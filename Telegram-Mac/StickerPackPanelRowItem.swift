@@ -30,10 +30,11 @@ class StickerPackPanelRowItem: TableRowItem {
     let packReference: StickerPackReference?
     
     private let preloadFeaturedDisposable = MetaDisposable()
-    
-    init(_ initialSize: NSSize, context: AccountContext, arguments: StickerPanelArguments, files:[TelegramMediaFile], packInfo: StickerPackInfo, collectionId: StickerPackCollectionId) {
+    let canSend: Bool
+    init(_ initialSize: NSSize, context: AccountContext, arguments: StickerPanelArguments, files:[TelegramMediaFile], packInfo: StickerPackInfo, collectionId: StickerPackCollectionId, canSend: Bool) {
         self.context = context
         self.arguments = arguments
+        self.canSend = canSend
         var filesAndPoints:[(TelegramMediaFile, ChatMediaContentView.Type, NSPoint)] = []
         let size: NSSize = NSMakeSize(60, 60)
         
@@ -149,32 +150,34 @@ class StickerPackPanelRowItem: TableRowItem {
                         }, itemImage: MenuAnimation.menu_add_to_favorites.value))
                     }
                 }
-                items.append(ContextMenuItem(strings().chatSendWithoutSound, handler: { [weak self] in
-                    guard let `self` = self else {
-                        return
-                    }
-                    let contentView = (self.view as? StickerPackPanelRowView)?.subviews.compactMap { $0 as? ChatMediaContentView}.first(where: { view -> Bool in
-                        return view.media?.isEqual(to: file) ?? false
-                    })
-                    
-                    if let contentView = contentView {
-                        self.arguments.sendMedia(file, contentView, true, false)
-                    }
-                }, itemImage: MenuAnimation.menu_mute.value))
                 
-                items.append(ContextMenuItem(strings().chatSendScheduledMessage, handler: { [weak self] in
-                    guard let `self` = self else {
-                        return
-                    }
-                    let contentView = (self.view as? StickerPackPanelRowView)?.subviews.compactMap { $0 as? ChatMediaContentView}.first(where: { view -> Bool in
-                        return view.media?.isEqual(to: file) ?? false
-                    })
+                if canSend {
+                    items.append(ContextMenuItem(strings().chatSendWithoutSound, handler: { [weak self] in
+                        guard let `self` = self else {
+                            return
+                        }
+                        let contentView = (self.view as? StickerPackPanelRowView)?.subviews.compactMap { $0 as? ChatMediaContentView}.first(where: { view -> Bool in
+                            return view.media?.isEqual(to: file) ?? false
+                        })
+                        
+                        if let contentView = contentView {
+                            self.arguments.sendMedia(file, contentView, true, false)
+                        }
+                    }, itemImage: MenuAnimation.menu_mute.value))
                     
-                    if let contentView = contentView {
-                        self.arguments.sendMedia(file, contentView, false, true)
-                    }
-                }, itemImage: MenuAnimation.menu_schedule_message.value))
-                
+                    items.append(ContextMenuItem(strings().chatSendScheduledMessage, handler: { [weak self] in
+                        guard let `self` = self else {
+                            return
+                        }
+                        let contentView = (self.view as? StickerPackPanelRowView)?.subviews.compactMap { $0 as? ChatMediaContentView}.first(where: { view -> Bool in
+                            return view.media?.isEqual(to: file) ?? false
+                        })
+                        
+                        if let contentView = contentView {
+                            self.arguments.sendMedia(file, contentView, false, true)
+                        }
+                    }, itemImage: MenuAnimation.menu_schedule_message.value))
+                }
                 break
             }
         }

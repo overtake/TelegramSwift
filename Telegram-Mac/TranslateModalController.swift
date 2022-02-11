@@ -115,10 +115,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 @available(macOS 10.14, *)
-private func translate(from: String?, to: String, blocks: [String]) -> Signal<String, Translate.Error> {
+private func translate(context: AccountContext, from: String?, to: String, blocks: [String]) -> Signal<String, Translate.Error> {
     var signals:[Signal<String, Translate.Error>] = []
     for block in blocks {
-        signals.append(Translate.translateText(text: block, from: from, to: to))
+        signals.append(context.engine.messages.translate(text: block, fromLang: from, toLang: to) |> castError(Translate.Error.self) |> mapToSignal { value in
+            if let value = value {
+                return .single(value)
+            } else {
+                return Translate.translateText(text: block, from: from, to: to)
+            }
+        })
     }
     var signal: Signal<String, Translate.Error> = .single("")
     for current in signals {
@@ -128,6 +134,7 @@ private func translate(from: String?, to: String, blocks: [String]) -> Signal<St
             }
         }
     }
+    
     return signal
 }
 @available(macOS 10.14, *)
@@ -136,6 +143,7 @@ func TranslateModalController(context: AccountContext, from: String?, toLang: St
     let actionsDisposable = DisposableSet()
     let disposable = MetaDisposable()
     actionsDisposable.add(disposable)
+    
     
     
     let initialState = State(text: text, from: from, to: toLang, fromIsRevealed: false, toIsRevealed: true)
@@ -152,7 +160,7 @@ func TranslateModalController(context: AccountContext, from: String?, toLang: St
     
     
     let request:()->Void = {
-        disposable.set(translate(from: stateValue.with { $0.from }, to: stateValue.with { $0.to }, blocks: blocks).start(next: { result in
+        disposable.set(translate(context: context, from: stateValue.with { $0.from }, to: stateValue.with { $0.to }, blocks: blocks).start(next: { result in
             updateState { current in
                 var current = current
                 current.translated = result

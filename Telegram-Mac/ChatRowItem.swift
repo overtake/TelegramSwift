@@ -2400,7 +2400,7 @@ class ChatRowItem: TableRowItem {
         if unsupported {
             return rightSize.height
         }
-                
+        
         if let lastLine = lastLineContentWidth {
             if lastLine.single && !isBubbleFullFilled {
                 if contentOffset.x + lastLine.width + (rightSize.width + insetBetweenContentAndDate) > blockWidth {
@@ -2776,6 +2776,8 @@ class ChatRowItem: TableRowItem {
                         return LastLineData(width: line.frame.width, single: false)
                     }
                 }
+            } else if let _ = item.webpageLayout as? WPMediaLayout {
+                return nil
             }
             if let line = item.textLayout.lines.last {
                 return LastLineData(width: line.frame.width, single: item.textLayout.lines.count == 1)

@@ -360,7 +360,7 @@ private enum StickerPackEntry : TableItemListNodeEntry {
     func item(_ arguments: StickerPanelArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .pack(_, files, packInfo, collectionId):
-            return StickerPackPanelRowItem(initialSize, context: arguments.context, arguments: arguments, files: files, packInfo: packInfo, collectionId: collectionId)
+            return StickerPackPanelRowItem(initialSize, context: arguments.context, arguments: arguments, files: files, packInfo: packInfo, collectionId: collectionId, canSend: true)
         case let .trending(_, items, collectionId):
             return StickerPackTrendingItem(initialSize, context: arguments.context, featured: items, collectionId: collectionId, close: arguments.closeInlineFeatured, click: arguments.openFeatured)
         }
