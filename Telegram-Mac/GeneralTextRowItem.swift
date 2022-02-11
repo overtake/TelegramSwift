@@ -279,7 +279,7 @@ class GeneralTextRowView : GeneralRowView {
                 self.clickable = current
                 addSubview(current, positioned: .below, relativeTo: self.textView)
             }
-            current.set(background: item.customTheme?.grayBackground ?? theme.colors.grayBackground, for: .Normal)
+            current.set(background: item.customTheme?.backgroundColor ?? theme.colors.background, for: .Normal)
             current.layer?.cornerRadius = .cornerRadius
             
             current.contextMenu = { [weak item] in

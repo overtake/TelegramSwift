@@ -308,15 +308,8 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         
         if !data.message.isCopyProtected() {
             if let textLayout = data.textLayout?.0 {
+                
                 if !textLayout.selectedRange.hasSelectText {
-                    thirdBlock.append(ContextMenuItem(strings().chatContextCopyText, handler: { [weak textLayout] in
-                        if let textLayout = textLayout {
-                            if !globalLinkExecutor.copyAttributedString(textLayout.attributedString) {
-                                copyToClipboard(textLayout.attributedString.string)
-                            }
-                        }
-                    }, itemImage: MenuAnimation.menu_copy.value))
-                    
                     if #available(macOS 10.14, *) {
                         let text = textLayout.attributedString.string
                         let language = Translate.detectLanguage(for: text)
@@ -327,6 +320,13 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                             }, itemImage: MenuAnimation.menu_translate.value))
                         }
                     }
+                    thirdBlock.append(ContextMenuItem(strings().chatContextCopyText, handler: { [weak textLayout] in
+                        if let textLayout = textLayout {
+                            if !globalLinkExecutor.copyAttributedString(textLayout.attributedString) {
+                                copyToClipboard(textLayout.attributedString.string)
+                            }
+                        }
+                    }, itemImage: MenuAnimation.menu_copy.value))
                 } else {
                     let text: String
                     if let linkType = data.textLayout?.1 {
@@ -349,6 +349,19 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                             
                         }, itemImage: MenuAnimation.menu_copy.value))
                     } else {
+                        if #available(macOS 10.14, *) {
+                            
+                            let attr = textLayout.attributedString
+                            let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
+                            let text = selectedText.string
+                            let language = Translate.detectLanguage(for: text)
+                            let toLang = appAppearance.language.baseLanguageCode
+                            if language != toLang, Translate.supportedTranslationLanguages.contains(toLang) {
+                                thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
+                                    showModal(with: TranslateModalController(context: context, from: language, toLang: toLang, text: text), for: context.window)
+                                }, itemImage: MenuAnimation.menu_translate.value))
+                            }
+                        }
                         thirdBlock.append(ContextMenuItem(strings().chatCopySelectedText, handler: { [weak textLayout] in
                             if let textLayout = textLayout {
                                 let result = textLayout.interactions.copy?()
@@ -371,21 +384,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                                 }
                             }
                         }, itemImage: MenuAnimation.menu_copy.value))
-                        
-                        if #available(macOS 10.14, *) {
-                            
-                            let attr = textLayout.attributedString
-                            let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
-                            let text = selectedText.string
-                            let language = Translate.detectLanguage(for: text)
-                            let toLang = appAppearance.language.baseLanguageCode
-                            if language != toLang, Translate.supportedTranslationLanguages.contains(toLang) {
-                                thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
-                                    showModal(with: TranslateModalController(context: context, from: language, toLang: toLang, text: text), for: context.window)
-                                }, itemImage: MenuAnimation.menu_translate.value))
-                            }
-                        }
-                        
+
                     }
                 }
             }
