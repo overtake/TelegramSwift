@@ -129,6 +129,7 @@ class SharedAccountContext {
         
         if let items = self.callStatusBarMenuItems?()  {
             for item in items {
+                item.menu = nil
                 menu.addItem(item)
             }
         } else {

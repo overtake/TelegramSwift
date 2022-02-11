@@ -802,7 +802,7 @@ private func chatMessageStickerThumbnailData(postbox: Postbox, file: TelegramMed
 }
 
 
-public func chatMessageSticker(postbox: Postbox, file: FileMediaReference, small: Bool, scale: CGFloat, fetched: Bool = false, onlyFullSize: Bool = false, thumbnail: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
+public func chatMessageSticker(postbox: Postbox, file: FileMediaReference, small: Bool, scale: CGFloat, fetched: Bool = true, onlyFullSize: Bool = false, thumbnail: Bool = false, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
     let signal: Signal<ImageRenderData, NoError>
     signal = chatMessageStickerDatas(postbox: postbox, file: file, small: small, fetched: fetched, onlyFullSize: onlyFullSize, synchronousLoad: synchronousLoad)
     return signal |> map { data in

@@ -2319,7 +2319,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_reactions_add: {  NSImage(named: "Icon_Reactions_Add")!.precomposed(palette.grayIcon) },
                                                chat_reactions_add_bubble: {  NSImage(named: "Icon_Reactions_Add")!.precomposed(palette.text) },
                                                chat_reactions_add_active: {  NSImage(named: "Icon_Reactions_Add")!.precomposed(palette.accent) },
-                                               reactions_badge: { generateBadgeMention(image: NSImage(named: "Icon_ReactionBadge")!, backgroundColor: palette.badge, foregroundColor: palette.background) },
+                                               reactions_badge: { generateBadgeMention(image: NSImage(named: "Icon_ReactionBadge")!, backgroundColor: palette.redUI, foregroundColor: palette.background) },
                                                reactions_badge_active: { generateBadgeMention(image: NSImage(named: "Icon_ReactionBadge")!, backgroundColor: palette.underSelectedColor, foregroundColor: palette.accentSelect) },
                                                reactions_badge_archive: { generateBadgeMention(image: NSImage(named: "Icon_ReactionBadge")!, backgroundColor: palette.badgeMuted, foregroundColor: palette.background) },
                                                reactions_badge_archive_active: { generateBadgeMention(image: NSImage(named: "Icon_ReactionBadge")!, backgroundColor: palette.underSelectedColor, foregroundColor: palette.accentSelect) },

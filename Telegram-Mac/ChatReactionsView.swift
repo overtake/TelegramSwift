@@ -372,6 +372,10 @@ final class ChatReactionsLayout {
             }
         }
         
+        for available in list {
+            _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .standalone(resource: available.staticIcon.resource)).start()
+        }
+        
         self.reactions = sorted.compactMap { reaction in
             if let current = available?.reactions.first(where: { $0.value == reaction.value || reaction.value.isEmpty }) {
                 
@@ -721,6 +725,7 @@ final class ChatReactionsView : View {
             
             let file = reaction.available.centerAnimation ?? reaction.available.staticIcon
             var reactionSize: NSSize = reaction.presentation.reactionSize
+            
             
             if reaction.available.centerAnimation != nil {
                 reactionSize = NSMakeSize(reaction.presentation.reactionSize.width * 2, reaction.presentation.reactionSize.height * 2)

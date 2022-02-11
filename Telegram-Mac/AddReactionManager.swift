@@ -41,6 +41,9 @@ final class ContextAddReactionsListView : View  {
             }
             |> deliverOnMainQueue
             
+            _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .standalone(resource: reaction.selectAnimation.resource)).start()
+            _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .standalone(resource: reaction.appearAnimation.resource)).start()
+            
             stateDisposable.set(player.state.start(next: { [weak self] state in
                 switch state {
                 case .playing:
@@ -381,6 +384,11 @@ final class AddReactionManager : NSObject, Notifable {
                     $0.complete
                 }
                 |> deliverOnMainQueue
+                
+                _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .standalone(resource: reaction.selectAnimation.resource)).start()
+
+                _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .standalone(resource: reaction.appearAnimation.resource)).start()
+
                 
                 stateDisposable.set(player.state.start(next: { [weak self] state in
                     switch state {
