@@ -8,8 +8,6 @@ import TGUIKit
 import ApiCredentials
 import InAppSettings
 
-private let manager = CountryManager()
-
 enum LoginAuthViewState {
     case phoneNumber
     case password
@@ -17,256 +15,168 @@ enum LoginAuthViewState {
 }
 
 
-private enum QRTokenState {
-    case qr(CGImage)
+private let languageKey: String = "Login.ContinueOnLanguage"
+
+extension AuthTransferExportedToken : Equatable {
+    public static func == (lhs: AuthTransferExportedToken, rhs: AuthTransferExportedToken) -> Bool {
+        return lhs.value == rhs.value && lhs.validUntil == rhs.validUntil
+    }
+}
+extension AuthorizationCodeRequestError : Equatable {
+    public static func == (lhs: AuthorizationCodeRequestError, rhs: AuthorizationCodeRequestError) -> Bool {
+        switch lhs {
+        case .invalidPhoneNumber:
+            if case .invalidPhoneNumber = rhs {
+                return true
+            }
+        case .limitExceeded:
+            if case .limitExceeded = rhs {
+                return true
+            }
+        case let .generic(lhsInfo):
+            if case let .generic(rhsInfo) = rhs {
+                return lhsInfo?.0 == rhsInfo?.0 && lhsInfo?.1 == rhsInfo?.1
+            }
+        case .phoneLimitExceeded:
+            if case .phoneLimitExceeded = rhs {
+                return true
+            }
+        case .phoneBanned:
+            if case .phoneBanned = rhs {
+                return true
+            }
+        case .timeout:
+            if case .timeout = rhs {
+                return true
+            }
+        }
+        return false
+    }
+    
+    
 }
 
-private final class ExportTokenOptionView : View {
-    private let textView: TextView = TextView()
-    private let optionText = TextView()
-    private let cap = View(frame: NSMakeRect(0, 0, 20, 20))
+extension ExportAuthTransferTokenResult : Equatable {
+    public static func == (lhs: ExportAuthTransferTokenResult, rhs: ExportAuthTransferTokenResult) -> Bool {
+        switch lhs {
+        case .changeAccountAndRetry:
+            switch rhs {
+            case .changeAccountAndRetry:
+                return true
+            default:
+                return false
+            }
+        case let .displayToken(token):
+            switch rhs {
+            case .displayToken(token):
+                return true
+            default:
+                return false
+            }
+        case .loggedIn:
+            switch rhs {
+            case .loggedIn:
+                return true
+            default:
+                return false
+            }
+        case .passwordRequested:
+            switch rhs {
+            case .passwordRequested:
+                return true
+            default:
+                return false
+            }
+        }
+    }
+}
+
+final class AuthView : Control {
+    private var continueOn: TitleButton?
+    fileprivate let back = TitleButton()
+    
+    fileprivate let proxyButton:ImageButton = ImageButton()
+    private let proxyConnecting: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 12, 12))
+
+
+    
+    fileprivate var updateView: NSView? {
+        didSet {
+            if let updateView = updateView {
+                addSubview(updateView)
+            }
+            needsLayout = true
+        }
+    }
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
-        cap.layer?.cornerRadius = cap.frame.height / 2
-        
-        textView.isSelectable = false
-        textView.userInteractionEnabled = false
-        
-        optionText.isSelectable = false
-        optionText.userInteractionEnabled = false
-        addSubview(cap)
-        addSubview(self.textView)
-        addSubview(self.optionText)
-    }
-    
-    func update(title: String, number: String) {
-        let textAttr = NSMutableAttributedString()
-        _ = textAttr.append(string: title, color: theme.colors.text, font: .normal(.text))
-        textAttr.detectBoldColorInString(with: .medium(.text))
-        let text = TextViewLayout(textAttr, maximumNumberOfLines: 2)
-        text.measure(width: frame.width - cap.frame.width - 10)
-        textView.update(text)
-        
-        let option = TextViewLayout(.initialize(string: number, color: theme.colors.underSelectedColor, font: .normal(.text)), maximumNumberOfLines: 2)
-        option.measure(width: frame.width)
-        optionText.update(option)
-        
-        cap.backgroundColor = theme.colors.accent
-        
-        setFrameSize(NSMakeSize(frame.width, max(cap.frame.height, 4 + text.layoutSize.height + 4)))
-    }
-    
-    override func layout() {
-        super.layout()
-        
-        cap.setFrameOrigin(NSZeroPoint)
-        let offset: CGFloat = optionText.frame.width == 6 ? 7 : 6
-        optionText.setFrameOrigin(NSMakePoint(offset, 2))
-        textView.setFrameOrigin(NSMakePoint(cap.frame.maxX + 10, 2))
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-}
+        addSubview(back)
+        addSubview(proxyButton)
+        proxyButton.addSubview(proxyConnecting)
 
-private final class ExportTokenView : View {
-    fileprivate let imageView: ImageView = ImageView()
-    fileprivate let logoView = ImageView(frame: NSMakeRect(0, 0, 60, 60))
-    private let containerView = View()
-    private let titleView = TextView()
-    fileprivate let cancelButton = TitleButton()
-    
-    private let firstHelp: ExportTokenOptionView
-    private let secondHelp: ExportTokenOptionView
-    private let thridHelp: ExportTokenOptionView
+        proxyButton.scaleOnClick = true
 
-    required init(frame frameRect: NSRect) {
-        firstHelp = ExportTokenOptionView(frame: NSMakeRect(0, 0, frameRect.width, 0))
-        secondHelp = ExportTokenOptionView(frame: NSMakeRect(0, 0, frameRect.width, 0))
-        thridHelp = ExportTokenOptionView(frame: NSMakeRect(0, 0, frameRect.width, 0))
-        super.init(frame: frameRect)
-        containerView.addSubview(self.imageView)
-        
-        self.imageView.addSubview(logoView)
-        containerView.addSubview(self.titleView)
-        containerView.addSubview(firstHelp)
-        containerView.addSubview(secondHelp)
-        containerView.addSubview(thridHelp)
-        containerView.addSubview(cancelButton)
-        addSubview(containerView)
-        titleView.isSelectable = false
-        titleView.userInteractionEnabled = false
+        back.autohighlight = false
+        back.scaleOnClick = true
         updateLocalizationAndTheme(theme: theme)
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
-        let theme = theme as! TelegramPresentationTheme
         super.updateLocalizationAndTheme(theme: theme)
-        self.backgroundColor = theme.colors.background
-        
-        let titleLayout = TextViewLayout(.initialize(string: strings().loginQRTitle, color: theme.colors.text, font: .normal(.header)), maximumNumberOfLines: 2, alignment: .center)
-        titleLayout.measure(width: frame.width)
-        titleView.update(titleLayout)
-        
-        firstHelp.update(title: strings().loginQRHelp1, number: "1")
-        secondHelp.update(title: strings().loginQRHelp2, number: "2")
-        thridHelp.update(title: strings().loginQRHelp3, number: "3")
-        
-        cancelButton.set(font: .medium(.text), for: .Normal)
-        cancelButton.set(color: theme.colors.accent, for: .Normal)
-        cancelButton.set(text: strings().loginQRCancel, for: .Normal)
-        _ = cancelButton.sizeToFit()
-        logoView.image = theme.icons.login_qr_cap
-        logoView.sizeToFit()
+        let theme = theme as! TelegramPresentationTheme
+        back.set(image: theme.icons.chatNavigationBack, for: .Normal)
+        back.set(font: .medium(.header), for: .Normal)
+        back.set(color: theme.colors.accent, for: .Normal)
+        back.set(text: strings().navigationBack, for: .Normal)
+        back.sizeToFit(NSMakeSize(10, 10), NSMakeSize(0, 24), thatFit: true)
+        needsLayout = true
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    
-    func update(state: QRTokenState) {
-        switch state {
-        case let .qr(image):
-            self.imageView.image = image
-            imageView.sizeToFit()
-        }
-        needsLayout = true
+    func addView(_ view: NSView) {
+        self.addSubview(view, positioned: .below, relativeTo: self.back)
     }
     
-    override func layout() {
-        
-        containerView.setFrameSize(NSMakeSize(frame.width, imageView.frame.height + 20 + self.titleView.frame.height + 20 + firstHelp.frame.height + 10 + secondHelp.frame.height + 10 + thridHelp.frame.height + 30 + cancelButton.frame.height))
-        containerView.center()
-        
-        imageView.centerX(y: 0)
-        logoView.center()
-        titleView.updateWithNewWidth(containerView.frame.width)
-        titleView.centerX(y: imageView.frame.maxY + 10)
-        firstHelp.centerX(y: titleView.frame.maxY + 10)
-        secondHelp.centerX(y: firstHelp.frame.maxY + 10)
-        thridHelp.centerX(y: secondHelp.frame.maxY + 10)
-        cancelButton.centerX(y: thridHelp.frame.maxY + 20)
-        
-    }
-}
-
-class AuthHeaderView : View {
-    fileprivate var isQrEnabled: Bool? = nil {
-        didSet {
-            updateLocalizationAndTheme(theme: theme)
+    func hideLanguage() {
+        if let view = continueOn {
+            performSubviewRemoval(view, animated: true)
+            self.continueOn = nil
         }
     }
     
-    fileprivate var isLoading: Bool = false
-    
-    
-    private var progressView: ProgressIndicator?
-    
-    private let containerView = View(frame: NSMakeRect(0, 0, 300, 480))
-    
-    fileprivate let proxyButton:ImageButton = ImageButton()
-    private let proxyConnecting: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 12, 12))
-    
-    fileprivate var exportTokenView:ExportTokenView?
-    
-    fileprivate var arguments:LoginAuthViewArguments?
-    fileprivate let loginView:LoginAuthInfoView = LoginAuthInfoView(frame: NSZeroRect)
-    fileprivate var state: UnauthorizedAccountStateContents = .empty
-    fileprivate var qrTokenState: QRTokenState? = nil
-    private let logo:ImageView = ImageView()
-    private let header:TextView = TextView()
-    private let desc:TextView = TextView()
-    private let textHeaderView:TextView = TextView()
-    let intro:View = View()
-    private let switchLanguage:TitleButton = TitleButton()
-    fileprivate let nextButton:TitleButton = TitleButton()
-    fileprivate let backButton = TitleButton()
-    fileprivate let cancelButton = TitleButton()
-    
-    
-    private let animatedLogoView = ImageView()
-
-    fileprivate var needShowSuggestedButton: Bool = false
-    required init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-        intro.setFrameSize(containerView.frame.size)
-        
-        
-        updateLocalizationAndTheme(theme: theme)
-
-        intro.addSubview(logo)
-        intro.addSubview(header)
-        intro.addSubview(desc)
-        
-        containerView.addSubview(intro)
-
-        
-        desc.userInteractionEnabled = false
-        desc.isSelectable = false
-        
-        header.userInteractionEnabled = false
-        header.isSelectable = false
-        
-        textHeaderView.userInteractionEnabled = false
-        textHeaderView.isSelectable = false
-        
-        containerView.addSubview(loginView)
-
-        
-        containerView.addSubview(textHeaderView)
-        textHeaderView.userInteractionEnabled = false
-        textHeaderView.isSelected = false
-        
-        nextButton.autohighlight = false
-        nextButton.style = ControlStyle(font: NSFont.medium(16.0), foregroundColor: .white, backgroundColor: NSColor(0x32A3E2), highlightColor: .white)
-        nextButton.set(text: strings().loginNext, for: .Normal)
-        _ = nextButton.sizeToFit(thatFit: true)
-        nextButton.setFrameSize(76, 36)
-        nextButton.layer?.cornerRadius = 18
-        nextButton.disableActions()
-        nextButton.set(handler: { [weak self] _ in
-           if let strongSelf = self {
-                switch strongSelf.state {
-                case .phoneEntry, .empty:
-                    strongSelf.arguments?.sendCode(strongSelf.loginView.phoneNumber)
-                    break
-                case .confirmationCodeEntry:
-                    strongSelf.arguments?.checkCode(strongSelf.loginView.code)
-                case .passwordEntry:
-                    strongSelf.arguments?.checkPassword(strongSelf.loginView.password)
-                case .signUp:
-                     strongSelf.loginView.trySignUp()
-                default:
-                    break
-                }
-            }
+    func showLanguage(title: String, callback: @escaping()->Void) {
+        let current: TitleButton
+        if let view = self.continueOn {
+            current = view
+        } else {
+            current = TitleButton()
+            self.continueOn = current
+            self.addSubview(current, positioned: .below, relativeTo: back)
+            current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+        }
+        current.set(font: .normal(.text), for: .Normal)
+        current.set(color: theme.colors.accent, for: .Normal)
+        current.set(text: title, for: .Normal)
+        current.sizeToFit()
+        current.removeAllHandlers()
+        current.set(handler: { [weak self] control in
+            callback()
+            performSubviewRemoval(control, animated: true)
+            self?.continueOn = nil
         }, for: .Click)
         
-        containerView.addSubview(nextButton)
-        containerView.addSubview(switchLanguage)
-        switchLanguage.isHidden = true
-        
-        switchLanguage.disableActions()
-        switchLanguage.set(font: .medium(.title), for: .Normal)
-        switchLanguage.set(text: "Continue on English", for: .Normal)
-        _ = switchLanguage.sizeToFit()
-        
-        addSubview(proxyButton)
-        proxyButton.addSubview(proxyConnecting)
-        containerView.addSubview(backButton)
-        
-        addSubview(containerView)
-        
-        
-        addSubview(cancelButton)
-        
         needsLayout = true
     }
     
-    fileprivate func updateProxyPref(_ pref: ProxySettings, _ connection: ConnectionStatus, _ isForceHidden: Bool = true) {
+    func updateBack(_ isHidden: Bool, animated: Bool) {
+        self.back.change(opacity: isHidden ? 0 : 1, animated: animated)
+    }
+    
+    fileprivate func updateProxy(_ pref: ProxySettings, _ connection: ConnectionStatus, _ isForceHidden: Bool = true) {
         proxyButton.isHidden = isForceHidden && pref.servers.isEmpty
         switch connection {
         case .connecting:
@@ -292,449 +202,125 @@ class AuthHeaderView : View {
         proxyConnecting.centerY(addition: -1)
         needsLayout = true
     }
-    
-    
-    func hideSwitchButton() {
-        needShowSuggestedButton = false
-        switchLanguage.change(opacity: 0, removeOnCompletion: false) { [weak self] completed in
-            self?.switchLanguage.isHidden = true
-        }
-    }
-    
-    func showLanguageButton(title: String, callback:@escaping()->Void) -> Void {
-        needShowSuggestedButton = true
-        switchLanguage.set(text: title, for: .Normal)
-        _ = switchLanguage.sizeToFit()
-        switchLanguage.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-        switchLanguage.set(handler: { _ in
-            callback()
-        }, for: .Click)
-        switchLanguage.isHidden = false
-        needsLayout = true
-    }
+
+
     
     override func layout() {
         super.layout()
-        switchLanguage.centerX(y: containerView.frame.height - switchLanguage.frame.height - 20)
-       
-        logo.centerX(y: 0)
-        header.centerX(y: logo.frame.maxY + 10)
-        desc.centerX(y: header.frame.maxY)
-        intro.setFrameSize(containerView.frame.width, desc.frame.maxY)
-        intro.centerX(y: 20)
-        loginView.setFrameSize(300, containerView.frame.height)
-        loginView.centerX(y: intro.frame.maxY)
-        nextButton.centerX(y: containerView.frame.height - nextButton.frame.height - 50)
-        
-        proxyConnecting.centerX()
-        proxyConnecting.centerY(addition: -1)
-        proxyButton.setFrameOrigin(frame.width - proxyButton.frame.width - 15, 15)
-        
-        containerView.center()
-        
-        cancelButton.setFrameOrigin(15, 15)
-
-        self.exportTokenView?.setFrameSize(NSMakeSize(300, 500))
-        self.exportTokenView?.center()
-        
-        self.progressView?.center()
-        
-        updateState(state, qrTokenState: self.qrTokenState, isLoading: self.isLoading, animated: false)
-    }
-    
-    
-    override func updateLocalizationAndTheme(theme: PresentationTheme) {
-        super.updateLocalizationAndTheme(theme: theme)
-        let theme = (theme as! TelegramPresentationTheme)
-        switchLanguage.set(color: theme.colors.accent, for: .Normal)
-        
-        
-        self.animatedLogoView.image = theme.icons.login_cap
-        self.animatedLogoView.sizeToFit()
-        
-        self.logo.image = theme.icons.login_cap
-        self.logo.sizeToFit()
-        
-        let headerLayout = TextViewLayout(.initialize(string: appName, color: theme.colors.text, font: NSFont.normal(30.0)), maximumNumberOfLines: 1)
-        headerLayout.measure(width: .greatestFiniteMagnitude)
-        header.update(headerLayout)
-        
-        header.backgroundColor = theme.colors.background
-        desc.backgroundColor = theme.colors.background
-        textHeaderView.backgroundColor = theme.colors.background
-        
-        let descLayout = TextViewLayout(.initialize(string: strings().loginWelcomeDescription, color: theme.colors.grayText, font: .normal(16.0)), maximumNumberOfLines: 2, alignment: .center)
-        descLayout.measure(width: 300)
-        desc.update(descLayout)
-        
-        
-        if let isQrEnabled = self.isQrEnabled, isQrEnabled {
-            nextButton.set(text: strings().loginQRLogin, for: .Normal)
-            _ = nextButton.sizeToFit(NSMakeSize(30, 0), NSMakeSize(0, 36), thatFit: true)
-            nextButton.style = ControlStyle(font: .medium(15.0), foregroundColor: theme.colors.accent, backgroundColor: .clear)
-        } else {
-            nextButton.set(text: strings().loginNext, for: .Normal)
-            _ = nextButton.sizeToFit(NSMakeSize(30, 0), NSMakeSize(0, 36), thatFit: true)
-            nextButton.style = ControlStyle(font: .medium(15.0), foregroundColor: theme.colors.underSelectedColor, backgroundColor: theme.colors.accent)
-        }
-        
-        
-        proxyConnecting.progressColor = theme.colors.accentIcon
-        
-        
-        backButton.set(font: .medium(.header), for: .Normal)
-        backButton.set(color: theme.colors.accent, for: .Normal)
-        backButton.set(image: theme.icons.chatNavigationBack, for: .Normal)
-        backButton.set(text: strings().navigationBack, for: .Normal)
-        _ = backButton.sizeToFit()
-        
-        cancelButton.set(font: .medium(.header), for: .Normal)
-        cancelButton.set(color: theme.colors.accent, for: .Normal)
-        cancelButton.set(text: strings().navigationCancel, for: .Normal)
-        _ = cancelButton.sizeToFit()
-        
-        progressView?.progressColor = theme.colors.text
-
-        
-        updateState(self.state, qrTokenState: self.qrTokenState, isLoading: self.isLoading, animated: false)
-        needsLayout = true
-        
-    }
-    
-    fileprivate func nextButtonAsForQr(_ isQrEnabled: Bool?) -> Void {
-        self.isQrEnabled = isQrEnabled
-        self.updateLocalizationAndTheme(theme: theme)
-    }
-    
-    private func animateAndCancelQr() {
-        
-        guard let exportTokenView = self.exportTokenView else {
-            return
-        }
-        CATransaction.begin()
-        
-        self.containerView.isHidden = false
-        
-        addSubview(animatedLogoView)
-        
-        exportTokenView.logoView.isHidden = true
-        
-        let point = NSMakePoint(exportTokenView.frame.midX - 20, exportTokenView.frame.minY + exportTokenView.imageView.frame.height / 2 - 16)
-        
-        animatedLogoView.frame = NSMakeRect(point.x, point.y, 60, 60)
-        
-        exportTokenView.imageView.layer?.animateScaleSpring(from: 1, to: animatedLogoView.frame.width / exportTokenView.imageView.frame.width, duration: 0.4, removeOnCompletion: false, bounce: true)
-
-        animatedLogoView.layer?.animateScaleX(from: 1, to: logo.frame.width / animatedLogoView.frame.width, duration: 0.4, timingFunction: .spring, removeOnCompletion: false)
-        animatedLogoView.layer?.animateScaleY(from: 1, to: logo.frame.height / animatedLogoView.frame.height, duration: 0.4, timingFunction: .spring, removeOnCompletion: false)
-
-        self.logo.isHidden = true
-        
-        animatedLogoView.layer?.animatePosition(from: animatedLogoView.frame.origin, to: NSMakePoint((round(frame.width / 2) - logo.frame.width / 2), containerView.frame.minY + 20), duration: 0.4, timingFunction: .spring, removeOnCompletion: false, completion: { [weak self] _ in
-            self?.exportTokenView?.logoView.isHidden = false
-            self?.animatedLogoView.removeFromSuperview()
-            self?.animatedLogoView.layer?.removeAllAnimations()
-            self?.logo.isHidden = false
-        })
-        
-        CATransaction.commit()
-        
-        self.arguments?.cancelQrAuth()
-    }
-    
-    private func animateAndApplyQr() {
-        addSubview(animatedLogoView)
-        
-        guard let exportTokenView = self.exportTokenView else {
-            return
-        }
-        
-        
-        exportTokenView.logoView.isHidden = true
-
-        let point = NSMakePoint(frame.width / 2 - logo.frame.width / 2 + 1, containerView.frame.minY + 20)
-
-        animatedLogoView.frame = NSMakeRect(point.x, point.y, 60, 60)
-        
-        exportTokenView.imageView.layer?.animateScaleSpring(from: animatedLogoView.frame.height / exportTokenView.imageView.frame.width, to: 1, duration: 0.4, removeOnCompletion: false, bounce: true)
-        
-        animatedLogoView.layer?.animateScaleX(from: logo.frame.width / animatedLogoView.frame.width, to: 1, duration: 0.4, timingFunction: .spring, removeOnCompletion: false)
-        animatedLogoView.layer?.animateScaleY(from: logo.frame.height / animatedLogoView.frame.height, to: 1, duration: 0.4, timingFunction: .spring, removeOnCompletion: false)
-        
-        self.logo.isHidden = true
-        
-        
-        animatedLogoView.layer?.animatePosition(from: point, to: NSMakePoint(exportTokenView.frame.midX - 30, exportTokenView.frame.minY + exportTokenView.imageView.frame.height / 2 - 26), duration: 0.4, timingFunction: .spring, removeOnCompletion: false, completion: { [weak self] _ in
-            self?.exportTokenView?.logoView.isHidden = false
-            self?.animatedLogoView.removeFromSuperview()
-            self?.logo.isHidden = false
-            self?.containerView.isHidden = true
-            self?.animatedLogoView.layer?.removeAllAnimations()
-        })
-    }
-    
-    fileprivate func updateState(_ state:UnauthorizedAccountStateContents, qrTokenState: QRTokenState?, isLoading: Bool, animated: Bool) {
-        
-        let prevIsLoading = self.isLoading
-        
-        self.isLoading = isLoading
-        self.state = state
-        self.qrTokenState = qrTokenState
-        
-        
-        self.loginView.updateState(self.state, animated: animated)
-       
-        if let qrTokenState = qrTokenState {
-            
-            self.logo.change(opacity: 0, animated: animated)
-            var firstTime: Bool = false
-            if self.exportTokenView == nil {
-                self.exportTokenView = ExportTokenView(frame: NSMakeRect(0, 0, 300, 500))
-                #if !APP_STORE
-                self.addSubview(self.exportTokenView!, positioned: .below, relativeTo: self.subviews.first(where: { $0 is UpdateTabView }))
-                #else
-                self.addSubview(self.exportTokenView!)
-                #endif
-                self.exportTokenView?.center()
-                
-                self.exportTokenView?.cancelButton.set(handler: { [weak self] _ in
-                    self?.animateAndCancelQr()
-                }, for: .Click)
-                
-                if animated {
-                    self.exportTokenView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.35, timingFunction: .spring)
-                }
-                firstTime = true
-            }
-            
-            guard let exportTokenView = self.exportTokenView else {
-                return
-            }
-            exportTokenView.update(state: qrTokenState)
-            
-            if firstTime && animated {
-                self.animateAndApplyQr()
-            } else {
-                self.containerView.isHidden = true
-            }
-            
-        } else {
-            self.containerView.isHidden = false
-            if let exportTokenView = self.exportTokenView {
-                if animated {
-                    self.exportTokenView = nil
-                    exportTokenView.layer?.animateAlpha(from: 1, to: 0, duration: 0.35, timingFunction: .spring, removeOnCompletion: false, completion: { [weak exportTokenView] _ in
-                        exportTokenView?.removeFromSuperview()
-                    })
-                } else {
-                    exportTokenView.removeFromSuperview()
-                    self.exportTokenView = nil
-                }
-            }
-            self.logo.change(opacity: 1, animated: animated)
-        }
-        
-     
-        
-        
-        backButton.isHidden = true
-        switch self.state {
-        case .phoneEntry, .empty:
-            nextButton.change(opacity: 1, animated: animated)
-            textHeaderView.change(opacity: 0, animated: animated)
-            intro.change(pos: NSMakePoint(intro.frame.minX, 20), animated: animated)
-            intro.change(opacity: 1, animated: animated)
-            loginView.change(pos: NSMakePoint(loginView.frame.minX, intro.frame.maxY + 30), animated: animated)
-            textHeaderView.change(pos: NSMakePoint(textHeaderView.frame.minX, floorToScreenPixels(backingScaleFactor, (frame.height - textHeaderView.frame.height)/2)), animated: animated)
-            switchLanguage.isHidden = !needShowSuggestedButton
-        case .confirmationCodeEntry:
-            nextButton.change(opacity: 1, animated: animated)
-            let headerLayout = TextViewLayout(.initialize(string: strings().loginHeaderCode, color: theme.colors.text, font: .normal(25)))
-            headerLayout.measure(width: .greatestFiniteMagnitude)
-            textHeaderView.update(headerLayout)
-            textHeaderView.centerX()
-            textHeaderView.change(opacity: 1, animated: animated)
-            textHeaderView.change(pos: NSMakePoint(textHeaderView.frame.minX, 30), animated: animated)
-            intro.change(pos: NSMakePoint(intro.frame.minX, -intro.frame.height), animated: animated)
-            intro.change(opacity: 0, animated: animated)
-            loginView.change(pos: NSMakePoint(loginView.frame.minX, textHeaderView.frame.maxY + 30), animated: animated)
-            switchLanguage.isHidden = true
-        case .passwordEntry:
-            nextButton.change(opacity: 1, animated: animated)
-            let headerLayout = TextViewLayout(.initialize(string: strings().loginHeaderPassword, color: theme.colors.text, font: .normal(25)))
-            headerLayout.measure(width: .greatestFiniteMagnitude)
-            textHeaderView.update(headerLayout)
-            textHeaderView.centerX(y: 30)
-            textHeaderView.change(opacity: 1, animated: animated)
-            intro.change(pos: NSMakePoint(intro.frame.minX, -intro.frame.height), animated: animated)
-            intro.change(opacity: 0, animated: animated)
-            loginView.change(pos: NSMakePoint(loginView.frame.minX, textHeaderView.frame.maxY + 30), animated: animated)
-            switchLanguage.isHidden = true
-        case .signUp:
-            nextButton.change(opacity: 1, animated: animated)
-            let headerLayout = TextViewLayout(.initialize(string: strings().loginHeaderSignUp, color: theme.colors.text, font: .normal(25)))
-            headerLayout.measure(width: .greatestFiniteMagnitude)
-            textHeaderView.update(headerLayout)
-            textHeaderView.centerX()
-            textHeaderView.change(opacity: 1, animated: animated)
-            textHeaderView.change(pos: NSMakePoint(textHeaderView.frame.minX, 50), animated: animated)
-            intro.change(pos: NSMakePoint(intro.frame.minX, -intro.frame.height), animated: animated)
-            intro.change(opacity: 0, animated: animated)
-            loginView.change(pos: NSMakePoint(loginView.frame.minX, textHeaderView.frame.maxY + 50), animated: animated)
-            switchLanguage.isHidden = true
-            backButton.isHidden = false
-            backButton.setFrameOrigin(loginView.frame.minX, textHeaderView.frame.minY + floorToScreenPixels(backingScaleFactor, (textHeaderView.frame.height - backButton.frame.height) / 2))
-        case .passwordRecovery:
-            break
-        case .awaitingAccountReset:
-            let headerLayout = TextViewLayout(.initialize(string: strings().loginResetAccountText, color: theme.colors.text, font: .normal(25)))
-            headerLayout.measure(width: .greatestFiniteMagnitude)
-            intro.change(pos: NSMakePoint(intro.frame.minX, -intro.frame.height), animated: animated)
-            intro.change(opacity: 0, animated: animated)
-            switchLanguage.isHidden = true
-            
-            textHeaderView.update(headerLayout)
-            textHeaderView.centerX()
-            textHeaderView.change(pos: NSMakePoint(textHeaderView.frame.minX, 50), animated: animated)
-            textHeaderView.change(opacity: 1, animated: animated)
-            
-            loginView.change(pos: NSMakePoint(loginView.frame.minX, textHeaderView.frame.maxY + 20), animated: animated)
-            
-            nextButton.change(opacity: 0, animated: animated)
-            backButton.isHidden = false
-            backButton.setFrameOrigin(loginView.frame.minX, textHeaderView.frame.minY + floorToScreenPixels(backingScaleFactor, (textHeaderView.frame.height - backButton.frame.height) / 2))
-        }
-        
-        if prevIsLoading != isLoading {
-            exportTokenView?.layer?.opacity = isLoading ? 0 : 1
-            containerView.layer?.opacity = isLoading ? 0 : 1
-            
-            if animated {
-                if isLoading {
-                    if let exportTokenView = self.exportTokenView {
-                        exportTokenView.layer?.animateAlpha(from: 1, to: 0, duration: 0.35, timingFunction: .spring)
-                        exportTokenView.layer?.animateScaleSpring(from: 1, to: 0.2, duration: 0.35)
-                    } else {
-                        containerView.layer?.animateAlpha(from: 1, to: 0, duration: 0.35, timingFunction: .spring)
-                        containerView.layer?.animateScaleSpring(from: 1, to: 0.2, duration: 0.35)
-                    }
-                } else {
-                    if let exportTokenView = self.exportTokenView {
-                        exportTokenView.layer?.animateAlpha(from: 0, to: 1, duration: 0.35, timingFunction: .spring)
-                        exportTokenView.layer?.animateScaleSpring(from: 0.2, to: 1, duration: 0.35)
-                    } else {
-                        containerView.layer?.animateAlpha(from: 0, to: 1, duration: 0.35, timingFunction: .spring)
-                        containerView.layer?.animateScaleSpring(from: 0.2, to: 1, duration: 0.35)
-                    }
-                }
-            }
-            
-            if isLoading {
-                if self.progressView == nil {
-                    let progressView = ProgressIndicator(frame: NSMakeRect(0, 0, 40, 40))
-                    self.progressView = progressView
-                    
-                    progressView.progressColor = theme.colors.text
-                    addSubview(progressView)
-                }
-                
-                self.progressView?.center()
-                
-                if animated {
-                    progressView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.35, timingFunction: .spring)
-                }
-            } else {
-                if let progressView = self.progressView {
-                    self.progressView = nil
-                    if animated {
-                        progressView.layer?.animateAlpha(from: 1, to: 0, duration: 0.35, timingFunction: .spring, removeOnCompletion: false, completion: { [weak progressView] _ in
-                            progressView?.removeFromSuperview()
-                        })
-                    } else {
-                        progressView.removeFromSuperview()
-                    }
-                }
+        for subview in subviews {
+            if subview != continueOn, subview != updateView, subview != back, subview != proxyButton {
+                subview.setFrameSize(NSMakeSize(subview.frame.width, frame.height))
+                subview.center()
             }
         }
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        if let view = continueOn {
+            view.centerX(y: frame.height - view.frame.height - 15)
+        }
+        if let updateView = updateView {
+            updateView.frame = NSMakeRect(0, frame.height - 40, frame.width, 40)
+        }
+        back.setFrameOrigin(NSMakePoint(10, 10))
+        proxyButton.setFrameOrigin(NSMakePoint(frame.width - proxyButton.frame.width - 10, 10))
     }
 }
 
 
-class AuthController : GenericViewController<AuthHeaderView> {
+class AuthController : GenericViewController<AuthView> {
+    
     private let disposable:MetaDisposable = MetaDisposable()
-    private let actionDisposable = MetaDisposable()
-    private let proxyDisposable = DisposableSet()
-    private let suggestedLanguageDisposable = MetaDisposable()
-    private let localizationDisposable = MetaDisposable()
-    private let exportTokenDisposable = MetaDisposable()
     private let tokenEventsDisposable = MetaDisposable()
-    private let configurationDisposable = MetaDisposable()
-    private var account:UnauthorizedAccount
+    private let tokenDisposable = MetaDisposable()
+    private let stateDisposable = MetaDisposable()
+    private let exportTokenDisposable = MetaDisposable()
+    private let actionDisposable = MetaDisposable()
+    private let localizationDisposable = MetaDisposable()
+    private let suggestedLanguageDisposable = MetaDisposable()
+    private let proxyDisposable = MetaDisposable()
+    private let delayDisposable = MetaDisposable()
+    
+    
+    private let stateView: Promise<PostboxStateView> = Promise()
+    private var account:UnauthorizedAccount {
+        didSet {
+            stateView.set(account.postbox.stateView())
+        }
+    }
+    private var stateViewValue: Signal<PostboxStateView, NoError> {
+        return stateView.get()
+    }
     private let sharedContext: SharedAccountContext
-    private let engine: TelegramEngineUnauthorized
+    private var engine: TelegramEngineUnauthorized {
+        return .init(account: self.account)
+    }
+   
+    struct State : Equatable {
+        var state: UnauthorizedAccountStateContents?
+        var tokenResult: ExportAuthTransferTokenResult?
+        var tokenAvailable: Bool
+        var configuration: UnauthorizedConfiguration = .defaultValue
+        var qrEnabled: Bool
+        var error: AuthorizationCodeRequestError?
+        var codeError: AuthorizationCodeVerificationError?
+        var passwordError: AuthorizationPasswordVerificationError?
+        var emailError: PasswordRecoveryError?
+        var signError: SignUpError?
+        var locked: Bool = false
+        var countries:[Country] = []
+    }
+        
+    
     #if !APP_STORE
     private let updateController: UpdateTabController
     #endif
     
-    private var state: UnauthorizedAccountStateContents = .empty
-    private var qrType: QRLoginType = .disabled
-    private var qrTokenState: (state: QRTokenState?, animated: Bool) = (state: nil, animated: false) {
-        didSet {
-            self.genericView.updateState(self.state, qrTokenState: self.qrTokenState.state, isLoading: self.isLoading.value, animated: self.qrTokenState.animated)
-        }
-    }
-    private var isLoading: (value: Bool, update: Bool) = (value: true, update: true) {
-        didSet {
-            if isLoading.update {
-                self.genericView.updateState(self.state, qrTokenState: self.qrTokenState.state, isLoading: isLoading.value, animated: !isFirst)
-                isFirst = false
-            }
-        }
-    }
+    private var current: ViewController?
     
-    
+    private let loading_c: Auth_Loading
+    private let token_c: Auth_TokenController
+    private let phone_number_c: Auth_PhoneNumberController
+    private let code_entry_c: Auth_CodeEntryController
+    private let password_entry_c: Auth_PasswordEntryController
+    private let email_recovery_c: Auth_EmailController
+    private let awaiting_reset_c: Auth_AwaitingResetController
+    private let signup_c: Auth_SignupController
     
     private let otherAccountPhoneNumbers: ((String, AccountRecordId, Bool)?, [(String, AccountRecordId, Bool)])
     
     init(_ account:UnauthorizedAccount, sharedContext: SharedAccountContext, otherAccountPhoneNumbers: ((String, AccountRecordId, Bool)?, [(String, AccountRecordId, Bool)])) {
         self.account = account
         self.sharedContext = sharedContext
-        self.engine = .init(account: account)
+        self.stateView.set(account.postbox.stateView())
+
+        self.token_c = .init(frame: NSMakeRect(0, 0, 380, 300))
+        self.loading_c = .init(frame: NSMakeRect(0, 0, 380, 300))
+        self.phone_number_c = .init(frame: NSMakeRect(0, 0, 380, 300))
+        self.code_entry_c = .init(frame: NSMakeRect(0, 0, 380, 300))
+        self.password_entry_c = .init(frame: NSMakeRect(0, 0, 380, 300))
+        self.email_recovery_c = .init(frame: NSMakeRect(0, 0, 380, 300))
+        self.awaiting_reset_c = .init(frame: NSMakeRect(0, 0, 380, 300))
+        self.signup_c = .init(frame: NSMakeRect(0, 0, 380, 300))
+        
         self.otherAccountPhoneNumbers = otherAccountPhoneNumbers
         #if !APP_STORE
         updateController = UpdateTabController(sharedContext)
         #endif
         super.init()
-        
-        self.disposable.set(combineLatest(account.postbox.stateView() |> deliverOnMainQueue, appearanceSignal).start(next: { [weak self] view, _ in
-            self?.updateState(state: view.state ?? UnauthorizedAccountState(isTestingEnvironment: account.testingEnvironment, masterDatacenterId: account.masterDatacenterId, contents: .empty))
-        }))
         bar = .init(height: 0)
     }
-
-    var isFirst:Bool = true
     
-    func updateState(state: PostboxCoding?) {
-        if let state = state as? UnauthorizedAccountState {
-            self.state = state.contents
-            self.genericView.updateState(self.state, qrTokenState: self.qrTokenState.state, isLoading: self.isLoading.value, animated: !isFirst)
-        }
-        isFirst = false
-        readyOnce()
-    }
-
     
+
     deinit {
         disposable.dispose()
+        tokenEventsDisposable.dispose()
+        tokenDisposable.dispose()
+        stateDisposable.dispose()
+        exportTokenDisposable.dispose()
         actionDisposable.dispose()
+        localizationDisposable.dispose()
         suggestedLanguageDisposable.dispose()
         proxyDisposable.dispose()
-        exportTokenDisposable.dispose()
-        configurationDisposable.dispose()
+        delayDisposable.dispose()
     }
 
     override func returnKeyAction() -> KeyHandlerResult {
@@ -751,278 +337,142 @@ class AuthController : GenericViewController<AuthHeaderView> {
     }
     
     override func firstResponder() -> NSResponder? {
-        return genericView.exportTokenView ?? genericView.loginView.firstResponder()
+        return self.current?.firstResponder()
     }
-    
+
     override var canBecomeResponder: Bool {
         return true
     }
     
-    private func openProxySettings() {
+    private func cancelOrBack(_ state: State, updateState:@escaping((State) -> State) -> Void) {
+        guard let controller = self.current else {
+            return
+        }
+        let index = self.index(of: controller)
         
-        var pushController:((ViewController)->Void)? = nil
-        
-        let controller = proxyListController(accountManager: sharedContext.accountManager, network: account.network, showUseCalls: false, pushController: {  controller in
-            pushController?(controller)
-        })
-        let navigation:NavigationViewController = NavigationViewController(controller, mainWindow)
-        navigation._frameRect = NSMakeRect(0, 0, 350, 440)
-        navigation.readyOnce()
-        
-        pushController = { [weak navigation] controller in
-            navigation?.push(controller)
+        let discard:()->Void = { [weak self] in
+            guard let window = self?.window, let account = self?.account else {
+                return
+            }
+            confirm(for: window, header: appName, information: strings().loginNewCancelConfirm, okTitle: strings().alertYes, cancelTitle: strings().alertNO, successHandler: { _ in
+                
+                updateState { current in
+                    var current = current
+                    current.state = .empty
+                    current.tokenAvailable = false
+                    current.tokenResult = nil
+                    current.qrEnabled = false
+                    current.error = nil
+                    current.signError = nil
+                    current.emailError = nil
+                    current.passwordError = nil
+                    return current
+                }
+                
+                _ = resetAuthorizationState(account: account, to: .empty).start()
+            })
         }
         
-        showModal(with: navigation, for: mainWindow)
-        
-    }
-    
-    override func viewDidResized(_ size: NSSize) {
-        super.viewDidResized(size)
-        
-        #if !APP_STORE        
-        updateController.frame = NSMakeRect(0, frame.height - 40, frame.width, 40)
-        #endif
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        #if !APP_STORE
-        updateController.frame = NSMakeRect(0, frame.height - 40, frame.width, 40)
-        #endif
-    }
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        #if !APP_STORE
-            addSubview(updateController.view)
-        
-            updateController.frame = NSMakeRect(0, frame.height - 40, frame.width, 40)
-        #endif
-        
-        var arguments: LoginAuthViewArguments?
-        
-        let again:(String)-> Void = { number in
-            arguments?.sendCode(number)
-        }
-        
-        
-        let sharedContext = self.sharedContext
-        var forceHide = true
-        
-      
-        let engine = self.engine
-        
-        var settings:(ProxySettings, ConnectionStatus)? = nil
-        
-        
-        let updateProxyUI:()->Void = { [weak self] in
-            if let settings = settings {
-                self?.genericView.updateProxyPref(settings.0, settings.1, forceHide)
+        if self.otherAccountPhoneNumbers.1.isEmpty {
+            discard()
+        } else {
+            if index <= 2 {
+                _ = sharedContext.accountManager.transaction({ transaction in
+                    transaction.removeAuth()
+                }).start()
+            } else {
+                discard()
             }
         }
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        #if !APP_STORE
+        genericView.updateView = updateController.view
+        #endif
         
-        let openProxySettings:()->Void = { [weak self] in
-            self?.openProxySettings()
-            forceHide = false
-            updateProxyUI()
+        let sharedContext = self.sharedContext
+                        
+        let initialState = State(state: nil, tokenResult: nil, tokenAvailable: true, configuration: .defaultValue, qrEnabled: true)
+        let statePromise = ValuePromise(initialState, ignoreRepeated: true)
+        let stateValue = Atomic(value: initialState)
+        let updateState: ((State) -> State) -> Void = { f in
+            statePromise.set(stateValue.modify (f))
         }
         
-        proxyDisposable.add(combineLatest(proxySettings(accountManager: sharedContext.accountManager) |> deliverOnMainQueue, account.network.connectionStatus |> deliverOnMainQueue).start(next: { pref, connection in
-            settings = (pref, connection)
-            updateProxyUI()
+        self.genericView.back.set(handler: { [weak self] _ in
+            self?.cancelOrBack(stateValue.with { $0 }, updateState: updateState)
+        }, for: .Click)
+        
+        let refreshToken:()->Void = { [weak self] in
+            guard let engine = self?.engine else {
+                return
+            }
+            
+            let available = stateValue.with { $0.tokenAvailable }
+            if available {
+                let tokenSignal: Signal<ExportAuthTransferTokenResult, ExportAuthTransferTokenError> = sharedContext.activeAccounts |> castError(ExportAuthTransferTokenError.self) |> take(1) |> mapToSignal { accounts in
+                    return engine.auth.exportAuthTransferToken(accountManager: sharedContext.accountManager, otherAccountUserIds: accounts.accounts.map { $0.1.peerId.id }, syncContacts: false)
+                }
+                
+                self?.tokenDisposable.set(tokenSignal.start(next: { result in
+                    updateState { current in
+                        var current = current
+                        current.tokenResult = result
+                        return current
+                    }
+                }, error: { error in
+                    updateState { current in
+                        var current = current
+                        current.tokenResult = nil
+                        return current
+                    }
+                }))
+            }
+            
+        }
+        
+        self.tokenEventsDisposable.set((self.account.updateLoginTokenEvents |> deliverOnMainQueue).start(next: { _ in
+            refreshToken()
         }))
         
         
-        
-        let disposable = MetaDisposable()
-        proxyDisposable.add(disposable)
-        
-        
-        let defaultProxyVisibles: [String] = ["RU"]
-        
-        if defaultProxyVisibles.firstIndex(where: {$0 == Locale.current.regionCode}) != nil {
-            forceHide = false
-            updateProxyUI()
+        let engine = self.engine
+        let getCountries = appearanceSignal |> mapToSignal { appearance in
+            engine.localization.getCountriesList(accountManager: sharedContext.accountManager, langCode: appearance.language.baseLanguageCode)
         }
         
+        let signal = combineLatest(queue: .mainQueue(), stateViewValue, unauthorizedConfiguration(accountManager: sharedContext.accountManager) |> take(1), getCountries)
+        let account = self.account
 
         
-        let resetState:()->Void = { [weak self] in
-            guard let `self` = self else {return}
-            _ = resetAuthorizationState(account: self.account, to: .empty).start()
-        }
-        
-        genericView.proxyButton.set(handler: {  _ in
-            if let _ = settings {
-                openProxySettings()
+        self.disposable.set(signal.start(next: { view, configuration, countries in
+            let value = view.state as? UnauthorizedAccountState ?? UnauthorizedAccountState(isTestingEnvironment: account.testingEnvironment, masterDatacenterId: account.masterDatacenterId, contents: .empty)
+            updateState { current in
+                var current = current
+                current.state = value.contents
+                current.configuration = configuration
+                current.qrEnabled = configuration.qr != .disabled
+                current.countries = countries
+                return current
             }
-        }, for: .Click)
+        }))
         
-        arguments = LoginAuthViewArguments(sendCode: { [weak self] phoneNumber in
-            if let strongSelf = self {
-                
-                if let isQrEnabled = strongSelf.genericView.isQrEnabled, isQrEnabled {
-                    strongSelf.refreshQrToken(true)
-                } else {
-                    let logInNumber = formatPhoneNumber(phoneNumber)
-                    for (number, accountId, isTestingEnvironment) in strongSelf.otherAccountPhoneNumbers.1 {
-                        if isTestingEnvironment == strongSelf.account.testingEnvironment && formatPhoneNumber(number) == logInNumber {
-                            confirm(for: mainWindow, information: strings().loginPhoneNumberAlreadyAuthorized, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().loginPhoneNumberAlreadyAuthorizedSwitch, successHandler: { result in
-                                switch result {
-                                case .thrid:
-                                    _ = (sharedContext.accountManager.transaction({ transaction in
-                                        transaction.removeAuth()
-                                    }) |> deliverOnMainQueue).start(completed: {
-                                        sharedContext.switchToAccount(id: accountId, action: nil)
-                                    })
-                                default:
-                                    break
-                                }
-                            })
-                            return
-                        }
-                    }
-                    
-                    
-                    self?.actionDisposable.set((showModalProgress(signal: sendAuthorizationCode(accountManager: sharedContext.accountManager, account: strongSelf.account, phoneNumber: phoneNumber, apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, syncContacts: false)
-                        |> map {Optional($0)}
-                        |> mapError {Optional($0)}
-                        |> timeout(20, queue: Queue.mainQueue(), alternate: .fail(nil))
-                        |> deliverOnMainQueue, for: mainWindow)
-                        |> filter({$0 != nil}) |> map {$0!} |> deliverOnMainQueue).start(next: { [weak strongSelf] account in
-                            strongSelf?.account = account
-                            }, error: { [weak self] error in
-                                if let error = error {
-                                    self?.genericView.loginView.updatePhoneError(error)
-                                } else {
-                                    confirm(for: mainWindow, header: strings().loginConnectionErrorHeader, information: strings().loginConnectionErrorInfo, okTitle: strings().loginConnectionErrorTryAgain, thridTitle: strings().loginConnectionErrorUseProxy, successHandler: { result in
-                                        switch result {
-                                        case .basic:
-                                            again(phoneNumber)
-                                        case .thrid:
-                                            openProxySettings()
-                                        }
-                                    })
-                                }
-                        }))
-                    _ = self?.engine.localization.markSuggestedLocalizationAsSeenInteractively(languageCode: Locale.current.languageCode ?? "en").start()
-                }
-            }
-        },resendCode: { [weak self] in
-            if let window = self?.window {
-                confirm(for: window, information: strings().loginSmsAppErr, cancelTitle: strings().loginSmsAppErrGotoSite, successHandler: { _ in
-                    
-                }, cancelHandler:{
-                    execute(inapp: .external(link: "https://telegram.org", false))
-                })
-
-            }
-//            if let strongSelf = self {
-//                _ = resendAuthorizationCode(account: strongSelf.account).start()
-//            }
-        }, editPhone: {
-            resetState()
-        }, checkCode: { [weak self] code in
-            if let strongSelf = self {
-                _ = (authorizeWithCode(accountManager: sharedContext.accountManager, account: strongSelf.account, code: code, termsOfService: nil, forcedPasswordSetupNotice: { _ in return nil }) |> deliverOnMainQueue ).start(next: { [weak strongSelf] value in
-                    if let strongSelf = strongSelf {
-                        switch value {
-                        case let .signUp(data):
-                            _ = beginSignUp(account: strongSelf.account, data: data).start()
-                        default:
-                            break
-                        }
-                    }
-                }, error: { [weak self] error in
-                    self?.genericView.loginView.updateCodeError(error)
-                })
-            }
-            
-        }, checkPassword: { [weak self] password in
-            if let strongSelf = self {
-                _ = (authorizeWithPassword(accountManager: sharedContext.accountManager, account: strongSelf.account, password: password, syncContacts: false)
-                    |> map { () -> AuthorizationPasswordVerificationError? in
-                        return nil
-                    }
-                    |> `catch` { error -> Signal<AuthorizationPasswordVerificationError?, AuthorizationPasswordVerificationError> in
-                        return .single(error)
-                    }
-                |> mapError {_ in} |> deliverOnMainQueue).start(next: { [weak self] error in
-                    if let error = error {
-                        self?.genericView.loginView.updatePasswordError(error)
-                    }
-                })
-            }
-        
-        }, requestPasswordRecovery: { [weak self] f in
-            guard let `self` = self else {return}
-            
-            _ = showModalProgress(signal: engine.auth.requestTwoStepVerificationPasswordRecoveryCode() |> deliverOnMainQueue, for: mainWindow).start(next: { [weak self] pattern in
-                guard let `self` = self else {return}
-                f(pattern)
-                showModal(with: ForgotUnauthorizedPasswordController(accountManager: sharedContext.accountManager, engine: self.engine, emailPattern: pattern), for: mainWindow)
-            }, error: { error in
-                alert(for: mainWindow, info: strings().unknownError)
-            })
-        }, resetAccount: { [weak self] in
-            guard let `self` = self else {return}
-            confirm(for: mainWindow, information: strings().loginResetAccountDescription, okTitle: strings().loginResetAccount, successHandler: { _ in
-                _ = showModalProgress(signal: performAccountReset(account: self.account) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
-                    alert(for: mainWindow, info: strings().unknownError)
-                })
-            })
-        }, signUp: { [weak self] firstName, lastName, photo in
-            guard let `self` = self else {return}
-            _ = showModalProgress(signal: signUpWithName(accountManager: sharedContext.accountManager, account: self.account, firstName: firstName, lastName: lastName, avatarData: photo != nil ? try? Data(contentsOf: photo!) : nil, avatarVideo: nil, videoStartTimestamp: nil, forcedPasswordSetupNotice: { _ in return nil }) |> deliverOnMainQueue, for: mainWindow).start(error: { error in
-                let text: String
-                switch error {
-                case .limitExceeded:
-                    text = strings().loginFloodWait
-                case .codeExpired:
-                    text = strings().phoneCodeExpired
-                case .invalidFirstName:
-                    text = strings().loginInvalidFirstNameError
-                case .invalidLastName:
-                    text = strings().loginInvalidLastNameError
-                case .generic:
-                    text = strings().unknownError
-                }
-                alert(for: mainWindow, info: text)
-            })
-        }, cancelQrAuth: { [weak self] in
-            self?.cancelQrToken()
-        }, updatePhoneNumberField: { [weak self] updated in
-            if self?.qrType != .disabled {
-                self?.genericView.nextButtonAsForQr(updated.isEmpty)
-            }
-        })
-        genericView.loginView.arguments = arguments
-        genericView.arguments = arguments
-
-        genericView.backButton.set(handler: { _ in
-           resetState()
-        }, for: .Click)
-        
-        
-        genericView.cancelButton.isHidden = otherAccountPhoneNumbers.1.isEmpty
-        
-        genericView.cancelButton.set(handler: { _ in
-            _ = sharedContext.accountManager.transaction({ transaction in
-                transaction.removeAuth()
-            }).start()
-        }, for: .Click)
+        self.stateDisposable.set((statePromise.get() |> filter { $0.state != nil } |> deliverOnMainQueue).start(next: { [weak self] state in
+            self?.updateState(state, refreshToken: refreshToken, updateState: updateState)
+        }))
         
         if otherAccountPhoneNumbers.1.isEmpty {
-            suggestedLanguageDisposable.set((engine.localization.currentlySuggestedLocalization(extractKeys: ["Login.ContinueOnLanguage"]) |> deliverOnMainQueue).start(next: { [weak self] info in
-                if let strongSelf = self, let info = info, info.languageCode != appCurrentLanguage.baseLanguageCode {
-                    
-                    strongSelf.genericView.showLanguageButton(title: info.localizedKey("Login.ContinueOnLanguage"), callback: { [weak strongSelf] in
-                        if let strongSelf = strongSelf {
-                            strongSelf.genericView.hideSwitchButton()
-                            _ = showModalProgress(signal: strongSelf.engine.localization.downloadAndApplyLocalization(accountManager: sharedContext.accountManager, languageCode: info.languageCode), for: mainWindow).start()
-                        }
+            suggestedLanguageDisposable.set((engine.localization.currentlySuggestedLocalization(extractKeys: [languageKey]) |> deliverOnMainQueue).start(next: { [weak self] info in
+                
+                guard let window = self?.window, let engine = self?.engine else {
+                    return
+                }
+                
+                if let info = info, info.languageCode != appCurrentLanguage.baseLanguageCode {
+                    self?.genericView.showLanguage(title: info.localizedKey(languageKey), callback: {
+                        _ = showModalProgress(signal: engine.localization.downloadAndApplyLocalization(accountManager: sharedContext.accountManager, languageCode: info.languageCode), for: window).start()
                     })
                 }
             }))
@@ -1032,115 +482,616 @@ class AuthController : GenericViewController<AuthHeaderView> {
         localizationDisposable.set(appearanceSignal.start(next: { [weak self] _ in
             self?.updateLocalizationAndTheme(theme: theme)
         }))
-        
-        self.tokenEventsDisposable.set((self.account.updateLoginTokenEvents |> deliverOnMainQueue).start(next: { [weak self]  _ in
-            self?.refreshQrToken()
-        }))
-       
 
-        configurationDisposable.set((unauthorizedConfiguration(accountManager: self.sharedContext.accountManager) |> take(1) |> castError(Void.self) |> timeout(25.0, queue: .mainQueue(), alternate: .fail(Void())) |> deliverOnMainQueue).start(next: { [weak self] value in
-            
-            self?.qrType = value.qr
-            self?.genericView.isQrEnabled = value.qr != .disabled
-            switch value.qr {
-            case .disabled:
-                self?.isLoading = (value: false, update: true)
-            case .secondary:
-                self?.isLoading = (value: false, update: true)
-            case .primary:
-                self?.refreshQrToken()
+        var forceHide = true
+        var settings:(ProxySettings, ConnectionStatus)? = nil
+
+        let updateProxy:()->Void = { [weak self] in
+            if let settings = settings {
+                self?.genericView.updateProxy(settings.0, settings.1, forceHide)
             }
-            
-        }, error: { [weak self] in
-            self?.qrType = .disabled
-            self?.isLoading = (value: false, update: true)
+        }
+        
+        let openProxySettings:()->Void = { [weak self] in
+            self?.openProxy()
             forceHide = false
-            updateProxyUI()
+            updateProxy()
+        }
+        
+        proxyDisposable.set(combineLatest(proxySettings(accountManager: sharedContext.accountManager) |> deliverOnMainQueue, account.network.connectionStatus |> deliverOnMainQueue).start(next: { pref, connection in
+            settings = (pref, connection)
+            updateProxy()
         }))
         
+        let delaySignal = unauthorizedConfiguration(accountManager: self.sharedContext.accountManager) |> take(1) |> castError(Void.self) |> timeout(25.0, queue: .mainQueue(), alternate: .fail(Void())) |> deliverOnMainQueue
         
+        delayDisposable.set(delaySignal.start(error: {
+            forceHide = false
+            updateProxy()
+        }))
+
+        genericView.proxyButton.set(handler: {  _ in
+            if let _ = settings {
+                openProxySettings()
+            }
+        }, for: .Click)
+        
+        readyOnce()
+
     }
     
-    private func cancelQrToken() {
-        self.exportTokenDisposable.set(nil)
-        self.tokenEventsDisposable.set(nil)
-        self.qrTokenState = (state: nil, animated: true)
+    private func openProxy() {
+        
+        guard let window = self.window else {
+            return
+        }
+        
+        var pushController:((ViewController)->Void)? = nil
+           
+           let controller = proxyListController(accountManager: sharedContext.accountManager, network: account.network, showUseCalls: false, pushController: {  controller in
+               pushController?(controller)
+           })
+           let navigation:NavigationViewController = NavigationViewController(controller, window)
+           navigation._frameRect = NSMakeRect(0, 0, 350, 440)
+           navigation.readyOnce()
+           
+           pushController = { [weak navigation] controller in
+               navigation?.push(controller)
+           }
+           
+           showModal(with: navigation, for: mainWindow)
+           
+
     }
     
-    private func refreshQrToken(_ showProgress: Bool = false) {
+    
+    private func updateState(_ state: State, refreshToken:@escaping()->Void, updateState:@escaping((State) -> State) -> Void) {
         
         let sharedContext = self.sharedContext
-        let engine = self.engine
+        var controller: ViewController?
         
-        var tokenSignal: Signal<ExportAuthTransferTokenResult, ExportAuthTransferTokenError> = sharedContext.activeAccounts |> castError(ExportAuthTransferTokenError.self) |> take(1) |> mapToSignal { accounts in
-            return engine.auth.exportAuthTransferToken(accountManager: sharedContext.accountManager, otherAccountUserIds: accounts.accounts.map { $0.1.peerId.id }, syncContacts: false)
+        guard let currentState = state.state else {
+            return
         }
-        
-        if showProgress {
-            tokenSignal = showModalProgress(signal: tokenSignal |> take(1), for: mainWindow)
-        }
-        
-        self.exportTokenDisposable.set((tokenSignal
-            |> deliverOnMainQueue).start(next: { [weak self] result in
-                guard let strongSelf = self else {
+                
+        switch currentState {
+        case .empty:
+            if state.tokenAvailable {
+                if let token = state.tokenResult {
+                    switch token {
+                    case let .displayToken(token):
+                        controller = token_c
+                        token_c.update(token, cancel: {
+                            updateState { current in
+                                var current = current
+                                current.tokenAvailable = false
+                                return current
+                            }
+                        })
+                        
+                        let timestamp = Int32(Date().timeIntervalSince1970)
+                        let timeout = max(5, token.validUntil - timestamp)
+                        self.exportTokenDisposable.set((Signal<Never, NoError>.complete()
+                            |> delay(Double(timeout), queue: .mainQueue())).start(completed: refreshToken))
+                    case let .changeAccountAndRetry(account):
+                        controller = token_c
+                        self.exportTokenDisposable.set(nil)
+                        self.account = account
+                        refreshToken()
+                    case let .passwordRequested(account):
+                        self.account = account
+                        self.exportTokenDisposable.set(nil)
+                        self.tokenEventsDisposable.set(nil)
+                        controller = password_entry_c
+                        updateState { current in
+                            var current = current
+                            current.tokenResult = nil
+                            current.tokenAvailable = true
+                            return current
+                        }
+                    case .loggedIn:
+                        self.exportTokenDisposable.set(nil)
+                        self.tokenEventsDisposable.set(nil)
+                    }
+                } else {
+                    controller = token_c
+                    token_c.update(nil, cancel: {
+                        updateState { current in
+                            var current = current
+                            current.tokenAvailable = false
+                            return current
+                        }
+                    })
+                }
+                
+            } else {
+                exportTokenDisposable.set(nil)
+            }
+            if state.tokenAvailable, state.qrEnabled {
+                refreshToken()
+            } else {
+                controller = phone_number_c
+                phone_number_c.update(currentState, countries: state.countries, error: state.error, qrEnabled: state.qrEnabled, takeToken: {
+                    updateState { current in
+                        var current = current
+                        current.tokenAvailable = true
+                        return current
+                    }
+                }, takeNext: { [weak self] value in
+                    self?.sendCode(value, updateState: updateState)
+                })
+            }
+        case let .phoneEntry(countryCode, number):
+            controller = phone_number_c
+            phone_number_c.update(currentState, countries: state.countries, error: state.error, qrEnabled: state.qrEnabled, takeToken: {
+                updateState { current in
+                    var current = current
+                    current.tokenAvailable = true
+                    return current
+                }
+            }, takeNext: { [weak self] value in
+                self?.sendCode(value, updateState: updateState)
+            })
+            phone_number_c.set(number: "\(countryCode)" + number)
+        case let .confirmationCodeEntry(number, type, _, timeout, nextType, _):
+            controller = code_entry_c
+            phone_number_c.set(number: number)
+            code_entry_c.update(locked: state.locked, error: state.codeError, number: number, type: type, timeout: timeout, nextType: nextType, takeEdit: { [weak self] in
+                updateState { current in
+                    var current = current
+                    current.locked = false
+                    current.codeError = nil
+                    return current
+                }
+                if let account = self?.account {
+                    _ = resetAuthorizationState(account: account, to: .empty).start()
+                }
+            }, takeNext: { [weak self] code in
+                guard let account = self?.account else {
+                    return
+                }
+                updateState { current in
+                    var current = current
+                    current.locked = true
+                    return current
+                }
+                
+                let signal = authorizeWithCode(accountManager: sharedContext.accountManager, account: account, code: code, termsOfService: nil, forcedPasswordSetupNotice: { _ in
+                    return nil
+                })
+                |> deliverOnMainQueue
+                
+                _ = signal.start(next: { value in
+                    updateState { current in
+                        var current = current
+                        current.locked = false
+                        current.codeError = nil
+                        return current
+                    }
+                    switch value {
+                    case let .signUp(data):
+                        _ = beginSignUp(account: account, data: data).start()
+                    default:
+                        break
+                    }
+                }, error: { [weak self] error in
+                    guard let account = self?.account else {
+                        return
+                    }
+                    updateState { current in
+                        var current = current
+                        if case .codeExpired = error {
+                            current.codeError = nil
+                            current.error = .timeout
+                        } else {
+                            current.codeError = error
+                            current.error = nil
+                        }
+                        current.locked = false
+                        return current
+                    }
+                    switch error {
+                    case .codeExpired:
+                        _ = resetAuthorizationState(account: account, to: .empty).start()
+                    default:
+                        break
+                    }
+                })
+            }, takeResend: { [weak self] in
+                guard let window = self?.window else {
+                    return
+                }
+                confirm(for: window, information: L10n.loginSmsAppErr, cancelTitle: L10n.loginSmsAppErrGotoSite, successHandler: { _ in
+                                   
+                }, cancelHandler:{
+                    execute(inapp: .external(link: "https://telegram.org", false))
+                })
+            }, takeError: {
+                updateState { current in
+                    var current = current
+                    current.codeError = nil
+                    return current
+                }
+            })
+        case let .passwordEntry(hint, number, _, suggestReset, _):
+            controller = password_entry_c
+            if let number = number {
+                phone_number_c.set(number: number)
+            }
+            password_entry_c.update(locked: state.locked, error: state.passwordError, hint: hint, takeNext: { [weak self] password in
+                guard let account = self?.account else {
+                    return
+                }
+                updateState { current in
+                    var current = current
+                    current.locked = true
+                    current.error = nil
+                    return current
+                }
+                
+                let signal = authorizeWithPassword(accountManager: sharedContext.accountManager, account: account, password: password, syncContacts: false)
+                    |> map { () -> AuthorizationPasswordVerificationError? in
+                         return nil
+                    }
+                    |> `catch` { error -> Signal<AuthorizationPasswordVerificationError?, AuthorizationPasswordVerificationError> in
+                         return .single(error)
+                    }
+                    |> mapError {_ in }
+                    |> deliverOnMainQueue
+                
+                
+                _ = signal.start(next: { error in
+                    updateState { current in
+                        var current = current
+                        current.locked = false
+                        current.passwordError = error
+                        return current
+                    }
+                })
+
+                
+            }, takeError: {
+                updateState { current in
+                    var current = current
+                    current.locked = false
+                    current.passwordError = nil
+                    return current
+                }
+            }, takeForgot: { [weak self] reset, f in
+                guard let window = self?.window, let engine = self?.engine else {
+                    return
+                }
+                if reset {
+                    let info = L10n.loginResetAccountDescription
+                    let ok = L10n.loginResetAccount
+                    confirm(for: window, information: info, okTitle: ok, successHandler: { [weak self] _ in
+                        guard let account = self?.account else {
+                            return
+                        }
+                        _ = showModalProgress(signal: performAccountReset(account: account), for: window).start(error: { error in
+                            alert(for: window, info: L10n.unknownError)
+                        })
+                    })
+
+                } else {
+                    updateState { current in
+                        var current = current
+                        current.locked = true
+                        return current
+                    }
+                    let signal = engine.auth.requestTwoStepVerificationPasswordRecoveryCode() |> deliverOnMainQueue
+                    _ = signal.start(next: { pattern in
+                        
+                        updateState { current in
+                            var current = current
+                            current.locked = false
+                            current.state = .passwordRecovery(hint: hint, number: number, code: nil, emailPattern: pattern, syncContacts: false)
+                            return current
+                        }
+                        
+                    }, error: { error in
+                        alert(for: window, info: L10n.loginRecoveryMailFailed)
+                        updateState { current in
+                            var current = current
+                            current.locked = false
+                            return current
+                        }
+                        f()
+                    })
+                }
+            })
+        case let .awaitingAccountReset(protectedUntil, number, _):
+            controller = awaiting_reset_c
+            awaiting_reset_c.update(locked: state.locked, protectedUntil: protectedUntil, number: number, takeReset: { [weak self] in
+                guard let window = self?.window, let account = self?.account else {
+                    return
+                }
+                confirm(for: window, information: L10n.loginResetAccountDescription, okTitle: L10n.loginResetAccount, successHandler: { _ in
+                    _ = showModalProgress(signal: performAccountReset(account: account) |> deliverOnMainQueue, for: window).start(error: { error in
+                        alert(for: window, info: L10n.unknownError)
+                    })
+                })
+
+            })
+        case let .passwordRecovery(_, _, _, pattern, _):
+            controller = email_recovery_c
+            email_recovery_c.update(locked: state.locked, error: state.emailError, pattern: pattern, takeNext: { [weak self] value in
+                guard let engine = self?.engine else {
+                    return
+                }
+                updateState { current in
+                    var current = current
+                    current.locked = true
+                    current.emailError = nil
+                    return current
+                }
+                _ = engine.auth.performPasswordRecovery(code: value, updatedPassword: .none).start(next: { data in
+                    let auth = loginWithRecoveredAccountData(accountManager: sharedContext.accountManager, account: engine.account, recoveredAccountData: data, syncContacts: false) |> deliverOnMainQueue
+                    
+                    _ = auth.start(completed: {
+                        updateState { current in
+                            var current = current
+                            current.locked = false
+                            return current
+                        }
+                    })
+                    
+                }, error: { error in
+                    updateState { current in
+                        var current = current
+                        current.locked = false
+                        current.emailError = error
+                        return current
+                    }
+                })
+            }, takeError: {
+                updateState { current in
+                    var current = current
+                    current.emailError = nil
+                    return current
+                }
+            }, takeReset: { [weak self] in
+                guard let window = self?.window, let engine = self?.engine else {
                     return
                 }
                 
-                switch result {
-                case let .displayToken(token):
-                    var tokenString = token.value.base64EncodedString()
-                    tokenString = tokenString.replacingOccurrences(of: "+", with: "-")
-                    tokenString = tokenString.replacingOccurrences(of: "/", with: "_")
-                    let urlString = "tg://login?token=\(tokenString)"
-                    let _ = (qrCode(string: urlString, color: theme.colors.text, backgroundColor: theme.colors.background, icon: .custom(theme.icons.login_qr_empty_cap))
-                        |> deliverOnMainQueue).start(next: { _, generate in
-                            guard let strongSelf = self else {
-                                return
-                            }
-                            
-                            let context = generate(TransformImageArguments(corners: ImageCorners(), imageSize: CGSize(width: 280, height: 280), boundingSize: CGSize(width: 280, height: 280), intrinsicInsets: NSEdgeInsets(), scale: 2.0))
-                            if let image = context?.generateImage() {
-                                strongSelf.qrTokenState = (state: .qr(image), animated: !strongSelf.isLoading.value)
-                                strongSelf.isLoading = (value: false, update: true)
-                            }
-                        })
+                let signal = performAccountReset(account: engine.account) |> deliverOnMainQueue
+
+                confirm(for: window, header: appName, information: strings().loginNewEmailAlert, okTitle: strings().loginNewEmailAlertReset, cancelTitle: strings().alertCancel, successHandler: { _ in
                     
-                    let timestamp = Int32(Date().timeIntervalSince1970)
-                    let timeout = max(5, token.validUntil - timestamp)
-                    strongSelf.exportTokenDisposable.set((Signal<Never, NoError>.complete()
-                        |> delay(Double(timeout), queue: .mainQueue())).start(completed: {
-                            guard let strongSelf = self else {
-                                return
-                            }
-                            strongSelf.refreshQrToken()
-                        }))
-                case let .passwordRequested(account):
-                    strongSelf.account = account
-                    strongSelf.genericView.isQrEnabled = false
-                    strongSelf.exportTokenDisposable.set(nil)
-                    strongSelf.tokenEventsDisposable.set(nil)
-                    strongSelf.qrTokenState = (state: nil, animated: true)
-                case let .changeAccountAndRetry(account):
-                    strongSelf.exportTokenDisposable.set(nil)
-                    strongSelf.account = account
-                    strongSelf.tokenEventsDisposable.set((account.updateLoginTokenEvents
-                        |> deliverOnMainQueue).start(next: { _ in
-                            self?.refreshQrToken()
-                        }))
-                    strongSelf.refreshQrToken()
-                    strongSelf.qrTokenState = (state: nil, animated: true)
-                case .loggedIn:
-                    strongSelf.exportTokenDisposable.set(nil)
-                    strongSelf.qrTokenState = (state: nil, animated: true)
+                    updateState { current in
+                        var current = current
+                        current.locked = true
+                        return current
+                    }
+                    _ = signal.start(error: { error in
+                        updateState { current in
+                            var current = current
+                            current.locked = false
+                            return current
+                        }
+                        alert(for: window, info: strings().unknownError)
+                    }, completed: {
+                        updateState { current in
+                            var current = current
+                            current.locked = false
+                            return current
+                        }
+                    })
+                })
+            })
+        case let .signUp(_, _, firstName, lastName, _, _):
+            controller = signup_c
+            signup_c.update(state.locked, error: state.signError, firstName: firstName, lastName: lastName, takeNext: { firstName, lastName, photo in
+                
+                let photoData: Data?
+                if let photo = photo {
+                    photoData = try? Data(contentsOf: URL(fileURLWithPath: photo))
+                } else {
+                    photoData = nil
                 }
-            }))
+                updateState { current in
+                    var current = current
+                    current.locked = true
+                    return current
+                }
+                
+                let signal = signUpWithName(accountManager: sharedContext.accountManager, account: self.account, firstName: firstName, lastName: lastName, avatarData: photoData, avatarVideo: nil, videoStartTimestamp: nil, forcedPasswordSetupNotice: { _ in
+                    return nil
+                }) |> deliverOnMainQueue
+                
+                _ = signal.start(error: { error in
+                    updateState { current in
+                        var current = current
+                        current.signError = error
+                        current.locked = false
+                        return current
+                    }
+                }, completed: {
+                    updateState { current in
+                        var current = current
+                        current.signError = nil
+                        current.locked = false
+                        return current
+                    }
+                })
+
+            }, takeTerms: {
+                
+            })
+        }
+        
+        if let controller = controller {
+            set(controller, animated: true)
+        }
+    }
+    
+    private func sendCode(_ phoneNumber: String, updateState:@escaping((State) -> State) -> Void) {
+        guard let window = self.window else {
+            return
+        }
+        let sharedContext = self.sharedContext
+        let logInNumber = formatPhoneNumber(phoneNumber)
+        for (number, accountId, isTestingEnvironment) in self.otherAccountPhoneNumbers.1 {
+            if isTestingEnvironment == self.account.testingEnvironment && formatPhoneNumber(number) == logInNumber {
+                confirm(for: window, information: strings().loginPhoneNumberAlreadyAuthorized, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().loginPhoneNumberAlreadyAuthorizedSwitch, successHandler: { result in
+                    switch result {
+                    case .thrid:
+                        _ = (sharedContext.accountManager.transaction({ transaction in
+                            transaction.removeAuth()
+                        }) |> deliverOnMainQueue).start(completed: {
+                            sharedContext.switchToAccount(id: accountId, action: nil)
+                        })
+                    default:
+                        break
+                    }
+                })
+                return
+            }
+        }
+        
+        updateState { current in
+            var current = current
+            current.locked = true
+            return current
+        }
+
+        let signal = sendAuthorizationCode(accountManager: sharedContext.accountManager, account: self.account, phoneNumber: phoneNumber, apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, syncContacts: false)
+                                       |> map(Optional.init)
+                                       |> mapError(Optional.init)
+                                       |> timeout(20, queue: Queue.mainQueue(), alternate: .fail(nil))
+                                       |> filter { $0 != nil }
+                                       |> map { $0! }
+                                       |> deliverOnMainQueue
+        
+
+        self.actionDisposable.set(signal.start(next: { [weak self] account in
+            updateState { current in
+                var current = current
+                current.error = nil
+                current.locked = false
+                return current
+            }
+            self?.account = account
+        }, error: { [weak self] error in
+            if let error = error {
+                updateState { current in
+                    var current = current
+                    current.error = error
+                    current.locked = false
+                    return current
+                }
+            } else {
+                confirm(for: window, header: strings().loginConnectionErrorHeader, information: strings().loginConnectionErrorInfo, okTitle: strings().loginConnectionErrorTryAgain, thridTitle: strings().loginConnectionErrorUseProxy, successHandler: { [weak self] result in
+                    switch result {
+                    case .basic:
+                        self?.sendCode(phoneNumber, updateState: updateState)
+                    case .thrid:
+                        break
+                    }
+                })
+            }
+        }))
+        _ = self.engine.localization.markSuggestedLocalizationAsSeenInteractively(languageCode: Locale.current.languageCode ?? "en").start()
+
+    }
+    
+    func index(of controller: ViewController) -> Int {
+        if controller == loading_c {
+            return 0
+        } else if controller == token_c {
+            return 1
+        } else if controller == phone_number_c {
+            return 2
+        } else if controller == code_entry_c {
+            return 3
+        } else if controller == password_entry_c {
+            return 4
+        } else if controller == email_recovery_c {
+            return 5
+        } else if controller == awaiting_reset_c {
+            return 6
+        } else if controller == signup_c {
+            return 7
+        }
+        return 8
+    }
+    
+    private func set(_ controller: ViewController, animated: Bool) {
+        if self.current != controller {
+            let previous = self.current
+
+            let isNext: Bool
+            if let previous = previous {
+                let prevIndex = index(of: previous)
+                let newIndex = index(of: controller)
+                isNext = newIndex > prevIndex
+            } else {
+                isNext = true
+            }
+            
+            self.genericView.updateBack(otherAccountPhoneNumbers.1.isEmpty ? index(of: controller) > 2 : false, animated: animated)
+            
+            self.genericView.hideLanguage()
+            
+            controller.viewWillAppear(animated)
+            previous?.viewWillDisappear(animated)
+            let window = self.window
+           
+            controller.frame = self.view.focus(NSMakeSize(controller.frame.width, self.frame.height))
+            genericView.addView(controller.view)
+            if animated {
+                
+                if previous == code_entry_c || previous == phone_number_c || controller == code_entry_c || controller == phone_number_c {
+                    
+                }
+                
+                controller.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, completion: { [weak controller, weak window] completed in
+                    if completed {
+                        controller?.viewDidAppear(animated)
+                        _ = window?.makeFirstResponder(controller?.firstResponder())
+                    }
+                })
+                
+                controller.view.layer?.animateScaleSpring(from: 0.7, to: 1.0, duration: 0.3, bounce: false)
+                controller.view.layer?.animatePosition(from: NSMakePoint(controller.frame.minX, controller.frame.minY + (isNext ? 20 : -20)), to: controller.frame.origin, duration: 0.3, timingFunction: .spring)
+
+                
+            } else {
+                controller.viewDidAppear(animated)
+                _ = window?.makeFirstResponder(controller.firstResponder())
+                previous?.viewDidDisappear(animated)
+            }
+            if let previous = previous {
+                performSubviewRemoval(previous.view, animated: animated, checkCompletion: true, completed: { [weak previous] completed in
+                    if completed {
+                        previous?.viewDidDisappear(animated)
+                    }
+                })
+            }
+            self.current = controller
+        }
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
+        
+        loading_c.updateLocalizationAndTheme(theme: theme)
+        token_c.updateLocalizationAndTheme(theme: theme)
+        phone_number_c.updateLocalizationAndTheme(theme: theme)
+        code_entry_c.updateLocalizationAndTheme(theme: theme)
+        password_entry_c.updateLocalizationAndTheme(theme: theme)
+        
         #if !APP_STORE
         updateController.updateLocalizationAndTheme(theme: theme)
         #endif
+    }
+    override func viewDidResized(_ size: NSSize) {
+        super.viewDidResized(size)
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
     }
     
 }

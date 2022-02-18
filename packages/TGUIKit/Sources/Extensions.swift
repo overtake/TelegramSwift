@@ -1869,10 +1869,10 @@ public func arc4random64() -> Int64 {
 }
 
 
-public func performSubviewRemoval(_ view: NSView, animated: Bool, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeInEaseOut, checkCompletion: Bool = false, scale: Bool = false, completed:(()->Void)? = nil) {
+public func performSubviewRemoval(_ view: NSView, animated: Bool, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeInEaseOut, checkCompletion: Bool = false, scale: Bool = false, completed:((Bool)->Void)? = nil) {
     if animated {
         view.layer?.animateAlpha(from: 1, to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak view] finish in
-            completed?()
+            completed?(finish)
             if checkCompletion {
                 if finish {
                     view?.removeFromSuperview()

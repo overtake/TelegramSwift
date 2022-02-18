@@ -245,12 +245,12 @@ open class Control: View {
                     if !newValue {
                         super.isHidden = newValue
                     }
-                    self.layer?.opacity = newValue ? 0.0 : 1.0
-                    self.layer?.animateAlpha(from: newValue ? 1.0 : 0.0, to: newValue ? 0.0 : 1.0, duration: 0.2, completion:{[weak self] (completed) in
+                    self.change(opacity: newValue ? 1.0 : 0.0, animated: true, completion: { [weak self] (completed) in
                         if completed {
                             self?.updateHiddenState(newValue)
                         }
                     })
+                    
                 } else {
                     updateHiddenState(newValue)
                 }

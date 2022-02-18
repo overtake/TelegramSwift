@@ -5503,20 +5503,88 @@ public final class L10n {
   public static var loginHeaderPassword: String  { return L10n.tr("Localizable", "Login.Header.Password") }
   /// Sign Up
   public static var loginHeaderSignUp: String  { return L10n.tr("Localizable", "Login.Header.SignUp") }
+  /// Your phone was banned.
+  public static var loginNewPhoneBannedError: String  { return L10n.tr("Localizable", "Login.New.PhoneBannedError") }
+  /// Please confirm your country code and enter your phone number.
+  public static var loginNewPhoneNumber: String  { return L10n.tr("Localizable", "Login.New.PhoneNumber") }
+  /// Are you sure you want to cancel log in?
+  public static var loginNewCancelConfirm: String  { return L10n.tr("Localizable", "Login.New.Cancel.Confirm") }
+  /// We’ve just called\non your phone **%@** · [Edit]()
+  public static func loginNewCodeCallInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Login.New.Code.CallInfo", p1)
+  }
+  /// We’ve sent the code to the Telegram app\nfor **%@** on your device · [Edit]()
+  public static func loginNewCodeCodeInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Login.New.Code.CodeInfo", p1)
+  }
+  /// Check your Telegram messages
+  public static var loginNewCodeEnterCode: String  { return L10n.tr("Localizable", "Login.New.Code.EnterCode") }
+  /// Enter Code
+  public static var loginNewCodeEnterSms: String  { return L10n.tr("Localizable", "Login.New.Code.EnterSms") }
+  /// We’ve sent an SMS with an activation code\non your phone **%@** · [Edit]()
+  public static func loginNewCodeSmsInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Login.New.Code.SmsInfo", p1)
+  }
+  /// Your remaining options are either to remember your password or to reset your account.
+  public static var loginNewEmailAlert: String  { return L10n.tr("Localizable", "Login.New.Email.Alert") }
+  /// Unable to access [%@]()?
+  public static func loginNewEmailFooter(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Login.New.Email.Footer", p1)
+  }
+  /// Email code
+  public static var loginNewEmailHeader: String  { return L10n.tr("Localizable", "Login.New.Email.Header") }
+  /// Please check your email and enter the 6-digit code we’ve sent there to deactivate your cloud password.
+  public static var loginNewEmailInfo: String  { return L10n.tr("Localizable", "Login.New.Email.Info") }
+  /// Reset Account
+  public static var loginNewEmailAlertReset: String  { return L10n.tr("Localizable", "Login.New.Email.Alert.Reset") }
+  /// You have two-step verification enabled, so your account is protected with an additional password.
+  public static var loginNewPasswordInfo: String  { return L10n.tr("Localizable", "Login.New.Password.Info") }
+  /// Your Password
+  public static var loginNewPasswordLabel: String  { return L10n.tr("Localizable", "Login.New.Password.Label") }
+  /// Enter Password
+  public static var loginNewPasswordPlaceholder: String  { return L10n.tr("Localizable", "Login.New.Password.Placeholder") }
+  /// By signing up, you agree to the [Terms of Service]()
+  public static var loginNewRegisterFooter: String  { return L10n.tr("Localizable", "Login.New.Register.Footer") }
+  /// Profile Info
+  public static var loginNewRegisterHeader: String  { return L10n.tr("Localizable", "Login.New.Register.Header") }
+  /// Enter your name and add a profile picture
+  public static var loginNewRegisterInfo: String  { return L10n.tr("Localizable", "Login.New.Register.Info") }
+  /// Sign Up
+  public static var loginNewRegisterNext: String  { return L10n.tr("Localizable", "Login.New.Register.Next") }
+  /// Remove
+  public static var loginNewRegisterRemove: String  { return L10n.tr("Localizable", "Login.New.Register.Remove") }
+  /// Select
+  public static var loginNewRegisterSelect: String  { return L10n.tr("Localizable", "Login.New.Register.Select") }
+  /// You can reset your account right now.
+  public static var loginNewResetAble: String  { return L10n.tr("Localizable", "Login.New.Reset.Able") }
+  /// Reset
+  public static var loginNewResetButton: String  { return L10n.tr("Localizable", "Login.New.Reset.Button") }
+  /// Cancel Reset
+  public static var loginNewResetCancelReset: String  { return L10n.tr("Localizable", "Login.New.Reset.CancelReset") }
+  /// Reset Account
+  public static var loginNewResetHeader: String  { return L10n.tr("Localizable", "Login.New.Reset.Header") }
+  /// Since the account **%@** is active and protected by a password, it will be deleted in 1 week. This delay is required for security purposes.\n\n%@
+  public static func loginNewResetInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Login.New.Reset.Info", p1, p2)
+  }
+  /// You'll be able to reset your account in:
+  public static var loginNewResetWhen: String  { return L10n.tr("Localizable", "Login.New.Reset.When") }
+  /// You'll be able to reset your account in:
+  public static var loginNewResetWillAble: String  { return L10n.tr("Localizable", "Login.New.Reset.WillAble") }
   /// Switch
   public static var loginPhoneNumberAlreadyAuthorizedSwitch: String  { return L10n.tr("Localizable", "Login.PhoneNumberAlreadyAuthorized.Switch") }
   /// Log in by phone Number
   public static var loginQRCancel: String  { return L10n.tr("Localizable", "Login.QR.Cancel") }
-  /// Open Telegram on your phone
-  public static var loginQRHelp1: String  { return L10n.tr("Localizable", "Login.QR.Help1") }
-  /// Go to **Settings** > **Devices** > **Scan QR**
-  public static var loginQRHelp2: String  { return L10n.tr("Localizable", "Login.QR.Help2") }
-  /// Point your phone at this screen to confirm login
-  public static var loginQRHelp3: String  { return L10n.tr("Localizable", "Login.QR.Help3") }
   /// Log in by QR Code
   public static var loginQRLogin: String  { return L10n.tr("Localizable", "Login.QR.Login") }
   /// Log in to Telegram by QR Code
   public static var loginQRTitle: String  { return L10n.tr("Localizable", "Login.QR.Title") }
+  /// Open Telegram on your phone
+  public static var loginQR1Help1: String  { return L10n.tr("Localizable", "Login.QR1.Help1") }
+  /// Go to **Settings** → **Devices** → **Scan QR**
+  public static var loginQR1Help2: String  { return L10n.tr("Localizable", "Login.QR1.Help2") }
+  /// Point your phone at this screen to confirm login
+  public static var loginQR1Help3: String  { return L10n.tr("Localizable", "Login.QR1.Help3") }
   /// Enter your name and add a profile picture.
   public static var loginRegisterDesc: String  { return L10n.tr("Localizable", "Login.Register.Desc") }
   /// add\nphoto

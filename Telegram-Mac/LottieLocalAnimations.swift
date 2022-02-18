@@ -78,6 +78,10 @@ enum LocalAnimatedSticker : String {
     case request_join_link
     case thumbsup
     case zoom
+    case code_note
+    case email_recovery
+    case qrcode_matrix
+    case login_airplane
     
     case device_android
     case device_chrome

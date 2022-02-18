@@ -30,7 +30,7 @@ class TextLayerExt: CATextLayer {
 }
 
 
-public class TitleButton: ImageButton {
+open class TitleButton: ImageButton {
 
     private var text:TextLayerExt = TextLayerExt()
     

@@ -126,7 +126,7 @@ class ChangePhoneNumberContainerView : View, NSTextFieldDelegate {
         case .timeout:
             text = "timeout"
         }
-        errorLabel.state.set(.single(.error(text)))
+        errorLabel.state.set(.error(text))
     }
     
     func update(countryCode: Int32, number: String) {
