@@ -484,7 +484,6 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
             }, completed: { [weak self] in
                 self?.arguments?.resendCode()
         }))
-        
     }
     
     func clean() {
@@ -611,7 +610,7 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         case .codeExpired:
             textError = strings().phoneCodeExpired
         }
-        errorLabel.state.set(.single(.error(textError)))
+        errorLabel.state.set(.error(textError))
         codeText.shake()
     }
     
@@ -625,18 +624,18 @@ private class InputCodeContainerView : View, NSTextFieldDelegate {
         case .generic:
             text = "undefined error"
         }
-        errorLabel.state.set(.single(.error(text)))
+        errorLabel.state.set(.error(text))
         inputPassword.input.shake()
     }
     
    
     
     func clearError() {
-        errorLabel.state.set(.single(.normal))
+        errorLabel.state.set(.normal)
     }
     
     func showPasswordInput(_ hint:String, _ number:String, _ code:String, animated: Bool) {
-        errorLabel.state.set(.single(.normal))
+        errorLabel.state.set(.normal)
         self.passwordEnabled = true
         
         self.codeText.isHidden = code.isEmpty
@@ -825,7 +824,7 @@ private class PhoneNumberContainerView : View, NSTextFieldDelegate {
         case .timeout:
             text = "timeout"
         }
-        errorLabel.state.set(.single(.error(text)))
+        errorLabel.state.set(.error(text))
     }
     
     func update(countryCode: Int32, number: String) {
@@ -1225,7 +1224,7 @@ class LoginAuthInfoView : View {
         switch state {
         case let .phoneEntry(countryCode, phoneNumber):
             phoneNumberContainer.updateLocalizationAndTheme(theme: theme)
-            phoneNumberContainer.errorLabel.state.set(.single(.normal))
+            phoneNumberContainer.errorLabel.state.set(.normal)
             phoneNumberContainer.update(countryCode: countryCode, number: phoneNumber)
             phoneNumberContainer.isHidden = false
             

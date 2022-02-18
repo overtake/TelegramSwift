@@ -18,7 +18,7 @@ public enum QRLoginType : String {
     case secondary = "secondary"
     case disabled = "disabled"
 }
-public struct UnauthorizedConfiguration {
+public struct UnauthorizedConfiguration : Equatable {
     public static var defaultValue: UnauthorizedConfiguration {
         return UnauthorizedConfiguration(qr: .disabled)
     }

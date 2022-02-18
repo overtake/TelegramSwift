@@ -1130,7 +1130,7 @@ class PhoneCallWindowController {
                         self?.session.setToRemovableState()
                     }
                 default:
-                    self?.session.hangUpCurrentCall().start()
+                    _ = self?.session.hangUpCurrentCall().start()
                 }
             } else {
                 self?.session.setToRemovableState()
@@ -1411,18 +1411,10 @@ func closeCall(minimisize: Bool = false) {
             if controller.window.isFullScreen {
                 controller.window.toggleFullScreen(nil)
                 delay(0.8, closure: {
-                    NSAnimationContext.runAnimationGroup({ ctx in
-                        controller.window.animator().alphaValue = 0
-                    }, completionHandler: {
-                        controller.window.orderOut(nil)
-                    })
-                })
-            } else {
-                NSAnimationContext.runAnimationGroup({ ctx in
-                    controller.window.animator().alphaValue = 0
-                }, completionHandler: {
                     controller.window.orderOut(nil)
                 })
+            } else {
+                controller.window.orderOut(nil)
             }
         }
         return nil

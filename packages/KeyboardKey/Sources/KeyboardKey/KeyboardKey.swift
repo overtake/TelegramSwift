@@ -99,4 +99,31 @@ public enum KeyboardKey : UInt16  {
     public var isFlagKey: Bool {
         return self == .Shift || self == .CapsLock || self == .Command || self == .Option || self == .Control || self == .RightShift || self == .RightOption || self == .RightControl || self == .Function
     }
+    
+    public var number: UInt16? {
+        switch self {
+        case .Zero, .Keypad0:
+            return 0
+        case .One, .Keypad1:
+            return 1
+        case .Two, .Keypad2:
+            return 2
+        case .Three, .Keypad3:
+            return 3
+        case .Four, .Keypad4:
+            return 4
+        case .Five, .Keypad5:
+            return 5
+        case .Six, .Keypad6:
+            return 6
+        case .Seven, .Keypad7:
+            return 7
+        case .Eight, .Keypad8:
+            return 8
+        case .Nine, .Keypad9:
+            return 9
+        default:
+            return nil
+        }
+    }
 }

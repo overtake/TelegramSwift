@@ -44,18 +44,14 @@ final class UnauthorizedApplicationContext {
 
         
         window.maxSize = NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude)
-        window.minSize = NSMakeSize(380, 500)
-        
+        window.minSize = NSMakeSize(380, 550)
         
         updatesDisposable.add(managedAppConfigurationUpdates(accountManager: sharedContext.accountManager, network: account.network).start())
+                        
         
-        if !window.initFromSaver {
-            window.setFrame(NSMakeRect(0, 0, 800, 650), display: true)
-            window.center()
-        }
-        
-        if window.frame.height < window.minSize.height {
+        if window.frame.height < window.minSize.height || window.frame.width < window.minSize.width {
             window.setFrame(NSMakeRect(window.frame.minX, window.frame.minY, window.minSize.width, window.minSize.height), display: true)
+            window.center()
         }
         
         self.account = account
@@ -198,6 +194,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             window.center()
         }
         
+        window.maxSize = NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude)
+        window.minSize = NSMakeSize(380, 550)
+
         
         context.account.importableContacts.set(.single([:]))
         
@@ -766,7 +765,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     
     
     private func updateMinMaxWindowSize(animated: Bool) {
-        window.maxSize = NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude)
         var width: CGFloat = 380
         if leftSidebarController != nil {
             width += leftSidebarWidth
@@ -774,7 +772,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         if context.sharedContext.layout == .minimisize {
             width += 70
         }
-        window.minSize = NSMakeSize(width, 500)
+        window.minSize = NSMakeSize(width, 550)
         
         if window.frame.width < window.minSize.width {
             window.setFrame(NSMakeRect(max(0, window.frame.minX - (window.minSize.width - window.frame.width)), window.frame.minY, window.minSize.width, window.frame.height), display: true, animate: false)

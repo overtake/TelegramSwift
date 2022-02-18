@@ -295,7 +295,7 @@ final class MenuView: View, TableViewDelegate {
     
     func updateScroll() {
         if let item = tableView.selectedItem() {
-            self.tableView.scroll(to: .top(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0))
+            self.tableView.scroll(to: .top(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: -2))
         }
     }
     
@@ -527,7 +527,23 @@ final class AppMenuController : NSObject  {
         var found: AppMenuBasicItem?
         current.tableView.enumerateItems(with: { item in
             if let item = item as? AppMenuBasicItem {
-                if item.searchable.lowercased().hasPrefix(query.lowercased()) {
+                
+                let searchText = item.searchable.lowercased().unicodeScalars
+                    .filter { value in
+                        if #available(macOS 10.12.2, *) {
+                            if !value.properties.isEmojiPresentation {
+                                return true
+                            } else {
+                                return false
+                            }
+                        } else {
+                            return true
+                        }
+                    }
+                    .reduce("") { $0 + String($1) }
+                    .trimmed
+                                
+                if searchText.hasPrefix(query.lowercased()) {
                     found = item
                     return false
                 }

@@ -27,14 +27,21 @@ final class AppMenuAnimatedImage : LottiePlayerView, AppMenuItemImageDrawable {
     
     private let sticker: LocalAnimatedSticker
     private let item: ContextMenuItem
-    init(_ sticker: LocalAnimatedSticker, _ color: NSColor, _ item: ContextMenuItem) {
+    init(_ sticker: LocalAnimatedSticker, _ color: NSColor?, _ item: ContextMenuItem) {
         self.sticker = sticker
         self.item = item
         super.init(frame: NSMakeRect(0, 0, 18, 18))
         
         if let data = sticker.data {
             
-            let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey.init(key: .bundle(self.sticker.rawValue), size: frame.size), type: .lottie, cachePurpose: .none, playPolicy: .framesCount(1), maximumFps: 60, colors: [.init(keyPath: "", color: color)], metalSupport: false)
+            var colors:[LottieColor] = []
+            if let color = color {
+                colors = [.init(keyPath: "", color: color)]
+            } else {
+                colors = []
+            }
+            
+            let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey.init(key: .bundle(self.sticker.rawValue), size: frame.size), type: .lottie, cachePurpose: .none, playPolicy: .framesCount(1), maximumFps: 60, colors: colors, metalSupport: false)
             
             self.set(animation, reset: true, saveContext: false, animated: false)
 
