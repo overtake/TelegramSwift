@@ -195,7 +195,6 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
         
         genericView.set(background: theme.colors.grayForeground, for: .Normal)
         genericView.isHidden = true
-        genericView.hideAnimated = true
         
         disposable.set((appUpdateStateSignal |> deliverOnMainQueue).start(next: { [weak self] state in
             switch state.loadingState {
