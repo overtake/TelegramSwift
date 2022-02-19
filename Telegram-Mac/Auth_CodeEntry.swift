@@ -328,6 +328,7 @@ final class Auth_CodeEntryView: View {
 
     func playAnimation() {
         header.playAnimation()
+        control.moveToStart()
     }
     
     func firstResponder() -> NSResponder? {

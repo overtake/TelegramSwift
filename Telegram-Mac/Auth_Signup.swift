@@ -21,7 +21,7 @@ final class Auth_SignupHeader : View {
     private let header: TextView = TextView()
     private let desc: TextView = TextView()
     
-    private var selectedPath: String? {
+    private(set) var selectedPath: String? {
         didSet {
             updateLocalizationAndTheme(theme: theme)
         }
@@ -267,7 +267,7 @@ final class Auth_SignupView : View {
     }
     
     private func invoke() {
-        
+        self.takeNext?(self.input.readyValue.0, self.input.readyValue.1, self.header.selectedPath)
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -312,9 +312,8 @@ final class Auth_SignupView : View {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func update(_ locked: Bool, error: SignUpError?, firstName: String, lastName: String, takeNext: @escaping(String, String, String?)->Void, takeTerms:@escaping()->Void) {
+    func update(_ locked: Bool, error: SignUpError?, takeNext: @escaping(String, String, String?)->Void, takeTerms:@escaping()->Void) {
         nextView.updateLocked(locked, string: strings().loginNewRegisterNext)
-        self.input.set(firstName: firstName, lastName: lastName)
         self.takeNext = takeNext
         self.takeTerms = takeTerms
         
@@ -357,8 +356,8 @@ final class Auth_SignupController: GenericViewController<Auth_SignupView> {
         readyOnce()
     }
     
-    func update(_ locked: Bool, error: SignUpError?, firstName: String, lastName: String, takeNext: @escaping(String, String, String?)->Void, takeTerms:@escaping()->Void) {
-        self.genericView.update(locked, error: error, firstName: firstName, lastName: lastName, takeNext: takeNext, takeTerms: takeTerms)
+    func update(_ locked: Bool, error: SignUpError?, takeNext: @escaping(String, String, String?)->Void, takeTerms:@escaping()->Void) {
+        self.genericView.update(locked, error: error, takeNext: takeNext, takeTerms: takeTerms)
     }
     
     override func firstResponder() -> NSResponder? {
