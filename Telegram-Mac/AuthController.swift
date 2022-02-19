@@ -882,7 +882,7 @@ class AuthController : GenericViewController<AuthView> {
             })
         case let .signUp(_, _, firstName, lastName, _, _):
             controller = signup_c
-            signup_c.update(state.locked, error: state.signError, firstName: firstName, lastName: lastName, takeNext: { firstName, lastName, photo in
+            signup_c.update(state.locked, error: state.signError, takeNext: { firstName, lastName, photo in
                 
                 let photoData: Data?
                 if let photo = photo {
@@ -1034,22 +1034,22 @@ class AuthController : GenericViewController<AuthView> {
             
             self.genericView.hideLanguage()
             
+            genericView.addView(controller.view)
             controller.viewWillAppear(animated)
+            _ = window?.makeFirstResponder(controller.firstResponder())
             previous?.viewWillDisappear(animated)
             let window = self.window
            
             controller.frame = self.view.focus(NSMakeSize(controller.frame.width, self.frame.height))
-            genericView.addView(controller.view)
             if animated {
                 
                 if previous == code_entry_c || previous == phone_number_c || controller == code_entry_c || controller == phone_number_c {
                     
                 }
                 
-                controller.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, completion: { [weak controller, weak window] completed in
+                controller.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, completion: { [weak controller] completed in
                     if completed {
                         controller?.viewDidAppear(animated)
-                        _ = window?.makeFirstResponder(controller?.firstResponder())
                     }
                 })
                 
@@ -1059,7 +1059,6 @@ class AuthController : GenericViewController<AuthView> {
                 
             } else {
                 controller.viewDidAppear(animated)
-                _ = window?.makeFirstResponder(controller.firstResponder())
                 previous?.viewDidDisappear(animated)
             }
             if let previous = previous {

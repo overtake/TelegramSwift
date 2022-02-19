@@ -137,19 +137,32 @@ final class Auth_TokenView : View {
         
         measure()
         
-        
-        if let data = LocalAnimatedSticker.qrcode_matrix.data {
-            let colors:[LottieColor] = [.init(keyPath: "", color: theme.colors.text)]
-            self.animation.set(LottieAnimation(compressed: data, key: .init(key: .bundle("qrcode_matrix"), size: Auth_Insets.qrAnimSize, backingScale: Int(System.backingScale), fitzModifier: nil), playPolicy: .loop, colors: colors))
-        }
-
-        if let data = LocalAnimatedSticker.login_airplane.data {
-            let colors:[LottieColor] = []
-            self.logoView.set(LottieAnimation(compressed: data, key: .init(key: .bundle("login_airplane"), size: NSMakeSize(40, 40), backingScale: Int(System.backingScale), fitzModifier: nil), playPolicy: .loop, colors: colors))
-        }
+        updateLottie()
         
        needsLayout = true
     }
+    
+    private func updateLottie() {
+        if window != nil {
+            if let data = LocalAnimatedSticker.qrcode_matrix.data, imageView.isHidden {
+                let colors:[LottieColor] = [.init(keyPath: "", color: theme.colors.text)]
+                self.animation.set(LottieAnimation(compressed: data, key: .init(key: .bundle("qrcode_matrix"), size: Auth_Insets.qrAnimSize, backingScale: Int(System.backingScale), fitzModifier: nil), playPolicy: .loop, colors: colors))
+            }
+            if let data = LocalAnimatedSticker.login_airplane.data {
+                let colors:[LottieColor] = []
+                self.logoView.set(LottieAnimation(compressed: data, key: .init(key: .bundle("login_airplane"), size: NSMakeSize(40, 40), backingScale: Int(System.backingScale), fitzModifier: nil), playPolicy: .loop, colors: colors))
+            }
+        } else {
+            self.logoView.set(nil)
+            self.animation.set(nil)
+        }
+        
+    }
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        updateLottie()
+    }
+    
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

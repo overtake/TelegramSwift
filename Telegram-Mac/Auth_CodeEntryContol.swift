@@ -158,6 +158,10 @@ final class Auth_CodeEntryContol : View {
             updateTextView()
         }
         
+        func clear() {
+            inputKey(nil, animated: true)
+        }
+        
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
@@ -174,6 +178,10 @@ final class Auth_CodeEntryContol : View {
     
     
     func moveToStart() {
+        let subviews = self.subviews.compactMap { $0 as? Auth_CodeElement }
+        for subview in subviews {
+            subview.clear()
+        }
         let subview = self.subviews.compactMap { $0 as? Auth_CodeElement }.first
         window?.makeFirstResponder(subview)
     }

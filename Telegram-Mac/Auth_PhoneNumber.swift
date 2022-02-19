@@ -48,6 +48,10 @@ private func emojiFlagForISOCountryCode(_ countryCode: String) -> String {
         return ""
     }
     
+    if countryCode == "TG" {
+        return "🛰️"
+    }
+    
     if countryCode == "XG" {
         return "🛰️"
     } else if countryCode == "XV" {
@@ -91,7 +95,27 @@ private final class Manager {
         self.list = countries
     }
     
+    private let global: Country = .init(id: "TG", name: "Airlines", localizedName: "Airlines", countryCodes: [.init(code: "999", prefixes: [], patterns: ["XXXX X XX"])], hidden: false)
+    
+    func items(byCodeNumber codeNumber: String) -> [Country] {
+        
+        var list = self.list
+        list.append(global)
+        
+        return list.filter( { value in
+            for code in value.countryCodes {
+                if code.code == codeNumber {
+                    return true
+                }
+            }
+            return false
+        })
+    }
+    
     func item(byCodeNumber codeNumber: String, prefix: String?) -> Country? {
+        if codeNumber == "999" {
+            return global
+        }
         let firstTrip = self.list.first(where: { value in
             for code in value.countryCodes {
                 if code.code == codeNumber {
@@ -146,10 +170,7 @@ final class Auth_LoginHeader : View {
         let theme = theme as! TelegramPresentationTheme
         
         
-        if let data = LocalAnimatedSticker.login_airplane.data {
-            let colors:[LottieColor] = []
-            self.logo.set(LottieAnimation(compressed: data, key: .init(key: .bundle("login_airplane"), size: Auth_Insets.logoSize, backingScale: Int(System.backingScale), fitzModifier: nil), playPolicy: .loop, colors: colors))
-        }
+        updateLottie()
         
         let layout = TextViewLayout(.initialize(string: appName, color: theme.colors.text, font: Auth_Insets.headerFont))
         layout.measure(width: frame.width)
@@ -161,6 +182,23 @@ final class Auth_LoginHeader : View {
         self.desc.update(descLayout)
         
         self.layout()
+    }
+    
+    private func updateLottie() {
+        if window != nil {
+            if let data = LocalAnimatedSticker.login_airplane.data {
+                let colors:[LottieColor] = []
+                self.logo.set(LottieAnimation(compressed: data, key: .init(key: .bundle("login_airplane"), size: Auth_Insets.logoSize, backingScale: Int(System.backingScale), fitzModifier: nil), playPolicy: .loop, colors: colors))
+            }
+        } else {
+            self.logo.set(nil)
+        }
+        
+    }
+    
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        updateLottie()
     }
     
     func update(desc: NSAttributedString) {
@@ -300,6 +338,10 @@ private final class Auth_PhoneInput: View, NSTextFieldDelegate {
         super.updateLocalizationAndTheme(theme: theme)
         self.backgroundColor = theme.colors.grayBackground
         self.separator.background = theme.colors.border
+        
+        numberText.textColor = theme.colors.text
+        codeText.textColor = theme.colors.text
+
         codeText.backgroundColor = .clear
         numberText.backgroundColor = .clear
         country.style = ControlStyle(font: .medium(.title), foregroundColor: theme.colors.text, backgroundColor: theme.colors.grayBackground)
@@ -392,7 +434,13 @@ private final class Auth_PhoneInput: View, NSTextFieldDelegate {
                 } else {
                     codeText.stringValue = "+" + dec
                     let item:Country? = manager.item(byCodeNumber: dec, prefix: nil)
+                    
+                    let shouldSwitch = manager.items(byCodeNumber: dec).count == 1
                     update(selected: item, update: true, updateCode:false)
+                                             
+                    if shouldSwitch {
+                        window?.makeFirstResponder(numberText)
+                    }
                 }
                 
             } else if field == numberText, let item = self.selected {
@@ -405,6 +453,13 @@ private final class Auth_PhoneInput: View, NSTextFieldDelegate {
                 let formated = formatNumber(current, country: updated ?? item).prefix(17)
                 numberText.stringValue = formated
                 self.updatePhoneNumber?(formated)
+            } else if field == numberText {
+                let current = "+" + numberText.stringValue.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+                self.numberText.stringValue = ""
+                self.codeText.stringValue = current
+                window?.makeFirstResponder(codeText)
+                codeText.setCursorToEnd()
+                self.controlTextDidChange(Notification.init(name: NSControl.textDidChangeNotification, object: self.codeText, userInfo: nil))
             }
             
         }
