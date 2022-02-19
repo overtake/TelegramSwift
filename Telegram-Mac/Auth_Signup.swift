@@ -213,6 +213,10 @@ private final class Auth_PhoneInput: View, NSTextFieldDelegate {
         return (self.firstText.stringValue, self.lastText.stringValue)
     }
     
+    func shakeFirst() {
+        self.firstText.shake()
+    }
+    
     var firstResponder: NSResponder? {
         if window?.firstResponder != firstText.textView || window?.firstResponder != lastText.textView {
             if self.firstText.stringValue.isEmpty {
@@ -267,7 +271,11 @@ final class Auth_SignupView : View {
     }
     
     private func invoke() {
-        self.takeNext?(self.input.readyValue.0, self.input.readyValue.1, self.header.selectedPath)
+        if !self.input.readyValue.0.isEmpty {
+            self.takeNext?(self.input.readyValue.0, self.input.readyValue.1, self.header.selectedPath)
+        } else {
+            self.input.shakeFirst()
+        }
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {

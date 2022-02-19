@@ -880,7 +880,7 @@ class AuthController : GenericViewController<AuthView> {
                     })
                 })
             })
-        case let .signUp(_, _, firstName, lastName, _, _):
+        case .signUp:
             controller = signup_c
             signup_c.update(state.locked, error: state.signError, takeNext: { firstName, lastName, photo in
                 
