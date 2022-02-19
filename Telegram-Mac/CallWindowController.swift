@@ -1411,10 +1411,20 @@ func closeCall(minimisize: Bool = false) {
             if controller.window.isFullScreen {
                 controller.window.toggleFullScreen(nil)
                 delay(0.8, closure: {
-                    controller.window.orderOut(nil)
+                    NSAnimationContext.runAnimationGroup({ ctx in
+                        controller.window.animator().alphaValue = 0
+                    }, completionHandler: {
+                        controller.window.orderOut(nil)
+                    })
+
                 })
             } else {
-                controller.window.orderOut(nil)
+                NSAnimationContext.runAnimationGroup({ ctx in
+                    controller.window.animator().alphaValue = 0
+                }, completionHandler: {
+                    controller.window.orderOut(nil)
+                })
+
             }
         }
         return nil

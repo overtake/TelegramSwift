@@ -2954,12 +2954,23 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.beginEditingMessage = { [weak self] (message) in
-            if let message = message {
-                self?.chatInteraction.update({$0.withEditMessage(message)})
-            } else {
-                self?.chatInteraction.cancelEditing(true)
+            
+            let process:()->Void = { [weak self] in
+                if let message = message {
+                    self?.chatInteraction.update({$0.withEditMessage(message)})
+                } else {
+                    self?.chatInteraction.cancelEditing(true)
+                }
+                self?.chatInteraction.focusInputField()
             }
-            self?.chatInteraction.focusInputField()
+            
+            if let _ = self?.chatInteraction.presentation.interfaceState.editState, let window = self?.window  {
+                confirm(for: window, information: strings().chatEditCancelText, okTitle: strings().alertDiscard, successHandler: { _ in
+                    process()
+                })
+            } else {
+                process()
+            }
         }
         
         chatInteraction.mentionPressed = { [weak self] in

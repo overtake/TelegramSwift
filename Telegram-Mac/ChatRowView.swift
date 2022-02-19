@@ -712,6 +712,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         } else if item.isBubbled, let forwardAccessory = forwardAccessory {
             let contentFrame = self.contentFrame(item)
             point.x = item.isIncoming ? contentFrame.maxX : contentFrame.minX - forwardAccessory.frame.width
+            point.y += 2
         }
         
         return point

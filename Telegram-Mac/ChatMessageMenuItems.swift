@@ -270,7 +270,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     }, itemImage: MenuAnimation.menu_retract_vote.value))
                 }
                 if data.message.forwardInfo == nil {
-                    let canClose: Bool = canEditMessage(data.message, chatInteraction: data.chatInteraction, context: context)
+                    let canClose: Bool = canEditMessage(data.message, chatInteraction: data.chatInteraction, context: context, ignorePoll: true)
                     if canClose {
                         add_secondBlock.append(ContextMenuItem(poll.kind == .quiz ? strings().chatQuizStop : strings().chatPollStop, handler: { [weak data] in
                             confirm(for: context.window, header: poll.kind == .quiz ? strings().chatQuizStopConfirmHeader : strings().chatPollStopConfirmHeader, information: poll.kind == .quiz ? strings().chatQuizStopConfirmText : strings().chatPollStopConfirmText, okTitle: strings().alertConfirmStop, successHandler: { [weak data] _ in
