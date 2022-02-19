@@ -121,7 +121,7 @@ final class Auth_TokenView : View {
         titleView.update(titleLayout)
         
         firstHelp.update(title: strings().loginQR1Help1, number: "1")
-        secondHelp.update(title: strings().loginQR1Help2, number: "2")
+        secondHelp.update(title: strings().loginQR2Help2, number: "2")
         thridHelp.update(title: strings().loginQR1Help3, number: "3")
         
         cancelButton.set(font: Auth_Insets.infoFontBold, for: .Normal)
@@ -134,6 +134,9 @@ final class Auth_TokenView : View {
         let theme = theme as! TelegramPresentationTheme
         super.updateLocalizationAndTheme(theme: theme)
         self.backgroundColor = theme.colors.background
+        
+        measure()
+        
         
         if let data = LocalAnimatedSticker.qrcode_matrix.data {
             let colors:[LottieColor] = [.init(keyPath: "", color: theme.colors.text)]
@@ -181,11 +184,7 @@ final class Auth_TokenView : View {
     }
     
     override func layout() {
-        
-        measure()
-        
-        
-        
+            
         firstHelp.setFrameOrigin(NSMakePoint(0, 0))
         secondHelp.setFrameOrigin(NSMakePoint(0, firstHelp.frame.maxY + 10))
         thridHelp.setFrameOrigin(NSMakePoint(0, secondHelp.frame.maxY + 10))

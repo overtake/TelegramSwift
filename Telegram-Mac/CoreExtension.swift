@@ -1033,7 +1033,7 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode) -> Bool
     return false
 }
 
-func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context: AccountContext) -> Bool {
+func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context: AccountContext, ignorePoll: Bool = false) -> Bool {
     if message.forwardInfo != nil {
         return false
     }
@@ -1067,7 +1067,7 @@ func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context
         if media is TelegramMediaMap {
             return false
         }
-        if media is TelegramMediaPoll {
+        if media is TelegramMediaPoll, !ignorePoll {
             return false
         }
         if media is TelegramMediaDice {

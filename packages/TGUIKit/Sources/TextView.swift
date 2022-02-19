@@ -373,7 +373,10 @@ public final class TextViewLayout : Equatable {
 
         
         var maybeTypesetter: CTTypesetter?
-        maybeTypesetter = CTTypesetterCreateWithAttributedString(attributedString as CFAttributedString)
+        
+        let copy = attributedString.mutableCopy() as! NSMutableAttributedString
+        copy.removeAttribute(.strikethroughStyle, range: copy.range)
+        maybeTypesetter = CTTypesetterCreateWithAttributedString(copy as CFAttributedString)
         
         let typesetter = maybeTypesetter!
         
@@ -532,10 +535,11 @@ public final class TextViewLayout : Equatable {
                 
                 attributedString.enumerateAttributes(in: NSMakeRange(lineRange.location, lineRange.length), options: []) { attributes, range, _ in
                     if let _ = attributes[.strikethroughStyle] {
+                        let color = attributes[.foregroundColor] as? NSColor ?? presentation.colors.text
                         let lowerX = floor(CTLineGetOffsetForStringIndex(coreTextLine, range.location, nil))
                         let upperX = ceil(CTLineGetOffsetForStringIndex(coreTextLine, range.location + range.length, nil))
                         let x = lowerX < upperX ? lowerX : upperX
-                        strikethroughs.append(TextViewStrikethrough(color: presentation.colors.text, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
+                        strikethroughs.append(TextViewStrikethrough(color: color, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
                     }
                 }
 
@@ -579,10 +583,11 @@ public final class TextViewLayout : Equatable {
 
                     attributedString.enumerateAttributes(in: NSMakeRange(lineRange.location, lineRange.length), options: []) { attributes, range, _ in
                         if let _ = attributes[.strikethroughStyle] {
+                            let color = attributes[.foregroundColor] as? NSColor ?? presentation.colors.text
                             let lowerX = floor(CTLineGetOffsetForStringIndex(coreTextLine, range.location, nil))
                             let upperX = ceil(CTLineGetOffsetForStringIndex(coreTextLine, range.location + range.length, nil))
                             let x = lowerX < upperX ? lowerX : upperX
-                            strikethroughs.append(TextViewStrikethrough(color: presentation.colors.text, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
+                            strikethroughs.append(TextViewStrikethrough(color: color, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
                         }
                     }
                     
@@ -1482,6 +1487,11 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         CTRunDraw(run, ctx, CFRangeMake(0, glyphCount))
                     }
                 }
+                for strikethrough in line.strikethrough {
+                    ctx.setFillColor(strikethrough.color.cgColor)
+                    ctx.fill(NSMakeRect(strikethrough.frame.minX, strikethrough.frame.minY + strikethrough.frame.height / 2 + 1, strikethrough.frame.width, .borderSize))
+                }
+
                 // spoiler was here
             }
             for spoiler in layout.spoilerRects(!inAnimation) {

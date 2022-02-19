@@ -5507,7 +5507,7 @@ public final class L10n {
   public static var loginNewPhoneBannedError: String  { return L10n.tr("Localizable", "Login.New.PhoneBannedError") }
   /// Please confirm your country code and enter your phone number.
   public static var loginNewPhoneNumber: String  { return L10n.tr("Localizable", "Login.New.PhoneNumber") }
-  /// Are you sure you want to cancel log in?
+  /// Cancel logging in and start over?
   public static var loginNewCancelConfirm: String  { return L10n.tr("Localizable", "Login.New.Cancel.Confirm") }
   /// We’ve just called\non your phone **%@** · [Edit]()
   public static func loginNewCodeCallInfo(_ p1: String) -> String {
@@ -5581,10 +5581,10 @@ public final class L10n {
   public static var loginQRTitle: String  { return L10n.tr("Localizable", "Login.QR.Title") }
   /// Open Telegram on your phone
   public static var loginQR1Help1: String  { return L10n.tr("Localizable", "Login.QR1.Help1") }
-  /// Go to **Settings** → **Devices** → **Scan QR**
-  public static var loginQR1Help2: String  { return L10n.tr("Localizable", "Login.QR1.Help2") }
   /// Point your phone at this screen to confirm login
   public static var loginQR1Help3: String  { return L10n.tr("Localizable", "Login.QR1.Help3") }
+  /// Go to **Settings** → **Devices** → **Link Desktop Device**
+  public static var loginQR2Help2: String  { return L10n.tr("Localizable", "Login.QR2.Help2") }
   /// Enter your name and add a profile picture.
   public static var loginRegisterDesc: String  { return L10n.tr("Localizable", "Login.Register.Desc") }
   /// add\nphoto
