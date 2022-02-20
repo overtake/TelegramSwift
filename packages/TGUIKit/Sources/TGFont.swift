@@ -131,7 +131,11 @@ public extension NSFont {
     }
     
     static func code(_ size:FontSize) ->NSFont {
-        return NSFont(name: "Menlo-Regular", size: size) ?? NSFont.systemFont(ofSize: size)
+        if #available(OSX 10.15, *) {
+            return NSFont.monospacedSystemFont(ofSize: size, weight: .regular)
+        } else {
+            return NSFont(name: "Menlo-Regular", size: size) ?? NSFont.systemFont(ofSize: size)
+        }
     }
     static func blockchain(_ size: FontSize)->NSFont {
         return NSFont(name: "PT Mono", size: size) ?? NSFont.systemFont(ofSize: size)

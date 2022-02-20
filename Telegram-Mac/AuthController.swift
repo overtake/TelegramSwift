@@ -1030,7 +1030,7 @@ class AuthController : GenericViewController<AuthView> {
                 isNext = true
             }
             
-            self.genericView.updateBack(otherAccountPhoneNumbers.1.isEmpty ? index(of: controller) > 2 : false, animated: animated)
+            self.genericView.updateBack(otherAccountPhoneNumbers.1.isEmpty ? index(of: controller) <= 2 : false, animated: animated)
             
             self.genericView.hideLanguage()
             
@@ -1038,14 +1038,10 @@ class AuthController : GenericViewController<AuthView> {
             controller.viewWillAppear(animated)
             _ = window?.makeFirstResponder(controller.firstResponder())
             previous?.viewWillDisappear(animated)
-            let window = self.window
            
             controller.frame = self.view.focus(NSMakeSize(controller.frame.width, self.frame.height))
             if animated {
-                
-                if previous == code_entry_c || previous == phone_number_c || controller == code_entry_c || controller == phone_number_c {
-                    
-                }
+
                 
                 controller.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, completion: { [weak controller] completed in
                     if completed {
@@ -1053,16 +1049,14 @@ class AuthController : GenericViewController<AuthView> {
                     }
                 })
                 
-                controller.view.layer?.animateScaleSpring(from: 0.7, to: 1.0, duration: 0.3, bounce: false)
-                controller.view.layer?.animatePosition(from: NSMakePoint(controller.frame.minX, controller.frame.minY + (isNext ? 20 : -20)), to: controller.frame.origin, duration: 0.3, timingFunction: .spring)
-
+                controller.view.layer?.animateScaleSpring(from: 1.15, to: 1.0, duration: 0.3, bounce: false)
                 
             } else {
                 controller.viewDidAppear(animated)
                 previous?.viewDidDisappear(animated)
             }
             if let previous = previous {
-                performSubviewRemoval(previous.view, animated: animated, checkCompletion: true, completed: { [weak previous] completed in
+                performSubviewRemoval(previous.view, animated: animated, checkCompletion: true, scaleTo: 0.75, completed: { [weak previous] completed in
                     if completed {
                         previous?.viewDidDisappear(animated)
                     }
