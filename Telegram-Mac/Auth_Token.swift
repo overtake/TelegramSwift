@@ -137,6 +137,11 @@ final class Auth_TokenView : View {
         
         measure()
         
+        if let data = LocalAnimatedSticker.qrcode_matrix.data, imageView.isHidden {
+            let colors:[LottieColor] = [.init(keyPath: "", color: theme.colors.text)]
+            self.animation.set(LottieAnimation(compressed: data, key: .init(key: .bundle("qrcode_matrix"), size: Auth_Insets.qrAnimSize, backingScale: Int(System.backingScale), fitzModifier: nil), playPolicy: .loop, colors: colors))
+        }
+        
         updateLottie()
         
        needsLayout = true
@@ -144,17 +149,12 @@ final class Auth_TokenView : View {
     
     private func updateLottie() {
         if window != nil {
-            if let data = LocalAnimatedSticker.qrcode_matrix.data, imageView.isHidden {
-                let colors:[LottieColor] = [.init(keyPath: "", color: theme.colors.text)]
-                self.animation.set(LottieAnimation(compressed: data, key: .init(key: .bundle("qrcode_matrix"), size: Auth_Insets.qrAnimSize, backingScale: Int(System.backingScale), fitzModifier: nil), playPolicy: .loop, colors: colors))
-            }
             if let data = LocalAnimatedSticker.login_airplane.data {
                 let colors:[LottieColor] = []
                 self.logoView.set(LottieAnimation(compressed: data, key: .init(key: .bundle("login_airplane"), size: NSMakeSize(40, 40), backingScale: Int(System.backingScale), fitzModifier: nil), playPolicy: .loop, colors: colors))
             }
         } else {
             self.logoView.set(nil)
-            self.animation.set(nil)
         }
         
     }
@@ -235,7 +235,9 @@ final class Auth_TokenController : GenericViewController<Auth_TokenView> {
     
     func update(_ token: AuthTransferExportedToken?, cancel:@escaping()->Void) {
         
-        let tokenString = (token?.value ?? temp).base64EncodedString()
+        var tokenString = (token?.value ?? temp).base64EncodedString()
+        tokenString = tokenString.replacingOccurrences(of: "+", with: "-")
+        tokenString = tokenString.replacingOccurrences(of: "/", with: "_")
         let urlString = "tg://login?token=\(tokenString)"
         
         let signal = (qrCode(string: urlString, color: theme.colors.text, backgroundColor: theme.colors.background, icon: .custom(theme.icons.login_qr_empty_cap))
