@@ -1217,12 +1217,12 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                     switch joinCallResult.connectionMode {
                     case .rtc:
                         strongSelf.currentConnectionMode = .rtc
-                        strongSelf.genericCallContext?.setConnectionMode(.rtc, keepBroadcastConnectedIfWasEnabled: false)
+                        strongSelf.genericCallContext?.setConnectionMode(.rtc, keepBroadcastConnectedIfWasEnabled: false, isUnifiedBroadcast: false)
                         strongSelf.genericCallContext?.setJoinResponse(payload: clientParams)
                     case let .broadcast(isExternalStream):
                         strongSelf.currentConnectionMode = .broadcast
                         strongSelf.genericCallContext?.setAudioStreamData(audioStreamData: OngoingGroupCallContext.AudioStreamData(engine: strongSelf.accountContext.engine, callId: callInfo.id, accessHash: callInfo.accessHash, isExternalStream: isExternalStream))
-                        strongSelf.genericCallContext?.setConnectionMode(.broadcast, keepBroadcastConnectedIfWasEnabled: false)
+                        strongSelf.genericCallContext?.setConnectionMode(.broadcast, keepBroadcastConnectedIfWasEnabled: false, isUnifiedBroadcast: isExternalStream)
                     }
 
                     strongSelf.updateSessionState(internalState: .established(info: joinCallResult.callInfo, connectionMode: joinCallResult.connectionMode, clientParams: clientParams, localSsrc: ssrc, initialState: joinCallResult.state))
@@ -1538,6 +1538,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             participants.sort(by: { GroupCallParticipantsContext.Participant.compare(lhs: $0, rhs: $1, sortAscending: state.sortAscending) })
                         }
                     }
+
                     
                     var otherParticipantsWithVideo = 0
                                         
@@ -1782,12 +1783,23 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         return nil
                     }
                 }
+                let chatPeer = self.accountContext.account.postbox.peerView(id: self.peerId)
+                |> map { view -> Peer? in
+                    if let peer = peerViewMainPeer(view) {
+                        return peer
+                    } else {
+                        return nil
+                    }
+                }
+
+                
                 self.participantsContextStateDisposable.set(combineLatest(queue: .mainQueue(),
                     participantsContext.state,
                     adminIds,
                     myPeer,
+                    chatPeer,
                     accountContext.account.postbox.peerView(id: peerId)
-                ).start(next: { [weak self] state, adminIds, myPeerAndCachedData, view in
+                ).start(next: { [weak self] state, adminIds, myPeerAndCachedData, chatPeer, view in
                     guard let strongSelf = self else {
                         return
                     }
@@ -2245,7 +2257,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 }
                 let clientParams = joinCallResult.jsonParams
 
-                screencastCallContext.setConnectionMode(.rtc, keepBroadcastConnectedIfWasEnabled: false)
+                screencastCallContext.setConnectionMode(.rtc, keepBroadcastConnectedIfWasEnabled: false, isUnifiedBroadcast: false)
                 screencastCallContext.setJoinResponse(payload: clientParams)
                 
                 strongSelf.screencastEndpointId = joinCallResult.endpointId
@@ -2408,7 +2420,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
     
     private func requestCall(movingFromBroadcastToRtc: Bool) {
         self.currentConnectionMode = .none
-        self.genericCallContext?.setConnectionMode(.none, keepBroadcastConnectedIfWasEnabled: movingFromBroadcastToRtc)
+        self.genericCallContext?.setConnectionMode(.none, keepBroadcastConnectedIfWasEnabled: movingFromBroadcastToRtc, isUnifiedBroadcast: false)
                 
         self.internalState = .requesting
         self.internalStatePromise.set(.single(.requesting))
