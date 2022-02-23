@@ -549,6 +549,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             frame.origin.y = bubbleFrame.maxY
         }
         
+        if let reactions = item.reactionsLayout, reactions.presentation.isOutOfBounds {
+            frame.origin.y += reactions.size.height + item.defaultReactionsInset + item.defaultContentInnerInset
+        }
+        
         return frame
     }
     
