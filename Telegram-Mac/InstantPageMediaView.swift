@@ -121,7 +121,7 @@ final class InstantPageMediaView: View, InstantPageView {
             case .Local:
                 self.progressView.isHidden = media.media is TelegramMediaImage || self.imageView is GIFPlayerView
                 self.progressView.state = media.media is TelegramMediaImage || self.imageView is GIFPlayerView ? .None : .Play
-            case .Remote:
+            case .Remote, .Paused:
                 self.progressView.state = .Remote
             }
         }

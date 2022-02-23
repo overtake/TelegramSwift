@@ -1119,7 +1119,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         disposable.set(strongSelf.requestMediaChannelDescriptions(ssrcs: ssrcs, completion: completion))
                     }
                     return disposable
-                }, audioStreamData: OngoingGroupCallContext.AudioStreamData(engine: self.accountContext.engine, callId: callInfo.id, accessHash: callInfo.accessHash), rejoinNeeded: { [weak self] in
+                }, rejoinNeeded: { [weak self] in
                     Queue.mainQueue().async {
                         guard let strongSelf = self else {
                             return
@@ -1128,7 +1128,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             strongSelf.requestCall(movingFromBroadcastToRtc: false)
                         }
                     }
-                }, outgoingAudioBitrateKbit: nil, videoContentType: .generic, enableNoiseSuppression: false)
+                }, outgoingAudioBitrateKbit: nil, videoContentType: .generic, enableNoiseSuppression: false, preferX264: false)
                 
                 self.settingsDisposable = (voiceCallSettings(self.sharedContext.accountManager) |> deliverOnMainQueue).start(next: { [weak self] settings in
                     self?.genericCallContext?.setIsNoiseSuppressionEnabled(settings.noiseSuppression)
@@ -1219,8 +1219,9 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         strongSelf.currentConnectionMode = .rtc
                         strongSelf.genericCallContext?.setConnectionMode(.rtc, keepBroadcastConnectedIfWasEnabled: false)
                         strongSelf.genericCallContext?.setJoinResponse(payload: clientParams)
-                    case .broadcast:
+                    case let .broadcast(isExternalStream):
                         strongSelf.currentConnectionMode = .broadcast
+                        strongSelf.genericCallContext?.setAudioStreamData(audioStreamData: OngoingGroupCallContext.AudioStreamData(engine: strongSelf.accountContext.engine, callId: callInfo.id, accessHash: callInfo.accessHash, isExternalStream: isExternalStream))
                         strongSelf.genericCallContext?.setConnectionMode(.broadcast, keepBroadcastConnectedIfWasEnabled: false)
                     }
 
@@ -2206,11 +2207,11 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 completion([])
                 return EmptyDisposable
             },
-            audioStreamData: nil,
             rejoinNeeded: {},
             outgoingAudioBitrateKbit: nil,
             videoContentType: .screencast,
-            enableNoiseSuppression: false
+            enableNoiseSuppression: false,
+            preferX264: false
         )
 
         self.screencastCallContext = screencastCallContext
@@ -2753,7 +2754,7 @@ func createVoiceChat(context: AccountContext, peerId: PeerId, displayAsList: [Fo
                 } else {
                     scheduleDate = nil
                 }
-                disposable.set(context.engine.calls.createGroupCall(peerId: peerId, title: nil, scheduleDate: scheduleDate).start(next: { info in
+                disposable.set(context.engine.calls.createGroupCall(peerId: peerId, title: nil, scheduleDate: scheduleDate, isExternalStream: false).start(next: { info in
                     subscriber.putNext((info, joinAs))
                     subscriber.putCompletion()
                 }, error: { error in

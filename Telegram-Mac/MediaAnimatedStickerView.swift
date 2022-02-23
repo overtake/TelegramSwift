@@ -292,7 +292,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 self.fetchStatus = .Local
             } else {
                 self?.sticker = nil
-                self?.fetchStatus = .Remote
+                self?.fetchStatus = .Remote(progress: 0)
             }
         }))
         

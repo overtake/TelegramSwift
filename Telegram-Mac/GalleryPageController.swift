@@ -81,13 +81,15 @@ fileprivate class GMagnifyView : MagnifyView  {
                     }
                 })
             }
-        case .Remote:
+        case .Remote, .Paused:
             if self.progressView == nil {
                 self.progressView = RadialProgressView()
                 self.addSubview(self.progressView!)
                 self.progressView!.center()
             }
             progressView?.state = .Remote
+        case let .Paused(progress: progress):
+            break
         }
         
         progressView?.userInteractionEnabled = status != .Local

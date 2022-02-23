@@ -31,9 +31,11 @@ class PeerMediaRowItem: GeneralRowItem {
     let interface:ChatInteraction
     let automaticDownload: AutomaticMediaDownloadSettings
     let context: AccountContext
-    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, viewType: GeneralViewType = .legacy) {
+    let gallery: GalleryAppearType
+    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, gallery: GalleryAppearType = .history, viewType: GeneralViewType = .legacy) {
         self.entry = object
         self.interface = interface
+        self.gallery = gallery
         self.context = interface.context
         if case let .messageEntry(message, _, automaticDownload, _) = object {
             self.message = message

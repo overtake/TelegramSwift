@@ -23,8 +23,9 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
     private(set) var icon:TelegramMediaImage?
     private(set) var iconArguments:TransformImageArguments?
     private(set) var thumb:CGImage? = nil
-    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, viewType: GeneralViewType = .legacy) {
-        super.init(initialSize,interface,object, viewType: viewType)
+    //, gallery: GalleryAppearType = .history
+    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, gallery: GalleryAppearType = .history, viewType: GeneralViewType = .legacy) {
+        super.init(initialSize, interface, object, gallery: gallery, viewType: viewType)
 
         
         var linkLayouts:[TextViewLayout] = []

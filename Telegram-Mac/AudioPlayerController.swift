@@ -315,7 +315,7 @@ class APSongItem : APItem {
                     return strongSelf.account.postbox.mediaBox.resourceData(strongSelf.resource) |> filter {$0.complete} |> map { resource -> APResource in
                         return APResource(complete: resource.complete, progress: 1, path: link(path: resource.path, ext: ext)!)
                     }
-                case .Remote:
+                case .Remote, .Paused:
                     return .complete()
                 case let .Fetching(_, progress):
                     return .single(APResource(complete: false, progress: progress, path: ""))

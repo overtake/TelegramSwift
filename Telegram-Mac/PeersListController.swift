@@ -106,6 +106,9 @@ class PeerListContainerView : View {
     private var searchState: SearchFieldState = .None
     
     var openSharedMediaWithToken:((PeerId?, MessageTags?)->Void)? = nil
+    
+    fileprivate var showDownloads:(()->Void)? = nil
+
 
     var mode: PeerListMode = .plain {
         didSet {
@@ -208,11 +211,15 @@ class PeerListContainerView : View {
         
         switch state {
         case .Focus:
-            searchView.customSearchControl = CustomSearchController(clickHandler: { control, updateTitle in
+            searchView.customSearchControl = CustomSearchController(clickHandler: { [weak self] control, updateTitle in
                 
                 
                 var items: [ContextMenuItem] = []
 
+                
+                items.append(ContextMenuItem.init("Downloads", handler: { [weak self] in
+                    self?.showDownloads?()
+                }, itemImage: MenuAnimation.menu_save_as.value))
                 
                 for tag in tags {
                     var append: Bool = false
@@ -424,6 +431,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     private let actionsDisposable = DisposableSet()
     private let followGlobal:Bool
     private let searchOptions: AppSearchOptions
+    
+    private var downloadsController: ViewController?
+    
     let mode:PeerListMode
     private(set) var searchController:SearchController? {
         didSet {
@@ -465,11 +475,33 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         super.viewDidResized(size)
     }
     
+    private func showDownloads(animated: Bool) {
+        let controller: ViewController
+        if let current = self.downloadsController {
+            controller = current
+        } else {
+            controller = DownloadsController(context: context)
+            self.downloadsController = controller
+            
+            controller.frame = genericView.tableView.frame
+            addSubview(controller.view)
+            
+            if animated {
+                controller.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                controller.view.layer?.animateScaleSpring(from: 1.1, to: 1, duration: 0.2)
+            }
+        }
+        
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         let context = self.context
 
+        
+        genericView.showDownloads = { [weak self] in
+            self?.showDownloads(animated: true)
+        }
         
         layoutDisposable.set(context.sharedContext.layoutHandler.get().start(next: { [weak self] state in
             if let strongSelf = self, case .minimisize = state {
@@ -742,6 +774,18 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     private func hideSearchController(animated: Bool) {
+        
+        if let downloadsController = downloadsController {
+            downloadsController.viewWillDisappear(animated)
+            self.downloadsController = nil
+            downloadsController.viewDidDisappear(animated)
+            
+            let view = downloadsController.view
+            downloadsController.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
+                view?.removeFromSuperview()
+            })
+        }
+        
         if let searchController = self.searchController {
             searchController.viewWillDisappear(animated)
             searchController.view.layer?.opacity = animated ? 1.0 : 0.0

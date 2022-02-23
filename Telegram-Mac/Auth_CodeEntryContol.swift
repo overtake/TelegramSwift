@@ -9,6 +9,7 @@
 import Foundation
 import TGUIKit
 import KeyboardKey
+import AppKit
 
 final class Auth_CodeEntryContol : View {
     
@@ -21,6 +22,8 @@ final class Auth_CodeEntryContol : View {
         var prev:((Control, Bool)->Void)?
         var next:((Control, Bool)->Void)?
         var invoke:(()->Void)?
+
+        var insertAll:(([Int])->Void)?
         
         var locked: Bool = false
 
@@ -38,6 +41,21 @@ final class Auth_CodeEntryContol : View {
                 return "\(current)"
             } else {
                 return ""
+            }
+        }
+        
+        @objc func paste(_ id: Any) {
+            let pasteboard = NSPasteboard.general
+            guard let items = pasteboard.pasteboardItems else {
+                return
+            }
+            for item in items {
+                let string = item.string(forType: .string)?.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+                if let string = string, !string.isEmpty {
+                    let chars = Array(string).map { String($0) }
+                    self.insertAll?(chars.compactMap { Int($0) })
+                    break
+                }
             }
         }
         
@@ -199,22 +217,41 @@ final class Auth_CodeEntryContol : View {
             subviews.removeLast()
         }
         while subviews.count < count {
-            let Auth_CodeElement = Auth_CodeElement(frame: NSMakeRect(0, 0, 40, 40))
+            let element = Auth_CodeElement(frame: NSMakeRect(0, 0, 40, 40))
             
-            Auth_CodeElement.next = { [weak self] control, flip in
+            element.next = { [weak self] control, flip in
                 self?.next(control, flip)
             }
-            Auth_CodeElement.prev = { [weak self] control, flip in
+            element.prev = { [weak self] control, flip in
                 self?.prev(control, flip)
             }
-            Auth_CodeElement.invoke = { [weak self] in
+            element.invoke = { [weak self] in
                 self?.invoke()
             }
-            subviews.append(Auth_CodeElement)
+            element.insertAll = { [weak self] values in
+                self?.insertAll(values)
+            }
+            
+            subviews.append(element)
         }
         needsLayout = true
         return NSMakeSize(subviewsSize.width + (CGFloat(subviews.count - 1) * 8) + 20, 40)
     }
+    
+    private func insertAll(_ values: [Int]) {
+        let subviews = self.subviews.compactMap { $0 as? Auth_CodeElement }
+        if values.count == subviews.count {
+            for (i, subview) in subviews.enumerated() {
+                let value = values[i]
+                if let keyboardKey = KeyboardKey.keyboardKey(value)?.rawValue {
+                    subview.inputKey(keyboardKey, animated: true)
+                }
+            }
+            window?.makeFirstResponder(subviews.last)
+            self.invoke()
+        }
+    }
+    
     var value: String {
         let values = self.subviews.compactMap { $0 as? Auth_CodeElement }
         return values.reduce("", { current, value in

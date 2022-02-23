@@ -20,7 +20,7 @@ class PeerMediaMusicRowItem: PeerMediaRowItem {
     fileprivate let thumbResource: TelegramMediaResource?
     fileprivate let isCompactPlayer: Bool
     fileprivate let messages: [Message]
-    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, isCompactPlayer: Bool = false, viewType: GeneralViewType = .legacy) {
+    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, isCompactPlayer: Bool = false, gallery: GalleryAppearType = .history, viewType: GeneralViewType = .legacy) {
         self.isCompactPlayer = isCompactPlayer
         
         file = object.message!.media[0] as! TelegramMediaFile
@@ -61,7 +61,7 @@ class PeerMediaMusicRowItem: PeerMediaRowItem {
         self.thumbResource = resource
         
         
-        super.init(initialSize, interface, object, viewType: viewType)
+        super.init(initialSize, interface, object, gallery: gallery, viewType: viewType)
         
     }
     
@@ -270,7 +270,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     
     func fetch() {
         if let item = item as? PeerMediaMusicRowItem {
-            fetchDisposable.set(messageMediaFileInteractiveFetched(context: item.interface.context, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference(item.message), media: item.file)).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(context: item.context, messageId: item.message.id, messageReference: .init(item.message), file: item.file, userInitiated: true).start())
         }
         open()
     }
@@ -278,7 +278,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     
     func cancelFetching() {
         if let item = item as? PeerMediaMusicRowItem {
-            messageMediaFileCancelInteractiveFetch(context: item.interface.context, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference(item.message), media: item.file))
+            messageMediaFileCancelInteractiveFetch(context: item.interface.context, messageId: item.message.id, file: item.file)
         }
     }
     
