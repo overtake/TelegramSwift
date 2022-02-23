@@ -95,7 +95,6 @@
 		2748C56327BA53C800F05503 /* Auth_Loading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748C56227BA53C800F05503 /* Auth_Loading.swift */; };
 		2748C56527BA959F00F05503 /* Auth_PhoneNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748C56427BA959F00F05503 /* Auth_PhoneNumber.swift */; };
 		2748D44527C61DCF0057CF99 /* libtgvoip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2748D44427C61DCF0057CF99 /* libtgvoip.framework */; };
-		2748D44627C61DCF0057CF99 /* libtgvoip.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 2748D44427C61DCF0057CF99 /* libtgvoip.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2748D44927C624690057CF99 /* OngoingCallThreadLocalContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2748D44727C624690057CF99 /* OngoingCallThreadLocalContext.mm */; };
 		274B831826F0C0A700E6E474 /* EmojiScreenEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274B831726F0C0A700E6E474 /* EmojiScreenEffect.swift */; };
 		274B9E32272C2253009993C7 /* ChatCalendarModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274B9E31272C2253009993C7 /* ChatCalendarModalController.swift */; };
@@ -1208,7 +1207,6 @@
 			dstSubfolderSpec = 10;
 			files = (
 				A7D08F4A236AC9BB002DC240 /* Sparkle.framework in Copy Files */,
-				2748D44627C61DCF0057CF99 /* libtgvoip.framework in Copy Files */,
 			);
 			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 0;
