@@ -206,7 +206,7 @@ public final class TableEntriesTransition<T> : TableUpdateTransition {
     }
 }
 
-public protocol TableViewDelegate : class {
+public protocol TableViewDelegate : AnyObject {
     
     func selectionDidChange(row:Int, item:TableRowItem, byClick:Bool, isNew:Bool) -> Void;
     func selectionWillChange(row:Int, item:TableRowItem, byClick:Bool) -> Bool;
@@ -326,7 +326,7 @@ public extension TableScrollState {
 }
 
 
-protocol SelectDelegate : class {
+protocol SelectDelegate : AnyObject {
     func selectRow(index:Int) -> Void;
     func longAction(index:Int) -> Void;
 }
@@ -573,7 +573,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
 
 }
 
-public protocol InteractionContentViewProtocol : class {
+public protocol InteractionContentViewProtocol : AnyObject {
     func contentInteractionView(for stableId: AnyHashable, animateIn: Bool) -> NSView?
     func interactionControllerDidFinishAnimation(interactive: Bool, for stableId: AnyHashable)
     func addAccesoryOnCopiedView(for stableId: AnyHashable, view: NSView)
@@ -623,6 +623,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
     }
     
+    public var supplyment: InteractionContentViewProtocol? = nil
 
     var list:[TableRowItem] = [TableRowItem]();
     var tableView:TGFlipableTableView
@@ -2770,8 +2771,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
 
     public func contentInteractionView(for stableId: AnyHashable, animateIn: Bool) -> NSView? {
-        var item = self.item(stableId: stableId)
         
+        if let supplyment = supplyment {
+            return supplyment.contentInteractionView(for: stableId, animateIn: animateIn)
+        }
+        
+        var item = self.item(stableId: stableId)
         if item == nil {
             if let groupStableId = delegate?.findGroupStableId(for: stableId) {
                 item = self.item(stableId: groupStableId)
@@ -2783,13 +2788,16 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             if let view = view, !NSIsEmptyRect(view.visibleRect) {
                 return view.interactionContentView(for: stableId, animateIn: animateIn)
             }
-           
         }
-        
         return nil
     }
     
     public func interactionControllerDidFinishAnimation(interactive: Bool, for stableId: AnyHashable) {
+        
+        if let supplyment = supplyment {
+            return supplyment.interactionControllerDidFinishAnimation(interactive: interactive, for: stableId)
+        }
+        
         var item = self.item(stableId: stableId)
         
         if item == nil {
@@ -2807,6 +2815,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func addAccesoryOnCopiedView(for stableId: AnyHashable, view: NSView) {
+        
+        if let supplyment = supplyment {
+            return supplyment.addAccesoryOnCopiedView(for: stableId, view: view)
+        }
+        
         var item = self.item(stableId: stableId)
 
         if item == nil {
@@ -2844,6 +2857,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func applyTimebase(for stableId: AnyHashable, timebase: CMTimebase?) {
+        
+        if let supplyment = supplyment {
+            return supplyment.applyTimebase(for: stableId, timebase: timebase)
+        }
+        
         var item = self.item(stableId: stableId)
         
         if item == nil {

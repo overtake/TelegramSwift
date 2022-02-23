@@ -63,10 +63,10 @@ class StickerMediaContentView: ChatMediaContentView {
     
     
     override func update(with media: Media, size: NSSize, context: AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
-              
-        let previous = self.media
-        
+                      
         super.update(with: media, size: size, context: context, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
+        
+        self.fetchStatus = .Local
         
         let file = media as! TelegramMediaFile
         
@@ -93,6 +93,7 @@ class StickerMediaContentView: ChatMediaContentView {
         content.update(with: file, size: size, context: context, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags, approximateSynchronousValue: approximateSynchronousValue)
         
         content.userInteractionEnabled = false
+        
     }
     
     
@@ -140,8 +141,8 @@ class StickerMediaContentView: ChatMediaContentView {
         content?.open()
     }
     
-    override func fetch() -> Void {
-        content?.fetch()
+    override func fetch(userInitiated: Bool) -> Void {
+        content?.fetch(userInitiated: true)
     }
     
     override func preloadStreamblePart() {

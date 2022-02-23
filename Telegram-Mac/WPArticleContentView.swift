@@ -301,7 +301,7 @@ class WPArticleContentView: WPContentView {
                             initProgress = true
                         case .Local:
                             state = .Fetching(progress: 1.0, force: false)
-                        case .Remote:
+                        case .Remote, .Paused:
                             initProgress = true
                             state = .Remote
                         }
@@ -349,7 +349,7 @@ class WPArticleContentView: WPContentView {
                         
                         self.downloadIndicator?.fetchControls = FetchControls(fetch: { [weak self] in
                             switch status {
-                            case .Remote:
+                            case .Remote, .Paused:
                                 self?.fetch()
                             case .Fetching:
                                 self?.cancelFetching()

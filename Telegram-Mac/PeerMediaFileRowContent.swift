@@ -28,14 +28,14 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
     
     private(set) var docIcon:CGImage?
     private(set) var docTitle:NSAttributedString?
-    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, viewType: GeneralViewType = .legacy) {
+    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, gallery: GalleryAppearType = .history, viewType: GeneralViewType = .legacy) {
         
         
         let message = object.message!
         let file = message.media.first as! TelegramMediaFile
         self.file = file
         
-        nameLayout = TextViewLayout(NSAttributedString.initialize(string: file.fileName ?? "Unknown", color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
+        nameLayout = TextViewLayout(.initialize(string: file.fileName ?? "Unknown", color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
         
         let dateFormatter = makeNewDateFormatter()
         dateFormatter.dateFormat = "MMM d, yyyy, h a"
@@ -72,7 +72,7 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
             docTitle = NSAttributedString.initialize(string: fileExtension, color: theme.colors.text, font: .medium(.text))
 
         }
-        super.init(initialSize,interface,object, viewType: viewType)
+        super.init(initialSize, interface, object, gallery: gallery, viewType: viewType)
     }
     
     
@@ -131,28 +131,28 @@ class PeerMediaFileRowView : PeerMediaRowView {
     
     func cancelFetching() {
         if let item = item as? PeerMediaFileRowItem, let file = item.file {
-            messageMediaFileCancelInteractiveFetch(context: item.interface.context, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference(item.message), media: file))
+            toggleInteractiveFetchPaused(context: item.context, file: file, isPaused: true)
         }
     }
     
     func open() -> Void {
         if let item = item as? PeerMediaFileRowItem, let file = item.file {
             if file.isGraphicFile {
-                showChatGallery(context: item.interface.context, message: item.message, item.table, nil)
+                showChatGallery(context: item.interface.context, message: item.message, item.table, nil, type: item.gallery)
             } else {
                QuickLookPreview.current.show(context: item.interface.context, with: file, stableId:item.message.chatStableId, item.table)
             }
         }
     }
     
-    func fetch() -> Void {
+    func fetch(userInitiated: Bool) -> Void {
         if let item = item as? PeerMediaFileRowItem, let file = item.file {
-            fetchDisposable.set(messageMediaFileInteractiveFetched(context: item.interface.context, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference(item.message), media: file)).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(context: item.context, messageId: item.message.id, messageReference: .init(item.message), file: file, userInitiated: userInitiated).start())
         }
     }
     
     func executeInteraction(_ isControl:Bool) -> Void {
-        if let fetchStatus = self.fetchStatus, let item = item as? PeerMediaRowItem {
+        if let fetchStatus = self.fetchStatus, let item = item as? PeerMediaFileRowItem {
             switch fetchStatus {
             case .Fetching:
                 if isControl {
@@ -165,13 +165,18 @@ class PeerMediaFileRowView : PeerMediaRowView {
                 }
             case .Remote:
                 if isControl {
-                    fetch()
+                    fetch(userInitiated: true)
                 } else {
                     open()
+                }
+            case .Paused:
+                if let file = item.file {
+                    toggleInteractiveFetchPaused(context: item.context, file: file, isPaused: false)
                 }
             case .Local:
                 open()
                 break
+                
             }
         }
     }
@@ -183,7 +188,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
                 return
             } else if let status = self.fetchStatus {
                 switch status {
-                case .Remote:
+                case .Remote, .Paused:
                     executeInteraction(true)
                 case .Fetching:
                     executeInteraction(true)
@@ -338,7 +343,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
                         case .Local:
                             deinitDownloadControls()
                             strongSelf.actionView.update(item.actionLayoutLocal)
-                        case .Remote:
+                        case .Remote, .Paused:
                             deinitProgressControl()
                             initStatusControlIfNeeded()
                             strongSelf.downloadStatusControl?.image = theme.icons.peerMediaDownloadFileStart

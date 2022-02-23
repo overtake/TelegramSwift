@@ -192,7 +192,11 @@ class MGalleryPhotoItem: MGalleryItem {
     }
     
     override func fetch() -> Void {
-         fetching.set(chatMessagePhotoInteractiveFetched(account: context.account, imageReference: entry.imageReference(media)).start())
+        if let message = entry.message, let file = entry.message?.media.first as? TelegramMediaFile {
+            fetching.set(messageMediaFileInteractiveFetched(context: context, messageId: message.id, messageReference: .init(message), file: file, userInitiated: true).start())
+        } else {
+            fetching.set(chatMessagePhotoInteractiveFetched(account: context.account, imageReference: entry.imageReference(media)).start())
+        }
     }
     
     override func cancel() -> Void {

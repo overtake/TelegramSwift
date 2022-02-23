@@ -18,7 +18,7 @@ class PeerMediaVoiceRowItem: PeerMediaRowItem {
     fileprivate let file:TelegramMediaFile
     fileprivate let titleLayout: TextViewLayout
     fileprivate let nameLayout: TextViewLayout
-    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, viewType: GeneralViewType = .legacy) {
+    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, gallery: GalleryAppearType = .history, viewType: GeneralViewType = .legacy) {
         let message = object.message!
         file = message.media[0] as! TelegramMediaFile
         
@@ -40,7 +40,7 @@ class PeerMediaVoiceRowItem: PeerMediaRowItem {
         
         nameLayout = TextViewLayout(.initialize(string: title, color: theme.colors.grayText, font: .normal(.short)), maximumNumberOfLines: 1)
 
-        super.init(initialSize, interface, object, viewType: viewType)
+        super.init(initialSize, interface, object, gallery: gallery, viewType: viewType)
         
     }
     
@@ -136,14 +136,14 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
     
     func fetch() {
         if let item = item as? PeerMediaVoiceRowItem {
-            fetchDisposable.set(messageMediaFileInteractiveFetched(context: item.interface.context, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference.init(item.message), media: item.file)).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(context: item.context, messageId: item.message.id, messageReference: .init(item.message), file: item.file, userInitiated: true).start())
         }
     }
     
     
     func cancelFetching() {
         if let item = item as? PeerMediaVoiceRowItem {
-            messageMediaFileCancelInteractiveFetch(context: item.interface.context, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference.init(item.message), media: item.file))
+            messageMediaFileCancelInteractiveFetch(context: item.interface.context, messageId: item.message.id, file: item.file)
         }
     }
     
@@ -191,7 +191,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
                 } else {
                     //open()
                 }
-            case .Remote:
+            case .Remote, .Paused:
                 fetch()
             //open()
             case .Local:
@@ -216,7 +216,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
                 switch fetchStatus {
                 case let .Fetching(_, progress):
                     progressView.state = .Fetching(progress: progress, force: false)
-                case .Remote:
+                case .Remote, .Paused:
                     progressView.state = .Remote
                 case .Local:
                     progressView.state = .Play
@@ -330,7 +330,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
                 switch status {
                 case let .Fetching(_, progress):
                     strongSelf.progressView.state = .Fetching(progress: progress, force: false)
-                case .Remote:
+                case .Remote, .Paused:
                     strongSelf.progressView.state = .Remote
                 case .Local:
                     strongSelf.progressView.state = .Play

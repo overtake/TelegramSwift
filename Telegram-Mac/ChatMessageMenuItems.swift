@@ -272,11 +272,9 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 if data.message.forwardInfo == nil {
                     let canClose: Bool = canEditMessage(data.message, chatInteraction: data.chatInteraction, context: context, ignorePoll: true)
                     if canClose {
-                        add_secondBlock.append(ContextMenuItem(poll.kind == .quiz ? strings().chatQuizStop : strings().chatPollStop, handler: { [weak data] in
-                            confirm(for: context.window, header: poll.kind == .quiz ? strings().chatQuizStopConfirmHeader : strings().chatPollStopConfirmHeader, information: poll.kind == .quiz ? strings().chatQuizStopConfirmText : strings().chatPollStopConfirmText, okTitle: strings().alertConfirmStop, successHandler: { [weak data] _ in
-                                if let data = data {
-                                    data.chatInteraction.closePoll(messageId)
-                                }
+                        add_secondBlock.append(ContextMenuItem(poll.kind == .quiz ? strings().chatQuizStop : strings().chatPollStop, handler: { [weak chatInteraction] in
+                            confirm(for: context.window, header: poll.kind == .quiz ? strings().chatQuizStopConfirmHeader : strings().chatPollStopConfirmHeader, information: poll.kind == .quiz ? strings().chatQuizStopConfirmText : strings().chatPollStopConfirmText, okTitle: strings().alertConfirmStop, successHandler: { [weak chatInteraction] _ in
+                                chatInteraction?.closePoll(messageId)
                             })
                         }, itemImage: MenuAnimation.menu_stop_poll.value))
                     }

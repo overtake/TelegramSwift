@@ -42,6 +42,8 @@ class ChatStickerContentView: ChatMediaContentView {
         return true
     }
     
+    
+    
     required init(frame frameRect: NSRect) {
         super.init(frame:frameRect)
         self.addSubview(image)
@@ -51,7 +53,6 @@ class ChatStickerContentView: ChatMediaContentView {
     override func executeInteraction(_ isControl: Bool) {
         if let window = window as? Window {
             if let context = context, let peerId = parent?.id.peerId, let media = media as? TelegramMediaFile, let reference = media.stickerReference {
-                
                 showModal(with:StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for:window)
             }
         }

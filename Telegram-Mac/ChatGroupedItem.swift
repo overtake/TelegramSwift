@@ -197,7 +197,7 @@ class ChatGroupedItem: ChatRowItem {
                         if entry.additionalData.updatingMedia != nil {
                             context.account.pendingUpdateMessageManager.cancel(messageId: message.id)
                         } else if let media = media as? TelegramMediaFile {
-                            messageMediaFileCancelInteractiveFetch(context: context, messageId: message.id, fileReference: FileMediaReference.message(message: MessageReference(message), media: media))
+                            messageMediaFileCancelInteractiveFetch(context: context, messageId: message.id, file: media)
                             if let resource = media.resource as? LocalFileArchiveMediaResource {
                                 archiver.remove(.resource(resource))
                             }

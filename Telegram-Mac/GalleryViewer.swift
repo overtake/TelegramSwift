@@ -70,6 +70,7 @@ enum GalleryAppearType : Equatable {
     case history
     case profile(PeerId)
     case secret
+    case recentDownloaded
     case messages([Message])
 }
 
@@ -634,6 +635,27 @@ class GalleryViewer: NSResponder {
                             _ = indexes.swap((view.earlierId, view.laterId))
                             return (transition,previous, entries)
                         }
+                    }
+                case .recentDownloaded:
+                    return recentDownloadItems(postbox: context.account.postbox) |> mapToSignal { downloaded in
+                        let messages = downloaded.map {
+                            $0.message
+                        }.map {
+                            MessageHistoryEntry(message: $0, isRead: true, location: nil, monthLocation: nil, attributes: MutableMessageHistoryEntryAttributes(authorIsContact: false))
+                        }
+                        let entries:[ChatHistoryEntry] = messageEntries(messages, includeHoles : false).filter { entry -> Bool in
+                            switch entry {
+                            case let .MessageEntry(message, _, _, _, _, _, _):
+                                return message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia && mediaForMessage(message: message, postbox: context.account.postbox) != nil
+                            default:
+                                return true
+                            }
+                        }
+                        let previous = previous.with {$0}
+                        return prepareEntries(from: previous, to: entries, context: context, pagerSize: pagerSize) |> deliverOnMainQueue |> map { transition in
+                            return (transition,previous, entries)
+                        }
+                        
                     }
                 case .secret:
                     return context.account.postbox.messageView(index.id) |> mapToSignal { view -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in

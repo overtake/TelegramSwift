@@ -127,7 +127,7 @@ class ChatMessageAccessoryView: Control {
 
             
             switch status {
-            case .Remote:
+            case .Remote, .Paused:
                 progress.isHidden = true
                 download.isHidden = false
                 progress.state = .None

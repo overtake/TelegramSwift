@@ -288,17 +288,19 @@ final class InputDataGeneralTextData : Equatable {
     let fontSize: CGFloat?
     let contextMenu:(()->[ContextMenuItem])?
     let clickable: Bool
-    init(color: NSColor = theme.colors.listGrayText, detectBold: Bool = true, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), fontSize: CGFloat? = nil, contextMenu:(()->[ContextMenuItem])? = nil, clickable: Bool = false) {
+    let inset: NSEdgeInsets
+    init(color: NSColor = theme.colors.listGrayText, detectBold: Bool = true, viewType: GeneralViewType = .legacy, rightItem: InputDataGeneralTextRightData = InputDataGeneralTextRightData(isLoading: false, text: nil), fontSize: CGFloat? = nil, contextMenu:(()->[ContextMenuItem])? = nil, clickable: Bool = false, inset: NSEdgeInsets = .init(left: 30.0, right: 30.0, top:4, bottom:2)) {
         self.color = color
         self.detectBold = detectBold
         self.viewType = viewType
         self.rightItem = rightItem
+        self.inset = inset
         self.fontSize = fontSize
         self.contextMenu = contextMenu
         self.clickable = clickable
     }
     static func ==(lhs: InputDataGeneralTextData, rhs: InputDataGeneralTextData) -> Bool {
-        return lhs.color == rhs.color && lhs.detectBold == rhs.detectBold && lhs.viewType == rhs.viewType && lhs.rightItem == rhs.rightItem && lhs.fontSize == rhs.fontSize && lhs.clickable == rhs.clickable
+        return lhs.color == rhs.color && lhs.detectBold == rhs.detectBold && lhs.viewType == rhs.viewType && lhs.rightItem == rhs.rightItem && lhs.fontSize == rhs.fontSize && lhs.clickable == rhs.clickable && lhs.inset == rhs.inset
     }
 }
 
@@ -460,7 +462,7 @@ enum InputDataEntry : Identifiable, Comparable {
             }
             return GeneralRowItem(initialSize, height: type.height, stableId: stableId, viewType: viewType)
         case let .desc(_, _, text, data):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: data.detectBold, textColor: data.color, viewType: data.viewType, rightItem: data.rightItem, fontSize: data.fontSize, contextMenu: data.contextMenu, clickable: data.clickable)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, detectBold: data.detectBold, textColor: data.color, inset: data.inset, viewType: data.viewType, rightItem: data.rightItem, fontSize: data.fontSize, contextMenu: data.contextMenu, clickable: data.clickable)
         case let .custom(_, _, _, _, _, _, item):
             return item(initialSize, stableId)
         case let .selector(_, _, value, error, _, placeholder, viewType, values):

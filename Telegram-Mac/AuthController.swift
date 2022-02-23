@@ -611,7 +611,7 @@ class AuthController : GenericViewController<AuthView> {
                 refreshToken()
             } else {
                 controller = phone_number_c
-                phone_number_c.update(currentState, countries: state.countries, error: state.error, qrEnabled: state.qrEnabled, takeToken: {
+                phone_number_c.update(state.locked, state: currentState, countries: state.countries, error: state.error, qrEnabled: state.qrEnabled, takeToken: {
                     updateState { current in
                         var current = current
                         current.tokenAvailable = true
@@ -623,7 +623,7 @@ class AuthController : GenericViewController<AuthView> {
             }
         case let .phoneEntry(countryCode, number):
             controller = phone_number_c
-            phone_number_c.update(currentState, countries: state.countries, error: state.error, qrEnabled: state.qrEnabled, takeToken: {
+            phone_number_c.update(state.locked, state: currentState, countries: state.countries, error: state.error, qrEnabled: state.qrEnabled, takeToken: {
                 updateState { current in
                     var current = current
                     current.tokenAvailable = true
@@ -1021,14 +1021,6 @@ class AuthController : GenericViewController<AuthView> {
         if self.current != controller {
             let previous = self.current
 
-            let isNext: Bool
-            if let previous = previous {
-                let prevIndex = index(of: previous)
-                let newIndex = index(of: controller)
-                isNext = newIndex > prevIndex
-            } else {
-                isNext = true
-            }
             
             self.genericView.updateBack(otherAccountPhoneNumbers.1.isEmpty ? index(of: controller) <= 2 : false, animated: animated)
             

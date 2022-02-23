@@ -117,7 +117,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         
     }
     
-    func fetch() -> Void {
+    func fetch(userInitiated: Bool) -> Void {
         
     }
     
@@ -140,8 +140,8 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
                     cancelFetching()
                 } else {
                 }
-            case .Remote:
-                fetch()
+            case .Remote, .Paused:
+                fetch(userInitiated: true)
             case .Local:
                 open()
                 break
@@ -175,7 +175,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         if let parameters = parameters {
             if let parent = parent {
                 if parameters.automaticDownloadFunc(parent) {
-                    fetch()
+                    fetch(userInitiated: false)
                     preloadStreamblePart()
                 } else {
                     if parameters.preload {
@@ -183,7 +183,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
                     }
                 }
             } else if parameters.automaticDownload {
-                fetch()
+                fetch(userInitiated: false)
                 preloadStreamblePart()
             } else if parameters.preload {
                 preloadStreamblePart()

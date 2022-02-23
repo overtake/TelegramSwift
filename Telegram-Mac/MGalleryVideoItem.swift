@@ -242,7 +242,7 @@ class MGalleryVideoItem: MGalleryItem {
     override func fetch() -> Void {
         if !media.isStreamable {
             if let parent = entry.message {
-                _ = messageMediaFileInteractiveFetched(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start()
+                _ = messageMediaFileInteractiveFetched(context: context, messageId: parent.id, messageReference: .init(parent), file: media, userInitiated: true).start()
             } else {
                 _ = freeMediaFileInteractiveFetched(context: context, fileReference: FileMediaReference.standalone(media: media)).start()
             }

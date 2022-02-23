@@ -66,10 +66,10 @@ class ChatFileContentView: ChatMediaContentView {
         }
     }
     
-    override func fetch() {
+    override func fetch(userInitiated: Bool) {
         if let context = context, let media = media as? TelegramMediaFile {
             if let parent = parent {
-                fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start())
+                fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, messageReference: .init(parent), file: media, userInitiated: userInitiated).start())
             } else {
                 fetchDisposable.set(freeMediaFileInteractiveFetched(context: context, fileReference: FileMediaReference.standalone(media: media)).start())
             }
@@ -184,7 +184,7 @@ class ChatFileContentView: ChatMediaContentView {
                 return layout
             }
             return paremeters?.finderLayout
-        case .Remote:
+        case .Remote, .Paused:
             return paremeters?.downloadLayout
         }
     }
@@ -292,8 +292,11 @@ class ChatFileContentView: ChatMediaContentView {
                         if case .Local = status {} else {
                             statusWasUpdated = true
                         }
-                    case .Remote:
+                    case .Remote, .Paused:
                         if case .Remote = status {} else {
+                            statusWasUpdated = true
+                        }
+                        if case .Paused = status {} else {
                             statusWasUpdated = true
                         }
                     }
@@ -407,7 +410,7 @@ class ChatFileContentView: ChatMediaContentView {
                 case .Local:
                     progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : .clear, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .clear, icon: nil)
                     progressView.state = !file.previewRepresentations.isEmpty ? .None : .Icon(image: presentation.fileThumb, mode: .normal)
-                case .Remote:
+                case .Remote, .Paused:
                     progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor: file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: nil)
                     progressView.state = archiveStatus != nil && self.parent == nil ? .Icon(image: presentation.fileThumb, mode: .normal) : .Remote
                 }

@@ -2953,7 +2953,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
         }
         
-        chatInteraction.beginEditingMessage = { [weak self] (message) in
+        chatInteraction.beginEditingMessage = { [weak self] message in
             
             let process:()->Void = { [weak self] in
                 if let message = message {
@@ -2964,10 +2964,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 self?.chatInteraction.focusInputField()
             }
             
-            if let _ = self?.chatInteraction.presentation.interfaceState.editState, let window = self?.window  {
-                confirm(for: window, information: strings().chatEditCancelText, okTitle: strings().alertDiscard, successHandler: { _ in
+            if let editState = self?.chatInteraction.presentation.interfaceState.editState, let window = self?.window, let _ = message  {
+                if editState.inputState.inputText != editState.message.text {
+                    confirm(for: window, information: strings().chatEditCancelText, okTitle: strings().alertDiscard, successHandler: { _ in
+                        process()
+                    })
+                } else {
                     process()
-                })
+                }
             } else {
                 process()
             }
@@ -5289,7 +5293,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     var found: Bool = false
                     self.genericView.tableView.enumerateItems(with: { item in
                         if let item = item as? ChatRowItem {
-                            found = item.message?.id == messageId
+                            found = item.messages.contains(where: { $0.id == messageId })
                         }
                         return !found
                     })

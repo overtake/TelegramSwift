@@ -58,10 +58,10 @@ class VideoStickerContentView: ChatMediaContentView {
     
    
     
-    override func fetch() {
+    override func fetch(userInitiated: Bool) {
         if let context = context, let media = media as? TelegramMediaFile {
             if let parent = parent {
-                fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start())
+                fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, messageReference: .init(parent), file: media, userInitiated: false).start())
             } else {
                 fetchDisposable.set(freeMediaFileInteractiveFetched(context: context, fileReference: FileMediaReference.standalone(media: media)).start())
             }
@@ -209,7 +209,7 @@ class VideoStickerContentView: ChatMediaContentView {
             }
             
         }
-        fetch()
+        fetch(userInitiated: false)
     }
     
     private func removePlaceholder(animated: Bool) {

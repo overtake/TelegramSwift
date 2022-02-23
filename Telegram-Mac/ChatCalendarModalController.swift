@@ -106,7 +106,9 @@ private func entries(state: State, controllerArguments: ControllerArguments, cal
                         dimensions = media.representationForDisplayAtSize(PixelDimensions(dimensions))?.dimensions.size ?? dimensions
                     } else if let media = entry.message.media.first as? TelegramMediaFile {
                         updateSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: .message(message: MessageReference(entry.message), media: media), scale: System.backingScale)
-                        fetchSignal = messageMediaFileInteractiveFetched(context: context, messageId: entry.message.id, fileReference: FileMediaReference.message(message: MessageReference(entry.message), media: media))
+                        
+                        
+                        fetchSignal = messageMediaFileInteractiveFetched(context: context, messageId: entry.message.id, messageReference: .init(entry.message), file: media, userInitiated: false)
                         dimensions = media.dimensions?.size ?? dimensions
                     }
                     

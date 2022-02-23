@@ -15,6 +15,7 @@ import TGUIKit
 import InAppSettings
 import ThemeSettings
 import Reactions
+import FetchManager
 
 protocol ChatLocationContextHolder: class {
 }
@@ -213,7 +214,7 @@ final class AccountContext {
         #if !SHARE
         self.peerChannelMemberCategoriesContextsManager = PeerChannelMemberCategoriesContextsManager(self.engine, account: account)
         self.diceCache = DiceCache(postbox: account.postbox, engine: self.engine)
-        self.fetchManager = FetchManager(postbox: account.postbox)
+        self.fetchManager = FetchManagerImpl(postbox: account.postbox, storeManager: DownloadedMediaStoreManagerImpl.init(postbox: account.postbox, accountManager: sharedContext.accountManager))
         self.blockedPeersContext = BlockedPeersContext(account: account)
         self.cacheCleaner = AccountClearCache(account: account)
         self.cachedGroupCallContexts = AccountGroupCallContextCacheImpl()
@@ -936,3 +937,13 @@ private final class ChatLocationContextHolderImpl: ChatLocationContextHolder {
         self.context = ReplyThreadHistoryContext(account: account, peerId: data.messageId.peerId, data: data)
     }
 }
+
+
+/*
+ _ = (strongSelf.postbox.messageAtId(messageId) |> filter { $0?.isCopyProtected() == false } |> map { $0?.media.first as? TelegramMediaFile} |> filter {$0 != nil} |> map {$0!} |> mapToSignal { file -> Signal<Void, NoError> in
+     if !file.isMusic && !file.isAnimated && !file.isVideo && !file.isVoice && !file.isInstantVideo && !file.isAnimatedSticker && !file.isStaticSticker {
+         return copyToDownloads(file, postbox: postbox) |> map { _ in }
+     }
+     return .single(Void())
+ }).start()
+ */

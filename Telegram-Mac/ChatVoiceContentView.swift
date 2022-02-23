@@ -193,7 +193,7 @@ class ChatVoiceContentView: ChatAudioContentView {
                 case let .Fetching(_, progress):
                     state = .Fetching(progress: progress, force: false)
                     strongSelf.progressView.state = .Fetching(progress: progress, force: false)
-                case .Remote:
+                case .Remote, .Paused:
                     state = .Remote
                     strongSelf.progressView.state = .Remote
                 case .Local:

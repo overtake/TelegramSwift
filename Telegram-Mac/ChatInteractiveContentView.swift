@@ -298,7 +298,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 } 
             }
             text = size
-        case .Remote:
+        case .Remote, .Paused:
             var size = String.durationTransformed(elapsed: file.videoDuration)
             if file.isStreamable, parent?.groupingKey == nil, maxWidth > 100 {
                  size = size + ", " + String.prettySized(with: file.elapsedSize)
@@ -320,7 +320,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
         }
         
         videoAccessory?.updateText(text, maxWidth: maxWidth, status: status, isStreamable: isStreamable, isCompact: parent?.groupingKey != nil, soundOffOnImage: nil, isBuffering: isBuffering, animated: animated, fetch: { [weak self] in
-            self?.fetch()
+            self?.fetch(userInitiated: true)
         }, cancelFetch: { [weak self] in
             self?.cancelFetching()
         }, click: {
@@ -781,7 +781,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                         }
                         
                         strongSelf.progressView?.state = state
-                    case .Remote:
+                    case .Remote, .Paused:
                         strongSelf.progressView?.state = .Remote
                     }
                     strongSelf.needsLayout = true
@@ -812,11 +812,11 @@ class ChatInteractiveContentView: ChatMediaContentView {
     }
     
    
-    override func fetch() {
+    override func fetch(userInitiated: Bool) {
         if let context = context {
             if let media = media as? TelegramMediaFile, !media.isLocalResource {
                 if let parent = parent {
-                    fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start())
+                    fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, messageReference: .init(parent), file: media, userInitiated: false).start())
                 } else {
                     fetchDisposable.set(freeMediaFileInteractiveFetched(context: context, fileReference: FileMediaReference.standalone(media: media)).start())
                 }

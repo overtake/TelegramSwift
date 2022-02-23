@@ -417,14 +417,14 @@ private final class MediaVideoCell : MediaCell {
     private func fetch() {
         if let context = context, let layoutItem = self.layoutItem {
             let file = layoutItem.message.media.first as! TelegramMediaFile
-            fetchingDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: layoutItem.message.id, fileReference: FileMediaReference.message(message: MessageReference(layoutItem.message), media: file)).start())
+            fetchingDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: layoutItem.message.id, messageReference: .init(layoutItem.message), file: file, userInitiated: true).start())
         }
     }
       
     private func cancelFetching() {
         if let context = context, let layoutItem = self.layoutItem {
             let file = layoutItem.message.media.first as! TelegramMediaFile
-            messageMediaFileCancelInteractiveFetch(context: context, messageId: layoutItem.message.id, fileReference: FileMediaReference.message(message: MessageReference(layoutItem.message), media: file))
+            messageMediaFileCancelInteractiveFetch(context: context, messageId: layoutItem.message.id, file: file)
         }
     }
       
@@ -526,7 +526,7 @@ private final class MediaVideoCell : MediaCell {
             switch progressStatus {
             case let .Fetching(_, progress):
                 self.progressView.state = .Fetching(progress: progress, force: false)
-            case .Remote:
+            case .Remote, .Paused:
                 self.progressView.state = .Remote
             case .Local:
                 self.progressView.state = .Play

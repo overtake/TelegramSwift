@@ -424,6 +424,7 @@ private final class Auth_PhoneInput: View, NSTextFieldDelegate {
                             window?.makeFirstResponder(numberText)
                             numberText.setCursorToEnd()
                             found = true
+                            self.updatePhoneNumber?(formated)
                             break
                         }
                     }
@@ -459,7 +460,8 @@ private final class Auth_PhoneInput: View, NSTextFieldDelegate {
                 self.codeText.stringValue = current
                 window?.makeFirstResponder(codeText)
                 codeText.setCursorToEnd()
-                self.controlTextDidChange(Notification.init(name: NSControl.textDidChangeNotification, object: self.codeText, userInfo: nil))
+                self.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: self.codeText, userInfo: nil))
+                self.updatePhoneNumber?(formatPhoneNumber(current))
             }
             
         }
@@ -542,7 +544,7 @@ final class Auth_PhoneNumberView : View {
     private var takeToken:(()->Void)?
     private var takeNext:((String)->Void)?
 
-    
+    private var locked: Bool = false
     
     required init(frame frameRect: NSRect) {
         header = Auth_LoginHeader(frame: frameRect.size.bounds)
@@ -560,7 +562,7 @@ final class Auth_PhoneNumberView : View {
         qrButton.scaleOnClick = true
         
         nextView.set(handler: { [weak self] _ in
-            self?.takeNext?(self?.input.readyValue ?? "")
+            self?.invokeNext()
         }, for: .Click)
         
         qrButton.set(handler: { [weak self] _ in
@@ -570,6 +572,13 @@ final class Auth_PhoneNumberView : View {
         addSubview(container)
 
         updateLocalizationAndTheme(theme: theme)
+    }
+    
+    private func invokeNext() {
+        guard !locked else {
+            return
+        }
+        self.takeNext?(self.input.readyValue)
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -628,18 +637,22 @@ final class Auth_PhoneNumberView : View {
         errorLabel.state.set(.error(text))
     }
     
-    func update(_ state: UnauthorizedAccountStateContents, countries: [Country], error: AuthorizationCodeRequestError?, qrEnabled: Bool, animated: Bool, takeToken:@escaping()->Void, takeNext: @escaping(String)->Void) {
+    func update(_ locked: Bool, state: UnauthorizedAccountStateContents, countries: [Country], error: AuthorizationCodeRequestError?, qrEnabled: Bool, animated: Bool, takeToken:@escaping()->Void, takeNext: @escaping(String)->Void) {
         if let error = error {
             setPhoneError(error)
         } else {
             errorLabel.state.set(.normal)
         }
+        self.locked = locked
         switch state {
         case let .phoneEntry(countryCode, number):
             self.input.update(countryCode: countryCode, number: number)
         default:
             break
         }
+        
+        self.nextView.updateLocked(locked)
+        
         self.qrEnabled = qrEnabled
         
         self.takeNext = takeNext
@@ -663,7 +676,9 @@ final class Auth_PhoneNumberView : View {
             self?.nextView.isHidden = value.isEmpty && qrEnabled
             self?.isUserUpdated = !value.isEmpty
         }
-        input.next = takeNext
+        input.next = { [weak self] _ in
+            self?.invokeNext()
+        }
         
         input.manager = .init(countries)
         
@@ -690,8 +705,8 @@ final class Auth_PhoneNumberController: GenericViewController<Auth_PhoneNumberVi
         readyOnce()
     }
     
-    func update(_ state: UnauthorizedAccountStateContents, countries: [Country], error: AuthorizationCodeRequestError?, qrEnabled: Bool, takeToken:@escaping()->Void, takeNext: @escaping(String)->Void) {
-        self.genericView.update(state, countries: countries, error: error, qrEnabled: qrEnabled, animated: true, takeToken: takeToken, takeNext: takeNext)
+    func update(_ locked: Bool, state: UnauthorizedAccountStateContents, countries: [Country], error: AuthorizationCodeRequestError?, qrEnabled: Bool, takeToken:@escaping()->Void, takeNext: @escaping(String)->Void) {
+        self.genericView.update(locked, state: state, countries: countries, error: error, qrEnabled: qrEnabled, animated: true, takeToken: takeToken, takeNext: takeNext)
     }
     
     func set(number: String) {

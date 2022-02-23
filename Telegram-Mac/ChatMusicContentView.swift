@@ -35,7 +35,7 @@ class ChatMusicContentView: ChatAudioContentView {
                         progressView.state = .Fetching(progress: progress, force: false)
                     }
                     progressView.isHidden = false
-                case .Remote:
+                case .Remote, .Paused:
                     progressView.isHidden = true
                 case .Local:
                     progressView.isHidden = true

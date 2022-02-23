@@ -552,7 +552,7 @@ public final class TextViewLayout : Equatable {
                     }
                 }
                 
-                lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush, isBlocked: isWasPreformatted, isRTL: isRTL))
+                lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush, isBlocked: isWasPreformatted, isRTL: isRTL, strikethrough: strikethroughs))
                 
                 break
             } else {
@@ -1489,7 +1489,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 }
                 for strikethrough in line.strikethrough {
                     ctx.setFillColor(strikethrough.color.cgColor)
-                    ctx.fill(NSMakeRect(strikethrough.frame.minX, strikethrough.frame.minY + strikethrough.frame.height / 2 + 1, strikethrough.frame.width, .borderSize))
+                    ctx.fill(NSMakeRect(strikethrough.frame.minX, line.frame.minY - line.frame.height / 2 + 2, strikethrough.frame.width, .borderSize))
                 }
 
                 // spoiler was here

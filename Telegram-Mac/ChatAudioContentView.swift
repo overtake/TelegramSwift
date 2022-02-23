@@ -55,7 +55,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
                     } else {
                         progressView.state = .Fetching(progress: progress, force: false)
                     }
-                case .Remote:
+                case .Remote, .Paused:
                     progressView.state = .Remote
                 case .Local:
                     checkState(animated: false)
@@ -100,9 +100,9 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     
    
     
-    override func fetch() {
+    override func fetch(userInitiated: Bool) {
         if let context = context, let media = media as? TelegramMediaFile, let parent = parent {
-            fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, messageReference: .init(parent), file: media, userInitiated: false).start())
         }
     }
     

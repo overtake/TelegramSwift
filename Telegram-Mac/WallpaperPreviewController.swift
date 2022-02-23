@@ -797,7 +797,7 @@ private final class WallpaperPreviewView: View {
                         })
                     }
                     
-                case .Remote:
+                case .Remote, .Paused:
                     break
                 }
             }))
