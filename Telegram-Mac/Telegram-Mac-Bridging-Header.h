@@ -17,5 +17,7 @@
 
 
 
+#import "OngoingCallThreadLocalContext.h"
+
 
 #endif /* Telegram_Mac_Bridging_Header_h */

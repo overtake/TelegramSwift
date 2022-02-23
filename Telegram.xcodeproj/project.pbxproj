@@ -94,6 +94,9 @@
 		2748C56127BA477900F05503 /* Auth_Token.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748C56027BA477900F05503 /* Auth_Token.swift */; };
 		2748C56327BA53C800F05503 /* Auth_Loading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748C56227BA53C800F05503 /* Auth_Loading.swift */; };
 		2748C56527BA959F00F05503 /* Auth_PhoneNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748C56427BA959F00F05503 /* Auth_PhoneNumber.swift */; };
+		2748D44527C61DCF0057CF99 /* libtgvoip.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2748D44427C61DCF0057CF99 /* libtgvoip.framework */; };
+		2748D44627C61DCF0057CF99 /* libtgvoip.framework in Copy Files */ = {isa = PBXBuildFile; fileRef = 2748D44427C61DCF0057CF99 /* libtgvoip.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		2748D44927C624690057CF99 /* OngoingCallThreadLocalContext.mm in Sources */ = {isa = PBXBuildFile; fileRef = 2748D44727C624690057CF99 /* OngoingCallThreadLocalContext.mm */; };
 		274B831826F0C0A700E6E474 /* EmojiScreenEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274B831726F0C0A700E6E474 /* EmojiScreenEffect.swift */; };
 		274B9E32272C2253009993C7 /* ChatCalendarModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274B9E31272C2253009993C7 /* ChatCalendarModalController.swift */; };
 		274B9E34272C3D15009993C7 /* mac_devices.txt in Resources */ = {isa = PBXBuildFile; fileRef = 274B9E33272C3D15009993C7 /* mac_devices.txt */; };
@@ -1205,6 +1208,7 @@
 			dstSubfolderSpec = 10;
 			files = (
 				A7D08F4A236AC9BB002DC240 /* Sparkle.framework in Copy Files */,
+				2748D44627C61DCF0057CF99 /* libtgvoip.framework in Copy Files */,
 			);
 			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1334,6 +1338,9 @@
 		2748C56027BA477900F05503 /* Auth_Token.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_Token.swift; sourceTree = "<group>"; };
 		2748C56227BA53C800F05503 /* Auth_Loading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_Loading.swift; sourceTree = "<group>"; };
 		2748C56427BA959F00F05503 /* Auth_PhoneNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_PhoneNumber.swift; sourceTree = "<group>"; };
+		2748D44427C61DCF0057CF99 /* libtgvoip.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = libtgvoip.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		2748D44727C624690057CF99 /* OngoingCallThreadLocalContext.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = OngoingCallThreadLocalContext.mm; sourceTree = "<group>"; };
+		2748D44827C624690057CF99 /* OngoingCallThreadLocalContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OngoingCallThreadLocalContext.h; sourceTree = "<group>"; };
 		274A12DD2584BFF5006C6FED /* GroupCallInvitation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallInvitation.swift; sourceTree = "<group>"; };
 		274B831726F0C0A700E6E474 /* EmojiScreenEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiScreenEffect.swift; sourceTree = "<group>"; };
 		274B9E31272C2253009993C7 /* ChatCalendarModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatCalendarModalController.swift; sourceTree = "<group>"; };
@@ -2477,6 +2484,7 @@
 				27B6D05D27393A5500C785C7 /* MergeLists in Frameworks */,
 				D0076EEB25685BB5007EF588 /* libbz2.1.0.tbd in Frameworks */,
 				27E5C3BD2739761300C52BA0 /* MurMurHash32 in Frameworks */,
+				2748D44527C61DCF0057CF99 /* libtgvoip.framework in Frameworks */,
 				27D43DB22791774C006968A6 /* libcrypto.a in Frameworks */,
 				27A697A3273D313000B33415 /* Stripe in Frameworks */,
 				27C2B1A627C3CF13004BC87B /* FetchManager in Frameworks */,
@@ -4261,6 +4269,8 @@
 		C271EB981EB9DEDA0034792D /* calls */ = {
 			isa = PBXGroup;
 			children = (
+				2748D44827C624690057CF99 /* OngoingCallThreadLocalContext.h */,
+				2748D44727C624690057CF99 /* OngoingCallThreadLocalContext.mm */,
 			);
 			name = calls;
 			sourceTree = "<group>";
@@ -5097,6 +5107,7 @@
 		D098C7311D7E18CB007784E4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				2748D44427C61DCF0057CF99 /* libtgvoip.framework */,
 				27D43DB327917798006968A6 /* libmac_framework_objc_static.a */,
 				27D43DB12791774A006968A6 /* libcrypto.a */,
 				27D43DAF27917747006968A6 /* libssl.a */,
@@ -6379,6 +6390,7 @@
 				C251FB4C1FEDCC750035E5D7 /* ChatPresentationUtils.swift in Sources */,
 				C29B5F411DC7859800D13E65 /* InputContextHelper.swift in Sources */,
 				9F7B74052227F4F2006610E4 /* SharedAccountInfo.swift in Sources */,
+				2748D44927C624690057CF99 /* OngoingCallThreadLocalContext.mm in Sources */,
 				2796FEEF273E503200DA653C /* ChatInputSendAsView.swift in Sources */,
 				C24FD40E1F20EE8B00A97196 /* ContextClueRowItem.swift in Sources */,
 				C29A65051E0845B80071BCEF /* ExternalVideoLoader.swift in Sources */,
