@@ -396,7 +396,7 @@ class PeerListContainerView : View {
             if let view = self.downloads {
                 current = view
             } else {
-                current = DownloadsControl(frame: NSMakeRect(0, frame.height - 50, frame.width - .borderSize, 50))
+                current = DownloadsControl(frame: NSMakeRect(0, frame.height - 30, frame.width - .borderSize, 30))
                 self.downloads = current
                 addSubview(current, positioned: .above, relativeTo: self.tableView)
                 if animated {

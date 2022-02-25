@@ -25,91 +25,10 @@ final class DownloadsControlArguments {
 
 final class DownloadsControl : Control {
     
-    private class Preview: View {
-        private let imageView: TransformImageView = TransformImageView()
-        private let thumbView = ImageView()
-        required init(frame frameRect: NSRect) {
-            super.init(frame: frameRect)
-            
-            addSubview(thumbView)
-            addSubview(imageView)
-            
-            self.thumbView.isEventLess = true
-            self.isEventLess = true
-            
-            self.layer?.cornerRadius = frameRect.height / 2
-        }
-        
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-        
-        override func updateLocalizationAndTheme(theme: PresentationTheme) {
-            super.updateLocalizationAndTheme(theme: theme)
-            let theme = theme as! TelegramPresentationTheme
-            thumbView.image = NSImage(named: "Icon_MessageFile")?.precomposed(theme.colors.underSelectedColor)
-            thumbView.sizeToFit()
-        }
-        
-        private var thumbMessage: Message?
-        
-        func update(_ messages: [Message], context: AccountContext, animated: Bool) {
-            
-            let thumb: Message?
-            if messages.count == 1 {
-                if let reps = (messages[0].media.first as? TelegramMediaFile)?.previewRepresentations, !reps.isEmpty {
-                    thumb = messages[0]
-                } else {
-                    thumb = nil
-                }
-            } else {
-                thumb = nil
-            }
-            imageView._change(opacity: thumb != nil ? 1 : 0, animated: animated)
-            
-            if let message = thumb, let file = message.media.first as? TelegramMediaFile {
-                
-                let stableId = message.id.toInt64()
-                let updated = self.thumbMessage?.id != message.id
-                
-                let arguments = TransformImageArguments(corners: ImageCorners(radius: 0), imageSize: file.previewRepresentations[0].dimensions.size, boundingSize: frame.size, intrinsicInsets: NSEdgeInsets())
-                
-                imageView.setSignal(signal: cachedMedia(messageId: stableId, arguments: arguments, scale: backingScaleFactor), clearInstantly: updated)
-                
-                let reference = FileMediaReference.message(message: MessageReference(message), media: file)
-                
-                imageView.setSignal(chatMessageImageFile(account: context.account, fileReference: reference, progressive: false, scale: backingScaleFactor, synchronousLoad: false), clearInstantly: false, animate: true, synchronousLoad: false, cacheImage: { result in
-                    cacheMedia(result, messageId: stableId, arguments: arguments, scale: System.backingScale)
-                })
-                imageView.set(arguments: arguments)
-            } else {
-                imageView.setSignal(signal: .single(TransformImageResult(nil, false)))
-            }
-            
-            self.thumbMessage = thumb
-            
-            updateLocalizationAndTheme(theme: theme)
-            needsLayout = true
-        }
-        
-        override func layout() {
-            super.layout()
-            thumbView.center()
-            imageView.center()
-        }
-    }
-    
-    private let progressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .clear, foregroundColor: theme.colors.accent), twist: true, size: NSMakeSize(44, 44))
-
-    private let preview: Preview = Preview(frame: NSMakeRect(0, 0, 34, 34))
-    
-    private let previewContainer: View = View(frame: NSMakeRect(0, 0, 40, 40))
+    private let progressView = LinearProgressControl(progressHeight: 2)
     
     private let titleView = TextView()
-    private let statusView = TextView()
-    
     private let textContainer = View()
-    
     private let nextView = ImageView()
     
     private var state: DownloadsSummary.State = .empty
@@ -118,22 +37,17 @@ final class DownloadsControl : Control {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        progressView.setFrameSize(NSMakeSize(44, 44))
         
-        previewContainer.addSubview(preview)
-        previewContainer.addSubview(progressView)
-        addSubview(previewContainer)
         
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
-        
-        statusView.isSelectable = false
-        
+                
         textContainer.addSubview(titleView)
-        textContainer.addSubview(statusView)
         addSubview(textContainer)
         
         addSubview(nextView)
+        
+        addSubview(progressView)
         
         updateLocalizationAndTheme(theme: theme)
     }
@@ -143,20 +57,20 @@ final class DownloadsControl : Control {
         let theme = theme as! TelegramPresentationTheme
         self.backgroundColor = theme.colors.background
         self.border = [.Top]
-        progressView.theme = RadialProgressTheme(backgroundColor: .clear, foregroundColor: theme.colors.accent)
         
-        preview.background = theme.colors.accent
+        progressView.style = ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: .clear, highlightColor: .clear)
+
+        let attr = NSMutableAttributedString()        
+        attr.append(getTitle(self.state))
+        attr.append(.initialize(string: "  "))
+        attr.append(getStatus(self.state))
 
         
-        let titleLayout = TextViewLayout(getTitle(self.state), maximumNumberOfLines: 1, truncationType: .middle)
+        let titleLayout = TextViewLayout(attr, maximumNumberOfLines: 1, truncationType: .middle)
         titleLayout.measure(width: textContainer.frame.width)
         titleLayout.interactions = globalLinkExecutor
         titleView.update(titleLayout)
         
-        let statusLayout = TextViewLayout(getStatus(self.state, arguments: self.arguments), maximumNumberOfLines: 1)
-        statusLayout.measure(width: textContainer.frame.width)
-        statusLayout.interactions = globalLinkExecutor
-        statusView.update(statusLayout)
         
         nextView.image = theme.icons.generalNext
         nextView.sizeToFit()
@@ -168,20 +82,12 @@ final class DownloadsControl : Control {
     override func layout() {
         super.layout()
         
-        previewContainer.centerY(x: 10)
-        progressView.center()
-        preview.center()
+        progressView.frame = NSMakeRect(0, frame.height - progressView.frame.height, frame.width - .borderSize, 2)
         
-        textContainer.setFrameSize(NSMakeSize(frame.width - previewContainer.frame.maxX - 10 - 10 - 10, 34))
-        
-        textContainer.centerY(x: previewContainer.frame.maxX + 10)
-        
-        titleView.resize(textContainer.frame.width)
-        statusView.resize(textContainer.frame.width)
-        
+        titleView.resize(frame.width - 20)
         titleView.setFrameOrigin(.zero)
-        statusView.setFrameOrigin(NSMakePoint(0, textContainer.frame.height - statusView.frame.height))
-        
+        textContainer.setFrameSize(NSMakeSize(frame.width - 10 - 10, titleView.frame.height))
+        textContainer.centerY(x: 10)
         nextView.centerY(x: frame.width - 10 - nextView.frame.width)
 
     }
@@ -193,41 +99,32 @@ final class DownloadsControl : Control {
     func update(_ state: DownloadsSummary.State, context: AccountContext, arguments: DownloadsControlArguments, animated: Bool) {
         self.state = state
         self.arguments = arguments
-        progressView.state = .ImpossibleFetching(progress: Float(state.totalProgress), force: false)
+        progressView.set(progress: state.totalProgress, animated: animated)
         switch state {
         case .downloading:
             self.progressView.change(opacity: 1, animated: animated)
-            self.statusView.userInteractionEnabled = false
             self.unseenDisposable.set(nil)
-        case let .hasUnseen(msgs):
+        case .hasUnseen:
             self.progressView.change(opacity: 0, animated: animated)
-            self.statusView.userInteractionEnabled = msgs.count == 1
             let signal = markAllRecentDownloadItemsAsSeen(postbox: context.account.postbox) |> delay(5.0, queue: .mainQueue())
             self.unseenDisposable.set(signal.start())
         case .empty:
             self.progressView.change(opacity: 0, animated: animated)
-            self.statusView.userInteractionEnabled = false
             self.unseenDisposable.set(nil)
         }
-        preview.update(state.messages, context: context, animated: animated)
-        
         updateLocalizationAndTheme(theme: theme)
     }
     private func getTitle(_ state: DownloadsSummary.State) -> NSAttributedString {
         switch state {
         case let .downloading(_, _, msgs), let .hasUnseen(msgs):
             let text: String
-            if msgs.count == 1, let file = msgs.first?.media.first as? TelegramMediaFile {
-                text = file.fileName ?? strings().downloadsManagerControlTitleCountable(msgs.count)
-            } else {
-                text = strings().downloadsManagerControlTitleCountable(msgs.count)
-            }
+            text = strings().downloadsManagerControlTitleCountable(msgs.count)
             return .initialize(string: text, color: theme.colors.text, font: .medium(.text))
         case .empty:
             return self.titleView.textLayout?.attributedString ?? NSAttributedString()
         }
     }
-    private func getStatus(_ state: DownloadsSummary.State, arguments: DownloadsControlArguments?) -> NSAttributedString {
+    private func getStatus(_ state: DownloadsSummary.State) -> NSAttributedString {
         switch state {
         case let .downloading(bytesLoaded, totalBytes, _):
             let attr = NSMutableAttributedString()
@@ -244,17 +141,7 @@ final class DownloadsControl : Control {
                 }
             })
             let sizeText = String.prettySized(with: size)
-            if msgs.count == 1 {
-                let txt = strings().downloadsManagerControlNavigate(sizeText)
-                let info = parseMarkdownIntoAttributedString(txt, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .medium(.text), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
-                    return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents,  { _ in
-                        arguments?.navigate(msgs[0].id)
-                    }))
-                }))
-                attr.append(info)
-            } else {
-                _ = attr.append(string: sizeText, color: theme.colors.grayText, font: .normal(.text))
-            }
+            _ = attr.append(string: sizeText, color: theme.colors.grayText, font: .normal(.text))
             return attr
         default:
             break
