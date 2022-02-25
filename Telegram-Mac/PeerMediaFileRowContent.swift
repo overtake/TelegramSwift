@@ -131,7 +131,11 @@ class PeerMediaFileRowView : PeerMediaRowView {
     
     func cancelFetching() {
         if let item = item as? PeerMediaFileRowItem, let file = item.file {
-            toggleInteractiveFetchPaused(context: item.context, file: file, isPaused: true)
+            if item.gallery != .recentDownloaded {
+                messageMediaFileCancelInteractiveFetch(context: item.context, messageId: item.message.id, file: file)
+            } else {
+                toggleInteractiveFetchPaused(context: item.context, file: file, isPaused: true)
+            }
         }
     }
     
@@ -170,9 +174,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
                     open()
                 }
             case .Paused:
-                if let file = item.file {
-                    toggleInteractiveFetchPaused(context: item.context, file: file, isPaused: false)
-                }
+                cancel()
             case .Local:
                 open()
                 break
