@@ -3765,7 +3765,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 currentActiveCall = activeCall
             } 
             if let activeCall = currentActiveCall {
-                let join:(PeerId, Date?)->Void = { joinAs, _ in
+                let join:(PeerId, Date?, Bool)->Void = { joinAs, _, _ in
                     _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: activeCall, initialInfo: groupCall?.data?.info, joinHash: joinHash), for: context.window).start(next: { result in
                         switch result {
                         case let .samePeer(callContext):
@@ -3781,7 +3781,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     })
                 }
                 if let callJoinPeerId = groupCall?.callJoinPeerId {
-                    join(callJoinPeerId, nil)
+                    join(callJoinPeerId, nil, false)
                 } else {
                     selectGroupCallJoiner(context: context, peerId: peerId, completion: join)
                 }
@@ -5557,7 +5557,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let context = self.context
         let peerId = self.chatLocation.peerId
         if let activeCall = current {
-            let join:(PeerId, Date?)->Void = { joinAs, _ in
+            let join:(PeerId, Date?, Bool)->Void = { joinAs, _, _ in
                 _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: activeCall, initialInfo: nil, joinHash: nil), for: context.window).start(next: { result in
                     switch result {
                     case let .samePeer(callContext):
@@ -5570,7 +5570,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 })
             }
             if let callJoinPeerId = callJoinPeerId {
-                join(callJoinPeerId, nil)
+                join(callJoinPeerId, nil, false)
             } else {
                 selectGroupCallJoiner(context: context, peerId: peerId, completion: join)
             }

@@ -2509,7 +2509,7 @@ public final class L10n {
   public static var chatMessageSponsoredWhat: String  { return L10n.tr("Localizable", "Chat.Message.Sponsored.What") }
   /// SHOW MESSAGE
   public static var chatMessageActionShowMessage: String  { return L10n.tr("Localizable", "Chat.MessageAction.ShowMessage") }
-  /// Messsage doesn't exist
+  /// Message doesn't exist
   public static var chatOpenMessageNotExist: String  { return L10n.tr("Localizable", "Chat.Open.MessageNotExist") }
   /// Don't Show Pinned Messages
   public static var chatPinnedDontShow: String  { return L10n.tr("Localizable", "Chat.Pinned.DontShow") }
@@ -4157,12 +4157,18 @@ public final class L10n {
   public static var displayMeAsPersonalAccount: String  { return L10n.tr("Localizable", "DisplayMeAs.PersonalAccount") }
   /// Scheduled Voice Chat
   public static var displayMeAsScheduled: String  { return L10n.tr("Localizable", "DisplayMeAs.Scheduled") }
+  /// Start With...
+  public static var displayMeAsStartWith: String  { return L10n.tr("Localizable", "DisplayMeAs.StartWith") }
   /// Choose whether you want to be displayed as your personal account or as your channel.
   public static var displayMeAsText: String  { return L10n.tr("Localizable", "DisplayMeAs.Text") }
   /// Display Me As
   public static var displayMeAsTitle: String  { return L10n.tr("Localizable", "DisplayMeAs.Title") }
   /// You can also create a public channel to participate in voice chats as a channel.
   public static var displayMeAsAloneDesc: String  { return L10n.tr("Localizable", "DisplayMeAs.Alone.Desc") }
+  /// Schedule Voice Chat
+  public static var displayMeAsModernSchedule: String  { return L10n.tr("Localizable", "DisplayMeAs.Modern.Schedule") }
+  /// Start Voice Chat
+  public static var displayMeAsModernStart: String  { return L10n.tr("Localizable", "DisplayMeAs.Modern.Start") }
   /// Schedule Voice Chat as %@
   public static func displayMeAsNewScheduleAs(_ p1: String) -> String {
     return L10n.tr("Localizable", "DisplayMeAs.New.ScheduleAs", p1)
@@ -4179,6 +4185,42 @@ public final class L10n {
   }
   /// Choose whether you want to be displayed as your personal account or as group.
   public static var displayMeAsTextGroup: String  { return L10n.tr("Localizable", "DisplayMeAs.Text.Group") }
+  /// RECENTLY DOWNLOADED
+  public static var downloadsManagerRecently: String  { return L10n.tr("Localizable", "DownloadsManager.Recently") }
+  /// %@ - [View in Chat]()
+  public static func downloadsManagerControlNavigate(_ p1: String) -> String {
+    return L10n.tr("Localizable", "DownloadsManager.Control.Navigate", p1)
+  }
+  /// %d
+  public static func downloadsManagerControlTitleCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "DownloadsManager.Control.Title_countable", p1)
+  }
+  /// %d Files
+  public static func downloadsManagerControlTitleFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "DownloadsManager.Control.Title_few", p1)
+  }
+  /// %d Files
+  public static func downloadsManagerControlTitleMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "DownloadsManager.Control.Title_many", p1)
+  }
+  /// %d File
+  public static func downloadsManagerControlTitleOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "DownloadsManager.Control.Title_one", p1)
+  }
+  /// %d Files
+  public static func downloadsManagerControlTitleOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "DownloadsManager.Control.Title_other", p1)
+  }
+  /// %d Files
+  public static func downloadsManagerControlTitleTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "DownloadsManager.Control.Title_two", p1)
+  }
+  /// %d Files
+  public static func downloadsManagerControlTitleZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "DownloadsManager.Control.Title_zero", p1)
+  }
+  /// clear
+  public static var downloadsManagerRecentlyClear: String  { return L10n.tr("Localizable", "DownloadsManager.Recently.Clear") }
   /// Spelling and Grammar
   public static var dv1IoYv7Title: String  { return L10n.tr("Localizable", "Dv1-io-Yv7.title") }
   /// Edit
@@ -10347,6 +10389,18 @@ public final class L10n {
   public static func voiceChatJoinAsGroupZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "VoiceChat.JoinAs.Group_zero", p1)
   }
+  /// Please make sure you entered the right Server URL and Stream Key in your app.
+  public static var voiceChatRTMPDesc: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.Desc") }
+  /// To stream video with a another app, enter these Server URL and Stream Key in your steaming app.
+  public static var voiceChatRTMPInfo: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.Info") }
+  /// Start Streaming
+  public static var voiceChatRTMPOK: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.OK") }
+  /// server URL
+  public static var voiceChatRTMPServerURL: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.ServerURL") }
+  /// stream key
+  public static var voiceChatRTMPStreamKey: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.StreamKey") }
+  /// Stream With...
+  public static var voiceChatRTMPTitle: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.Title") }
   /// we let the speakers know
   public static var voiceChatRaisedHandText: String  { return L10n.tr("Localizable", "VoiceChat.RaisedHand.Text") }
   /// You asked to speak
@@ -10409,6 +10463,8 @@ public final class L10n {
   public static var voiceChatSettingsReduceMotion: String  { return L10n.tr("Localizable", "VoiceChat.Settings.ReduceMotion") }
   /// Revoke Speakers Link
   public static var voiceChatSettingsResetLink: String  { return L10n.tr("Localizable", "VoiceChat.Settings.ResetLink") }
+  /// STREAM DATA
+  public static var voiceChatSettingsRTMP: String  { return L10n.tr("Localizable", "VoiceChat.Settings.RTMP") }
   /// VOICE CHAT TITLE
   public static var voiceChatSettingsTitle: String  { return L10n.tr("Localizable", "VoiceChat.Settings.Title") }
   /// personal account
@@ -10601,6 +10657,8 @@ public final class L10n {
   public static var voiceChatVideoStreamMore: String  { return L10n.tr("Localizable", "VoiceChat.Video.Stream.More") }
   /// screen
   public static var voiceChatVideoStreamScreencast: String  { return L10n.tr("Localizable", "VoiceChat.Video.Stream.Screencast") }
+  /// share
+  public static var voiceChatVideoStreamShare: String  { return L10n.tr("Localizable", "VoiceChat.Video.Stream.Share") }
   /// video
   public static var voiceChatVideoStreamVideo: String  { return L10n.tr("Localizable", "VoiceChat.Video.Stream.Video") }
   /// Cancel

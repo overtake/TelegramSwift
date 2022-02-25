@@ -33,6 +33,8 @@ private final class Arguments {
     let reduceMotions:(Bool)->Void
     let selectVideoRecordOrientation:(GroupCallSettingsState.VideoOrientation)->Void
     let toggleRecordVideo: ()->Void
+    let copyToClipboard:(String)->Void
+    let toggleHideKey:()->Void
     init(sharedContext: SharedAccountContext,
          toggleInputAudioDevice: @escaping(String?)->Void,
          toggleOutputAudioDevice:@escaping(String?)->Void,
@@ -49,7 +51,9 @@ private final class Arguments {
          setNoiseSuppression:@escaping(Bool)->Void,
          reduceMotions:@escaping(Bool)->Void,
          selectVideoRecordOrientation:@escaping(GroupCallSettingsState.VideoOrientation)->Void,
-         toggleRecordVideo: @escaping()->Void) {
+         toggleRecordVideo: @escaping()->Void,
+         copyToClipboard:@escaping(String)->Void,
+         toggleHideKey:@escaping()->Void) {
         self.sharedContext = sharedContext
         self.toggleInputAudioDevice = toggleInputAudioDevice
         self.toggleOutputAudioDevice = toggleOutputAudioDevice
@@ -67,6 +71,8 @@ private final class Arguments {
         self.reduceMotions = reduceMotions
         self.selectVideoRecordOrientation = selectVideoRecordOrientation
         self.toggleRecordVideo = toggleRecordVideo
+        self.copyToClipboard = copyToClipboard
+        self.toggleHideKey = toggleHideKey
     }
 }
 
@@ -148,6 +154,7 @@ struct GroupCallSettingsState : Equatable {
     var recordName: String?
     var recordVideo: Bool
     var videoOrientation: VideoOrientation
+    var hideKey: Bool = true
 }
 
 private let _id_leave_chat = InputDataIdentifier.init("_id_leave_chat")
@@ -164,6 +171,9 @@ private let _id_input_mode_ptt_se = InputDataIdentifier("_id_input_mode_ptt_se")
 private let _id_input_mode_toggle = InputDataIdentifier("_id_input_mode_toggle")
 private let _id_noise_suppression =  InputDataIdentifier("_id_noise_suppression")
 
+private let _id_server_url = InputDataIdentifier("_id_server_url")
+private let _id_stream_key = InputDataIdentifier("_id_stream_key")
+
 private let _id_input_chat_title = InputDataIdentifier("_id_input_chat_title")
 private let _id_input_record_title = InputDataIdentifier("_id_input_record_title")
 
@@ -178,7 +188,7 @@ private func _id_peer(_ id:PeerId) -> InputDataIdentifier {
     return InputDataIdentifier("_id_peer_\(id.toInt64())")
 }
 
-private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODevices, uiState: GroupCallSettingsState, settings: VoiceCallSettings, account: Account, peer: Peer, accountPeer: Peer, joinAsPeerId: PeerId, arguments: Arguments) -> [InputDataEntry] {
+private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODevices, uiState: GroupCallSettingsState, settings: VoiceCallSettings, account: Account, peer: Peer, accountPeer: Peer, joinAsPeerId: PeerId, rtmp_credentials: GroupCallStreamCredentials?, arguments: Arguments) -> [InputDataEntry] {
     
     var entries:[InputDataEntry] = []
     let theme = GroupCallTheme.customTheme
@@ -327,9 +337,6 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
         
         let tuple = Tuple(recordingStartTimestamp: recordingStartTimestamp, viewType: recordingStartTimestamp == nil ? .lastItem : .singleItem)
         
-        
-
-        
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("recording"), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
             return GroupCallRecorderRowItem(initialSize, stableId: stableId, viewType: tuple.viewType, account: account, startedRecordedTime: tuple.recordingStartTimestamp, customTheme: theme, start: arguments.startRecording, stop: arguments.stopRecording)
         }))
@@ -337,37 +344,8 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
         
     }
     
-//    if state.canManageCall {
-//
-//        entries.append(.sectionId(sectionId, type: .customModern(20)))
-//        sectionId += 1
-//
-//        //TODOLANG
-//        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("INVITE LINKS"), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
-//        index += 1
-//
-//        //TODOLANG
-//        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_listening_link, data: InputDataGeneralData(name: "Copy Listening Link", color: theme.accentColor, type: .none, viewType: .firstItem, enabled: true, action: {
-//            copyToClipboard("t.me/listeninglink")
-//            arguments.showTooltip("Listening link successfully copied to Clipboard")
-//        }, theme: theme)))
-//        index += 1
-//
-//        //TODOLANG
-//        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_speaking_link, data: InputDataGeneralData(name: "Copy Speaking Link", color: theme.accentColor, type: .none, viewType: .lastItem, enabled: true, action: {
-//            copyToClipboard("t.me/speakinglink")
-//            arguments.showTooltip("Speaking link successfully copied to Clipboard")
-//        }, theme: theme)))
-//        index += 1
-//
-//        entries.append(.desc(sectionId: sectionId, index: index, text: .plain("Use these links to invite listeners or speakers to your voice chat."), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textBottomItem)))
-//        index += 1
-//
-//
-//    }
     
-    
-    if state.canManageCall, let defaultParticipantMuteState = state.defaultParticipantMuteState {
+    if state.canManageCall, let defaultParticipantMuteState = state.defaultParticipantMuteState, !state.isStream {
         
         if case .sectionId = entries.last {
             
@@ -394,39 +372,43 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
     }
 
     
+    if !state.isStream {
+        if case .sectionId = entries.last {
+            
+        } else {
+            entries.append(.sectionId(sectionId, type: .customModern(20)))
+            sectionId += 1
+        }
+
+            
+        let microDevice = settings.audioInputDeviceId == nil ? devices.audioInput.first : devices.audioInput.first(where: { $0.uniqueID == settings.audioInputDeviceId })
+           
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().callSettingsInputTitle), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
+        index += 1
+        
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_audio, data: .init(name: strings().callSettingsInputText, color: theme.textColor, type: .contextSelector(settings.audioInputDeviceId == nil ? strings().callSettingsDeviceDefault : microDevice?.localizedName ?? strings().callSettingsDeviceDefault, [SPopoverItem(strings().callSettingsDeviceDefault, {
+            arguments.toggleInputAudioDevice(nil)
+        })] + devices.audioInput.map { value in
+            return SPopoverItem(value.localizedName, {
+                arguments.toggleInputAudioDevice(value.uniqueID)
+            })
+        }), viewType: microDevice == nil ? .singleItem : .firstItem, theme: theme)))
+        index += 1
+        
+        if let microDevice = microDevice {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_micro, equatable: InputDataEquatable(microDevice.uniqueID), comparable: nil, item: { initialSize, stableId -> TableRowItem in
+                return MicrophonePreviewRowItem(initialSize, stableId: stableId, context: arguments.sharedContext, viewType: .lastItem, customTheme: theme)
+            }))
+            index += 1
+        }
+    }
+    
     if case .sectionId = entries.last {
         
     } else {
         entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
     }
-
-        
-    let microDevice = settings.audioInputDeviceId == nil ? devices.audioInput.first : devices.audioInput.first(where: { $0.uniqueID == settings.audioInputDeviceId })
-       
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().callSettingsInputTitle), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
-    index += 1
-    
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_audio, data: .init(name: strings().callSettingsInputText, color: theme.textColor, type: .contextSelector(settings.audioInputDeviceId == nil ? strings().callSettingsDeviceDefault : microDevice?.localizedName ?? strings().callSettingsDeviceDefault, [SPopoverItem(strings().callSettingsDeviceDefault, {
-        arguments.toggleInputAudioDevice(nil)
-    })] + devices.audioInput.map { value in
-        return SPopoverItem(value.localizedName, {
-            arguments.toggleInputAudioDevice(value.uniqueID)
-        })
-    }), viewType: microDevice == nil ? .singleItem : .firstItem, theme: theme)))
-    index += 1
-    
-    if let microDevice = microDevice {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_micro, equatable: InputDataEquatable(microDevice.uniqueID), comparable: nil, item: { initialSize, stableId -> TableRowItem in
-            return MicrophonePreviewRowItem(initialSize, stableId: stableId, context: arguments.sharedContext, viewType: .lastItem, customTheme: theme)
-        }))
-        index += 1
-    }
-    
-    
-    entries.append(.sectionId(sectionId, type: .customModern(20)))
-    sectionId += 1
-    
     
     let outputDevice = devices.audioOutput.first(where: { $0.uniqueID == settings.audioOutputDeviceId })
        
@@ -442,97 +424,101 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
     }), viewType: .singleItem, theme: theme)))
     index += 1
     
-
-    entries.append(.sectionId(sectionId, type: .customModern(20)))
-    sectionId += 1
-
-
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatSettingsPushToTalkTitle), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
-    index += 1
-
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_mode_toggle, data: .init(name: strings().voiceChatSettingsPushToTalkEnabled, color: theme.textColor, type: .switchable(settings.mode != .none), viewType: .singleItem, action: {
-        if settings.mode == .none {
-            arguments.checkPermission()
-        }
-        arguments.updateSettings {
-            $0.withUpdatedMode($0.mode == .none ? .pushToTalk : .none)
-        }
-    }, theme: theme)))
-    index += 1
-
-    switch settings.mode {
-    case .none:
-        break
-    default:
+    if !state.isStream {
         entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
 
 
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatSettingsInputMode), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatSettingsPushToTalkTitle), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
         index += 1
 
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_mode_always, data: .init(name: strings().voiceChatSettingsInputModeAlways, color: theme.textColor, type: .selectable(settings.mode == .always), viewType: .firstItem, action: {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_mode_toggle, data: .init(name: strings().voiceChatSettingsPushToTalkEnabled, color: theme.textColor, type: .switchable(settings.mode != .none), viewType: .singleItem, action: {
+            if settings.mode == .none {
+                arguments.checkPermission()
+            }
             arguments.updateSettings {
-                $0.withUpdatedMode(.always)
+                $0.withUpdatedMode($0.mode == .none ? .pushToTalk : .none)
             }
         }, theme: theme)))
         index += 1
 
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_mode_ptt, data: .init(name: strings().voiceChatSettingsInputModePushToTalk, color: theme.textColor, type: .selectable(settings.mode == .pushToTalk), viewType: .lastItem, action: {
-            arguments.updateSettings {
-                $0.withUpdatedMode(.pushToTalk)
-            }
-        }, theme: theme)))
-        index += 1
+        switch settings.mode {
+        case .none:
+            break
+        default:
+            entries.append(.sectionId(sectionId, type: .customModern(20)))
+            sectionId += 1
 
 
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatSettingsInputMode), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
+            index += 1
 
-        entries.append(.sectionId(sectionId, type: .customModern(20)))
-        sectionId += 1
-
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatSettingsPushToTalk), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 0, 0)))))
-        index += 1
-
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_ptt, equatable: InputDataEquatable(settings.pushToTalk), comparable: nil, item: { initialSize, stableId -> TableRowItem in
-            return PushToTalkRowItem(initialSize, stableId: stableId, settings: settings.pushToTalk, update: { value in
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_mode_always, data: .init(name: strings().voiceChatSettingsInputModeAlways, color: theme.textColor, type: .selectable(settings.mode == .always), viewType: .firstItem, action: {
                 arguments.updateSettings {
-                    $0.withUpdatedPushToTalk(value)
+                    $0.withUpdatedMode(.always)
                 }
-            }, checkPermission: arguments.checkPermission, viewType: .singleItem)
-        }))
-        index += 1
+            }, theme: theme)))
+            index += 1
 
-        if let permission = uiState.hasPermission {
-            if !permission {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_mode_ptt, data: .init(name: strings().voiceChatSettingsInputModePushToTalk, color: theme.textColor, type: .selectable(settings.mode == .pushToTalk), viewType: .lastItem, action: {
+                arguments.updateSettings {
+                    $0.withUpdatedMode(.pushToTalk)
+                }
+            }, theme: theme)))
+            index += 1
 
-                let text: String
-                if #available(macOS 10.15, *) {
-                    text = strings().voiceChatSettingsPushToTalkAccess
+
+
+            entries.append(.sectionId(sectionId, type: .customModern(20)))
+            sectionId += 1
+
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatSettingsPushToTalk), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 0, 0)))))
+            index += 1
+
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_ptt, equatable: InputDataEquatable(settings.pushToTalk), comparable: nil, item: { initialSize, stableId -> TableRowItem in
+                return PushToTalkRowItem(initialSize, stableId: stableId, settings: settings.pushToTalk, update: { value in
+                    arguments.updateSettings {
+                        $0.withUpdatedPushToTalk(value)
+                    }
+                }, checkPermission: arguments.checkPermission, viewType: .singleItem)
+            }))
+            index += 1
+
+            if let permission = uiState.hasPermission {
+                if !permission {
+
+                    let text: String
+                    if #available(macOS 10.15, *) {
+                        text = strings().voiceChatSettingsPushToTalkAccess
+                    } else {
+                        text = strings().voiceChatSettingsPushToTalkAccessOld
+                    }
+
+                    entries.append(.desc(sectionId: sectionId, index: index, text: .customMarkdown(text, linkColor: GroupCallTheme.speakLockedColor, linkFont: .bold(11.5), linkHandler: { permission in
+                        PermissionsManager.openInputMonitoringPrefs()
+                    }), data: .init(color: GroupCallTheme.speakLockedColor, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 0, 0)))))
+                    index += 1
                 } else {
-                    text = strings().voiceChatSettingsPushToTalkAccessOld
+                    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatSettingsPushToTalkDesc), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 0, 0)))))
+                    index += 1
                 }
-
-                entries.append(.desc(sectionId: sectionId, index: index, text: .customMarkdown(text, linkColor: GroupCallTheme.speakLockedColor, linkFont: .bold(11.5), linkHandler: { permission in
-                    PermissionsManager.openInputMonitoringPrefs()
-                }), data: .init(color: GroupCallTheme.speakLockedColor, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 0, 0)))))
-                index += 1
-            } else {
-                entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatSettingsPushToTalkDesc), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 16, 0, 0)))))
-                index += 1
             }
         }
     }
 
-    entries.append(.sectionId(sectionId, type: .customModern(20)))
-    sectionId += 1
+    if !state.isStream {
+        entries.append(.sectionId(sectionId, type: .customModern(20)))
+        sectionId += 1
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatSettingsPerformanceHeader), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
+        index += 1
+        
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_noise_suppression, data: InputDataGeneralData(name: strings().voiceChatSettingsNoiseSuppression, color: theme.textColor, type: .switchable(settings.noiseSuppression), viewType: .singleItem, enabled: true, action: {
+            arguments.setNoiseSuppression(!settings.noiseSuppression)
+        }, theme: theme)))
+        index += 1
+    }
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatSettingsPerformanceHeader), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
-    index += 1
-    
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_noise_suppression, data: InputDataGeneralData(name: strings().voiceChatSettingsNoiseSuppression, color: theme.textColor, type: .switchable(settings.noiseSuppression), viewType: .singleItem, enabled: true, action: {
-        arguments.setNoiseSuppression(!settings.noiseSuppression)
-    }, theme: theme)))
-    index += 1
     
 
     
@@ -549,11 +535,43 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
         entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_reset_link, data: InputDataGeneralData(name: strings().voiceChatSettingsResetLink, color: GroupCallTheme.customTheme.accentColor, type: .none, viewType: .firstItem, enabled: true, action: arguments.resetLink, theme: theme)))
-        index += 1
+        if !state.isStream {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_reset_link, data: InputDataGeneralData(name: strings().voiceChatSettingsResetLink, color: GroupCallTheme.customTheme.accentColor, type: .none, viewType: .firstItem, enabled: true, action: arguments.resetLink, theme: theme)))
+            index += 1
+        } else if let credentials = rtmp_credentials {
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatSettingsRTMP), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
+            index += 1
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_server_url, equatable: .init(uiState), comparable: nil, item: { initialSize, stableId in
+                return TextAndLabelItem(initialSize, stableId: stableId, label: strings().voiceChatRTMPServerURL, copyMenuText: strings().textCopy, labelColor: theme.textColor, textColor: theme.accentColor, backgroundColor: theme.backgroundColor, text: credentials.url, context: nil, viewType: .firstItem, isTextSelectable: false, callback: {
+                    arguments.copyToClipboard(credentials.url)
+                }, selectFullWord: true, canCopy: true, _copyToClipboard: {
+                    arguments.copyToClipboard(credentials.url)
+                }, textFont: .code(.title), accentColor: theme.accentColor)
+            }))
+            index += 1
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_stream_key, equatable: .init(uiState), comparable: nil, item: { initialSize, stableId in
+                return TextAndLabelItem(initialSize, stableId: stableId, label: strings().voiceChatRTMPStreamKey, copyMenuText: strings().textCopy, labelColor: theme.textColor, textColor: theme.accentColor, backgroundColor: theme.backgroundColor, text: credentials.streamKey, context: nil, viewType: .lastItem, isTextSelectable: false, callback: {
+                    arguments.copyToClipboard(credentials.streamKey)
+                }, selectFullWord: true, canCopy: true, _copyToClipboard: {
+                    arguments.copyToClipboard(credentials.streamKey)
+                }, textFont: .code(.title), hideText: uiState.hideKey, toggleHide: arguments.toggleHideKey, accentColor: theme.accentColor)
+            }))
+            index += 1
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatRTMPInfo), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textBottomItem)))
+            index += 1
 
+            
+            entries.append(.sectionId(sectionId, type: .customModern(20)))
+            sectionId += 1
+            
+        }
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_leave_chat, data: InputDataGeneralData(name: strings().voiceChatSettingsEnd, color: GroupCallTheme.speakLockedColor, type: .none, viewType: .lastItem, enabled: true, action: arguments.finishCall, theme: theme)))
+        
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_leave_chat, data: InputDataGeneralData(name: strings().voiceChatSettingsEnd, color: GroupCallTheme.speakLockedColor, type: .none, viewType: state.isStream ? .singleItem : .lastItem, enabled: true, action: arguments.finishCall, theme: theme)))
         index += 1
     }
     
@@ -823,6 +841,17 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
                 current.recordVideo = !current.recordVideo
                 return current
             }
+        }, copyToClipboard: { [weak self] value in
+            copyToClipboard(value)
+            if let window = self?.window {
+                showModalText(for: window, text: strings().contextAlertCopied)
+            }
+        }, toggleHideKey: {
+            updateState { current in
+                var current = current
+                current.hideKey = !current.hideKey
+                return current
+            }
         })
         
         let previousEntries:Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
@@ -846,8 +875,25 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
         })
         let initialSize = self.atomicSize
         let joinAsPeer: Signal<PeerId, NoError> = self.call.joinAsPeerIdValue
-        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, sharedContext.devicesContext.signal, voiceCallSettings(sharedContext.accountManager), appearanceSignal, self.call.account.postbox.loadedPeerWithId(self.call.peerId), self.call.account.postbox.loadedPeerWithId(account.peerId), joinAsPeer, self.callState, statePromise.get()) |> mapToQueue { devices, settings, appearance, peer, accountPeer, joinAsPeerId, state, uiState in
-            let entries = groupCallSettingsEntries(callState: state, devices: devices, uiState: uiState, settings: settings, account: account, peer: peer, accountPeer: accountPeer, joinAsPeerId: joinAsPeerId, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
+        
+        
+        let rtmp_credentials: Signal<GroupCallStreamCredentials?, NoError>
+        
+        if let peer = self.call.peer, peer.groupAccess.isCreator {
+            let credentials = self.call.engine.calls.getGroupCallStreamCredentials(peerId: .init(self.call.peerId.toInt64()), revokePreviousCredentials: false)
+            |> map(Optional.init)
+            |> `catch` { _ -> Signal<GroupCallStreamCredentials?, NoError> in
+                return .single(nil)
+            }
+            
+           rtmp_credentials = .single(nil) |> then(credentials)
+        } else {
+            rtmp_credentials = .single(nil)
+        }
+        
+        
+        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, sharedContext.devicesContext.signal, voiceCallSettings(sharedContext.accountManager), appearanceSignal, self.call.account.postbox.loadedPeerWithId(self.call.peerId), self.call.account.postbox.loadedPeerWithId(account.peerId), joinAsPeer, self.callState, statePromise.get(), rtmp_credentials) |> mapToQueue { devices, settings, appearance, peer, accountPeer, joinAsPeerId, state, uiState, rtmp_credentials in
+            let entries = groupCallSettingsEntries(callState: state, devices: devices, uiState: uiState, settings: settings, account: account, peer: peer, accountPeer: accountPeer, joinAsPeerId: joinAsPeerId, rtmp_credentials: rtmp_credentials, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
             return prepareInputDataTransition(left: previousEntries.swap(entries), right: entries, animated: true, searchState: nil, initialSize: initialSize.with { $0 }, arguments: inputDataArguments, onMainQueue: false)
         } |> deliverOnMainQueue
 

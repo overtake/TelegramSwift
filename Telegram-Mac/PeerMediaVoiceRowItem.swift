@@ -182,7 +182,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
 
         if let fetchStatus = self.fetchStatus {
             switch fetchStatus {
-            case .Fetching:
+            case .Fetching, .Paused:
                 if isControl {
                     if item.message.flags.contains(.Unsent) && !item.message.flags.contains(.Failed) {
                         delete()
@@ -191,7 +191,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
                 } else {
                     //open()
                 }
-            case .Remote, .Paused:
+            case .Remote:
                 fetch()
             //open()
             case .Local:
@@ -214,9 +214,9 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         didSet {
             if let fetchStatus = fetchStatus {
                 switch fetchStatus {
-                case let .Fetching(_, progress):
+                case let .Fetching(_, progress), let .Paused(progress):
                     progressView.state = .Fetching(progress: progress, force: false)
-                case .Remote, .Paused:
+                case .Remote:
                     progressView.state = .Remote
                 case .Local:
                     progressView.state = .Play
@@ -311,7 +311,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         let file:TelegramMediaFile = item.file
         
         if item.message.flags.contains(.Unsent) && !item.message.flags.contains(.Failed) {
-            updatedStatusSignal = combineLatest(chatMessageFileStatus(account: item.interface.context.account, file: file), item.interface.context.account.pendingMessageManager.pendingMessageStatus(item.message.id))
+            updatedStatusSignal = combineLatest(chatMessageFileStatus(context: item.interface.context, message: item.message, file: file), item.interface.context.account.pendingMessageManager.pendingMessageStatus(item.message.id))
                 |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
                     if let pendingStatus = pendingStatus.0 {
                         return .Fetching(isActive: true, progress: pendingStatus.progress)
@@ -320,7 +320,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
                     }
                 } |> deliverOnMainQueue
         } else {
-            updatedStatusSignal = chatMessageFileStatus(account: item.interface.context.account, file: file) |> deliverOnMainQueue
+            updatedStatusSignal = chatMessageFileStatus(context: item.interface.context, message: item.message, file: file) |> deliverOnMainQueue
         }
         
         self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status in

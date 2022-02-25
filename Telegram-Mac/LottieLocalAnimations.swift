@@ -69,6 +69,11 @@ enum LocalAnimatedSticker : String {
     case screenoff
     case screenon
     
+    case group_call_share
+    case group_call_minmax
+    case group_call_maxmin
+    case group_call_stream_empty
+    
     case cameraon
     case cameraoff
     

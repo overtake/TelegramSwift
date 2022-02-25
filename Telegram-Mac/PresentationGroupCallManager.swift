@@ -179,6 +179,7 @@ public struct PresentationGroupCallState: Equatable {
     public var scheduleTimestamp: Int32?
     public var subscribedToScheduled: Bool
     public var isVideoEnabled: Bool
+    public var isStream: Bool
     public init(
         myPeerId: PeerId,
         networkState: NetworkState,
@@ -191,7 +192,8 @@ public struct PresentationGroupCallState: Equatable {
         raisedHand: Bool,
         scheduleTimestamp: Int32?,
         subscribedToScheduled: Bool,
-        isVideoEnabled: Bool
+        isVideoEnabled: Bool,
+        isStream: Bool
     ) {
         self.myPeerId = myPeerId
         self.networkState = networkState
@@ -205,6 +207,7 @@ public struct PresentationGroupCallState: Equatable {
         self.scheduleTimestamp = scheduleTimestamp
         self.subscribedToScheduled = subscribedToScheduled
         self.isVideoEnabled = isVideoEnabled
+        self.isStream = isStream
     }
     
     var scheduleState: ScheduleState? {
@@ -277,6 +280,8 @@ protocol PresentationGroupCall: class {
     var callInfo: Signal<GroupCallInfo?, NoError> { get }
     var stateVersion: Signal<Int, NoError> { get }
     var isSpeaking: Signal<Bool, NoError> { get }
+    
+    var isStream: Bool { get }
 
     var mustStopSharing:(()->Void)? { get set }
     var mustStopVideo:(()->Void)? { get set }

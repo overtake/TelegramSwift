@@ -247,6 +247,12 @@ final class GroupCallTitleView : Control {
         let mode: Mode = .normal
         
         self.updateMode(mode, animated: animated)
+        
+        let windowIsPinned = window?.level == NSWindow.Level.popUpMenu
+        
+        pinWindow.set(image: !windowIsPinned ?  GroupCallTheme.pin_window : GroupCallTheme.unpin_window, for: .Normal)
+        pinWindow.sizeToFit()
+
                 
         let title: String = state.title
         let oldTitle: String? = currentState?.title
@@ -316,9 +322,9 @@ final class GroupCallTitleView : Control {
         let oldHidePeers = currentState?.hideParticipants == true
         
         
-        let hidePeersButtonHide = state.mode != .video || state.activeVideoViews.isEmpty || !state.isFullScreen
+        let hidePeersButtonHide = state.mode != .video || state.activeVideoViews.isEmpty || !state.isFullScreen || state.isStream
         
-        let oldHidePeersButtonHide = currentState?.mode != .video || currentState?.activeVideoViews.isEmpty == true || currentState?.isFullScreen == false
+        let oldHidePeersButtonHide = currentState?.mode != .video || currentState?.activeVideoViews.isEmpty == true || currentState?.isFullScreen == false || currentState?.isStream == true
 
         
         let updated = titleUpdated || recordingUpdated || participantsUpdated || mode != oldMode || hidePeers != oldHidePeers || oldHidePeersButtonHide != hidePeersButtonHide
@@ -410,10 +416,6 @@ final class GroupCallTitleView : Control {
             needsLayout = true
         }
         
-        let windowIsPinned = window?.level == NSWindow.Level.popUpMenu
-        
-        pinWindow.set(image: !windowIsPinned ?  GroupCallTheme.pin_window : GroupCallTheme.unpin_window, for: .Normal)
-        pinWindow.sizeToFit()
         
         pinWindow.removeAllHandlers()
         pinWindow.set(handler: { control in

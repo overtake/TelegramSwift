@@ -268,7 +268,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         let context = self.context
         let peerId = self.peerId
         if let activeCall = current {
-            let join:(PeerId, Date?)->Void = { joinAs, _ in
+            let join:(PeerId, Date?, Bool)->Void = { joinAs, _, _ in
                 _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: activeCall, initialInfo: nil, joinHash: nil), for: context.window).start(next: { result in
                     switch result {
                     case let .samePeer(callContext):
@@ -281,7 +281,7 @@ class ChannelInfoArguments : PeerInfoArguments {
                 })
             }
             if let callJoinPeerId = callJoinPeerId {
-                join(callJoinPeerId, nil)
+                join(callJoinPeerId, nil, false)
             } else {
                 selectGroupCallJoiner(context: context, peerId: peerId, completion: join)
             }

@@ -132,7 +132,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     func executeInteraction(_ isControl:Bool) -> Void {
         if let fetchStatus = self.fetchStatus, userInteractionEnabled {
             switch fetchStatus {
-            case .Fetching:
+            case .Fetching, .Paused:
                 if isControl {
                     if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
                         delete()
@@ -140,7 +140,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
                     cancelFetching()
                 } else {
                 }
-            case .Remote, .Paused:
+            case .Remote:
                 fetch(userInitiated: true)
             case .Local:
                 open()

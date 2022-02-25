@@ -778,7 +778,7 @@ private final class WallpaperPreviewView: View {
             disposable.set(updatedStatusSignal.start(next: { [weak self] status in
                 guard let `self` = self else { return }
                 switch status {
-                case let .Fetching(_, progress):
+                case let .Fetching(_, progress), let .Paused(progress):
                     if self.progressView == nil {
                         self.progressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white), twist: true, size: NSMakeSize(40, 40))
                         self.addSubview(self.progressView!)
@@ -797,7 +797,7 @@ private final class WallpaperPreviewView: View {
                         })
                     }
                     
-                case .Remote, .Paused:
+                case .Remote:
                     break
                 }
             }))

@@ -163,7 +163,7 @@ class ChatFileContentView: ChatMediaContentView {
            
         }
         switch status {
-        case let .Fetching(_, progress):
+        case let .Fetching(_, progress), let .Paused(progress):
             if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
                 let _ = attr.append(string: strings().messagesFileStateFetchingOut1(Int(progress * 100.0)), color: presentation.grayText, font: .normal(.text))
             } else {
@@ -184,7 +184,7 @@ class ChatFileContentView: ChatMediaContentView {
                 return layout
             }
             return paremeters?.finderLayout
-        case .Remote, .Paused:
+        case .Remote:
             return paremeters?.downloadLayout
         }
     }
@@ -210,7 +210,7 @@ class ChatFileContentView: ChatMediaContentView {
             archiveSignal = archiver.archive(.resource(resource)) |> map {Optional($0)}
         }
         if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
-            updatedStatusSignal = combineLatest(chatMessageFileStatus(account: context.account, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id), archiveSignal)
+            updatedStatusSignal = combineLatest(chatMessageFileStatus(context: context, message: parent, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id), archiveSignal)
                 |> map { resourceStatus, pendingStatus, archiveStatus in
                     if let archiveStatus = archiveStatus {
                         switch archiveStatus {
@@ -227,7 +227,13 @@ class ChatFileContentView: ChatMediaContentView {
                     }
                 } |> deliverOnMainQueue
         } else {
-            updatedStatusSignal = combineLatest(chatMessageFileStatus(account: context.account, file: file, approximateSynchronousValue: approximateSynchronousValue), archiveSignal) |> map { resourceStatus, archiveStatus in
+            let signal: Signal<MediaResourceStatus, NoError>
+            if let parent = parent {
+                signal = chatMessageFileStatus(context: context, message: parent, file: file, approximateSynchronousValue: approximateSynchronousValue)
+            } else {
+                signal = context.account.postbox.mediaBox.resourceStatus(file.resource)
+            }
+            updatedStatusSignal = combineLatest(signal, archiveSignal) |> map { resourceStatus, archiveStatus in
                 if let archiveStatus = archiveStatus {
                     switch archiveStatus {
                     case let .progress(progress):
@@ -284,21 +290,22 @@ class ChatFileContentView: ChatMediaContentView {
                 var statusWasUpdated: Bool = false
                 if let oldStatus = oldStatus {
                     switch oldStatus {
-                    case .Fetching:
+                    case .Fetching, .Paused:
                         if case .Fetching = status {} else {
+                            statusWasUpdated = true
+                        }
+                        if case .Paused = status {} else {
                             statusWasUpdated = true
                         }
                     case .Local:
                         if case .Local = status {} else {
                             statusWasUpdated = true
                         }
-                    case .Remote, .Paused:
+                    case .Remote:
                         if case .Remote = status {} else {
                             statusWasUpdated = true
                         }
-                        if case .Paused = status {} else {
-                            statusWasUpdated = true
-                        }
+
                     }
                 }
                 
@@ -329,7 +336,7 @@ class ChatFileContentView: ChatMediaContentView {
                         switch status {
                         case .Remote:
                             self.thumbProgress?.state = .Remote
-                        case let .Fetching(_, progress):
+                        case let .Fetching(_, progress), let .Paused(progress):
                             let sentGrouped = parent?.groupingKey != nil && (parent!.flags.contains(.Sending) || parent!.flags.contains(.Unsent))
                             if progress == 1.0, sentGrouped {
                                 self.thumbProgress?.state = .Success
@@ -386,7 +393,7 @@ class ChatFileContentView: ChatMediaContentView {
                 progressView.fetchControls = self.fetchControls
                 
                 switch status {
-                case let .Fetching(_, progress):
+                case let .Fetching(_, progress), let .Paused(progress):
                     var progress = progress
                     if let archiveStatus = archiveStatus {
                         switch archiveStatus {
@@ -410,7 +417,7 @@ class ChatFileContentView: ChatMediaContentView {
                 case .Local:
                     progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : .clear, foregroundColor:  file.previewRepresentations.isEmpty ? presentation.activityForeground : .clear, icon: nil)
                     progressView.state = !file.previewRepresentations.isEmpty ? .None : .Icon(image: presentation.fileThumb, mode: .normal)
-                case .Remote, .Paused:
+                case .Remote:
                     progressView.theme = RadialProgressTheme(backgroundColor: file.previewRepresentations.isEmpty ? presentation.activityBackground : theme.colors.blackTransparent, foregroundColor: file.previewRepresentations.isEmpty ? presentation.activityForeground : .white, icon: nil)
                     progressView.state = archiveStatus != nil && self.parent == nil ? .Icon(image: presentation.fileThumb, mode: .normal) : .Remote
                 }

@@ -172,7 +172,7 @@ class ChatVoiceContentView: ChatAudioContentView {
       //  self.progressView.state = .None
  
         if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
-            updatedStatusSignal = combineLatest(chatMessageFileStatus(account: context.account, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
+            updatedStatusSignal = combineLatest(chatMessageFileStatus(context: context, message: parent, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                 |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
                     if let pendingStatus = pendingStatus.0 {
                         return .Fetching(isActive: true, progress: pendingStatus.progress)
@@ -180,8 +180,10 @@ class ChatVoiceContentView: ChatAudioContentView {
                         return resourceStatus
                     }
                 } |> deliverOnMainQueue
+        } else if let parent = parent {
+            updatedStatusSignal = chatMessageFileStatus(context: context, message: parent, file: file, approximateSynchronousValue: approximateSynchronousValue) |> deliverOnMainQueue
         } else {
-            updatedStatusSignal = chatMessageFileStatus(account: context.account, file: file, approximateSynchronousValue: approximateSynchronousValue) |> deliverOnMainQueue
+            updatedStatusSignal = context.account.postbox.mediaBox.resourceStatus(file.resource) |> deliverOnMainQueue
         }
         
         self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status in
@@ -190,10 +192,10 @@ class ChatVoiceContentView: ChatAudioContentView {
                 
                 var state: RadialProgressState? = nil
                 switch status {
-                case let .Fetching(_, progress):
+                case let .Fetching(_, progress), let .Paused(progress):
                     state = .Fetching(progress: progress, force: false)
                     strongSelf.progressView.state = .Fetching(progress: progress, force: false)
-                case .Remote, .Paused:
+                case .Remote:
                     state = .Remote
                     strongSelf.progressView.state = .Remote
                 case .Local:

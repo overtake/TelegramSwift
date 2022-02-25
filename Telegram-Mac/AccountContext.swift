@@ -17,7 +17,7 @@ import ThemeSettings
 import Reactions
 import FetchManager
 
-protocol ChatLocationContextHolder: class {
+protocol ChatLocationContextHolder: AnyObject {
 }
 
 
@@ -214,7 +214,7 @@ final class AccountContext {
         #if !SHARE
         self.peerChannelMemberCategoriesContextsManager = PeerChannelMemberCategoriesContextsManager(self.engine, account: account)
         self.diceCache = DiceCache(postbox: account.postbox, engine: self.engine)
-        self.fetchManager = FetchManagerImpl(postbox: account.postbox, storeManager: DownloadedMediaStoreManagerImpl.init(postbox: account.postbox, accountManager: sharedContext.accountManager))
+        self.fetchManager = FetchManagerImpl(postbox: account.postbox, storeManager: DownloadedMediaStoreManagerImpl(postbox: account.postbox, accountManager: sharedContext.accountManager))
         self.blockedPeersContext = BlockedPeersContext(account: account)
         self.cacheCleaner = AccountClearCache(account: account)
         self.cachedGroupCallContexts = AccountGroupCallContextCacheImpl()

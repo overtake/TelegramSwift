@@ -42,9 +42,11 @@ private struct DownloadItem: Equatable {
 private final class Arguments {
     let context: AccountContext
     let interaction: ChatInteraction
-    init(context: AccountContext, interaction: ChatInteraction) {
+    let clearRecent:()->Void
+    init(context: AccountContext, interaction: ChatInteraction, clearRecent:@escaping()->Void) {
         self.context = context
         self.interaction = interaction
+        self.clearRecent = clearRecent
     }
 }
 
@@ -85,9 +87,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     if !state.doneItems.isEmpty {
                
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_recent_separator, equatable: nil, comparable: nil, item: { initialSize, stableId in
-            return SeparatorRowItem(initialSize, stableId, string: "RECENTLY DOWNLOADED", state: .none, action: {
-                
-            }, leftInset: 10, border: [.Right])
+            return SeparatorRowItem(initialSize, stableId, string: strings().downloadsManagerRecently, right: strings().downloadsManagerRecentlyClear, state: .none, action: arguments.clearRecent, leftInset: 10, border: [.Right])
         }))
         index += 1
       
@@ -161,10 +161,27 @@ func DownloadsController(context: AccountContext) -> InputDataController {
 
     interaction.focusMessageId = { _, messageId, animated in
         let navigation = context.bindings.rootNavigation()
-        navigation.push(ChatController(context: context, chatLocation: .peer(messageId.peerId), messageId: messageId))
+        if let current = navigation.controller as? ChatController {
+            if current.chatInteraction.peerId == messageId.peerId {
+                current.chatInteraction.focusMessageId(nil, messageId, .center(id: AnyHashable(0), innerId: nil, animated: true, focus: .init(focus: true, action: nil), inset: 0))
+            } else {
+                navigation.push(ChatController(context: context, chatLocation: .peer(messageId.peerId), messageId: messageId))
+            }
+        } else {
+            navigation.push(ChatController(context: context, chatLocation: .peer(messageId.peerId), messageId: messageId))
+        }
+        
+    }
+    interaction.forwardMessages = { ids in
+        showModal(with: ShareModalController(ForwardMessagesObject(context, messageIds: ids)), for: context.window)
+    }
+    interaction.deleteMessages = { ids in
+        
     }
 
-    let arguments = Arguments(context: context, interaction: interaction)
+    let arguments = Arguments(context: context, interaction: interaction, clearRecent: {
+        _ = clearRecentDownloadList(postbox: context.account.postbox).start()
+    })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
@@ -213,7 +230,6 @@ func DownloadsController(context: AccountContext) -> InputDataController {
     }
     
     
-    
     controller.didLoaded = { controller, _ in
         controller.tableView.getBackgroundColor = {
             return theme.colors.background
@@ -223,6 +239,10 @@ func DownloadsController(context: AccountContext) -> InputDataController {
         controller.tableView.supplyment = GallerySupplyment(tableView: controller.tableView)
     }
 
+    controller.afterTransaction = { controller in
+        actionsDisposable.add(markAllRecentDownloadItemsAsSeen(postbox: context.account.postbox).start())
+    }
+    
     return controller
     
 }

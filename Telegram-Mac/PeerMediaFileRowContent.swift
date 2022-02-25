@@ -188,9 +188,9 @@ class PeerMediaFileRowView : PeerMediaRowView {
                 return
             } else if let status = self.fetchStatus {
                 switch status {
-                case .Remote, .Paused:
+                case .Remote:
                     executeInteraction(true)
-                case .Fetching:
+                case .Fetching, .Paused:
                     executeInteraction(true)
                 default:
                     break
@@ -271,7 +271,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
             
             let context = item.interface.context
             if let file = item.file {
-                updatedStatusSignal = chatMessageFileStatus(account: context.account, file: file, approximateSynchronousValue: false)
+                updatedStatusSignal = chatMessageFileStatus(context: context, message: item.message, file: file, approximateSynchronousValue: false)
                 updatedFetchControls = FetchControls(fetch: { [weak self] in
                     self?.executeInteraction(true)
                 })

@@ -63,7 +63,7 @@ fileprivate class GMagnifyView : MagnifyView  {
     private func updateProgress(_ status: MediaResourceStatus) {
         
         switch status {
-        case let .Fetching(_, progress):
+        case let .Fetching(_, progress), let .Paused(progress):
             if self.progressView == nil {
                 self.progressView = RadialProgressView()
                 self.addSubview(self.progressView!)
@@ -81,15 +81,13 @@ fileprivate class GMagnifyView : MagnifyView  {
                     }
                 })
             }
-        case .Remote, .Paused:
+        case .Remote:
             if self.progressView == nil {
                 self.progressView = RadialProgressView()
                 self.addSubview(self.progressView!)
                 self.progressView!.center()
             }
             progressView?.state = .Remote
-        case let .Paused(progress: progress):
-            break
         }
         
         progressView?.userInteractionEnabled = status != .Local

@@ -301,9 +301,9 @@ class ContextListAudioView : ContextListRowView, APDelegate {
         
         if let item = item as? ContextListRowItem, let status = fetchStatus {
             switch status {
-            case .Fetching(progress: _):
+            case .Fetching, .Paused:
                 break
-            case .Local, .Remote, .Paused:
+            case .Local, .Remote:
                 if let wrapper = item.audioWrapper {
                     if let controller = item.context.audioPlayer, controller.playOrPause(wrapper) {
                     } else {
@@ -370,11 +370,11 @@ class ContextListAudioView : ContextListRowView, APDelegate {
                 if let strongSelf = self {
                     strongSelf.fetchStatus = status
                     switch status {
-                    case let .Fetching(_, progress):
+                    case let .Fetching(_, progress), let .Paused(progress):
                         strongSelf.progressView.state = .Fetching(progress: progress, force: false)
                     case .Local:
                         strongSelf.progressView.state = .Play
-                    case .Remote, .Paused:
+                    case .Remote:
                         strongSelf.progressView.state = .Play
                     }
                 }

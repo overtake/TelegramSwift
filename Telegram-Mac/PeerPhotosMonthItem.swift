@@ -500,7 +500,7 @@ private final class MediaVideoCell : MediaCell {
         super.update(layout: layout, context: context, table: table)
         let file = layout.message.media.first as! TelegramMediaFile
         
-         let updatedStatusSignal = chatMessageFileStatus(account: context.account, file: file) |> deliverOnMainQueue |> map { status -> (MediaResourceStatus, MediaResourceStatus) in
+        let updatedStatusSignal = chatMessageFileStatus(context: context, message: layout.message, file: file) |> deliverOnMainQueue |> map { status -> (MediaResourceStatus, MediaResourceStatus) in
            if file.isStreamable && layout.message.id.peerId.namespace != Namespaces.Peer.SecretChat {
                return (.Local, status)
            }
@@ -524,9 +524,9 @@ private final class MediaVideoCell : MediaCell {
                 progressStatus = status
             }
             switch progressStatus {
-            case let .Fetching(_, progress):
+            case let .Fetching(_, progress), let .Paused(progress):
                 self.progressView.state = .Fetching(progress: progress, force: false)
-            case .Remote, .Paused:
+            case .Remote:
                 self.progressView.state = .Remote
             case .Local:
                 self.progressView.state = .Play

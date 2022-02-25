@@ -58,7 +58,7 @@ private final class GroupCallScheduleTimerView : View {
         let time = Int(timeValue - Int32(Date().timeIntervalSince1970))
         
         let text = timerText(time, addminus: false)
-        let value = DynamicCounterTextView.make(for: text, count: text, font: .avatar(50), textColor: .white, width: frame.width)
+        let value = DynamicCounterTextView.make(for: text, count: text, font: .digitalRound(50), textColor: .white, width: frame.width)
         
         counter.update(value, animated: animated, reversed: true)
         
@@ -126,6 +126,8 @@ private final class GroupCallScheduleTimerView : View {
     override func layout() {
         super.layout()
         mask.center()
+        headerView.centerX(y: mask.frame.minY - headerView.frame.height)
+        descView.centerX(y: mask.frame.maxY)
     }
 }
 

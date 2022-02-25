@@ -47,7 +47,11 @@ class MGalleryGIFItem: MGalleryItem {
     }
     
     override var status:Signal<MediaResourceStatus, NoError> {
-        return chatMessageFileStatus(account: context.account, file: media)
+        if let message = entry.message {
+            return chatMessageFileStatus(context: context, message: message, file: media)
+        } else {
+            return context.account.postbox.mediaBox.resourceStatus(media.resource)
+        }
     }
     
     var media:TelegramMediaFile {
