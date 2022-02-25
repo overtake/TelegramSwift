@@ -47,22 +47,22 @@ private let progressiveRangeMap: [(Int, [Int])] = [
     (Int(Int32.max), [2, 3, 4])
 ]
 
-func chatMessageFileStatus(account: Account, file: TelegramMediaFile, approximateSynchronousValue: Bool = false, useVideoThumb: Bool = false) -> Signal<MediaResourceStatus, NoError> {
+func chatMessageFileStatus(context: AccountContext, message: Message, file: TelegramMediaFile, approximateSynchronousValue: Bool = false, useVideoThumb: Bool = false) -> Signal<MediaResourceStatus, NoError> {
     if let _ = file.resource as? LocalFileReferenceMediaResource {
         return .single(.Local)
     }
+    
     if useVideoThumb, let videoThumb = file.videoThumbnails.first {
-        return combineLatest(account.postbox.mediaBox.resourceStatus(file.resource, approximateSynchronousValue: approximateSynchronousValue), account.postbox.mediaBox.resourceStatus(videoThumb.resource, approximateSynchronousValue: approximateSynchronousValue)) |> map { file, thumb in
+        return combineLatest(context.fetchManager.fetchStatus(category: .file, location: .chat(message.id.peerId), locationKey: .messageId(message.id), resource: file.resource), context.fetchManager.fetchStatus(category: .file, location: .chat(message.id.peerId), locationKey: .messageId(message.id), resource: videoThumb.resource)) |> map { file, thumb in
             switch thumb {
-            case .Local, .Fetching:
+            case .Local, .Fetching, .Paused:
                 return thumb
             default:
                 return file
             }
         }
-      //  return account.postbox.mediaBox.resourceStatus(videoThumb.resource, approximateSynchronousValue: approximateSynchronousValue)
     }
-    return account.postbox.mediaBox.resourceStatus(file.resource, approximateSynchronousValue: approximateSynchronousValue)
+    return context.fetchManager.fetchStatus(category: .file, location: .chat(message.id.peerId), locationKey: .messageId(message.id), resource: file.resource)
 }
 
 func chatMessageFileInteractiveFetched(account: Account, fileReference: FileMediaReference) -> Signal<FetchResourceSourceType, NoError> {

@@ -194,8 +194,8 @@ final class GroupCallWindow : Window {
     
     var navigation: NavigationViewController?
     
-    init() {
-        let size = GroupCallTheme.minSize
+    init(isStream: Bool) {
+        let size = isStream ? GroupCallTheme.minFullScreenSize : GroupCallTheme.minSize
         var rect: NSRect = .init(origin: .init(x: 100, y: 100), size: size)
         if let screen = NSScreen.main {
             let x = floorToScreenPixels(System.backingScale, (screen.frame.width - size.width) / 2)
@@ -205,7 +205,7 @@ final class GroupCallWindow : Window {
 
         //
         super.init(contentRect: rect, styleMask: [.fullSizeContentView, .borderless, .miniaturizable, .closable, .titled, .resizable], backing: .buffered, defer: true)
-        self.minSize = GroupCallTheme.minSize
+        self.minSize = isStream ? GroupCallTheme.minFullScreenSize : GroupCallTheme.minSize
         self.name = "GroupCallWindow5"
         self.acceptFirstMouse = false
         self.titlebarAppearsTransparent = true
@@ -215,10 +215,18 @@ final class GroupCallWindow : Window {
         self.isMovableByWindowBackground = true
         self.level = .normal
         self.appearance = darkPalette.appearance
+        
+        
+       
 //        self.toolbar = NSToolbar(identifier: "window")
 //        self.toolbar?.showsBaselineSeparator = false
         
         initSaver()
+        
+        if self.frame.width < rect.width || self.frame.height < rect.height {
+            self.setFrame(rect, display: true)
+        }
+        
     }
     
     
@@ -261,7 +269,7 @@ final class GroupCallContext {
     init(call: PresentationGroupCall, peerMemberContextsManager: PeerChannelMemberCategoriesContextsManager) {
         self.call = call
         self.peerMemberContextsManager = peerMemberContextsManager
-        self.window = GroupCallWindow()
+        self.window = GroupCallWindow(isStream: call.isStream)
         self.controller = GroupCallUIController(.init(call: call, peerMemberContextsManager: peerMemberContextsManager), size: window.frame.size)
         self.navigation = MajorNavigationController(GroupCallUIController.self, controller, self.window)
         self.navigation._frameRect = NSMakeRect(0, 0, window.frame.width, window.frame.height)

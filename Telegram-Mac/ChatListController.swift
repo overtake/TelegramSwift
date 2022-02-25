@@ -12,6 +12,7 @@ import SwiftSignalKit
 import Postbox
 import TelegramCore
 import InAppSettings
+import FetchManager
 
 
 
@@ -315,6 +316,7 @@ class ChatListController : PeersListController {
     private let first = Atomic(value:true)
     private let animated = Atomic(value: false)
     private let removePeerIdGroupDisposable = MetaDisposable()
+    private let downloadsDisposable = MetaDisposable()
     private let disposable = MetaDisposable()
     private let scrollDisposable = MetaDisposable()
     private let reorderDisposable = MetaDisposable()
@@ -322,6 +324,8 @@ class ChatListController : PeersListController {
     private let archivationTooltipDisposable = MetaDisposable()
     private let animateGroupNextTransition:Atomic<PeerGroupId?> = Atomic(value: nil)
     private var activityStatusesDisposable:Disposable?
+    
+    private let downloadsSummary: DownloadsSummary
     
     private let suggestAutoarchiveDisposable = MetaDisposable()
     
@@ -753,6 +757,17 @@ class ChatListController : PeersListController {
                 } )
             }))
         }
+        
+        let arguments: DownloadsControlArguments = DownloadsControlArguments(open: { [weak self] in
+            self?.showDownloads(animated: true)
+        }, navigate: { [weak self] messageId in
+            self?.open(with: .chatId(messageId.peerId, nil), messageId: messageId, initialAction: nil, close: false, forceAnimated: true)
+        })
+        
+        downloadsDisposable.set(self.downloadsSummary.state.start(next: { [weak self] state in
+            self?.genericView.updateDownloads(state, context: context, arguments: arguments, animated: true)
+        }))
+        
     }
     
     func collapseOrExpandArchive() {
@@ -1316,6 +1331,7 @@ class ChatListController : PeersListController {
         activityStatusesDisposable?.dispose()
         filterDisposable.dispose()
         suggestAutoarchiveDisposable.dispose()
+        downloadsDisposable.dispose()
     }
     
     
@@ -1364,6 +1380,8 @@ class ChatListController : PeersListController {
         } else {
             mode = .plain
         }
+        
+        self.downloadsSummary = DownloadsSummary(context.fetchManager as! FetchManagerImpl, context: context)
         
         super.init(context, followGlobal: !modal, mode: mode)
         

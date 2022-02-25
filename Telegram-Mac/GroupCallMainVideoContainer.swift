@@ -219,6 +219,8 @@ struct DominantVideo : Equatable {
         case focused
     }
     
+    static let streamEndpoint = "unified"
+    
     let peerId: PeerId
     let endpointId: String
     let mode: VideoSourceMacMode
@@ -287,17 +289,7 @@ final class GroupCallMainVideoContainerView: Control {
         
         self.forceMouseDownCanMoveWindow = true
         
-        
-        
-//        backstage.wantsLayer = true
-//        backstage.material = .dark
-//        backstage.blendingMode = .withinWindow
-//        if #available(OSX 10.12, *) {
-//            backstage.isEmphasized = true
-//        }
-//        backstage.state = .active
-        
-        
+
         nameView.userInteractionEnabled = false
         nameView.isSelectable = false
         
@@ -375,6 +367,9 @@ final class GroupCallMainVideoContainerView: Control {
         self.arguments = arguments
         
         
+        self.nameView.isHidden = peer?.endpointId == DominantVideo.streamEndpoint
+        self.statusView.isHidden = peer?.endpointId == DominantVideo.streamEndpoint
+
         if self.pinIsVisible {
             let currentPinView: PinView
             if let current = self.pinView {

@@ -91,6 +91,9 @@ final class FilterTabsView : View {
 
 class PeerListContainerView : View {
     private let backgroundView = BackgroundView(frame: NSZeroRect)
+    
+    private var downloads: DownloadsControl?
+    
     var tableView = TableView(frame:NSZeroRect, drawBorder: true) {
         didSet {
             oldValue.removeFromSuperview()
@@ -380,7 +383,36 @@ class PeerListContainerView : View {
         
         backgroundView.frame = bounds
         
+        if let downloads = downloads {
+            downloads.frame = NSMakeRect(0, frame.height - downloads.frame.height, frame.width - .borderSize, downloads.frame.height)
+        }
+        
         self.needsDisplay = true
+    }
+    
+    func updateDownloads(_ state: DownloadsSummary.State, context: AccountContext, arguments: DownloadsControlArguments, animated: Bool) {
+        if !state.isEmpty {
+            let current: DownloadsControl
+            if let view = self.downloads {
+                current = view
+            } else {
+                current = DownloadsControl(frame: NSMakeRect(0, frame.height - 50, frame.width - .borderSize, 50))
+                self.downloads = current
+                addSubview(current, positioned: .above, relativeTo: self.tableView)
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    current.layer?.animatePosition(from: NSMakePoint(current.frame.minX, current.frame.maxY), to: current.frame.origin)
+                }
+            }
+            current.update(state, context: context, arguments: arguments, animated: animated)
+            current.removeAllHandlers()
+            current.set(handler: { _ in
+                arguments.open()
+            }, for: .Click)
+        } else if let view = self.downloads {
+            self.downloads = nil
+            performSubviewPosRemoval(view, pos: NSMakePoint(0, frame.maxY), animated: true)
+        }
     }
     
 }
@@ -475,7 +507,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         super.viewDidResized(size)
     }
     
-    private func showDownloads(animated: Bool) {
+    func showDownloads(animated: Bool) {
+        
+        self.genericView.searchView.change(state: .Focus,  true)
+
         let controller: ViewController
         if let current = self.downloadsController {
             controller = current
@@ -858,7 +893,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         return .rejected
     }
     
-    func open(with entryId: UIChatListEntryId, messageId:MessageId? = nil, initialAction: ChatInitialAction? = nil, close:Bool = true, addition: Bool = false) ->Void {
+    func open(with entryId: UIChatListEntryId, messageId:MessageId? = nil, initialAction: ChatInitialAction? = nil, close:Bool = true, addition: Bool = false, forceAnimated: Bool = false) ->Void {
         
         let navigation = context.bindings.rootNavigation()
         
@@ -887,7 +922,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     current.chatInteraction.focusMessageId(nil, messageId, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
                 } else {
                     let chat:ChatController = addition ? ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: messageId) : ChatController(context: self.context, chatLocation: .peer(peerId), messageId: messageId, initialAction: initialAction)
-                    navigation.push(chat, context.sharedContext.layout == .single)
+                    navigation.push(chat, context.sharedContext.layout == .single || forceAnimated)
                 }
             }
         case let .groupId(groupId):

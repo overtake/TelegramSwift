@@ -137,6 +137,7 @@ public extension NSFont {
             return NSFont(name: "Menlo-Regular", size: size) ?? NSFont.systemFont(ofSize: size)
         }
     }
+    
     static func blockchain(_ size: FontSize)->NSFont {
         return NSFont(name: "PT Mono", size: size) ?? NSFont.systemFont(ofSize: size)
     }

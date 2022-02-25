@@ -115,13 +115,13 @@ final class InstantPageMediaView: View, InstantPageView {
             })
             
             switch status {
-            case let .Fetching(_, progress):
+            case let .Fetching(_, progress), let .Paused(progress):
                 self.progressView.isHidden = false
                 self.progressView.state = .Fetching(progress: progress, force: false)
             case .Local:
                 self.progressView.isHidden = media.media is TelegramMediaImage || self.imageView is GIFPlayerView
                 self.progressView.state = media.media is TelegramMediaImage || self.imageView is GIFPlayerView ? .None : .Play
-            case .Remote, .Paused:
+            case .Remote:
                 self.progressView.state = .Remote
             }
         }

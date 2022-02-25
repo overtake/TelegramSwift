@@ -242,8 +242,8 @@ private final class FetchManagerCategoryContext {
                             let _ = addRecentDownloadItem(postbox: postbox, item: RecentDownloadItem(messageId: messageId, resourceId: entry.resourceReference.resource.id.stringRepresentation, timestamp: Int32(Date().timeIntervalSince1970), isSeen: false)).start()
                         }
                         
-                        if let storeManager = storeManager, let mediaReference = entry.mediaReference, case .remote = type, let peerType = entry.storeToDownloadsPeerType {
-                            return storeDownloadedMedia(storeManager: storeManager, media: mediaReference, peerType: peerType)
+                        if let storeManager = storeManager, let mediaReference = entry.mediaReference, case .remote = type {
+                            return storeDownloadedMedia(storeManager: storeManager, media: mediaReference)
                             |> castError(FetchResourceError.self)
                             |> mapToSignal { _ -> Signal<FetchResourceSourceType, FetchResourceError> in
                             }
@@ -366,8 +366,8 @@ private final class FetchManagerCategoryContext {
                                 let _ = addRecentDownloadItem(postbox: postbox, item: RecentDownloadItem(messageId: messageId, resourceId: entry.resourceReference.resource.id.stringRepresentation, timestamp: Int32(Date().timeIntervalSince1970), isSeen: false)).start()
                             }
                             
-                            if let storeManager = storeManager, let mediaReference = entry.mediaReference, case .remote = type, let peerType = entry.storeToDownloadsPeerType {
-                                return storeDownloadedMedia(storeManager: storeManager, media: mediaReference, peerType: peerType)
+                            if let storeManager = storeManager, let mediaReference = entry.mediaReference, case .remote = type {
+                                return storeDownloadedMedia(storeManager: storeManager, media: mediaReference)
                                 |> castError(FetchResourceError.self)
                                 |> mapToSignal { _ -> Signal<FetchResourceSourceType, FetchResourceError> in
                                 }

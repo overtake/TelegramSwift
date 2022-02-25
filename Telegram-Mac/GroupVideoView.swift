@@ -84,8 +84,6 @@ final class GroupVideoView: View {
     }
     
     func setVideoContentMode(_ contentMode: CALayerContentsGravity, animated: Bool) {
-
-
         self.gravity = contentMode
         self.validLayout = nil
         let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.3, curve: .easeOut) : .immediate

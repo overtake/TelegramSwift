@@ -906,7 +906,9 @@ open class Window: NSWindow {
             })
         } else {
             invokeFullScreen(nil)
-            isFullScreenValue.set(newValue)
+            DispatchQueue.main.async {
+                self.isFullScreenValue.set(newValue)
+            }
         }
     }
     

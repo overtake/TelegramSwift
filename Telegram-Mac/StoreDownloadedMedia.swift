@@ -25,10 +25,12 @@ private final class DownloadedMediaStoreContext {
         self.disposable?.dispose()
     }
     
-    func start(postbox: Postbox, storeSettings: Signal<AutomaticMediaDownloadSettings, NoError>, peerType: MediaAutoDownloadPeerType, timestamp: Int32, media: AnyMediaReference, completed: @escaping () -> Void) {
+    func start(postbox: Postbox, storeSettings: Signal<AutomaticMediaDownloadSettings, NoError>, timestamp: Int32, media: AnyMediaReference, completed: @escaping () -> Void) {
         var resource: TelegramMediaResource?
         if let image = media.media as? TelegramMediaImage {
             resource = largestImageRepresentation(image.representations)?.resource
+        } else if let file = media.media as? TelegramMediaFile {
+            resource = file.resource
         }
         if let resource = resource {
             self.disposable = (storeSettings
@@ -47,17 +49,16 @@ private final class DownloadedMediaStoreContext {
                 if !data.complete {
                     return
                 }
-                let creationDate = Date(timeIntervalSince1970: TimeInterval(timestamp))
-                
                 let storeAsset: () -> Void = {
-                   // COPY TO FINDER
+                    if let file = media.media as? TelegramMediaFile {
+                        if !file.isMusic && !file.isAnimated && !file.isVideo && !file.isVoice && !file.isInstantVideo && !file.isSticker {
+                            _ = copyToDownloads(file, postbox: postbox).start()
+                        }
+                    }
                 }
                 
                 storeAsset()
-//                if !alreadyStored {
-//                    storeAsset()
-//                }
-                
+
                 completed()
             })
         } else {
@@ -92,14 +93,15 @@ private final class DownloadedMediaStoreManagerPrivateImpl {
         return nextId
     }
     
-    func store(_ media: AnyMediaReference, timestamp: Int32, peerType: MediaAutoDownloadPeerType) {
+    func store(_ media: AnyMediaReference, timestamp: Int32) {
         guard let id = media.media.id else {
             return
         }
+        
         if self.storeContexts[id] == nil {
             let context = DownloadedMediaStoreContext(queue: self.queue)
             self.storeContexts[id] = context
-            context.start(postbox: self.postbox, storeSettings: self.storeSettings.get(), peerType: peerType, timestamp: timestamp, media: media, completed: { [weak self, weak context] in
+            context.start(postbox: self.postbox, storeSettings: self.storeSettings.get(), timestamp: timestamp, media: media, completed: { [weak self, weak context] in
                 guard let strongSelf = self, let context = context else {
                     return
                 }
@@ -123,9 +125,9 @@ final class DownloadedMediaStoreManagerImpl: DownloadedMediaStoreManager {
         })
     }
     
-    func store(_ media: AnyMediaReference, timestamp: Int32, peerType: MediaAutoDownloadPeerType) {
+    func store(_ media: AnyMediaReference, timestamp: Int32) {
         self.impl.with { impl in
-            impl.store(media, timestamp: timestamp, peerType: peerType)
+            impl.store(media, timestamp: timestamp)
         }
     }
 }

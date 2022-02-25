@@ -127,7 +127,7 @@ class ChatMessageAccessoryView: Control {
 
             
             switch status {
-            case .Remote, .Paused:
+            case .Remote:
                 progress.isHidden = true
                 download.isHidden = false
                 progress.state = .None
@@ -135,7 +135,7 @@ class ChatMessageAccessoryView: Control {
                 progress.isHidden = true
                 download.isHidden = true
                 progress.state = .None
-            case let .Fetching(_, progress):
+            case let .Fetching(_, progress), let .Paused(progress):
                 self.progress.state = !isCompact ? .Fetching(progress: progress, force: false) : .None
                 self.progress.isHidden = isCompact
                 download.isHidden = !isCompact

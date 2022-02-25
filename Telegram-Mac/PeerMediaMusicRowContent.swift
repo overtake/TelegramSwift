@@ -232,7 +232,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
 
             
             if item.message.flags.contains(.Unsent) && !item.message.flags.contains(.Failed) {
-                updatedStatusSignal = combineLatest(chatMessageFileStatus(account: item.interface.context.account, file: item.file), item.interface.context.account.pendingMessageManager.pendingMessageStatus(item.message.id))
+                updatedStatusSignal = combineLatest(chatMessageFileStatus(context: item.interface.context, message: item.message, file: item.file), item.interface.context.account.pendingMessageManager.pendingMessageStatus(item.message.id))
                     |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
                         if let pendingStatus = pendingStatus.0 {
                             return .Fetching(isActive: true, progress: pendingStatus.progress)
@@ -241,7 +241,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
                         }
                     } |> deliverOnMainQueue
             } else {
-                updatedStatusSignal = chatMessageFileStatus(account: item.interface.context.account, file: item.file) |> deliverOnMainQueue
+                updatedStatusSignal = chatMessageFileStatus(context: item.interface.context, message: item.message, file: item.file) |> deliverOnMainQueue
             }
             
             

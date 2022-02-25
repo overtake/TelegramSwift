@@ -222,6 +222,12 @@
 		27803C0927A3E944007B0FA9 /* menu_folder_unread.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BEE27A3E944007B0FA9 /* menu_folder_unread.tgs */; };
 		2780DE40271F0BB30092323F /* zoom.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2780DE3F271F0BB20092323F /* zoom.tgs */; };
 		2780E3EC272186D00092323F /* SmartThemeListRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2780E3EB272186CF0092323F /* SmartThemeListRowItem.swift */; };
+		2786367A27C66F5A00690B10 /* RTMPStartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2786367927C66F5A00690B10 /* RTMPStartController.swift */; };
+		2786367C27C7C5D600690B10 /* group_call_share.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2786367B27C7C5D600690B10 /* group_call_share.tgs */; };
+		2786367E27C7C5F800690B10 /* group_call_minmax.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2786367D27C7C5F800690B10 /* group_call_minmax.tgs */; };
+		2786368027C7CF1200690B10 /* group_call_maxmin.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2786367F27C7CF1200690B10 /* group_call_maxmin.tgs */; };
+		2786368227C8B55D00690B10 /* group_call_stream_empty in Resources */ = {isa = PBXBuildFile; fileRef = 2786368127C8B55D00690B10 /* group_call_stream_empty */; };
+		2786368527C8B76200690B10 /* DownloadsControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2786368427C8B76200690B10 /* DownloadsControl.swift */; };
 		278680AD26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278680AC26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift */; };
 		278926C327550BB200923087 /* ColorPalette in Frameworks */ = {isa = PBXBuildFile; productRef = 278926C227550BB200923087 /* ColorPalette */; };
 		278926C527550C8200923087 /* FoundationUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 278926C427550C8200923087 /* FoundationUtils */; };
@@ -1480,6 +1486,12 @@
 		2785F7FE274F707F00FDF88F /* InAppSettings */ = {isa = PBXFileReference; lastKnownFileType = folder; name = InAppSettings; path = packages/InAppSettings; sourceTree = "<group>"; };
 		2785F801274F75D300FDF88F /* ThemeSettings */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ThemeSettings; path = packages/ThemeSettings; sourceTree = "<group>"; };
 		2785F802274F764100FDF88F /* ColorPalette */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ColorPalette; path = packages/ColorPalette; sourceTree = "<group>"; };
+		2786367927C66F5A00690B10 /* RTMPStartController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RTMPStartController.swift; sourceTree = "<group>"; };
+		2786367B27C7C5D600690B10 /* group_call_share.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = group_call_share.tgs; sourceTree = "<group>"; };
+		2786367D27C7C5F800690B10 /* group_call_minmax.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = group_call_minmax.tgs; sourceTree = "<group>"; };
+		2786367F27C7CF1200690B10 /* group_call_maxmin.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = group_call_maxmin.tgs; sourceTree = "<group>"; };
+		2786368127C8B55D00690B10 /* group_call_stream_empty */ = {isa = PBXFileReference; lastKnownFileType = file; path = group_call_stream_empty; sourceTree = "<group>"; };
+		2786368427C8B76200690B10 /* DownloadsControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadsControl.swift; sourceTree = "<group>"; };
 		278680AC26A982DC005FDBB9 /* WallpaperPatternPreviewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperPatternPreviewController.swift; sourceTree = "<group>"; };
 		278926CD27551B4800923087 /* common.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = common.xcconfig; sourceTree = "<group>"; };
 		278926CE27551B5600923087 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
@@ -2769,6 +2781,15 @@
 			name = "video-sticker";
 			sourceTree = "<group>";
 		};
+		2786368327C8B73E00690B10 /* downloads */ = {
+			isa = PBXGroup;
+			children = (
+				2718FF8727C3A11F00196BC4 /* DownloadsController.swift */,
+				2786368427C8B76200690B10 /* DownloadsControl.swift */,
+			);
+			name = downloads;
+			sourceTree = "<group>";
+		};
 		27949108260A41C60003BFA0 /* ffmpeg */ = {
 			isa = PBXGroup;
 			children = (
@@ -3801,6 +3822,7 @@
 		C22E06301D8043A000A11C88 /* chatlist */ = {
 			isa = PBXGroup;
 			children = (
+				2786368327C8B73E00690B10 /* downloads */,
 				A789E08223E05E9A00AEB34A /* filters */,
 				C22E06311D8044CC00A11C88 /* ChatListController.swift */,
 				C22E063C1D80929400A11C88 /* ChatListRowItem.swift */,
@@ -3814,7 +3836,6 @@
 				A7C1379D23DF21EA00803ED3 /* ChatListRevealItem.swift */,
 				A73884342580E501002E8424 /* CGChatListIndicator.swift */,
 				2725785A259CF987001558E8 /* AnimatedBadgeView.swift */,
-				2718FF8727C3A11F00196BC4 /* DownloadsController.swift */,
 			);
 			name = chatlist;
 			sourceTree = "<group>";
@@ -4975,6 +4996,10 @@
 				275549082747C2400098A3CD /* device_windows.tgs */,
 				27F2BBD027BF694800A37463 /* qrcode_matrix.tgs */,
 				2718FF8127BFB28900196BC4 /* login_airplane.tgs */,
+				2786367B27C7C5D600690B10 /* group_call_share.tgs */,
+				2786367D27C7C5F800690B10 /* group_call_minmax.tgs */,
+				2786367F27C7CF1200690B10 /* group_call_maxmin.tgs */,
+				2786368127C8B55D00690B10 /* group_call_stream_empty */,
 				2780DE3F271F0BB20092323F /* zoom.tgs */,
 				27F2BBC827BE79ED00A37463 /* email_recovery.tgs */,
 				27F2BBC427BE4E7A00A37463 /* code_note.tgs */,
@@ -5237,6 +5262,7 @@
 				275045E425EE271D00872D20 /* GroupCallDisplayAsController.swift */,
 				276B597F261C78F40029FD3F /* GroupCallUIState.swift */,
 				278E86D6265D49100006685D /* MicroListenerController.swift */,
+				2786367927C66F5A00690B10 /* RTMPStartController.swift */,
 			);
 			name = "group-calls";
 			sourceTree = "<group>";
@@ -5488,6 +5514,7 @@
 				27672EB126F8D62C00297DB4 /* 3.m4a in Resources */,
 				275549162747C24F0098A3CD /* device_safari.tgs in Resources */,
 				27803C0227A3E944007B0FA9 /* menu_folder_folder.tgs in Resources */,
+				2786368027C7CF1200690B10 /* group_call_maxmin.tgs in Resources */,
 				27672EB226F8D62E00297DB4 /* 4.m4a in Resources */,
 				27336731276231E80027441E /* menu_seen.tgs in Resources */,
 				27672EB326F8D63100297DB4 /* 5.m4a in Resources */,
@@ -5528,6 +5555,7 @@
 				27336738276241EE0027441E /* menu_remove_gif.tgs in Resources */,
 				2733671927620B7B0027441E /* menu_leave.tgs in Resources */,
 				A7B6DDD723ED935100B8E01C /* think_spectacular.tgs in Resources */,
+				2786367C27C7C5D600690B10 /* group_call_share.tgs in Resources */,
 				27803C0527A3E944007B0FA9 /* menu_folder_game.tgs in Resources */,
 				27CB1756276357B600DD25E0 /* menu_show_in_finder.tgs in Resources */,
 				27CB176A27638EEE00DD25E0 /* menu_expand.tgs in Resources */,
@@ -5625,6 +5653,7 @@
 				27803BF827A3E944007B0FA9 /* menu_folder_lock.tgs in Resources */,
 				275549122747C24F0098A3CD /* device_mac.tgs in Resources */,
 				27803C0427A3E944007B0FA9 /* menu_folder_love.tgs in Resources */,
+				2786368227C8B55D00690B10 /* group_call_stream_empty in Resources */,
 				27CE376C2760960A007E6F1B /* menu_add_to_folder.tgs in Resources */,
 				277DFE6A2784844700F78396 /* menu_lock.tgs in Resources */,
 				27CE37762760CEE4007E6F1B /* menu_mute_for_1_hour.tgs in Resources */,
@@ -5684,6 +5713,7 @@
 				274BB570264013B900620D03 /* cameraoff.tgs in Resources */,
 				C27A6F731ECF610C00C65577 /* currencies.json in Resources */,
 				2763A16E261DF68100C12762 /* voice_chat_set_reminder_to_mute.tgs in Resources */,
+				2786367E27C7C5F800690B10 /* group_call_minmax.tgs in Resources */,
 				27478F5C25FBD05F005B8B98 /* voice_chat_raise_hand_3.tgs in Resources */,
 				C250B01C1DB670B4004E9FBE /* url-schemes.txt in Resources */,
 				D0A5586E2574F75B00B7C182 /* group_call_chatlist_typing.json in Resources */,
@@ -6168,6 +6198,7 @@
 				2713B222260A42FE00CE0EC6 /* MediaPlaybackData.swift in Sources */,
 				9F6B54C821369B4000748FC1 /* GalleryModernControls.swift in Sources */,
 				C2271F541D9D420B00424F7B /* ContactsController.swift in Sources */,
+				2786367A27C66F5A00690B10 /* RTMPStartController.swift in Sources */,
 				2718FF8827C3A11F00196BC4 /* DownloadsController.swift in Sources */,
 				C258D1B61F8D3A0D00458478 /* PreHistoryControllerStructures.swift in Sources */,
 				A7831B1C2403CFDD0056AEAC /* ChannelStatsViewController.swift in Sources */,
@@ -6547,6 +6578,7 @@
 				2713B220260A42FE00CE0EC6 /* MediaTrackDecodableFrame.swift in Sources */,
 				C22E06321D8044CC00A11C88 /* ChatListController.swift in Sources */,
 				2773A53A25FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift in Sources */,
+				2786368527C8B76200690B10 /* DownloadsControl.swift in Sources */,
 				C246D6281FAB72D4004C17FA /* MediaGroupPreviewRowItem.swift in Sources */,
 				9F18DD93206D8FFD00A2AAD0 /* SecureIdVerificationDocumentsContext.swift in Sources */,
 				9F8DF3C8209228B000AED104 /* EditAccountInfoController.swift in Sources */,

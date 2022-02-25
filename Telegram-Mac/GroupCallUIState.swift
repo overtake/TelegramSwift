@@ -122,7 +122,9 @@ final class GroupCallUIState : Equatable {
     let activeVideoViews: [ActiveVideo]
     let hideParticipants: Bool
     let isVideoEnabled: Bool
-    
+    let isStream: Bool
+    let windowIsFullscreen: Bool
+
     let videoJoined: Bool
     
     let tooltipSpeaker: PeerGroupCallData?
@@ -133,7 +135,7 @@ final class GroupCallUIState : Equatable {
     
     let myPeer: PeerGroupCallData?
         
-    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, dominantSpeaker: DominantVideo?, pinnedData: PinnedData, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, version: Int, activeVideoViews: [ActiveVideo], hideParticipants: Bool, isVideoEnabled: Bool, tooltipSpeaker: PeerGroupCallData?, controlsTooltip: ControlsTooltip?, dismissedTooltips: Set<ControlsTooltip.`Type`>, videoJoined: Bool) {
+    init(memberDatas: [PeerGroupCallData], state: PresentationGroupCallState, isMuted: Bool, summaryState: PresentationGroupCallSummaryState?, myAudioLevel: Float, peer: Peer, cachedData: CachedChannelData?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, dominantSpeaker: DominantVideo?, pinnedData: PinnedData, isFullScreen: Bool, mode: Mode, videoSources: VideoSources, version: Int, activeVideoViews: [ActiveVideo], hideParticipants: Bool, isVideoEnabled: Bool, tooltipSpeaker: PeerGroupCallData?, controlsTooltip: ControlsTooltip?, dismissedTooltips: Set<ControlsTooltip.`Type`>, videoJoined: Bool, isStream: Bool, windowIsFullscreen: Bool) {
         self.summaryState = summaryState
         self.memberDatas = memberDatas
         self.peer = peer
@@ -146,6 +148,7 @@ final class GroupCallUIState : Equatable {
         self.dominantSpeaker = dominantSpeaker
         self.pinnedData = pinnedData
         self.isFullScreen = isFullScreen
+        self.windowIsFullscreen = windowIsFullscreen
         self.mode = activeVideoViews.isEmpty ? mode : .video
         self.videoSources = videoSources
         self.version = version
@@ -156,6 +159,7 @@ final class GroupCallUIState : Equatable {
         self.controlsTooltip = controlsTooltip
         self.dismissedTooltips = dismissedTooltips
         self.videoJoined = videoJoined
+        self.isStream = isStream
         self.myPeer = memberDatas.first(where: { $0.peer.id == $0.accountPeerId })
         var modeMembers:[GroupCallUIState.ActiveVideo.Mode : [PeerGroupCallData]] = [:]
         
@@ -234,6 +238,9 @@ final class GroupCallUIState : Equatable {
         if lhs.voiceSettings != rhs.voiceSettings {
             return false
         }
+        if lhs.windowIsFullscreen != rhs.windowIsFullscreen {
+            return false
+        }
         if let lhsCachedData = lhs.cachedData, let rhsCachedData = rhs.cachedData {
             if !lhsCachedData.isEqual(to: rhsCachedData) {
                 return false
@@ -254,6 +261,9 @@ final class GroupCallUIState : Equatable {
             return false
         }
         if lhs.mode != rhs.mode {
+            return false
+        }
+        if lhs.isStream != rhs.isStream {
             return false
         }
         if lhs.hasVideo != rhs.hasVideo {
@@ -303,7 +313,7 @@ final class GroupCallUIState : Equatable {
     }
     
     func withUpdatedFullScreen(_ isFullScreen: Bool) -> GroupCallUIState {
-        return .init(memberDatas: self.memberDatas, state: self.state, isMuted: self.isMuted, summaryState: self.summaryState, myAudioLevel: self.myAudioLevel, peer: self.peer, cachedData: self.cachedData, voiceSettings: self.voiceSettings, isWindowVisible: self.isWindowVisible, dominantSpeaker: self.dominantSpeaker, pinnedData: self.pinnedData, isFullScreen: isFullScreen, mode: self.mode, videoSources: self.videoSources, version: self.version, activeVideoViews: self.activeVideoViews, hideParticipants: self.hideParticipants, isVideoEnabled: self.isVideoEnabled, tooltipSpeaker: self.tooltipSpeaker, controlsTooltip: self.controlsTooltip, dismissedTooltips: self.dismissedTooltips, videoJoined: self.videoJoined)
+        return .init(memberDatas: self.memberDatas, state: self.state, isMuted: self.isMuted, summaryState: self.summaryState, myAudioLevel: self.myAudioLevel, peer: self.peer, cachedData: self.cachedData, voiceSettings: self.voiceSettings, isWindowVisible: self.isWindowVisible, dominantSpeaker: self.dominantSpeaker, pinnedData: self.pinnedData, isFullScreen: isFullScreen, mode: self.mode, videoSources: self.videoSources, version: self.version, activeVideoViews: self.activeVideoViews, hideParticipants: self.hideParticipants, isVideoEnabled: self.isVideoEnabled, tooltipSpeaker: self.tooltipSpeaker, controlsTooltip: self.controlsTooltip, dismissedTooltips: self.dismissedTooltips, videoJoined: self.videoJoined, isStream: self.isStream, windowIsFullscreen: self.windowIsFullscreen)
     }
 }
 

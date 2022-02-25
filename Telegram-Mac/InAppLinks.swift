@@ -459,7 +459,15 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 alert(for: context.window, info: strings().alertPrivateChannelAccessError)
             }
         } else {
-            let _ = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username) |> mapToSignal { peerId -> Signal<Peer?, NoError> in
+            let phone = username.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+            let signal: Signal<EnginePeer?, NoError>
+            if phone == username {
+                signal = context.engine.peers.resolvePeerByPhone(phone: phone)
+            } else {
+                signal = context.engine.peers.resolvePeerByName(name: username)
+            }
+                
+            let _ = showModalProgress(signal: signal |> mapToSignal { peerId -> Signal<Peer?, NoError> in
                 if let peerId = peerId {
                     return context.account.postbox.loadedPeerWithId(peerId._asPeer().id) |> map {Optional($0)}
                 }
@@ -714,7 +722,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         context.bindings.rootNavigation().push(controller)
         afterComplete(true)
     case let .joinGroupCall(_, context, peerId, callId):
-        selectGroupCallJoiner(context: context, peerId: peerId, completion: { peerId, schedule in
+        selectGroupCallJoiner(context: context, peerId: peerId, completion: { peerId, schedule, isStream in
             _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: context.peerId, initialCall: callId), for: context.window).start(next: { result in
                 switch result {
                 case let .success(callContext), let .samePeer(callContext):
@@ -1109,10 +1117,14 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                     } else if let context = context {
 
                         let joinKeys:[String] = ["+", "%20"]
-
-                        for joinKey in joinKeys {
-                            if username.hasPrefix(joinKey), username.length > joinKey.length {
-                                return .joinchat(link: urlString, username.nsstring.substring(from: joinKey.length), context: context, callback: openInfo)
+                        let phone = username.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+                        if phone == username || "+\(phone)" == username {
+                            return .followResolvedName(link: urlString, username: phone, postId: nil, context: context, action: action, callback: openInfo)
+                        } else {
+                            for joinKey in joinKeys {
+                                if username.hasPrefix(joinKey), username.length > joinKey.length {
+                                    return .joinchat(link: urlString, username.nsstring.substring(from: joinKey.length), context: context, callback: openInfo)
+                                }
                             }
                         }
                         return .followResolvedName(link: urlString, username: username, postId: nil, context: context, action: action, callback: openInfo)

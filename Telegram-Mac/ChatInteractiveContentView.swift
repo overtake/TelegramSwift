@@ -282,7 +282,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
         }
         
         switch status {
-        case let .Fetching(_, progress):
+        case let .Fetching(_, progress), let .Paused(progress):
             let current = String.prettySized(with: Int(Float(file.elapsedSize) * progress), afterDot: 1)
             var size = "\(current) / \(String.prettySized(with: file.elapsedSize))"
             if (maxWidth < 100 && parent?.groupingKey != nil) || file.elapsedSize == 0 {
@@ -298,7 +298,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 } 
             }
             text = size
-        case .Remote, .Paused:
+        case .Remote:
             var size = String.durationTransformed(elapsed: file.videoDuration)
             if file.isStreamable, parent?.groupingKey == nil, maxWidth > 100 {
                  size = size + ", " + String.prettySized(with: file.elapsedSize)
@@ -542,7 +542,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
 
                 
                 if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
-                    updatedStatusSignal = combineLatest(chatMessageFileStatus(account: context.account, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
+                    updatedStatusSignal = combineLatest(chatMessageFileStatus(context: context, message: parent, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                         |> map { resourceStatus, pendingStatus in
                             if let pendingStatus = pendingStatus.0 {
                                 return (.Fetching(isActive: true, progress: pendingStatus.progress), .Fetching(isActive: true, progress: pendingStatus.progress))
@@ -557,7 +557,13 @@ class ChatInteractiveContentView: ChatMediaContentView {
                     if file.resource is LocalFileVideoMediaResource {
                         updatedStatusSignal = .single((.Local, .Local))
                     } else {
-                        updatedStatusSignal = chatMessageFileStatus(account: context.account, file: file, approximateSynchronousValue: approximateSynchronousValue) |> deliverOnMainQueue |> map { [weak parent, weak file] status in
+                        let signal: Signal<MediaResourceStatus, NoError>
+                        if let parent = parent {
+                            signal = chatMessageFileStatus(context: context, message: parent, file: file, approximateSynchronousValue: approximateSynchronousValue)
+                        } else {
+                            signal = context.account.postbox.mediaBox.resourceStatus(file.resource)
+                        }
+                        updatedStatusSignal = signal |> deliverOnMainQueue |> map { [weak parent, weak file] status in
                             if let parent = parent, let file = file {
                                 if file.isStreamable && parent.id.peerId.namespace != Namespaces.Peer.SecretChat {
                                     return (.Local, status)
@@ -754,7 +760,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
                     
                     switch progressStatus {
-                    case let .Fetching(_, progress):
+                    case let .Fetching(_, progress), let .Paused(progress):
                         
                         let sentGrouped = parent?.groupingKey != nil && (parent!.flags.contains(.Sending) || parent!.flags.contains(.Unsent))
                         
@@ -781,7 +787,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                         }
                         
                         strongSelf.progressView?.state = state
-                    case .Remote, .Paused:
+                    case .Remote:
                         strongSelf.progressView?.state = .Remote
                     }
                     strongSelf.needsLayout = true
@@ -816,7 +822,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
         if let context = context {
             if let media = media as? TelegramMediaFile, !media.isLocalResource {
                 if let parent = parent {
-                    fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, messageReference: .init(parent), file: media, userInitiated: false).start())
+                    fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, messageReference: .init(parent), file: media, userInitiated: userInitiated).start())
                 } else {
                     fetchDisposable.set(freeMediaFileInteractiveFetched(context: context, fileReference: FileMediaReference.standalone(media: media)).start())
                 }

@@ -329,7 +329,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                 player.set(arguments: arguments)
                 
                 if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
-                    updatedStatusSignal = combineLatest(chatMessageFileStatus(account: context.account, file: media), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
+                    updatedStatusSignal = combineLatest(chatMessageFileStatus(context: context, message: parent, file: media), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                         |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
                             if let pendingStatus = pendingStatus.0 {
                                 return .Fetching(isActive: true, progress: pendingStatus.progress)
@@ -338,7 +338,11 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                             }
                         } |> deliverOnMainQueue
                 } else {
-                    updatedStatusSignal = chatMessageFileStatus(account: context.account, file: media, approximateSynchronousValue: approximateSynchronousValue)
+                    if let parent = parent {
+                        updatedStatusSignal = chatMessageFileStatus(context: context, message: parent, file: media, approximateSynchronousValue: approximateSynchronousValue)
+                    } else {
+                        updatedStatusSignal = context.account.postbox.mediaBox.resourceStatus(media.resource)
+                    }
                 }
                 
                 if let updatedStatusSignal = updatedStatusSignal {
@@ -381,11 +385,11 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                             }
                             
                             switch status {
-                            case let .Fetching(_, progress):
+                            case let .Fetching(_, progress), let .Paused(progress):
                                 strongSelf.progressView?.state = .Fetching(progress: progress, force: false)
                             case .Local:
                                 strongSelf.progressView?.state = .Play
-                            case .Remote, .Paused:
+                            case .Remote:
                                 strongSelf.progressView?.state = .Remote
                             }
                         }

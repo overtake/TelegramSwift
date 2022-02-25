@@ -48,14 +48,14 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
             if let fetchStatus = fetchStatus {
                 
                 switch fetchStatus {
-                case let .Fetching(_, progress):
+                case let .Fetching(_, progress), let .Paused(progress):
                     let sentGrouped = parent?.groupingKey != nil && (parent!.flags.contains(.Sending) || parent!.flags.contains(.Unsent))
                     if progress == 1.0, sentGrouped {
                         progressView.state = .Success
                     } else {
                         progressView.state = .Fetching(progress: progress, force: false)
                     }
-                case .Remote, .Paused:
+                case .Remote:
                     progressView.state = .Remote
                 case .Local:
                     checkState(animated: false)

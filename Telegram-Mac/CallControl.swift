@@ -195,7 +195,7 @@ final class CallControl : Control {
                 } else {
                     policy = .toEnd(from: .max)
                 }
-                player?.set(LottieAnimation(compressed: animationData, key: .init(key: .bundle(value.rawValue), size: data.iconSize), type: .lottie, cachePurpose: .none, playPolicy: policy, runOnQueue: .mainQueue()))
+                player?.set(LottieAnimation(compressed: animationData, key: .init(key: .bundle(value.rawValue), size: data.iconSize), type: .lottie, cachePurpose: .none, playPolicy: policy, colors: [.init(keyPath: "", color: NSColor(0xffffff))], runOnQueue: .mainQueue()))
             }
             self.imageBackgroundView?.background = color
         }
