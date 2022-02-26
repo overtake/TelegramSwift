@@ -10395,12 +10395,16 @@ public final class L10n {
   public static var voiceChatRTMPInfo: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.Info") }
   /// Start Streaming
   public static var voiceChatRTMPOK: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.OK") }
+  /// Revoke Stream Key
+  public static var voiceChatRTMPRevoke: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.Revoke") }
   /// server URL
   public static var voiceChatRTMPServerURL: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.ServerURL") }
   /// stream key
   public static var voiceChatRTMPStreamKey: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.StreamKey") }
   /// Stream With...
   public static var voiceChatRTMPTitle: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.Title") }
+  /// Revoke Stream Key?
+  public static var voiceChatRTMPRevokeInfo: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.Revoke.Info") }
   /// we let the speakers know
   public static var voiceChatRaisedHandText: String  { return L10n.tr("Localizable", "VoiceChat.RaisedHand.Text") }
   /// You asked to speak

@@ -336,7 +336,7 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
     let modalInteractions = ModalInteractions(acceptTitle: "", accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, cancelTitle: isCreator ? strings().displayMeAsStartWith : nil, cancel: {
-        showModal(with: RTMPStartController(context: context, peerId: peerId, scheduleDate: stateValue.with { $0.scheduleDate }, completion: completion), for: context.window)
+        showModal(with: RTMPStartController(context: context, peerId: peerId, scheduleDate: stateValue.with { $0.schedule ? $0.scheduleDate : nil }, completion: completion), for: context.window)
         close?()
     }, drawBorder: true, height: 50, singleButton: !isCreator)
     
