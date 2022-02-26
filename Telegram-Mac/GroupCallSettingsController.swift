@@ -35,6 +35,7 @@ private final class Arguments {
     let toggleRecordVideo: ()->Void
     let copyToClipboard:(String)->Void
     let toggleHideKey:()->Void
+    let revokeStreamKey: ()->Void
     init(sharedContext: SharedAccountContext,
          toggleInputAudioDevice: @escaping(String?)->Void,
          toggleOutputAudioDevice:@escaping(String?)->Void,
@@ -53,7 +54,8 @@ private final class Arguments {
          selectVideoRecordOrientation:@escaping(GroupCallSettingsState.VideoOrientation)->Void,
          toggleRecordVideo: @escaping()->Void,
          copyToClipboard:@escaping(String)->Void,
-         toggleHideKey:@escaping()->Void) {
+         toggleHideKey:@escaping()->Void,
+         revokeStreamKey: @escaping()->Void) {
         self.sharedContext = sharedContext
         self.toggleInputAudioDevice = toggleInputAudioDevice
         self.toggleOutputAudioDevice = toggleOutputAudioDevice
@@ -73,6 +75,7 @@ private final class Arguments {
         self.toggleRecordVideo = toggleRecordVideo
         self.copyToClipboard = copyToClipboard
         self.toggleHideKey = toggleHideKey
+        self.revokeStreamKey = revokeStreamKey
     }
 }
 
@@ -155,6 +158,7 @@ struct GroupCallSettingsState : Equatable {
     var recordVideo: Bool
     var videoOrientation: VideoOrientation
     var hideKey: Bool = true
+    var credentials: GroupCallStreamCredentials?
 }
 
 private let _id_leave_chat = InputDataIdentifier.init("_id_leave_chat")
@@ -171,8 +175,10 @@ private let _id_input_mode_ptt_se = InputDataIdentifier("_id_input_mode_ptt_se")
 private let _id_input_mode_toggle = InputDataIdentifier("_id_input_mode_toggle")
 private let _id_noise_suppression =  InputDataIdentifier("_id_noise_suppression")
 
+
 private let _id_server_url = InputDataIdentifier("_id_server_url")
 private let _id_stream_key = InputDataIdentifier("_id_stream_key")
+private let _id_revoke_stream_key = InputDataIdentifier("_id_revoke_stream_key")
 
 private let _id_input_chat_title = InputDataIdentifier("_id_input_chat_title")
 private let _id_input_record_title = InputDataIdentifier("_id_input_record_title")
@@ -188,7 +194,7 @@ private func _id_peer(_ id:PeerId) -> InputDataIdentifier {
     return InputDataIdentifier("_id_peer_\(id.toInt64())")
 }
 
-private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODevices, uiState: GroupCallSettingsState, settings: VoiceCallSettings, account: Account, peer: Peer, accountPeer: Peer, joinAsPeerId: PeerId, rtmp_credentials: GroupCallStreamCredentials?, arguments: Arguments) -> [InputDataEntry] {
+private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODevices, uiState: GroupCallSettingsState, settings: VoiceCallSettings, account: Account, peer: Peer, accountPeer: Peer, joinAsPeerId: PeerId, arguments: Arguments) -> [InputDataEntry] {
     
     var entries:[InputDataEntry] = []
     let theme = GroupCallTheme.customTheme
@@ -517,19 +523,11 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
             arguments.setNoiseSuppression(!settings.noiseSuppression)
         }, theme: theme)))
         index += 1
+        
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatSettingsPerformanceDesc), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textBottomItem)))
+        index += 1
     }
     
-    
-
-    
-//    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_reduce_motion, data: InputDataGeneralData(name: strings().voiceChatSettingsReduceMotion, color: theme.textColor, type: .switchable(!settings.visualEffects), viewType: .lastItem, enabled: true, action: {
-//        arguments.reduceMotions(!settings.visualEffects)
-//    }, theme: theme)))
-//    index += 1
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatSettingsPerformanceDesc), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textBottomItem)))
-    index += 1
-
 
     if state.canManageCall {
         entries.append(.sectionId(sectionId, type: .customModern(20)))
@@ -538,7 +536,7 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
         if !state.isStream {
             entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_reset_link, data: InputDataGeneralData(name: strings().voiceChatSettingsResetLink, color: GroupCallTheme.customTheme.accentColor, type: .none, viewType: .firstItem, enabled: true, action: arguments.resetLink, theme: theme)))
             index += 1
-        } else if let credentials = rtmp_credentials {
+        } else if let credentials = uiState.credentials {
             
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatSettingsRTMP), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textTopItem)))
             index += 1
@@ -553,12 +551,15 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
             index += 1
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_stream_key, equatable: .init(uiState), comparable: nil, item: { initialSize, stableId in
-                return TextAndLabelItem(initialSize, stableId: stableId, label: strings().voiceChatRTMPStreamKey, copyMenuText: strings().textCopy, labelColor: theme.textColor, textColor: theme.accentColor, backgroundColor: theme.backgroundColor, text: credentials.streamKey, context: nil, viewType: .lastItem, isTextSelectable: false, callback: {
+                return TextAndLabelItem(initialSize, stableId: stableId, label: strings().voiceChatRTMPStreamKey, copyMenuText: strings().textCopy, labelColor: theme.textColor, textColor: theme.accentColor, backgroundColor: theme.backgroundColor, text: credentials.streamKey, context: nil, viewType: .innerItem, isTextSelectable: false, callback: {
                     arguments.copyToClipboard(credentials.streamKey)
                 }, selectFullWord: true, canCopy: true, _copyToClipboard: {
                     arguments.copyToClipboard(credentials.streamKey)
                 }, textFont: .code(.title), hideText: uiState.hideKey, toggleHide: arguments.toggleHideKey, accentColor: theme.accentColor)
             }))
+            index += 1
+            
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_revoke_stream_key, data: InputDataGeneralData(name: strings().voiceChatRTMPRevoke, color: GroupCallTheme.speakLockedColor, type: .none, viewType: .lastItem, enabled: true, action: arguments.revokeStreamKey, theme: theme)))
             index += 1
             
             entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().voiceChatRTMPInfo), data: .init(color: GroupCallTheme.grayStatusColor, viewType: .textBottomItem)))
@@ -597,6 +598,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
     private let monitorPermissionDisposable = MetaDisposable()
     private let actualizeTitleDisposable = MetaDisposable()
     private let displayAsPeersDisposable = MetaDisposable()
+    private let credentialsDisposable = MetaDisposable()
     
     private let callState: Signal<GroupCallUIState, NoError>
     
@@ -668,6 +670,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
         monitorPermissionDisposable.dispose()
         actualizeTitleDisposable.dispose()
         displayAsPeersDisposable.dispose()
+        credentialsDisposable.dispose()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -714,7 +717,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
         self.genericView.tableView._mouseDownCanMoveWindow = true
         
         let account = self.account
-                
+        let peerId = self.call.peerId
         let initialState = GroupCallSettingsState(hasPermission: nil, title: nil, recordVideo: true, videoOrientation: .landscape)
         
         let statePromise = ValuePromise(initialState, ignoreRepeated: true)
@@ -852,6 +855,23 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
                 current.hideKey = !current.hideKey
                 return current
             }
+        }, revokeStreamKey: { [weak self] in
+            if let window = self?.window {
+                confirm(for: window, header: appName, information: strings().voiceChatRTMPRevokeInfo, okTitle: strings().alertYes, cancelTitle: strings().alertNO, successHandler: { [weak self] _ in
+                    
+                    let signal = self?.call.engine.calls.getGroupCallStreamCredentials(peerId: .init(peerId.toInt64()), revokePreviousCredentials: true)
+                    if let signal = signal {
+                        _ = showModalProgress(signal: signal, for: window).start(next: { value in
+                            updateState { current in
+                                var current = current
+                                current.credentials = value
+                                return current
+                            }
+                        })
+                    }
+                    
+                }, appearance: GroupCallTheme.customTheme.appearance)
+            }
         })
         
         let previousEntries:Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
@@ -891,9 +911,17 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
             rtmp_credentials = .single(nil)
         }
         
+        credentialsDisposable.set(rtmp_credentials.start(next: { value in
+            updateState { current in
+                var current = current
+                current.credentials = value
+                return current
+            }
+        }))
         
-        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, sharedContext.devicesContext.signal, voiceCallSettings(sharedContext.accountManager), appearanceSignal, self.call.account.postbox.loadedPeerWithId(self.call.peerId), self.call.account.postbox.loadedPeerWithId(account.peerId), joinAsPeer, self.callState, statePromise.get(), rtmp_credentials) |> mapToQueue { devices, settings, appearance, peer, accountPeer, joinAsPeerId, state, uiState, rtmp_credentials in
-            let entries = groupCallSettingsEntries(callState: state, devices: devices, uiState: uiState, settings: settings, account: account, peer: peer, accountPeer: accountPeer, joinAsPeerId: joinAsPeerId, rtmp_credentials: rtmp_credentials, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
+        
+        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, sharedContext.devicesContext.signal, voiceCallSettings(sharedContext.accountManager), appearanceSignal, self.call.account.postbox.loadedPeerWithId(self.call.peerId), self.call.account.postbox.loadedPeerWithId(account.peerId), joinAsPeer, self.callState, statePromise.get()) |> mapToQueue { devices, settings, appearance, peer, accountPeer, joinAsPeerId, state, uiState in
+            let entries = groupCallSettingsEntries(callState: state, devices: devices, uiState: uiState, settings: settings, account: account, peer: peer, accountPeer: accountPeer, joinAsPeerId: joinAsPeerId, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
             return prepareInputDataTransition(left: previousEntries.swap(entries), right: entries, animated: true, searchState: nil, initialSize: initialSize.with { $0 }, arguments: inputDataArguments, onMainQueue: false)
         } |> deliverOnMainQueue
 
