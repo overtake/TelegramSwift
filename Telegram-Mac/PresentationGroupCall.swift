@@ -165,7 +165,7 @@ final class AccountGroupCallContextImpl: AccountGroupCallContext {
                 defaultParticipantsAreMuted: nil,
                 isVideoEnabled: false,
                 unmutedVideoLimit: 0,
-                isStream: call.isStream
+                isStream: call.isStream ?? false
             ),
             topParticipants: [],
             participantCount: 0,
@@ -206,7 +206,7 @@ final class AccountGroupCallContextImpl: AccountGroupCallContext {
                 }
                 return GroupCallPanelData(
                     peerId: peerId,
-                    info: GroupCallInfo(id: call.id, accessHash: call.accessHash, participantCount: state.totalCount, streamDcId: nil, title: state.title, scheduleTimestamp: state.scheduleTimestamp, subscribedToScheduled: state.subscribedToScheduled, recordingStartTimestamp: state.recordingStartTimestamp, sortAscending: state.sortAscending, defaultParticipantsAreMuted: state.defaultParticipantsAreMuted, isVideoEnabled: state.isVideoEnabled, unmutedVideoLimit: state.unmutedVideoLimit, isStream: call.isStream),
+                    info: GroupCallInfo(id: call.id, accessHash: call.accessHash, participantCount: state.totalCount, streamDcId: nil, title: state.title, scheduleTimestamp: state.scheduleTimestamp, subscribedToScheduled: state.subscribedToScheduled, recordingStartTimestamp: state.recordingStartTimestamp, sortAscending: state.sortAscending, defaultParticipantsAreMuted: state.defaultParticipantsAreMuted, isVideoEnabled: state.isVideoEnabled, unmutedVideoLimit: state.unmutedVideoLimit, isStream: call.isStream ?? false),
                     topParticipants: topParticipants,
                     participantCount: state.totalCount,
                     activeSpeakers: activeSpeakers,
@@ -709,7 +709,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         peerId: PeerId,
         invite: String?,
         joinAsPeerId: PeerId?,
-        initialInfo: GroupCallInfo?
+        initialInfo: GroupCallInfo?,
+        isStream: Bool
     ) {
         self.account = accountContext.account
         self.accountContext = accountContext
@@ -718,16 +719,13 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         self.internalId = internalId
         self.peerId = peerId
         self.invite = invite
+        self.isStream = isStream
         self.joinAsPeerId = joinAsPeerId ?? accountContext.account.peerId
         self.joinAsPeerIdSignal.set(self.joinAsPeerId)
         let peerSignal = account.postbox.peerView(id: peerId)
             |> map { peerViewMainPeer($0) }
             |> deliverOnMainQueue
                 
-        
-        if let initialCall = initialCall {
-            self.isStream = initialCall.isStream
-        }
 
         self.stateValue = PresentationGroupCallState.initialValue(myPeerId: self.joinAsPeerId, title: initialCall?.title, scheduledTimestamp: initialCall?.scheduleTimestamp, subscribedToScheduled: initialCall?.subscribedToScheduled ?? false, isStream: self.isStream)
         self.statePromise = ValuePromise(self.stateValue)
@@ -1137,7 +1135,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             strongSelf.requestCall(movingFromBroadcastToRtc: false)
                         }
                     }
-                }, outgoingAudioBitrateKbit: nil, videoContentType: .generic, enableNoiseSuppression: false, preferX264: false)
+                }, outgoingAudioBitrateKbit: nil, videoContentType: .generic, enableNoiseSuppression: false, disableAudioInput: self.isStream, preferX264: false)
                 
                 self.settingsDisposable = (voiceCallSettings(self.sharedContext.accountManager) |> deliverOnMainQueue).start(next: { [weak self] settings in
                     self?.genericCallContext?.setIsNoiseSuppressionEnabled(settings.noiseSuppression)
@@ -1350,7 +1348,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 }
                 
                 strongSelf.isSpeakingPromise.set(orignalMyLevelHasVoice)
-                if !missingSsrcs.isEmpty {
+                if !missingSsrcs.isEmpty && !strongSelf.isStream {
                     strongSelf.participantsContext?.ensureHaveParticipants(ssrcs: missingSsrcs)
                 }
             }))
@@ -1821,6 +1819,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                         totalCount: 0,
                         isVideoEnabled: callInfo.isVideoEnabled,
                         unmutedVideoLimit: callInfo.unmutedVideoLimit,
+                        isStream: callInfo.isStream,
                         version: 0
                     ),
                     previousServiceState: nil
@@ -2311,6 +2310,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             outgoingAudioBitrateKbit: nil,
             videoContentType: .screencast,
             enableNoiseSuppression: false,
+            disableAudioInput: true,
             preferX264: false
         )
 
@@ -2840,7 +2840,7 @@ private func startGroupCall(context: AccountContext, peerId: PeerId, joinAs: Pee
     
     
     
-    return GroupCallContext(call: PresentationGroupCallImpl(accountContext: context, initialCall: initialCall, internalId: internalId, peerId: peerId, invite: joinHash, joinAsPeerId: joinAs, initialInfo: initialInfo), peerMemberContextsManager: context.peerChannelMemberCategoriesContextsManager)
+    return GroupCallContext(call: PresentationGroupCallImpl(accountContext: context, initialCall: initialCall, internalId: internalId, peerId: peerId, invite: joinHash, joinAsPeerId: joinAs, initialInfo: initialInfo, isStream: initialCall?.isStream ?? initialCall?.isStream ?? false), peerMemberContextsManager: context.peerChannelMemberCategoriesContextsManager)
 }
 
 func createVoiceChat(context: AccountContext, peerId: PeerId, displayAsList: [FoundPeer]? = nil, canBeScheduled: Bool = false) {
