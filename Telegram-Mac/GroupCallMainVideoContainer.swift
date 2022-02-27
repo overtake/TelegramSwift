@@ -12,6 +12,7 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 import ColorPalette
+import TgVoipWebrtc
 
 private final class PinView : Control {
     private let imageView:ImageView = ImageView()
