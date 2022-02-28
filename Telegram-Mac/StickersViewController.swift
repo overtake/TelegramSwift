@@ -524,9 +524,7 @@ private func packEntries(view: ItemCollectionsView?, specificPack:Tuple2<PeerSpe
     
     if let view = view {
         if !featured.isEmpty, mode == .common {
-            if settings.trendingClosedOn == featured.first?.info.id.id {
-                entries.append(.featured(hasUnread: hasUnread))
-            }
+            entries.append(.featured(hasUnread: hasUnread))
         }
         
         if !view.orderedItemListsViews[1].items.isEmpty {

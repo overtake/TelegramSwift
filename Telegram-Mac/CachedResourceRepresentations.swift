@@ -117,27 +117,29 @@ final class CachedBlurredWallpaperRepresentation: CachedMediaResourceRepresentat
 final class CachedAnimatedStickerRepresentation: CachedMediaResourceRepresentation {
     var keepDuration: CachedMediaRepresentationKeepDuration = .general
     var uniqueId: String {
-        let version: Int = 1
+        let version: Int = 5
         if let fitzModifier = self.fitzModifier {
-            return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-fitz\(fitzModifier.rawValue)-f\(frame)"
+            return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-fitz\(fitzModifier.rawValue)-f\(frame)-m1\(self.isVideo)"
         } else {
-            return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-f\(frame)"
+            return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-f\(frame)-m1\(self.isVideo)"
         }
     }
     let thumb: Bool
     let size: NSSize
     let fitzModifier: EmojiFitzModifier?
     let frame: Int
-    init(thumb: Bool, size: NSSize, fitzModifier: EmojiFitzModifier? = nil, frame: Int = 0) {
+    let isVideo: Bool
+    init(thumb: Bool, size: NSSize, fitzModifier: EmojiFitzModifier? = nil, frame: Int = 0, isVideo: Bool = false) {
         self.thumb = thumb
         self.size = size
         self.fitzModifier = fitzModifier
         self.frame = frame
+        self.isVideo = isVideo
     }
     
     func isEqual(to: CachedMediaResourceRepresentation) -> Bool {
         if let to = to as? CachedAnimatedStickerRepresentation {
-            return self.thumb == to.thumb && self.size == to.size && self.fitzModifier == to.fitzModifier && self.frame == to.frame
+            return self.thumb == to.thumb && self.size == to.size && self.fitzModifier == to.fitzModifier && self.frame == to.frame && self.isVideo == to.isVideo
         } else {
             return false
         }

@@ -10405,6 +10405,10 @@ public final class L10n {
   public static var voiceChatRTMPStreamKey: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.StreamKey") }
   /// Stream With...
   public static var voiceChatRTMPTitle: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.Title") }
+  /// Telegram couldn’t detect any live stream from %@
+  public static func voiceChatRTMPViewerError(_ p1: String) -> String {
+    return L10n.tr("Localizable", "VoiceChat.RTMP.ViewerError", p1)
+  }
   /// A new key will be generated. You will need to update it in your streaming app.
   public static var voiceChatRTMPRevokeInfo: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.Revoke.Info") }
   /// we let the speakers know
