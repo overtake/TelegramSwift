@@ -127,6 +127,10 @@ private final class Auth_PasswordEntryInputView : View, NSTextFieldDelegate {
         secureField.frame = NSMakeRect(10, 10, frame.width - 20, 18)
     }
     
+    func updateLocked(_ locked: Bool) {
+        self.secureField.textView?.isEditable = !locked
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -232,6 +236,7 @@ final class Auth_PasswordEntryView: View {
         self.takeForgot = takeForgot
         self.locked = locked
         nextView.updateLocked(locked)
+        self.input.updateLocked(locked)
         if let error = error {
             let text:String
             switch error {
