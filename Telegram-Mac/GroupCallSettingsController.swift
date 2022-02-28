@@ -529,7 +529,7 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
     }
     
 
-    if state.canManageCall {
+    if state.canManageCall, peer.groupAccess.isCreator {
         entries.append(.sectionId(sectionId, type: .customModern(20)))
         sectionId += 1
         

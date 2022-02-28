@@ -762,7 +762,7 @@ final class GroupCallView : View {
                 self.noStreamView = current
                 addSubview(current)
             }
-            current.update(initialTimestamp: state.initialTimestamp, title: !state.state.canManageCall ? state.peer.displayTitle : nil, transition: transition)
+            current.update(initialTimestamp: state.initialTimestamp, title: !state.peer.groupAccess.isCreator ? state.peer.displayTitle : nil, transition: transition)
         } else if let view = noStreamView {
             performSubviewRemoval(view, animated: animated)
             self.noStreamView = nil
