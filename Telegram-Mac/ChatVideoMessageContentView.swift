@@ -235,7 +235,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     
     override func fetch(userInitiated: Bool) {
         if let context = context, let media = media as? TelegramMediaFile, let parent = parent {
-            fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, messageReference: .init(parent), file: media, userInitiated: userInitiated).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, messageReference: .init(parent), file: media, userInitiated: false).start())
         }
     }
     

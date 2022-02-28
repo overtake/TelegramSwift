@@ -406,13 +406,12 @@ class AuthController : GenericViewController<AuthView> {
         }, for: .Click)
         
         let refreshToken:()->Void = { [weak self] in
-            guard let engine = self?.engine else {
-                return
-            }
-            
             let available = stateValue.with { $0.tokenAvailable }
             if available {
-                let tokenSignal: Signal<ExportAuthTransferTokenResult, ExportAuthTransferTokenError> = sharedContext.activeAccounts |> castError(ExportAuthTransferTokenError.self) |> take(1) |> mapToSignal { accounts in
+                let tokenSignal: Signal<ExportAuthTransferTokenResult, ExportAuthTransferTokenError> = sharedContext.activeAccounts |> castError(ExportAuthTransferTokenError.self) |> take(1) |> deliverOnMainQueue |> mapToSignal { [weak self] accounts in
+                    guard let engine = self?.engine else {
+                        return .complete()
+                    }
                     return engine.auth.exportAuthTransferToken(accountManager: sharedContext.accountManager, otherAccountUserIds: accounts.accounts.map { $0.1.peerId.id }, syncContacts: false)
                 }
                 

@@ -1323,8 +1323,8 @@ class ChatRowItem: TableRowItem {
             let reactions = message.effectiveReactions(context.peerId)
             
             let chatInteraction = self.chatInteraction
-            if let reactions = reactions, !reactions.reactions.isEmpty {
-                let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: entry.additionalData.reactions, peerAllowed: chatInteraction.presentation.allowedReactions ?? [], engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)), openInfo: { [weak chatInteraction] peerId in
+            if let reactions = reactions, !reactions.reactions.isEmpty, let available = context.reactions.available {
+                let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: available, peerAllowed: chatInteraction.presentation.allowedReactions ?? [], engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)), openInfo: { [weak chatInteraction] peerId in
                     chatInteraction?.openInfo(peerId, false, nil, nil)
                 }, runEffect: { [weak chatInteraction] value in
                     chatInteraction?.runReactionEffect(value, message.id)

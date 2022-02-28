@@ -396,7 +396,7 @@ private func fetchCachedAnimatedStickerRepresentation(account: Account, resource
                 var image: CGImage?
                 if representation.isVideo {
                     let decoder = SoftwareVideoSource(path: resourceData.path, hintVP9: true)
-                    image = decoder.preview(size: representation.size, backingScale: 1)
+                    image = decoder.preview(size: representation.size, backingScale: 2)
                 } else {
                     image = convertFromWebP(data)?._cgImage ?? NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil)
                     
