@@ -266,6 +266,7 @@ class AuthController : GenericViewController<AuthView> {
         var signError: SignUpError?
         var locked: Bool = false
         var countries:[Country] = []
+        var lockAfterLogin: Bool = false
     }
         
     
@@ -552,6 +553,10 @@ class AuthController : GenericViewController<AuthView> {
         guard let currentState = state.state else {
             return
         }
+        
+        if state.lockAfterLogin {
+            return
+        }
                 
         switch currentState {
         case .empty:
@@ -665,12 +670,13 @@ class AuthController : GenericViewController<AuthView> {
                         var current = current
                         current.locked = false
                         current.codeError = nil
+                        current.lockAfterLogin = false
                         return current
                     }
                     switch value {
                     case let .signUp(data):
                         _ = beginSignUp(account: account, data: data).start()
-                    default:
+                    case .loggedIn:
                         break
                     }
                 }, error: { [weak self] error in
@@ -743,6 +749,7 @@ class AuthController : GenericViewController<AuthView> {
                     updateState { current in
                         var current = current
                         current.locked = false
+                        current.lockAfterLogin = error == nil
                         current.passwordError = error
                         return current
                     }
@@ -911,6 +918,7 @@ class AuthController : GenericViewController<AuthView> {
                         var current = current
                         current.signError = nil
                         current.locked = false
+                        current.lockAfterLogin = true
                         return current
                     }
                 })
@@ -921,6 +929,9 @@ class AuthController : GenericViewController<AuthView> {
         }
         
         if let controller = controller {
+            if state.locked, controller != self.current {
+                return
+            }
             set(controller, animated: true)
         }
     }

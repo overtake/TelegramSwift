@@ -244,6 +244,11 @@ private final class Auth_PhoneInput: View, NSTextFieldDelegate {
     }
 
     
+    func updateLocked(_ locked: Bool) {
+        self.codeText.textView?.isEditable = !locked
+        self.numberText.textView?.isEditable = !locked
+    }
+    
     fileprivate var selected:Country? {
         didSet {
             updatePlaceholder()
@@ -644,6 +649,7 @@ final class Auth_PhoneNumberView : View {
             errorLabel.state.set(.normal)
         }
         self.locked = locked
+        self.input.updateLocked(locked)
         switch state {
         case let .phoneEntry(countryCode, number):
             self.input.update(countryCode: countryCode, number: number)
