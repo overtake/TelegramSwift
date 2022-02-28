@@ -342,9 +342,9 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             
             switch file.mimeType {
             case "image/webp":
-                signal = chatMessageSticker(postbox: context.account.postbox, file: reference, small: size.width < 120, scale: backingScaleFactor, fetched: true)
+                signal = chatMessageSticker(postbox: context.account.postbox, file: reference, small: size.width <= 40, scale: backingScaleFactor, fetched: true)
             default:
-                signal = chatMessageAnimatedSticker(postbox: context.account.postbox, file: reference, small: size.width < 120, scale: backingScaleFactor, size: size, fetched: true, thumbAtFrame: parameters?.thumbAtFrame ?? 0, isVideo: file.fileName == "webm-preview")
+                signal = chatMessageAnimatedSticker(postbox: context.account.postbox, file: reference, small: size.width <= 40, scale: backingScaleFactor, size: size, fetched: true, thumbAtFrame: parameters?.thumbAtFrame ?? 0, isVideo: file.fileName == "webm-preview")
             }
             self.thumbView.setSignal(signal, cacheImage: { [weak file, weak self] result in
                 if let file = file {
