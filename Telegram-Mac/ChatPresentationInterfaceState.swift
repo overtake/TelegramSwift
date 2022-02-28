@@ -135,6 +135,14 @@ struct ChatActiveGroupCallInfo: Equatable {
     let data: GroupCallPanelData?
     let callJoinPeerId: PeerId?
     let joinHash: String?
+    
+    init(activeCall: CachedChannelData.ActiveCall, data: GroupCallPanelData?, callJoinPeerId: PeerId?, joinHash: String?) {
+        self.activeCall = activeCall
+        self.data = data
+        self.callJoinPeerId = callJoinPeerId
+        self.joinHash = joinHash
+    }
+    
     func withUpdatedData(_ data: GroupCallPanelData?) -> ChatActiveGroupCallInfo {
         return ChatActiveGroupCallInfo(activeCall: self.activeCall, data: data, callJoinPeerId: self.callJoinPeerId, joinHash: self.joinHash)
     }

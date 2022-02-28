@@ -396,8 +396,13 @@ final class GroupCallTitleView : Control {
                 status = strings().voiceChatTitleScheduledSoon
                 count = 0
             }  else if let summaryState = state.summaryState {
-                status = strings().voiceChatStatusMembersCountable(summaryState.participantCount)
-                count = summaryState.participantCount
+                if summaryState.participantCount == 0 {
+                    status = strings().voiceChatStatusStream
+                    count = summaryState.participantCount
+                } else {
+                    status = strings().voiceChatStatusMembersCountable(summaryState.participantCount)
+                    count = summaryState.participantCount
+                }
             } else {
                 status = strings().voiceChatStatusLoading
                 count = 0

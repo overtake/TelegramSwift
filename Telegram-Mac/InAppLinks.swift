@@ -1118,7 +1118,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
 
                         let joinKeys:[String] = ["+", "%20"]
                         let phone = username.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
-                        if phone == username || "+\(phone)" == username {
+                        if "+\(phone)" == username {
                             return .followResolvedName(link: urlString, username: phone, postId: nil, context: context, action: action, callback: openInfo)
                         } else {
                             for joinKey in joinKeys {

@@ -32,7 +32,7 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
         
         
         let message = object.message!
-        let file = message.media.first as! TelegramMediaFile
+        let file = message.file!
         self.file = file
         
         nameLayout = TextViewLayout(.initialize(string: file.fileName ?? "Unknown", color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
