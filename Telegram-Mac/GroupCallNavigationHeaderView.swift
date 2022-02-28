@@ -157,7 +157,11 @@ class GroupCallNavigationHeaderView: CallHeaderBasicView {
             if let first = data.topParticipants.first(where: { members?.speakingParticipants.contains($0.peer.id) ?? false }) {
                 self.status = .text(first.peer.compactDisplayTitle.prefixWithDots(12), nil)
             } else {
-                self.status = .text(strings().voiceChatStatusMembersCountable(data.participantCount), nil)
+                if state.isStream, data.participantCount == 0 {
+                    self.status = .text(strings().voiceChatStatusStream.lowercased(), nil)
+                } else {
+                    self.status = .text(strings().voiceChatStatusMembersCountable(data.participantCount), nil)
+                }
             }
             isConnected = true
         }

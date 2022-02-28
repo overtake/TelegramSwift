@@ -857,7 +857,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
             }
         }, revokeStreamKey: { [weak self] in
             if let window = self?.window {
-                confirm(for: window, header: appName, information: strings().voiceChatRTMPRevokeInfo, okTitle: strings().alertYes, cancelTitle: strings().alertNO, successHandler: { [weak self] _ in
+                confirm(for: window, header: strings().voiceChatRTMPRevoke, information: strings().voiceChatRTMPRevokeInfo, okTitle: strings().alertYes, cancelTitle: strings().alertNO, successHandler: { [weak self] _ in
                     
                     let signal = self?.call.engine.calls.getGroupCallStreamCredentials(peerId: .init(peerId.toInt64()), revokePreviousCredentials: true)
                     if let signal = signal {

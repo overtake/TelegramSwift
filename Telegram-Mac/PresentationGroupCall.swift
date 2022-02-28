@@ -206,7 +206,7 @@ final class AccountGroupCallContextImpl: AccountGroupCallContext {
                 }
                 return GroupCallPanelData(
                     peerId: peerId,
-                    info: GroupCallInfo(id: call.id, accessHash: call.accessHash, participantCount: state.totalCount, streamDcId: nil, title: state.title, scheduleTimestamp: state.scheduleTimestamp, subscribedToScheduled: state.subscribedToScheduled, recordingStartTimestamp: state.recordingStartTimestamp, sortAscending: state.sortAscending, defaultParticipantsAreMuted: state.defaultParticipantsAreMuted, isVideoEnabled: state.isVideoEnabled, unmutedVideoLimit: state.unmutedVideoLimit, isStream: call.isStream ?? false),
+                    info: GroupCallInfo(id: call.id, accessHash: call.accessHash, participantCount: state.totalCount, streamDcId: nil, title: state.title, scheduleTimestamp: state.scheduleTimestamp, subscribedToScheduled: state.subscribedToScheduled, recordingStartTimestamp: state.recordingStartTimestamp, sortAscending: state.sortAscending, defaultParticipantsAreMuted: state.defaultParticipantsAreMuted, isVideoEnabled: state.isVideoEnabled, unmutedVideoLimit: state.unmutedVideoLimit, isStream: state.isStream),
                     topParticipants: topParticipants,
                     participantCount: state.totalCount,
                     activeSpeakers: activeSpeakers,
@@ -2840,7 +2840,7 @@ private func startGroupCall(context: AccountContext, peerId: PeerId, joinAs: Pee
     
     
     
-    return GroupCallContext(call: PresentationGroupCallImpl(accountContext: context, initialCall: initialCall, internalId: internalId, peerId: peerId, invite: joinHash, joinAsPeerId: joinAs, initialInfo: initialInfo, isStream: initialCall?.isStream ?? initialCall?.isStream ?? false), peerMemberContextsManager: context.peerChannelMemberCategoriesContextsManager)
+    return GroupCallContext(call: PresentationGroupCallImpl(accountContext: context, initialCall: initialCall, internalId: internalId, peerId: peerId, invite: joinHash, joinAsPeerId: joinAs, initialInfo: initialInfo, isStream: initialCall?.isStream ?? initialCall?.isStream ?? initialInfo?.isStream ?? false), peerMemberContextsManager: context.peerChannelMemberCategoriesContextsManager)
 }
 
 func createVoiceChat(context: AccountContext, peerId: PeerId, displayAsList: [FoundPeer]? = nil, canBeScheduled: Bool = false) {
@@ -2888,7 +2888,7 @@ func createVoiceChat(context: AccountContext, peerId: PeerId, displayAsList: [Fo
             initialCall = nil
         }
         
-        return showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: initialCall) |> mapError { _ in .generic }, for: context.window)
+        return showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: initialCall) |> castError(CreateGroupCallError.self), for: context.window)
     } |> deliverOnMainQueue
     
     _ = requestCall.start(next: { result in

@@ -216,8 +216,8 @@ func DownloadsController(context: AccountContext) -> InputDataController {
     actionsDisposable.add(downloadItems.start(next: { values in
         updateState { current in
             var current = current
-            current.doneItems = values.doneItems
-            current.inProgressItems = values.inProgressItems
+            current.doneItems = values.doneItems.filter { $0.message.file != nil }
+            current.inProgressItems = values.inProgressItems.filter { $0.message.file != nil }
             return current
         }
     }))

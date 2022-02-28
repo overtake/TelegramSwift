@@ -519,6 +519,20 @@ public extension Message {
         return nil
     }
     
+    var file: TelegramMediaFile? {
+        if let file = self.media.first as? TelegramMediaFile {
+            return file
+        } else if let webpage = self.media.first as? TelegramMediaWebpage {
+            switch webpage.content {
+            case let .Loaded(content):
+                return content.file
+            default:
+                break
+            }
+        }
+        return nil
+    }
+    
     var textEntities: TextEntitiesMessageAttribute? {
         for attr in attributes {
             if let attr = attr as? TextEntitiesMessageAttribute {

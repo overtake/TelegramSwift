@@ -10391,6 +10391,8 @@ public final class L10n {
   }
   /// Please make sure you entered the right Server URL and Stream Key in your app.
   public static var voiceChatRTMPDesc: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.Desc") }
+  /// Oops! Telegram doesn't see any stream coming from your streaming app. Please make sure you entered the right Server URL and Stream Key in your app..
+  public static var voiceChatRTMPError: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.Error") }
   /// To stream video with a another app, enter these Server URL and Stream Key in your steaming app.
   public static var voiceChatRTMPInfo: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.Info") }
   /// Start Streaming
@@ -10403,7 +10405,7 @@ public final class L10n {
   public static var voiceChatRTMPStreamKey: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.StreamKey") }
   /// Stream With...
   public static var voiceChatRTMPTitle: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.Title") }
-  /// Revoke Stream Key?
+  /// A new key will be generated. You will need to update it in your streaming app.
   public static var voiceChatRTMPRevokeInfo: String  { return L10n.tr("Localizable", "VoiceChat.RTMP.Revoke.Info") }
   /// we let the speakers know
   public static var voiceChatRaisedHandText: String  { return L10n.tr("Localizable", "VoiceChat.RaisedHand.Text") }
@@ -10571,6 +10573,8 @@ public final class L10n {
   public static var voiceChatStatusScreensharing: String  { return L10n.tr("Localizable", "VoiceChat.Status.Screensharing") }
   /// speaking
   public static var voiceChatStatusSpeaking: String  { return L10n.tr("Localizable", "VoiceChat.Status.Speaking") }
+  /// Live Stream
+  public static var voiceChatStatusStream: String  { return L10n.tr("Localizable", "VoiceChat.Status.Stream") }
   /// wants to speak
   public static var voiceChatStatusWantsSpeak: String  { return L10n.tr("Localizable", "VoiceChat.Status.WantsSpeak") }
   /// This is you
