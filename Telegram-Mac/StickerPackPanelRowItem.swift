@@ -339,7 +339,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         guard let item = item as? StickerPackPanelRowItem else {
             return
         }
-        
+                
         let size: NSSize = NSMakeSize(60, 60)
         
         let visibleRect = self.visibleRect.insetBy(dx: 0, dy: -120)

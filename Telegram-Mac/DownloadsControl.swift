@@ -174,9 +174,9 @@ final class DownloadsSummary {
                     return bytesLoaded / totalBytes
                 }
             case .hasUnseen:
-                return 1
+                return 0
             default:
-                return 1
+                return 0
             }
         }
         

@@ -24,10 +24,10 @@ private final class NoStreamView : View {
         self.progressView.progress = nil
     }
     
-    func update(initialTimestamp: TimeInterval, transition: ContainedViewLayoutTransition) {
+    func update(initialTimestamp: TimeInterval, title: String?, transition: ContainedViewLayoutTransition) {
         self.progressView.viewDidMoveToWindow()
         
-        if Date().timeIntervalSince1970 - initialTimestamp > 20 {
+        if Date().timeIntervalSince1970 - initialTimestamp > 10 {
             let current: TextView
             var isNew = false
             if let view = self.textView {
@@ -43,7 +43,7 @@ private final class NoStreamView : View {
                 }
                 isNew = true
             }
-            let layout = TextViewLayout(.initialize(string: strings().voiceChatRTMPError, color: GroupCallTheme.customTheme.textColor, font: .normal(.text)), alignment: .center)
+            let layout = TextViewLayout(.initialize(string: title == nil ? strings().voiceChatRTMPError : strings().voiceChatRTMPViewerError(title!), color: GroupCallTheme.customTheme.textColor, font: .normal(.text)), alignment: .center)
             layout.measure(width: frame.width)
             current.update(layout)
             
@@ -56,7 +56,7 @@ private final class NoStreamView : View {
             self.textView = nil
         } else {
             delay(1, closure: { [weak self] in
-                self?.update(initialTimestamp: initialTimestamp, transition: .animated(duration: 0.2, curve: .easeOut))
+                self?.update(initialTimestamp: initialTimestamp, title: title, transition: .animated(duration: 0.2, curve: .easeOut))
             })
         }
     }
@@ -753,7 +753,7 @@ final class GroupCallView : View {
             }
         }
         
-        if state.state.scheduleState == nil, state.isStream, state.videoActive(.main).isEmpty, state.peer.groupAccess.isCreator {
+        if state.state.scheduleState == nil, state.isStream, state.videoActive(.main).isEmpty {
             let current: NoStreamView
             if let view = self.noStreamView {
                 current = view
@@ -762,7 +762,7 @@ final class GroupCallView : View {
                 self.noStreamView = current
                 addSubview(current)
             }
-            current.update(initialTimestamp: state.initialTimestamp, transition: transition)
+            current.update(initialTimestamp: state.initialTimestamp, title: !state.state.canManageCall ? state.peer.displayTitle : nil, transition: transition)
         } else if let view = noStreamView {
             performSubviewRemoval(view, animated: animated)
             self.noStreamView = nil
