@@ -131,6 +131,9 @@ private final class Auth_PasswordEntryInputView : View, NSTextFieldDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     func firstResponder() -> NSResponder? {
+        if window?.firstResponder == secureField.textView {
+            return secureField.textView
+        }
         return secureField
     }
     var value: String {
