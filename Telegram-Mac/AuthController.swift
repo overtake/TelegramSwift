@@ -582,6 +582,10 @@ class AuthController : GenericViewController<AuthView> {
                         self.exportTokenDisposable.set(nil)
                         self.account = account
                         refreshToken()
+                        let events = account.updateLoginTokenEvents  |> deliverOnMainQueue
+                        self.tokenEventsDisposable.set(events.start(next: { _ in
+                            refreshToken()
+                        }))
                     case let .passwordRequested(account):
                         self.account = account
                         self.exportTokenDisposable.set(nil)

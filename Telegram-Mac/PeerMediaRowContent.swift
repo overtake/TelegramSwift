@@ -61,6 +61,7 @@ class PeerMediaRowItem: GeneralRowItem {
         let message = self.message
         let interface = self.interface
         let messageId = self.message.id
+        let mode = self.gallery
                 
         return resourceData
         |> take(1)
@@ -96,7 +97,7 @@ class PeerMediaRowItem: GeneralRowItem {
                 interface.focusMessageId(nil, messageId, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: false), inset: 0))
             }, itemImage: MenuAnimation.menu_show_message.value))
             
-            if canDeleteMessage(message, account: interface.context.account, mode: .history) {
+            if canDeleteMessage(message, account: interface.context.account, mode: .history) || mode == .recentDownloaded {
                 thirdBlock.append(ContextMenuItem(strings().messageContextDelete, handler: {
                     interface.deleteMessages([messageId])
                 }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
