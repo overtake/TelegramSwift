@@ -159,7 +159,7 @@ extension ChatTextInputAttribute {
         case let .italic(range):
             return (NSAttributedString.Key.font.rawValue, NSFontManager.shared.convert(.normal(.text), toHaveTrait: .italicFontMask), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .pre(range), let .code(range):
-            return (NSAttributedString.Key.font.rawValue, NSFont.code(.text), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+            return (NSAttributedString.Key.font.rawValue, NSFont.menlo(.text), NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .uid(range, uid):
             let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: NSNumber(value: uid), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
             return (TGCustomLinkAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
@@ -377,7 +377,7 @@ final class ChatTextInputState: Codable, Equatable {
         for (range, fontAttributes) in fontAttributes {
             var font: NSFont?
             if fontAttributes.contains(.blockQuote) {
-                font = .code(theme.fontSize)
+                font = .menlo(theme.fontSize)
             } else if fontAttributes == [.bold, .italic] {
                 font = .boldItalic(theme.fontSize)
             } else if fontAttributes == [.bold] {
@@ -385,7 +385,7 @@ final class ChatTextInputState: Codable, Equatable {
             } else if fontAttributes == [.italic] {
                 font = .italic(theme.fontSize)
             }else if fontAttributes == [.monospace] {
-                font = .code(theme.fontSize)
+                font = .menlo(theme.fontSize)
             }
             if let font = font {
                 string.addAttribute(.font, value: font, range: range)

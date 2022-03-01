@@ -612,12 +612,12 @@ class ChatControllerView : View, ChatInputDelegate {
         }
 
         var state:ChatHeaderState
-        if let count = interfaceState.inviteRequestsPending, let inviteRequestsPendingPeers = interfaceState.inviteRequestsPendingPeers, !inviteRequestsPendingPeers.isEmpty {
+        if interfaceState.isSearchMode.0 {
+           state = .search(voiceChat, searchInteractions, interfaceState.isSearchMode.1, interfaceState.isSearchMode.2)
+        } else if let count = interfaceState.inviteRequestsPending, let inviteRequestsPendingPeers = interfaceState.inviteRequestsPendingPeers, !inviteRequestsPendingPeers.isEmpty {
             state = .pendingRequests(voiceChat, Int(count), inviteRequestsPendingPeers)
         } else if interfaceState.reportMode != nil {
             state = .none(nil)
-        } else if interfaceState.isSearchMode.0 {
-            state = .search(voiceChat, searchInteractions, interfaceState.isSearchMode.1, interfaceState.isSearchMode.2)
         } else if let initialAction = interfaceState.initialAction, case let .ad(kind) = initialAction {
             state = .promo(voiceChat, kind)
         } else if let peerStatus = interfaceState.peerStatus, let settings = peerStatus.peerStatusSettings, !settings.flags.isEmpty {
