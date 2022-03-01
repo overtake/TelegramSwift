@@ -925,6 +925,7 @@ let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmph
 let ton_scheme:String = "ton://"
 
 private let keyURLUsername = "domain";
+private let keyURLPhone = "phone";
 private let keyURLPostId = "post";
 private let keyURLCommentId = "comment";
 private let keyURLThreadId = "thread";
@@ -937,7 +938,6 @@ private let keyURLVoiceChat = "voicechat";
 private let keyURLStartGroup = "startgroup";
 private let keyURLSecret = "secret";
 
-private let keyURLPhone = "phone";
 private let keyURLHash = "hash";
 
 private let keyURLHost = "server";
@@ -1252,6 +1252,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 return .followResolvedName(link: urlString, username: username, postId: post, context: context, action: action, callback:openInfo)
                             }
                         }
+                    } else if let phone = vars[keyURLPhone], let openInfo = openInfo, let context = context {
+                        return .followResolvedName(link: urlString, username: phone, postId: nil, context: context, action: nil, callback: openInfo)
                     }
                 case known_scheme[1]:
                     if let url = vars[keyURLUrl] {

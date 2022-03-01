@@ -156,7 +156,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
     }
     
     func executeInteraction(_ isControl:Bool) -> Void {
-        if let fetchStatus = self.fetchStatus, let item = item as? PeerMediaFileRowItem {
+        if let fetchStatus = self.fetchStatus, let item = item as? PeerMediaFileRowItem, let file = item.file {
             switch fetchStatus {
             case .Fetching:
                 if isControl {
@@ -174,7 +174,11 @@ class PeerMediaFileRowView : PeerMediaRowView {
                     open()
                 }
             case .Paused:
-                cancel()
+                if item.gallery == .recentDownloaded {
+                    toggleInteractiveFetchPaused(context: item.context, file: file, isPaused: false)
+                } else {
+                    cancel()
+                }
             case .Local:
                 open()
                 break
