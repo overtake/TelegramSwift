@@ -615,7 +615,9 @@ final class ChatInteraction : InterfaceObserver  {
         
         let disposable = s.start(completed: {
             context.setChatInterfaceTempState(ChatInterfaceTempState(editState: interfaceState.editState), for: peerId)
-            semaphore.signal()
+            if sync {
+                semaphore.signal()
+            }
         })
         modifyDisposable.set(disposable)
 
