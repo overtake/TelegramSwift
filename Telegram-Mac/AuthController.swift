@@ -555,7 +555,7 @@ class AuthController : GenericViewController<AuthView> {
             return
         }
         
-        self.tokenEventsDisposable.set(nil)
+        self.exportTokenDisposable.set(nil)
         self.tokenEventsDisposable.set(nil)
         
         switch currentState {
