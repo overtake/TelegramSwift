@@ -240,21 +240,17 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             firstBlock.append(ContextMenuItem(strings().chatContextScheduledSendNow, handler: {
                 _ = context.engine.messages.sendScheduledMessageNowInteractively(messageId: messageId).start()
             }, itemImage: MenuAnimation.menu_send_now.value))
-            firstBlock.append(ContextMenuItem(strings().chatContextScheduledReschedule, handler: { [weak data] in
-                if let data = data {
-                    showModal(with: DateSelectorModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), mode: .schedule(peer.id), selectedAt: { date in
-                        _ = showModalProgress(signal: context.engine.messages.requestEditMessage(messageId: messageId, text: data.message.text, media: .keep, entities: data.message.textEntities, scheduleTime: Int32(min(date.timeIntervalSince1970, Double(scheduleWhenOnlineTimestamp)))), for: context.window).start()
-                   }), for: context.window)
-                }
+            firstBlock.append(ContextMenuItem(strings().chatContextScheduledReschedule, handler: {
+                showModal(with: DateSelectorModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), mode: .schedule(peer.id), selectedAt: { date in
+                    _ = showModalProgress(signal: context.engine.messages.requestEditMessage(messageId: messageId, text: data.message.text, media: .keep, entities: data.message.textEntities, scheduleTime: Int32(min(date.timeIntervalSince1970, Double(scheduleWhenOnlineTimestamp)))), for: context.window).start()
+               }), for: context.window)
             }, itemImage: MenuAnimation.menu_schedule_message.value))
         }
         
         
         if canReplyMessage(data.message, peerId: data.peerId, mode: data.chatMode)  {
-            firstBlock.append(ContextMenuItem(strings().messageContextReply1, handler: { [weak data] in
-                if let data = data {
-                    data.chatInteraction.setupReplyMessage(data.message.id)
-                }
+            firstBlock.append(ContextMenuItem(strings().messageContextReply1, handler: {
+                data.chatInteraction.setupReplyMessage(data.message.id)
             }, itemImage: MenuAnimation.menu_reply.value, keyEquivalent: .cmdr))
         }
         
@@ -263,8 +259,8 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             if !poll.isClosed && isNotFailed {
                 if let _ = poll.results.voters?.first(where: {$0.selected}), poll.kind != .quiz {
                     let isLoading = data.additionalData.pollStateData.isLoading
-                    add_secondBlock.append(ContextMenuItem(strings().chatPollUnvote, handler: { [weak data] in
-                        if !isLoading, let data = data, isNotFailed {
+                    add_secondBlock.append(ContextMenuItem(strings().chatPollUnvote, handler: {
+                        if !isLoading, isNotFailed {
                             data.chatInteraction.vote(messageId, [], true)
                         }
                     }, itemImage: MenuAnimation.menu_retract_vote.value))
@@ -296,10 +292,8 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     }
                 }
                 let text = modeIsReplies ? strings().messageContextViewRepliesCountable(Int(attr.count)) : strings().messageContextViewCommentsCountable(Int(attr.count))
-                secondBlock.append(ContextMenuItem(text, handler: { [weak data] in
-                    if let data = data {
-                        data.chatInteraction.openReplyThread(messageId, !modeIsReplies, true, modeIsReplies ? .replies(origin: messageId) : .comments(origin: messageId))
-                    }
+                secondBlock.append(ContextMenuItem(text, handler: {
+                    data.chatInteraction.openReplyThread(messageId, !modeIsReplies, true, modeIsReplies ? .replies(origin: messageId) : .comments(origin: messageId))
                 }, itemImage: MenuAnimation.menu_view_replies.value))
             }
         }
@@ -391,24 +385,19 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         
         if let peer = peer as? TelegramChannel, !isService {
             if isNotFailed, !message.isScheduledMessage {
-                thirdBlock.append(ContextMenuItem(strings().messageContextCopyMessageLink1, handler: { [weak data] in
-                    if let data = data {
-                        _ = showModalProgress(signal: context.engine.messages.exportMessageLink(peerId: peer.id, messageId: messageId, isThread: data.chatMode.threadId != nil), for: context.window).start(next: { link in
-                            if let link = link {
-                                copyToClipboard(link)
-                            }
-                        })
-                    }
-                    
+                thirdBlock.append(ContextMenuItem(strings().messageContextCopyMessageLink1, handler: {
+                    _ = showModalProgress(signal: context.engine.messages.exportMessageLink(peerId: peer.id, messageId: messageId, isThread: data.chatMode.threadId != nil), for: context.window).start(next: { link in
+                        if let link = link {
+                            copyToClipboard(link)
+                        }
+                    })
                 }, itemImage: MenuAnimation.menu_copy_link.value))
             }
         }
         
         if canEditMessage(data.message, chatInteraction: data.chatInteraction, context: context), data.chatMode != .pinned, !isService {
-            secondBlock.append(ContextMenuItem(strings().messageContextEdit, handler: { [weak data] in
-                if let data = data {
-                    data.chatInteraction.beginEditingMessage(data.message)
-                }
+            secondBlock.append(ContextMenuItem(strings().messageContextEdit, handler: {
+                data.chatInteraction.beginEditingMessage(data.message)
             }, itemImage: MenuAnimation.menu_edit.value, keyEquivalent: .cmde))
         }
         
@@ -428,42 +417,40 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             if let peer = peer as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
                 if isNotFailed {
                     if !data.chatMode.isThreadMode, (needUnpin || data.chatMode != .pinned) {
-                        secondBlock.append(ContextMenuItem(pinText, handler: { [weak data] in
-                            if peer.isSupergroup, !needUnpin, let data = data {
+                        secondBlock.append(ContextMenuItem(pinText, handler: {
+                            if peer.isSupergroup, !needUnpin {
                                 let info = pinAndOld ? strings().chatConfirmPinOld : strings().messageContextConfirmPin1
                                 
                                 modernConfirm(for: context.window, information: info, okTitle:  strings().messageContextPin, thridTitle: pinAndOld ? nil : strings().messageContextConfirmNotifyPin, successHandler: { result in
                                     data.chatInteraction.updatePinned(data.message.id, needUnpin, result != .thrid, false)
                                 })
-                            } else if let data = data {
+                            } else {
                                 data.chatInteraction.updatePinned(data.message.id, needUnpin, true, false)
                             }
                         }, itemImage: pinImage))
                     }
                 }
             } else if data.message.id.peerId == context.peerId {
-                secondBlock.append(ContextMenuItem(pinText, handler: { [weak data] in
-                    if let data = data {
-                        data.chatInteraction.updatePinned(data.message.id, needUnpin, true, false)
-                    }
+                secondBlock.append(ContextMenuItem(pinText, handler: {
+                    data.chatInteraction.updatePinned(data.message.id, needUnpin, true, false)
                 }, itemImage: pinImage))
             } else if let peer = peer as? TelegramGroup, peer.canPinMessage, (needUnpin || data.chatMode != .pinned) {
-                secondBlock.append(ContextMenuItem(pinText, handler: { [weak data] in
-                    if !needUnpin, let data = data {
+                secondBlock.append(ContextMenuItem(pinText, handler: {
+                    if !needUnpin {
                         modernConfirm(for: context.window, account: account, peerId: nil, information: pinAndOld ? strings().chatConfirmPinOld : strings().messageContextConfirmPin1, okTitle: strings().messageContextPin, thridTitle: pinAndOld ? nil : strings().messageContextConfirmNotifyPin, successHandler: { result in
                             data.chatInteraction.updatePinned(data.message.id, needUnpin, result == .thrid, false)
                         })
-                    } else if let data = data {
+                    } else {
                         data.chatInteraction.updatePinned(data.message.id, needUnpin, false, false)
                     }
                 }, itemImage: pinImage))
             } else if data.canPinMessage, let peer = data.peer, (needUnpin || data.chatMode != .pinned) {
-                secondBlock.append(ContextMenuItem(pinText, handler: { [weak data] in
-                    if !needUnpin, let data = data {
+                secondBlock.append(ContextMenuItem(pinText, handler: {
+                    if !needUnpin {
                         modernConfirm(for: context.window, account: account, peerId: nil, information: pinAndOld ? strings().chatConfirmPinOld : strings().messageContextConfirmPin1, okTitle: strings().messageContextPin, thridTitle: strings().chatConfirmPinFor(peer.displayTitle), thridAutoOn: false, successHandler: { result in
                             data.chatInteraction.updatePinned(data.message.id, needUnpin, false, result != .thrid)
                         })
-                    } else if let data = data {
+                    } else {
                         data.chatInteraction.updatePinned(data.message.id, needUnpin, false, false)
                     }
                 }, itemImage: pinImage))
@@ -471,10 +458,8 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         }
         
         if canForwardMessage(data.message, chatInteraction: data.chatInteraction), !isService {
-            let forwardItem = ContextMenuItem(strings().messageContextForward, handler: { [weak data] in
-                if let data = data {
-                    data.chatInteraction.forwardMessages([data.message.id])
-                }
+            let forwardItem = ContextMenuItem(strings().messageContextForward, handler: {
+                data.chatInteraction.forwardMessages([data.message.id])
             }, itemImage: MenuAnimation.menu_forward.value)
             let forwardMenu = ContextMenu()
             
@@ -557,7 +542,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         }
         /*
          else if data.message.id.peerId.namespace == Namespaces.Peer.SecretChat, !data.message.containsSecretMedia {
-             secondBlock.append(ContextMenuItem(strings().messageContextShare, handler: { [weak data] in
+             secondBlock.append(ContextMenuItem(strings().messageContextShare, handler: {
                  if let data = data {
                      data.chatInteraction.forwardMessages([data.message.id])
                  }
@@ -568,12 +553,10 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         
         
         if data.chatMode.threadId != data.message.id, !isService {
-            secondBlock.append(ContextMenuItem(strings().messageContextSelect, handler: { [weak data] in
-                if let data = data {
-                    data.chatInteraction.withToggledSelectedMessage({
-                        $0.withToggledSelectedMessage(data.message.id)
-                    })
-                }
+            secondBlock.append(ContextMenuItem(strings().messageContextSelect, handler: {
+                data.chatInteraction.withToggledSelectedMessage({
+                    $0.withToggledSelectedMessage(data.message.id)
+                })
             }, itemImage: MenuAnimation.menu_select_messages.value))
         }
         
@@ -585,10 +568,8 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                             _ = removeSavedGif(postbox: account.postbox, mediaId: file.fileId).start()
                         }, itemImage: MenuAnimation.menu_remove_gif.value))
                     } else {
-                        thirdBlock.append(ContextMenuItem(strings().messageContextSaveGif, handler: { [weak data] in
-                            if let data = data {
-                                _ = addSavedGif(postbox: account.postbox, fileReference: FileMediaReference.message(message: MessageReference(data.message), media: file)).start()
-                            }
+                        thirdBlock.append(ContextMenuItem(strings().messageContextSaveGif, handler: {
+                            _ = addSavedGif(postbox: account.postbox, fileReference: FileMediaReference.message(message: MessageReference(data.message), media: file)).start()
                         }, itemImage: MenuAnimation.menu_add_gif.value))
                     }
                 }
@@ -709,10 +690,8 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         }
 
         if canDeleteMessage(data.message, account: account, mode: data.chatMode) {
-            fifthBlock.append(ContextMenuItem(strings().messageContextDelete, handler: { [weak data] in
-                if let data = data {
-                    data.chatInteraction.deleteMessages([data.message.id])
-                }
+            fifthBlock.append(ContextMenuItem(strings().messageContextDelete, handler: {
+                data.chatInteraction.deleteMessages([data.message.id])
             }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
         }
         
