@@ -433,9 +433,6 @@ class AuthController : GenericViewController<AuthView> {
             
         }
         
-        self.tokenEventsDisposable.set((self.account.updateLoginTokenEvents |> deliverOnMainQueue).start(next: { _ in
-            refreshToken()
-        }))
         
         
         let engine = self.engine
@@ -557,7 +554,10 @@ class AuthController : GenericViewController<AuthView> {
         if state.lockAfterLogin {
             return
         }
-                
+        
+        self.tokenEventsDisposable.set(nil)
+        self.tokenEventsDisposable.set(nil)
+        
         switch currentState {
         case .empty:
             if state.tokenAvailable {
@@ -577,6 +577,11 @@ class AuthController : GenericViewController<AuthView> {
                         let timeout = max(5, token.validUntil - timestamp)
                         self.exportTokenDisposable.set((Signal<Never, NoError>.complete()
                             |> delay(Double(timeout), queue: .mainQueue())).start(completed: refreshToken))
+                        
+                        self.tokenEventsDisposable.set((self.account.updateLoginTokenEvents |> deliverOnMainQueue).start(next: { _ in
+                            refreshToken()
+                        }))
+                        
                     case let .changeAccountAndRetry(account):
                         controller = token_c
                         self.exportTokenDisposable.set(nil)
