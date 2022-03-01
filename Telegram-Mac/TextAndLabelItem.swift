@@ -53,13 +53,15 @@ class TextAndLabelItem: GeneralRowItem {
     let accentColor: NSColor
     let hideText: Bool?
     let toggleHide:(()->Void)?
-    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, copyMenuText: String, labelColor: NSColor = theme.colors.accent, textColor: NSColor = theme.colors.text, backgroundColor: NSColor = theme.colors.background, text:String, context: AccountContext?, viewType: GeneralViewType = .legacy, detectLinks:Bool = false, onlyInApp: Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false, canCopy: Bool = true, _copyToClipboard:(()->Void)? = nil, textFont: NSFont = .normal(.title), hideText: Bool? = nil, toggleHide: (()->Void)? = nil, accentColor: NSColor = theme.colors.accent) {
+    let borderColor: NSColor
+    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, copyMenuText: String, labelColor: NSColor = theme.colors.accent, textColor: NSColor = theme.colors.text, backgroundColor: NSColor = theme.colors.background, text:String, context: AccountContext?, viewType: GeneralViewType = .legacy, detectLinks:Bool = false, onlyInApp: Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false, canCopy: Bool = true, _copyToClipboard:(()->Void)? = nil, textFont: NSFont = .normal(.title), hideText: Bool? = nil, toggleHide: (()->Void)? = nil, accentColor: NSColor = theme.colors.accent, borderColor: NSColor = theme.colors.border) {
         self.callback = callback
         self.accentColor = accentColor
         self.hideText = hideText
         self.toggleHide = toggleHide
         self.isTextSelectable = isTextSelectable
         self.copyMenuText = copyMenuText
+        self.borderColor = borderColor
         self.label = NSAttributedString.initialize(string: label, color: labelColor, font: .normal(FontSize.text))
         let attr = NSMutableAttributedString()
         var text = text.trimmed.fullTrimmed
@@ -192,19 +194,21 @@ class TextAndLabelRowView: GeneralRowView {
             case .legacy:
                 label.1.draw(NSMakeRect(item.inset.left, item.labelY, label.0.size.width, label.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backdorColor)
                 if item.drawCustomSeparator {
-                    ctx.setFillColor(theme.colors.border.cgColor)
+                    ctx.setFillColor(item.borderColor.cgColor)
                     ctx.fill(NSMakeRect(item.inset.left, frame.height - .borderSize, frame.width - item.inset.left - item.inset.right, .borderSize))
                 }
             case let .modern(position, insets):
                 label.1.draw(NSMakeRect(insets.left, item.labelY, label.0.size.width, label.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backdorColor)
                 if position.border {
-                    ctx.setFillColor(theme.colors.border.cgColor)
+                    ctx.setFillColor(item.borderColor.cgColor)
                     ctx.fill(NSMakeRect(insets.left, self.containerView.frame.height - .borderSize, self.containerView.frame.width - insets.left - insets.right, .borderSize))
                 }
             }
         }
         
     }
+    
+    
     
     override var backdorColor: NSColor {
         if let item = item as? TextAndLabelItem {

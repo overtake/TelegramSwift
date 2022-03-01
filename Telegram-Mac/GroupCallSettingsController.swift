@@ -546,7 +546,7 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
                     arguments.copyToClipboard(credentials.url)
                 }, selectFullWord: true, canCopy: true, _copyToClipboard: {
                     arguments.copyToClipboard(credentials.url)
-                }, textFont: .code(.title), accentColor: theme.accentColor)
+                }, textFont: .code(.title), accentColor: theme.accentColor, borderColor: theme.borderColor)
             }))
             index += 1
             
@@ -555,7 +555,7 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
                     arguments.copyToClipboard(credentials.streamKey)
                 }, selectFullWord: true, canCopy: true, _copyToClipboard: {
                     arguments.copyToClipboard(credentials.streamKey)
-                }, textFont: .code(.title), hideText: uiState.hideKey, toggleHide: arguments.toggleHideKey, accentColor: theme.accentColor)
+                }, textFont: .code(.title), hideText: uiState.hideKey, toggleHide: arguments.toggleHideKey, accentColor: theme.accentColor, borderColor: theme.borderColor)
             }))
             index += 1
             
