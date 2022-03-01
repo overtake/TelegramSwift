@@ -547,6 +547,10 @@ class AuthController : GenericViewController<AuthView> {
         let sharedContext = self.sharedContext
         var controller: ViewController?
         
+        self.exportTokenDisposable.set(nil)
+        self.tokenEventsDisposable.set(nil)
+
+        
         guard let currentState = state.state else {
             return
         }
@@ -555,11 +559,7 @@ class AuthController : GenericViewController<AuthView> {
             return
         }
         
-        self.exportTokenDisposable.set(nil)
-        self.tokenEventsDisposable.set(nil)
-        
-        switch currentState {
-        case .empty:
+        if state.tokenAvailable, state.qrEnabled {
             if state.tokenAvailable {
                 if let token = state.tokenResult {
                     switch token {
@@ -599,7 +599,7 @@ class AuthController : GenericViewController<AuthView> {
                         updateState { current in
                             var current = current
                             current.tokenResult = nil
-                            current.tokenAvailable = true
+                            current.tokenAvailable = false
                             return current
                         }
                     case .loggedIn:
@@ -616,13 +616,11 @@ class AuthController : GenericViewController<AuthView> {
                         }
                     })
                 }
-                
-            } else {
-                exportTokenDisposable.set(nil)
             }
-            if state.tokenAvailable, state.qrEnabled {
-                refreshToken()
-            } else {
+            refreshToken()
+        } else {
+            switch currentState {
+            case .phoneEntry, .empty:
                 controller = phone_number_c
                 phone_number_c.update(state.locked, state: currentState, countries: state.countries, error: state.error, qrEnabled: state.qrEnabled, takeToken: {
                     updateState { current in
@@ -633,309 +631,300 @@ class AuthController : GenericViewController<AuthView> {
                 }, takeNext: { [weak self] value in
                     self?.sendCode(value, updateState: updateState)
                 })
-            }
-        case let .phoneEntry(countryCode, number):
-            controller = phone_number_c
-            phone_number_c.update(state.locked, state: currentState, countries: state.countries, error: state.error, qrEnabled: state.qrEnabled, takeToken: {
-                updateState { current in
-                    var current = current
-                    current.tokenAvailable = true
-                    return current
-                }
-            }, takeNext: { [weak self] value in
-                self?.sendCode(value, updateState: updateState)
-            })
-            phone_number_c.set(number: "\(countryCode)" + number)
-        case let .confirmationCodeEntry(number, type, _, timeout, nextType, _):
-            controller = code_entry_c
-            phone_number_c.set(number: number)
-            code_entry_c.update(locked: state.locked, error: state.codeError, number: number, type: type, timeout: timeout, nextType: nextType, takeEdit: { [weak self] in
-                updateState { current in
-                    var current = current
-                    current.locked = false
-                    current.codeError = nil
-                    return current
-                }
-                if let account = self?.account {
-                    _ = resetAuthorizationState(account: account, to: .empty).start()
-                }
-            }, takeNext: { [weak self] code in
-                guard let account = self?.account else {
-                    return
-                }
-                updateState { current in
-                    var current = current
-                    current.locked = true
-                    return current
-                }
-                
-                let signal = authorizeWithCode(accountManager: sharedContext.accountManager, account: account, code: code, termsOfService: nil, forcedPasswordSetupNotice: { _ in
-                    return nil
-                })
-                |> deliverOnMainQueue
-                
-                _ = signal.start(next: { value in
+            case let .confirmationCodeEntry(number, type, _, timeout, nextType, _):
+                controller = code_entry_c
+                phone_number_c.set(number: number)
+                code_entry_c.update(locked: state.locked, error: state.codeError, number: number, type: type, timeout: timeout, nextType: nextType, takeEdit: { [weak self] in
                     updateState { current in
                         var current = current
                         current.locked = false
                         current.codeError = nil
-                        current.lockAfterLogin = false
                         return current
                     }
-                    switch value {
-                    case let .signUp(data):
-                        _ = beginSignUp(account: account, data: data).start()
-                    case .loggedIn:
-                        break
+                    if let account = self?.account {
+                        _ = resetAuthorizationState(account: account, to: .empty).start()
                     }
-                }, error: { [weak self] error in
+                }, takeNext: { [weak self] code in
                     guard let account = self?.account else {
                         return
                     }
                     updateState { current in
                         var current = current
-                        if case .codeExpired = error {
-                            current.codeError = nil
-                            current.error = .timeout
-                        } else {
-                            current.codeError = error
-                            current.error = nil
-                        }
-                        current.locked = false
+                        current.locked = true
                         return current
                     }
-                    switch error {
-                    case .codeExpired:
-                        _ = resetAuthorizationState(account: account, to: .empty).start()
-                    default:
-                        break
-                    }
-                })
-            }, takeResend: { [weak self] in
-                guard let window = self?.window else {
-                    return
-                }
-                confirm(for: window, information: L10n.loginSmsAppErr, cancelTitle: L10n.loginSmsAppErrGotoSite, successHandler: { _ in
-                                   
-                }, cancelHandler:{
-                    execute(inapp: .external(link: "https://telegram.org", false))
-                })
-            }, takeError: {
-                updateState { current in
-                    var current = current
-                    current.codeError = nil
-                    return current
-                }
-            })
-        case let .passwordEntry(hint, number, _, suggestReset, _):
-            controller = password_entry_c
-            if let number = number {
-                phone_number_c.set(number: number)
-            }
-            password_entry_c.update(locked: state.locked, error: state.passwordError, hint: hint, takeNext: { [weak self] password in
-                guard let account = self?.account else {
-                    return
-                }
-                updateState { current in
-                    var current = current
-                    current.locked = true
-                    current.error = nil
-                    return current
-                }
-                
-                let signal = authorizeWithPassword(accountManager: sharedContext.accountManager, account: account, password: password, syncContacts: false)
-                    |> map { () -> AuthorizationPasswordVerificationError? in
-                         return nil
-                    }
-                    |> `catch` { error -> Signal<AuthorizationPasswordVerificationError?, AuthorizationPasswordVerificationError> in
-                         return .single(error)
-                    }
-                    |> mapError {_ in }
+                    
+                    let signal = authorizeWithCode(accountManager: sharedContext.accountManager, account: account, code: code, termsOfService: nil, forcedPasswordSetupNotice: { _ in
+                        return nil
+                    })
                     |> deliverOnMainQueue
-                
-                
-                _ = signal.start(next: { error in
-                    updateState { current in
-                        var current = current
-                        current.locked = false
-                        current.lockAfterLogin = error == nil
-                        current.passwordError = error
-                        return current
-                    }
-                })
-
-                
-            }, takeError: {
-                updateState { current in
-                    var current = current
-                    current.locked = false
-                    current.passwordError = nil
-                    return current
-                }
-            }, takeForgot: { [weak self] reset, f in
-                guard let window = self?.window, let engine = self?.engine else {
-                    return
-                }
-                if reset {
-                    let info = L10n.loginResetAccountDescription
-                    let ok = L10n.loginResetAccount
-                    confirm(for: window, information: info, okTitle: ok, successHandler: { [weak self] _ in
+                    
+                    _ = signal.start(next: { value in
+                        updateState { current in
+                            var current = current
+                            current.locked = false
+                            current.codeError = nil
+                            current.lockAfterLogin = false
+                            return current
+                        }
+                        switch value {
+                        case let .signUp(data):
+                            _ = beginSignUp(account: account, data: data).start()
+                        case .loggedIn:
+                            break
+                        }
+                    }, error: { [weak self] error in
                         guard let account = self?.account else {
                             return
                         }
-                        _ = showModalProgress(signal: performAccountReset(account: account), for: window).start(error: { error in
+                        updateState { current in
+                            var current = current
+                            if case .codeExpired = error {
+                                current.codeError = nil
+                                current.error = .timeout
+                            } else {
+                                current.codeError = error
+                                current.error = nil
+                            }
+                            current.locked = false
+                            return current
+                        }
+                        switch error {
+                        case .codeExpired:
+                            _ = resetAuthorizationState(account: account, to: .empty).start()
+                        default:
+                            break
+                        }
+                    })
+                }, takeResend: { [weak self] in
+                    guard let window = self?.window else {
+                        return
+                    }
+                    confirm(for: window, information: L10n.loginSmsAppErr, cancelTitle: L10n.loginSmsAppErrGotoSite, successHandler: { _ in
+                                       
+                    }, cancelHandler:{
+                        execute(inapp: .external(link: "https://telegram.org", false))
+                    })
+                }, takeError: {
+                    updateState { current in
+                        var current = current
+                        current.codeError = nil
+                        return current
+                    }
+                })
+            case let .passwordEntry(hint, number, _, suggestReset, _):
+                controller = password_entry_c
+                if let number = number {
+                    phone_number_c.set(number: number)
+                }
+                password_entry_c.update(locked: state.locked, error: state.passwordError, hint: hint, takeNext: { [weak self] password in
+                    guard let account = self?.account else {
+                        return
+                    }
+                    updateState { current in
+                        var current = current
+                        current.locked = true
+                        current.error = nil
+                        return current
+                    }
+                    
+                    let signal = authorizeWithPassword(accountManager: sharedContext.accountManager, account: account, password: password, syncContacts: false)
+                        |> map { () -> AuthorizationPasswordVerificationError? in
+                             return nil
+                        }
+                        |> `catch` { error -> Signal<AuthorizationPasswordVerificationError?, AuthorizationPasswordVerificationError> in
+                             return .single(error)
+                        }
+                        |> mapError {_ in }
+                        |> deliverOnMainQueue
+                    
+                    
+                    _ = signal.start(next: { error in
+                        updateState { current in
+                            var current = current
+                            current.locked = false
+                            current.lockAfterLogin = error == nil
+                            current.passwordError = error
+                            return current
+                        }
+                    })
+
+                    
+                }, takeError: {
+                    updateState { current in
+                        var current = current
+                        current.locked = false
+                        current.passwordError = nil
+                        return current
+                    }
+                }, takeForgot: { [weak self] reset, f in
+                    guard let window = self?.window, let engine = self?.engine else {
+                        return
+                    }
+                    if reset {
+                        let info = L10n.loginResetAccountDescription
+                        let ok = L10n.loginResetAccount
+                        confirm(for: window, information: info, okTitle: ok, successHandler: { [weak self] _ in
+                            guard let account = self?.account else {
+                                return
+                            }
+                            _ = showModalProgress(signal: performAccountReset(account: account), for: window).start(error: { error in
+                                alert(for: window, info: L10n.unknownError)
+                            })
+                        })
+
+                    } else {
+                        updateState { current in
+                            var current = current
+                            current.locked = true
+                            return current
+                        }
+                        let signal = engine.auth.requestTwoStepVerificationPasswordRecoveryCode() |> deliverOnMainQueue
+                        _ = signal.start(next: { pattern in
+                            
+                            updateState { current in
+                                var current = current
+                                current.locked = false
+                                current.state = .passwordRecovery(hint: hint, number: number, code: nil, emailPattern: pattern, syncContacts: false)
+                                return current
+                            }
+                            
+                        }, error: { error in
+                            alert(for: window, info: L10n.loginRecoveryMailFailed)
+                            updateState { current in
+                                var current = current
+                                current.locked = false
+                                return current
+                            }
+                            f()
+                        })
+                    }
+                })
+            case let .awaitingAccountReset(protectedUntil, number, _):
+                controller = awaiting_reset_c
+                awaiting_reset_c.update(locked: state.locked, protectedUntil: protectedUntil, number: number, takeReset: { [weak self] in
+                    guard let window = self?.window, let account = self?.account else {
+                        return
+                    }
+                    confirm(for: window, information: L10n.loginResetAccountDescription, okTitle: L10n.loginResetAccount, successHandler: { _ in
+                        _ = showModalProgress(signal: performAccountReset(account: account) |> deliverOnMainQueue, for: window).start(error: { error in
                             alert(for: window, info: L10n.unknownError)
                         })
                     })
 
-                } else {
+                })
+            case let .passwordRecovery(_, _, _, pattern, _):
+                controller = email_recovery_c
+                email_recovery_c.update(locked: state.locked, error: state.emailError, pattern: pattern, takeNext: { [weak self] value in
+                    guard let engine = self?.engine else {
+                        return
+                    }
                     updateState { current in
                         var current = current
                         current.locked = true
+                        current.emailError = nil
                         return current
                     }
-                    let signal = engine.auth.requestTwoStepVerificationPasswordRecoveryCode() |> deliverOnMainQueue
-                    _ = signal.start(next: { pattern in
+                    _ = engine.auth.performPasswordRecovery(code: value, updatedPassword: .none).start(next: { data in
+                        let auth = loginWithRecoveredAccountData(accountManager: sharedContext.accountManager, account: engine.account, recoveredAccountData: data, syncContacts: false) |> deliverOnMainQueue
                         
-                        updateState { current in
-                            var current = current
-                            current.locked = false
-                            current.state = .passwordRecovery(hint: hint, number: number, code: nil, emailPattern: pattern, syncContacts: false)
-                            return current
-                        }
+                        _ = auth.start(completed: {
+                            updateState { current in
+                                var current = current
+                                current.locked = false
+                                return current
+                            }
+                        })
                         
                     }, error: { error in
-                        alert(for: window, info: L10n.loginRecoveryMailFailed)
                         updateState { current in
                             var current = current
                             current.locked = false
-                            return current
-                        }
-                        f()
-                    })
-                }
-            })
-        case let .awaitingAccountReset(protectedUntil, number, _):
-            controller = awaiting_reset_c
-            awaiting_reset_c.update(locked: state.locked, protectedUntil: protectedUntil, number: number, takeReset: { [weak self] in
-                guard let window = self?.window, let account = self?.account else {
-                    return
-                }
-                confirm(for: window, information: L10n.loginResetAccountDescription, okTitle: L10n.loginResetAccount, successHandler: { _ in
-                    _ = showModalProgress(signal: performAccountReset(account: account) |> deliverOnMainQueue, for: window).start(error: { error in
-                        alert(for: window, info: L10n.unknownError)
-                    })
-                })
-
-            })
-        case let .passwordRecovery(_, _, _, pattern, _):
-            controller = email_recovery_c
-            email_recovery_c.update(locked: state.locked, error: state.emailError, pattern: pattern, takeNext: { [weak self] value in
-                guard let engine = self?.engine else {
-                    return
-                }
-                updateState { current in
-                    var current = current
-                    current.locked = true
-                    current.emailError = nil
-                    return current
-                }
-                _ = engine.auth.performPasswordRecovery(code: value, updatedPassword: .none).start(next: { data in
-                    let auth = loginWithRecoveredAccountData(accountManager: sharedContext.accountManager, account: engine.account, recoveredAccountData: data, syncContacts: false) |> deliverOnMainQueue
-                    
-                    _ = auth.start(completed: {
-                        updateState { current in
-                            var current = current
-                            current.locked = false
+                            current.emailError = error
                             return current
                         }
                     })
-                    
-                }, error: { error in
+                }, takeError: {
                     updateState { current in
                         var current = current
-                        current.locked = false
-                        current.emailError = error
+                        current.emailError = nil
                         return current
                     }
-                })
-            }, takeError: {
-                updateState { current in
-                    var current = current
-                    current.emailError = nil
-                    return current
-                }
-            }, takeReset: { [weak self] in
-                guard let window = self?.window, let engine = self?.engine else {
-                    return
-                }
-                
-                let signal = performAccountReset(account: engine.account) |> deliverOnMainQueue
-
-                confirm(for: window, header: appName, information: strings().loginNewEmailAlert, okTitle: strings().loginNewEmailAlertReset, cancelTitle: strings().alertCancel, successHandler: { _ in
+                }, takeReset: { [weak self] in
+                    guard let window = self?.window, let engine = self?.engine else {
+                        return
+                    }
                     
+                    let signal = performAccountReset(account: engine.account) |> deliverOnMainQueue
+
+                    confirm(for: window, header: appName, information: strings().loginNewEmailAlert, okTitle: strings().loginNewEmailAlertReset, cancelTitle: strings().alertCancel, successHandler: { _ in
+                        
+                        updateState { current in
+                            var current = current
+                            current.locked = true
+                            return current
+                        }
+                        _ = signal.start(error: { error in
+                            updateState { current in
+                                var current = current
+                                current.locked = false
+                                return current
+                            }
+                            alert(for: window, info: strings().unknownError)
+                        }, completed: {
+                            updateState { current in
+                                var current = current
+                                current.locked = false
+                                return current
+                            }
+                        })
+                    })
+                })
+            case .signUp:
+                controller = signup_c
+                signup_c.update(state.locked, error: state.signError, takeNext: { firstName, lastName, photo in
+                    
+                    let photoData: Data?
+                    if let photo = photo {
+                        photoData = try? Data(contentsOf: URL(fileURLWithPath: photo))
+                    } else {
+                        photoData = nil
+                    }
                     updateState { current in
                         var current = current
                         current.locked = true
                         return current
                     }
+                    
+                    let signal = signUpWithName(accountManager: sharedContext.accountManager, account: self.account, firstName: firstName, lastName: lastName, avatarData: photoData, avatarVideo: nil, videoStartTimestamp: nil, forcedPasswordSetupNotice: { _ in
+                        return nil
+                    }) |> deliverOnMainQueue
+                    
                     _ = signal.start(error: { error in
                         updateState { current in
                             var current = current
+                            current.signError = error
                             current.locked = false
                             return current
                         }
-                        alert(for: window, info: strings().unknownError)
                     }, completed: {
                         updateState { current in
                             var current = current
+                            current.signError = nil
                             current.locked = false
+                            current.lockAfterLogin = true
                             return current
                         }
                     })
-                })
-            })
-        case .signUp:
-            controller = signup_c
-            signup_c.update(state.locked, error: state.signError, takeNext: { firstName, lastName, photo in
-                
-                let photoData: Data?
-                if let photo = photo {
-                    photoData = try? Data(contentsOf: URL(fileURLWithPath: photo))
-                } else {
-                    photoData = nil
-                }
-                updateState { current in
-                    var current = current
-                    current.locked = true
-                    return current
-                }
-                
-                let signal = signUpWithName(accountManager: sharedContext.accountManager, account: self.account, firstName: firstName, lastName: lastName, avatarData: photoData, avatarVideo: nil, videoStartTimestamp: nil, forcedPasswordSetupNotice: { _ in
-                    return nil
-                }) |> deliverOnMainQueue
-                
-                _ = signal.start(error: { error in
-                    updateState { current in
-                        var current = current
-                        current.signError = error
-                        current.locked = false
-                        return current
-                    }
-                }, completed: {
-                    updateState { current in
-                        var current = current
-                        current.signError = nil
-                        current.locked = false
-                        current.lockAfterLogin = true
-                        return current
-                    }
-                })
 
-            }, takeTerms: {
-                
-            })
+                }, takeTerms: {
+                    
+                })
+            }
         }
+        
+        
+        
         
         if let controller = controller {
             if state.locked, controller != self.current {

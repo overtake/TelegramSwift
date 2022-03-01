@@ -78,7 +78,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     if !state.inProgressItems.isEmpty {
         for item in state.inProgressItems {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_downloading(item.message.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-                return PeerMediaFileRowItem(initialSize, arguments.interaction, .messageEntry(item.message, [], .defaultSettings, viewType), viewType: viewType)
+                return PeerMediaFileRowItem(initialSize, arguments.interaction, .messageEntry(item.message, [], .defaultSettings, viewType), gallery: .recentDownloaded, viewType: viewType)
             }))
             index += 1
         }
