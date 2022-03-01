@@ -290,10 +290,11 @@ class ChatFileContentView: ChatMediaContentView {
                 var statusWasUpdated: Bool = false
                 if let oldStatus = oldStatus {
                     switch oldStatus {
-                    case .Fetching, .Paused:
+                    case .Fetching:
                         if case .Fetching = status {} else {
                             statusWasUpdated = true
                         }
+                    case .Paused:
                         if case .Paused = status {} else {
                             statusWasUpdated = true
                         }
@@ -305,7 +306,6 @@ class ChatFileContentView: ChatMediaContentView {
                         if case .Remote = status {} else {
                             statusWasUpdated = true
                         }
-
                     }
                 }
                 
