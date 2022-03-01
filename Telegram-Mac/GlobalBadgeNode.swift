@@ -201,8 +201,9 @@ class GlobalBadgeNode: Node {
                     forceUpdateStatusBarIconByDockTile(sharedContext: sharedContext)
                 }
             }
-            
-            semaphore.signal()
+            if sync {
+                semaphore.signal()
+            }
         }))
         
         if sync {

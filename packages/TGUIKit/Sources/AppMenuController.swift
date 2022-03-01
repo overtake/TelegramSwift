@@ -620,8 +620,8 @@ final class AppMenuController : NSObject  {
         
         let interaction = AppMenuBasicItem.Interaction(action: { [weak self] item in
             if let handler = item.handler {
-                self?.closeAll()
                 handler()
+                self?.closeAll()
             }
         }, presentSubmenu: { [weak self, weak panel, weak menu] item in
             if let submenu = item.submenu as? ContextMenu, let parentView = panel, self?.findSubmenu(item.id) == nil {
