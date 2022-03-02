@@ -93,23 +93,6 @@ class WPArticleContentView: WPContentView {
                 return
             }
             
-            if ExternalVideoLoader.isPlayable(content) {
-                openExternalDisposable.set((sharedVideoLoader.status(for: content) |> deliverOnMainQueue).start(next: { (status) in
-                    if let status = status {
-                        switch status {
-                        case .fail:
-                            execute(inapp: .external(link: content.url, false))
-                        case .loaded:
-                            showChatGallery(context: layout.context, message: layout.parent, layout.table)
-                        default:
-                            break
-                        }
-                    }
-                }))
-                
-                _ = sharedVideoLoader.fetch(for: content).start()
-                return
-            }
             if content.embedType == "iframe" {
                 showModal(with: WebpageModalController(content:content, context: layout.context), for: window)
             } else if layout.isGalleryAssemble {

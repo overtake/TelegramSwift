@@ -1552,10 +1552,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 if !current.isEmpty {
                     groupped.append(current)
                 }
+                var shouldAdd = current.isEmpty
+                let prev = current.last
                 current = []
-
+                
                 if let item = item as? ChatRowItem {
-                    if item.canHasFloatingPhoto {
+                    shouldAdd = shouldAdd || prev?.message?.author?.id != item.message?.author?.id
+                    if item.canHasFloatingPhoto, shouldAdd {
                         current.append(item)
                     }
                 }
