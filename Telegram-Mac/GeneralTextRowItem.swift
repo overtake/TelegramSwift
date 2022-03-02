@@ -216,7 +216,7 @@ class GeneralTextRowView : GeneralRowView {
         
         guard let item = item as? GeneralTextRowItem else {return}
         textView.isSelectable = item.isTextSelectable
-        textView.userInteractionEnabled = false
+        textView.userInteractionEnabled = !item.clickable
         if item.additionLoading || item.rightItem.isLoading {
             let size = item.rightItem.isLoading ? NSMakeSize(15, 15) : NSMakeSize(20, 20)
             if progressView == nil {
