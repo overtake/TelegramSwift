@@ -1061,8 +1061,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                             return;
                         }
                         
-                        if(scroll.current.rect != strongSelf.previousScroll?.rect) {
-                            
+                        if(scroll.current.direction != strongSelf.previousScroll?.direction && scroll.current.rect != strongSelf.previousScroll?.rect) {
+
                             switch(scroll.current.direction) {
                             case .top:
                                 if(range.location  <= reqCount) {
