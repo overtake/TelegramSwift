@@ -6895,6 +6895,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var search_filter_downloads: CGImage {
+      if let image = cached.with({ $0["search_filter_downloads"] }) {
+          return image
+      } else {
+          let image = _search_filter_downloads()
+          _ = cached.modify { current in 
+              var current = current
+              current["search_filter_downloads"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var search_filter_add_peer: CGImage {
       if let image = cached.with({ $0["search_filter_add_peer"] }) {
           return image
@@ -8817,6 +8830,7 @@ public final class TelegramIconsTheme {
   private let _search_filter_files: ()->CGImage
   private let _search_filter_links: ()->CGImage
   private let _search_filter_music: ()->CGImage
+  private let _search_filter_downloads: ()->CGImage
   private let _search_filter_add_peer: ()->CGImage
   private let _search_filter_add_peer_active: ()->CGImage
   private let _chat_reply_count_bubble_incoming: ()->CGImage
@@ -9456,6 +9470,7 @@ public final class TelegramIconsTheme {
       search_filter_files: @escaping()->CGImage,
       search_filter_links: @escaping()->CGImage,
       search_filter_music: @escaping()->CGImage,
+      search_filter_downloads: @escaping()->CGImage,
       search_filter_add_peer: @escaping()->CGImage,
       search_filter_add_peer_active: @escaping()->CGImage,
       chat_reply_count_bubble_incoming: @escaping()->CGImage,
@@ -10094,6 +10109,7 @@ public final class TelegramIconsTheme {
       self._search_filter_files = search_filter_files
       self._search_filter_links = search_filter_links
       self._search_filter_music = search_filter_music
+      self._search_filter_downloads = search_filter_downloads
       self._search_filter_add_peer = search_filter_add_peer
       self._search_filter_add_peer_active = search_filter_add_peer_active
       self._chat_reply_count_bubble_incoming = chat_reply_count_bubble_incoming

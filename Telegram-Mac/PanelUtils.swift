@@ -20,7 +20,7 @@ let videoExts:[String] = ["mp4","mov","avi", "m4v"]
 let audioExts:[String] = ["mp3","wav", "m4a"]
 
 func filePanel(with exts:[String]? = nil, allowMultiple:Bool = true, canChooseDirectories: Bool = false, for window:Window, completion:@escaping ([String]?)->Void) {
-    delay(0.35, closure: {
+    delay(0.01, closure: {
         var result:[String] = []
         let panel:NSOpenPanel = NSOpenPanel()
         panel.canChooseFiles = true
@@ -51,7 +51,7 @@ func filePanel(with exts:[String]? = nil, allowMultiple:Bool = true, canChooseDi
 }
 
 func selectFolder(for window:Window, completion:@escaping (String)->Void) {
-    delay(0.35, closure: {
+    delay(0.01, closure: {
         var result:[String] = []
         let panel:NSOpenPanel = NSOpenPanel()
         panel.canChooseFiles = false
@@ -74,7 +74,7 @@ func selectFolder(for window:Window, completion:@escaping (String)->Void) {
 
 func savePanel(file:String, ext:String, for window:Window, defaultName: String? = nil, completion:((String?)->Void)? = nil) {
     
-    delay(0.35, closure: {
+    delay(0.01, closure: {
         let savePanel:NSSavePanel = NSSavePanel()
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH.mm.ss"
@@ -106,7 +106,7 @@ func savePanel(file:String, ext:String, for window:Window, defaultName: String? 
 
 func savePanel(file:String, named:String, for window:Window) {
     
-    delay(0.35, closure: {
+    delay(0.01, closure: {
         let savePanel:NSSavePanel = NSSavePanel()
         let dateFormatter = DateFormatter()
 
@@ -125,7 +125,7 @@ func savePanel(file:String, named:String, for window:Window) {
 
 func alert(for window:Window, header:String = appName, info:String?, runModal: Bool = false, completion: (()->Void)? = nil, appearance: NSAppearance? = nil) {
     
-    delay(0.35, closure: {
+    delay(0.01, closure: {
         let alert:NSAlert = NSAlert()
         alert.window.appearance = appearance ?? theme.appearance
         alert.alertStyle = .informational
@@ -155,7 +155,7 @@ enum ConfirmResult {
 
 func confirm(for window:Window, header: String? = nil, information:String?, okTitle:String? = nil, cancelTitle:String = strings().alertCancel, thridTitle:String? = nil, fourTitle: String? = nil, successHandler:@escaping (ConfirmResult)->Void, cancelHandler: (()->Void)? = nil, appearance: NSAppearance? = nil) {
 
-    delay(0.35, closure: {
+    delay(0.01, closure: {
         
         let alert:NSAlert = NSAlert()
         alert.window.appearance = appearance ?? theme.appearance
@@ -197,7 +197,7 @@ func confirm(for window:Window, header: String? = nil, information:String?, okTi
 
 func modernConfirm(for window:Window, account: Account? = nil, peerId: PeerId? = nil, header: String = appName, information:String? = nil, okTitle:String = strings().alertOK, cancelTitle:String = strings().alertCancel, thridTitle:String? = nil, thridAutoOn: Bool = true, successHandler:@escaping(ConfirmResult)->Void, appearance: NSAppearance? = nil) {
     
-    delay(0.35, closure: {
+    delay(0.01, closure: {
         let alert:NSAlert = NSAlert()
         alert.window.appearance = appearance ?? theme.appearance
         alert.alertStyle = .informational
@@ -292,7 +292,7 @@ func modernConfirm(for window:Window, account: Account? = nil, peerId: PeerId? =
 func modernConfirmSignal(for window:Window, account: Account?, peerId: PeerId?, header: String = appName, information:String? = nil, okTitle:String = strings().alertOK, cancelTitle:String = strings().alertCancel, thridTitle: String? = nil, thridAutoOn: Bool = true) -> Signal<ConfirmResult, NoError> {
     let value:ValuePromise<ConfirmResult> = ValuePromise(ignoreRepeated: true)
     
-    delay(0.35, closure: {
+    delay(0.01, closure: {
         modernConfirm(for: window, account: account, peerId: peerId, header: header, information: information, okTitle: okTitle, cancelTitle: cancelTitle, thridTitle: thridTitle, thridAutoOn: thridAutoOn, successHandler: { response in
              value.set(response)
         })
@@ -305,7 +305,7 @@ func confirmSignal(for window:Window, header: String? = nil, information:String?
 
     let value:ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
     
-    delay(0.35, closure: {
+    delay(0.01, closure: {
         let alert:NSAlert = NSAlert()
         alert.alertStyle = .informational
         alert.messageText = header ?? appName

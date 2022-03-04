@@ -111,7 +111,8 @@ class PeerListContainerView : View {
     var openSharedMediaWithToken:((PeerId?, MessageTags?)->Void)? = nil
     
     fileprivate var showDownloads:(()->Void)? = nil
-
+    fileprivate var hideDownloads:(()->Void)? = nil
+    
 
     var mode: PeerListMode = .plain {
         didSet {
@@ -220,7 +221,8 @@ class PeerListContainerView : View {
                 var items: [ContextMenuItem] = []
 
                 
-                items.append(ContextMenuItem.init("Downloads", handler: { [weak self] in
+                items.append(ContextMenuItem.init(strings().chatListDownloadsTag, handler: { [weak self] in
+                    updateSearchTags(SearchTags(messageTags: nil, peerTag: nil))
                     self?.showDownloads?()
                 }, itemImage: MenuAnimation.menu_save_as.value))
                 
@@ -250,11 +252,12 @@ class PeerListContainerView : View {
                                 itemImage = nil
                             }
                             if let itemImage = itemImage {
-                                items.append(ContextMenuItem(tag.1, handler: {
+                                items.append(ContextMenuItem(tag.1, handler: { [weak self] in
                                     currentTag = tag.0
                                     updateSearchTags(SearchTags(messageTags: currentTag, peerTag: currentPeerTag?.id))
                                     let collected = collectTags()
                                     updateTitle(collected.0, collected.1)
+                                    self?.hideDownloads?()
                                 }, itemImage: itemImage.value))
                             }
                         }
@@ -288,6 +291,7 @@ class PeerListContainerView : View {
                 let collected = collectTags()
                 updateSearchTags(SearchTags(messageTags: currentTag, peerTag: currentPeerTag?.id))
                 self?.searchView.updateTags(collected.0, collected.1)
+                self?.hideDownloads?()
             }, icon: theme.icons.search_filter)
             
             updatePeerTag( { [weak self] updatedPeerTag in
@@ -515,7 +519,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         if let current = self.downloadsController {
             controller = current
         } else {
-            controller = DownloadsController(context: context)
+            controller = DownloadsController(context: context, searchValue: self.genericView.searchView.searchValue |> map { $0.request })
             self.downloadsController = controller
             
             controller.frame = genericView.tableView.frame
@@ -526,7 +530,21 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 controller.view.layer?.animateScaleSpring(from: 1.1, to: 1, duration: 0.2)
             }
         }
-        
+        self.genericView.searchView.updateTags([strings().chatListDownloadsTag], theme.icons.search_filter_downloads)
+
+    }
+    
+    private func hideDownloads(animated: Bool) {
+        if let downloadsController = downloadsController {
+            downloadsController.viewWillDisappear(animated)
+            self.downloadsController = nil
+            downloadsController.viewDidDisappear(animated)
+            
+            let view = downloadsController.view
+            downloadsController.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
+                view?.removeFromSuperview()
+            })
+        }
     }
     
     override func viewDidLoad() {
@@ -536,6 +554,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
         genericView.showDownloads = { [weak self] in
             self?.showDownloads(animated: true)
+        }
+        genericView.hideDownloads = { [weak self] in
+            self?.hideDownloads(animated: true)
         }
         
         layoutDisposable.set(context.sharedContext.layoutHandler.get().start(next: { [weak self] state in

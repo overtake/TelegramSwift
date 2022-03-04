@@ -937,6 +937,7 @@ private let keyURLStart = "start";
 private let keyURLVoiceChat = "voicechat";
 private let keyURLStartGroup = "startgroup";
 private let keyURLSecret = "secret";
+private let keyURLproxy = "proxy";
 
 private let keyURLHash = "hash";
 
@@ -1080,6 +1081,25 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                     }
                 }
             }
+            
+            let userAndVariables = string.components(separatedBy: "?")
+            let username:String = userAndVariables[0]
+            if username == keyURLproxy {
+                if userAndVariables.count == 2 {
+                    let (vars, _) = urlVars(with: userAndVariables[1])
+                    if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort) {
+                        let server = escape(with: server)
+                        return .socks(link: urlString, ProxyServerSettings(host: server, port: port, connection: .socks5(username: vars[keyURLUser], password: vars[keyURLPass])), applyProxy: applyProxy)
+                    } else if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort), let rawSecret = vars[keyURLSecret] {
+                        let server = escape(with: server)
+                        if let secret = MTProxySecret.parse(rawSecret)?.serialize() {
+                            return .socks(link: urlString, ProxyServerSettings(host: server, port: port, connection: .mtp(secret: secret)), applyProxy: applyProxy)
+                        }
+                    }
+                }
+            }
+            
+            
              if string.range(of: "/") == nil {
                 let userAndVariables = string.components(separatedBy: "?")
                 let username:String = userAndVariables[0]
@@ -1109,9 +1129,6 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 }
 
                 if let openInfo = openInfo {
-
-
-
                     if username == "iv" || username.isEmpty {
                         return .external(link: urlString, username.isEmpty)
                     } else if let context = context {
