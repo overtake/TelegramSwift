@@ -574,6 +574,7 @@ func initialize() -> [String] {
     array.append("search_filter_files")
     array.append("search_filter_links")
     array.append("search_filter_music")
+    array.append("search_filter_downloads")
     array.append("search_filter_add_peer")
     array.append("search_filter_add_peer_active")
 

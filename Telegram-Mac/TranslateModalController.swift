@@ -50,8 +50,8 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
   
     let from: String
-    if let fr = state.from {
-        from = _NSLocalizedString("Translate.Language.\(fr)")
+    if let fr = state.from, let value = Translate.find(fr) {
+        from = _NSLocalizedString("Translate.Language.\(value.language)")
     } else {
         from = strings().translateLanguageAuto
     }
@@ -59,12 +59,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().translateFrom(from).uppercased()), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, contextMenu: {
         
         var items: [ContextMenuItem] = []
-        for language in Translate.supportedTranslationLanguages {
-            if let emoji = Translate.languagesEmojies[language] {
-                items.append(ContextMenuItem(emoji + " " + language, handler: {
-                    arguments.updateFrom(language)
-                }))
-            }
+        for language in Translate.codes {
+            items.append(ContextMenuItem(language.language, handler: {
+                arguments.updateFrom(language.code[0])
+            }, state: language.code.contains(state.from ?? "") ? .on : nil))
         }
         return items
     }, clickable: true)))
@@ -84,12 +82,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         var items: [ContextMenuItem] = []
         
-        for language in Translate.supportedTranslationLanguages {
-            if let emoji = Translate.languagesEmojies[language] {
-                items.append(ContextMenuItem(emoji + " " + language, handler: {
-                    arguments.updateTo(language)
-                }))
-            }
+        for language in Translate.codes {
+            items.append(ContextMenuItem(language.language, handler: {
+                arguments.updateTo(language.code[0])
+            }, state: language.code.contains(state.to) ? .on : nil))
         }
         return items
     }, clickable: true)))
@@ -115,22 +111,22 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 @available(macOS 10.14, *)
-private func translate(context: AccountContext, from: String?, to: String, blocks: [String]) -> Signal<String, Translate.Error> {
-    var signals:[Signal<String, Translate.Error>] = []
+private func translate(context: AccountContext, from: String?, to: String, blocks: [String]) -> Signal<(detect: String?, result: String), Translate.Error> {
+    var signals:[Signal<(detect: String?, result: String), Translate.Error>] = []
     for block in blocks {
         signals.append(context.engine.messages.translate(text: block, fromLang: from, toLang: to) |> castError(Translate.Error.self) |> mapToSignal { value in
             if let value = value {
-                return .single(value)
+                return .single((detect: nil, result: value))
             } else {
                 return Translate.translateText(text: block, from: from, to: to)
             }
         })
     }
-    var signal: Signal<String, Translate.Error> = .single("")
+    var signal: Signal<(detect: String?, result: String), Translate.Error> = .single((detect: nil, result: ""))
     for current in signals {
         signal = signal |> mapToSignal { result in
             return current |> delay(2.0, queue: .mainQueue()) |> map {
-                return result + $0
+                return (detect: $0.detect, result.result + $0.result)
             }
         }
     }
@@ -163,12 +159,14 @@ func TranslateModalController(context: AccountContext, from: String?, toLang: St
         disposable.set(translate(context: context, from: stateValue.with { $0.from }, to: stateValue.with { $0.to }, blocks: blocks).start(next: { result in
             updateState { current in
                 var current = current
-                current.translated = result
+                current.translated = result.result
+                if current.from == nil {
+                    current.from = result.detect
+                }
                 return current
             }
         }, error: { error in
-            var bp = 0
-            bp += 1
+            
         }))
     }
     

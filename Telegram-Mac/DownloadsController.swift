@@ -145,7 +145,7 @@ private final class GallerySupplyment : InteractionContentViewProtocol {
 }
 
 
-func DownloadsController(context: AccountContext) -> InputDataController {
+func DownloadsController(context: AccountContext, searchValue: Signal<String, NoError>) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
 
@@ -219,11 +219,20 @@ func DownloadsController(context: AccountContext) -> InputDataController {
     }
         
     
-    actionsDisposable.add(downloadItems.start(next: { values in
+    actionsDisposable.add(combineLatest(queue: .mainQueue(), searchValue, downloadItems).start(next: { search, values in
+        
+        let sf:(TelegramMediaFile)->Bool = { file -> Bool in
+            if let filename = file.fileName {
+                return filename.lowercased().hasPrefix(search.lowercased())
+            } else {
+                return true
+            }
+        }
+        
         updateState { current in
             var current = current
-            current.doneItems = values.doneItems.filter { $0.message.file != nil }
-            current.inProgressItems = values.inProgressItems.filter { $0.message.file != nil }
+            current.doneItems = values.doneItems.filter { $0.message.file != nil }.filter { sf($0.message.file!) }
+            current.inProgressItems = values.inProgressItems.filter { $0.message.file != nil }.filter { sf($0.message.file!) }
             return current
         }
     }))

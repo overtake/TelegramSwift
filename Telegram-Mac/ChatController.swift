@@ -1535,7 +1535,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let item = item as? ChatRowItem {
                 if item.canHasFloatingPhoto {
                     let prev = current.last
-                    let sameAuthor = prev?.message?.author?.id == item.message?.author?.id
+                    let sameAuthor = prev?.lastMessage?.author?.id == item.lastMessage?.author?.id
                     var canGroup = false
                     if sameAuthor {
                         if case .Short = item.itemType {
@@ -1547,22 +1547,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         current.append(item)
                     }
                 }
-            }
-            if skipOrFill {
-                if !current.isEmpty {
-                    groupped.append(current)
-                }
-                var shouldAdd = current.isEmpty
-                let prev = current.last
-                current = []
-                
-                if let item = item as? ChatRowItem {
-//                    shouldAdd = shouldAdd || prev?.message?.author?.id != item.message?.author?.id
+                if skipOrFill {
+                    if !current.isEmpty {
+                        groupped.append(current)
+                    }
+                    current = []
+                    
                     if item.canHasFloatingPhoto {
                         current.append(item)
                     }
                 }
             }
+            
         }
         
         if !current.isEmpty {

@@ -780,9 +780,9 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         if let key = message.groupInfo, groupingPhotos, message.id.peerId.namespace == Namespaces.Peer.SecretChat || !message.containsSecretMedia, !message.media.isEmpty {
             if groupInfo == nil {
                 groupInfo = key
-                groupedPhotos.append(entry.withUpdatedItemType(.Full(rank: rank, header: .normal)))
+                groupedPhotos.append(entry.withUpdatedItemType(itemType))
             } else if groupInfo == key {
-                groupedPhotos.append(entry.withUpdatedItemType(.Full(rank: rank, header: .normal)))
+                groupedPhotos.append(entry.withUpdatedItemType(itemType))
             } else {
                 if groupedPhotos.count > 0 {
                     if let groupInfo = groupInfo {
@@ -796,7 +796,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 }
                 
                 groupInfo = key
-                groupedPhotos.append(entry.withUpdatedItemType(.Full(rank: rank, header: .normal)))
+                groupedPhotos.append(entry.withUpdatedItemType(itemType))
             }
         } else {
             entries.append(entry)

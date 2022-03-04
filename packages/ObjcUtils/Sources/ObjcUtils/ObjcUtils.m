@@ -1139,8 +1139,8 @@ NSArray<NSString *> *cut_long_message(NSString *message, int max_length) {
                 NSUInteger index = NSNotFound;
                 
                 for (int j = (int)substring.length ; j > 0; j --) {
-                    
-                    if([[substring substringWithRange:NSMakeRange(MAX(0, j-symbol.length), symbol.length)] rangeOfString:symbol].location != NSNotFound) {
+                    NSString *sub = [substring substringWithRange:NSMakeRange(MAX(0, j-(int)symbol.length), symbol.length)];
+                    if([sub rangeOfString:symbol].location != NSNotFound) {
                         index = j;
                         break;
                     }

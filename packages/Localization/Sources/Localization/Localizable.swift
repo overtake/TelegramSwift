@@ -3305,6 +3305,8 @@ public final class L10n {
   public static var chatListCloseFilter: String  { return L10n.tr("Localizable", "ChatList.CloseFilter") }
   /// All
   public static var chatListCloseFilterShort: String  { return L10n.tr("Localizable", "ChatList.CloseFilterShort") }
+  /// Downloads
+  public static var chatListDownloadsTag: String  { return L10n.tr("Localizable", "ChatList.DownloadsTag") }
   /// Draft:
   public static var chatListDraft: String  { return L10n.tr("Localizable", "ChatList.Draft") }
   /// **You have no conversations yet**\nStart messaging by tapping the pencil button in the top right corner or got to the Contacts section.
@@ -9979,30 +9981,246 @@ public final class L10n {
   public static func translateTo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Translate.To", p1)
   }
+  /// Afrikaans
+  public static var translateLanguageAfrikaans: String  { return L10n.tr("Localizable", "Translate.Language.Afrikaans") }
+  /// Albanian
+  public static var translateLanguageAlbanian: String  { return L10n.tr("Localizable", "Translate.Language.Albanian") }
+  /// Amharic
+  public static var translateLanguageAmharic: String  { return L10n.tr("Localizable", "Translate.Language.Amharic") }
   /// Arabic
   public static var translateLanguageAr: String  { return L10n.tr("Localizable", "Translate.Language.ar") }
+  /// Arabic
+  public static var translateLanguageArabic: String  { return L10n.tr("Localizable", "Translate.Language.Arabic") }
+  /// Armenian
+  public static var translateLanguageArmenian: String  { return L10n.tr("Localizable", "Translate.Language.Armenian") }
   /// Auto
   public static var translateLanguageAuto: String  { return L10n.tr("Localizable", "Translate.Language.auto") }
+  /// Azerbaijani
+  public static var translateLanguageAzerbaijani: String  { return L10n.tr("Localizable", "Translate.Language.Azerbaijani") }
+  /// Basque
+  public static var translateLanguageBasque: String  { return L10n.tr("Localizable", "Translate.Language.Basque") }
+  /// Belarusian
+  public static var translateLanguageBelarusian: String  { return L10n.tr("Localizable", "Translate.Language.Belarusian") }
+  /// Bengali
+  public static var translateLanguageBengali: String  { return L10n.tr("Localizable", "Translate.Language.Bengali") }
+  /// Bosnian
+  public static var translateLanguageBosnian: String  { return L10n.tr("Localizable", "Translate.Language.Bosnian") }
+  /// Bulgarian
+  public static var translateLanguageBulgarian: String  { return L10n.tr("Localizable", "Translate.Language.Bulgarian") }
+  /// Catalan
+  public static var translateLanguageCatalan: String  { return L10n.tr("Localizable", "Translate.Language.Catalan") }
+  /// Cebuano
+  public static var translateLanguageCebuano: String  { return L10n.tr("Localizable", "Translate.Language.Cebuano") }
+  /// Chinese (Simplified)
+  public static var translateLanguageChineseSimplified: String  { return L10n.tr("Localizable", "Translate.Language.Chinese (Simplified)") }
+  /// Chinese (Traditional)
+  public static var translateLanguageChineseTraditional: String  { return L10n.tr("Localizable", "Translate.Language.Chinese (Traditional)") }
+  /// Corsican
+  public static var translateLanguageCorsican: String  { return L10n.tr("Localizable", "Translate.Language.Corsican") }
+  /// Croatian
+  public static var translateLanguageCroatian: String  { return L10n.tr("Localizable", "Translate.Language.Croatian") }
+  /// Czech
+  public static var translateLanguageCzech: String  { return L10n.tr("Localizable", "Translate.Language.Czech") }
+  /// Danish
+  public static var translateLanguageDanish: String  { return L10n.tr("Localizable", "Translate.Language.Danish") }
   /// German
   public static var translateLanguageDe: String  { return L10n.tr("Localizable", "Translate.Language.de") }
+  /// Dutch
+  public static var translateLanguageDutch: String  { return L10n.tr("Localizable", "Translate.Language.Dutch") }
   /// English
   public static var translateLanguageEn: String  { return L10n.tr("Localizable", "Translate.Language.en") }
+  /// English
+  public static var translateLanguageEnglish: String  { return L10n.tr("Localizable", "Translate.Language.English") }
   /// Spanish
   public static var translateLanguageEs: String  { return L10n.tr("Localizable", "Translate.Language.es") }
+  /// Esperanto
+  public static var translateLanguageEsperanto: String  { return L10n.tr("Localizable", "Translate.Language.Esperanto") }
+  /// Estonian
+  public static var translateLanguageEstonian: String  { return L10n.tr("Localizable", "Translate.Language.Estonian") }
+  /// Finnish
+  public static var translateLanguageFinnish: String  { return L10n.tr("Localizable", "Translate.Language.Finnish") }
   /// France
   public static var translateLanguageFr: String  { return L10n.tr("Localizable", "Translate.Language.fr") }
+  /// French
+  public static var translateLanguageFrench: String  { return L10n.tr("Localizable", "Translate.Language.French") }
+  /// Frisian
+  public static var translateLanguageFrisian: String  { return L10n.tr("Localizable", "Translate.Language.Frisian") }
+  /// Galician
+  public static var translateLanguageGalician: String  { return L10n.tr("Localizable", "Translate.Language.Galician") }
+  /// Georgian
+  public static var translateLanguageGeorgian: String  { return L10n.tr("Localizable", "Translate.Language.Georgian") }
+  /// German
+  public static var translateLanguageGerman: String  { return L10n.tr("Localizable", "Translate.Language.German") }
+  /// Greek
+  public static var translateLanguageGreek: String  { return L10n.tr("Localizable", "Translate.Language.Greek") }
+  /// Gujarati
+  public static var translateLanguageGujarati: String  { return L10n.tr("Localizable", "Translate.Language.Gujarati") }
+  /// Haitian Creole
+  public static var translateLanguageHaitianCreole: String  { return L10n.tr("Localizable", "Translate.Language.Haitian Creole") }
+  /// Hausa
+  public static var translateLanguageHausa: String  { return L10n.tr("Localizable", "Translate.Language.Hausa") }
+  /// Hawaiian
+  public static var translateLanguageHawaiian: String  { return L10n.tr("Localizable", "Translate.Language.Hawaiian") }
+  /// Hebrew
+  public static var translateLanguageHebrew: String  { return L10n.tr("Localizable", "Translate.Language.Hebrew") }
+  /// Hindi
+  public static var translateLanguageHindi: String  { return L10n.tr("Localizable", "Translate.Language.Hindi") }
+  /// Hmong
+  public static var translateLanguageHmong: String  { return L10n.tr("Localizable", "Translate.Language.Hmong") }
+  /// Hungarian
+  public static var translateLanguageHungarian: String  { return L10n.tr("Localizable", "Translate.Language.Hungarian") }
+  /// Icelandic
+  public static var translateLanguageIcelandic: String  { return L10n.tr("Localizable", "Translate.Language.Icelandic") }
+  /// Igbo
+  public static var translateLanguageIgbo: String  { return L10n.tr("Localizable", "Translate.Language.Igbo") }
+  /// Indonesian
+  public static var translateLanguageIndonesian: String  { return L10n.tr("Localizable", "Translate.Language.Indonesian") }
+  /// Irish
+  public static var translateLanguageIrish: String  { return L10n.tr("Localizable", "Translate.Language.Irish") }
   /// Italian
   public static var translateLanguageIt: String  { return L10n.tr("Localizable", "Translate.Language.it") }
+  /// Italian
+  public static var translateLanguageItalian: String  { return L10n.tr("Localizable", "Translate.Language.Italian") }
+  /// Japanese
+  public static var translateLanguageJapanese: String  { return L10n.tr("Localizable", "Translate.Language.Japanese") }
+  /// Javanese
+  public static var translateLanguageJavanese: String  { return L10n.tr("Localizable", "Translate.Language.Javanese") }
   /// Japanese
   public static var translateLanguageJp: String  { return L10n.tr("Localizable", "Translate.Language.jp") }
+  /// Kannada
+  public static var translateLanguageKannada: String  { return L10n.tr("Localizable", "Translate.Language.Kannada") }
+  /// Kazakh
+  public static var translateLanguageKazakh: String  { return L10n.tr("Localizable", "Translate.Language.Kazakh") }
+  /// Khmer
+  public static var translateLanguageKhmer: String  { return L10n.tr("Localizable", "Translate.Language.Khmer") }
+  /// Kinyarwanda
+  public static var translateLanguageKinyarwanda: String  { return L10n.tr("Localizable", "Translate.Language.Kinyarwanda") }
   /// Korean
   public static var translateLanguageKo: String  { return L10n.tr("Localizable", "Translate.Language.ko") }
+  /// Korean
+  public static var translateLanguageKorean: String  { return L10n.tr("Localizable", "Translate.Language.Korean") }
+  /// Kurdish
+  public static var translateLanguageKurdish: String  { return L10n.tr("Localizable", "Translate.Language.Kurdish") }
+  /// Kyrgyz
+  public static var translateLanguageKyrgyz: String  { return L10n.tr("Localizable", "Translate.Language.Kyrgyz") }
+  /// Lao
+  public static var translateLanguageLao: String  { return L10n.tr("Localizable", "Translate.Language.Lao") }
+  /// Latvian
+  public static var translateLanguageLatvian: String  { return L10n.tr("Localizable", "Translate.Language.Latvian") }
+  /// Lithuanian
+  public static var translateLanguageLithuanian: String  { return L10n.tr("Localizable", "Translate.Language.Lithuanian") }
+  /// Luxembourgish
+  public static var translateLanguageLuxembourgish: String  { return L10n.tr("Localizable", "Translate.Language.Luxembourgish") }
+  /// Macedonian
+  public static var translateLanguageMacedonian: String  { return L10n.tr("Localizable", "Translate.Language.Macedonian") }
+  /// Malagasy
+  public static var translateLanguageMalagasy: String  { return L10n.tr("Localizable", "Translate.Language.Malagasy") }
+  /// Malay
+  public static var translateLanguageMalay: String  { return L10n.tr("Localizable", "Translate.Language.Malay") }
+  /// Malayalam
+  public static var translateLanguageMalayalam: String  { return L10n.tr("Localizable", "Translate.Language.Malayalam") }
+  /// Maltese
+  public static var translateLanguageMaltese: String  { return L10n.tr("Localizable", "Translate.Language.Maltese") }
+  /// Maori
+  public static var translateLanguageMaori: String  { return L10n.tr("Localizable", "Translate.Language.Maori") }
+  /// Marathi
+  public static var translateLanguageMarathi: String  { return L10n.tr("Localizable", "Translate.Language.Marathi") }
+  /// Mongolian
+  public static var translateLanguageMongolian: String  { return L10n.tr("Localizable", "Translate.Language.Mongolian") }
+  /// Myanmar (Burmese)
+  public static var translateLanguageMyanmarBurmese: String  { return L10n.tr("Localizable", "Translate.Language.Myanmar (Burmese)") }
+  /// Nepali
+  public static var translateLanguageNepali: String  { return L10n.tr("Localizable", "Translate.Language.Nepali") }
+  /// Norwegian
+  public static var translateLanguageNorwegian: String  { return L10n.tr("Localizable", "Translate.Language.Norwegian") }
+  /// Nyanja (Chichewa)
+  public static var translateLanguageNyanjaChichewa: String  { return L10n.tr("Localizable", "Translate.Language.Nyanja (Chichewa)") }
+  /// Odia (Oriya)
+  public static var translateLanguageOdiaOriya: String  { return L10n.tr("Localizable", "Translate.Language.Odia (Oriya)") }
+  /// Pashto
+  public static var translateLanguagePashto: String  { return L10n.tr("Localizable", "Translate.Language.Pashto") }
+  /// Persian
+  public static var translateLanguagePersian: String  { return L10n.tr("Localizable", "Translate.Language.Persian") }
+  /// Polish
+  public static var translateLanguagePolish: String  { return L10n.tr("Localizable", "Translate.Language.Polish") }
+  /// Portuguese (Portugal, Brazil)
+  public static var translateLanguagePortuguesePortugalBrazil: String  { return L10n.tr("Localizable", "Translate.Language.Portuguese (Portugal, Brazil)") }
   /// Portuguese
   public static var translateLanguagePt: String  { return L10n.tr("Localizable", "Translate.Language.pt") }
+  /// Punjabi
+  public static var translateLanguagePunjabi: String  { return L10n.tr("Localizable", "Translate.Language.Punjabi") }
+  /// Romanian
+  public static var translateLanguageRomanian: String  { return L10n.tr("Localizable", "Translate.Language.Romanian") }
   /// Russian
   public static var translateLanguageRu: String  { return L10n.tr("Localizable", "Translate.Language.ru") }
+  /// Russian
+  public static var translateLanguageRussian: String  { return L10n.tr("Localizable", "Translate.Language.Russian") }
+  /// Samoan
+  public static var translateLanguageSamoan: String  { return L10n.tr("Localizable", "Translate.Language.Samoan") }
+  /// Scots Gaelic
+  public static var translateLanguageScotsGaelic: String  { return L10n.tr("Localizable", "Translate.Language.Scots Gaelic") }
+  /// Serbian
+  public static var translateLanguageSerbian: String  { return L10n.tr("Localizable", "Translate.Language.Serbian") }
+  /// Sesotho
+  public static var translateLanguageSesotho: String  { return L10n.tr("Localizable", "Translate.Language.Sesotho") }
+  /// Shona
+  public static var translateLanguageShona: String  { return L10n.tr("Localizable", "Translate.Language.Shona") }
+  /// Sindhi
+  public static var translateLanguageSindhi: String  { return L10n.tr("Localizable", "Translate.Language.Sindhi") }
+  /// Sinhala (Sinhalese)
+  public static var translateLanguageSinhalaSinhalese: String  { return L10n.tr("Localizable", "Translate.Language.Sinhala (Sinhalese)") }
+  /// Slovak
+  public static var translateLanguageSlovak: String  { return L10n.tr("Localizable", "Translate.Language.Slovak") }
+  /// Slovenian
+  public static var translateLanguageSlovenian: String  { return L10n.tr("Localizable", "Translate.Language.Slovenian") }
+  /// Somali
+  public static var translateLanguageSomali: String  { return L10n.tr("Localizable", "Translate.Language.Somali") }
+  /// Spanish
+  public static var translateLanguageSpanish: String  { return L10n.tr("Localizable", "Translate.Language.Spanish") }
+  /// Sundanese
+  public static var translateLanguageSundanese: String  { return L10n.tr("Localizable", "Translate.Language.Sundanese") }
+  /// Swahili
+  public static var translateLanguageSwahili: String  { return L10n.tr("Localizable", "Translate.Language.Swahili") }
+  /// Swedish
+  public static var translateLanguageSwedish: String  { return L10n.tr("Localizable", "Translate.Language.Swedish") }
+  /// Tagalog (Filipino)
+  public static var translateLanguageTagalogFilipino: String  { return L10n.tr("Localizable", "Translate.Language.Tagalog (Filipino)") }
+  /// Tajik
+  public static var translateLanguageTajik: String  { return L10n.tr("Localizable", "Translate.Language.Tajik") }
+  /// Tamil
+  public static var translateLanguageTamil: String  { return L10n.tr("Localizable", "Translate.Language.Tamil") }
+  /// Tatar
+  public static var translateLanguageTatar: String  { return L10n.tr("Localizable", "Translate.Language.Tatar") }
+  /// Telugu
+  public static var translateLanguageTelugu: String  { return L10n.tr("Localizable", "Translate.Language.Telugu") }
+  /// Thai
+  public static var translateLanguageThai: String  { return L10n.tr("Localizable", "Translate.Language.Thai") }
+  /// Turkish
+  public static var translateLanguageTurkish: String  { return L10n.tr("Localizable", "Translate.Language.Turkish") }
+  /// Turkmen
+  public static var translateLanguageTurkmen: String  { return L10n.tr("Localizable", "Translate.Language.Turkmen") }
+  /// Ukrainian
+  public static var translateLanguageUkrainian: String  { return L10n.tr("Localizable", "Translate.Language.Ukrainian") }
+  /// Urdu
+  public static var translateLanguageUrdu: String  { return L10n.tr("Localizable", "Translate.Language.Urdu") }
+  /// Uyghur
+  public static var translateLanguageUyghur: String  { return L10n.tr("Localizable", "Translate.Language.Uyghur") }
+  /// Uzbek
+  public static var translateLanguageUzbek: String  { return L10n.tr("Localizable", "Translate.Language.Uzbek") }
+  /// Vietnamese
+  public static var translateLanguageVietnamese: String  { return L10n.tr("Localizable", "Translate.Language.Vietnamese") }
+  /// Welsh
+  public static var translateLanguageWelsh: String  { return L10n.tr("Localizable", "Translate.Language.Welsh") }
+  /// Xhosa
+  public static var translateLanguageXhosa: String  { return L10n.tr("Localizable", "Translate.Language.Xhosa") }
+  /// Yiddish
+  public static var translateLanguageYiddish: String  { return L10n.tr("Localizable", "Translate.Language.Yiddish") }
+  /// Yoruba
+  public static var translateLanguageYoruba: String  { return L10n.tr("Localizable", "Translate.Language.Yoruba") }
   /// Mandarin Chinese
   public static var translateLanguageZh: String  { return L10n.tr("Localizable", "Translate.Language.zh") }
+  /// Zulu
+  public static var translateLanguageZulu: String  { return L10n.tr("Localizable", "Translate.Language.Zulu") }
   /// Skip
   public static var twoStepAuthEmailSkip: String  { return L10n.tr("Localizable", "TwoStep.AuthEmailSkip") }
   /// An error occured. Please try again later.
