@@ -76,8 +76,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    let to: String = _NSLocalizedString("Translate.Language.\(state.to)")
-   
+    let to: String
+    if let value = Translate.find(state.to) {
+        to = _NSLocalizedString("Translate.Language.\(value.language)")
+    } else {
+        to = strings().translateLanguageAuto
+    }
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().translateTo(to).uppercased()), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem, contextMenu: {
         
         var items: [ContextMenuItem] = []
