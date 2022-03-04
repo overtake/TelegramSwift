@@ -554,7 +554,10 @@ final class AppMenuController : NSObject  {
             _ = current.tableView.select(item: found)
             current.updateScroll()
         }
+        self.foundItem = found
     }
+    
+    private var foundItem: TableRowItem? = nil
     
     private var isClosed = false
     func close() {
@@ -663,6 +666,14 @@ final class AppMenuController : NSObject  {
         
         panel.set(mouseHandler: { [weak self] _ in
             if let windows = self?.windows {
+                
+                if let _ = self?.foundItem, let menu = self?.activeMenu {
+                    if menu.mouseInside() {
+                        menu.tableView.cancelSelection()
+                        self?.foundItem = nil
+                    }
+                }
+                
                 for (_, window) in windows {
                     window.view.tableView.enumerateViews(with: { view in
                         view.updateMouse()
