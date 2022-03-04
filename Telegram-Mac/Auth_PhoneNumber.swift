@@ -97,7 +97,7 @@ private final class Manager {
     
     private let global: Country = .init(id: "TG", name: "Airlines", localizedName: "Airlines", countryCodes: [.init(code: "999", prefixes: [], patterns: ["XXXX X XX"])], hidden: false)
     
-    func items(byCodeNumber codeNumber: String) -> [Country] {
+    func items(byCodeNumber codeNumber: String, checkAll: Bool = false) -> [Country] {
         
         var list = self.list
         list.append(global)
@@ -106,6 +106,8 @@ private final class Manager {
             for code in value.countryCodes {
                 if code.code == codeNumber {
                     return true
+                } else if checkAll {
+                    return code.code.hasPrefix(codeNumber)
                 }
             }
             return false
@@ -441,7 +443,7 @@ private final class Auth_PhoneInput: View, NSTextFieldDelegate {
                     codeText.stringValue = "+" + dec
                     let item:Country? = manager.item(byCodeNumber: dec, prefix: nil)
                     
-                    let shouldSwitch = manager.items(byCodeNumber: dec).count == 1
+                    let shouldSwitch = manager.items(byCodeNumber: dec, checkAll: true).count == 1
                     update(selected: item, update: true, updateCode:false)
                                              
                     if shouldSwitch {
