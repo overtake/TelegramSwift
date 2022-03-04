@@ -521,6 +521,9 @@ final class GroupCallView : View {
     
     var isFullScreen: Bool {
         if let state = state {
+            if state.isStream {
+                return true
+            }
             return state.isFullScreen
         }
         if frame.width >= GroupCallTheme.fullScreenThreshold {

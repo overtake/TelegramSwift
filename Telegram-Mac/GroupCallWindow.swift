@@ -163,7 +163,7 @@ struct GroupCallTheme {
         return NSMakeSize(380, 600)
     }
     static var minFullScreenSize:NSSize {
-        return NSMakeSize(fullScreenThreshold, minSize.height)
+        return NSMakeSize(380, 380)
     }
     
     private static let switchAppearance = SwitchViewAppearance(backgroundColor: GroupCallTheme.membersColor, stateOnColor: GroupCallTheme.blueStatusColor, stateOffColor: GroupCallTheme.grayStatusColor, disabledColor: GroupCallTheme.grayStatusColor.withAlphaComponent(0.5), borderColor: GroupCallTheme.memberSeparatorColor)
