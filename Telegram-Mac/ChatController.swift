@@ -515,6 +515,7 @@ class ChatControllerView : View, ChatInputDelegate {
         let inputY: CGFloat = themeSelectorView != nil ? frame.height : tableView.frame.maxY
         
         transition.updateFrame(view: inputView, frame: NSMakeRect(0, inputY, frame.width, inputView.frame.height))
+        inputView.updateLayout(size: NSMakeSize(frame.width, inputView.frame.height), transition: transition)
 
         
         transition.updateFrame(view: gradientMaskView, frame: tableView.frame)
