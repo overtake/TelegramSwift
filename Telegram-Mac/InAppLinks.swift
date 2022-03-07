@@ -1085,7 +1085,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
             let userAndVariables = string.components(separatedBy: "?")
             let username:String = userAndVariables[0]
             if username == keyURLproxy {
-                if userAndVariables.count == 2 {
+                 if userAndVariables.count == 2 {
                     let (vars, _) = urlVars(with: userAndVariables[1])
                     if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort) {
                         let server = escape(with: server)

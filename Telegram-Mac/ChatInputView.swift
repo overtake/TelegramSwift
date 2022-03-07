@@ -451,13 +451,18 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 current = ChatInputMenuView(frame: NSMakeRect(0, 0, 60, contentView.frame.height))
                 self.botMenuView = current
                 contentView.addSubview(current)
+                
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
+                }
             }
             current.chatInteraction = self.chatInteraction
             current.update(botMenu, animated: animated)
         } else {
             if let view = self.botMenuView {
                 self.botMenuView = nil
-                performSubviewRemoval(view, animated: animated)
+                performSubviewRemoval(view, animated: animated, scale: true)
             }
         }
         
@@ -477,80 +482,86 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                performSubviewRemoval(view, animated: animated)
             }
         }
+        updateLayout(size: frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
     }
     
     
-    override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         
+        
+        let bottomInset = chatInteraction.presentation.isKeyboardShown ? bottomHeight : 0
         let keyboardWidth = frame.width - 40
+        var leftInset: CGFloat = 0
+
+
+        transition.updateFrame(view: contentView, frame: NSMakeRect(0, bottomInset, frame.width, contentView.frame.height))
+        transition.updateFrame(view: bottomView, frame: NSMakeRect(20, chatInteraction.presentation.isKeyboardShown ? 0 : -bottomHeight, keyboardWidth, bottomHeight))
         
-        bottomView.setFrameSize( NSMakeSize(keyboardWidth, bottomHeight))
-        if let markup = replyMarkupModel, markup.hasButtons {
+        
+        transition.updateFrame(view: actionsView, frame: NSMakeRect(frame.width - actionsView.frame.width, 0, actionsView.frame.width, actionsView.frame.height))
+
+        
+        if let view = botMenuView {
+            leftInset += view.frame.width
+            transition.updateFrame(view: view, frame: NSMakeRect(0, 0, view.frame.width, view.frame.height))
+        }
+        if let view = sendAsView {
+            leftInset += view.frame.width
+            transition.updateFrame(view: view, frame: NSMakeRect(0, 0, view.frame.width, view.frame.height))
+        }
+        if let markup = replyMarkupModel, markup.hasButtons, let view = markup.view {
             markup.measureSize(keyboardWidth)
-            markup.view?.setFrameSize(NSMakeSize(markup.size.width, markup.size.height + 5))
-            markup.layout()
-        }
-        contentView.setFrameSize(frame.width, contentView.frame.height)
-        textView.setFrameSize(textViewSize(textView))
-        actionsView.setFrameSize(NSWidth(actionsView.frame), NSHeight(actionsView.frame))
-        attachView.setFrameSize(NSWidth(attachView.frame), NSHeight(attachView.frame))
-        
-        if let botMenuView = botMenuView {
-            botMenuView.setFrameSize(NSWidth(botMenuView.frame), NSHeight(botMenuView.frame))
+            transition.updateFrame(view: view, frame: NSMakeRect(0, 0, markup.size.width, markup.size.height + 5))
+            markup.layout(transition: transition)
         }
         
-        _ts.setFrameSize(frame.width, .borderSize)
+        transition.updateFrame(view: attachView, frame: NSMakeRect(leftInset, 0, attachView.frame.width, attachView.frame.height))
+        leftInset += attachView.frame.width
         
-        accessory.measureSize(frame.width - 64)
-        accessory.frame = NSMakeRect(15, contentView.frame.maxY, frame.width - 39, accessory.size.height)
-        messageActionsPanelView?.setFrameSize(frame.size)
-        blockedActionView?.setFrameSize(frame.size)
-        chatDiscussionView?.setFrameSize(frame.size)
-        restrictedView?.setFrameSize(frame.size)
+        let textSize = textViewSize(textView)
+        transition.updateFrame(view: textView, frame: NSMakeRect(leftInset, yInset, textSize.width, textSize.height))
+                
+        if let view = additionBlockedActionView {
+            transition.updateFrame(view: view, frame: view.centerFrameY(x: size.width - view.frame.width - 22))
+        }
+        
+        transition.updateFrame(view: _ts, frame: NSMakeRect(0, size.height - .borderSize, size.width, .borderSize))
+            
+        accessory.measureSize(size.width - 64)
+        if let view = accessory.view {
+            transition.updateFrame(view: view, frame: NSMakeRect(15, contentView.frame.maxY, size.width - 39, accessory.size.height))
+        }
+        
+        if let view = messageActionsPanelView {
+            transition.updateFrame(view: view, frame: bounds)
+        }
+        if let view = blockedActionView {
+            transition.updateFrame(view: view, frame: bounds)
+        }
+        if let view = chatDiscussionView {
+            transition.updateFrame(view: view, frame: bounds)
+        }
+        if let view = restrictedView {
+            transition.updateFrame(view: view, frame: bounds)
+        }
         
         guard let superview = superview else {return}
         textView.max_height = Int32(superview.frame.height / 2 + 50)
-        
-        if textView.placeholderAttributedString?.string != self.textPlaceholder {
-            textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(theme.fontSize), coreText: false), update: false)
-        }
-
 
     }
+    
+    /*
+     
+     if textView.placeholderAttributedString?.string != self.textPlaceholder {
+         textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(theme.fontSize), coreText: false), update: false)
+     }
+     
+     */
     
     override func layout() {
         super.layout()
-        let bottomInset = chatInteraction.presentation.isKeyboardShown ? bottomHeight : 0
-        bottomView.setFrameOrigin(20, chatInteraction.presentation.isKeyboardShown ? 0 : -bottomHeight)
-        contentView.setFrameOrigin(0, bottomInset)
-        actionsView.setFrameOrigin(frame.width - actionsView.frame.width, 0)
-        
-        var leftInset: CGFloat = 0
-        
-        if let botMenuView = botMenuView {
-            botMenuView.setFrameOrigin(.zero)
-            leftInset += botMenuView.frame.width
-        }
-        if let sendAsView = sendAsView {
-            sendAsView.setFrameOrigin(.zero)
-            leftInset += sendAsView.frame.width
-        }
-        
-        attachView.setFrameOrigin(NSMakePoint(leftInset, 0))
-        leftInset += attachView.frame.width
-        
-        textView.setFrameOrigin(NSMakePoint(leftInset, yInset))
-        
-        _ts.setFrameOrigin(0, frame.height - .borderSize)
-        if let additionBlockedActionView = additionBlockedActionView {
-            additionBlockedActionView.centerY(x: frame.width - additionBlockedActionView.frame.width - 22)
-        }
+        self.updateLayout(size: self.frame.size, transition: .immediate)
 
-    }
-    
-    override func setFrameOrigin(_ newOrigin: NSPoint) {
-        super.setFrameOrigin(newOrigin)
     }
     
     

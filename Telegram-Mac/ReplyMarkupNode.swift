@@ -132,7 +132,7 @@ class ReplyMarkupNode: Node {
         })
     }
     
-    func layout() {
+    func layout(transition: ContainedViewLayoutTransition = .immediate) {
         var y:CGFloat = 0
         
         var i:Int = 0
@@ -159,10 +159,10 @@ class ReplyMarkupNode: Node {
                     }
                 }
                 if let btnView = btnView {
-                    btnView.frame = rect
+                    transition.updateFrame(view: btnView, frame: frame)
                     btnView.setNeedsDisplayLayer()
                     if !btnView.subviews.isEmpty, let urlView = btnView.subviews.first(where: { $0 is ImageView }) {
-                        urlView.setFrameOrigin(rect.width - urlView.frame.width - 5, 5)
+                        transition.updateFrame(view: urlView, frame: NSMakeRect(rect.width - urlView.frame.width - 5, 5, urlView.frame.width, urlView.frame.height))
                     }
                 }
                 

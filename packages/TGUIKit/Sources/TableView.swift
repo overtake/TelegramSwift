@@ -1037,7 +1037,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 var isNextCallLocked: Bool {
                     if let beginPendingTime = beginPendingTime {
                         if CFAbsoluteTimeGetCurrent() - beginPendingTime < 0.05 {
-                            return true
+                            return false
                         }
                     }
                     beginPendingTime = CFAbsoluteTimeGetCurrent()
