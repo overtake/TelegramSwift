@@ -235,12 +235,20 @@ class ChatInputAccessory: Node {
         }
         set {
             super.frame = newValue
-            self.container.frame = NSMakeRect(49, 0, measuredWidth, size.height)
-            iconView.centerY(x: 2)
-            dismiss.centerY(x: newValue.width - dismiss.frame.width)
-            progress?.centerY(x: 5)
-            displayNode?.setNeedDisplay()
+            updateLayout(newValue.size, transition: .immediate)
         }
+    }
+    
+    func updateLayout(_ size: NSSize, transition: ContainedViewLayoutTransition) {
+        
+        transition.updateFrame(view: self.container, frame: NSMakeRect(49, 0, measuredWidth, size.height))
+        transition.updateFrame(view: iconView, frame: iconView.centerFrameY(x: 2))
+        transition.updateFrame(view: dismiss, frame: dismiss.centerFrameY(x: size.width - dismiss.frame.width))
+        if let view = progress {
+            transition.updateFrame(view: view, frame: view.centerFrameY(x: 5))
+        }
+        displayNode?.setNeedDisplay()
+        
     }
     
     override var view: View? {

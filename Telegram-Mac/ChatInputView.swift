@@ -131,7 +131,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         needUpdateChatState(with: chatState, false)
         needUpdateReplyMarkup(with: interaction.presentation, false)
         
-        setFrameSize(frame.size)
+        
         textView.textColor = theme.colors.text
         textView.linkColor = theme.colors.link
         textView.textFont = .normal(CGFloat(theme.fontSize))
@@ -147,6 +147,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         
         chatInteraction.add(observer: self)
         ready.set(accessory.nodeReady.get() |> map {_ in return true} |> take(1) )
+        
+        updateLayout(size: frame.size, transition: .immediate)
     }
     
     private var textPlaceholder: String {
@@ -256,7 +258,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 textViewHeightChanged(defaultContentHeight, animated: animated)
             }
             
-            update()
+            self.updateLayout(size: self.frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
         }
     }
     
@@ -413,18 +415,19 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     func updateAdditions(_ state:ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
         accessory.update(with: state, account: chatInteraction.context.account, animated: animated)
         
-        accessoryDispose.set(accessory.nodeReady.get().start(next: { [weak self] (animated) in
-            if let strongSelf = self {
-                strongSelf.accessory.measureSize(strongSelf.frame.width - 40.0)
-                strongSelf.textViewHeightChanged(strongSelf.defaultContentHeight, animated: animated)
-                strongSelf.update()
-                if strongSelf.updateFirstTime {
-                    strongSelf.updateFirstTime = false
-                    strongSelf.textView.scrollToCursor()
-                }
-            }
+        accessoryDispose.set(accessory.nodeReady.get().start(next: { [weak self] animated in
+            self?.updateAccesory(animated: animated)
         }))
-        
+    }
+    
+    private func updateAccesory(animated: Bool) {
+        self.accessory.measureSize(self.frame.width - 40.0)
+        self.textViewHeightChanged(self.defaultContentHeight, animated: animated)
+        self.updateLayout(size: self.frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+        if self.updateFirstTime {
+            self.updateFirstTime = false
+            self.textView.scrollToCursor()
+        }
     }
     
     override func mouseUp(with event: NSEvent) {
@@ -432,15 +435,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         textView.setSelectedRange(NSMakeRange(textView.string().length, 0))
     }
     
-    func update() {
-        if #available(OSX 10.12, *) {
-            needsLayout = true
-            setFrameSize(frame.size)
-        } else {
-            needsLayout = true
-        }
-        
-    }
+   
     
     func updateAttachments(_ inputState:ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
         if let botMenu = inputState.botMenu, inputState.interfaceState.inputState.inputText.isEmpty {
@@ -482,7 +477,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                performSubviewRemoval(view, animated: animated)
             }
         }
-        updateLayout(size: frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+        updateLayout(size: frame.size, transition: .immediate)
     }
     
     
@@ -527,9 +522,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         
         transition.updateFrame(view: _ts, frame: NSMakeRect(0, size.height - .borderSize, size.width, .borderSize))
             
-        accessory.measureSize(size.width - 64)
         if let view = accessory.view {
+            accessory.measureSize(size.width - 64)
             transition.updateFrame(view: view, frame: NSMakeRect(15, contentView.frame.maxY, size.width - 39, accessory.size.height))
+            accessory.updateLayout(NSMakeSize(size.width - 39, accessory.size.height), transition: transition)
         }
         
         if let view = messageActionsPanelView {
