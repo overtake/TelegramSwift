@@ -95,7 +95,7 @@ private final class Manager {
         self.list = countries
     }
     
-    private let global: Country = .init(id: "TG", name: "Airlines", localizedName: "Airlines", countryCodes: [.init(code: "999", prefixes: [], patterns: ["XXXX X XX"])], hidden: false)
+    private let global: Country = .init(id: "TG", name: "Test", localizedName: "Test", countryCodes: [.init(code: "999", prefixes: [], patterns: ["XXXX X XX"])], hidden: false)
     
     func items(byCodeNumber codeNumber: String, checkAll: Bool = false) -> [Country] {
         
