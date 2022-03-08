@@ -315,7 +315,7 @@ class ChatControllerView : View, ChatInputDelegate {
             chatInteraction.scrollToLatest(false)
         }, for: .Click)
         scroller.forceHide()
-        addSubview(scroller)
+        addSubview(scroller, positioned: .below, relativeTo: inputView)
         
         let context = chatInteraction.context
         
@@ -722,7 +722,7 @@ class ChatControllerView : View, ChatInputDelegate {
                 if let mentions = self.mentions {
                     mentions.frame = mentionsRect
                     mentions.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                    addSubview(mentions)
+                    addSubview(mentions, positioned: .below, relativeTo: inputView)
                 }             
             }
             self.mentions?.updateCount(mentionsCount)
@@ -746,7 +746,7 @@ class ChatControllerView : View, ChatInputDelegate {
                 if let reactions = self.reactions {
                     reactions.frame = reactionsRect
                     reactions.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                    addSubview(reactions)
+                    addSubview(reactions, positioned: .below, relativeTo: inputView)
                 }
             }
             self.reactions?.updateCount(reactionsCount)

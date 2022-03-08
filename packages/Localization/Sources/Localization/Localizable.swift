@@ -9255,6 +9255,10 @@ public final class L10n {
   public static func stickerPackAdd1Zero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StickerPack.Add1_zero", p1)
   }
+  /// Show More
+  public static var stickerPackShowMore: String  { return L10n.tr("Localizable", "StickerPack.ShowMore") }
+  /// Featured Packs
+  public static var stickerPackFeaturedTitle: String  { return L10n.tr("Localizable", "StickerPack.Featured.Title") }
   /// Sorry, this sticker set doesn't seem to exist.
   public static var stickerSetDontExist: String  { return L10n.tr("Localizable", "StickerSet.DontExist") }
   /// Remove

@@ -477,7 +477,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                performSubviewRemoval(view, animated: animated)
             }
         }
-        updateLayout(size: frame.size, transition: .immediate)
+        updateLayout(size: frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
     }
     
     
