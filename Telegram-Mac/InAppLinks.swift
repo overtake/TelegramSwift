@@ -1105,7 +1105,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 let username:String = userAndVariables[0]
                 var action:ChatInitialAction? = nil
                 if userAndVariables.count == 2 {
-                    let (vars, emptyVars) = urlVars(with: userAndVariables[1])
+                    let (vars, _) = urlVars(with: userAndVariables[1])
                     loop: for (key,value) in vars {
                         switch key {
                         case keyURLStart:
