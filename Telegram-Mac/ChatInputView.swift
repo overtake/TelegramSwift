@@ -506,7 +506,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         }
         if let markup = replyMarkupModel, markup.hasButtons, let view = markup.view {
             markup.measureSize(keyboardWidth)
-            transition.updateFrame(view: view, frame: NSMakeRect(0, 0, markup.size.width, markup.size.height + 5))
+            transition.updateFrame(view: view, frame: NSMakeRect(0, 0, markup.size.width, markup.size.height))
             markup.layout(transition: transition)
         }
         

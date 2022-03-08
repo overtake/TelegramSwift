@@ -159,7 +159,7 @@ class ReplyMarkupNode: Node {
                     }
                 }
                 if let btnView = btnView {
-                    transition.updateFrame(view: btnView, frame: frame)
+                    transition.updateFrame(view: btnView, frame: rect)
                     btnView.setNeedsDisplayLayer()
                     if !btnView.subviews.isEmpty, let urlView = btnView.subviews.first(where: { $0 is ImageView }) {
                         transition.updateFrame(view: urlView, frame: NSMakeRect(rect.width - urlView.frame.width - 5, 5, urlView.frame.width, urlView.frame.height))
