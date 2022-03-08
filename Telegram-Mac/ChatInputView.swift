@@ -460,7 +460,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 performSubviewRemoval(view, animated: animated, scale: true)
             }
         }
-        
+        var anim = animated
         if let sendAsPeers = inputState.sendAsPeers, !sendAsPeers.isEmpty && inputState.state == .normal {
             let current: ChatInputSendAsView
             if let view = self.sendAsView {
@@ -469,6 +469,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 current = ChatInputSendAsView(frame: NSMakeRect(0, 0, 50, 50))
                 self.sendAsView = current
                 contentView.addSubview(current)
+                anim = false
             }
             current.update(sendAsPeers, currentPeerId: inputState.currentSendAsPeerId ?? self.chatInteraction.context.peerId, chatInteraction: self.chatInteraction, animated: animated)
         } else {
@@ -477,7 +478,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                performSubviewRemoval(view, animated: animated)
             }
         }
-        updateLayout(size: frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+        updateLayout(size: frame.size, transition: anim ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
     }
     
     

@@ -82,7 +82,7 @@ final class ChatInputSendAsView : Control {
         fatalError("init(coder:) has not been implemented")
     }
     
-    private var first: Bool = true
+    var first: Bool = true
     
     func update(_ peers: [FoundPeer], currentPeerId: PeerId, chatInteraction: ChatInteraction, animated: Bool) {
         let currentIsUpdated = self.currentPeerId != currentPeerId
