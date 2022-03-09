@@ -1092,7 +1092,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         
         var canCollage: Bool = canCollagesFromUrl(self.urls)
         let options = takeSenderOptions(for: self.urls)
-        let mediaState:PreviewSendingState.State = asMedia ? .media : .file
+        let mediaState:PreviewSendingState.State = asMedia && options == [.media] ? .media : .file
         switch mediaState {
         case .media:
             canCollage = canCollage && options == [.media]

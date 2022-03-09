@@ -27,7 +27,7 @@ class ChatInputAttachView: ImageButton, Notifable {
         super.init(frame: frameRect)
         
         
-        highlightHovered = true
+        highlightHovered = false
         
         
         updateLayout()
@@ -209,12 +209,12 @@ class ChatInputAttachView: ImageButton, Notifable {
             if let editState = value?.interfaceState.editState {
                 let isMedia = editState.message.media.first is TelegramMediaFile || editState.message.media.first is TelegramMediaImage
                 editMediaAccessory.change(opacity: isMedia ? 1 : 0)
-                self.highlightHovered = isMedia
-                self.autohighlight = isMedia
+                self.highlightHovered = false
+                self.autohighlight = false
             } else {
                 editMediaAccessory.change(opacity: 0)
-                self.highlightHovered = true
-                self.autohighlight = true
+                self.highlightHovered = false
+                self.autohighlight = false
             }
         }
        

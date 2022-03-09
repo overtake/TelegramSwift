@@ -206,7 +206,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         accessoryView.backgroundColor = theme.colors.background
         accessory.container.backgroundColor = theme.colors.background
         textView.setBackgroundColor(theme.colors.background)
-        
+                
     }
     
     func notify(with value: Any, oldValue:Any, animated:Bool) {
@@ -493,8 +493,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         transition.updateFrame(view: contentView, frame: NSMakeRect(0, bottomInset, frame.width, contentView.frame.height))
         transition.updateFrame(view: bottomView, frame: NSMakeRect(20, chatInteraction.presentation.isKeyboardShown ? 0 : -bottomHeight, keyboardWidth, bottomHeight))
         
-        
-        transition.updateFrame(view: actionsView, frame: NSMakeRect(frame.width - actionsView.frame.width, 0, actionsView.frame.width, actionsView.frame.height))
+        let actionsSize = actionsView.size(chatInteraction.presentation)
+        let immediate: ContainedViewLayoutTransition = .immediate
+        immediate.updateFrame(view: actionsView, frame: CGRect(origin: CGPoint(x: size.width - actionsSize.width, y: 0), size: actionsSize))
+        actionsView.updateLayout(size: actionsSize, transition: immediate)
 
         
         if let view = botMenuView {
