@@ -28,7 +28,7 @@ final class ChatMediaPresentation : Equatable {
     let link: NSColor
     let presentation: TelegramPresentationTheme
     init(presentation: TelegramPresentationTheme, isIncoming: Bool, isBubble: Bool, activityBackground: NSColor, activityForeground: NSColor, text: NSColor, grayText: NSColor, link: NSColor, waveformBackground: NSColor, waveformForeground: NSColor) {
-        self.presentation = theme
+        self.presentation = presentation
         self.isIncoming = isIncoming
         self.isBubble = isBubble
         self.activityForeground = activityForeground

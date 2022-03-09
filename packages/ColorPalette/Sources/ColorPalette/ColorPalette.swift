@@ -1484,7 +1484,6 @@ public class ColorPalette : Equatable {
         
         let fileActivityForegroundBubble_incoming = NSColor(0xffffff)
         let fileActivityBackgroundBubble_incoming = color.accent
-
         
         var selectTextBubble_outgoing = self.selectTextBubble_outgoing
 

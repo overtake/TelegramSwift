@@ -135,7 +135,7 @@ class ChatInputActionsView: View, Notifable {
         }
         
         
-        scheduled?.set(image: theme.icons.scheduledInputAction, for: .Normal)
+        scheduled?.set(image: theme.icons.chatInputScheduled, for: .Normal)
 
         
         slowModeTimeout.set(font: .normal(.text), for: .Normal)
@@ -199,9 +199,6 @@ class ChatInputActionsView: View, Notifable {
             }
         }, for: .Click)
     }
-    override func setFrameOrigin(_ newOrigin: NSPoint) {
-        super.setFrameOrigin(newOrigin)
-    }
     
     func toggleKeyboard() {
         let keyboardId = chatInteraction.presentation.keyboardButtonsMessage?.id
@@ -213,48 +210,10 @@ class ChatInputActionsView: View, Notifable {
     
     override func layout() {
         super.layout()
-        
-        
-        
-        inlineCancel.centerY(x:frame.width - inlineCancel.frame.width - iconsInset - 6)
-        inlineProgress?.centerY(x: frame.width - inlineCancel.frame.width - iconsInset - 10)
-        voice.centerY(x:frame.width - voice.frame.width - iconsInset)
-        send.centerY(x: frame.width - send.frame.width - iconsInset)
-        slowModeTimeout.centerY(x: frame.width - slowModeTimeout.frame.width - iconsInset)
-        entertaiments.centerY(x: voice.frame.minX - entertaiments.frame.width - 0)
-        keyboard.centerY(x: entertaiments.frame.minX - keyboard.frame.width)
-        muteChannelMessages.centerY(x: entertaiments.frame.minX - muteChannelMessages.frame.width)
-        
-        if let scheduled = scheduled {
-            if muteChannelMessages.isHidden {
-                scheduled.centerY(x: (keyboard.isHidden ? entertaiments.frame.minX : keyboard.frame.minX) - scheduled.frame.width)
-            } else {
-                scheduled.centerY(x: muteChannelMessages.frame.minX - scheduled.frame.width - iconsInset)
-            }
-        }
-        
-        let views = [inlineCancel,
-         inlineProgress,
-         voice,
-         send,
-         slowModeTimeout,
-         entertaiments,
-         keyboard,
-         muteChannelMessages,
-         scheduled].filter { $0 != nil && !$0!.isHidden }.map { $0! }
-        
-        let minView = views.min(by: { $0.frame.minX < $1.frame.minX })
-        if let minView = minView, let secretTimer = secretTimer {
-            if minView == entertaiments {
-                secretTimer.centerY(x: minView.frame.minX - secretTimer.frame.width)
-            } else {
-                secretTimer.centerY(x: minView.frame.minX - secretTimer.frame.width - iconsInset)
-            }
-        }
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
     
     func stop() {
-
         let chatInteraction = self.chatInteraction
         if let recorder = chatInteraction.presentation.recordingState {
             if canSend {
@@ -295,12 +254,6 @@ class ChatInputActionsView: View, Notifable {
     func notify(with value: Any, oldValue: Any, animated:Bool) {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
             if value.interfaceState != oldValue.interfaceState || !animated || value.inputQueryResult != oldValue.inputQueryResult || value.inputContext != oldValue.inputContext || value.sidebarEnabled != oldValue.sidebarEnabled || value.sidebarShown != oldValue.sidebarShown || value.layout != oldValue.layout || value.isKeyboardActive != oldValue.isKeyboardActive || value.isKeyboardShown != oldValue.isKeyboardShown || value.slowMode != oldValue.slowMode || value.hasScheduled != oldValue.hasScheduled || value.messageSecretTimeout != oldValue.messageSecretTimeout {
-            
-                var size:NSSize = NSMakeSize(send.frame.width + iconsInset + entertaiments.frame.width, frame.height)
-                
-                if chatInteraction.hasSetDestructiveTimer {
-                    size.width += theme.icons.chatSecretTimer.backingSize.width + iconsInset
-                }
 
                 if chatInteraction.hasSetDestructiveTimer {
                     if secretTimer == nil {
@@ -328,8 +281,8 @@ class ChatInputActionsView: View, Notifable {
                             }
                         }
                     }
-                } else {
-                    secretTimer?.removeFromSuperview()
+                } else if let view = secretTimer {
+                    performSubviewRemoval(view, animated: animated, scale: true)
                     secretTimer = nil
                 }
 
@@ -346,10 +299,6 @@ class ChatInputActionsView: View, Notifable {
               
                 if let peer = value.peer {
                     muteChannelMessages.isHidden = !peer.isChannel || !peer.canSendMessage(value.chatMode.isThreadMode) || !value.effectiveInput.inputText.isEmpty || value.interfaceState.editState != nil
-                }
-                
-                if !muteChannelMessages.isHidden {
-                    size.width += muteChannelMessages.frame.width
                 }
                 
                 var newInlineRequest = value.inputQueryResult != oldValue.inputQueryResult
@@ -384,9 +333,6 @@ class ChatInputActionsView: View, Notifable {
                     oldInlineRequest = false
                 }
                 
-//                newInlineLoading = newInlineLoading && newInlineRequest
-//                oldInlineLoading = oldInlineLoading && oldInlineRequest
-
                 
                 let sNew = !value.effectiveInput.inputText.isEmpty || !value.interfaceState.forwardMessageIds.isEmpty || value.state == .editing
                 let sOld = !oldValue.effectiveInput.inputText.isEmpty || !oldValue.interfaceState.forwardMessageIds.isEmpty || oldValue.state == .editing
@@ -447,17 +393,9 @@ class ChatInputActionsView: View, Notifable {
                             }
                         }, for: .Click)
                     }
-                } else {
-                    if let inlineProgress = inlineProgress {
-                        self.inlineProgress = nil
-                        if animated {
-                            inlineProgress.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak inlineProgress] _ in
-                                inlineProgress?.removeFromSuperview()
-                            })
-                        } else {
-                            inlineProgress.removeFromSuperview()
-                        }
-                    }
+                } else if let view = inlineProgress {
+                    performSubviewRemoval(view, animated: animated, scale: true)
+                    inlineProgress = nil
                 }
        
                 entertaiments.apply(state: .Normal)
@@ -466,9 +404,6 @@ class ChatInputActionsView: View, Notifable {
                 keyboard.isHidden = !value.isKeyboardActive
                 
                 if let keyboardMessage = value.keyboardButtonsMessage {
-                   // if value.state == .normal && (value.effectiveInput.inputText.isEmpty || value.isKeyboardShown) {
-                        size.width += keyboard.frame.width + iconsInset
-                   // }
                     if let closedId = value.interfaceState.messageActionsState.closedButtonKeyboardMessageId, closedId == keyboardMessage.id {
                         self.keyboard.set(image: theme.icons.chatDisabledReplyMarkup, for: .Normal)
                     } else {
@@ -486,25 +421,88 @@ class ChatInputActionsView: View, Notifable {
                 if value.hasScheduled && value.effectiveInput.inputText.isEmpty && value.interfaceState.editState == nil {
                     if scheduled == nil {
                         scheduled = ImageButton()
+                        scheduled!.set(image: theme.icons.chatInputScheduled, for: .Normal)
+                        _ = scheduled!.sizeToFit()
                         addSubview(scheduled!)
+                        scheduled?.centerY(x: 0)
                     }
                     scheduled?.removeAllHandlers()
                     scheduled?.set(handler: { [weak self] _ in
                         self?.chatInteraction.openScheduledMessages()
                     }, for: .Click)
-                    scheduled!.set(image: theme.icons.chatInputScheduled, for: .Normal)
-                    _ = scheduled!.sizeToFit()
-                    size.width += scheduled!.frame.width + iconsInset + (muteChannelMessages.isHidden ? 0 : iconsInset)
-                } else {
-                    scheduled?.removeFromSuperview()
+                } else if let view = scheduled {
+                    performSubviewRemoval(view, animated: animated, scale: true)
                     scheduled = nil
                 }
-                
-                setFrameSize(size)
                 updateEntertainmentIcon()
-                needsLayout = true
             } else if value.isEmojiSection != oldValue.isEmojiSection {
                 updateEntertainmentIcon()
+            }
+        }
+    }
+    
+    func size(_ value: ChatPresentationInterfaceState) -> NSSize {
+        
+        
+        var size:NSSize = NSMakeSize(send.frame.width + iconsInset + entertaiments.frame.width, frame.height)
+        
+        if chatInteraction.hasSetDestructiveTimer {
+            size.width += theme.icons.chatSecretTimer.backingSize.width + iconsInset
+        }
+        if chatInteraction.presentation.keyboardButtonsMessage != nil {
+            size.width += keyboard.frame.width + iconsInset
+        }
+        if let peer = chatInteraction.presentation.peer {
+            let hasMute = !(!peer.isChannel || !peer.canSendMessage(value.chatMode.isThreadMode) || !value.effectiveInput.inputText.isEmpty || value.interfaceState.editState != nil)
+            if hasMute {
+                size.width += muteChannelMessages.frame.width
+            }
+        }
+        if value.hasScheduled && value.effectiveInput.inputText.isEmpty && value.interfaceState.editState == nil {
+            size.width += theme.icons.chatInputScheduled.backingSize.width + iconsInset + (muteChannelMessages.isHidden ? 0 : iconsInset)
+        }
+        return size
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
+        transition.updateFrame(view: inlineCancel, frame: inlineCancel.centerFrameY(x: size.width - inlineCancel.frame.width - iconsInset - 6))
+        
+        if let view = inlineProgress {
+            transition.updateFrame(view: view, frame: view.centerFrameY(x: size.width - inlineCancel.frame.width - iconsInset - 10))
+        }
+        transition.updateFrame(view: voice, frame: voice.centerFrameY(x: size.width - voice.frame.width - iconsInset))
+        transition.updateFrame(view: send, frame: send.centerFrameY(x: size.width - send.frame.width - iconsInset))
+        transition.updateFrame(view: slowModeTimeout, frame: slowModeTimeout.centerFrameY(x: size.width - slowModeTimeout.frame.width - iconsInset))
+        transition.updateFrame(view: entertaiments, frame: entertaiments.centerFrameY(x: voice.frame.minX - entertaiments.frame.width - 0))
+        transition.updateFrame(view: keyboard, frame: keyboard.centerFrameY(x: entertaiments.frame.minX - keyboard.frame.width))
+        transition.updateFrame(view: muteChannelMessages, frame: muteChannelMessages.centerFrameY(x: entertaiments.frame.minX - muteChannelMessages.frame.width))
+
+        
+        if let scheduled = scheduled {
+            if muteChannelMessages.isHidden {
+                transition.updateFrame(view: scheduled, frame: scheduled.centerFrameY(x: (keyboard.isHidden ? entertaiments.frame.minX : keyboard.frame.minX) - scheduled.frame.width))
+            } else {
+                transition.updateFrame(view: scheduled, frame: scheduled.centerFrameY(x: muteChannelMessages.frame.minX - scheduled.frame.width - iconsInset))
+            }
+        }
+        
+        let views = [inlineCancel,
+         inlineProgress,
+         voice,
+         send,
+         slowModeTimeout,
+         entertaiments,
+         keyboard,
+         muteChannelMessages,
+         scheduled].filter { $0 != nil && !$0!.isHidden }.map { $0! }
+        
+        let minView = views.min(by: { $0.frame.minX < $1.frame.minX })
+        if let minView = minView, let secretTimer = secretTimer {
+            if minView == entertaiments {
+                transition.updateFrame(view: secretTimer, frame: secretTimer.centerFrameY(x: minView.frame.minX - secretTimer.frame.width))
+            } else {
+                transition.updateFrame(view: secretTimer, frame: secretTimer.centerFrameY(x: minView.frame.minX - secretTimer.frame.width - iconsInset))
             }
         }
     }
