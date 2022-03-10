@@ -2266,7 +2266,7 @@ public extension NSAttributedString {
                 } else if font.fontDescriptor.symbolicTraits.contains(.italic) {
                     newFont = .italic(theme.fontSize)
                 } else if font.fontDescriptor.symbolicTraits.contains(NSFontDescriptor.SymbolicTraits.monoSpace) {
-                    newFont = .code(theme.fontSize)
+                    newFont = .menlo(theme.fontSize)
                 } else {
                     newFont = .normal(theme.fontSize)
                 }

@@ -745,7 +745,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         
         let item = self.item(at: pageController.selectedIndex)
         if let caption = item.caption {
-            caption.measure(width: min(item.sizeValue.width + 240, min(item.pagerSize.width - 200, 600)))
+            caption.measure(width: item.pagerSize.width - 300)
             captionView.update(caption)
             captionView.backgroundColor = .clear
             captionView.disableBackgroundDrawing = true
@@ -753,7 +753,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             
             view.addSubview(captionScrollView)
             captionScrollView.change(opacity: 1.0)
-            captionScrollView.setFrameSize(captionView.frame.size.width + 10, min(90, captionView.frame.height))
+            captionScrollView.setFrameSize(captionView.frame.size.width + 10, min(120, captionView.frame.height))
             captionScrollView.centerX(y: 100)
             captionScrollView.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.9).cgColor
             captionScrollView.layer?.cornerRadius = .cornerRadius
