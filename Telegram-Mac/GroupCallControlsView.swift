@@ -176,7 +176,7 @@ final class GroupCallControlsView : View {
 
         self.backgroundView.update(state: .connecting, animated: false)
 
-       // self.updateMode(self.mode, callMode: self.callMode, hasVideo: self.hasScreencast, hasScreencast: self.hasScreencast, animated: false, force: true)
+        self.updateMode(self.mode, callMode: self.callMode, isStream: self.isStream, hasVideo: self.hasScreencast, hasScreencast: self.hasScreencast, animated: false, force: true)
     }
     
     private func updateMode(_ mode: Mode, callMode: GroupCallUIState.Mode, isStream: Bool, hasVideo: Bool, hasScreencast: Bool, animated: Bool, force: Bool = false) {

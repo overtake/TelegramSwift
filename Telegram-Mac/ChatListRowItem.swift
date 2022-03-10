@@ -1099,7 +1099,7 @@ class ChatListRowItem: TableRowItem {
                 if isAd {
                     firstGroup.append(ContextMenuItem(strings().chatListContextHidePromo, handler: {
                         context.bindings.mainController().chatList.hidePromoItem(peerId)
-                    }))
+                    }, itemImage: MenuAnimation.menu_archive.value))
                 }
                 if let peer = peer as? TelegramGroup, !isAd {
                     thirdGroup.append(ContextMenuItem(strings().chatListContextClearHistory, handler: {
