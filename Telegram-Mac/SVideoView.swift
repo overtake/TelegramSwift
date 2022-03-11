@@ -36,10 +36,15 @@ private final class SVideoPipControls : Control {
     fileprivate func update(with status: MediaPlayerStatus, animated: Bool) {
         
         
+        self.forceMouseDownCanMoveWindow = true
+        volumeSlider.userInteractionEnabled = true
+        progress.userInteractionEnabled = true
+
+        
         self.backgroundColor = NSColor.blackTransparent
         
         volumeSlider.set(progress: CGFloat(status.volume))
-        volumeToggle.set(image: status.volume.isZero ? theme.icons.videoPlayerVolumeOff : theme.icons.videoPlayerVolume, for: .Normal)
+        volumeToggle.set(image: status.volume.isZero ? theme.icons.gallery_pip_muted : theme.icons.gallery_pip_unmuted, for: .Normal)
         
        
         playOrPause.isEnabled = status.duration > 0
@@ -48,13 +53,13 @@ private final class SVideoPipControls : Control {
         
         switch status.status {
         case .playing:
-            playOrPause.set(image: theme.icons.videoPlayerPause, for: .Normal)
+            playOrPause.set(image: theme.icons.gallery_pip_pause, for: .Normal)
             progress.set(progress: status.duration == 0 ? 0 : CGFloat(status.timestamp / status.duration), animated: animated, duration: status.duration, beginTime: status.generationTimestamp, offset: status.timestamp, speed: Float(status.baseRate))
         case .paused:
-            playOrPause.set(image: status.generationTimestamp == 0 ? theme.icons.videoPlayerPause : theme.icons.videoPlayerPlay, for: .Normal)
+            playOrPause.set(image: status.generationTimestamp == 0 ? theme.icons.gallery_pip_pause : theme.icons.videoPlayerPlay, for: .Normal)
             progress.set(progress: status.duration == 0 ? 0 : CGFloat(status.timestamp / status.duration), animated: false)
         case let .buffering(_, whilePlaying):
-            playOrPause.set(image: whilePlaying ? theme.icons.videoPlayerPause : theme.icons.videoPlayerPlay, for: .Normal)
+            playOrPause.set(image: whilePlaying ? theme.icons.gallery_pip_pause : theme.icons.gallery_pip_play, for: .Normal)
             progress.set(progress: status.duration == 0 ? 0 : CGFloat(status.timestamp / status.duration), animated: false)
         }
         let currentTimeAttr: NSAttributedString = .initialize(string: status.timestamp == 0 && status.duration == 0 ? "--:--" : String.durationTransformed(elapsed: Int(status.timestamp)), color: .white, font: .medium(11))
@@ -89,6 +94,8 @@ private final class SVideoPipControls : Control {
     }
     
     let playOrPause: ImageButton = ImageButton()
+    let close: ImageButton = ImageButton()
+
     let progress: LinearProgressControl = LinearProgressControl(progressHeight: 2)
     let fullscreen: ImageButton = ImageButton()
     
@@ -105,6 +112,7 @@ private final class SVideoPipControls : Control {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(playOrPause)
+        addSubview(close)
         addSubview(progress)
         addSubview(durationView)
         addSubview(currentTimeView)
@@ -126,7 +134,7 @@ private final class SVideoPipControls : Control {
         volumeContainer.addSubview(volumeSlider)
         
         volumeToggle.autohighlight = false
-        volumeToggle.set(image: theme.icons.videoPlayerVolume, for: .Normal)
+        volumeToggle.set(image: theme.icons.gallery_pip_unmuted, for: .Normal)
         _ = volumeToggle.sizeToFit()
         volumeSlider.setFrameSize(NSMakeSize(60, 5))
         volumeContainer.setFrameSize(NSMakeSize(volumeToggle.frame.width + 60 + 5, volumeToggle.frame.height))
@@ -146,10 +154,15 @@ private final class SVideoPipControls : Control {
         playOrPause.scaleOnClick = true
         fullscreen.scaleOnClick = true
         
-        fullscreen.set(image: theme.icons.videoPlayerPIPOut, for: .Normal)
-        playOrPause.set(image: theme.icons.videoPlayerPause, for: .Normal)
+        fullscreen.set(image: theme.icons.gallery_pip_out, for: .Normal)
+        playOrPause.set(image: theme.icons.gallery_pip_pause, for: .Normal)
         
+        close.set(image: theme.icons.gallery_pip_close, for: .Normal)
+        close.sizeToFit()
+        close.autohighlight = false
+        close.scaleOnClick = true
 
+        
         _ = playOrPause.sizeToFit()
         _ = fullscreen.sizeToFit()
         
@@ -174,7 +187,8 @@ private final class SVideoPipControls : Control {
         
         playOrPause.center()
         
-        fullscreen.setFrameOrigin(5, 5)
+        close.setFrameOrigin(5, 5)
+        fullscreen.setFrameOrigin(close.frame.maxX + 5, 5)
 
         
         volumeContainer.setFrameOrigin(frame.width - volumeContainer.frame.width - 5, 5)
@@ -844,6 +858,38 @@ class SVideoView: NSView {
                 current = SVideoPipControls(frame: self.bounds)
                 addSubview(current)
                 self.pipControls = current
+                
+                current.playOrPause.set(handler: { [weak self] _ in
+                    self?.interactions?.playOrPause()
+                }, for: .Click)
+                
+                current.progress.onUserChanged = { [weak self] value in
+                    guard let `self` = self else {return}
+                    if let status = self.status {
+                        let result = min(status.duration * Double(value), status.duration)
+                        self.status = status.withUpdatedTimestamp(result)
+                        self.interactions?.rewind(result)
+                    }
+                }
+                current.volumeSlider.onUserChanged = { [weak self] value in
+                    guard let `self` = self else {return}
+                    self.interactions?.volume(value)
+                }
+                current.volumeToggle.set(handler: { [weak self] _ in
+                    guard let `self` = self else {return}
+                    if let status = self.status {
+                        self.interactions?.volume(status.volume == 0 ? 0.8 : 0)
+                    }
+                }, for: .Click)
+                
+                current.close.set(handler: { [weak self] _ in
+                    self?.interactions?.closePictureInPicture()
+                }, for: .Click)
+                
+                current.fullscreen.set(handler: { [weak self] _ in
+                    self?.interactions?.togglePictureInPicture()
+                }, for: .Click)
+                
                 
                 if animated {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)

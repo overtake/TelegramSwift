@@ -724,7 +724,15 @@ func initialize() -> [String] {
     
     array.append("chat_reactions_badge")
     array.append("chat_reactions_badge_active")
-        
+    
+    
+    array.append("gallery_pip_close")
+    array.append("gallery_pip_muted")
+    array.append("gallery_pip_unmuted")
+    array.append("gallery_pip_out")
+    array.append("gallery_pip_pause")
+    array.append("gallery_pip_play")
+
     return array
 }
 //swift ./tools/generate-images.swift

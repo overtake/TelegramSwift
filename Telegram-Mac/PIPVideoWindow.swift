@@ -85,8 +85,8 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         self._contentInteractions = contentInteractions
         self._type = type
         self.control = control
-        let minSize = control.view.frame.size.aspectFilled(NSMakeSize(200, 200))
-        let size = item.notFittedSize.aspectFilled(NSMakeSize(200, 200)).aspectFilled(minSize)
+        let minSize = control.view.frame.size.aspectFilled(NSMakeSize(250, 250))
+        let size = item.notFittedSize.aspectFilled(NSMakeSize(250, 250)).aspectFilled(minSize)
         let newRect = NSMakeRect(origin.x, origin.y, size.width, size.height)
         self.rect = newRect
         self.restoreRect = NSMakeRect(origin.x, origin.y, control.view.frame.width, control.view.frame.height)
@@ -98,7 +98,6 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary];
 
         
-        self.control.setMode(.pip, animated: true)
         
         let view = PictureInpictureView(frame: bounds, window: _window)
         self.contentView = view
@@ -178,11 +177,16 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
                 }
             }))
         }
+        
+        self.control.setMode(.pip, animated: true)
     }
     
     
 
     func hide() {
+        
+
+        
         if hideAnimated {
             contentView?._change(opacity: 0, animated: true, duration: 0.1, timingFunction: .linear)
             setFrame(NSMakeRect(frame.minX + (frame.width - 0) / 2, frame.minY + (frame.height - 0) / 2, 0, 0), display: true, animate: true)
@@ -218,6 +222,7 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         if control.isPictureInPicture {
             control.pause()
         }
+        self.control.setMode(.normal, animated: true)
         NotificationCenter.default.removeObserver(self)
         lookAtMessageDisposable.dispose()
     }
@@ -290,9 +295,9 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         super.makeKeyAndOrderFront(sender)
         if let screen = NSScreen.main {
             let savedRect: NSRect = NSMakeRect(0, 0, screen.frame.width * 0.3, screen.frame.width * 0.3)
-            let convert_s = self.rect.size.aspectFilled(NSMakeSize(min(savedRect.width, 200), min(savedRect.height, 200)))
+            let convert_s = self.rect.size.aspectFilled(NSMakeSize(min(savedRect.width, 250), min(savedRect.height, 250)))
             self.aspectRatio = self.rect.size.fitted(NSMakeSize(savedRect.width, savedRect.height))
-            self.minSize = self.rect.size.aspectFitted(NSMakeSize(savedRect.width, savedRect.height)).aspectFilled(NSMakeSize(200, 200))
+            self.minSize = self.rect.size.aspectFitted(NSMakeSize(savedRect.width, savedRect.height)).aspectFilled(NSMakeSize(250, 250))
             
             let frame = NSScreen.main?.frame ?? NSMakeRect(0, 0, 1920, 1080)
             

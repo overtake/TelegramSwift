@@ -2085,7 +2085,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             return
         }
         self.markedAsCanBeRemoved = true
-
+        self.sharedContext.updateCurrentGroupCallValue(nil)
         self.genericCallContext?.stop()
         self.screencastCallContext?.stop()
         self._canBeRemoved.set(.single(true))
