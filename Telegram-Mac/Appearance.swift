@@ -2325,7 +2325,13 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                reactions_badge_archive: { generateBadgeMention(image: NSImage(named: "Icon_ReactionBadge")!, backgroundColor: palette.badgeMuted, foregroundColor: palette.background) },
                                                reactions_badge_archive_active: { generateBadgeMention(image: NSImage(named: "Icon_ReactionBadge")!, backgroundColor: palette.underSelectedColor, foregroundColor: palette.accentSelect) },
                                                chat_reactions_badge: { generateChatMention(image: NSImage(named: "Icon_ReactionButton")!, backgroundColor: palette.background, border: palette.chatBackground == palette.background && palette.isDark ? palette.grayIcon : .clear, foregroundColor: palette.grayIcon) },
-                                               chat_reactions_badge_active: { generateChatMention(image: NSImage(named: "Icon_ReactionButton")!, backgroundColor: palette.background, border: palette.chatBackground == palette.background && palette.isDark ? palette.accentIcon : .clear, foregroundColor: palette.accentIcon) }
+                                               chat_reactions_badge_active: { generateChatMention(image: NSImage(named: "Icon_ReactionButton")!, backgroundColor: palette.background, border: palette.chatBackground == palette.background && palette.isDark ? palette.accentIcon : .clear, foregroundColor: palette.accentIcon) },
+                                                gallery_pip_close: { NSImage(named: "Icon_Pip_Close")!.precomposed(NSColor(0xffffff)) },
+                                                gallery_pip_muted: { NSImage(named: "Icon_Pip_Muted")!.precomposed(NSColor(0xffffff)) },
+                                                gallery_pip_unmuted: { NSImage(named: "Icon_Pip_Unmuted")!.precomposed(NSColor(0xffffff)) },
+                                                gallery_pip_out: { NSImage(named: "Icon_Pip_Out")!.precomposed(NSColor(0xffffff)) },
+                                                gallery_pip_pause: { NSImage(named: "Icon_Pip_Pause")!.precomposed(NSColor(0xffffff)) },
+                                                gallery_pip_play: { NSImage(named: "Icon_Pip_Play")!.precomposed(NSColor(0xffffff)) }
 
     )
 

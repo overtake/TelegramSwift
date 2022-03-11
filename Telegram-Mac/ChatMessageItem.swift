@@ -656,7 +656,7 @@ class ChatMessageItem: ChatRowItem {
             }
         }
         
-        var fontAttributes: [NSRange: ChatTextFontAttributes] = [:]
+        var fontAttributes: [(NSRange, ChatTextFontAttributes)] = []
         
 
         
@@ -689,17 +689,10 @@ class ChatMessageItem: ChatRowItem {
                 }
                 string.addAttribute(NSAttributedString.Key.link, value: inApp(for: url as NSString, context: context, openInfo: openInfo, hashtag: hashtag, command: botCommand,  applyProxy: applyProxy, confirm: nsString?.substring(with: range).trimmed != url), range: range)
             case .Bold:
-                if let fontAttribute = fontAttributes[range] {
-                    fontAttributes[range] = fontAttribute.union(.bold)
-                } else {
-                    fontAttributes[range] = .bold
-                }
+                fontAttributes.append((range, .bold))
             case .Italic:
-                if let fontAttribute = fontAttributes[range] {
-                    fontAttributes[range] = fontAttribute.union(.italic)
-                } else {
-                    fontAttributes[range] = .italic
-                }
+                fontAttributes.append((range, .italic))
+
             case .Mention:
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
                 if nsString == nil {
@@ -718,11 +711,8 @@ class ChatMessageItem: ChatRowItem {
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.botCommand(nsString!.substring(with: range), botCommand), range: range)
             case .Code:
                 string.addAttribute(.preformattedCode, value: 4.0, range: range)
-                if let fontAttribute = fontAttributes[range] {
-                    fontAttributes[range] = fontAttribute.union(.monospace)
-                } else {
-                    fontAttributes[range] = .monospace
-                }
+                fontAttributes.append((range, .monospace))
+
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedCode, range: range)
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.code(text.nsstring.substring(with: range), {  link in
                     copyToClipboard(link)
@@ -730,11 +720,7 @@ class ChatMessageItem: ChatRowItem {
                 }), range: range)
             case  .Pre:
                 string.addAttribute(.preformattedCode, value: 4.0, range: range)
-                if let fontAttribute = fontAttributes[range] {
-                    fontAttributes[range] = fontAttribute.union(.monospace)
-                } else {
-                    fontAttributes[range] = .monospace
-                }
+                fontAttributes.append((range, .monospace))
                // string.addAttribute(.preformattedPre, value: 4.0, range: range)
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedPre, range: range)
             case .Hashtag:
@@ -792,22 +778,58 @@ class ChatMessageItem: ChatRowItem {
                 break
             }
         }
-        for (range, fontAttributes) in fontAttributes {
+        for (i, (range, attr)) in fontAttributes.enumerated() {
             var font: NSFont?
-            if fontAttributes.contains(.blockQuote) {
+            var intersects:[(NSRange, ChatTextFontAttributes)] = []
+            
+            
+            for (j, value) in fontAttributes.enumerated() {
+                if j != i {
+                    if let intersection = value.0.intersection(range) {
+                        intersects.append((intersection, value.1))
+                    }
+                }
+            }
+                        
+            switch attr {
+            case .monospace, .blockQuote:
                 font = .code(fontSize)
-            } else if fontAttributes == [.bold, .italic] {
-                font = .boldItalic(fontSize)
-            } else if fontAttributes == [.bold] {
-                font = .bold(fontSize)
-            } else if fontAttributes == [.italic] {
+            case .italic:
                 font = .italic(fontSize)
-            } else if fontAttributes == [.monospace] {
-                font = .code(fontSize)
+            case .bold:
+                font = .bold(fontSize)
+            default:
+                break
             }
             if let font = font {
                 string.addAttribute(.font, value: font, range: range)
             }
+            
+             for intersect in intersects {
+                 var font: NSFont? = nil
+                 loop: switch intersect.1 {
+                 case .italic:
+                     switch attr {
+                     case .bold:
+                         font = .boldItalic(fontSize)
+                     default:
+                         break loop
+                     }
+                 case .bold:
+                    switch attr {
+                    case .bold:
+                        font = .boldItalic(fontSize)
+                    default:
+                        break loop
+                    }
+                 default:
+                     break loop
+                     
+                 }
+                 if let font = font {
+                     string.addAttribute(.font, value: font, range: range)
+                 }
+             }
         }
         return string.copy() as! NSAttributedString
     }

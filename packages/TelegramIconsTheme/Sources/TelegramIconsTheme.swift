@@ -8299,6 +8299,84 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var gallery_pip_close: CGImage {
+      if let image = cached.with({ $0["gallery_pip_close"] }) {
+          return image
+      } else {
+          let image = _gallery_pip_close()
+          _ = cached.modify { current in 
+              var current = current
+              current["gallery_pip_close"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var gallery_pip_muted: CGImage {
+      if let image = cached.with({ $0["gallery_pip_muted"] }) {
+          return image
+      } else {
+          let image = _gallery_pip_muted()
+          _ = cached.modify { current in 
+              var current = current
+              current["gallery_pip_muted"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var gallery_pip_unmuted: CGImage {
+      if let image = cached.with({ $0["gallery_pip_unmuted"] }) {
+          return image
+      } else {
+          let image = _gallery_pip_unmuted()
+          _ = cached.modify { current in 
+              var current = current
+              current["gallery_pip_unmuted"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var gallery_pip_out: CGImage {
+      if let image = cached.with({ $0["gallery_pip_out"] }) {
+          return image
+      } else {
+          let image = _gallery_pip_out()
+          _ = cached.modify { current in 
+              var current = current
+              current["gallery_pip_out"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var gallery_pip_pause: CGImage {
+      if let image = cached.with({ $0["gallery_pip_pause"] }) {
+          return image
+      } else {
+          let image = _gallery_pip_pause()
+          _ = cached.modify { current in 
+              var current = current
+              current["gallery_pip_pause"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var gallery_pip_play: CGImage {
+      if let image = cached.with({ $0["gallery_pip_play"] }) {
+          return image
+      } else {
+          let image = _gallery_pip_play()
+          _ = cached.modify { current in 
+              var current = current
+              current["gallery_pip_play"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -8938,6 +9016,12 @@ public final class TelegramIconsTheme {
   private let _reactions_badge_archive_active: ()->CGImage
   private let _chat_reactions_badge: ()->CGImage
   private let _chat_reactions_badge_active: ()->CGImage
+  private let _gallery_pip_close: ()->CGImage
+  private let _gallery_pip_muted: ()->CGImage
+  private let _gallery_pip_unmuted: ()->CGImage
+  private let _gallery_pip_out: ()->CGImage
+  private let _gallery_pip_pause: ()->CGImage
+  private let _gallery_pip_play: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -9577,7 +9661,13 @@ public final class TelegramIconsTheme {
       reactions_badge_archive: @escaping()->CGImage,
       reactions_badge_archive_active: @escaping()->CGImage,
       chat_reactions_badge: @escaping()->CGImage,
-      chat_reactions_badge_active: @escaping()->CGImage
+      chat_reactions_badge_active: @escaping()->CGImage,
+      gallery_pip_close: @escaping()->CGImage,
+      gallery_pip_muted: @escaping()->CGImage,
+      gallery_pip_unmuted: @escaping()->CGImage,
+      gallery_pip_out: @escaping()->CGImage,
+      gallery_pip_pause: @escaping()->CGImage,
+      gallery_pip_play: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -10217,5 +10307,11 @@ public final class TelegramIconsTheme {
       self._reactions_badge_archive_active = reactions_badge_archive_active
       self._chat_reactions_badge = chat_reactions_badge
       self._chat_reactions_badge_active = chat_reactions_badge_active
+      self._gallery_pip_close = gallery_pip_close
+      self._gallery_pip_muted = gallery_pip_muted
+      self._gallery_pip_unmuted = gallery_pip_unmuted
+      self._gallery_pip_out = gallery_pip_out
+      self._gallery_pip_pause = gallery_pip_pause
+      self._gallery_pip_play = gallery_pip_play
   }
 }
