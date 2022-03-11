@@ -298,26 +298,6 @@ class MGalleryExternalVideoItem: MGalleryItem {
         view.autoresizingMask = []
         view.autoresizesSubviews = false
         
-        let pip:ImageButton = ImageButton()
-        pip.style = ControlStyle(highlightColor: .grayIcon)
-        pip.set(image: #imageLiteral(resourceName: "Icon_PIPVideoEnable").precomposed(NSColor.white.withAlphaComponent(0.9)), for: .Normal)
-        
-        pip.set(handler: { [weak view, weak self] _ in
-            if let view = view, let strongSelf = self, let viewer = viewer {
-                let frame = view.window!.convertToScreen(view.convert(view.bounds, to: nil))
-                if !viewer.pager.isFullScreen {
-                    closeGalleryViewer(false)
-                    showLegacyPipVideo(view, viewer: viewer, item: strongSelf, origin: frame.origin, delegate: viewer.delegate, contentInteractions: viewer.contentInteractions, type: viewer.type)
-                }
-            }
-        }, for: .Down)
-        
-        _ = pip.sizeToFit()
-        
-        pipButton = pip
-        
-        
-        
         _cachedView = view
         return view
         

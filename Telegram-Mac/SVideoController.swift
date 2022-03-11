@@ -31,8 +31,11 @@ enum SVideoStyle {
     case pictureInPicture
 }
 
+
+
 class SVideoController: GenericViewController<SVideoView>, PictureInPictureControl {
    
+    
     
     var style: SVideoStyle = .regular
     private var fullScreenWindow: Window?
@@ -61,6 +64,10 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         return _videoFramePreview!
     }
     
+    
+    func setMode(_ mode: PictureInPictureControlMode, animated: Bool) {
+        genericView.setMode(mode, animated: animated)
+    }
     
     private var scrubbingFrame = Promise<MediaPlayerFramePreviewResult?>(nil)
     private var scrubbingFrames = false
