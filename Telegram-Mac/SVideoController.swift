@@ -55,6 +55,10 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     private var isPaused: Bool = true
     private var forceHiddenControls: Bool = false
     private var _videoFramePreview: MediaPlayerFramePreview?
+    private var mode: PictureInPictureControlMode = .normal
+    
+    private var updateControls: SwiftSignalKit.Timer?
+    
     private var videoFramePreview: MediaPlayerFramePreview {
         if let videoFramePreview = _videoFramePreview {
             return videoFramePreview
@@ -67,6 +71,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     
     func setMode(_ mode: PictureInPictureControlMode, animated: Bool) {
         genericView.setMode(mode, animated: animated)
+        self.mode = mode
     }
     
     private var scrubbingFrame = Promise<MediaPlayerFramePreviewResult?>(nil)
@@ -145,17 +150,16 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     
     private func updateControlVisibility(_ isMouseUpOrDown: Bool = false) {
         updateIdleTimer()
+        
         if let rootView = genericView.superview?.superview {
             var hide = !genericView._mouseInside() && !rootView.isHidden && (NSEvent.pressedMouseButtons & (1 << 0)) == 0
+            
+           
             if self.fullScreenWindow != nil && isMouseUpOrDown, !genericView.insideControls {
                 hide = true
                 if !self.isPaused {
                     NSCursor.hide()
                 }
-            }
-            if hide {
-                var bp = 0
-                bp += 1
             }
             hideControls.set(hide || forceHiddenControls)
         } else {
@@ -227,6 +231,12 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             self.genericView.subviews.last?.mouseUp(with: event)
             return .rejected
         }, with: self, for: .leftMouseUp, priority: .modal)
+        
+        self.updateControls = SwiftSignalKit.Timer(timeout: 0.1, repeat: true, completion: { [weak self] in
+            self?.updateControlVisibility()
+        }, queue: .mainQueue())
+        
+        self.updateControls?.start()
         
     }
     
@@ -498,6 +508,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         bufferingDisposable.dispose()
         hideOnIdleDisposable.dispose()
         hideControlsDisposable.dispose()
+        updateControls?.invalidate()
         _ = IOPMAssertionRelease(assertionID)
         NSCursor.unhide()
     }

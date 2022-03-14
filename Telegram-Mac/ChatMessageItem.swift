@@ -782,7 +782,6 @@ class ChatMessageItem: ChatRowItem {
             var font: NSFont?
             var intersects:[(NSRange, ChatTextFontAttributes)] = []
             
-            
             for (j, value) in fontAttributes.enumerated() {
                 if j != i {
                     if let intersection = value.0.intersection(range) {
