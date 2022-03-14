@@ -330,13 +330,15 @@ class ChatRowItem: TableRowItem {
     
     var replyOffset:CGFloat {
         var top:CGFloat = defaultContentTopOffset
-        if isBubbled && authorText != nil {
+        if isBubbled && (authorText != nil || forwardNameLayout != nil) {
             top -= topInset
         } 
         if let author = authorText {
             top += author.layoutSize.height + defaultContentInnerInset
         }
-        
+        if let author = forwardNameLayout {
+            top += author.layoutSize.height + defaultContentInnerInset
+        }
         return top
     }
     
