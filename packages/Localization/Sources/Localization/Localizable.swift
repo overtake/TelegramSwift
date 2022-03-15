@@ -2967,16 +2967,16 @@ public final class L10n {
   public static func chatServiceUpdateThemeYou(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.UpdateTheme.You", p1)
   }
-  /// Voice chat ended (%1$@)
-  public static func chatServiceVoiceChatFinishedChannel(_ p1: String) -> String {
-    return L10n.tr("Localizable", "Chat.Service.VoiceChatFinished.Channel", p1)
+  /// Live stream ended (%1$@)
+  public static func chatServiceVoiceChatFinishedChannel1(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.VoiceChatFinished.Channel1", p1)
   }
-  /// [Voice Chat](open) scheduled for %@
-  public static func chatServiceVoiceChatScheduledChannel(_ p1: String) -> String {
-    return L10n.tr("Localizable", "Chat.Service.VoiceChatScheduled.Channel", p1)
+  /// [Live Stream](open) scheduled for %@
+  public static func chatServiceVoiceChatScheduledChannel1(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.VoiceChatScheduled.Channel1", p1)
   }
-  /// [Voice Chat](open) started
-  public static var chatServiceVoiceChatStartedChannel: String  { return L10n.tr("Localizable", "Chat.Service.VoiceChatStarted.Channel") }
+  /// [Live stream](open) started
+  public static var chatServiceVoiceChatStartedChannel1: String  { return L10n.tr("Localizable", "Chat.Service.VoiceChatStarted.Channel1") }
   /// %d
   public static func chatTitleCommentsCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Title.Comments_countable", p1)
@@ -3689,16 +3689,16 @@ public final class L10n {
   public static func chatListServiceVideoCallOutgoing(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatList.Service.VideoCall.outgoing", p1)
   }
-  /// voice chat ended (%1$@)
-  public static func chatListServiceVoiceChatFinishedChannel(_ p1: String) -> String {
-    return L10n.tr("Localizable", "ChatList.Service.VoiceChatFinished.Channel", p1)
+  /// Live stream ended (%1$@)
+  public static func chatListServiceVoiceChatFinishedChannel1(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatList.Service.VoiceChatFinished.Channel1", p1)
   }
-  /// voice chat scheduled for %@
-  public static func chatListServiceVoiceChatScheduledChannel(_ p1: String) -> String {
-    return L10n.tr("Localizable", "ChatList.Service.VoiceChatScheduled.Channel", p1)
+  /// live stream scheduled for %@
+  public static func chatListServiceVoiceChatScheduledChannel1(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatList.Service.VoiceChatScheduled.Channel1", p1)
   }
-  /// voice chat started
-  public static var chatListServiceVoiceChatStartedChannel: String  { return L10n.tr("Localizable", "ChatList.Service.VoiceChatStarted.Channel") }
+  /// Live stream started
+  public static var chatListServiceVoiceChatStartedChannel1: String  { return L10n.tr("Localizable", "ChatList.Service.VoiceChatStarted.Channel1") }
   /// Archive
   public static var chatListSwipingArchive: String  { return L10n.tr("Localizable", "ChatList.Swiping.Archive") }
   /// Delete
@@ -9255,7 +9255,7 @@ public final class L10n {
   public static func stickerPackAdd1Zero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StickerPack.Add1_zero", p1)
   }
-  /// Show More
+  /// Discover More
   public static var stickerPackShowMore: String  { return L10n.tr("Localizable", "StickerPack.ShowMore") }
   /// Featured Packs
   public static var stickerPackFeaturedTitle: String  { return L10n.tr("Localizable", "StickerPack.Featured.Title") }

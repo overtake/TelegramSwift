@@ -564,9 +564,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         var frame: NSRect = NSMakeRect(contentFrame.minX + item.elementsContentInset, item.replyOffset, reply.size.width, reply.size.height)
         if item.isBubbled, !item.hasBubble {
             if item.isIncoming {
-                frame.origin.x = contentFrame.maxX + 10
+                frame.origin.x = contentFrame.maxX + 6
             } else {
-                frame.origin.x = contentFrame.minX - reply.size.width - 10
+                frame.origin.x = contentFrame.minX - reply.size.width - 6
             }
             if item.isSharable || item.hasSource || item.commentsBubbleDataOverlay != nil {
                 if item.isIncoming {
@@ -756,7 +756,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     forwardAccessory = ChatBubbleAccessoryForward(frame: CGRect(origin: forwardNamePoint(item), size: forwardNameLayout.layoutSize))
                     rowView.addSubview(forwardAccessory!)
                 }
-                forwardAccessory?.updateText(layout: forwardNameLayout)
+                forwardAccessory?.updateText(layout: forwardNameLayout, replyView: self.replyView)
                 
             } else {
                 if let view = forwardAccessory {

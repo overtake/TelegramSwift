@@ -143,10 +143,13 @@ class ChatRowItem: TableRowItem {
 
     private var forwardHeaderNode:TextNode?
     private(set) var forwardHeader:(TextNodeLayout, TextNode)?
-    var forwardNameLayout:TextViewLayout?
+    private(set) var forwardNameLayout:TextViewLayout?
     var captionLayouts:[RowCaption] = []
     private(set) var authorText:TextViewLayout?
     private(set) var adminBadge:TextViewLayout?
+    
+    
+    
 
     var replyModel:ReplyModel?
     var replyMarkupModel:ReplyMarkupNode?
