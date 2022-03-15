@@ -456,7 +456,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             let text: String
             if let duration = duration {
                 if peer.isChannel {
-                    text = strings().chatServiceVoiceChatFinishedChannel(autoremoveLocalized(Int(duration)))
+                    text = strings().chatServiceVoiceChatFinishedChannel1(autoremoveLocalized(Int(duration)))
                 } else if authorId == account.peerId {
                     text = strings().chatServiceVoiceChatFinishedYou(autoremoveLocalized(Int(duration)))
                 } else {
@@ -465,9 +465,9 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 if peer.isChannel {
                     if let scheduledDate = scheduledDate {
-                        text = strings().chatListServiceVoiceChatScheduledChannel(stringForMediumDate(timestamp: scheduledDate))
+                        text = strings().chatListServiceVoiceChatScheduledChannel1(stringForMediumDate(timestamp: scheduledDate))
                     } else {
-                        text = strings().chatListServiceVoiceChatStartedChannel
+                        text = strings().chatListServiceVoiceChatStartedChannel1
                     }
                 } else if authorId == account.peerId {
                     if let scheduledDate = scheduledDate {
