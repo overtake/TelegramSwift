@@ -451,7 +451,10 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
     }, username: {
         f(UsernameSettingsViewController(context))
     }, changeNumber: {
-        f(PhoneNumberIntroController(context))
+        let navigation = MajorNavigationController(PhoneNumberIntroController.self, PhoneNumberIntroController(context), context.window)
+        navigation._frameRect = NSMakeRect(0, 0, 350, 400)
+        navigation.readyOnce()
+        showModal(with: navigation, for: context.window)
     }, addAccount: {
         let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
         context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)

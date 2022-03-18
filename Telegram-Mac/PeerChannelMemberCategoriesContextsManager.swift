@@ -304,6 +304,10 @@ final class PeerChannelMemberCategoriesContextsManager {
         return self.getContext(peerId: peerId, key: .restricted(searchQuery), requestUpdate: true, updated: updated)
     }
     
+    func contacts(peerId: PeerId, searchQuery: String? = nil, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
+        return self.getContext(peerId: peerId, key: .contacts(searchQuery), requestUpdate: true, updated: updated)
+    }
+    
     func banned(peerId: PeerId, searchQuery: String? = nil, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
         return self.getContext(peerId: peerId, key: .banned(searchQuery), requestUpdate: true, updated: updated)
     }

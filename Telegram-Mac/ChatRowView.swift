@@ -1517,7 +1517,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             transition.updateFrame(view: view, frame: CGRect(origin: viaAccesoryPoint(item), size: view.frame.size))
         }
         
-        if let view = item.replyModel?.view {
+        if let view = item.replyModel?.view, view.superview == rowView {
             transition.updateFrame(view: view, frame: replyFrame(item))
             view.needsDisplay = true
         }

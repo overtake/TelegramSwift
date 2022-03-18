@@ -38,6 +38,8 @@ private enum ChannelMembersEntryStableId: Hashable {
     case membersDesc
     case section(Int)
     case loading
+    case contactsHeader
+    case otherHeader
     var hashValue: Int {
         switch self {
         case let .peer(peerId):
@@ -50,6 +52,10 @@ private enum ChannelMembersEntryStableId: Hashable {
             return 2
         case .loading:
             return 3
+        case .contactsHeader:
+            return 4
+        case .otherHeader:
+            return 5
         case let .section(sectionId):
             return -(sectionId)
         }
@@ -62,6 +68,8 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
     case addMembers(sectionId:Int, Bool, GeneralViewType)
     case inviteLink(sectionId:Int, GeneralViewType)
     case membersDesc(sectionId:Int, GeneralViewType)
+    case contactsHeader(sectionId:Int, GeneralViewType)
+    case otherHeader(sectionId:Int, GeneralViewType)
     case section(sectionId:Int)
     case loading(sectionId: Int)
     
@@ -75,6 +83,10 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
             return .inviteLink
         case .membersDesc:
             return .membersDesc
+        case .contactsHeader:
+            return .contactsHeader
+        case .otherHeader:
+            return .otherHeader
         case .loading:
             return .loading
         case let .section(sectionId):
@@ -93,8 +105,12 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
             return (sectionId * 1000) + 1
         case let .membersDesc(sectionId, _):
             return (sectionId * 1000) + 2
-        case let .loading(sectionId):
+        case let .contactsHeader(sectionId, _):
+            return (sectionId * 1000) + 3
+        case let .otherHeader(sectionId, _):
             return (sectionId * 1000) + 4
+        case let .loading(sectionId):
+            return (sectionId * 1000) + 5
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -135,6 +151,10 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
             })
         case let .membersDesc(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().channelMembersMembersListDesc, viewType: viewType)
+        case let .contactsHeader(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().channelMembersContacts, viewType: viewType)
+        case let .otherHeader(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().channelMembersOtherMembers, viewType: viewType)
         case .loading:
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: true)
         case .section:
@@ -181,13 +201,18 @@ private struct ChannelMembersControllerState: Equatable {
     }
 }
 
-private func channelMembersControllerEntries(view: PeerView, context: AccountContext, state: ChannelMembersControllerState, participants: [RenderedChannelParticipant]?) -> [ChannelMembersEntry] {
+private func channelMembersControllerEntries(view: PeerView, context: AccountContext, state: ChannelMembersControllerState, participants: [RenderedChannelParticipant]?, contacts: [RenderedChannelParticipant]?) -> [ChannelMembersEntry] {
     
     var entries: [ChannelMembersEntry] = []
     
     var sectionId:Int = 1
-
-    if let participants = participants {
+    
+   
+    if let participants = participants, let contacts = contacts {
+        
+        let participants = participants.filter { value in
+            return contacts.contains(where: { $0.peer.id != $0.peer.id })
+        }
         
         entries.append(.section(sectionId: sectionId))
         sectionId += 1
@@ -201,6 +226,41 @@ private func channelMembersControllerEntries(view: PeerView, context: AccountCon
                 sectionId += 1
             }
             
+            if !contacts.isEmpty {
+                
+                entries.append(.contactsHeader(sectionId: sectionId, .textTopItem))
+                
+                var index: Int32 = 0
+                for (i, participant) in contacts.sorted(by: <).enumerated() {
+                    
+                    let editable:Bool
+                    switch participant.participant {
+                    case let .member(_, _, adminInfo, _, _):
+                        if let adminInfo = adminInfo {
+                            editable = adminInfo.canBeEditedByAccountPeer
+                        } else {
+                            editable = participant.participant.peerId != context.account.peerId
+                        }
+                    default:
+                        editable = false
+                    }
+                    
+                    var deleting:ShortPeerDeleting? = nil
+                    if state.editing {
+                        deleting = ShortPeerDeleting(editable: editable)
+                    }
+                    entries.append(.peerItem(sectionId: sectionId, index, participant, deleting, state.removingPeerId != participant.peer.id, bestGeneralViewType(contacts, for: i)))
+                    index += 1
+                }
+                if !participants.isEmpty {
+                    entries.append(.section(sectionId: sectionId))
+                    sectionId += 1
+                }
+            }
+
+            if !contacts.isEmpty {
+                entries.append(.otherHeader(sectionId: sectionId, .textTopItem))
+            }
            
             var index: Int32 = 0
             for (i, participant) in participants.sorted(by: <).enumerated() {
@@ -294,7 +354,8 @@ class ChannelMembersViewController: EditableViewController<TableView> {
         
         let actionsDisposable = DisposableSet()
         let peersPromise = Promise<[RenderedChannelParticipant]?>(nil)
-        
+        let contactsPromise = Promise<[RenderedChannelParticipant]?>(nil)
+
         let arguments = ChannelMembersControllerArguments(context: context, removePeer: { [weak self] memberId in
             
             updateState {
@@ -363,11 +424,16 @@ class ChannelMembersViewController: EditableViewController<TableView> {
         let peerView = context.account.viewTracker.peerView(peerId)
         
 
+        let (contactsDisposable, _) = context.peerChannelMemberCategoriesContextsManager.contacts(peerId: peerId, updated: { state in
+            contactsPromise.set(.single(state.list))
+        })
+        actionsDisposable.add(contactsDisposable)
+                                                                    
         let (disposable, loadMoreControl) = context.peerChannelMemberCategoriesContextsManager.recent(peerId: peerId, updated: { state in
             peersPromise.set(.single(state.list))
         })
         actionsDisposable.add(disposable)
-
+        
         
         
         
@@ -375,10 +441,10 @@ class ChannelMembersViewController: EditableViewController<TableView> {
         let previousEntries:Atomic<[AppearanceWrapperEntry<ChannelMembersEntry>]> = Atomic(value: [])
         
         
-        let signal = combineLatest(statePromise.get(), peerView, peersPromise.get(), appearanceSignal)
+        let signal = combineLatest(statePromise.get(), peerView, peersPromise.get(), contactsPromise.get(), appearanceSignal)
             |> deliverOnMainQueue
-            |> map { state, view, peers, appearance -> TableUpdateTransition in
-                let entries = channelMembersControllerEntries(view: view, context: context, state: state, participants: peers).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+            |> map { state, view, peers, contacts, appearance -> TableUpdateTransition in
+                let entries = channelMembersControllerEntries(view: view, context: context, state: state, participants: peers, contacts: contacts).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments)
         } |> afterDisposed {
             actionsDisposable.dispose()

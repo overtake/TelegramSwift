@@ -379,8 +379,14 @@ class PeerInfoController: EditableViewController<TableView> {
             let (disposable, control) = context.peerChannelMemberCategoriesContextsManager.recent(peerId: peerId, updated: { state in
                 channelMembersPromise.set(.single(state.list))
             })
-            loadMoreControl = control
             actionsDisposable.add(disposable)
+
+            let (contactsDisposable, _) = context.peerChannelMemberCategoriesContextsManager.contacts(peerId: peerId, updated: { _ in
+                
+            })
+            actionsDisposable.add(contactsDisposable)
+            
+            loadMoreControl = control
         } else {
             channelMembersPromise.set(.single([]))
         }

@@ -71,6 +71,7 @@
 		273367452762584F0027441E /* menu_view_sticker_set.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 273367442762584E0027441E /* menu_view_sticker_set.tgs */; };
 		2733674727625A270027441E /* menu_show_message.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2733674627625A270027441E /* menu_show_message.tgs */; };
 		2733674927625BD80027441E /* menu_promote.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2733674827625BD80027441E /* menu_promote.tgs */; };
+		2737557E27E396AB007DC755 /* PhoneNumberConfirmCodeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2737557D27E396AB007DC755 /* PhoneNumberConfirmCodeController.swift */; };
 		2738CAD6270704A800CDB1BF /* RequestJoinChatModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD5270704A800CDB1BF /* RequestJoinChatModalController.swift */; };
 		2738CAD82707067000CDB1BF /* RequestJoinChatRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */; };
 		2738CADA2707198100CDB1BF /* RequestJoinMemberListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */; };
@@ -568,7 +569,6 @@
 		9F7D422C222415C9007B68BB /* SharedAccountContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F7D422B222415C9007B68BB /* SharedAccountContext.swift */; };
 		9F88A134200FD425007B899E /* Wallpapers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F14CBF42007DFD400F22DA9 /* Wallpapers.swift */; };
 		9F8DF3C8209228B000AED104 /* EditAccountInfoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8DF3C7209228B000AED104 /* EditAccountInfoController.swift */; };
-		9F9206F020727AF30054E581 /* ChangePhoneNumberContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F9206EF20727AF30054E581 /* ChangePhoneNumberContainerView.swift */; };
 		9FA0E5342051A41A001E5649 /* PreUploadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FA0E5332051A41A001E5649 /* PreUploadManager.swift */; };
 		9FA0E53D205693DA001E5649 /* WebSessionsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FA0E53C205693DA001E5649 /* WebSessionsController.swift */; };
 		9FA0E53F2056E159001E5649 /* WebAuthorizationRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FA0E53E2056E159001E5649 /* WebAuthorizationRowItem.swift */; };
@@ -896,7 +896,6 @@
 		C275932E1DF6E1CE00A0807A /* AboutModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C275932D1DF6E1CE00A0807A /* AboutModalController.swift */; };
 		C275E9EF1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C275E9EE1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift */; };
 		C275E9F51F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C275E9F41F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift */; };
-		C275E9F71F90CDF900D3D8C0 /* PhoneNumberInputCodeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C275E9F61F90CDF900D3D8C0 /* PhoneNumberInputCodeController.swift */; };
 		C276248E1D95B4F300FE5B2B /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = C276248D1D95B4F300FE5B2B /* Extensions.swift */; };
 		C276383E1E8A9A86009E7839 /* StickerSetTableRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C276383D1E8A9A86009E7839 /* StickerSetTableRowItem.swift */; };
 		C2777B5B1DCE11A5008B69DD /* SendingClockProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2777B5A1DCE11A5008B69DD /* SendingClockProgress.swift */; };
@@ -1329,6 +1328,7 @@
 		273367442762584E0027441E /* menu_view_sticker_set.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_view_sticker_set.tgs; sourceTree = "<group>"; };
 		2733674627625A270027441E /* menu_show_message.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_show_message.tgs; sourceTree = "<group>"; };
 		2733674827625BD80027441E /* menu_promote.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_promote.tgs; sourceTree = "<group>"; };
+		2737557D27E396AB007DC755 /* PhoneNumberConfirmCodeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberConfirmCodeController.swift; sourceTree = "<group>"; };
 		2738CAD5270704A800CDB1BF /* RequestJoinChatModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinChatModalController.swift; sourceTree = "<group>"; };
 		2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinChatRowItem.swift; sourceTree = "<group>"; };
 		2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinMemberListController.swift; sourceTree = "<group>"; };
@@ -1784,7 +1784,6 @@
 		9F7D422922240403007B68BB /* AccountContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountContext.swift; sourceTree = "<group>"; };
 		9F7D422B222415C9007B68BB /* SharedAccountContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedAccountContext.swift; sourceTree = "<group>"; };
 		9F8DF3C7209228B000AED104 /* EditAccountInfoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditAccountInfoController.swift; sourceTree = "<group>"; };
-		9F9206EF20727AF30054E581 /* ChangePhoneNumberContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangePhoneNumberContainerView.swift; sourceTree = "<group>"; };
 		9FA0E5332051A41A001E5649 /* PreUploadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreUploadManager.swift; sourceTree = "<group>"; };
 		9FA0E53C205693DA001E5649 /* WebSessionsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSessionsController.swift; sourceTree = "<group>"; };
 		9FA0E53E2056E159001E5649 /* WebAuthorizationRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebAuthorizationRowItem.swift; sourceTree = "<group>"; };
@@ -2129,7 +2128,6 @@
 		C275932D1DF6E1CE00A0807A /* AboutModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AboutModalController.swift; sourceTree = "<group>"; };
 		C275E9EE1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberIntroController.swift; sourceTree = "<group>"; };
 		C275E9F41F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberConfirmController.swift; sourceTree = "<group>"; };
-		C275E9F61F90CDF900D3D8C0 /* PhoneNumberInputCodeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberInputCodeController.swift; sourceTree = "<group>"; };
 		C276248D1D95B4F300FE5B2B /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		C276383D1E8A9A86009E7839 /* StickerSetTableRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StickerSetTableRowItem.swift; sourceTree = "<group>"; };
 		C2777B5A1DCE11A5008B69DD /* SendingClockProgress.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SendingClockProgress.swift; sourceTree = "<group>"; };
@@ -4307,8 +4305,7 @@
 			children = (
 				C275E9EE1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift */,
 				C275E9F41F8FEDEB00D3D8C0 /* PhoneNumberConfirmController.swift */,
-				C275E9F61F90CDF900D3D8C0 /* PhoneNumberInputCodeController.swift */,
-				9F9206EF20727AF30054E581 /* ChangePhoneNumberContainerView.swift */,
+				2737557D27E396AB007DC755 /* PhoneNumberConfirmCodeController.swift */,
 			);
 			name = "change-phone-number";
 			sourceTree = "<group>";
@@ -6102,7 +6099,6 @@
 				27D006DF25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift in Sources */,
 				276957A92746C07400297991 /* SessionModalController.swift in Sources */,
 				C275E9EF1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift in Sources */,
-				C275E9F71F90CDF900D3D8C0 /* PhoneNumberInputCodeController.swift in Sources */,
 				9FC8ADA02062D5E70094F7B4 /* PassportAcceptRowItem.swift in Sources */,
 				D071E8AA214BC589001B6024 /* TouchBarStickerItemView.swift in Sources */,
 				9F4EEF8821D515C5002C3B33 /* InstantPageStoredState.swift in Sources */,
@@ -6118,7 +6114,6 @@
 				C22EBCBA1DFAB64F0034C435 /* ChatMapContentView.swift in Sources */,
 				C234A7FE1ED725C300EBBECE /* LanguageViewController.swift in Sources */,
 				C2E40A1B1E37ADAF0099AC7D /* PeerMediaEmptyRowItem.swift in Sources */,
-				9F9206F020727AF30054E581 /* ChangePhoneNumberContainerView.swift in Sources */,
 				C239BE951E61F15600C2C453 /* LoginOthersAccountModal.swift in Sources */,
 				C250B01A1DB66B44004E9FBE /* InAppLinks.swift in Sources */,
 				9FF1DEA6225B699D009512C9 /* SearchUtils.swift in Sources */,
@@ -6294,6 +6289,7 @@
 				27E6DB0A2689C71E003D6164 /* MetalFunctions.metal in Sources */,
 				A7D2822F236C549B0000A9BF /* SyncCoreExtension.swift in Sources */,
 				C2A315BB1E2E697200D89000 /* TwoStepVerification.swift in Sources */,
+				2737557E27E396AB007DC755 /* PhoneNumberConfirmCodeController.swift in Sources */,
 				C296AF881D8DB2A7001DBB59 /* ChatMediaContentView.swift in Sources */,
 				C2DE5D401F3CB0380081EC1E /* InstantPageTileView.swift in Sources */,
 				C2271DBB1DAE213D001792B6 /* ChannelInfoEntries.swift in Sources */,
@@ -6782,7 +6778,7 @@
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 8.6;
+				MARKETING_VERSION = 8.6.1;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";
@@ -6829,7 +6825,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 8.6;
+				MARKETING_VERSION = 8.6.1;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "$(inherited)";
@@ -6873,7 +6869,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 8.6;
+				MARKETING_VERSION = 8.6.1;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "$(inherited)";
@@ -6988,7 +6984,7 @@
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.11;
-				MARKETING_VERSION = 8.6;
+				MARKETING_VERSION = 8.6.1;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
 				OTHER_LDFLAGS = "-ObjC";

@@ -80,6 +80,8 @@ private final class SVideoPipControls : Control {
         currentTimeView.needsDisplay = true
         durationView.needsDisplay = true
         
+        needsLayout = true
+        
     }
     
     var status: MediaPlayerStatus? {

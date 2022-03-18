@@ -400,7 +400,7 @@ final class GroupCallTitleView : Control {
                     status = strings().voiceChatStatusStream
                     count = summaryState.participantCount
                 } else {
-                    status = strings().voiceChatStatusMembersCountable(summaryState.participantCount)
+                    status = strings().voiceChatStatusViewersCountable(summaryState.participantCount)
                     count = summaryState.participantCount
                 }
             } else {
