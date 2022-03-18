@@ -93,7 +93,7 @@ class WPArticleContentView: WPContentView {
                 return
             }
             
-            if content.embedType == "iframe" {
+            if content.embedType == "iframe", content.type != "video" {
                 showModal(with: WebpageModalController(content:content, context: layout.context), for: window)
             } else if layout.isGalleryAssemble {
                 showChatGallery(context: layout.context, message: layout.parent, layout.table, type: .alone)

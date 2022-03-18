@@ -127,7 +127,7 @@ final class Auth_SignupHeader : View {
     }
 }
 
-private final class Auth_PhoneInput: View, NSTextFieldDelegate {
+private final class Auth_SignPhoneInput: View, NSTextFieldDelegate {
     private let separator = View()
     
     private let firstText:NSTextField = NSTextField()
@@ -236,7 +236,7 @@ private final class Auth_PhoneInput: View, NSTextFieldDelegate {
 final class Auth_SignupView : View {
     private let header:Auth_SignupHeader
     private let container: View = View()
-    private let input = Auth_PhoneInput(frame: .zero)
+    private let input = Auth_SignPhoneInput(frame: .zero)
     
     private let nextView = Auth_NextView()
     private let error: LoginErrorStateView = LoginErrorStateView()

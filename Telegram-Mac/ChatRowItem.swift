@@ -340,7 +340,7 @@ class ChatRowItem: TableRowItem {
             top += author.layoutSize.height + defaultContentInnerInset
         }
         if let author = forwardNameLayout {
-            top += author.layoutSize.height + defaultContentInnerInset
+            top += author.layoutSize.height + defaultContentInnerInset - 2
         }
         return top
     }
