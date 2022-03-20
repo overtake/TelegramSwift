@@ -881,10 +881,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         return self.findBackgroundControllerView(view: self)
     }
     
+    
     open override func layout() {
         super.layout()
-        
-
         
         if let emptyView = emptyView, let superview = superview {
             emptyView.frame = findBackgroundControllerView?.bounds ?? bounds
@@ -1841,6 +1840,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         endTableUpdates()
     }
+    
+    public func fitToSize() {
+    }
+    
     
     public func moveItem(from:Int, to:Int, changeItem:TableRowItem? = nil, redraw:Bool = true, animation:NSTableView.AnimationOptions = .none) -> Void {
         

@@ -268,6 +268,7 @@
 		279FD2A0273C1234004F08A1 /* BuildConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 279FD29F273C1234004F08A1 /* BuildConfig */; };
 		279FD2A7273C1251004F08A1 /* Zip in Frameworks */ = {isa = PBXBuildFile; productRef = 279FD2A6273C1251004F08A1 /* Zip */; };
 		279FD2AD273C1291004F08A1 /* TgVoipWebrtc in Frameworks */ = {isa = PBXBuildFile; productRef = 279FD2AC273C1291004F08A1 /* TgVoipWebrtc */; };
+		27A08A2027E4BD7300284048 /* ChannelBotAdminController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A08A1F27E4BD7300284048 /* ChannelBotAdminController.swift */; };
 		27A69759273D084E00B33415 /* GroupCallWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BD19256A7D350068644D /* GroupCallWindow.swift */; };
 		27A6975A273D085000B33415 /* PresentationGroupCall.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BD6F256AA6430068644D /* PresentationGroupCall.swift */; };
 		27A6975B273D085500B33415 /* PresentationGroupCallManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BD72256AA6B50068644D /* PresentationGroupCallManager.swift */; };
@@ -1530,6 +1531,7 @@
 		279FD29E273C10AD004F08A1 /* BuildConfig */ = {isa = PBXFileReference; lastKnownFileType = folder; name = BuildConfig; path = submodules/BuildConfig; sourceTree = "<group>"; };
 		279FD2A5273C124B004F08A1 /* Zip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Zip; path = submodules/Zip; sourceTree = "<group>"; };
 		279FD2AB273C1287004F08A1 /* tgcalls */ = {isa = PBXFileReference; lastKnownFileType = folder; name = tgcalls; path = submodules/tgcalls; sourceTree = "<group>"; };
+		27A08A1F27E4BD7300284048 /* ChannelBotAdminController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelBotAdminController.swift; sourceTree = "<group>"; };
 		27A0A4E225F76F4600B789AF /* GroupCallPeerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallPeerController.swift; sourceTree = "<group>"; };
 		27A0A4E625F7764600B789AF /* GroupCallPeerAvatarRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallPeerAvatarRowItem.swift; sourceTree = "<group>"; };
 		27A0A4EA25F7814500B789AF /* GroupCallTextAndLabelRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallTextAndLabelRowItem.swift; sourceTree = "<group>"; };
@@ -4527,6 +4529,7 @@
 				D01C731622A9814C000DA008 /* InputPasswordController.swift */,
 				A731924A25CAE9DC00218E0E /* AutoremoMessagesController.swift */,
 				271D4F37276B69BD004FD034 /* ReactionsSettingsController.swift */,
+				27A08A1F27E4BD7300284048 /* ChannelBotAdminController.swift */,
 			);
 			name = controllers;
 			sourceTree = "<group>";
@@ -6224,6 +6227,7 @@
 				C2271D9C1DACC027001792B6 /* SearchController.swift in Sources */,
 				27F2BBCF27BEA4A400A37463 /* Auth_AwaitingReset.swift in Sources */,
 				D071E8B3214C15C7001B6024 /* TouchBarEmojiPicker.swift in Sources */,
+				27A08A2027E4BD7300284048 /* ChannelBotAdminController.swift in Sources */,
 				C234A8001ED73A3300EBBECE /* LanguageRowItem.swift in Sources */,
 				27949115260A41EB0003BFA0 /* FFMpegMediaVideoFrameDecoder.swift in Sources */,
 				27F7EC782726D35F002B05FF /* AppearanceMoreItem.swift in Sources */,

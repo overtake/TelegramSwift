@@ -200,7 +200,7 @@ struct SelectPeerValue : Equatable {
         if let count = subscribers, peer.isGroup || peer.isSupergroup {
             let countValue = strings().privacySettingsGroupMembersCountCountable(count)
             string = countValue.replacingOccurrences(of: "\(count)", with: count.separatedNumber)
-        } else if peer.isGroup || peer.isSupergroup {
+        } else if peer.isGroup || peer.isSupergroup || peer.isChannel {
             return (nil, color)
         } else if let presence = presence as? TelegramUserPresence {
             let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
@@ -845,6 +845,77 @@ final class SelectChatsBehavior: SelectPeersBehavior {
 
     }
 }
+
+final class SelectGroupOrChannelBehavior: SelectPeersBehavior {
+    override func start(context: AccountContext, search: Signal<SearchState, NoError>, linkInvation: ((Int)->Void)? = nil) -> Signal<([SelectPeerEntry], Bool), NoError> {
+        
+        let previousSearch = Atomic<String?>(value: nil)
+        let account = context.account
+        return search |> distinctUntilChanged |> mapToSignal { search -> Signal<([SelectPeerEntry], Bool), NoError> in
+            
+            if search.request.isEmpty {
+                
+                return account.viewTracker.tailChatListView(groupId: .root, count: 200) |> deliverOn(prepareQueue) |> mapToQueue {  value -> Signal<([SelectPeerEntry], Bool), NoError> in
+                    var entries:[Peer] = []
+                    
+
+                    for entry in value.0.entries.reversed() {
+                        switch entry {
+                        case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _):
+                            if let peer = renderedPeer.chatMainPeer, peer.canSendMessage(false), peer.canInviteUsers, peer.isSupergroup || peer.isGroup || peer.isChannel {
+                                entries.append(peer)
+                            }
+                        default:
+                            break
+                        }
+                    }
+                    
+                    
+                    let updatedSearch = previousSearch.swap(search.request) != search.request
+
+                    if entries.isEmpty {
+                        return .single(([.searchEmpty(.init(), theme.icons.emptySearch)], updatedSearch))
+                    } else {
+                        var common:[SelectPeerEntry] = []
+                        var index:Int32 = 0
+                        for value in entries {
+                            common.append(.peer(SelectPeerValue(peer: value, presence: nil, subscribers: nil), index, true))
+                            index += 1
+                        }
+                        return .single((common, updatedSearch))
+                    }
+                }
+            } else {
+                return account.postbox.searchPeers(query: search.request.lowercased()) |> map { value -> [Peer] in
+                    let values = value.compactMap { $0.chatMainPeer }
+                    return values.filter {
+                        ($0.isSupergroup || $0.isGroup || $0.isChannel) && $0.canInviteUsers
+                    }
+                } |> deliverOn(prepareQueue) |> map { entries -> ([SelectPeerEntry], Bool) in
+                    var common:[SelectPeerEntry] = []
+                    
+                    let updatedSearch = previousSearch.swap(search.request) != search.request
+
+                    
+                    if entries.isEmpty {
+                        common.append(.searchEmpty(.init(), theme.icons.emptySearch))
+                    } else {
+                        var index:Int32 = 0
+                        for peer in entries {
+                            common.append(.peer(SelectPeerValue(peer: peer, presence: nil, subscribers: nil), index, true))
+                            index += 1
+                        }
+                        
+                    }
+                    return (common, updatedSearch)
+                }
+            }
+            
+        }
+
+    }
+}
+
 
 
 class SelectUsersAndGroupsBehavior : SelectPeersBehavior {
