@@ -882,7 +882,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
     private let inputContextHelper: InputContextHelper
     private let contextChatInteraction: ChatInteraction
     
-    private let multipleSelection: ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
+    private let multipleSelection: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
 
     
     func notify(with value: Any, oldValue: Any, animated: Bool) {
@@ -1215,7 +1215,13 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         selectInteractions.update(animated: false, {
             $0.withUpdatedMultipleSelection(share.multipleSelection)
         })
-
+        
+        if share.multipleSelection {
+            search.set(combineLatest(genericView.tokenizedView.textUpdater, genericView.tokenizedView.stateValue.get()) |> map { SearchState(state: $1, request: $0)})
+        } else {
+            search.set(genericView.basicSearchView.searchValue)
+        }
+        self.multipleSelection.set(share.multipleSelection)
         
         self.contextChatInteraction.add(observer: self)
 

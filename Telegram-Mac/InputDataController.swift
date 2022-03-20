@@ -324,7 +324,14 @@ final class InputDataView : BackgroundView {
     }
     override func layout() {
         super.layout()
+        let size = tableView.frame.size
         tableView.frame = bounds
+        
+        if size.height > bounds.height {
+            self.tableView.beginTableUpdates()
+            self.tableView.layoutSubtreeIfNeeded()
+            self.tableView.endTableUpdates()
+        }
     }
 }
 
@@ -594,6 +601,7 @@ class InputDataController: GenericViewController<InputDataView> {
             }
             
             self.afterTransaction(self)
+
             self.modalTransitionHandler?(transition.animated)
             
             let wasReady: Bool = self.didSetReady

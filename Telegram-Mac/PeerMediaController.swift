@@ -1261,6 +1261,12 @@
     
     override func escapeKeyAction() -> KeyHandlerResult {
         if genericView.searchPanelView != nil {
+            if self.mode == .photoOrVideo {
+                if let currentController = currentController as? PeerMediaPhotosController {
+                    currentController.toggleSearch()
+                    return .invoked
+                }
+            }
             self.listControllers[self.currentTagListIndex].toggleSearch()
             return .invoked
         } else if interactions.presentation.state == .selecting {

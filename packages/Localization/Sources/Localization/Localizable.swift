@@ -905,6 +905,24 @@ public final class L10n {
   public static var channelUsernameAboutGroup: String  { return L10n.tr("Localizable", "Channel.UsernameAboutGroup") }
   /// USER RESTRICTIONS
   public static var channelUserRestriction: String  { return L10n.tr("Localizable", "Channel.UserRestriction") }
+  /// Add Bot
+  public static var channelAddBotTitle: String  { return L10n.tr("Localizable", "Channel.AddBot.Title") }
+  /// Add Bot as Admin
+  public static var channelAddBotButtonAdmin: String  { return L10n.tr("Localizable", "Channel.AddBot.Button.Admin") }
+  /// Add Bot as Member
+  public static var channelAddBotButtonMember: String  { return L10n.tr("Localizable", "Channel.AddBot.Button.Member") }
+  /// Are you sure you want to add this bot as an admin in the group %@?
+  public static func channelAddBotConfirmInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.AddBot.Confirm.Info", p1)
+  }
+  /// Add Bot as Admin?
+  public static var channelAddBotConfirmOkAdmin: String  { return L10n.tr("Localizable", "Channel.AddBot.Confirm.Ok.Admin") }
+  /// Add Bot as Member?
+  public static var channelAddBotConfirmOkMember: String  { return L10n.tr("Localizable", "Channel.AddBot.Confirm.Ok.Member") }
+  /// Add Bot as Admin?
+  public static var channelAddBotConfirmTitleAdmin: String  { return L10n.tr("Localizable", "Channel.AddBot.Confirm.Title.Admin") }
+  /// Add Bot as Member?
+  public static var channelAddBotConfirmTitleMember: String  { return L10n.tr("Localizable", "Channel.AddBot.Confirm.Title.Member") }
   /// This Admin will be able to add new admins with the same (or more limited) permissions than he/she has.
   public static var channelAdminAdminAccess: String  { return L10n.tr("Localizable", "Channel.Admin.AdminAccess") }
   /// This admin will not be able to add new admins.
@@ -6799,6 +6817,8 @@ public final class L10n {
   public static var peerInfoBlackList: String  { return L10n.tr("Localizable", "PeerInfo.BlackList") }
   /// Block User
   public static var peerInfoBlockUser: String  { return L10n.tr("Localizable", "PeerInfo.BlockUser") }
+  /// Add To Group or Channel
+  public static var peerInfoBotAddTo: String  { return L10n.tr("Localizable", "PeerInfo.BotAddTo") }
   /// Thank you! Your report will be reviewed by our team soon.
   public static var peerInfoChannelReported: String  { return L10n.tr("Localizable", "PeerInfo.ChannelReported") }
   /// Channel Type
@@ -6985,6 +7005,8 @@ public final class L10n {
   public static var peerInfoBotSettings: String  { return L10n.tr("Localizable", "PeerInfo.Bot.Settings") }
   /// Share
   public static var peerInfoBotShare: String  { return L10n.tr("Localizable", "PeerInfo.Bot.Share") }
+  /// This bot is able to manage group or channel
+  public static var peerInfoBotAddToInfo: String  { return L10n.tr("Localizable", "PeerInfo.BotAddTo.Info") }
   /// has access to messages
   public static var peerInfoBotStatusHasAccess: String  { return L10n.tr("Localizable", "PeerInfo.BotStatus.HasAccess") }
   /// has no access to messages
@@ -8645,6 +8667,8 @@ public final class L10n {
   public static var selectPeersTitleSearchMembers: String  { return L10n.tr("Localizable", "SelectPeers.Title.SearchMembers") }
   /// Select Chat
   public static var selectPeersTitleSelectChat: String  { return L10n.tr("Localizable", "SelectPeers.Title.SelectChat") }
+  /// Add to Group or Channel
+  public static var selectPeersTitleSelectGroupOrChannel: String  { return L10n.tr("Localizable", "SelectPeers.Title.SelectGroupOrChannel") }
   /// clear
   public static var separatorClear: String  { return L10n.tr("Localizable", "Separator.Clear") }
   /// show less
