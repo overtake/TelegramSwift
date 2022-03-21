@@ -269,6 +269,7 @@
 		279FD2A7273C1251004F08A1 /* Zip in Frameworks */ = {isa = PBXBuildFile; productRef = 279FD2A6273C1251004F08A1 /* Zip */; };
 		279FD2AD273C1291004F08A1 /* TgVoipWebrtc in Frameworks */ = {isa = PBXBuildFile; productRef = 279FD2AC273C1291004F08A1 /* TgVoipWebrtc */; };
 		27A08A2027E4BD7300284048 /* ChannelBotAdminController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27A08A1F27E4BD7300284048 /* ChannelBotAdminController.swift */; };
+		27A08A2227E8B73D00284048 /* change_sim.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27A08A2127E8B73D00284048 /* change_sim.tgs */; };
 		27A69759273D084E00B33415 /* GroupCallWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BD19256A7D350068644D /* GroupCallWindow.swift */; };
 		27A6975A273D085000B33415 /* PresentationGroupCall.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BD6F256AA6430068644D /* PresentationGroupCall.swift */; };
 		27A6975B273D085500B33415 /* PresentationGroupCallManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E7BD72256AA6B50068644D /* PresentationGroupCallManager.swift */; };
@@ -1532,6 +1533,7 @@
 		279FD2A5273C124B004F08A1 /* Zip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Zip; path = submodules/Zip; sourceTree = "<group>"; };
 		279FD2AB273C1287004F08A1 /* tgcalls */ = {isa = PBXFileReference; lastKnownFileType = folder; name = tgcalls; path = submodules/tgcalls; sourceTree = "<group>"; };
 		27A08A1F27E4BD7300284048 /* ChannelBotAdminController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelBotAdminController.swift; sourceTree = "<group>"; };
+		27A08A2127E8B73D00284048 /* change_sim.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = change_sim.tgs; sourceTree = "<group>"; };
 		27A0A4E225F76F4600B789AF /* GroupCallPeerController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallPeerController.swift; sourceTree = "<group>"; };
 		27A0A4E625F7764600B789AF /* GroupCallPeerAvatarRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallPeerAvatarRowItem.swift; sourceTree = "<group>"; };
 		27A0A4EA25F7814500B789AF /* GroupCallTextAndLabelRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallTextAndLabelRowItem.swift; sourceTree = "<group>"; };
@@ -4996,6 +4998,7 @@
 				275549082747C2400098A3CD /* device_windows.tgs */,
 				27F2BBD027BF694800A37463 /* qrcode_matrix.tgs */,
 				2718FF8127BFB28900196BC4 /* login_airplane.tgs */,
+				27A08A2127E8B73D00284048 /* change_sim.tgs */,
 				2786367B27C7C5D600690B10 /* group_call_share.tgs */,
 				2786367D27C7C5F800690B10 /* group_call_minmax.tgs */,
 				2786367F27C7CF1200690B10 /* group_call_maxmin.tgs */,
@@ -5763,6 +5766,7 @@
 				2733673B276242010027441E /* menu_add_to_favorites.tgs in Resources */,
 				27336741276247370027441E /* menu_pornography.tgs in Resources */,
 				27CB175E276376CE00DD25E0 /* menu_open_profile.tgs in Resources */,
+				27A08A2227E8B73D00284048 /* change_sim.tgs in Resources */,
 				2740AA3A26BD5F7A004B3BCE /* builtin-wallpaper-svg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

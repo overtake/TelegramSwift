@@ -100,6 +100,8 @@ enum LocalAnimatedSticker : String {
     case device_ubuntu
     case device_windows
     
+    case change_sim
+    
     
     case menu_add_to_folder
     case menu_archive
