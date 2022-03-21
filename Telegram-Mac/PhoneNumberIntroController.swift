@@ -13,7 +13,7 @@ import TelegramCore
 import SwiftSignalKit
 
 class ChaneNumberIntroView : View {
-    let imageView:ImageView = ImageView()
+    let imageView:LottiePlayerView = LottiePlayerView()
     let textView:TextView = TextView()
     private let containerView:View = View()
     fileprivate let next = TitleButton()
@@ -35,8 +35,10 @@ class ChaneNumberIntroView : View {
     }
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         let theme = (theme as! TelegramPresentationTheme)
-        imageView.image = theme.icons.changePhoneNumberIntro
-        imageView.sizeToFit()
+        if let data = LocalAnimatedSticker.change_sim.data {
+            self.imageView.setFrameSize(NSMakeSize(120, 120))
+            self.imageView.set(LottieAnimation(compressed: data, key: .init(key: .bundle("change_sim"), size: NSMakeSize(120, 120), backingScale: Int(System.backingScale), fitzModifier: nil), playPolicy: .loop, colors: []))
+        }
         
         backgroundColor = theme.colors.background
         textView.background = theme.colors.background
@@ -52,6 +54,8 @@ class ChaneNumberIntroView : View {
         next.set(text: strings().navigationNext, for: .Normal)
         next.sizeToFit()
         next.layer?.cornerRadius = 10
+        
+        needsLayout = true
     }
     
     
@@ -62,10 +66,10 @@ class ChaneNumberIntroView : View {
         textView.textLayout?.measure(width: frame.width - 60)
         textView.update(textView.textLayout)
         imageView.centerX(y: 0)
-        textView.centerX(y:imageView.frame.maxY + 30)
+        textView.centerX(y:imageView.frame.maxY + 10)
         containerView.setFrameSize(frame.width, textView.frame.maxY + 30)
         
-        containerView.centerX(y: 30)
+        containerView.centerX(y: 10)
         
         next.setFrameSize(NSMakeSize(frame.width - 60, 40))
         next.centerX(y: frame.height - next.frame.height - 50 - 30)

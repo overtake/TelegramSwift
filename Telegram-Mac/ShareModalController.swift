@@ -1223,6 +1223,8 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         }
         self.multipleSelection.set(share.multipleSelection)
         
+        
+        self.notify(with: self.selectInteractions.presentation, oldValue: self.selectInteractions.presentation, animated: false)
         self.contextChatInteraction.add(observer: self)
 
         

@@ -1080,13 +1080,13 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                             infoBlock.append(.block(sectionId: sectionId, peer: peer, blocked: cachedData.isBlocked, isBot: peer.isBot, viewType: .singleItem))
                         }
                     }
-                } else {
+                } else if let botInfo = user.botInfo, botInfo.flags.contains(.worksWithGroups) {
                     infoBlock.append(.botAddToGroup(sectionId: sectionId, viewType: .singleItem))
                 }
                
                 
                 applyBlock(infoBlock)
-                if user.isBot {
+                if let botInfo = user.botInfo, botInfo.flags.contains(.worksWithGroups) {
                     entries.append(UserInfoEntry.botAddToGroupInfo(sectionId: sectionId, viewType: .textBottomItem))
                 }
             }
