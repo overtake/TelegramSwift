@@ -509,9 +509,49 @@ final class ChatInteraction : InterfaceObserver  {
         }
     }
     
+    private func addBotAsMember(_ peer: Peer, to: Peer) -> Void {
+        let context = self.context
+        if to.isGroup {
+            _ = showModalProgress(signal: context.engine.peers.addGroupMember(peerId: to.id, memberId: peer.id), for: context.window).start(error: { error in
+                alert(for: context.window, info: strings().unknownError)
+            }, completed: { [weak self] in
+                self?.openInfo(to.id, true, nil, nil)
+            })
+        } else {
+            _ = showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: to.id, memberIds: [peer.id]), for: context.window).start(error: { error in
+                let text: String
+                switch error {
+                case .notMutualContact:
+                    text = strings().channelInfoAddUserLeftError
+                case .limitExceeded:
+                    text = strings().channelErrorAddTooMuch
+                case .botDoesntSupportGroups:
+                    text = strings().channelBotDoesntSupportGroups
+                case .tooMuchBots:
+                    text = strings().channelTooMuchBots
+                case .tooMuchJoined:
+                    text = strings().inviteChannelsTooMuch
+                case .generic:
+                    text = strings().unknownError
+                case .bot:
+                    text = strings().channelAddBotErrorHaveRights
+                case .restricted:
+                    text = strings().channelErrorAddBlocked
+                }
+                alert(for: context.window, info: text)
+            }, completed: { [weak self] in
+                self?.openInfo(to.id, true, nil, nil)
+            })
+        }
+    }
+
+    
     
     func processBotKeyboard(with keyboardMessage:Message) ->ReplyMarkupInteractions {
         if let attribute = keyboardMessage.replyMarkup, !isLogInteraction {
+            
+            let context = self.context
+            let peerId = self.peerId
             
             return ReplyMarkupInteractions(proccess: { [weak self] (button, progress) in
                 if let strongSelf = self {
@@ -582,6 +622,47 @@ final class ChatInteraction : InterfaceObserver  {
                         showModal(with: NewPollController(chatInteraction: strongSelf, isQuiz: isQuiz), for: strongSelf.context.window)
                     case let .openUserProfile(peerId: peerId):
                         strongSelf.openInfo(peerId, false, nil, nil)
+                    case .addToChat:
+                        let result = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectGroupOrChannel, behavior: SelectGroupOrChannelBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
+                            return .single(true)
+                        })
+                        |> filter { $0.first != nil }
+                        |> map { $0.first! }
+                        |> mapToSignal { sourceId in
+                            return combineLatest(context.account.postbox.loadedPeerWithId(peerId), context.account.postbox.loadedPeerWithId(sourceId)) |> map {
+                                (dest: $0, source: $1)
+                            }
+                        } |> deliverOnMainQueue
+                        
+                        _ = result.start(next: { [weak self] values in
+                            
+                            let addAdmin:()->Void = {
+                                showModal(with: ChannelBotAdminController(context: context, peer: values.source, admin: values.dest, callback: { [weak self] peerId in
+                                    self?.openInfo(peerId, true, nil, nil)
+                                }), for: context.window)
+                            }
+                            let addSimple:()->Void = {
+                                confirm(for: context.window, information: strings().confirmAddBotToGroup(values.dest.displayTitle), successHandler: { [weak self] _ in
+                                    self?.addBotAsMember(values.source, to: values.dest)
+                                })
+                            }
+                            if let peer = values.source as? TelegramChannel {
+                                if peer.groupAccess.isCreator {
+                                    addAdmin()
+                                } else if let adminRights = peer.adminRights, adminRights.rights.contains(.canAddAdmins) {
+                                    addAdmin()
+                                } else {
+                                    addSimple()
+                                }
+                            } else if let peer = values.source as? TelegramGroup {
+                                switch peer.role {
+                                case .creator:
+                                    addAdmin()
+                                default:
+                                    addSimple()
+                                }
+                            }
+                        })
                     default:
                         break
                     }

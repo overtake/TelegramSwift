@@ -562,7 +562,7 @@ final class GroupInfoArguments : PeerInfoArguments {
         }
         
         
-        let addMember = context.account.viewTracker.peerView(peerId) |> take(1) |> deliverOnMainQueue |> mapToSignal{ view -> Signal<Void, NoError> in
+        let addMember = context.account.viewTracker.peerView(peerId) |> take(1) |> deliverOnMainQueue |> mapToSignal{ view -> Signal<[PeerId], NoError> in
             
             var excludePeerIds:[PeerId] = []
             if let cachedData = view.cachedData as? CachedChannelData {
@@ -581,11 +581,11 @@ final class GroupInfoArguments : PeerInfoArguments {
             
             return selectModalPeers(window: context.window, context: context, title: strings().peerInfoAddMember, settings: [.contacts, .remote], excludePeerIds:excludePeerIds, limit: peerId.namespace == Namespaces.Peer.CloudGroup ? 1 : 100, confirmation: confirmationImpl, linkInvation: linkInvation)
                 |> deliverOnMainQueue
-                |> mapToSignal { memberIds -> Signal<Void, NoError> in
+                |> mapToSignal { memberIds -> Signal<[PeerId], NoError> in
                     return context.account.postbox.multiplePeersView(memberIds + [peerId])
                         |> take(1)
                         |> deliverOnMainQueue
-                        |> mapToSignal { view -> Signal<Void, NoError> in
+                        |> mapToSignal { view -> Signal<[PeerId], NoError> in
                             updateState { state in
                                 var state = state
                                 for (memberId, peer) in view.peers {
@@ -612,6 +612,7 @@ final class GroupInfoArguments : PeerInfoArguments {
                                 if peer.isGroup, let memberId = memberIds.first {
                                     return context.engine.peers.addGroupMember(peerId: peerId, memberId: memberId)
                                         |> deliverOnMainQueue
+                                        |> map { _ in return [memberId] }
                                         |> afterCompleted {
                                             updateState { state in
                                                 var successfullyAddedParticipantIds = state.successfullyAddedParticipantIds
@@ -619,7 +620,7 @@ final class GroupInfoArguments : PeerInfoArguments {
                                                 
                                                 return state.withUpdatedSuccessfullyAddedParticipantIds(successfullyAddedParticipantIds)
                                             }
-                                        } |> `catch` { error -> Signal<Void, NoError> in
+                                        } |> `catch` { error -> Signal<[PeerId], NoError> in
                                             updateState { state in
                                                 var temporaryParticipants = state.temporaryParticipants
                                                 for i in 0 ..< temporaryParticipants.count {

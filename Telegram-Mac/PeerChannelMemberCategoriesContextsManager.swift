@@ -335,7 +335,7 @@ final class PeerChannelMemberCategoriesContextsManager {
         }
     }
     
-    func updateMemberAdminRights(peerId: PeerId, memberId: PeerId, adminRights: TelegramChatAdminRights?, rank: String?) -> Signal<Void, NoError> {
+    func updateMemberAdminRights(peerId: PeerId, memberId: PeerId, adminRights: TelegramChatAdminRights?, rank: String?) -> Signal<PeerId, NoError> {
         return engine.peers.updateChannelAdminRights(peerId: peerId, adminId: memberId, rights: adminRights, rank: rank)
             |> map(Optional.init)
             |> `catch` { _ -> Signal<(ChannelParticipant?, RenderedChannelParticipant)?, NoError> in
@@ -353,8 +353,8 @@ final class PeerChannelMemberCategoriesContextsManager {
                     }
                 }
             }
-            |> mapToSignal { _ -> Signal<Void, NoError> in
-                return .complete()
+            |> mapToSignal { _ -> Signal<PeerId, NoError> in
+                return .single(memberId)
         }
     }
     
@@ -381,7 +381,7 @@ final class PeerChannelMemberCategoriesContextsManager {
         }
     }
     
-    func addMembers(peerId: PeerId, memberIds: [PeerId]) -> Signal<Void, AddChannelMemberError> {
+    func addMembers(peerId: PeerId, memberIds: [PeerId]) -> Signal<[PeerId], AddChannelMemberError> {
         let signals: [Signal<(ChannelParticipant?, RenderedChannelParticipant)?, AddChannelMemberError>] = memberIds.map({ memberId in
             return engine.peers.addChannelMember(peerId: peerId, memberId: memberId)
                 |> map(Optional.init)
@@ -410,9 +410,9 @@ final class PeerChannelMemberCategoriesContextsManager {
                     }
                 }
             }
-            |> mapToSignal { _ -> Signal<Void, AddChannelMemberError> in
-                return .complete()
-        }
+            |> mapToSignal { values -> Signal<[PeerId], AddChannelMemberError> in
+                return .single(values.compactMap { $0?.1.peer.id })
+            }
     }
     
     func replyThread(account: Account, messageId: MessageId) -> Signal<MessageHistoryViewExternalInput, NoError> {

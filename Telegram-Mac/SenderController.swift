@@ -561,7 +561,20 @@ class Sender: NSObject {
         
         let localGroupingKey = isCollage ? arc4random64() : nil
         
-        var messages = media.map({EnqueueMessage.message(text: caption.swap(ChatTextInputState()).inputText, attributes: attributes, mediaReference: AnyMediaReference.standalone(media: $0), replyToMessageId: replyId, localGroupingKey: localGroupingKey, correlationId: nil)})
+        var messages: [EnqueueMessage] = []
+        let count = media.count
+        for (i, media) in media.enumerated() {
+            let text: String
+            if media.isInteractiveMedia {
+                text = caption.swap(.init()).inputText
+            } else if i == count - 1 {
+                text = caption.swap(.init()).inputText
+            } else {
+                text = ""
+            }
+            messages.append(EnqueueMessage.message(text: text, attributes: attributes, mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: replyId, localGroupingKey: localGroupingKey, correlationId: nil))
+        }
+        
         if let input = additionText {
             var inset:Int = 0
             var input:ChatTextInputState = input

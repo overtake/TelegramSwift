@@ -168,6 +168,10 @@ final class DevicesContext : NSObject {
         })
         AudioObjectAddPropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.outputDevice, AudioListener.output, nil)
         
+        AudioObjectAddPropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.mixStereo, AudioListener.output, nil)
+
+
+        
         AudioObjectAddPropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.inputDevice, AudioListener.input, nil)
 
         
@@ -178,6 +182,11 @@ final class DevicesContext : NSObject {
         NotificationCenter.default.addObserver(forName: AudioNotification.audioInputDeviceDidChange.notificationName, object: nil, queue: nil, using: { [weak self] _ in
             self?.update()
         })
+        
+        NotificationCenter.default.addObserver(forName: AudioNotification.mixStereo.notificationName, object: nil, queue: nil, using: { [weak self] _ in
+            self?.update()
+        })
+        
         
         let currentCameraId = self._currentCameraId
         let currentMicroId = self._currentMicroId

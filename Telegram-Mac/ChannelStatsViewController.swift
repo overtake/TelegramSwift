@@ -253,7 +253,7 @@ func ChannelStatsViewController(_ context: AccountContext, peerId: PeerId, datac
     let messagesPromise = Promise<MessageHistoryView?>(nil)
 
     
-    let messageView = context.account.viewTracker.aroundMessageHistoryViewForLocation(.peer(peerId), index: .upperBound, anchorIndex: .upperBound, count: 100, fixedCombinedReadStates: nil)
+    let messageView = context.account.viewTracker.aroundMessageHistoryViewForLocation(.peer(peerId: peerId), index: .upperBound, anchorIndex: .upperBound, count: 100, fixedCombinedReadStates: nil)
         |> map { messageHistoryView, _, _ -> MessageHistoryView? in
             return messageHistoryView
     }

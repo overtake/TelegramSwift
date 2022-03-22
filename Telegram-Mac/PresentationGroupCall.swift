@@ -797,7 +797,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                                 } else if let ssrc = participantUpdate.ssrc, strongSelf.ssrcMapping[ssrc] == nil {
                                 }
                             }
-                        case let .call(isTerminated, _, _, _, _, _):
+                        case let .call(isTerminated, _, _, _, _, _, _):
                             if isTerminated {
                                 strongSelf.markAsCanBeRemoved()
                             }
@@ -2217,6 +2217,10 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             self.isMutedPromise.set(self.isMutedValue)
             let isEffectivelyMuted: Bool
             let isVisuallyMuted: Bool
+            
+            
+            
+            
             switch self.isMutedValue {
             case let .muted(isPushToTalkActive):
                 isEffectivelyMuted = !isPushToTalkActive
@@ -2234,6 +2238,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             } else {
                 self.stateValue.muteState = nil
             }
+            
         })
     }
     
