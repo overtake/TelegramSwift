@@ -211,7 +211,7 @@ private func channelMembersControllerEntries(view: PeerView, context: AccountCon
     if let participants = participants, let contacts = contacts {
         
         let participants = participants.filter { value in
-            return contacts.contains(where: { $0.peer.id != $0.peer.id })
+            return !contacts.contains(where: { $0.peer.id == value.peer.id })
         }
         
         entries.append(.section(sectionId: sectionId))
@@ -258,7 +258,7 @@ private func channelMembersControllerEntries(view: PeerView, context: AccountCon
                 }
             }
 
-            if !contacts.isEmpty {
+            if !contacts.isEmpty && participants.count > 0 {
                 entries.append(.otherHeader(sectionId: sectionId, .textTopItem))
             }
            
@@ -369,7 +369,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                 
             }))
         }, addMembers: {
-            let signal = selectModalPeers(window: context.window, context: context, title: strings().channelMembersSelectTitle, settings: [.contacts, .remote, .excludeBots]) |> mapError { _ in return AddChannelMemberError.generic} |> mapToSignal { peers -> Signal<Void, AddChannelMemberError> in
+            let signal = selectModalPeers(window: context.window, context: context, title: strings().channelMembersSelectTitle, settings: [.contacts, .remote, .excludeBots]) |> castError(AddChannelMemberError.self) |> mapToSignal { peers -> Signal<[PeerId], AddChannelMemberError> in
                 return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: peerId, memberIds: peers), for: context.window)
             } |> deliverOnMainQueue
             

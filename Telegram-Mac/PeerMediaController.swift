@@ -837,7 +837,7 @@
         
         
         let tabItems: [Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>] = self.tagsList.filter { !$0.tagsValue.isEmpty }.map { tags -> Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError> in
-            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId), count: 3, tagMask: tags.tagsValue)
+            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: peerId), count: 3, tagMask: tags.tagsValue)
             |> map { (view, _, _) -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
                 let hasLoaded = view.entries.count >= 3 || (!view.isLoading)
                 return (tag: tags, exists: !view.entries.isEmpty, hasLoaded: hasLoaded)

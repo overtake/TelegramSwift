@@ -82,6 +82,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             .canBanUsers,
             .canInviteUsers,
             .canPinMessages,
+            .canBeAnonymous
         ]
         
         for (i, right) in rightsOrder.enumerated() {
@@ -199,30 +200,83 @@ func ChannelBotAdminController(context: AccountContext, peer: Peer, admin: Peer,
             let cancel: String = strings().modalCancel
             
             confirm(for: context.window, header: title, information: info, okTitle: ok, cancelTitle: cancel, successHandler: { _ in
-                let signal: Signal<PeerId, NoError>
+                
+                var signal: Signal<PeerId, (AddGroupMemberError?, AddChannelMemberError?, ConvertGroupToSupergroupError?)>
                 
                 if isAdmin {
-                    if peer.id.namespace == Namespaces.Peer.CloudGroup {
-                                                
-                        signal = showModalProgress(signal: context.engine.peers.addGroupMember(peerId: peer.id, memberId: admin.id), for: context.window) |> `catch` {_ in .complete() } |> map { peer.id }
-                    } else {
-                        let admin = context.peerChannelMemberCategoriesContextsManager.addMember(peerId: peer.id, memberId: admin.id) |> mapToSignal {
-                            return context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(peerId: peer.id, memberId: admin.id, adminRights: .init(rights: rights), rank: rank)
+                    let add:(PeerId)->Signal<PeerId, (AddGroupMemberError?, AddChannelMemberError?, ConvertGroupToSupergroupError?)> = { peerId in
+                        return context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: peerId, memberIds: [admin.id])
+                        |> mapError { (nil, $0, nil) }
+                        |> mapToSignal { _ in
+                            return context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(peerId: peerId, memberId: admin.id, adminRights: .init(rights: rights), rank: rank)
+                            |> map { _ in
+                                return peerId
+                            }
+                            |> castError(AddChannelMemberError.self)
+                            |> mapError { (nil, $0, nil) }
                         }
-                        signal = showModalProgress(signal: admin, for: context.window) |> map { peer.id }
+                    }
+                    
+                    if peer.id.namespace == Namespaces.Peer.CloudGroup {
+                        let convert: Signal<PeerId, (AddGroupMemberError?, AddChannelMemberError?, ConvertGroupToSupergroupError?)> = context.engine.peers.convertGroupToSupergroup(peerId: peer.id)
+                        |> mapError { (nil, nil, $0) }
+                        signal = convert |> mapToSignal {
+                            add($0)
+                        }
+                    } else {
+                        signal = add(peer.id)
                     }
                 } else {
                     if peer.id.namespace == Namespaces.Peer.CloudGroup {
-                        signal = showModalProgress(signal: context.engine.peers.addGroupMember(peerId: peer.id, memberId: admin.id), for: context.window) |> `catch` {_ in .complete() } |> map { peer.id }
+                        signal = context.engine.peers.addGroupMember(peerId: peer.id, memberId: admin.id)
+                        |> mapError { ($0, nil, nil) }
+                        |> map { peer.id }
                     } else {
-                        signal = showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMember(peerId: peer.id, memberId: admin.id), for: context.window) |> map { peer.id }
+                        signal = context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: peer.id, memberIds: [admin.id])
+                        |> map { _ in
+                            return peer.id
+                        }
+                        
+                        |> mapError { (nil, $0, nil) }
                     }
                 }
-                _ = signal.start(next: { peerId in
-                    f(.success(.custom({
-                        callback(peerId)
-                        close?()
-                    })))
+                _ = showModalProgress(signal: signal, for: context.window).start(next: { peerId in
+                    f(.none)
+                    callback(peerId)
+                    close?()
+                    showModalText(for: context.window, text: isAdmin ? strings().channelAddBotSuccessAdmin(admin.displayTitle, peer.displayTitle) : strings().channelAddBotSuccessMember(admin.displayTitle, peer.displayTitle))
+                }, error: { error in
+                    if let _ = error.0 {
+                        alert(for: context.window, info: strings().unknownError)
+                    } else if let error = error.1 {
+                        let text: String
+                        switch error {
+                        case .notMutualContact:
+                            text = strings().channelInfoAddUserLeftError
+                        case .limitExceeded:
+                            text = strings().channelErrorAddTooMuch
+                        case .botDoesntSupportGroups:
+                            text = strings().channelBotDoesntSupportGroups
+                        case .tooMuchBots:
+                            text = strings().channelTooMuchBots
+                        case .tooMuchJoined:
+                            text = strings().inviteChannelsTooMuch
+                        case .generic:
+                            text = strings().unknownError
+                        case .bot:
+                            text = strings().channelAddBotErrorHaveRights
+                        case .restricted:
+                            text = strings().channelErrorAddBlocked
+                        }
+                        alert(for: context.window, info: text)
+                    } else if let error = error.2 {
+                        switch error {
+                        case .generic:
+                            alert(for: context.window, info: strings().unknownError)
+                        case .tooManyChannels:
+                            showInactiveChannels(context: context, source: .upgrade)
+                        }
+                    }
                 })
             })
             

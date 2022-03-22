@@ -68,11 +68,7 @@ private final class MicroListenerContextObject : RecoderContextRenderer {
     }
     
     func pause() {
-        if !paused {
-            paused = true
-            devicesDisposable.set(nil)
-            self.stop()
-        }
+        paused = true
     }
     func resume(onSpeaking: @escaping(Float)->Void, always: Bool) {
         if paused {
@@ -321,7 +317,7 @@ private final class MicroListenerContextObject : RecoderContextRenderer {
             
             if self.micLevelPeakCount >= 1200 {
                 let level = Float(self.micLevelPeak) / 4000.0
-                if always {
+                if always, !paused {
                     self.onSpeaking?(level)
                 } else {
                     if level >= 0.4 {

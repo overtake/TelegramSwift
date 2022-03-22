@@ -649,6 +649,11 @@ struct AudioAddress {
                                                          mScope: kAudioObjectPropertyScopeGlobal,
                                                          mElement: kAudioObjectPropertyElementMaster)
     
+    static var mixStereo = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyMixStereoToMono,
+                                                         mScope: kAudioObjectPropertyScopeGlobal,
+                                                         mElement: kAudioObjectPropertyElementMaster)
+
+    
     static var inputDevice = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyDefaultInputDevice,
                                                          mScope: kAudioObjectPropertyScopeGlobal,
                                                          mElement: kAudioObjectPropertyElementMaster)
@@ -659,6 +664,7 @@ enum AudioNotification: String {
     case audioDevicesDidChange
     case audioInputDeviceDidChange
     case audioOutputDeviceDidChange
+    case mixStereo
     
     var stringValue: String {
         return "Audio" + rawValue
@@ -672,6 +678,10 @@ enum AudioNotification: String {
 struct AudioListener {
     static var output: AudioObjectPropertyListenerProc = { _, _, _, _ in
         NotificationCenter.default.post(name: AudioNotification.audioOutputDeviceDidChange.notificationName, object: nil)
+        return 0
+    }
+    static var mixStereo: AudioObjectPropertyListenerProc = { _, _, _, _ in
+        NotificationCenter.default.post(name: AudioNotification.mixStereo.notificationName, object: nil)
         return 0
     }
     static var input: AudioObjectPropertyListenerProc = { _, _, _, _ in
@@ -704,12 +714,12 @@ final class MediaPlayerAudioRenderer {
         
         var audioTimebase: CMTimebase?
         if let audioClock = audioClock {
-            CMTimebaseCreateWithMasterClock(allocator: nil, masterClock: audioClock, timebaseOut: &audioTimebase)
+            CMTimebaseCreateWithSourceClock(allocator: nil, sourceClock: audioClock, timebaseOut: &audioTimebase)
         }
         
         
         if audioTimebase == nil {
-            CMTimebaseCreateWithMasterClock(allocator: nil, masterClock: CMClockGetHostTimeClock(), timebaseOut: &audioTimebase)
+            CMTimebaseCreateWithSourceClock(allocator: nil, sourceClock: CMClockGetHostTimeClock(), timebaseOut: &audioTimebase)
         }
         
         let timebase = audioTimebase!
@@ -726,7 +736,16 @@ final class MediaPlayerAudioRenderer {
         }
         
         AudioObjectAddPropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.outputDevice, AudioListener.output, nil)
+        
+        AudioObjectAddPropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.mixStereo, AudioListener.output, nil)
+
+        
         NotificationCenter.default.addObserver(self, selector: #selector(handleNotification(_:)), name: AudioNotification.audioOutputDeviceDidChange.notificationName, object: nil)
+        
+        AudioObjectAddPropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.mixStereo, AudioListener.output, nil)
+
+        NotificationCenter.default.addObserver(self, selector: #selector(handleNotification(_:)), name: AudioNotification.mixStereo.notificationName, object: nil)
+
     }
     
     @objc private func handleNotification(_ notification: Notification) {

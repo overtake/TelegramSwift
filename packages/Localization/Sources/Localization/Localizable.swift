@@ -915,14 +915,22 @@ public final class L10n {
   public static func channelAddBotConfirmInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.AddBot.Confirm.Info", p1)
   }
-  /// Add Bot as Admin?
+  /// Add as Admin?
   public static var channelAddBotConfirmOkAdmin: String  { return L10n.tr("Localizable", "Channel.AddBot.Confirm.Ok.Admin") }
-  /// Add Bot as Member?
+  /// Add as Member?
   public static var channelAddBotConfirmOkMember: String  { return L10n.tr("Localizable", "Channel.AddBot.Confirm.Ok.Member") }
   /// Add Bot as Admin?
   public static var channelAddBotConfirmTitleAdmin: String  { return L10n.tr("Localizable", "Channel.AddBot.Confirm.Title.Admin") }
   /// Add Bot as Member?
   public static var channelAddBotConfirmTitleMember: String  { return L10n.tr("Localizable", "Channel.AddBot.Confirm.Title.Member") }
+  /// You successfully added "%@" to "%@" as admin.
+  public static func channelAddBotSuccessAdmin(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.AddBot.Success.Admin", p1, p2)
+  }
+  /// You successfully added "%@" to "%@" as member
+  public static func channelAddBotSuccessMember(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.AddBot.Success.Member", p1, p2)
+  }
   /// This Admin will be able to add new admins with the same (or more limited) permissions than he/she has.
   public static var channelAdminAdminAccess: String  { return L10n.tr("Localizable", "Channel.Admin.AdminAccess") }
   /// This admin will not be able to add new admins.
@@ -3755,6 +3763,10 @@ public final class L10n {
   public static func chatServiceUserJoinedGroupByRequest(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatService.UserJoinedGroupByRequest", p1)
   }
+  /// Colorful
+  public static var chatThemeColorful: String  { return L10n.tr("Localizable", "ChatTheme.Colorful") }
+  /// Chat Theme
+  public static var chatThemeTheme: String  { return L10n.tr("Localizable", "ChatTheme.Theme") }
   /// Report Messages
   public static var chatTitleReportMessages: String  { return L10n.tr("Localizable", "ChatTitle.ReportMessages") }
   /// Default

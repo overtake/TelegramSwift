@@ -108,11 +108,11 @@ final class ChatThemeSelectorView : View {
         cancel.sizeToFit(.zero, NSMakeSize(accept.frame.width, accept.frame.size.height), thatFit: true)
 
         
-        let header = TextViewLayout(.initialize(string: "Chat Theme", color: theme.colors.text, font: .medium(.header)))
+        let header = TextViewLayout(.initialize(string: strings().chatThemeTheme, color: theme.colors.text, font: .medium(.header)))
         header.measure(width: .greatestFiniteMagnitude)
         headerView.update(header)
         
-        let switchLayout = TextViewLayout(.initialize(string: "Colorful", color: theme.colors.text, font: .normal(.text)))
+        let switchLayout = TextViewLayout(.initialize(string: strings().chatThemeColorful, color: theme.colors.text, font: .normal(.text)))
         switchLayout.measure(width: .greatestFiniteMagnitude)
         bubblesTitle.update(switchLayout)
         
