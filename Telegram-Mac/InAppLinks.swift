@@ -488,57 +488,112 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             })
         }
         afterComplete(true)
-    case let .inviteBotToGroup(_, username, context, action, callback):
+    case let .inviteBotToGroup(_, username, context, action, rights, callback):
         let _ = showModalProgress(signal: context.engine.peers.resolvePeerByName(name: username) |> filter {$0 != nil} |> map{$0!} |> deliverOnMainQueue, for: context.window).start(next: { botPeerId in
             
-            let selectedPeer = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectChat, behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
-                if let peerId = peerIds.first {
-                    return context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, NoError> in
-                        return confirmSignal(for: context.window, information: strings().confirmAddBotToGroup(peer.displayTitle))
-                    }
-                }
-                return .single(false)
-            }) |> deliverOnMainQueue |> filter { $0.first != nil } |> map { $0.first! }
             
-            let signal:Signal<(StartBotInGroupResult, PeerId), NoError> = selectedPeer |> mapToSignal { peerId in
-                var payload: String = ""
-                if let action = action {
-                    switch action {
-                    case let .start(data, _):
-                        payload = data
-                    default:
-                        break
-                    }
-                }
-                if payload.isEmpty {
-                    if peerId.namespace == Namespaces.Peer.CloudGroup {
-                        return showModalProgress(signal: context.engine.peers.addGroupMember(peerId: peerId, memberId: botPeerId._asPeer().id), for: context.window)
-                            |> map { (.none, peerId) }
-                            |> `catch` { _ -> Signal<(StartBotInGroupResult, PeerId), NoError> in return .single((.none, peerId)) }
-                    } else {
-                        return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMember(peerId: peerId, memberId: botPeerId._asPeer().id), for: context.window)
-                            |> map { _ in (.none, peerId) }
-                            |> then(.single((.none, peerId)))
-                    }
-                } else {
-                    return showModalProgress(signal: context.engine.messages.requestStartBotInGroup(botPeerId: botPeerId._asPeer().id, groupPeerId: peerId, payload: payload), for: context.window)
-                        |> map {
-                            ($0, peerId)
-                        }
-                        |> `catch` { _ -> Signal<(StartBotInGroupResult, PeerId), NoError> in return .single((.none, peerId)) }
-                    
-                }
-                } |> deliverOnMainQueue
-            
-            _ = signal.start(next: { result, peerId in
-                switch result {
-                case let .channelParticipant(participant):
-                    context.peerChannelMemberCategoriesContextsManager.externallyAdded(peerId: peerId, participant: participant)
-                case .none:
+            var payload: String = ""
+            if let action = action {
+                switch action {
+                case let .start(data, _):
+                    payload = data
+                default:
                     break
                 }
-                callback(peerId, true, nil, nil)
+            }
+            
+            let result = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectGroupOrChannel, behavior: payload.isEmpty ? SelectGroupOrChannelBehavior(limit: 1) : SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
+                return .single(true)
             })
+            |> filter { $0.first != nil }
+            |> map { $0.first! }
+            |> mapToSignal { sourceId in
+                return combineLatest( context.account.postbox.loadedPeerWithId(botPeerId._asPeer().id), context.account.postbox.loadedPeerWithId(sourceId)) |> map {
+                    (dest: $0, source: $1)
+                }
+            } |> deliverOnMainQueue
+            
+                        
+            _ = result.start(next: { values in
+                     
+                
+                let add:(PeerId)->Void = { peerId in
+                    if payload.isEmpty || values.dest.isChannel {
+                        addBotAsMember(context: context, peer: values.source, to: values.dest, completion: { peerId in
+                            callback(peerId, true, nil, action)
+                        }, error: { error in
+                            alert(for: context.window, info: error)
+                        })
+                    } else {
+                        let signal = showModalProgress(signal: context.engine.messages.requestStartBotInGroup(botPeerId: botPeerId._asPeer().id, groupPeerId: peerId, payload: payload), for: context.window)
+                            
+                        _ = signal.start(next: { result in
+                            switch result {
+                            case let .channelParticipant(participant):
+                                context.peerChannelMemberCategoriesContextsManager.externallyAdded(peerId: peerId, participant: participant)
+                            case .none:
+                                break
+                            }
+                            callback(peerId, true, nil, nil)
+                        }, error: { error in
+                            alert(for: context.window, info: strings().unknownError)
+                        })
+                    }
+                    
+                }
+                
+                let addAdmin:()->Void = {
+                    showModal(with: ChannelBotAdminController(context: context, peer: values.source, admin: values.dest, rights: rights, callback: { peerId in
+                        add(peerId)
+                    }), for: context.window)
+                }
+                let addSimple:()->Void = {
+                    confirm(for: context.window, information: strings().confirmAddBotToGroup(values.dest.displayTitle), successHandler: { _ in
+                        add(values.dest.id)
+                    })
+                }
+                if let peer = values.source as? TelegramChannel {
+                    if peer.groupAccess.isCreator {
+                        addAdmin()
+                    } else if let adminRights = peer.adminRights, adminRights.rights.contains(.canAddAdmins) {
+                        addAdmin()
+                    } else {
+                        addSimple()
+                    }
+                } else if let peer = values.source as? TelegramGroup {
+                    switch peer.role {
+                    case .creator:
+                        addAdmin()
+                    default:
+                        addSimple()
+                    }
+                }
+                
+//
+//                if !payload.isEmpty {
+//
+//
+//
+//                    let signal = showModalProgress(signal: context.engine.messages.requestStartBotInGroup(botPeerId: botPeerId._asPeer().id, groupPeerId: values.dest.id, payload: payload), for: context.window)
+//                        |> map {
+//                            ($0, values.dest.id)
+//                        }
+//                    _ = signal.start(next: { result, peerId in
+//                        switch result {
+//                        case let .channelParticipant(participant):
+//                            context.peerChannelMemberCategoriesContextsManager.externallyAdded(peerId: peerId, participant: participant)
+//                        case .none:
+//                            break
+//                        }
+//                        callback(peerId, true, nil, nil)
+//                    }, error: { error in
+//                        alert(for: context.window, info: strings().unknownError)
+//                    })
+//                } else {
+//
+//                }
+            })
+            
         })
         afterComplete(true)
     case let .botCommand(command, interaction):
@@ -842,7 +897,7 @@ enum inAppLink {
     case peerInfo(link: String, peerId:PeerId, action:ChatInitialAction?, openChat:Bool, postId:Int32?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
     case followResolvedName(link: String, username:String, postId:Int32?, context: AccountContext, action:ChatInitialAction?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
     case comments(link: String, username:String, context: AccountContext, threadId: Int32, commentId: Int32?)
-    case inviteBotToGroup(link: String, username:String, context: AccountContext, action:ChatInitialAction?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
+    case inviteBotToGroup(link: String, username:String, context: AccountContext, action:ChatInitialAction?, rights: String?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
     case botCommand(String, (String)->Void)
     case callback(String, (String)->Void)
     case code(String, (String)->Void)
@@ -928,6 +983,7 @@ private let keyURLUsername = "domain";
 private let keyURLPhone = "phone";
 private let keyURLPostId = "post";
 private let keyURLCommentId = "comment";
+private let keyURLAdmin = "admin";
 private let keyURLThreadId = "thread";
 private let keyURLInvite = "invite";
 private let keyURLUrl = "url";
@@ -1113,7 +1169,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             break loop;
                         case keyURLStartGroup:
                             if let openInfo = openInfo, let context = context {
-                                return .inviteBotToGroup(link: urlString, username: username, context: context, action: .start(parameter: value, behavior: .automatic), callback: openInfo)
+                                let rights = vars[keyURLAdmin]
+                                return .inviteBotToGroup(link: urlString, username: username, context: context, action: .start(parameter: value, behavior: .automatic), rights: rights, callback: openInfo)
                             }
                             break loop;
                         case keyURLVoiceChat:
@@ -1243,7 +1300,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 break loop;
                             case keyURLStartGroup:
                                 if let context = context {
-                                    return .inviteBotToGroup(link: urlString, username: username, context: context, action: .start(parameter: value, behavior: .none), callback: openInfo)
+                                    let rights = vars[keyURLAdmin]
+                                    return .inviteBotToGroup(link: urlString, username: username, context: context, action: .start(parameter: value, behavior: .none), rights: rights, callback: openInfo)
                                 }
                             case keyURLVoiceChat:
                                 action = .joinVoiceChat(value)

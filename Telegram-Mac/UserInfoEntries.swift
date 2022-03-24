@@ -242,43 +242,7 @@ class UserInfoArguments : PeerInfoArguments {
             applyUIPCallResult(context, result)
         }))
     }
-    
-    private func addBotAsMember(_ peer: Peer, to: Peer) -> Void {
-        let context = self.context
-        if to.isGroup {
-            _ = showModalProgress(signal: context.engine.peers.addGroupMember(peerId: to.id, memberId: peer.id), for: context.window).start(error: { error in
-                alert(for: context.window, info: strings().unknownError)
-            }, completed: { [weak self] in
-                self?.peerChat(to.id, postId: nil)
-            })
-        } else {
-            _ = showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: to.id, memberIds: [peer.id]), for: context.window).start(error: { error in
-                let text: String
-                switch error {
-                case .notMutualContact:
-                    text = strings().channelInfoAddUserLeftError
-                case .limitExceeded:
-                    text = strings().channelErrorAddTooMuch
-                case .botDoesntSupportGroups:
-                    text = strings().channelBotDoesntSupportGroups
-                case .tooMuchBots:
-                    text = strings().channelTooMuchBots
-                case .tooMuchJoined:
-                    text = strings().inviteChannelsTooMuch
-                case .generic:
-                    text = strings().unknownError
-                case .bot:
-                    text = strings().channelAddBotErrorHaveRights
-                case .restricted:
-                    text = strings().channelErrorAddBlocked
-                }
-                alert(for: context.window, info: text)
-            }, completed: { [weak self] in
-                self?.peerChat(to.id, postId: nil)
-            })
-        }
-    }
-    
+        
     func botAddToGroup() {
         let context = self.context
         let peerId = self.peerId
@@ -304,7 +268,11 @@ class UserInfoArguments : PeerInfoArguments {
             }
             let addSimple:()->Void = {
                 confirm(for: context.window, information: strings().confirmAddBotToGroup(values.dest.displayTitle), successHandler: { [weak self] _ in
-                    self?.addBotAsMember(values.source, to: values.dest)
+                    addBotAsMember(context: context, peer: values.source, to: values.dest, completion: { [weak self] peerId in
+                        self?.peerChat(peerId, postId: nil)
+                    }, error: { error in 
+                        alert(for: context.window, info: error)
+                    })
                 })
             }
             if let peer = values.source as? TelegramChannel {

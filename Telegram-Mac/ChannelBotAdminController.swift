@@ -15,6 +15,152 @@ import TelegramCore
 import Postbox
 import SwiftSignalKit
 
+func addBotAsMember(context: AccountContext, peer: Peer, to: Peer, completion:@escaping(PeerId)->Void, error: @escaping(String)->Void) -> Void {
+    if to.isGroup {
+        _ = showModalProgress(signal: context.engine.peers.addGroupMember(peerId: to.id, memberId: peer.id), for: context.window).start(error: { _ in
+            error(strings().unknownError)
+        }, completed: {
+            completion(to.id)
+        })
+    } else {
+        _ = showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: to.id, memberIds: [peer.id]), for: context.window).start(error: { errorValue in
+            let text: String
+            switch errorValue {
+            case .notMutualContact:
+                text = strings().channelInfoAddUserLeftError
+            case .limitExceeded:
+                text = strings().channelErrorAddTooMuch
+            case .botDoesntSupportGroups:
+                text = strings().channelBotDoesntSupportGroups
+            case .tooMuchBots:
+                text = strings().channelTooMuchBots
+            case .tooMuchJoined:
+                text = strings().inviteChannelsTooMuch
+            case .generic:
+                text = strings().unknownError
+            case .bot:
+                text = strings().channelAddBotErrorHaveRights
+            case .restricted:
+                text = strings().channelErrorAddBlocked
+            }
+            error(text)
+        }, completed: {
+            completion(to.id)
+        })
+    }
+}
+
+
+
+public struct ResolvedBotAdminRights: OptionSet {
+    public var rawValue: UInt32
+    
+    public init(rawValue: UInt32) {
+        self.rawValue = rawValue
+    }
+    
+    public init() {
+        self.rawValue = 0
+    }
+    
+    public static let changeInfo = ResolvedBotAdminRights(rawValue: 1)
+    public static let postMessages = ResolvedBotAdminRights(rawValue: 2)
+    public static let editMessages = ResolvedBotAdminRights(rawValue: 4)
+    public static let deleteMessages = ResolvedBotAdminRights(rawValue: 16)
+    public static let restrictMembers = ResolvedBotAdminRights(rawValue: 32)
+    public static let inviteUsers = ResolvedBotAdminRights(rawValue: 64)
+    public static let pinMessages = ResolvedBotAdminRights(rawValue: 128)
+    public static let promoteMembers = ResolvedBotAdminRights(rawValue: 256)
+    public static let manageVideoChats = ResolvedBotAdminRights(rawValue: 512)
+    public static let canBeAnonymous = ResolvedBotAdminRights(rawValue: 1024)
+    public static let manageChat = ResolvedBotAdminRights(rawValue: 2048)
+    
+    public var chatAdminRights: TelegramChatAdminRightsFlags? {
+        var flags = TelegramChatAdminRightsFlags()
+        
+        if self.contains(ResolvedBotAdminRights.changeInfo) {
+            flags.insert(.canChangeInfo)
+        }
+        if self.contains(ResolvedBotAdminRights.postMessages) {
+            flags.insert(.canPostMessages)
+        }
+        if self.contains(ResolvedBotAdminRights.editMessages) {
+            flags.insert(.canEditMessages)
+        }
+        if self.contains(ResolvedBotAdminRights.deleteMessages) {
+            flags.insert(.canDeleteMessages)
+        }
+        if self.contains(ResolvedBotAdminRights.restrictMembers) {
+            flags.insert(.canBanUsers)
+        }
+        if self.contains(ResolvedBotAdminRights.inviteUsers) {
+            flags.insert(.canInviteUsers)
+        }
+        if self.contains(ResolvedBotAdminRights.pinMessages) {
+            flags.insert(.canPinMessages)
+        }
+        if self.contains(ResolvedBotAdminRights.promoteMembers) {
+            flags.insert(.canAddAdmins)
+        }
+        if self.contains(ResolvedBotAdminRights.manageVideoChats) {
+            flags.insert(.canManageCalls)
+        }
+        if self.contains(ResolvedBotAdminRights.canBeAnonymous) {
+            flags.insert(.canBeAnonymous)
+        }
+        
+        if flags.isEmpty && !self.contains(ResolvedBotAdminRights.manageChat) {
+            return nil
+        }
+        
+        return flags
+    }
+}
+extension ResolvedBotAdminRights {
+    init?(_ string: String) {
+        var rawValue: UInt32 = 0
+        
+        let components = string.lowercased().components(separatedBy: "+")
+        if components.contains("change_info") {
+            rawValue |= ResolvedBotAdminRights.changeInfo.rawValue
+        }
+        if components.contains("post_messages") {
+            rawValue |= ResolvedBotAdminRights.postMessages.rawValue
+        }
+        if components.contains("delete_messages") {
+            rawValue |= ResolvedBotAdminRights.deleteMessages.rawValue
+        }
+        if components.contains("restrict_members") {
+            rawValue |= ResolvedBotAdminRights.restrictMembers.rawValue
+        }
+        if components.contains("invite_users") {
+            rawValue |= ResolvedBotAdminRights.inviteUsers.rawValue
+        }
+        if components.contains("pin_messages") {
+            rawValue |= ResolvedBotAdminRights.pinMessages.rawValue
+        }
+        if components.contains("promote_members") {
+            rawValue |= ResolvedBotAdminRights.promoteMembers.rawValue
+        }
+        if components.contains("manage_video_chats") {
+            rawValue |= ResolvedBotAdminRights.manageVideoChats.rawValue
+        }
+        if components.contains("manage_chat") {
+            rawValue |= ResolvedBotAdminRights.manageChat.rawValue
+        }
+        if components.contains("anonymous") {
+            rawValue |= ResolvedBotAdminRights.canBeAnonymous.rawValue
+        }
+                
+        if rawValue != 0 {
+            self.init(rawValue: rawValue)
+        } else {
+            return nil
+        }
+    }
+}
+
+
 private final class Arguments {
     let context: AccountContext
     let toggleIsAdmin: ()->Void
@@ -30,11 +176,7 @@ private struct State : Equatable {
     var peer: PeerEquatable
     var admin: PeerEquatable
     var isAdmin: Bool = true
-    var rights: TelegramChatAdminRightsFlags = [.canChangeInfo,
-                                                .canDeleteMessages,
-                                                .canBanUsers,
-                                                .canInviteUsers,
-                                                .canPinMessages]
+    var rights: TelegramChatAdminRightsFlags
     var title: String?
 }
 
@@ -66,7 +208,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
     
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_admin_rights, data: .init(name: "Admin Rights", color: theme.colors.text, type: .switchable(state.isAdmin), viewType: .singleItem, action: arguments.toggleIsAdmin)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_admin_rights, data: .init(name: strings().channelAddBotAdminRights, color: theme.colors.text, type: .switchable(state.isAdmin), viewType: .singleItem, action: arguments.toggleIsAdmin)))
     index += 1
     
     if state.isAdmin {
@@ -85,10 +227,21 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             .canBeAnonymous
         ]
         
+        
+        
         for (i, right) in rightsOrder.enumerated() {
             let text = stringForRight(right: right, isGroup: state.peer.peer.isGroup || state.peer.peer.isChannel, defaultBannedRights: nil)
             
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_admin_right(right), data: .init(name: text, color: theme.colors.text, type: .switchable(state.isAdmin), viewType: bestGeneralViewType(rightsOrder, for: i), action: {
+            
+            var enabled: Bool = state.peer.peer.groupAccess.isCreator
+            
+            let peer = state.peer.peer as? TelegramChannel
+            
+            if let adminRights = peer?.adminRights {
+                enabled = adminRights.rights.contains(right)
+            }
+            
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_admin_right(right), data: .init(name: text, color: theme.colors.text, type: .switchable(state.rights.contains(right)), viewType: bestGeneralViewType(rightsOrder, for: i), enabled: enabled, action: {
                 arguments.toggleAdminRight(right)
             })))
             index += 1
@@ -97,7 +250,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(state.title), error: nil, identifier: _id_title, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: "Custom title", filter: { text in
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(state.title), error: nil, identifier: _id_title, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().channelAddBotCustomTitle, filter: { text in
             let filtered = text.filter { character -> Bool in
                 return !String(character).containsOnlyEmoji
             }
@@ -114,11 +267,17 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func ChannelBotAdminController(context: AccountContext, peer: Peer, admin: Peer, callback:@escaping(PeerId)->Void) -> InputDataModalController {
+func ChannelBotAdminController(context: AccountContext, peer: Peer, admin: Peer, rights:String? = nil, callback:@escaping(PeerId)->Void) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(peer: .init(peer), admin: .init(admin))
+    let rights = ResolvedBotAdminRights(rights ?? "")?.chatAdminRights ?? [.canChangeInfo,
+                                                                           .canDeleteMessages,
+                                                                           .canBanUsers,
+                                                                           .canInviteUsers,
+                                                                           .canPinMessages]
+    
+    let initialState = State(peer: .init(peer), admin: .init(admin), rights: rights)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)

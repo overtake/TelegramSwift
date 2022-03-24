@@ -517,6 +517,10 @@ final class GroupCallView : View {
     override func layout() {
         super.layout()
         updateLayout(size: frame.size, transition: .immediate)
+        
+        self.peersTable.beginTableUpdates()
+        self.peersTable.layoutSubtreeIfNeeded()
+        self.peersTable.endTableUpdates()
     }
     
     var isFullScreen: Bool {
