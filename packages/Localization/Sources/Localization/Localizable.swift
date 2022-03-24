@@ -905,6 +905,10 @@ public final class L10n {
   public static var channelUsernameAboutGroup: String  { return L10n.tr("Localizable", "Channel.UsernameAboutGroup") }
   /// USER RESTRICTIONS
   public static var channelUserRestriction: String  { return L10n.tr("Localizable", "Channel.UserRestriction") }
+  /// Admin Rights
+  public static var channelAddBotAdminRights: String  { return L10n.tr("Localizable", "Channel.AddBot.AdminRights") }
+  /// Admin
+  public static var channelAddBotCustomTitle: String  { return L10n.tr("Localizable", "Channel.AddBot.CustomTitle") }
   /// Add Bot
   public static var channelAddBotTitle: String  { return L10n.tr("Localizable", "Channel.AddBot.Title") }
   /// Add Bot as Admin

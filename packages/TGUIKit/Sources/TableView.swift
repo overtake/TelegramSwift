@@ -2636,6 +2636,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             if let animation = animation, !animation.scrollBelow, !transition.isEmpty, contentView.bounds.minY > 0 {
                 saveVisible(.lower)
             }
+            
         case .bottom, .top, .center:
             self.scroll(to: transition.state)
         case .up, .down, .upOffset:
@@ -2645,11 +2646,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             break
         }
-        //reflectScrolledClipView(clipView)
-     //   self.tableView.endUpdates()
+        
+        self.reflectScrolledClipView(clipView)
+        self.tile()
+        self.layoutSubtreeIfNeeded()
+        
         self.endUpdates()
         
         
+
        self.updatedItems?(self.list)
         
 //        for subview in self.tableView.subviews.reversed() {
