@@ -648,8 +648,8 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             
             let submenu = ContextMenu()
                         
-            let options:[ReportReason] = [.spam, .violence, .porno, .childAbuse, .copyright]
-            let animation:[LocalAnimatedSticker] = [.menu_delete, .menu_violence, .menu_pornography, .menu_restrict, .menu_copyright]
+            let options:[ReportReason] = [.spam, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
+            let animation:[LocalAnimatedSticker] = [.menu_delete, .menu_violence, .menu_pornography, .menu_restrict, .menu_copyright, .menu_open_profile, .menu_drugs]
             
             for i in 0 ..< options.count {
                 submenu.addItem(ContextMenuItem(options[i].title, handler: {

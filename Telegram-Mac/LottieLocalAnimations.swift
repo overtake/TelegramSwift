@@ -209,7 +209,7 @@ enum LocalAnimatedSticker : String {
     case menu_folder_unread
     case menu_folder_virus
     case menu_folder_work
-
+    case menu_drugs
     
     
     case menu_speaker_muted
