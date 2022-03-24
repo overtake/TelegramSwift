@@ -19,7 +19,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate {
     private var indicator:ProgressIndicator!
     private let content:TelegramMediaWebpageLoadedContent
     private let context:AccountContext
-    private let webview: WKWebView = WKWebView(frame: NSZeroRect)
+    private let webview: WKWebView = WKWebView(frame: NSZeroRect, configuration: WKWebViewConfiguration())
     override func loadView() {
         super.loadView()
         webview.wantsLayer = true

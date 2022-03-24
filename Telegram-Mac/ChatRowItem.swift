@@ -341,7 +341,12 @@ class ChatRowItem: TableRowItem {
         }
         if let author = forwardNameLayout {
             top += author.layoutSize.height + defaultContentInnerInset - 2
+            
+            if !isBubbled, let header = forwardHeader?.0 {
+                top += header.size.height
+            }
         }
+       
         return top
     }
     

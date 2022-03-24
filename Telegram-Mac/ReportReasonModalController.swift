@@ -96,6 +96,10 @@ extension ReportReason {
             return strings().reportReasonOther
         case .fake:
             return strings().reportReasonFake
+        case .personalDetails:
+            return strings().reportReasonPersonalDetails
+        case .illegalDrugs:
+            return strings().reportReasonDrugs
         default:
             fatalError("unsupported")
         }
@@ -147,7 +151,7 @@ private func reportReasonEntries(state: ReportReasonState, arguments: ReportReas
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    let reasons:[ReportReason] = [.spam, .fake, .violence, .porno, .childAbuse, .copyright]
+    let reasons:[ReportReason] = [.spam, .fake, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
     
     for (i, reason) in reasons.enumerated() {
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: reason.id, data: InputDataGeneralData(name: reason.title, color: theme.colors.text, type: .none, viewType: bestGeneralViewType(reasons, for: i), action: {

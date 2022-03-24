@@ -8019,10 +8019,14 @@ public final class L10n {
   public static var reportReasonChildAbuse: String  { return L10n.tr("Localizable", "ReportReason.ChildAbuse") }
   /// Copyright
   public static var reportReasonCopyright: String  { return L10n.tr("Localizable", "ReportReason.Copyright") }
+  /// Illegal Drugs
+  public static var reportReasonDrugs: String  { return L10n.tr("Localizable", "ReportReason.Drugs") }
   /// Fake
   public static var reportReasonFake: String  { return L10n.tr("Localizable", "ReportReason.Fake") }
   /// Other
   public static var reportReasonOther: String  { return L10n.tr("Localizable", "ReportReason.Other") }
+  /// Personal Details
+  public static var reportReasonPersonalDetails: String  { return L10n.tr("Localizable", "ReportReason.PersonalDetails") }
   /// Pornography
   public static var reportReasonPorno: String  { return L10n.tr("Localizable", "ReportReason.Porno") }
   /// Report

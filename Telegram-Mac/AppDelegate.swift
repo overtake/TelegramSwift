@@ -22,6 +22,7 @@ import CrashHandler
 import InAppSettings
 import ThemeSettings
 import ColorPalette
+import WebKit
 
 #if !APP_STORE
 import AppCenter
@@ -300,6 +301,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     private func launchInterface() {
         initializeAccountManagement()
         
+
         let rootPath = containerUrl!
         let window = self.window!
         _ = System.scaleFactor.swap(window.backingScaleFactor)

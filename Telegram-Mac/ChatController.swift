@@ -661,7 +661,7 @@ class ChatControllerView : View, ChatInputDelegate {
                 state = .none(voiceChat)
             }
         } else if let canAdd = interfaceState.canAddContact, canAdd {
-           state = .none(voiceChat)
+            state = .none(voiceChat)
         } else {
             state = .none(voiceChat)
         }
@@ -5424,7 +5424,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             if !peer.isBot, !peer.isSecretChat {
                                 items.append(ContextMenuItem(strings().peerInfoStartSecretChat, handler: { [weak self] in
                                     self?.startSecretChat()
-                                }, itemImage: MenuAnimation.menu_secret_chat.value))
+                                }, itemImage: MenuAnimation.menu_lock.value))
                             }
                             
                             
@@ -5492,12 +5492,50 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         if !items.isEmpty {
                             items.append(ContextSeparatorItem())
                         }
-                        
+                        if peer.canManageDestructTimer && context.peerId != peer.id {
+                            
+                            let item = ContextMenuItem(strings().chatContextAutoDelete, handler: {
+                                clearHistory(context: context, peer: peer, mainPeer: mainPeer)
+                            }, itemImage: MenuAnimation.menu_secret_chat.value)
+                            
+                            let submenu = ContextMenu()
+                            
+                            var values:[Int32] = [0, .secondsInHour, .secondsInDay, .secondsInWeek, .secondsInMonth]
+                            
+                            var selected: Int32 = 0
+                            
+                            if let timeout = chatInteraction.presentation.messageSecretTimeout?.timeout {
+                                if !values.contains(timeout.effectiveValue) {
+                                    values.append(timeout.effectiveValue)
+                                }
+                                selected = timeout.effectiveValue
+                            }
+                            
+                            let updateTimer:(Int32)->Void = { value in
+                                _ = showModalProgress(signal: context.engine.peers.setChatMessageAutoremoveTimeoutInteractively(peerId: peerId, timeout: value == 0 ? nil : value), for: context.window).start()
+                            }
+                            
+                            for value in values {
+                                if value == 0 {
+                                    submenu.addItem(ContextMenuItem(strings().autoremoveMessagesNever, handler: {
+                                        updateTimer(value)
+                                    }, state: selected == value ? .on : nil))
+                                } else {
+                                    submenu.addItem(ContextMenuItem(autoremoveLocalized(Int(value)), handler: {
+                                        updateTimer(value)
+                                    }, state: selected == value ? .on : nil))
+                                }
+                            }
+                            
+                            item.submenu = submenu
+                            items.append(item)
+                        }
                         if peer.canClearHistory || (peer.canManageDestructTimer && context.peerId != peer.id) {
                             items.append(ContextMenuItem(strings().chatContextClearHistory, handler: {
                                 clearHistory(context: context, peer: peer, mainPeer: mainPeer)
                             }, itemImage: MenuAnimation.menu_clear_history.value))
                         }
+                       
                         
                         items.append(ContextMenuItem(text, handler: deleteChat, itemMode: .destruct, itemImage: animation.value))
                         
