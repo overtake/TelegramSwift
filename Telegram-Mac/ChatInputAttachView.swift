@@ -96,19 +96,12 @@ class ChatInputAttachView: ImageButton, Notifable {
                         self?.chatInteraction.attachPhotoOrVideo()
                     }, itemImage: MenuAnimation.menu_shared_media.value))
                     
+                    let replyTo = chatInteraction.presentation.interfaceState.replyMessageId
+                    
                     if chatInteraction.presentation.chatMode == .history {
                         for attach in chatInteraction.presentation.attachItems {
                             items.append(ContextMenuItem(attach.peer.displayTitle, handler: {
-                                let signal = context.engine.messages.requestWebView(peerId: peerId, botId: attach.peer.id, url: nil, themeParams: generateWebAppThemeParams(theme), replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId)
-                                _ = showModalProgress(signal: signal, for: context.window).start(next: { result in
-                                    switch result {
-                                    case let .webViewResult(queryId, url, keepAliveSignal):
-                                        showModal(with: WebpageModalController(url: url, title: attach.peer.displayTitle, data: .init(queryId: queryId, bot: attach.peer, peerId: peerId, buttonText: "", keepAliveSignal: keepAliveSignal), context: context), for: context.window)
-                                    case .requestConfirmation:
-                                        break
-                                    }
-                                })
-                               
+                                showModal(with: WebpageModalController(url: "", title: attach.peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: attach.peer, replyTo: replyTo, buttonText: ""), context: context), for: context.window)
                             }, itemImage: MenuAnimation.menu_folder_bot.value))
                         }
                     }
