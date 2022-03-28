@@ -508,7 +508,9 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
-
+                case let .webViewData(text):
+                    //TODOLANG
+                    let _ =  attributedString.append(string: "Data for \(text) sent to bot", color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 default:
                     break
                 }

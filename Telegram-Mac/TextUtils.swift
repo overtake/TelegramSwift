@@ -536,7 +536,11 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                     text = strings().chatServiceUserJoinedGroupByRequest(authorName)
                 }
             }
-            
+            return text
+        case let .webViewData(data):
+            let text: String
+            //TODOLANG
+            text = "Data for \(data) sent to bot"
             return text
         }
     }

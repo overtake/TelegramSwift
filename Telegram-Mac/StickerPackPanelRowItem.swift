@@ -36,7 +36,6 @@ class StickerPackPanelRowItem: TableRowItem {
         self.arguments = arguments
         self.canSend = canSend
         var filesAndPoints:[(TelegramMediaFile, ChatMediaContentView.Type, NSPoint)] = []
-        let size: NSSize = NSMakeSize(60, 60)
         
         
         let title: String?
@@ -87,11 +86,19 @@ class StickerPackPanelRowItem: TableRowItem {
             self.packNameLayout = nil
         }
         
+        let size: NSSize = NSMakeSize(60, 60)
 
 
         var point: NSPoint = NSMakePoint(5, title == nil ? 5 : !packInfo.featured ? 35 : 55)
         for (i, file) in files.enumerated() {
-            filesAndPoints.append((file, ChatLayoutUtils.contentNode(for: file, packs: true), point))
+            var filePoint = point
+            let fileSize = file.dimensions?.size.aspectFitted(size) ?? size
+            filePoint.y += (size.height - fileSize.height) / 2
+            filePoint.x += (size.width - fileSize.width) / 2
+            filesAndPoints.append((file, ChatLayoutUtils.contentNode(for: file, packs: true), filePoint))
+            
+
+            
             point.x += size.width + 10
             if (i + 1) % 5 == 0 {
                 point.y += size.height + 5
@@ -387,6 +394,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                     view = self.contentViews[i]!
                 }
                 if view.media?.id != file.id {
+                    let size = file.dimensions?.size.aspectFitted(size) ?? size
                     view.update(with: file, size: size, context: item.context, parent: nil, table: item.table)
                 }
                 view.userInteractionEnabled = false

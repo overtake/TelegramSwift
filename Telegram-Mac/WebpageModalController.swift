@@ -14,35 +14,56 @@ import SwiftSignalKit
 import Postbox
 import WebKit
 
+private class WeakScriptMessageHandler: NSObject, WKScriptMessageHandler {
+    private let f: (WKScriptMessage) -> ()
+    
+    init(_ f: @escaping (WKScriptMessage) -> ()) {
+        self.f = f
+        
+        super.init()
+    }
+    
+    func userContentController(_ controller: WKUserContentController, didReceive scriptMessage: WKScriptMessage) {
+        self.f(scriptMessage)
+    }
+}
+
+
 
 class WebpageModalController: ModalViewController, WKNavigationDelegate {
+    
+    struct Data {
+        let queryId: Int64
+        let bot: Peer
+        let peerId: PeerId
+        let buttonText: String
+        let keepAliveSignal: Signal<Never, KeepWebViewError>
+    }
+
+    
     private var indicator:ProgressIndicator!
-    private let content:TelegramMediaWebpageLoadedContent
+    private let url:String
     private let context:AccountContext
-    private let webview: WKWebView = WKWebView(frame: NSZeroRect, configuration: WKWebViewConfiguration())
-    override func loadView() {
-        super.loadView()
-        webview.wantsLayer = true
-        webview.removeFromSuperview()
-        addSubview(webview)
-        
-        indicator = ProgressIndicator(frame: NSMakeRect(0,0,30,30))
-        addSubview(indicator)
-        indicator.center()
-        
-        webview.isHidden = true
-        indicator.animates = true
-        
-        
-        webview.navigationDelegate = self
-       // leakWebview()
-        
-        if let embed = content.embedUrl, let url = URL(string: embed) {
-            webview.load(URLRequest(url: url))
-            
-            readyOnce()
-        }
-        
+    private var effectiveSize: NSSize?
+    private var data: Data?
+    private var webview: WKWebView!
+    private var locked: Bool = false
+    private var counter: Int = 0
+    private let title: String
+    
+    private var keepAliveDisposable: Disposable?
+    private let installedBotsDisposable = MetaDisposable()
+
+    
+    private var installedBots:[PeerId] = []
+    
+    init(url: String, title: String, effectiveSize: NSSize? = nil, data: Data? = nil, context: AccountContext) {
+        self.url = url
+        self.data = data
+        self.context = context
+        self.title = title
+        self.effectiveSize = effectiveSize
+        super.init(frame:NSMakeRect(0,0,380,450))
     }
     
     
@@ -58,10 +79,85 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate {
     }
     
     
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        let js = "var TelegramWebviewProxyProto = function() {}; " +
+        "TelegramWebviewProxyProto.prototype.postEvent = function(eventName, eventData) { " +
+        "window.webkit.messageHandlers.performAction.postMessage({'eventName': eventName, 'eventData': eventData}); " +
+        "}; " +
+        "var TelegramWebviewProxy = new TelegramWebviewProxyProto();"
+    
+        let configuration = WKWebViewConfiguration()
+        let userController = WKUserContentController()
+        
+        let userScript = WKUserScript(source: js, injectionTime: .atDocumentStart, forMainFrameOnly: false)
+        userController.addUserScript(userScript)
+        
+        userController.add(WeakScriptMessageHandler { [weak self] message in
+            if let strongSelf = self {
+                strongSelf.handleScriptMessage(message)
+            }
+        }, name: "performAction")
+
+        
+        configuration.userContentController = userController
+    
+        
+        
+        webview = WKWebView(frame: NSZeroRect, configuration: configuration)
+        
+        webview.wantsLayer = true
+        webview.removeFromSuperview()
+        addSubview(webview)
+        
+        indicator = ProgressIndicator(frame: NSMakeRect(0,0,30,30))
+        addSubview(indicator)
+        indicator.center()
+        
+        webview.isHidden = true
+        indicator.animates = true
+        
+        webview.navigationDelegate = self
+        
+        if let url = URL(string: self.url) {
+            webview.load(URLRequest(url: url))
+        }
+        
+        readyOnce()
+        
+        guard let data = data else {
+            return
+        }
+        
+
+        
+        self.keepAliveDisposable = (data.keepAliveSignal
+                                    |> deliverOnMainQueue).start(error: { [weak self] _ in
+                                        if let strongSelf = self {
+                                            strongSelf.close()
+                                        }
+                                    })
+        
+        
+        let bots = self.context.engine.messages.attachMenuBots() |> deliverOnMainQueue
+        installedBotsDisposable.set(bots.start(next: { [weak self] items in
+            self?.installedBots = items.map { $0.peer.id }
+        }))
+
+    }
+    
     
     override func measure(size: NSSize) {
-        if let embedSize = content.embedSize?.size {
+        if let embedSize = effectiveSize {
             let size = embedSize.aspectFitted(NSMakeSize(min(size.width - 100, 800), min(size.height - 100, 800)))
+            webview.setFrameSize(size)
+            
+            self.modal?.resize(with:size, animated: false)
+            indicator.center()
+
+        } else {
+            let size = NSMakeSize(380, 450)
             webview.setFrameSize(size)
             
             self.modal?.resize(with:size, animated: false)
@@ -78,16 +174,141 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate {
     }
     
     deinit {
-        var bp:Int = 0
-        bp += 1
+        keepAliveDisposable?.dispose()
+        installedBotsDisposable.dispose()
+    }
+    
+    private func handleScriptMessage(_ message: WKScriptMessage) {
+        guard let body = message.body as? [String: Any] else {
+            return
+        }
+        
+        guard let eventName = body["eventName"] as? String else {
+            return
+        }
+        
+        switch eventName {
+        case "webview_data_send":
+            if let eventData = body["eventData"] as? String {
+                self.handleSendData(data: eventData)
+            }
+        case "webview_close":
+            self.close()
+        default:
+            break
+        }
+    }
+    
+    func sendEvent(name: String, data: String) {
+        let script = "window.TelegramGameProxy.receiveEvent(\"\(name)\", \(data))"
+        self.webview.evaluateJavaScript(script, completionHandler: { _, _ in
+            
+        })
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        
+        
+        let themeParams = generateWebAppThemeParams(theme)
+        var themeParamsString = "{theme_params: {"
+        for (key, value) in themeParams {
+            if let value = value as? Int32 {
+                let color = NSColor(rgb: UInt32(bitPattern: value))
+                
+                if themeParamsString.count > 16 {
+                    themeParamsString.append(", ")
+                }
+                themeParamsString.append("\"\(key)\": \"#\(color.hexString)\"")
+            }
+        }
+        themeParamsString.append("}}")
+        self.sendEvent(name: "theme_changed", data: themeParamsString)
+
+    }
+    
+
+    
+    private func handleSendData(data string: String) {
+        guard let controllerData = self.data else {
+            return
+        }
+        
+        counter += 1
+        
+        
+        if let data = string.data(using: .utf8), let jsonArray = try? JSONSerialization.jsonObject(with: data, options : .allowFragments) as? [String: Any], let data = jsonArray["data"] {
+            var resultString: String?
+            if let string = data as? String {
+                resultString = string
+            } else if let data1 = try? JSONSerialization.data(withJSONObject: data, options: JSONSerialization.WritingOptions.prettyPrinted), let convertedString = String(data: data1, encoding: String.Encoding.utf8) {
+                resultString = convertedString
+            }
+            if let resultString = resultString {
+                let _ = (self.context.engine.messages.sendWebViewData(botId: controllerData.bot.id, buttonText: controllerData.buttonText, data: resultString)).start()
+            }
+        }
+        self.close()
+    }
+
+    private func reloadPage() {
+        self.webview.reload()
+    }
+    
+    override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
+        return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
+            self?.close()
+        }), center: ModalHeaderData(title: self.defaultBarTitle, subtitle: strings().presenceBot), right: ModalHeaderData(image: theme.icons.chatActions, contextMenu: { [weak self] in
+            
+            var items:[ContextMenuItem] = []
+            
+            items.append(.init(strings().webAppReload, handler: { [weak self] in
+                self?.reloadPage()
+            }, itemImage: MenuAnimation.menu_reload.value))
+            
+            if let installedBots = self?.installedBots {
+                if let data = self?.data, let bot = data.bot as? TelegramUser, let botInfo = bot.botInfo {
+                    if botInfo.flags.contains(.canBeAddedToAttachMenu) {
+                        if installedBots.contains(where: { $0 == bot.id }) {
+                            items.append(ContextSeparatorItem())
+                            items.append(.init(strings().webAppRemoveBot, handler: { [weak self] in
+                                self?.removeBotFromAttachMenu(bot: bot)
+                            }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                        } else {
+                            items.append(.init(strings().webAppInstallBot, handler: { [weak self] in
+                                self?.addBotToAttachMenu(bot: bot)
+                            }, itemImage: MenuAnimation.menu_plus.value))
+                        }
+                    }
+                }
+            }
+            return items
+        }))
+    }
+    
+    private func removeBotFromAttachMenu(bot: Peer) {
+        let context = self.context
+        _ = showModalProgress(signal: context.engine.messages.removeBotFromAttachMenu(peerId: bot.id), for: context.window).start(next: { value in
+            if value {
+                showModalText(for: context.window, text: strings().webAppAttachRemoveSuccess(bot.displayTitle))
+            }
+        })
+        self.installedBots.removeAll(where: { $0 == bot.id})
+    }
+    private func addBotToAttachMenu(bot: Peer) {
+        let context = self.context
+        installAttachMenuBot(context: context, peer: bot, completion: { [weak self] value in
+            if value {
+                self?.installedBots.append(bot.id)
+            }
+        })
     }
     
     
-    init(content:TelegramMediaWebpageLoadedContent, context: AccountContext) {
-        self.content = content
-        self.context = context
-        super.init(frame:NSMakeRect(0,0,350,270))
+    override var defaultBarTitle: String {
+        return self.title
     }
     
+
 }
 

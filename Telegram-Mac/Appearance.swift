@@ -2443,3 +2443,14 @@ func setDefaultTheme(for window: Window? = nil) {
     telegramUpdateTheme(generateTheme(palette: dayClassicPalette, cloudTheme: nil, bubbled: false, fontSize: 13.0, wallpaper: ThemeWallpaper()), window: window, animated: false)
 }
 
+func generateWebAppThemeParams(_ presentationTheme: PresentationTheme) -> [String: Any] {
+    return [
+        "bg_color": Int32(bitPattern: presentationTheme.colors.background.rgb),
+        "text_color": Int32(bitPattern: presentationTheme.colors.text.rgb),
+        "hint_color": Int32(bitPattern: presentationTheme.colors.listBackground.rgb),
+        "link_color": Int32(bitPattern: presentationTheme.colors.link.rgb),
+        "button_color": Int32(bitPattern: presentationTheme.colors.accent.rgb),
+        "button_text_color": Int32(bitPattern: presentationTheme.colors.underSelectedColor.rgb)
+    ]
+}
+

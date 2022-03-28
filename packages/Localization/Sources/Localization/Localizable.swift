@@ -11009,6 +11009,36 @@ public final class L10n {
   public static var wallpaperPreviewHeader: String  { return L10n.tr("Localizable", "WallpaperPreview.Header") }
   /// Paste and Match Style
   public static var weT3VZwkTitle: String  { return L10n.tr("Localizable", "WeT-3V-zwk.title") }
+  /// Install Bot
+  public static var webAppInstallBot: String  { return L10n.tr("Localizable", "WebApp.InstallBot") }
+  /// Reload
+  public static var webAppReload: String  { return L10n.tr("Localizable", "WebApp.Reload") }
+  /// Remove Bot
+  public static var webAppRemoveBot: String  { return L10n.tr("Localizable", "WebApp.RemoveBot") }
+  /// Webpage
+  public static var webAppTitle: String  { return L10n.tr("Localizable", "WebApp.Title") }
+  /// "%@" asks your permission to be added as an option to your attachments menu so you access it from any chat.
+  public static func webAppAttachConfirm(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.Attach.Confirm", p1)
+  }
+  /// Sorry, %@ doesn't seem to exist.
+  public static func webAppAttachDoenstExist(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.Attach.DoenstExist", p1)
+  }
+  /// Sorry, %@ can't be used from attach menu.
+  public static func webAppAttachNotSupport(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.Attach.NotSupport", p1)
+  }
+  /// You sucessfully added "%@" to attach menu.
+  public static func webAppAttachSuccess(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.Attach.Success", p1)
+  }
+  /// Add
+  public static var webAppAttachConfirmOK: String  { return L10n.tr("Localizable", "WebApp.Attach.Confirm.OK") }
+  /// You sucessfully removed "%@" from attach menu.
+  public static func webAppAttachRemoveSuccess(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.AttachRemove.Success", p1)
+  }
   /// Disconnect
   public static var webAuthorizationsLogout: String  { return L10n.tr("Localizable", "WebAuthorizations.Logout") }
   /// Disconnect All Websites

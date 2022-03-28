@@ -206,7 +206,7 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         }))
         if !peer.isBot {
             if !(item.peerView.peers[item.peerView.peerId] is TelegramSecretChat), arguments.context.peerId != peer.id, !isServicePeer(peer) && !peer.rawDisplayTitle.isEmpty {
-                items.append(ActionItem(text: strings().peerInfoActionSecretChat, image: theme.icons.profile_secret_chat, animation: .menu_secret_chat, action: arguments.startSecretChat))
+                items.append(ActionItem(text: strings().peerInfoActionSecretChat, image: theme.icons.profile_secret_chat, animation: .menu_lock, action: arguments.startSecretChat))
             }
             if peer.id != item.context.peerId, item.peerView.peerIsContact, peer.phone != nil {
                 items.append(ActionItem(text: strings().peerInfoActionShare, image: theme.icons.profile_share, animation: .menu_forward, action: arguments.shareContact))
