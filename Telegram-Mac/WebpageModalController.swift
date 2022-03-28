@@ -39,13 +39,19 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate {
         let buttonText: String
         let keepAliveSignal: Signal<Never, KeepWebViewError>
     }
+    
+    enum RequestData {
+        case simple(url: String, bot: Peer)
+        case normal(url: String?, peerId: PeerId, bot: Peer, replyTo: MessageId?, buttonText: String)
+    }
 
     
     private var indicator:ProgressIndicator!
-    private let url:String
+    private var url:String
     private let context:AccountContext
     private var effectiveSize: NSSize?
     private var data: Data?
+    private var requestData: RequestData?
     private var webview: WKWebView!
     private var locked: Bool = false
     private var counter: Int = 0
@@ -53,13 +59,14 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate {
     
     private var keepAliveDisposable: Disposable?
     private let installedBotsDisposable = MetaDisposable()
-
+    private let requestWebDisposable = MetaDisposable()
     
     private var installedBots:[PeerId] = []
     
-    init(url: String, title: String, effectiveSize: NSSize? = nil, data: Data? = nil, context: AccountContext) {
+    init(url: String, title: String, effectiveSize: NSSize? = nil, requestData: RequestData? = nil, context: AccountContext) {
         self.url = url
-        self.data = data
+        self.requestData = requestData
+        self.data = nil
         self.context = context
         self.title = title
         self.effectiveSize = effectiveSize
@@ -120,25 +127,63 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate {
         
         webview.navigationDelegate = self
         
-        if let url = URL(string: self.url) {
-            webview.load(URLRequest(url: url))
-        }
-        
         readyOnce()
-        
-        guard let data = data else {
-            return
-        }
-        
+        let context = self.context
 
         
-        self.keepAliveDisposable = (data.keepAliveSignal
-                                    |> deliverOnMainQueue).start(error: { [weak self] _ in
-                                        if let strongSelf = self {
-                                            strongSelf.close()
-                                        }
-                                    })
-        
+        if let requestData = requestData {
+            
+            switch requestData {
+            case .simple(let url, let bot):
+                let signal = context.engine.messages.requestSimpleWebView(botId: bot.id, url: url, themeParams: generateWebAppThemeParams(theme)) |> deliverOnMainQueue
+                
+                requestWebDisposable.set(signal.start(next: { [weak self] url in
+                    if let url = URL(string: url) {
+                        self?.webview.load(URLRequest(url: url))
+                    }
+                    self?.url = url
+                }, error: { [weak self] error in
+                    switch error {
+                    case .generic:
+                        alert(for: context.window, info: strings().unknownError)
+                        self?.close()
+                    }
+                }))
+            case .normal(let url, let peerId, let bot, let replyTo, let buttonText):
+                let signal = context.engine.messages.requestWebView(peerId: peerId, botId: bot.id, url: url, themeParams: generateWebAppThemeParams(theme), replyToMessageId: replyTo) |> deliverOnMainQueue
+                requestWebDisposable.set(signal.start(next: { [weak self] result in
+                    switch result {
+                    case let .webViewResult(queryId, url, keepAliveSignal):
+                        self?.data = .init(queryId: queryId, bot: bot, peerId: peerId, buttonText: buttonText, keepAliveSignal: keepAliveSignal)
+                        if let url = URL(string: url) {
+                            self?.webview.load(URLRequest(url: url))
+                        }
+                        self?.keepAliveDisposable = (keepAliveSignal
+                                                    |> deliverOnMainQueue).start(error: { [weak self] _ in
+                                                        self?.close()
+                                                    }, completed: { [weak self] in
+                                                        self?.close()
+                                                    })
+                        self?.url = url
+                    case .requestConfirmation:
+                        break
+                    }
+                }, error: { [weak self] error in
+                    switch error {
+                    case .generic:
+                        alert(for: context.window, info: strings().unknownError)
+                        self?.close()
+                    }
+                }))
+            }
+            
+            
+            
+        } else {
+            if let url = URL(string: self.url) {
+                webview.load(URLRequest(url: url))
+            }
+        }
         
         let bots = self.context.engine.messages.attachMenuBots() |> deliverOnMainQueue
         installedBotsDisposable.set(bots.start(next: { [weak self] items in
@@ -176,6 +221,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate {
     deinit {
         keepAliveDisposable?.dispose()
         installedBotsDisposable.dispose()
+        requestWebDisposable.dispose()
     }
     
     private func handleScriptMessage(_ message: WKScriptMessage) {
