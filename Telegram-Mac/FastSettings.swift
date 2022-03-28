@@ -137,7 +137,7 @@ class FastSettings {
     private static let kNeedShowChannelIntro = "kNeedShowChannelIntro"
     
     private static let kNoticeAdChannel = "kNoticeAdChannel"
-    private static let kPlayingRate = "kPlayingRate"
+    private static let kPlayingRate = "kPlayingRate2"
     private static let kPlayingVideoRate = "kPlayingVideoRate"
 
     private static let kSVCShareMicro = "kSVCShareMicro"

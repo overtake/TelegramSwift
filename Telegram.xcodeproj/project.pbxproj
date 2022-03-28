@@ -385,6 +385,7 @@
 		27CEA34D27B2A31B00472CB1 /* SupportAccountContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27CEA34C27B2A31B00472CB1 /* SupportAccountContext.swift */; };
 		27CEA34F27B676B700472CB1 /* menu_translate.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CEA34E27B676B700472CB1 /* menu_translate.tgs */; };
 		27D006DF25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D006DE25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift */; };
+		27D29AA227F1DE8E00D4BC64 /* menu_reload.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27D29AA127F1DE8E00D4BC64 /* menu_reload.tgs */; };
 		27D43D9A27917641006968A6 /* libvpx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2754D29827909668000DDAD3 /* libvpx.a */; };
 		27D43D9F279176DC006968A6 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43D9B279176C2006968A6 /* libavcodec.a */; };
 		27D43DA0279176DE006968A6 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43D9D279176C3006968A6 /* libavformat.a */; };
@@ -1006,7 +1007,6 @@
 		C2D187F01E28C58C0038961D /* ContextSwitchPeerRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D187EF1E28C58C0038961D /* ContextSwitchPeerRowItem.swift */; };
 		C2D187F21E28D0840038961D /* ChatSwitchInlineController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D187F11E28D0840038961D /* ChatSwitchInlineController.swift */; };
 		C2D2CAED1E64579700939968 /* StickerPackPreviewModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D2CAEC1E64579700939968 /* StickerPackPreviewModalController.swift */; };
-		C2D2CAF01E64874600939968 /* StickerPackGridItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D2CAEF1E64874600939968 /* StickerPackGridItem.swift */; };
 		C2DDA04E1EC0C024003531BB /* opening.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = C2DDA04D1EC0C024003531BB /* opening.mp3 */; };
 		C2DDA0501EC0C19A003531BB /* opening.m4a in Resources */ = {isa = PBXBuildFile; fileRef = C2DDA04F1EC0C19A003531BB /* opening.m4a */; };
 		C2DE5D281F3CA5FE0081EC1E /* InstantPageItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2DE5D271F3CA5FE0081EC1E /* InstantPageItem.swift */; };
@@ -1612,6 +1612,7 @@
 		27CEA34C27B2A31B00472CB1 /* SupportAccountContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupportAccountContext.swift; sourceTree = "<group>"; };
 		27CEA34E27B676B700472CB1 /* menu_translate.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_translate.tgs; sourceTree = "<group>"; };
 		27D006DE25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportedInvitationRowItem.swift; sourceTree = "<group>"; };
+		27D29AA127F1DE8E00D4BC64 /* menu_reload.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_reload.tgs; sourceTree = "<group>"; };
 		27D43D9B279176C2006968A6 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = "core-xprojects/ffmpeg/build/ffmpeg/lib/libavcodec.a"; sourceTree = "<group>"; };
 		27D43D9C279176C2006968A6 /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavutil.a; path = "core-xprojects/ffmpeg/build/ffmpeg/lib/libavutil.a"; sourceTree = "<group>"; };
 		27D43D9D279176C3006968A6 /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavformat.a; path = "core-xprojects/ffmpeg/build/ffmpeg/lib/libavformat.a"; sourceTree = "<group>"; };
@@ -2242,7 +2243,6 @@
 		C2D187EF1E28C58C0038961D /* ContextSwitchPeerRowItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContextSwitchPeerRowItem.swift; sourceTree = "<group>"; };
 		C2D187F11E28D0840038961D /* ChatSwitchInlineController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ChatSwitchInlineController.swift; sourceTree = "<group>"; };
 		C2D2CAEC1E64579700939968 /* StickerPackPreviewModalController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StickerPackPreviewModalController.swift; sourceTree = "<group>"; };
-		C2D2CAEF1E64874600939968 /* StickerPackGridItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StickerPackGridItem.swift; sourceTree = "<group>"; };
 		C2D70AF11F2BFB3700AE768E /* Telegram.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = Telegram.xcodeproj; sourceTree = "<group>"; };
 		C2DDA04D1EC0C024003531BB /* opening.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = opening.mp3; sourceTree = "<group>"; };
 		C2DDA04F1EC0C19A003531BB /* opening.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = opening.m4a; sourceTree = "<group>"; };
@@ -2853,6 +2853,7 @@
 				2729341B2779A35C00F10D3C /* menu_select_multiple.tgs */,
 				272934152778E05000F10D3C /* menu_music.tgs */,
 				272934132778E03E00F10D3C /* menu_voice.tgs */,
+				27D29AA127F1DE8E00D4BC64 /* menu_reload.tgs */,
 				272934112778E01100F10D3C /* menu_video.tgs */,
 				2729340F2778DFF900F10D3C /* menu_file.tgs */,
 				271D4F352769D07D004FD034 /* menu_reactions.tgs */,
@@ -4716,7 +4717,6 @@
 			isa = PBXGroup;
 			children = (
 				C2D2CAEC1E64579700939968 /* StickerPackPreviewModalController.swift */,
-				C2D2CAEF1E64874600939968 /* StickerPackGridItem.swift */,
 			);
 			name = stickers;
 			sourceTree = "<group>";
@@ -5611,6 +5611,7 @@
 				27803BF927A3E944007B0FA9 /* menu_folder_read.tgs in Resources */,
 				9F03680F22771A9700456348 /* anim_unarchive.json in Resources */,
 				2773A55125FA4DAC00AB45E9 /* voice_chat_raise_hand_2.tgs in Resources */,
+				27D29AA227F1DE8E00D4BC64 /* menu_reload.tgs in Resources */,
 				275549142747C24F0098A3CD /* device_edge.tgs in Resources */,
 				27336733276240A60027441E /* menu_view_replies.tgs in Resources */,
 				27F2BBC527BE4E7B00A37463 /* code_note.tgs in Resources */,
@@ -6102,7 +6103,6 @@
 				A778DC3023C8985300DD307B /* SoundEffects.swift in Sources */,
 				C2B648901EB25B1700BA574B /* MediaResources.swift in Sources */,
 				C219E1E81D8AC90B0042F0C8 /* ChatUnreadRowView.swift in Sources */,
-				C2D2CAF01E64874600939968 /* StickerPackGridItem.swift in Sources */,
 				C2379D2A1DDCCBF10063AD30 /* ReplyMarkupNode.swift in Sources */,
 				27E7E4A5270F0F9A00CF3A24 /* NetworkStatusManager.swift in Sources */,
 				D076F86D22959958004F895A /* InlineLoginController.swift in Sources */,

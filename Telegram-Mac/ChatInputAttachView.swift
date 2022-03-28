@@ -81,6 +81,8 @@ class ChatInputAttachView: ImageButton, Notifable {
                     }
                 } else if chatInteraction.presentation.interfaceState.editState == nil {
                     
+                    let peerId = chatInteraction.peerId
+                    
                     if let slowMode = self.chatInteraction.presentation.slowMode, slowMode.hasLocked {
                         showSlowModeTimeoutTooltip(slowMode, for: self)
                         return nil
@@ -93,6 +95,23 @@ class ChatInputAttachView: ImageButton, Notifable {
                         }
                         self?.chatInteraction.attachPhotoOrVideo()
                     }, itemImage: MenuAnimation.menu_shared_media.value))
+                    
+                    if chatInteraction.presentation.chatMode == .history {
+                        for attach in chatInteraction.presentation.attachItems {
+                            items.append(ContextMenuItem(attach.peer.displayTitle, handler: {
+                                let signal = context.engine.messages.requestWebView(peerId: peerId, botId: attach.peer.id, url: nil, themeParams: generateWebAppThemeParams(theme), replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId)
+                                _ = showModalProgress(signal: signal, for: context.window).start(next: { result in
+                                    switch result {
+                                    case let .webViewResult(queryId, url, keepAliveSignal):
+                                        showModal(with: WebpageModalController(url: url, title: attach.peer.displayTitle, data: .init(queryId: queryId, bot: attach.peer, peerId: peerId, buttonText: "", keepAliveSignal: keepAliveSignal), context: context), for: context.window)
+                                    case .requestConfirmation:
+                                        break
+                                    }
+                                })
+                               
+                            }, itemImage: MenuAnimation.menu_folder_bot.value))
+                        }
+                    }
                     
                     items.append(ContextMenuItem(strings().inputAttachPopoverFile, handler: { [weak self] in
                         if let permissionText = permissionText(from: peer, for: .banSendMedia) {

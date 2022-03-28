@@ -287,9 +287,23 @@ private final class ModalHeaderView: View {
             if let image = right.image {
                 rightButton?.set(image: image, for: .Normal)
             }
-            rightButton?.set(handler: { _ in
-                right.handler?()
-            }, for: .Click)
+            if right.contextMenu != nil {
+                rightButton?.contextMenu = {
+                    let menu = ContextMenu()
+                    if let items = right.contextMenu?() {
+                        for item in items {
+                            menu.addItem(item)
+                        }
+                    }
+                    return menu
+                }
+            } else {
+                rightButton?.set(handler: { _ in
+                    right.handler?()
+                }, for: .Click)
+            }
+            
+            
             
             _ = rightButton?.sizeToFit()
             addSubview(rightButton!)
@@ -300,9 +314,21 @@ private final class ModalHeaderView: View {
             if let image = left.image {
                 leftButton?.set(image: image, for: .Normal)
             }
-            leftButton?.set(handler: { _ in
-                left.handler?()
-            }, for: .Click)
+            if left.contextMenu != nil {
+                leftButton?.contextMenu = {
+                    let menu = ContextMenu()
+                    if let items = left.contextMenu?() {
+                        for item in items {
+                            menu.addItem(item)
+                        }
+                    }
+                    return menu
+                }
+            } else {
+                leftButton?.set(handler: { _ in
+                    left.handler?()
+                }, for: .Click)
+            }
             
             _ = leftButton?.sizeToFit()
             addSubview(leftButton!)

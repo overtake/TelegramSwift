@@ -1378,6 +1378,13 @@ extension Peer {
         return nil
     }
     
+    var botInfo: BotUserInfo? {
+        if let peer = self as? TelegramUser {
+            return peer.botInfo
+        }
+        return nil
+    }
+    
     var isSupergroup:Bool {
         if let peer = self as? TelegramChannel {
             switch peer.info {
@@ -3553,4 +3560,16 @@ extension SoftwareVideoSource {
             memcpy(pixelData, bytes, bufferSize)
         })
     }
+}
+
+
+func installAttachMenuBot(context: AccountContext, peer: Peer, completion: @escaping(Bool)->Void) {
+    confirm(for: context.window, information: strings().webAppAttachConfirm(peer.displayTitle), okTitle: strings().webAppAttachConfirmOK, successHandler: { _ in
+        _ = showModalProgress(signal: context.engine.messages.addBotToAttachMenu(peerId: peer.id), for: context.window).start(next: { value in
+            if value {
+                showModalText(for: context.window, text: strings().webAppAttachSuccess(peer.displayTitle))
+            }
+            completion(value)
+        })
+    })
 }

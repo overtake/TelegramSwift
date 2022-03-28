@@ -281,8 +281,12 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
             self.player?.removeFromSuperview()
             self.player = nil
             
-            let size = NSMakeSize(frame.width - 80, frame.height - 80)
-
+            let dimensions = reference.media.dimensions?.size
+            
+            var size = NSMakeSize(frame.width - 80, frame.height - 80)
+            if let dimensions = dimensions {
+                size = dimensions.aspectFitted(size)
+            }
 
             self.player = LottiePlayerView(frame: NSMakeRect(0, 0, size.width, size.height))
             addSubview(self.player!)

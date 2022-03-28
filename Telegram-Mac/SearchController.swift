@@ -626,7 +626,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 let link = inApp(for: query as NSString, context: context, peerId: nil, openInfo: callback, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
                 
                 switch link {
-                case let .followResolvedName(_, username, _, context, _, _):
+                case let .followResolvedName(_, username, _, _, context, _, _):
                     foundQueryPeers.set(resolveUsername(username: username, context: context))
                 default:
                     foundQueryPeers.set(.single(nil))
@@ -1273,7 +1273,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         if let query = query, let peerId = peerId {
             let link = inApp(for: query as NSString, context: context, peerId: peerId, openInfo: { _, _, _, _ in }, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
             switch link {
-            case let .followResolvedName(_, _, postId, _, _, _):
+            case let .followResolvedName(_, _, postId, _, _, _, _):
                 if let postId = postId {
                     messageId = MessageId(peerId: peerId, namespace: Namespaces.Message.Cloud, id: postId)
                 }

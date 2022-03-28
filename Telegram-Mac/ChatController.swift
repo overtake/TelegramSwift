@@ -2926,9 +2926,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let strongSelf = self {
                 func apply(_ controller: ChatController, atDate: Int32?) {
                     let chatInteraction = controller.chatInteraction
-                    
-                    let value = context.engine.messages.enqueueOutgoingMessageWithChatContextResult(to: chatInteraction.peerId, results: results, result: result, replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId ?? chatInteraction.mode.threadId)
-                    
+                    let value = context.engine.messages.enqueueOutgoingMessageWithChatContextResult(to: chatInteraction.peerId, botId: results.botId, result: result, replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId ?? chatInteraction.mode.threadId)
                     if value {
                         controller.nextTransaction.set(handler: afterSentTransition)
                     }
@@ -4381,8 +4379,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         let availableGroupCall: Signal<GroupCallPanelData?, NoError> = getGroupCallPanelData(context: context, peerId: peerId)
         
+        let attach = (context.engine.messages.attachMenuBots() |> then(.complete() |> suspendAwareDelay(1, queue: .mainQueue()))) |> restart
         
-        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall).start(next: { [weak self] pinnedMsg, postboxView, groupCallData in
+        
+        
+        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall, attach).start(next: { [weak self] pinnedMsg, postboxView, groupCallData, attachItems in
             
                         
             guard let `self` = self else {return}
@@ -4482,6 +4483,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         present = present.withUpdatedDiscussionGroupId(discussionGroupId)
                         present = present.withUpdatedPinnedMessageId(pinnedMsg)
                         
+                        present = present.withUpdatedAttachItems(attachItems)
                         var contactStatus: ChatPeerStatus?
                         if let cachedData = peerView.cachedData as? CachedUserData {
                             contactStatus = ChatPeerStatus(canAddContact: !peerView.peerIsContact, peerStatusSettings: cachedData.peerStatusSettings)
@@ -5875,7 +5877,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     
                     switch confirm {
                     case .thrid:
-                        execute(inapp: inAppLink.followResolvedName(link: "@spambot", username: "spambot", postId: nil, context: context, action: nil, callback: { [weak strongSelf] peerId, openChat, postid, initialAction in
+                        execute(inapp: inAppLink.followResolvedName(link: "@spambot", username: "spambot", postId: nil, suffixAction: nil, context: context, action: nil, callback: { [weak strongSelf] peerId, openChat, postid, initialAction in
                             strongSelf?.chatInteraction.openInfo(peerId, openChat, postid, initialAction)
                         }))
                     default:
