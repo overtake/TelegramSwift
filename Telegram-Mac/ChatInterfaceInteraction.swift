@@ -150,6 +150,7 @@ final class ChatInteraction : InterfaceObserver  {
     var blockContact: ()->Void = {}
     var openScheduledMessages: ()->Void = {}
     var openBank: (String)->Void = { _ in }
+    var afterSentTransition:()->Void = {}
     var getGradientOffsetRect:()->NSRect = {  return .zero }
     var contextHolder:()->Atomic<ChatLocationContextHolder?> = { Atomic(value: nil) }
     
@@ -481,7 +482,7 @@ final class ChatInteraction : InterfaceObserver  {
                 let peerId = self.peerId
                 
                 let openAttach:(Peer)->Void = { peer in
-                    showModal(with: WebpageModalController(url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: peer, replyTo: replyId, buttonText: ""), context: context), for: context.window)
+                    showModal(with: WebpageModalController(url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: peer, replyTo: replyId, buttonText: "", complete: self.afterSentTransition), context: context), for: context.window)
                 }
                 _ = installed.start(next: { peer in
                     if let peer = peer {
@@ -642,7 +643,7 @@ final class ChatInteraction : InterfaceObserver  {
                                     showModal(with: WebpageModalController(url: url, title: bot.displayTitle, requestData: .simple(url: hashUrl, bot: bot), context: context), for: context.window)
                                 })
                             } else {
-                                showModal(with: WebpageModalController(url: hashUrl, title: bot.displayTitle, requestData: .normal(url: hashUrl, peerId: peerId, bot: bot, replyTo: replyTo, buttonText: button.title), context: context), for: context.window)
+                                showModal(with: WebpageModalController(url: hashUrl, title: bot.displayTitle, requestData: .normal(url: hashUrl, peerId: peerId, bot: bot, replyTo: replyTo, buttonText: button.title, complete: strongSelf.afterSentTransition), context: context), for: context.window)
                             }
                             
                         }

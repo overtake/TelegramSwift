@@ -2331,7 +2331,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 gallery_pip_unmuted: { NSImage(named: "Icon_Pip_Unmuted")!.precomposed(NSColor(0xffffff)) },
                                                 gallery_pip_out: { NSImage(named: "Icon_Pip_Out")!.precomposed(NSColor(0xffffff)) },
                                                 gallery_pip_pause: { NSImage(named: "Icon_Pip_Pause")!.precomposed(NSColor(0xffffff)) },
-                                                gallery_pip_play: { NSImage(named: "Icon_Pip_Play")!.precomposed(NSColor(0xffffff)) }
+                                                gallery_pip_play: { NSImage(named: "Icon_Pip_Play")!.precomposed(NSColor(0xffffff)) },
+                                                notification_sound_add: { NSImage(named: "Icon_Notification_Add")!.precomposed(palette.accent, flipVertical: true) }
 
     )
 

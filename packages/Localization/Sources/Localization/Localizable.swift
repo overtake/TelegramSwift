@@ -2385,6 +2385,8 @@ public final class L10n {
   }
   /// Updated just now
   public static var chatLiveLocationUpdatedNow: String  { return L10n.tr("Localizable", "Chat.LiveLocation.UpdatedNow") }
+  /// Delete for All
+  public static var chatMessageDeleteForAll: String  { return L10n.tr("Localizable", "Chat.Message.DeleteForAll") }
   /// Delete for everyone
   public static var chatMessageDeleteForEveryone: String  { return L10n.tr("Localizable", "Chat.Message.DeleteForEveryone") }
   /// Delete for me
@@ -2899,6 +2901,10 @@ public final class L10n {
   }
   /// You started a [voice chat](open)
   public static var chatServiceVoiceChatStartedYou: String  { return L10n.tr("Localizable", "Chat.Service.VoiceChatStartedYou") }
+  /// You have just successfully transferred data from the "%@" button to the bot.
+  public static func chatServiceWebData(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.WebData", p1)
+  }
   /// You
   public static var chatServiceYou: String  { return L10n.tr("Localizable", "Chat.Service.You") }
   /// Cancelled
@@ -6311,6 +6317,14 @@ public final class L10n {
   public static var notificationSettingsTurnOnTextText: String  { return L10n.tr("Localizable", "NotificationSettings.TurnOn.Text.Text") }
   /// Allow Notifications
   public static var notificationSettingsTurnOnTextTitle: String  { return L10n.tr("Localizable", "NotificationSettings.TurnOn.Text.Title") }
+  /// Notification Sound
+  public static var notificationSoundTitle: String  { return L10n.tr("Localizable", "NotificationSound.Title") }
+  /// In context menu of any short voice note or mp3 file in chat and select "Save for Notifications". It will appear here.
+  public static var notificationSoundTonesInfo: String  { return L10n.tr("Localizable", "NotificationSound.Tones.Info") }
+  /// TELEGRAM TONES
+  public static var notificationSoundTonesTitle: String  { return L10n.tr("Localizable", "NotificationSound.Tones.Title") }
+  /// Upload Tone
+  public static var notificationSoundTonesUpload: String  { return L10n.tr("Localizable", "NotificationSound.Tones.Upload") }
   /// Mute
   public static var notificationsSnooze: String  { return L10n.tr("Localizable", "Notifications.Snooze") }
   /// Alert

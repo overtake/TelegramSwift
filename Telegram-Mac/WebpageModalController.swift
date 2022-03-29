@@ -42,7 +42,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate {
     
     enum RequestData {
         case simple(url: String, bot: Peer)
-        case normal(url: String?, peerId: PeerId, bot: Peer, replyTo: MessageId?, buttonText: String)
+        case normal(url: String?, peerId: PeerId, bot: Peer, replyTo: MessageId?, buttonText: String, complete:(()->Void)?)
     }
 
     
@@ -149,7 +149,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate {
                         self?.close()
                     }
                 }))
-            case .normal(let url, let peerId, let bot, let replyTo, let buttonText):
+            case .normal(let url, let peerId, let bot, let replyTo, let buttonText, let complete):
                 let signal = context.engine.messages.requestWebView(peerId: peerId, botId: bot.id, url: url, themeParams: generateWebAppThemeParams(theme), replyToMessageId: replyTo) |> deliverOnMainQueue
                 requestWebDisposable.set(signal.start(next: { [weak self] result in
                     switch result {
@@ -163,6 +163,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate {
                                                         self?.close()
                                                     }, completed: { [weak self] in
                                                         self?.close()
+                                                        complete?()
                                                     })
                         self?.url = url
                     case .requestConfirmation:

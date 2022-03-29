@@ -509,8 +509,7 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
                 case let .webViewData(text):
-                    //TODOLANG
-                    let _ =  attributedString.append(string: "Data for \(text) sent to bot", color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    let _ =  attributedString.append(string: strings().chatServiceWebData(text), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 default:
                     break
                 }

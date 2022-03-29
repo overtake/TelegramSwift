@@ -732,6 +732,8 @@ func initialize() -> [String] {
     array.append("gallery_pip_out")
     array.append("gallery_pip_pause")
     array.append("gallery_pip_play")
+    
+    array.append("notification_sound_add")
 
     return array
 }

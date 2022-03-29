@@ -211,13 +211,22 @@ enum LocalAnimatedSticker : String {
     case menu_folder_work
     case menu_drugs
     case menu_reload
+    case menu_webapp_placeholder
     
+    case menu_autodelete_1d
+    case menu_autodelete_1h
+    case menu_autodelete_1m
+    case menu_autodelete_1w
+    case menu_autodelete_never
+    case menu_autodelete_customize
+
     
     case menu_speaker_muted
     case menu_speaker
     
     case menu_sharescreen_slash
     case menu_sharescreen
+    case menu_note_download
     
     
     var file: TelegramMediaFile {
