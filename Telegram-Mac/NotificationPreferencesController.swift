@@ -141,7 +141,7 @@ private final class NotificationArguments {
     let resetAllNotifications:() -> Void
     let toggleMessagesPreview:() -> Void
     let toggleNotifications:() -> Void
-    let notificationTone:(PeerMessageSound) -> Void
+    let notificationTone:() -> Void
     let toggleIncludeUnreadChats:(Bool) -> Void
     let toggleCountUnreadMessages:(Bool) -> Void
     let toggleIncludeGroups:(Bool) -> Void
@@ -152,7 +152,7 @@ private final class NotificationArguments {
     let toggleBadge: (Bool)->Void
     let toggleRequestUserAttention: ()->Void
     let toggleInAppSounds:(Bool)->Void
-    init(resetAllNotifications: @escaping() -> Void, toggleMessagesPreview:@escaping() -> Void, toggleNotifications:@escaping() -> Void, notificationTone:@escaping(PeerMessageSound) -> Void, toggleIncludeUnreadChats:@escaping(Bool) -> Void, toggleCountUnreadMessages:@escaping(Bool) -> Void, toggleIncludeGroups:@escaping(Bool) -> Void, toggleIncludeChannels:@escaping(Bool) -> Void, allAcounts: @escaping()-> Void, snoof: @escaping()-> Void, updateJoinedNotifications: @escaping(Bool) -> Void, toggleBadge: @escaping(Bool)->Void, toggleRequestUserAttention: @escaping ()->Void, toggleInAppSounds: @escaping(Bool)->Void) {
+    init(resetAllNotifications: @escaping() -> Void, toggleMessagesPreview:@escaping() -> Void, toggleNotifications:@escaping() -> Void, notificationTone:@escaping() -> Void, toggleIncludeUnreadChats:@escaping(Bool) -> Void, toggleCountUnreadMessages:@escaping(Bool) -> Void, toggleIncludeGroups:@escaping(Bool) -> Void, toggleIncludeChannels:@escaping(Bool) -> Void, allAcounts: @escaping()-> Void, snoof: @escaping()-> Void, updateJoinedNotifications: @escaping(Bool) -> Void, toggleBadge: @escaping(Bool)->Void, toggleRequestUserAttention: @escaping ()->Void, toggleInAppSounds: @escaping(Bool)->Void) {
         self.resetAllNotifications = resetAllNotifications
         self.toggleMessagesPreview = toggleMessagesPreview
         self.toggleNotifications = toggleNotifications
@@ -249,31 +249,8 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     })))
     index += 1
     
-    var tonesItems:[SPopoverItem] = []
     
-    tonesItems.append(SPopoverItem(localizedPeerNotificationSoundString(sound: .default), {
-        arguments.notificationTone(.default)
-    }))
-
-    tonesItems.append(SPopoverItem(localizedPeerNotificationSoundString(sound: .none), {
-        arguments.notificationTone(.none)
-    }))
-    
-    
-    for i in 0 ..< 12 {
-        let sound: PeerMessageSound = .bundledModern(id: Int32(i))
-        tonesItems.append(SPopoverItem(localizedPeerNotificationSoundString(sound: sound), {
-            arguments.notificationTone(sound)
-        }))
-    }
-    for i in 0 ..< 8 {
-        let sound: PeerMessageSound = .bundledClassic(id: Int32(i))
-        tonesItems.append(SPopoverItem(localizedPeerNotificationSoundString(sound: sound), {
-            arguments.notificationTone(sound)
-        }))
-    }
-    
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_tone, data: InputDataGeneralData(name: strings().notificationSettingsNotificationTone, color: theme.colors.text, type: .contextSelector(localizedPeerNotificationSoundString(sound: settings.tone), tonesItems), viewType: .innerItem)))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_tone, data: InputDataGeneralData(name: strings().notificationSettingsNotificationTone, color: theme.colors.text, type: .nextContext(localizedPeerNotificationSoundString(sound: settings.tone)), viewType: .innerItem, action: arguments.notificationTone)))
     index += 1
 
     entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_bounce, data: InputDataGeneralData(name: strings().notificationSettingsBounceDockIcon, color: theme.colors.text, type: .switchable(settings.requestUserAttention), viewType: .innerItem, action: {
@@ -377,14 +354,8 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedDisplayPreviews(!$0.displayPreviews)}).start()
     }, toggleNotifications: {
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedEnables(!$0.enabled)}).start()
-    }, notificationTone: { tone in
-        if tone == .default {
-            
-        } else if tone != .none {
-            let name = fileNameForNotificationSound(tone, defaultSound: nil)
-            SoundEffectPlay.play(postbox: context.account.postbox, name: name, type: "m4a")
-        }
-        _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedTone(tone)}).start()
+    }, notificationTone: {
+        context.bindings.rootNavigation().push(NotificationSoundController(context: context))
     }, toggleIncludeUnreadChats: { enable in
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedTotalUnreadCountDisplayStyle(enable ? .raw : .filtered)}).start()
     }, toggleCountUnreadMessages: { enable in
@@ -442,7 +413,8 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
     }
 
     
-    let controller = InputDataController(dataSignal: entriesSignal |> map { InputDataSignalValue(entries: $0) }, title: strings().telegramNotificationSettingsViewController, hasDone: false, identifier: "notification-settings")
+    let controller = InputDataController(dataSignal: entriesSignal |> map { InputDataSignalValue(entries: $0) }, title: strings().telegramNotificationSettingsViewController, removeAfterDisappear: false, hasDone: false, identifier: "notification-settings")
+    
     
     
     controller.didLoaded = { controller, _ in

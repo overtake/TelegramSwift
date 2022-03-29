@@ -91,6 +91,7 @@ final class PeerMessageSoundNativeCodable : Codable {
 
 
 public struct InAppNotificationSettings: Codable, Equatable {
+    
     public let enabled: Bool
     public let playSounds: Bool
     public let tone: PeerMessageSound

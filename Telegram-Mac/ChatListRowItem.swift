@@ -1034,9 +1034,25 @@ class ChatListRowItem: TableRowItem {
             }
         }
         
-        return chatListFilterPreferences(engine: context.engine) |> deliverOnMainQueue |> take(1) |> map { filters -> [ContextMenuItem] in
+        let cachedData:Signal<CachedPeerData?, NoError>
+        if let peerId = peerId {
+            cachedData = context.account.viewTracker.peerView(peerId) |> map {
+                $0.cachedData
+            }
+        } else {
+            cachedData = .single(nil)
+        }
+        
+        return combineLatest(queue: .mainQueue(), chatListFilterPreferences(engine: context.engine), cachedData) |> take(1) |> map { filters, cachedData -> [ContextMenuItem] in
             
             var items:[ContextMenuItem] = []
+            
+            let canDeleteForAll: Bool?
+            if let cachedData = cachedData as? CachedChannelData {
+                canDeleteForAll = cachedData.flags.contains(.canDeleteHistory)
+            } else {
+                canDeleteForAll = nil
+            }
             
             var firstGroup:[ContextMenuItem] = []
             var secondGroup:[ContextMenuItem] = []
@@ -1077,7 +1093,7 @@ class ChatListRowItem: TableRowItem {
                 
                 if mainPeer is TelegramUser {
                     thirdGroup.append(ContextMenuItem(strings().chatListContextClearHistory, handler: {
-                        clearHistory(context: context, peer: peer, mainPeer: mainPeer)
+                        clearHistory(context: context, peer: peer, mainPeer: mainPeer, canDeleteForAll: canDeleteForAll)
                     }, itemImage: MenuAnimation.menu_clear_history.value))
                     thirdGroup.append(ContextMenuItem(strings().chatListContextDeleteChat, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                 }
@@ -1103,7 +1119,7 @@ class ChatListRowItem: TableRowItem {
                 }
                 if let peer = peer as? TelegramGroup, !isAd {
                     thirdGroup.append(ContextMenuItem(strings().chatListContextClearHistory, handler: {
-                        clearHistory(context: context, peer: peer, mainPeer: mainPeer)
+                        clearHistory(context: context, peer: peer, mainPeer: mainPeer, canDeleteForAll: canDeleteForAll)
                     }, itemImage: MenuAnimation.menu_delete.value))
                     thirdGroup.append(ContextMenuItem(strings().chatListContextDeleteAndExit, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                 } else if let peer = peer as? TelegramChannel, !isAd, !peer.flags.contains(.hasGeo) {
@@ -1113,9 +1129,9 @@ class ChatListRowItem: TableRowItem {
                     } else if !isAd {
                         if peer.addressName == nil {
                             thirdGroup.append(ContextMenuItem(strings().chatListContextClearHistory, handler: {
-                                clearHistory(context: context, peer: peer, mainPeer: mainPeer)
+                                clearHistory(context: context, peer: peer, mainPeer: mainPeer, canDeleteForAll: canDeleteForAll)
                             }, itemImage: MenuAnimation.menu_clear_history.value))
-                        }
+                        } 
                         thirdGroup.append(ContextMenuItem(strings().chatListContextLeaveGroup, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                     }
                 }

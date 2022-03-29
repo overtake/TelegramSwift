@@ -289,6 +289,17 @@ final class TelegramChatColors {
         }
     }
     
+    private var _chatActionWebUrl: CGImage?
+    func chatActionWebUrl(theme: TelegramPresentationTheme) -> CGImage {
+        if let chatActionWebUrl = _chatActionWebUrl {
+            return chatActionWebUrl
+        } else {
+            let image = NSImage.init(named: "Icon_InlineBotWeb")!.precomposed(theme.chatServiceItemTextColor)
+            _chatActionWebUrl = image
+            return image
+        }
+    }
+    
     private var _chatInvoiceAction: CGImage?
     func chatInvoiceAction(theme: TelegramPresentationTheme) -> CGImage {
         if let _chatInvoiceAction = _chatInvoiceAction {

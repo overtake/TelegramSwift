@@ -538,10 +538,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             }
             return text
         case let .webViewData(data):
-            let text: String
-            //TODOLANG
-            text = "Data for \(data) sent to bot"
-            return text
+            return strings().chatServiceWebData(data)
         }
     }
     
@@ -705,7 +702,7 @@ func autoremoveLocalized(_ ttl: Int, roundToCeil: Bool = false) -> String {
         localized = strings().timerMinutesCountable(ttl / 60)
     } else if ttl <= 86399 {
         localized = strings().timerHoursCountable(ttl / 60 / 60)
-    } else if ttl <= 604800 {
+    } else if ttl <= 604799 {
         if roundToCeil {
             localized = strings().timerDaysCountable(Int(ceil(Float(ttl) / 60 / 60 / 24)))
         } else {

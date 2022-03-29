@@ -2868,7 +2868,7 @@ func createVoiceChat(context: AccountContext, peerId: PeerId, displayAsList: [Fo
                 }))
             }
             if let displayAsList = displayAsList {
-                if !displayAsList.isEmpty || canBeScheduled {
+                if displayAsList.count > 1 || canBeScheduled {
                     showModal(with: GroupCallDisplayAsController(context: context, mode: .create, peerId: peerId, list: displayAsList, completion: create, canBeScheduled: canBeScheduled, isCreator: peer.groupAccess.isCreator), for: context.window)
                 } else {
                     create(context.peerId, nil, false)

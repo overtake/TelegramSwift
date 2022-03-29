@@ -106,6 +106,14 @@
 		274B9E44273035DE009993C7 /* ChatCalendarHeaderRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274B9E43273035DE009993C7 /* ChatCalendarHeaderRowItem.swift */; };
 		274BB56D264013AD00620D03 /* cameraon.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 274BB56C264013AC00620D03 /* cameraon.tgs */; };
 		274BB570264013B900620D03 /* cameraoff.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 274BB56F264013B800620D03 /* cameraoff.tgs */; };
+		2751E79527F340AD003E3937 /* menu_webapp_placeholder.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2751E79427F340AD003E3937 /* menu_webapp_placeholder.tgs */; };
+		2751E79727F34374003E3937 /* menu_clear_messages.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2751E79627F34374003E3937 /* menu_clear_messages.tgs */; };
+		2751E79D27F34415003E3937 /* menu_autodelete_1h.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2751E79827F34411003E3937 /* menu_autodelete_1h.tgs */; };
+		2751E79E27F34415003E3937 /* menu_autodelete_1w.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2751E79927F34412003E3937 /* menu_autodelete_1w.tgs */; };
+		2751E79F27F34415003E3937 /* menu_autodelete_never.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2751E79A27F34413003E3937 /* menu_autodelete_never.tgs */; };
+		2751E7A027F34415003E3937 /* menu_autodelete_1m.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2751E79B27F34414003E3937 /* menu_autodelete_1m.tgs */; };
+		2751E7A127F34415003E3937 /* menu_autodelete_1d.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2751E79C27F34415003E3937 /* menu_autodelete_1d.tgs */; };
+		2751E7A327F3480C003E3937 /* menu_autodelete_customize.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2751E7A227F3480C003E3937 /* menu_autodelete_customize.tgs */; };
 		275549102747C24F0098A3CD /* device_chrome.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275549052747C2380098A3CD /* device_chrome.tgs */; };
 		275549112747C24F0098A3CD /* device_firefox.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275549062747C23B0098A3CD /* device_firefox.tgs */; };
 		275549122747C24F0098A3CD /* device_mac.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275549072747C23D0098A3CD /* device_mac.tgs */; };
@@ -386,6 +394,8 @@
 		27CEA34F27B676B700472CB1 /* menu_translate.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27CEA34E27B676B700472CB1 /* menu_translate.tgs */; };
 		27D006DF25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D006DE25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift */; };
 		27D29AA227F1DE8E00D4BC64 /* menu_reload.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27D29AA127F1DE8E00D4BC64 /* menu_reload.tgs */; };
+		27D29AA527F306E500D4BC64 /* NotificationSoundController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D29AA427F306E500D4BC64 /* NotificationSoundController.swift */; };
+		27D29AA727F329A200D4BC64 /* menu_note_download.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27D29AA627F329A200D4BC64 /* menu_note_download.tgs */; };
 		27D43D9A27917641006968A6 /* libvpx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2754D29827909668000DDAD3 /* libvpx.a */; };
 		27D43D9F279176DC006968A6 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43D9B279176C2006968A6 /* libavcodec.a */; };
 		27D43DA0279176DE006968A6 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D43D9D279176C3006968A6 /* libavformat.a */; };
@@ -1359,6 +1369,14 @@
 		274BB56C264013AC00620D03 /* cameraon.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = cameraon.tgs; sourceTree = "<group>"; };
 		274BB56F264013B800620D03 /* cameraoff.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = cameraoff.tgs; sourceTree = "<group>"; };
 		275045E425EE271D00872D20 /* GroupCallDisplayAsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallDisplayAsController.swift; sourceTree = "<group>"; };
+		2751E79427F340AD003E3937 /* menu_webapp_placeholder.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_webapp_placeholder.tgs; sourceTree = "<group>"; };
+		2751E79627F34374003E3937 /* menu_clear_messages.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_clear_messages.tgs; sourceTree = "<group>"; };
+		2751E79827F34411003E3937 /* menu_autodelete_1h.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_autodelete_1h.tgs; sourceTree = "<group>"; };
+		2751E79927F34412003E3937 /* menu_autodelete_1w.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_autodelete_1w.tgs; sourceTree = "<group>"; };
+		2751E79A27F34413003E3937 /* menu_autodelete_never.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_autodelete_never.tgs; sourceTree = "<group>"; };
+		2751E79B27F34414003E3937 /* menu_autodelete_1m.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_autodelete_1m.tgs; sourceTree = "<group>"; };
+		2751E79C27F34415003E3937 /* menu_autodelete_1d.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_autodelete_1d.tgs; sourceTree = "<group>"; };
+		2751E7A227F3480C003E3937 /* menu_autodelete_customize.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_autodelete_customize.tgs; sourceTree = "<group>"; };
 		2754D29827909668000DDAD3 /* libvpx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libvpx.a; path = "core-xprojects/libvpx/build/libvpx/lib/libvpx.a"; sourceTree = "<group>"; };
 		275549052747C2380098A3CD /* device_chrome.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = device_chrome.tgs; sourceTree = "<group>"; };
 		275549062747C23B0098A3CD /* device_firefox.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = device_firefox.tgs; sourceTree = "<group>"; };
@@ -1613,6 +1631,8 @@
 		27CEA34E27B676B700472CB1 /* menu_translate.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_translate.tgs; sourceTree = "<group>"; };
 		27D006DE25AF3B1C00EE3EB1 /* ExportedInvitationRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportedInvitationRowItem.swift; sourceTree = "<group>"; };
 		27D29AA127F1DE8E00D4BC64 /* menu_reload.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_reload.tgs; sourceTree = "<group>"; };
+		27D29AA427F306E500D4BC64 /* NotificationSoundController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSoundController.swift; sourceTree = "<group>"; };
+		27D29AA627F329A200D4BC64 /* menu_note_download.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_note_download.tgs; sourceTree = "<group>"; };
 		27D43D9B279176C2006968A6 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = "core-xprojects/ffmpeg/build/ffmpeg/lib/libavcodec.a"; sourceTree = "<group>"; };
 		27D43D9C279176C2006968A6 /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavutil.a; path = "core-xprojects/ffmpeg/build/ffmpeg/lib/libavutil.a"; sourceTree = "<group>"; };
 		27D43D9D279176C3006968A6 /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavformat.a; path = "core-xprojects/ffmpeg/build/ffmpeg/lib/libavformat.a"; sourceTree = "<group>"; };
@@ -2845,7 +2865,16 @@
 				277C208B27A2C4C40070B3BF /* menu_sharescreen_slash.tgs */,
 				27CEA34E27B676B700472CB1 /* menu_translate.tgs */,
 				277C208C27A2C4C50070B3BF /* menu_sharescreen.tgs */,
+				27D29AA627F329A200D4BC64 /* menu_note_download.tgs */,
+				2751E79C27F34415003E3937 /* menu_autodelete_1d.tgs */,
+				2751E79827F34411003E3937 /* menu_autodelete_1h.tgs */,
+				2751E79B27F34414003E3937 /* menu_autodelete_1m.tgs */,
+				2751E7A227F3480C003E3937 /* menu_autodelete_customize.tgs */,
+				2751E79927F34412003E3937 /* menu_autodelete_1w.tgs */,
+				2751E79A27F34413003E3937 /* menu_autodelete_never.tgs */,
+				2751E79627F34374003E3937 /* menu_clear_messages.tgs */,
 				27E070F3278D9C0A0026BFA1 /* menu_location.tgs */,
+				2751E79427F340AD003E3937 /* menu_webapp_placeholder.tgs */,
 				27E070F1278D9A970026BFA1 /* menu_camera.tgs */,
 				277DFE6B2784846200F78396 /* menu_moon.tgs */,
 				277DFE692784844700F78396 /* menu_lock.tgs */,
@@ -2935,6 +2964,15 @@
 				2744AE6C25B44E1500E8849F /* ExportedInvitationController.swift */,
 			);
 			name = invitelinks;
+			sourceTree = "<group>";
+		};
+		27D29AA327F306A300D4BC64 /* notifications */ = {
+			isa = PBXGroup;
+			children = (
+				D01CBE2C22A5384600F6A971 /* NotificationPreferencesController.swift */,
+				27D29AA427F306E500D4BC64 /* NotificationSoundController.swift */,
+			);
+			name = notifications;
 			sourceTree = "<group>";
 		};
 		27E050982796B6DD00D5AFC3 /* sendas */ = {
@@ -3703,6 +3741,7 @@
 		C2271DD01DAF6DD9001792B6 /* settings-controllers */ = {
 			isa = PBXGroup;
 			children = (
+				27D29AA327F306A300D4BC64 /* notifications */,
 				2728991A26CBCD8F00F4D288 /* items */,
 				27FFCEC32694BA2C006CA024 /* widget-cards */,
 				9F10CE862060FFB7002DD61A /* secure-id */,
@@ -3718,7 +3757,6 @@
 				C2271DD11DAF6DF5001792B6 /* EmptyChatViewController.swift */,
 				C2A71CE21DDB2EBD00C69F73 /* GeneralSettingsViewController.swift */,
 				C2A71CE61DDB2F8700C69F73 /* UsernameSettingsViewController.swift */,
-				D01CBE2C22A5384600F6A971 /* NotificationPreferencesController.swift */,
 				A767DD4023F2BB3200366F76 /* ShortcutListController.swift */,
 			);
 			name = "settings-controllers";
@@ -5516,6 +5554,7 @@
 				27CB17662763855C00DD25E0 /* menu_show_info.tgs in Resources */,
 				2733671327620B600027441E /* menu_copy.tgs in Resources */,
 				27E7E4A0270E040600CF3A24 /* thumbsup.tgs in Resources */,
+				2751E7A127F34415003E3937 /* menu_autodelete_1d.tgs in Resources */,
 				27803BF727A3E944007B0FA9 /* menu_folder_star.tgs in Resources */,
 				27672EB126F8D62C00297DB4 /* 3.m4a in Resources */,
 				275549162747C24F0098A3CD /* device_safari.tgs in Resources */,
@@ -5526,6 +5565,7 @@
 				27672EB326F8D63100297DB4 /* 5.m4a in Resources */,
 				27672EB426F8D63300297DB4 /* 6.m4a in Resources */,
 				27672EB526F8D63500297DB4 /* 7.m4a in Resources */,
+				2751E79727F34374003E3937 /* menu_clear_messages.tgs in Resources */,
 				27672EB626F8D63700297DB4 /* 8.m4a in Resources */,
 				27672EB726F8D63900297DB4 /* 9.m4a in Resources */,
 				27672EB826F8D63E00297DB4 /* 100.m4a in Resources */,
@@ -5544,6 +5584,8 @@
 				27672EC226F8D65600297DB4 /* 110.m4a in Resources */,
 				271D4F362769D07E004FD034 /* menu_reactions.tgs in Resources */,
 				275549182747C24F0098A3CD /* device_android.tgs in Resources */,
+				27D29AA727F329A200D4BC64 /* menu_note_download.tgs in Resources */,
+				2751E7A327F3480C003E3937 /* menu_autodelete_customize.tgs in Resources */,
 				27672EC326F8D65800297DB4 /* 111.m4a in Resources */,
 				2764A5AE25DFBDE700F9A20D /* police.tgs in Resources */,
 				D0D1391B2521FBD5005FCF35 /* discussion.tgs in Resources */,
@@ -5581,6 +5623,7 @@
 				27CE37672760960A007E6F1B /* menu_pin.tgs in Resources */,
 				27CE37722760B13C007E6F1B /* menu_unpin.tgs in Resources */,
 				2763A15C261DF05200C12762 /* voice_chat_start_chat_to_mute.tgs in Resources */,
+				2751E7A027F34415003E3937 /* menu_autodelete_1m.tgs in Resources */,
 				D07450ED233D61B800769D7F /* chiken_born.tgs in Resources */,
 				274B9E34272C3D15009993C7 /* mac_devices.txt in Resources */,
 				27CB1760276376DE00DD25E0 /* menu_change_colors.tgs in Resources */,
@@ -5686,6 +5729,7 @@
 				27CB1754276344E000DD25E0 /* menu_shared_media.tgs in Resources */,
 				C2CFCABE1EBB4A4D00843F6A /* voip_connecting.mp3 in Resources */,
 				27CE37752760CEE4007E6F1B /* menu_mute_for_2_days.tgs in Resources */,
+				2751E79D27F34415003E3937 /* menu_autodelete_1h.tgs in Resources */,
 				2780DE40271F0BB30092323F /* zoom.tgs in Resources */,
 				277C208D27A2C4C50070B3BF /* menu_sharescreen_slash.tgs in Resources */,
 				27336739276241EE0027441E /* menu_add_gif.tgs in Resources */,
@@ -5720,6 +5764,7 @@
 				27CE376A2760960A007E6F1B /* menu_delete.tgs in Resources */,
 				274BB570264013B900620D03 /* cameraoff.tgs in Resources */,
 				C27A6F731ECF610C00C65577 /* currencies.json in Resources */,
+				2751E79E27F34415003E3937 /* menu_autodelete_1w.tgs in Resources */,
 				2763A16E261DF68100C12762 /* voice_chat_set_reminder_to_mute.tgs in Resources */,
 				2786367E27C7C5F800690B10 /* group_call_minmax.tgs in Resources */,
 				27478F5C25FBD05F005B8B98 /* voice_chat_raise_hand_3.tgs in Resources */,
@@ -5750,6 +5795,7 @@
 				27E969E6258B417200CB9F64 /* reconnecting.mp3 in Resources */,
 				9F03681022771A9700456348 /* anim_ungroup.json in Resources */,
 				272934122778E01100F10D3C /* menu_video.tgs in Resources */,
+				2751E79527F340AD003E3937 /* menu_webapp_placeholder.tgs in Resources */,
 				D0E7BE7B256D56DA0068644D /* group_call_member_mute.json in Resources */,
 				27803C0027A3E944007B0FA9 /* menu_folder_book.tgs in Resources */,
 				2763A16B261DF65700C12762 /* voice_chat_set_reminder.tgs in Resources */,
@@ -5767,6 +5813,7 @@
 				2733672C276214050027441E /* menu_select_messages.tgs in Resources */,
 				9F03681922771A9700456348 /* anim_archive.json in Resources */,
 				C23D0D7C1F1A649900AF5151 /* SFCompactRounded-Semibold.otf in Resources */,
+				2751E79F27F34415003E3937 /* menu_autodelete_never.tgs in Resources */,
 				27CB176C27638EF800DD25E0 /* menu_collapse.tgs in Resources */,
 				2733673B276242010027441E /* menu_add_to_favorites.tgs in Resources */,
 				27336741276247370027441E /* menu_pornography.tgs in Resources */,
@@ -5935,6 +5982,7 @@
 				2713B224260A42FE00CE0EC6 /* MediaTrackFrameBuffer.swift in Sources */,
 				D0186731223807D200A77C45 /* ChatListEmptyRowItem.swift in Sources */,
 				D02BD7C7232D4DB200D1814A /* AppearanceThumbs.swift in Sources */,
+				27D29AA527F306E500D4BC64 /* NotificationSoundController.swift in Sources */,
 				2738CAD6270704A800CDB1BF /* RequestJoinChatModalController.swift in Sources */,
 				C250B02B1DB76BA4004E9FBE /* WPMediaLayout.swift in Sources */,
 				27F2BBD327BF8CD300A37463 /* Auth_Signup.swift in Sources */,

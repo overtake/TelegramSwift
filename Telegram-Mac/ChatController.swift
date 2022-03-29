@@ -2922,6 +2922,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         
+        chatInteraction.afterSentTransition = afterSentTransition
+        
         chatInteraction.sendInlineResult = { [weak self] (results,result) in
             if let strongSelf = self {
                 func apply(_ controller: ChatController, atDate: Int32?) {
@@ -5413,6 +5415,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         var activeCall = (peerView.cachedData as? CachedGroupData)?.activeCall
                         activeCall = activeCall ?? (peerView.cachedData as? CachedChannelData)?.activeCall
                         
+                        let canDeleteForAll: Bool? = (peerView.cachedData as? CachedChannelData)?.flags.contains(.canDeleteHistory)
+                        
                         if peer.groupAccess.canMakeVoiceChat {
                             var isLiveStream: Bool = false
                             if let peer = peer as? TelegramChannel {
@@ -5496,16 +5500,28 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                         if peer.canManageDestructTimer && context.peerId != peer.id {
                             
-                            let item = ContextMenuItem(strings().chatContextAutoDelete, handler: {
-                                clearHistory(context: context, peer: peer, mainPeer: mainPeer)
-                            }, itemImage: MenuAnimation.menu_secret_chat.value)
-                            
-                            let submenu = ContextMenu()
-                            
-                            var values:[Int32] = [0, .secondsInHour, .secondsInDay, .secondsInWeek, .secondsInMonth]
+                            let best:(Int32) -> MenuAnimation = { value in
+//                                    if value == Int32.secondsInHour {
+//                                        return MenuAnimation.menu_autodelete_1h
+//                                    }
+                                if value == Int32.secondsInDay {
+                                    return MenuAnimation.menu_autodelete_1d
+                                }
+                                if value == Int32.secondsInWeek {
+                                    return MenuAnimation.menu_autodelete_1w
+                                }
+                                if value == Int32.secondsInMonth {
+                                    return MenuAnimation.menu_autodelete_1m
+                                }
+                                if value == 0 {
+                                    return MenuAnimation.menu_autodelete_never
+                                }
+                                return MenuAnimation.menu_autodelete_customize
+                            }
                             
                             var selected: Int32 = 0
-                            
+                            var values:[Int32] = [0, .secondsInDay, .secondsInWeek, .secondsInMonth]
+
                             if let timeout = chatInteraction.presentation.messageSecretTimeout?.timeout {
                                 if !values.contains(timeout.effectiveValue) {
                                     values.append(timeout.effectiveValue)
@@ -5513,19 +5529,31 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 selected = timeout.effectiveValue
                             }
                             
+                            let item = ContextMenuItem(strings().chatContextAutoDelete, handler: {
+                                clearHistory(context: context, peer: peer, mainPeer: mainPeer, canDeleteForAll: canDeleteForAll)
+                            }, itemImage: selected == 0 ?  MenuAnimation.menu_secret_chat.value : best(selected).value)
+                            
+                            let submenu = ContextMenu()
+                            
+                            
+         
+                            
                             let updateTimer:(Int32)->Void = { value in
                                 _ = showModalProgress(signal: context.engine.peers.setChatMessageAutoremoveTimeoutInteractively(peerId: peerId, timeout: value == 0 ? nil : value), for: context.window).start()
                             }
                             
                             for value in values {
+                                
+                                
+                                
                                 if value == 0 {
                                     submenu.addItem(ContextMenuItem(strings().autoremoveMessagesNever, handler: {
                                         updateTimer(value)
-                                    }, state: selected == value ? .on : nil))
+                                    }, state: selected == value ? .on : nil, itemImage: best(value).value))
                                 } else {
                                     submenu.addItem(ContextMenuItem(autoremoveLocalized(Int(value)), handler: {
                                         updateTimer(value)
-                                    }, state: selected == value ? .on : nil))
+                                    }, state: selected == value ? .on : nil, itemImage: best(value).value))
                                 }
                             }
                             
@@ -5534,7 +5562,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                         if peer.canClearHistory || (peer.canManageDestructTimer && context.peerId != peer.id) {
                             items.append(ContextMenuItem(strings().chatContextClearHistory, handler: {
-                                clearHistory(context: context, peer: peer, mainPeer: mainPeer)
+                                clearHistory(context: context, peer: peer, mainPeer: mainPeer, canDeleteForAll: canDeleteForAll)
                             }, itemImage: MenuAnimation.menu_clear_history.value))
                         }
                        

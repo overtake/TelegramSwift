@@ -8377,6 +8377,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var notification_sound_add: CGImage {
+      if let image = cached.with({ $0["notification_sound_add"] }) {
+          return image
+      } else {
+          let image = _notification_sound_add()
+          _ = cached.modify { current in 
+              var current = current
+              current["notification_sound_add"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -9022,6 +9035,7 @@ public final class TelegramIconsTheme {
   private let _gallery_pip_out: ()->CGImage
   private let _gallery_pip_pause: ()->CGImage
   private let _gallery_pip_play: ()->CGImage
+  private let _notification_sound_add: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -9667,7 +9681,8 @@ public final class TelegramIconsTheme {
       gallery_pip_unmuted: @escaping()->CGImage,
       gallery_pip_out: @escaping()->CGImage,
       gallery_pip_pause: @escaping()->CGImage,
-      gallery_pip_play: @escaping()->CGImage
+      gallery_pip_play: @escaping()->CGImage,
+      notification_sound_add: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -10313,5 +10328,6 @@ public final class TelegramIconsTheme {
       self._gallery_pip_out = gallery_pip_out
       self._gallery_pip_pause = gallery_pip_pause
       self._gallery_pip_play = gallery_pip_play
+      self._notification_sound_add = notification_sound_add
   }
 }

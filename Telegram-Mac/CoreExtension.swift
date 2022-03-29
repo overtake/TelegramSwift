@@ -3433,30 +3433,28 @@ extension CachedPeerAutoremoveTimeout {
 
 
 
-func clearHistory(context: AccountContext, peer: Peer, mainPeer: Peer) {
-    if peer.canClearHistory && (context.peerId != peer.id && peer.canManageDestructTimer) && !peer.isSecretChat {
-        showModal(with: AutoremoveMessagesController(context: context, peer: peer), for: context.window)
-    } else if peer.canClearHistory {
-        var thridTitle: String? = nil
-        var canRemoveGlobally: Bool = false
-        if peer.id.namespace == Namespaces.Peer.CloudUser && peer.id != context.account.peerId && !peer.isBot {
-            if context.limitConfiguration.maxMessageRevokeIntervalInPrivateChats == LimitsConfiguration.timeIntervalForever {
-                canRemoveGlobally = true
-            }
+func clearHistory(context: AccountContext, peer: Peer, mainPeer: Peer, canDeleteForAll: Bool? = nil) {
+    var thridTitle: String? = nil
+    var canRemoveGlobally: Bool = canDeleteForAll ?? false
+    if peer.id.namespace == Namespaces.Peer.CloudUser && peer.id != context.account.peerId && !peer.isBot {
+        if context.limitConfiguration.maxMessageRevokeIntervalInPrivateChats == LimitsConfiguration.timeIntervalForever {
+            canRemoveGlobally = true
         }
-        if canRemoveGlobally {
-            thridTitle = strings().chatMessageDeleteForMeAndPerson(peer.displayTitle)
-        }
-        
-        
-        let information = mainPeer is TelegramUser || mainPeer is TelegramSecretChat ? peer.id == context.peerId ? strings().peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peer.id.namespace == Namespaces.Peer.SecretChat ? strings().peerInfoConfirmClearHistoryUserBothSides : strings().peerInfoConfirmClearHistoryUser : strings().peerInfoConfirmClearHistoryGroup
-        
-        modernConfirm(for: context.window, account: context.account, peerId: mainPeer.id, information:information , okTitle: strings().peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
-            context.chatUndoManager.clearHistoryInteractively(engine: context.engine, peerId: peer.id, type: result == .thrid ? .forEveryone : .forLocalPeer)
-        })
-    } else {
-        showModal(with: AutoremoveMessagesController(context: context, peer: peer), for: context.window)
     }
+    if canRemoveGlobally {
+        if let peer = peer as? TelegramUser {
+            thridTitle = strings().chatMessageDeleteForMeAndPerson(peer.displayTitle)
+        } else {
+            thridTitle = strings().chatMessageDeleteForAll
+        }
+    }
+    
+    
+    let information = mainPeer is TelegramUser || mainPeer is TelegramSecretChat ? peer.id == context.peerId ? strings().peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peer.id.namespace == Namespaces.Peer.SecretChat ? strings().peerInfoConfirmClearHistoryUserBothSides : strings().peerInfoConfirmClearHistoryUser : strings().peerInfoConfirmClearHistoryGroup
+    
+    modernConfirm(for: context.window, account: context.account, peerId: mainPeer.id, information:information , okTitle: strings().peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
+        context.chatUndoManager.clearHistoryInteractively(engine: context.engine, peerId: peer.id, type: result == .thrid ? .forEveryone : .forLocalPeer)
+    })
 }
 
 
