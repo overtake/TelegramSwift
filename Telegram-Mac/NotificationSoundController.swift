@@ -37,6 +37,8 @@ private func _id_sound(_ sound: PeerMessageSound) -> InputDataIdentifier {
         return .init("_id_bundledClassic_\(id)")
     case let .bundledModern(id):
         return .init("_id_bundledModern_\(id)")
+    case let .cloud(fileId):
+        fatalError()
     }
 }
 private let _id_upload = InputDataIdentifier("_id_upload")

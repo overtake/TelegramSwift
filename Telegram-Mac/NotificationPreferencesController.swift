@@ -55,6 +55,8 @@ private func soundName(sound: PeerMessageSound) -> String {
                 return classicSoundNamePaths[Int(id)]
             }
             return "Sound \(id)"
+    case let .cloud(fileId):
+        fatalError()
     }
 }
 
@@ -96,6 +98,8 @@ func fileNameForNotificationSound(_ sound: PeerMessageSound, defaultSound: PeerM
             return "\(id + 100)"
         case let .bundledClassic(id):
             return "\(id + 2)"
+    case let .cloud(fileId):
+        fatalError()
     }
 }
 

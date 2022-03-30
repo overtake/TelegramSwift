@@ -84,6 +84,8 @@ final class PeerMessageSoundNativeCodable : Codable {
                 try container.encode(id, forKey: "s1.i")
             case .default:
                 try container.encode(PeerMessageSoundValue.default.rawValue, forKey: "s1.v")
+        case .cloud(fileId: let fileId):
+            fatalError()
         }
     }
 }
