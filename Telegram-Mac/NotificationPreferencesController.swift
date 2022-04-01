@@ -56,50 +56,64 @@ private func soundName(sound: PeerMessageSound) -> String {
             }
             return "Sound \(id)"
     case let .cloud(fileId):
-        fatalError()
+        return "Sound \(fileId)"
     }
 }
 
-public func localizedPeerNotificationSoundString(sound: PeerMessageSound, default: PeerMessageSound? = nil) -> String {
+public func localizedPeerNotificationSoundString(sound: PeerMessageSound, default: PeerMessageSound? = nil, list: NotificationSoundList? = nil) -> String {
     switch sound {
-        case .default:
-            if let defaultSound = `default` {
-                let name = soundName(sound: defaultSound)
-                let actualName: String
-                if name.isEmpty {
-                    actualName = soundName(sound: .bundledModern(id: 0))
-                } else {
-                    actualName = name
-                }
-                return strings().peerInfoNotificationsDefaultSound(actualName)
+    case .`default`:
+        if let defaultSound = `default` {
+            let name = soundName(sound: defaultSound)
+            let actualName: String
+            if name.isEmpty {
+                actualName = soundName(sound: .bundledModern(id: 0))
             } else {
-                return strings().peerInfoNotificationsDefault
+                actualName = name
             }
-        default:
-            return soundName(sound: sound)
-    }
-}
-
-func fileNameForNotificationSound(_ sound: PeerMessageSound, defaultSound: PeerMessageSound?) -> String {
-    switch sound {
-        case .none:
-            return ""
-        case .default:
-            if let defaultSound = defaultSound {
-                if case .default = defaultSound {
-                    return "\(100)"
-                } else {
-                    return fileNameForNotificationSound(defaultSound, defaultSound: nil)
-                }
-            } else {
-                return "default"
-            }
-        case let .bundledModern(id):
-            return "\(id + 100)"
-        case let .bundledClassic(id):
-            return "\(id + 2)"
+            return strings().peerInfoNotificationsDefaultSound(actualName)
+        } else {
+            return strings().peerInfoNotificationsDefault
+        }
     case let .cloud(fileId):
-        fatalError()
+        if let list = list, let sound = list.sounds.first(where: { $0.file.fileId.id == fileId }) {
+            return (sound.file.fileName ?? "#").nsstring.deletingPathExtension
+        } else {
+            return strings().peerInfoNotificationsDefault
+        }
+    default:
+        return soundName(sound: sound)
+    }
+}
+
+func fileNameForNotificationSound(postbox: Postbox, sound: PeerMessageSound, defaultSound: PeerMessageSound?, list: NotificationSoundList? = nil) -> Signal<TelegramMediaResource?, NoError> {
+    switch sound {
+    case .none:
+        return .single(nil)
+    case .`default`:
+        if let defaultSound = defaultSound {
+            if case .default = defaultSound {
+                return .single(SoundEffectPlay.resource(name: "100", type: "m4a"))
+            } else {
+                return fileNameForNotificationSound(postbox: postbox, sound: defaultSound, defaultSound: nil, list: list)
+            }
+        } else {
+            return .single(LocalFileReferenceMediaResource(localFilePath: "default", randomId: arc4random64()))
+        }
+    case let .bundledModern(id):
+        return .single(SoundEffectPlay.resource(name: "\(id + 100)", type: "m4a"))
+    case let .bundledClassic(id):
+        return .single(SoundEffectPlay.resource(name: "\(id + 2)", type: "m4a"))
+    case let .cloud(fileId):
+        if let list = list {
+            if let file = list.sounds.first(where: { $0.file.fileId.id == fileId})?.file {
+                _ = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: .standalone(resource: file.resource), ranges: nil, statsCategory: .audio, reportResultStatus: true).start()
+                return postbox.mediaBox.resourceData(id: file.resource.id) |> filter { $0.complete } |> take(1) |> map { _ in
+                    return file.resource
+                }
+            }
+        }
+        return .single(nil)
     }
 }
 
@@ -194,7 +208,7 @@ private let _id_turnon_notifications_title = InputDataIdentifier("_id_turnon_not
 
 private let _id_message_effect = InputDataIdentifier("_id_message_effect")
 
-private func notificationEntries(settings:InAppNotificationSettings, globalSettings: GlobalNotificationSettingsSet, accounts: [AccountWithInfo], unAuthStatus: UNUserNotifications.AuthorizationStatus, arguments: NotificationArguments) -> [InputDataEntry] {
+private func notificationEntries(settings:InAppNotificationSettings, soundList: NotificationSoundList?, globalSettings: GlobalNotificationSettingsSet, accounts: [AccountWithInfo], unAuthStatus: UNUserNotifications.AuthorizationStatus, arguments: NotificationArguments) -> [InputDataEntry] {
     
     var entries:[InputDataEntry] = []
     
@@ -254,7 +268,7 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     index += 1
     
     
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_tone, data: InputDataGeneralData(name: strings().notificationSettingsNotificationTone, color: theme.colors.text, type: .nextContext(localizedPeerNotificationSoundString(sound: settings.tone)), viewType: .innerItem, action: arguments.notificationTone)))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_tone, data: InputDataGeneralData(name: strings().notificationSettingsNotificationTone, color: theme.colors.text, type: .nextContext(localizedPeerNotificationSoundString(sound: settings.tone, list: soundList)), viewType: .innerItem, action: arguments.notificationTone)))
     index += 1
 
     entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_bounce, data: InputDataGeneralData(name: strings().notificationSettingsBounceDockIcon, color: theme.colors.text, type: .switchable(settings.requestUserAttention), viewType: .innerItem, action: {
@@ -412,8 +426,8 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
     
     
     
-    let entriesSignal = combineLatest(queue: prepareQueue, appNotificationSettings(accountManager: context.sharedContext.accountManager), globalNotificationSettings(postbox: context.account.postbox), context.sharedContext.activeAccountsWithInfo |> map { $0.accounts }, UNUserNotifications.recurrentAuthorizationStatus(context)) |> map { inAppSettings, globalSettings, accounts, unAuthStatus -> [InputDataEntry] in
-        return notificationEntries(settings: inAppSettings, globalSettings: globalSettings, accounts: accounts, unAuthStatus: unAuthStatus, arguments: arguments)
+    let entriesSignal = combineLatest(queue: prepareQueue, appNotificationSettings(accountManager: context.sharedContext.accountManager), globalNotificationSettings(postbox: context.account.postbox), context.sharedContext.activeAccountsWithInfo |> map { $0.accounts }, UNUserNotifications.recurrentAuthorizationStatus(context), context.engine.peers.notificationSoundList()) |> map { inAppSettings, globalSettings, accounts, unAuthStatus, soundList -> [InputDataEntry] in
+        return notificationEntries(settings: inAppSettings, soundList: soundList, globalSettings: globalSettings, accounts: accounts, unAuthStatus: unAuthStatus, arguments: arguments)
     }
 
     

@@ -1046,9 +1046,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         _ = System.scaleFactor.swap(window.backingScaleFactor)
     }
     
-    func playSound(_ sound: String) {
+    func playSound(_ path: String) {
         if let context = self.contextValue?.context {
-            SoundEffectPlay.play(postbox: context.account.postbox, name: sound, type: "m4a", volume: 0.7)
+            SoundEffectPlay.play(postbox: context.account.postbox, path: path, volume: 0.7)
         }
     }
 

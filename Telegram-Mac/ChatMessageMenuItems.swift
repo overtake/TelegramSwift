@@ -39,8 +39,8 @@ final class ChatMenuItemsData {
     let file: TelegramMediaFile?
     let image: TelegramMediaImage?
     let textLayout: (TextViewLayout?, LinkType?)?
-    
-    init(chatInteraction: ChatInteraction, message: Message, accountPeer: Peer, resourceData: MediaResourceData?, chatState: ChatState, chatMode: ChatMode, disableSelectAbility: Bool, isLogInteraction: Bool, canPinMessage: Bool, pinnedMessage: ChatPinnedMessage?, peer: Peer?, peerId: PeerId, fileFinderPath: String?, isStickerSaved: Bool?, dialogs: [Peer], recentUsedPeers: [Peer], favoritePeers: [Peer], recentMedia: [RecentMediaItem], updatingMessageMedia: [MessageId: ChatUpdatingMessageMedia], additionalData: MessageEntryAdditionalData, file: TelegramMediaFile?, image: TelegramMediaImage?, textLayout: (TextViewLayout?, LinkType?)?, availableReactions: AvailableReactions?) {
+    let notifications: NotificationSoundList?
+    init(chatInteraction: ChatInteraction, message: Message, accountPeer: Peer, resourceData: MediaResourceData?, chatState: ChatState, chatMode: ChatMode, disableSelectAbility: Bool, isLogInteraction: Bool, canPinMessage: Bool, pinnedMessage: ChatPinnedMessage?, peer: Peer?, peerId: PeerId, fileFinderPath: String?, isStickerSaved: Bool?, dialogs: [Peer], recentUsedPeers: [Peer], favoritePeers: [Peer], recentMedia: [RecentMediaItem], updatingMessageMedia: [MessageId: ChatUpdatingMessageMedia], additionalData: MessageEntryAdditionalData, file: TelegramMediaFile?, image: TelegramMediaImage?, textLayout: (TextViewLayout?, LinkType?)?, availableReactions: AvailableReactions?, notifications: NotificationSoundList?) {
         self.chatInteraction = chatInteraction
         self.message = message
         self.accountPeer = accountPeer
@@ -65,6 +65,7 @@ final class ChatMenuItemsData {
         self.image = image
         self.textLayout = textLayout
         self.availableReactions = availableReactions
+        self.notifications = notifications
     }
 }
 func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkType?)?, entry: ChatHistoryEntry?, chatInteraction: ChatInteraction) -> Signal<ChatMenuItemsData, NoError> {
@@ -160,12 +161,12 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
         }
     }
     
-    let combined = combineLatest(queue: .mainQueue(), _dialogs, _recentUsedPeers, _favoritePeers, _accountPeer, _resourceData, _fileFinderPath, _getIsStickerSaved, _recentMedia, _updatingMessageMedia, context.reactions.stateValue)
+    let combined = combineLatest(queue: .mainQueue(), _dialogs, _recentUsedPeers, _favoritePeers, _accountPeer, _resourceData, _fileFinderPath, _getIsStickerSaved, _recentMedia, _updatingMessageMedia, context.reactions.stateValue, context.engine.peers.notificationSoundList())
     |> take(1)
     
     
-    return combined |> map { dialogs, recentUsedPeers, favoritePeers, accountPeer, resourceData, fileFinderPath, isStickerSaved, recentMedia, updatingMessageMedia, availableReactions in
-        return .init(chatInteraction: chatInteraction, message: message, accountPeer: accountPeer, resourceData: resourceData, chatState: chatState, chatMode: chatMode, disableSelectAbility: disableSelectAbility, isLogInteraction: isLogInteraction, canPinMessage: canPinMessage, pinnedMessage: pinnedMessage, peer: peer, peerId: peerId, fileFinderPath: fileFinderPath, isStickerSaved: isStickerSaved, dialogs: dialogs, recentUsedPeers: recentUsedPeers, favoritePeers: favoritePeers, recentMedia: recentMedia, updatingMessageMedia: updatingMessageMedia, additionalData: additionalData, file: file, image: image, textLayout: textLayout, availableReactions: availableReactions)
+    return combined |> map { dialogs, recentUsedPeers, favoritePeers, accountPeer, resourceData, fileFinderPath, isStickerSaved, recentMedia, updatingMessageMedia, availableReactions, notifications in
+        return .init(chatInteraction: chatInteraction, message: message, accountPeer: accountPeer, resourceData: resourceData, chatState: chatState, chatMode: chatMode, disableSelectAbility: disableSelectAbility, isLogInteraction: isLogInteraction, canPinMessage: canPinMessage, pinnedMessage: pinnedMessage, peer: peer, peerId: peerId, fileFinderPath: fileFinderPath, isStickerSaved: isStickerSaved, dialogs: dialogs, recentUsedPeers: recentUsedPeers, favoritePeers: favoritePeers, recentMedia: recentMedia, updatingMessageMedia: updatingMessageMedia, additionalData: additionalData, file: file, image: image, textLayout: textLayout, availableReactions: availableReactions, notifications: notifications)
     }
 }
 
@@ -585,6 +586,34 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 }
                 
                 if resourceData.complete {
+                    if let file = data.file, file.isMusic, let list = data.notifications {
+                        let settings = NotificationSoundSettings.extract(from: context.appConfiguration)
+                        let size = file.size ?? 0
+                        let contains = list.sounds.contains(where: { $0.file.fileId.id == file.fileId.id })
+                        let duration = file.duration ?? 0
+                        if size < settings.maxSize, duration < settings.maxDuration, list.sounds.count < settings.maxSavedCount, !contains {
+                            thirdBlock.append(ContextMenuItem(strings().chatContextSaveRingtoneAdd, handler: {
+                                let signal = context.engine.peers.saveNotificationSound(file: .message(message: .init(message), media: file))
+                                _ = showModalProgress(signal: signal, for: context.window).start(error: { error in
+                                    alert(for: context.window, info: strings().unknownError)
+                                }, completed: {
+                                    showModalText(for: context.window, text: strings().chatContextSaveRingtoneAddSuccess)
+                                })
+                                
+                            }, itemImage: MenuAnimation.menu_note_download.value))
+                        } else if contains {
+                            thirdBlock.append(ContextMenuItem(strings().chatContextSaveRingtoneRemove, handler: {
+                                let signal = context.engine.peers.removeNotificationSound(file: .message(message: .init(message), media: file))
+                                _ = showModalProgress(signal: signal, for: context.window).start(error: { error in
+                                    alert(for: context.window, info: strings().unknownError)
+                                }, completed: {
+                                    showModalText(for: context.window, text: strings().chatContextSaveRingtoneRemoveSuccess)
+                                })
+                                
+                            }, itemImage: MenuAnimation.menu_note_download.value))
+                        }
+                    }
+                    
                     thirdBlock.append(ContextMenuItem(strings().chatContextSaveMedia, handler: {
                         saveAs(file, account: account)
                     }, itemImage: MenuAnimation.menu_save_as.value, keyEquivalent: .cmds))

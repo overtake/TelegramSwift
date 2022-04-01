@@ -86,7 +86,7 @@ enum ChatInitialAction : Equatable {
     case closeAfter(Int32)
     case selectToReport(reason: ReportReasonValue)
     case joinVoiceChat(_ joinHash: String?)
-    case attachBot(_ bot: String)
+    case attachBot(_ bot: String, _ payload: String?)
     case openMedia(_ timemark: Int32?)
     var selectionNeeded: Bool {
         switch self {
@@ -362,9 +362,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         } else {
             peerSignal = context.engine.peers.resolvePeerByName(name: username) |> mapToSignalPromotingError { peerId -> Signal<Peer, Error> in
                 if let peerId = peerId {
-                    return context.account.postbox.loadedPeerWithId(peerId._asPeer().id) |> mapError { _ in
-                        return .doesntExists
-                    }
+                    return context.account.postbox.loadedPeerWithId(peerId._asPeer().id) |> castError(Error.self)
                 }
                 return .fail(.doesntExists)
             } |> mapError { _ in
@@ -423,7 +421,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         })
         
         afterComplete(true)
-    case let .followResolvedName(_, username, postId, suffixAction, context, action, callback):
+    case let .followResolvedName(_, username, postId, context, action, callback):
         
         if username.hasPrefix("_private_"), let range = username.range(of: "_private_") {
             if let channelId = Int64(username[range.upperBound...]) {
@@ -483,14 +481,18 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     } else {
                         messageId = nil
                     }
-                    if let suffixAction = suffixAction, let peer = peer as? TelegramUser, let botInfo = peer.botInfo {
-                        if botInfo.flags.contains(.canBeAddedToAttachMenu) {
-                            switch suffixAction {
-                            case .setattach:
-                                installAttachMenuBot(context: context, peer: peer, completion: { _ in
-                                    
-                                })
-                                return
+                    
+                    if peer.isBot {
+                        if let action = action {
+                            switch action {
+                            case let .attachBot(botname, _):
+                                if peer.username == botname {
+                                    let chat = context.bindings.rootNavigation().controller as? ChatController
+                                    chat?.chatInteraction.invokeInitialAction(action: action)
+                                    return
+                                }
+                            default:
+                                break
                             }
                         }
                     }
@@ -908,13 +910,10 @@ enum WallpaperPreview {
 
 enum inAppLink {
     
-    enum SuffixAction : String {
-        case setattach
-    }
     
     case external(link:String, Bool) // link, confirm
     case peerInfo(link: String, peerId:PeerId, action:ChatInitialAction?, openChat:Bool, postId:Int32?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
-    case followResolvedName(link: String, username:String, postId:Int32?, suffixAction: SuffixAction?, context: AccountContext, action:ChatInitialAction?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
+    case followResolvedName(link: String, username:String, postId:Int32?, context: AccountContext, action:ChatInitialAction?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
     case comments(link: String, username:String, context: AccountContext, threadId: Int32, commentId: Int32?)
     case inviteBotToGroup(link: String, username:String, context: AccountContext, action:ChatInitialAction?, rights: String?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
     case botCommand(String, (String)->Void)
@@ -1010,11 +1009,11 @@ private let keyURLSet = "set";
 private let keyURLText = "text";
 private let keyURLStart = "start";
 private let keyURLVoiceChat = "voicechat";
+private let keyURLStartattach = "startattach";
 private let keyURLAttach = "attach";
 private let keyURLStartGroup = "startgroup";
 private let keyURLSecret = "secret";
 private let keyURLproxy = "proxy";
-private let keyURLSetattach = "setattach";
 private let keyURLLivestream = "livestream";
 
 private let keyURLHash = "hash";
@@ -1199,7 +1198,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             action = .joinVoiceChat(value)
                             break loop;
                         case keyURLAttach:
-                            action = .attachBot(value)
+                            action = .attachBot(value, nil)
                             break loop
                         default:
                             break
@@ -1218,7 +1217,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         let joinKeys:[String] = ["+", "%20"]
                         let phone = username.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
                         if "+\(phone)" == username {
-                            return .followResolvedName(link: urlString, username: phone, postId: nil, suffixAction: nil, context: context, action: action, callback: openInfo)
+                            return .followResolvedName(link: urlString, username: phone, postId: nil, context: context, action: action, callback: openInfo)
                         } else {
                             for joinKey in joinKeys {
                                 if username.hasPrefix(joinKey), username.length > joinKey.length {
@@ -1227,14 +1226,14 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             }
                         }
                         let components = string.components(separatedBy: "?")
-                        
-                        var suffixAction: inAppLink.SuffixAction? = nil
-                        if components.contains(keyURLSetattach) {
-                            suffixAction = .setattach
+                        let (vars, empty) = urlVars(with: string)
+
+                        if vars[keyURLStartattach] != nil || empty.contains(keyURLStartattach) {
+                            action = .attachBot(vars[keyURLAttach] ?? username, vars[keyURLStartattach])
                         } else if components.contains(keyURLLivestream) {
                             action = .joinVoiceChat(nil)
                         }
-                        return .followResolvedName(link: urlString, username: username, postId: nil, suffixAction: suffixAction, context: context, action: action, callback: openInfo)
+                        return .followResolvedName(link: urlString, username: username, postId: nil, context: context, action: action, callback: openInfo)
                     }
                 }
             } else if let openInfo = openInfo {
@@ -1252,7 +1251,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             if let thread = params[keyURLThreadId]?.nsstring.intValue, let post = post {
                                 return .comments(link: urlString, username: "_private_\(userAndPost[1])", context: context, threadId: thread, commentId: post)
                             } else {
-                                return .followResolvedName(link: urlString, username: "_private_\(userAndPost[1])", postId: post, suffixAction: nil, context: context, action:nil, callback: openInfo)
+                                return .followResolvedName(link: urlString, username: "_private_\(userAndPost[1])", postId: post, context: context, action:nil, callback: openInfo)
                             }
                         }
                     } else if name == "s" {
@@ -1290,7 +1289,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             } else if let thread = params[keyURLThreadId]?.nsstring.intValue, let comment = post {
                                  return .comments(link: urlString, username: name, context: context, threadId: thread, commentId: comment)
                             } else {
-                                return .followResolvedName(link: urlString, username: name, postId: post, suffixAction: nil, context: context, action: action, callback: openInfo)
+                                return .followResolvedName(link: urlString, username: name, postId: post, context: context, action: action, callback: openInfo)
                             }
                         }
                     }
@@ -1300,7 +1299,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
     }
     
     if url.hasPrefix("@"), let openInfo = openInfo, let context = context {
-        return .followResolvedName(link: urlString, username: url.substring(from: 1), postId: nil, suffixAction: nil, context: context, action:nil, callback: openInfo)
+        return .followResolvedName(link: urlString, username: url.substring(from: 1), postId: nil, context: context, action:nil, callback: openInfo)
     }
     
     if url.hasPrefix("/"), let command = command {
@@ -1340,17 +1339,16 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 action = .joinVoiceChat(value)
                                 break loop
                             case keyURLAttach:
-                                action = .attachBot(value)
+                                action = .attachBot(value, vars[keyURLStartattach])
                                 break loop
                             default:
                                 break
                             }
                         }
-                        var suffixAction: inAppLink.SuffixAction? = nil
                         if action == nil && emptyVars.contains(keyURLVoiceChat) {
                             action = .joinVoiceChat(nil)
-                        } else if emptyVars.contains(keyURLSetattach) {
-                            suffixAction = .setattach
+                        } else if action == nil, vars[keyURLStartattach] != nil || vars[keyURLAttach] != nil {
+                            action = .attachBot(vars[keyURLAttach] ?? username, vars[keyURLStartattach])
                         }
                         if username == legacyPassportUsername {
                             return inApp(for: external.replacingOccurrences(of: "tg://resolve", with: "tg://passport").nsstring, context: context, peerId: peerId, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy, confirm: confirm)
@@ -1363,11 +1361,11 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             } else if let thread = thread, let comment = post {
                                 return .comments(link: urlString, username: username, context: context, threadId: thread, commentId: comment)
                             } else {
-                                return .followResolvedName(link: urlString, username: username, postId: post, suffixAction: suffixAction, context: context, action: action, callback:openInfo)
+                                return .followResolvedName(link: urlString, username: username, postId: post, context: context, action: action, callback:openInfo)
                             }
                         }
                     } else if let phone = vars[keyURLPhone], let openInfo = openInfo, let context = context {
-                        return .followResolvedName(link: urlString, username: phone, postId: nil, suffixAction: nil, context: context, action: nil, callback: openInfo)
+                        return .followResolvedName(link: urlString, username: phone, postId: nil, context: context, action: nil, callback: openInfo)
                     }
                 case known_scheme[1]:
                     if let url = vars[keyURLUrl] {
@@ -1500,7 +1498,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         if let threadId = threadId, let post = post, let context = context {
                             return .comments(link: urlString, username: "_private_\(username)", context: context, threadId: threadId, commentId: post)
                         } else if let context = context {
-                            return .followResolvedName(link: urlString, username: "_private_\(username)", postId: post, suffixAction: nil, context: context, action:nil, callback: openInfo)
+                            return .followResolvedName(link: urlString, username: "_private_\(username)", postId: post, context: context, action:nil, callback: openInfo)
                         }
                     }
                 case known_scheme[11]:

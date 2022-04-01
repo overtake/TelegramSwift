@@ -84,23 +84,24 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
                     if !muteState.canUnmute && data.isRaisedHand {
                         self.buttonImage = (GroupCallTheme.small_raised_hand, GroupCallTheme.small_raised_hand_active)
                     } else if muteState.canUnmute && !muteState.mutedByYou {
-                        buttonImage = (GroupCallTheme.small_muted, GroupCallTheme.small_muted_active)
+                        self.buttonImage = (GroupCallTheme.small_muted, GroupCallTheme.small_muted_active)
                     } else {
-                        buttonImage = (GroupCallTheme.small_muted_locked, GroupCallTheme.small_muted_locked_active)
+                        self.buttonImage = (GroupCallTheme.small_muted_locked, GroupCallTheme.small_muted_locked_active)
                     }
                 } else if data.state == nil {
-                    buttonImage = (GroupCallTheme.small_muted, GroupCallTheme.small_muted_active)
+                    self.buttonImage = (GroupCallTheme.small_muted, GroupCallTheme.small_muted_active)
                 } else {
-                    buttonImage = (GroupCallTheme.small_unmuted, GroupCallTheme.small_unmuted_active)
+                    self.buttonImage = (GroupCallTheme.small_unmuted, GroupCallTheme.small_unmuted_active)
                 }
             }
         } else {
             if isInvited {
-                buttonImage = (GroupCallTheme.invitedIcon, nil)
+                self.buttonImage = (GroupCallTheme.invitedIcon, nil)
             } else {
-                buttonImage = (GroupCallTheme.inviteIcon, nil)
+                self.buttonImage = (GroupCallTheme.inviteIcon, nil)
             }
         }
+
 
     }
     
@@ -247,7 +248,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
             
             if data.videoMode {
                 if let muteState = state.muteState {
-                    if muteState.mutedByYou {
+                    if muteState.mutedByYou || !muteState.canUnmute {
                         images.append(GroupCallTheme.video_status_muted_red)
                     } else {
                         images.append(GroupCallTheme.video_status_muted_gray)

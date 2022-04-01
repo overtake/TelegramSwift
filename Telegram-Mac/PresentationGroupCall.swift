@@ -2088,7 +2088,6 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         self.genericCallContext?.stop()
         self.screencastCallContext?.stop()
         self._canBeRemoved.set(.single(true))
-        
         if self.didConnectOnce {
         }
     }

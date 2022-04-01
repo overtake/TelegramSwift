@@ -42,7 +42,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate {
     
     enum RequestData {
         case simple(url: String, bot: Peer)
-        case normal(url: String?, peerId: PeerId, bot: Peer, replyTo: MessageId?, buttonText: String, complete:(()->Void)?)
+        case normal(url: String?, peerId: PeerId, bot: Peer, replyTo: MessageId?, buttonText: String, payload: String?, complete:(()->Void)?)
     }
 
     
@@ -149,26 +149,22 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate {
                         self?.close()
                     }
                 }))
-            case .normal(let url, let peerId, let bot, let replyTo, let buttonText, let complete):
-                let signal = context.engine.messages.requestWebView(peerId: peerId, botId: bot.id, url: url, themeParams: generateWebAppThemeParams(theme), replyToMessageId: replyTo) |> deliverOnMainQueue
+            case .normal(let url, let peerId, let bot, let replyTo, let buttonText, let payload, let complete):
+                let signal = context.engine.messages.requestWebView(peerId: peerId, botId: bot.id, url: url, payload: payload, themeParams: generateWebAppThemeParams(theme), replyToMessageId: replyTo) |> deliverOnMainQueue
                 requestWebDisposable.set(signal.start(next: { [weak self] result in
-                    switch result {
-                    case let .webViewResult(queryId, url, keepAliveSignal):
-                        self?.data = .init(queryId: queryId, bot: bot, peerId: peerId, buttonText: buttonText, keepAliveSignal: keepAliveSignal)
-                        if let url = URL(string: url) {
-                            self?.webview.load(URLRequest(url: url))
-                        }
-                        self?.keepAliveDisposable = (keepAliveSignal
-                                                    |> deliverOnMainQueue).start(error: { [weak self] _ in
-                                                        self?.close()
-                                                    }, completed: { [weak self] in
-                                                        self?.close()
-                                                        complete?()
-                                                    })
-                        self?.url = url
-                    case .requestConfirmation:
-                        break
+                    
+                    self?.data = .init(queryId: result.queryId, bot: bot, peerId: peerId, buttonText: buttonText, keepAliveSignal: result.keepAliveSignal)
+                    if let url = URL(string: result.url) {
+                        self?.webview.load(URLRequest(url: url))
                     }
+                    self?.keepAliveDisposable = (result.keepAliveSignal
+                                                |> deliverOnMainQueue).start(error: { [weak self] _ in
+                                                    self?.close()
+                                                }, completed: { [weak self] in
+                                                    self?.close()
+                                                    complete?()
+                                                })
+                    self?.url = result.url
                 }, error: { [weak self] error in
                     switch error {
                     case .generic:
@@ -235,11 +231,11 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate {
         }
         
         switch eventName {
-        case "webview_data_send":
+        case "web_app_data_send":
             if let eventData = body["eventData"] as? String {
                 self.handleSendData(data: eventData)
             }
-        case "webview_close":
+        case "web_app_close":
             self.close()
         default:
             break
@@ -335,7 +331,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate {
     
     private func removeBotFromAttachMenu(bot: Peer) {
         let context = self.context
-        _ = showModalProgress(signal: context.engine.messages.removeBotFromAttachMenu(peerId: bot.id), for: context.window).start(next: { value in
+        _ = showModalProgress(signal: context.engine.messages.removeBotFromAttachMenu(botId: bot.id), for: context.window).start(next: { value in
             if value {
                 showModalText(for: context.window, text: strings().webAppAttachRemoveSuccess(bot.displayTitle))
             }
