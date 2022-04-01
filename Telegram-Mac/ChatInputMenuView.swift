@@ -82,6 +82,8 @@ final class ChatInputMenuView : View {
     override func layout() {
         super.layout()
         
+        NSLog("size: \(frame.size)")
+        
         button.setFrameSize(NSMakeSize(40, 30))
         button.centerY(x: frame.width - button.frame.width)
         animationView.center()
