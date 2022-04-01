@@ -38,6 +38,8 @@ open class TitleButton: ImageButton {
     private var stateColor:[ControlState:NSColor] = [:]
     private var stateFont:[ControlState:NSFont] = [:]
     
+    private var currentTextSize: NSSize?
+    
     public var autoSizeToFit: Bool = true
     
     public var direction: TitleButtonImageDirection = .left {
@@ -94,7 +96,7 @@ open class TitleButton: ImageButton {
             text.foregroundColor = presentation.colors.grayText.cgColor
         }
         
-         text.backgroundColor = .clear
+        text.backgroundColor = .clear
         
         if let stateFont = stateFont[state] {
             text.font = stateFont.fontName as CFTypeRef
@@ -128,7 +130,7 @@ open class TitleButton: ImageButton {
         }
         font = font ?? .normal(text.fontSize)
         let size:NSSize = TitleButton.size(with: self.text.string as! String?, font: font)
-        
+        self.currentTextSize = size
         var msize:NSSize = size
         
         if maxSize.width < size.width {
@@ -176,8 +178,8 @@ open class TitleButton: ImageButton {
     public override func updateLayout() {
         super.updateLayout()
         
-        var textFocus:NSRect = focus(self.text.frame.size)
-        textFocus.origin.y -= 1
+        var textFocus:NSRect = focus(currentTextSize ?? self.text.frame.size)
+//        textFocus.origin.y -= 1
         if let _ = imageView.image {
             if let string = self.text.string as? String, !string.isEmpty {
                 let imageFocus:NSRect = focus(self.imageView.frame.size)
@@ -205,10 +207,10 @@ open class TitleButton: ImageButton {
     
     
      public static func size(with string: String?, font: NSFont?) -> NSSize {
-        if font == nil || string == nil {
-            return NSZeroSize
-        }
-        let attributedString:NSAttributedString = NSAttributedString.initialize(string: string, font: font, coreText: true)
+         guard let font = font, let string = string else {
+             return .zero
+         }
+         let attributedString:NSAttributedString = NSAttributedString.initialize(string: string, font: font, coreText: true)
         let layout = TextViewLayout(attributedString)
         layout.measure(width: .greatestFiniteMagnitude)
         var size:NSSize = layout.layoutSize
