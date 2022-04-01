@@ -443,7 +443,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             if let view = self.botMenuView {
                 current = view
             } else {
-                current = ChatInputMenuView(frame: NSMakeRect(0, 0, 60, contentView.frame.height))
+                current = ChatInputMenuView(frame: NSMakeRect(0, 0, 60, 50))
                 self.botMenuView = current
                 contentView.addSubview(current)
                 
@@ -613,6 +613,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             change(size: NSMakeSize(NSWidth(frame), sumHeight), animated: animated)
             
             delegate?.inputChanged(height: sumHeight, animated: animated)
+            
         }
         
     }
