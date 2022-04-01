@@ -114,6 +114,7 @@
 		2751E7A027F34415003E3937 /* menu_autodelete_1m.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2751E79B27F34414003E3937 /* menu_autodelete_1m.tgs */; };
 		2751E7A127F34415003E3937 /* menu_autodelete_1d.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2751E79C27F34415003E3937 /* menu_autodelete_1d.tgs */; };
 		2751E7A327F3480C003E3937 /* menu_autodelete_customize.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2751E7A227F3480C003E3937 /* menu_autodelete_customize.tgs */; };
+		2751E7A527F72078003E3937 /* menu_note_slash.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2751E7A427F72078003E3937 /* menu_note_slash.tgs */; };
 		275549102747C24F0098A3CD /* device_chrome.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275549052747C2380098A3CD /* device_chrome.tgs */; };
 		275549112747C24F0098A3CD /* device_firefox.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275549062747C23B0098A3CD /* device_firefox.tgs */; };
 		275549122747C24F0098A3CD /* device_mac.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275549072747C23D0098A3CD /* device_mac.tgs */; };
@@ -1377,6 +1378,7 @@
 		2751E79B27F34414003E3937 /* menu_autodelete_1m.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_autodelete_1m.tgs; sourceTree = "<group>"; };
 		2751E79C27F34415003E3937 /* menu_autodelete_1d.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_autodelete_1d.tgs; sourceTree = "<group>"; };
 		2751E7A227F3480C003E3937 /* menu_autodelete_customize.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_autodelete_customize.tgs; sourceTree = "<group>"; };
+		2751E7A427F72078003E3937 /* menu_note_slash.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_note_slash.tgs; sourceTree = "<group>"; };
 		2754D29827909668000DDAD3 /* libvpx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libvpx.a; path = "core-xprojects/libvpx/build/libvpx/lib/libvpx.a"; sourceTree = "<group>"; };
 		275549052747C2380098A3CD /* device_chrome.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = device_chrome.tgs; sourceTree = "<group>"; };
 		275549062747C23B0098A3CD /* device_firefox.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = device_firefox.tgs; sourceTree = "<group>"; };
@@ -2865,6 +2867,7 @@
 				277C208B27A2C4C40070B3BF /* menu_sharescreen_slash.tgs */,
 				27CEA34E27B676B700472CB1 /* menu_translate.tgs */,
 				277C208C27A2C4C50070B3BF /* menu_sharescreen.tgs */,
+				2751E7A427F72078003E3937 /* menu_note_slash.tgs */,
 				27D29AA627F329A200D4BC64 /* menu_note_download.tgs */,
 				2751E79C27F34415003E3937 /* menu_autodelete_1d.tgs */,
 				2751E79827F34411003E3937 /* menu_autodelete_1h.tgs */,
@@ -5564,6 +5567,7 @@
 				27336731276231E80027441E /* menu_seen.tgs in Resources */,
 				27672EB326F8D63100297DB4 /* 5.m4a in Resources */,
 				27672EB426F8D63300297DB4 /* 6.m4a in Resources */,
+				2751E7A527F72078003E3937 /* menu_note_slash.tgs in Resources */,
 				27672EB526F8D63500297DB4 /* 7.m4a in Resources */,
 				2751E79727F34374003E3937 /* menu_clear_messages.tgs in Resources */,
 				27672EB626F8D63700297DB4 /* 8.m4a in Resources */,

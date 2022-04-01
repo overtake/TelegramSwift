@@ -626,7 +626,6 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
             }
             
             if let message = pinnedMessage.message, let replyMarkup = pinnedMessage.message?.replyMarkup, replyMarkup.hasButtons, replyMarkup.rows.count == 1, replyMarkup.rows[0].buttons.count == 1 {
-                
                 self.installReplyMarkup(replyMarkup.rows[0].buttons[0], message: message, animated: animated)
             } else {
                 self.deinstallReplyMarkup(animated: animated)
@@ -655,6 +654,11 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
                     
                 })
             }, for: .Click)
+            
+            if animated {
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+            
             self.inlineButton = current
             addSubview(current)
         }
@@ -668,7 +672,7 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
     private func deinstallReplyMarkup(animated: Bool) {
         self.dismiss.isHidden = false
         if let view = self.inlineButton {
-            performSubviewRemoval(view, animated: animated, scale: true)
+            performSubviewRemoval(view, animated: animated)
             self.inlineButton = nil
         }
     }
@@ -700,7 +704,11 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
  
     override func layout() {
         if let node = node {
-            node.measureSize(frame.width - (40 + (dismiss.isHidden ? 0 : 30)))
+            if let view = inlineButton {
+                node.measureSize(frame.width - (40 + view.frame.width))
+            } else {
+                node.measureSize(frame.width - (40 + (dismiss.isHidden ? 0 : 30)))
+            }
             container.setFrameSize(frame.width - (40 + (dismiss.isHidden ? 0 : 30)), node.size.height)
         }
         container.centerY(x: 24)

@@ -159,6 +159,10 @@ final class PhoneNumberConfirmController : GenericViewController<PhoneNumberConf
         return genericView.input.firstResponder
     }
     
+    
+    override var enableBack: Bool {
+        return true
+    }
     override func becomeFirstResponder() -> Bool? {
         return true
     }

@@ -2065,7 +2065,7 @@ public final class L10n {
   public static var chatContextSaveRingtoneAdd: String  { return L10n.tr("Localizable", "Chat.Context.SaveRingtone.Add") }
   /// Ringtone successfully saved
   public static var chatContextSaveRingtoneAddSuccess: String  { return L10n.tr("Localizable", "Chat.Context.SaveRingtone.AddSuccess") }
-  /// Remove from Notifications
+  /// Remove Ringtone
   public static var chatContextSaveRingtoneRemove: String  { return L10n.tr("Localizable", "Chat.Context.SaveRingtone.Remove") }
   /// Ringtone successfully removed
   public static var chatContextSaveRingtoneRemoveSuccess: String  { return L10n.tr("Localizable", "Chat.Context.SaveRingtone.RemoveSuccess") }
@@ -6329,7 +6329,7 @@ public final class L10n {
   public static var notificationSettingsTurnOnTextTitle: String  { return L10n.tr("Localizable", "NotificationSettings.TurnOn.Text.Title") }
   /// Notification Sound
   public static var notificationSoundTitle: String  { return L10n.tr("Localizable", "NotificationSound.Title") }
-  /// In context menu of any short voice note or mp3 file in chat and select "Save for Notifications". It will appear here.
+  /// In context menu of any short mp3 file in chat and select "Save for Notifications". It will appear here.
   public static var notificationSoundTonesInfo: String  { return L10n.tr("Localizable", "NotificationSound.Tones.Info") }
   /// TELEGRAM TONES
   public static var notificationSoundTonesTitle: String  { return L10n.tr("Localizable", "NotificationSound.Tones.Title") }
@@ -11033,6 +11033,10 @@ public final class L10n {
   public static var wallpaperPreviewHeader: String  { return L10n.tr("Localizable", "WallpaperPreview.Header") }
   /// Paste and Match Style
   public static var weT3VZwkTitle: String  { return L10n.tr("Localizable", "WeT-3V-zwk.title") }
+  /// %@ would like to open its web app to proceed.\n\nIt will be able to access your IP adress and basic device info.
+  public static func webAppFirstOpen(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.FirstOpen", p1)
+  }
   /// Install Bot
   public static var webAppInstallBot: String  { return L10n.tr("Localizable", "WebApp.InstallBot") }
   /// Reload

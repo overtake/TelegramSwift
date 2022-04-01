@@ -610,7 +610,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                                     showModalText(for: context.window, text: strings().chatContextSaveRingtoneRemoveSuccess)
                                 })
                                 
-                            }, itemImage: MenuAnimation.menu_note_download.value))
+                            }, itemImage: MenuAnimation.menu_note_slash.value))
                         }
                     }
                     

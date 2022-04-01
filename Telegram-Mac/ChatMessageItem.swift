@@ -431,7 +431,7 @@ class ChatMessageItem: ChatRowItem {
                     switch webpage.content {
                     case let .Loaded(content):
                         if content.embedType == "iframe" && content.type != kBotInlineTypeGif, let url = content.embedUrl {
-                            showModal(with: WebpageModalController(url: url, title: content.websiteName ?? content.title ?? strings().webAppTitle, effectiveSize: content.embedSize?.size, context: context), for: context.window)
+                            showModal(with: WebpageModalController(context: context, url: url, title: content.websiteName ?? content.title ?? strings().webAppTitle, effectiveSize: content.embedSize?.size, chatInteraction: self?.chatInteraction), for: context.window)
                             return
                         }
                     default:

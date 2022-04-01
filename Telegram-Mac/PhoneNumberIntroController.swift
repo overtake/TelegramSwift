@@ -102,7 +102,7 @@ class PhoneNumberIntroController: EmptyComposeController<Void,Bool,ChaneNumberIn
     
     
     override var enableBack: Bool {
-        return true
+        return false
     }
     
     
