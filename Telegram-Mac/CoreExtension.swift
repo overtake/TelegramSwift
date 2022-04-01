@@ -3563,11 +3563,11 @@ extension SoftwareVideoSource {
 
 func installAttachMenuBot(context: AccountContext, peer: Peer, completion: @escaping(Bool)->Void) {
     confirm(for: context.window, information: strings().webAppAttachConfirm(peer.displayTitle), okTitle: strings().webAppAttachConfirmOK, successHandler: { _ in
-        _ = showModalProgress(signal: context.engine.messages.addBotToAttachMenu(peerId: peer.id), for: context.window).start(next: { value in
+        _ = showModalProgress(signal: context.engine.messages.addBotToAttachMenu(botId: peer.id), for: context.window).start(next: { value in
             if value {
                 showModalText(for: context.window, text: strings().webAppAttachSuccess(peer.displayTitle))
+                completion(value)
             }
-            completion(value)
         })
     })
 }

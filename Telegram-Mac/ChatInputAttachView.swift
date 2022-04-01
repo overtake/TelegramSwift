@@ -102,8 +102,8 @@ class ChatInputAttachView: ImageButton, Notifable {
                     
                     if chatInteraction.presentation.chatMode == .history {
                         for attach in chatInteraction.presentation.attachItems {
-                            items.append(ContextMenuItem(attach.peer.displayTitle, handler: {
-                                showModal(with: WebpageModalController(url: "", title: attach.peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: attach.peer, replyTo: replyTo, buttonText: "", complete: chatInteraction.afterSentTransition), context: context), for: context.window)
+                            items.append(ContextMenuItem(attach.shortName, handler: {
+                                showModal(with: WebpageModalController(url: "", title: attach.peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: attach.peer, replyTo: replyTo, buttonText: "", payload: nil, complete: chatInteraction.afterSentTransition), context: context), for: context.window)
                             }, itemImage: MenuAnimation.menu_webapp_placeholder.value))
                         }
                     }

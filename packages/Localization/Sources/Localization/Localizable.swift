@@ -2061,6 +2061,14 @@ public final class L10n {
   public static var chatContextForwardMore: String  { return L10n.tr("Localizable", "Chat.Context.Forward.More") }
   /// Set As Quick
   public static var chatContextReactionQuick: String  { return L10n.tr("Localizable", "Chat.Context.Reaction.Quick") }
+  /// Save for Notifications
+  public static var chatContextSaveRingtoneAdd: String  { return L10n.tr("Localizable", "Chat.Context.SaveRingtone.Add") }
+  /// Ringtone successfully saved
+  public static var chatContextSaveRingtoneAddSuccess: String  { return L10n.tr("Localizable", "Chat.Context.SaveRingtone.AddSuccess") }
+  /// Remove from Notifications
+  public static var chatContextSaveRingtoneRemove: String  { return L10n.tr("Localizable", "Chat.Context.SaveRingtone.Remove") }
+  /// Ringtone successfully removed
+  public static var chatContextSaveRingtoneRemoveSuccess: String  { return L10n.tr("Localizable", "Chat.Context.SaveRingtone.RemoveSuccess") }
   /// Reschedule
   public static var chatContextScheduledReschedule: String  { return L10n.tr("Localizable", "Chat.Context.Scheduled.Reschedule") }
   /// Send Now
@@ -4036,6 +4044,8 @@ public final class L10n {
   /// Remove
   public static var contextRecentGifRemove: String  { return L10n.tr("Localizable", "Context.RecentGifRemove") }
   /// Remove
+  public static var contextRemove: String  { return L10n.tr("Localizable", "Context.Remove") }
+  /// Remove
   public static var contextRemoveFaveSticker: String  { return L10n.tr("Localizable", "Context.RemoveFaveSticker") }
   /// Save as...
   public static var contextSaveMedia: String  { return L10n.tr("Localizable", "Context.SaveMedia") }
@@ -5789,7 +5799,7 @@ public final class L10n {
   public static var mediaSenderDiscardChangesOK: String  { return L10n.tr("Localizable", "MediaSender.DiscardChanges.OK") }
   /// Are you sure you want to discard all changes?
   public static var mediaSenderDiscardChangesText: String  { return L10n.tr("Localizable", "MediaSender.DiscardChanges.Text") }
-  /// INVOICE
+  /// Invoice
   public static var messageInvoiceLabel: String  { return L10n.tr("Localizable", "Message.InvoiceLabel") }
   /// Payment: %@
   public static func messagePaymentSent(_ p1: String) -> String {

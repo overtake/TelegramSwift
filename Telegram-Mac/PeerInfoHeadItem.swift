@@ -287,11 +287,6 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             items.append(ActionItem(text: strings().peerInfoActionReport, image: theme.icons.profile_report, animation: .menu_report, destruct: false, action: arguments.report))
         }
         
-        if let cachedData = item.peerView.cachedData as? CachedChannelData {
-            if cachedData.flags.contains(.canDeleteHistory) {
-                items.append(ActionItem(text: strings().peerInfoActionLeave, image: theme.icons.profile_leave, animation: .menu_leave, destruct: true, action: arguments.delete))
-            }
-        }
         
         if let group = peer as? TelegramGroup {
             if case .Member = group.membership {

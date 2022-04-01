@@ -103,7 +103,7 @@ class ChatMessageItem: ChatRowItem {
         if let webpage = webpageLayout, !webpage.hasInstantPage {
             let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
             switch link {
-            case let .followResolvedName(_, _, postId, _, _, action, _):
+            case let .followResolvedName(_, _, postId, _, action, _):
                 if let action = action {
                     inner: switch action {
                     case let .joinVoiceChat(hash):
@@ -698,7 +698,7 @@ class ChatMessageItem: ChatRowItem {
                 if nsString == nil {
                     nsString = text as NSString
                 }
-                string.addAttribute(NSAttributedString.Key.link, value: inAppLink.followResolvedName(link: nsString!.substring(with: range), username: nsString!.substring(with: range), postId:nil, suffixAction: nil, context:context, action:nil, callback: openInfo), range: range)
+                string.addAttribute(NSAttributedString.Key.link, value: inAppLink.followResolvedName(link: nsString!.substring(with: range), username: nsString!.substring(with: range), postId:nil, context:context, action:nil, callback: openInfo), range: range)
             case let .TextMention(peerId):
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.peerInfo(link: "", peerId: peerId, action:nil, openChat: false, postId: nil, callback: openInfo), range: range)

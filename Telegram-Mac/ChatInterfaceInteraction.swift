@@ -391,8 +391,8 @@ final class ChatInteraction : InterfaceObserver  {
         
     }
     
-    func invokeInitialAction(includeAuto:Bool = false, animated: Bool = true) {
-        if let action = presentation.initialAction {
+    func invokeInitialAction(includeAuto:Bool = false, animated: Bool = true, action: ChatInitialAction? = nil) {
+        if let action = action ?? presentation.initialAction {
             switch action {
             case let .start(parameter: parameter, behavior: behavior):
                 var invoke:Bool = !includeAuto
@@ -462,7 +462,7 @@ final class ChatInteraction : InterfaceObserver  {
                 update(animated: animated, {
                     $0.withSelectionState().withoutInitialAction().withUpdatedRepotMode(reason)
                 })
-            case let .attachBot(username):
+            case let .attachBot(botname, payload):
                 update({
                     $0.withoutInitialAction()
                 })
@@ -471,7 +471,7 @@ final class ChatInteraction : InterfaceObserver  {
                 
                 let installed: Signal<Peer?, NoError> = context.engine.messages.attachMenuBots() |> map { items in
                     for item in items {
-                        if item.peer.username?.lowercased() == username.lowercased() {
+                        if item.peer.username?.lowercased() == botname.lowercased() {
                             return item.peer
                         }
                     }
@@ -482,13 +482,13 @@ final class ChatInteraction : InterfaceObserver  {
                 let peerId = self.peerId
                 
                 let openAttach:(Peer)->Void = { peer in
-                    showModal(with: WebpageModalController(url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: peer, replyTo: replyId, buttonText: "", complete: self.afterSentTransition), context: context), for: context.window)
+                    showModal(with: WebpageModalController(url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, complete: self.afterSentTransition), context: context), for: context.window)
                 }
                 _ = installed.start(next: { peer in
                     if let peer = peer {
                         openAttach(peer)
                     } else {
-                        _ = showModalProgress(signal: resolveUsername(username: username, context: context), for: context.window).start(next: { peer in
+                        _ = showModalProgress(signal: resolveUsername(username: botname, context: context), for: context.window).start(next: { peer in
                             if let peer = peer {
                                 if let botInfo = peer.botInfo {
                                     if botInfo.flags.contains(.canBeAddedToAttachMenu) {
@@ -498,11 +498,11 @@ final class ChatInteraction : InterfaceObserver  {
                                             }
                                         })
                                     } else {
-                                        alert(for: context.window, info: strings().webAppAttachNotSupport(peer.displayTitle))
+                                        openAttach(peer)
                                     }
                                 }
                             } else {
-                                alert(for: context.window, info: strings().webAppAttachDoenstExist("@\(username)"))
+                                alert(for: context.window, info: strings().webAppAttachDoenstExist("@\(botname)"))
                             }
                         })
                     }
@@ -643,7 +643,7 @@ final class ChatInteraction : InterfaceObserver  {
                                     showModal(with: WebpageModalController(url: url, title: bot.displayTitle, requestData: .simple(url: hashUrl, bot: bot), context: context), for: context.window)
                                 })
                             } else {
-                                showModal(with: WebpageModalController(url: hashUrl, title: bot.displayTitle, requestData: .normal(url: hashUrl, peerId: peerId, bot: bot, replyTo: replyTo, buttonText: button.title, complete: strongSelf.afterSentTransition), context: context), for: context.window)
+                                showModal(with: WebpageModalController(url: hashUrl, title: bot.displayTitle, requestData: .normal(url: hashUrl, peerId: peerId, bot: bot, replyTo: replyTo, buttonText: button.title, payload: nil, complete: strongSelf.afterSentTransition), context: context), for: context.window)
                             }
                             
                         }

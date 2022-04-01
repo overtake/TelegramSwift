@@ -22,6 +22,19 @@ func getNotificationMessageId(userInfo:[AnyHashable: Any], for prefix: String) -
     return nil
 }
 
+func getNotificationToneFile(account: Account, inAppNotifications: InAppNotificationSettings) -> Signal<String?, NoError> {
+    let engine = TelegramEngine(account: account)
+    return engine.peers.notificationSoundList() |> take(1) |> mapToSignal { list in
+        return fileNameForNotificationSound(postbox: account.postbox, sound: inAppNotifications.tone, defaultSound: nil, list: list) |> map { resource in
+            if let resource = resource {
+                return resourcePath(account.postbox, resource)
+            } else {
+                return "default"
+            }
+        }
+    }
+}
+
 struct LockNotificationsData : Equatable {
     let screenLock:Bool
     let passcodeLock:Bool
@@ -365,26 +378,28 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                     |> take(1)
                     |> map { data in return (sources, images, inAppSettings, data.isLocked)}
             }
-            |> mapToSignal { values -> Signal<([Source], [MessageId:NSImage], InAppNotificationSettings, Bool, Peer), NoError> in
-                return account.postbox.loadedPeerWithId(account.peerId) |> mapToSignal { peer in
+            |> mapToSignal { values -> Signal<([Source], [MessageId:NSImage], InAppNotificationSettings, Bool, Peer, String?), NoError> in
+            
+            
+            
+                return combineLatest(getNotificationToneFile(account: account, inAppNotifications: values.2), account.postbox.loadedPeerWithId(account.peerId)) |> mapToSignal { soundPath, peer in
                     if let message = values.0.first?.messages.first {
                         return account.postbox.transaction({ transaction in
                             let notifications = transaction.getPeerNotificationSettings(message.id.peerId) as? TelegramPeerNotificationSettings
                             if notifications == nil || !notifications!.isMuted {
-                                return (values.0, values.1, values.2, values.3, peer)
+                                return (values.0, values.1, values.2, values.3, peer, soundPath)
                             } else {
-                                return ([], values.1, values.2, values.3, peer)
+                                return ([], values.1, values.2, values.3, peer, soundPath)
                             }
                         })
                     }
                     return .complete()
                 }
-            } |> deliverOnMainQueue).start(next: { sources, images, inAppSettings, screenIsLocked, accountPeer in
+            } |> deliverOnMainQueue).start(next: { sources, images, inAppSettings, screenIsLocked, accountPeer, soundPath in
                 
                 if !primary, !inAppSettings.notifyAllAccounts {
                     return
                 }
-                
 
                 for source in sources {
                     for message in source.messages {
@@ -469,7 +484,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 case .none:
                                     notification.soundName = nil
                                 default:
-                                    notification.soundName = fileNameForNotificationSound(inAppSettings.tone, defaultSound: nil)
+                                    notification.soundName = soundPath
                                 }
                             } else {
                                 switch inAppSettings.tone {

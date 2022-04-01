@@ -2647,15 +2647,18 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             break
         }
         
-        self.reflectScrolledClipView(clipView)
-        self.tile()
-        self.layoutSubtreeIfNeeded()
+        
         
         self.endUpdates()
         
         
-
-       self.updatedItems?(self.list)
+        self.reflectScrolledClipView(clipView)
+        self.tile()
+        self.layoutSubtreeIfNeeded()
+        self.setFrameSize(self.frame.size)
+        
+        
+        self.updatedItems?(self.list)
         
 //        for subview in self.tableView.subviews.reversed() {
 //            if self.tableView.row(for: subview) == -1 {
