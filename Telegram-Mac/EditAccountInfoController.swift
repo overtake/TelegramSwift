@@ -452,6 +452,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
         f(UsernameSettingsViewController(context))
     }, changeNumber: {
         let navigation = MajorNavigationController(PhoneNumberIntroController.self, PhoneNumberIntroController(context), context.window)
+        navigation.alwaysAnimate = true
         navigation._frameRect = NSMakeRect(0, 0, 350, 400)
         navigation.readyOnce()
         showModal(with: navigation, for: context.window)

@@ -30,7 +30,7 @@ private class WeakScriptMessageHandler: NSObject, WKScriptMessageHandler {
 
 
 
-class WebpageModalController: ModalViewController, WKNavigationDelegate {
+class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDelegate {
     
     struct Data {
         let queryId: Int64
@@ -62,11 +62,13 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate {
     private let requestWebDisposable = MetaDisposable()
     
     private var installedBots:[PeerId] = []
+    private var chatInteraction: ChatInteraction?
     
-    init(url: String, title: String, effectiveSize: NSSize? = nil, requestData: RequestData? = nil, context: AccountContext) {
+    init(context: AccountContext, url: String, title: String, effectiveSize: NSSize? = nil, requestData: RequestData? = nil, chatInteraction: ChatInteraction? = nil) {
         self.url = url
         self.requestData = requestData
         self.data = nil
+        self.chatInteraction = chatInteraction
         self.context = context
         self.title = title
         self.effectiveSize = effectiveSize
@@ -113,6 +115,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate {
         
         
         webview = WKWebView(frame: NSZeroRect, configuration: configuration)
+        
+        webview.uiDelegate = self
         
         webview.wantsLayer = true
         webview.removeFromSuperview()
@@ -189,6 +193,54 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate {
 
     }
     
+    @available(macOS 10.12, *)
+    func webView(_ webView: WKWebView, runOpenPanelWith parameters: WKOpenPanelParameters, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping ([URL]?) -> Void) {
+
+        let allowDirectories: Bool
+        if #available(macOS 10.13.4, *) {
+            allowDirectories = parameters.allowsDirectories
+        } else {
+            allowDirectories = true
+        }
+        
+        filePanel(with: nil, allowMultiple: parameters.allowsMultipleSelection, canChooseDirectories: allowDirectories, for: context.window, completion: { files in
+            completionHandler(files?.map { URL(fileURLWithPath: $0) })
+        })
+    }
+    
+    func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
+        confirm(for: context.window, information: message, successHandler: { _ in
+            completionHandler(true)
+        }, cancelHandler: {
+            completionHandler(false)
+        })
+    }
+    
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        if navigationAction.navigationType == .linkActivated, navigationAction.targetFrame == nil {
+            if let url = navigationAction.request.url {
+                if let currentUrl = URL(string: self.url) {
+                    if currentUrl.host == url.host {
+                        decisionHandler(.allow)
+                        return
+                    }
+                }
+                let link = inApp(for: url.absoluteString.nsstring, context: context, peerId: nil, openInfo: chatInteraction?.openInfo, hashtag: nil, command: nil, applyProxy: chatInteraction?.applyProxy, confirm: true)
+                switch link {
+                case .external:
+                    break
+                default:
+                    self.close()
+                }
+                execute(inapp: link)
+                decisionHandler(.cancel)
+            } else {
+                decisionHandler(.allow)
+            }
+        } else {
+            decisionHandler(.allow)
+        }
+    }
     
     override func measure(size: NSSize) {
         if let embedSize = effectiveSize {
@@ -347,6 +399,13 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate {
         })
     }
     
+    
+    override var canBecomeResponder: Bool {
+        return true
+    }
+    override func firstResponder() -> NSResponder? {
+        return webview
+    }
     
     override var defaultBarTitle: String {
         return self.title

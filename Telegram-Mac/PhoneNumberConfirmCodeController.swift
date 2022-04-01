@@ -166,6 +166,10 @@ final class PhoneNumberCodeConfirmController : GenericViewController<PhoneNumber
         return strings().telegramPhoneNumberConfirmController
     }
     
+    override var enableBack: Bool {
+        return true
+    }
+    
     override func firstResponder() -> NSResponder? {
         return genericView.input.firstResponder()
     }

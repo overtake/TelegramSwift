@@ -481,8 +481,27 @@ final class ChatInteraction : InterfaceObserver  {
                 let replyId = presentation.interfaceState.replyMessageId
                 let peerId = self.peerId
                 
-                let openAttach:(Peer)->Void = { peer in
-                    showModal(with: WebpageModalController(url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, complete: self.afterSentTransition), context: context), for: context.window)
+                let openAttach:(Peer)->Void = { [weak self] peer in
+                    
+                    let invoke:()->Void = { [weak self] in
+                        showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, complete: self?.afterSentTransition), chatInteraction: self), for: context.window)
+                    }
+                    if peer.isVerified {
+                        invoke()
+                    } else if let info = peer.botInfo {
+                        if info.flags.contains(.canBeAddedToAttachMenu) {
+                            invoke()
+                        } else {
+                            if FastSettings.shouldConfirmWebApp(peer.id) {
+                                confirm(for: context.window, information: strings().webAppFirstOpen(peer.displayTitle), successHandler: { _ in
+                                    invoke()
+                                    FastSettings.markWebAppAsConfirmed(peer.id)
+                                })
+                            } else {
+                                invoke()
+                            }
+                        }
+                    }
                 }
                 _ = installed.start(next: { peer in
                     if let peer = peer {
@@ -640,10 +659,10 @@ final class ChatInteraction : InterfaceObserver  {
                             if simple {
                                 let signal = context.engine.messages.requestSimpleWebView(botId: botId, url: hashUrl, themeParams: generateWebAppThemeParams(theme))
                                 _ = showModalProgress(signal: signal, for: context.window).start(next: { url in
-                                    showModal(with: WebpageModalController(url: url, title: bot.displayTitle, requestData: .simple(url: hashUrl, bot: bot), context: context), for: context.window)
+                                    showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .simple(url: hashUrl, bot: bot), chatInteraction: strongSelf), for: context.window)
                                 })
                             } else {
-                                showModal(with: WebpageModalController(url: hashUrl, title: bot.displayTitle, requestData: .normal(url: hashUrl, peerId: peerId, bot: bot, replyTo: replyTo, buttonText: button.title, payload: nil, complete: strongSelf.afterSentTransition), context: context), for: context.window)
+                                showModal(with: WebpageModalController(context: context, url: hashUrl, title: bot.displayTitle, requestData: .normal(url: hashUrl, peerId: peerId, bot: bot, replyTo: replyTo, buttonText: button.title, payload: nil, complete: strongSelf.afterSentTransition), chatInteraction: strongSelf), for: context.window)
                             }
                             
                         }

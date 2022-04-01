@@ -94,7 +94,7 @@ class WPArticleContentView: WPContentView {
             }
             
             if content.embedType == "iframe", content.type != "video", let url = content.embedUrl {
-                showModal(with: WebpageModalController(url: url, title: content.websiteName ?? content.title ?? strings().webAppTitle, effectiveSize: content.embedSize?.size, context: layout.context), for: window)
+                showModal(with: WebpageModalController(context: layout.context, url: url, title: content.websiteName ?? content.title ?? strings().webAppTitle, effectiveSize: content.embedSize?.size), for: window)
             } else if layout.isGalleryAssemble {
                 showChatGallery(context: layout.context, message: layout.parent, layout.table, type: .alone)
             } else if let wallpaper = layout.wallpaper {

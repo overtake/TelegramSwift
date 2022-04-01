@@ -58,7 +58,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     let settings = NotificationSoundSettings.extract(from: arguments.context.appConfiguration)
     
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().notificationSoundTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().notificationSoundTonesTitle.uppercased()), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
     var hasUploaded: Bool = false
@@ -92,7 +92,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
     }
     if canAdd {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_upload, data: .init(name: strings().notificationSoundTonesUpload, color: theme.colors.text, icon: theme.icons.notification_sound_add, type: .none, viewType: hasUploaded ? .lastItem : .singleItem, action: arguments.upload)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_upload, data: .init(name: strings().notificationSoundTonesUpload, color: theme.colors.accent, icon: theme.icons.notification_sound_add, type: .none, viewType: hasUploaded ? .lastItem : .singleItem, action: arguments.upload)))
         index += 1
     }
     
