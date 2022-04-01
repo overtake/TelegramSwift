@@ -632,7 +632,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
         }
     } |> castError(BotPaymentFormRequestError.self)
     
-    actionsDisposable.add(combineLatest(formAndMaybeValidatedInfo, botPeer).start(next: { form, botPeer in
+    actionsDisposable.add(combineLatest(formPromise.get() |> castError(BotPaymentFormRequestError.self), botPeer).start(next: { form, botPeer in
         updateState { current in
             var current = current
             current.form = form.0
