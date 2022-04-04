@@ -645,10 +645,12 @@
          self.doneButton = doneButton
 
          
+         doneButton.set(handler: { [weak self] _ in
+             self?.changeState()
+         }, for: .Click)
+         
          doneButton.isHidden = true
          
-         doneButton.userInteractionEnabled = false
-         editButton.userInteractionEnabled = false
          
          let context = self.context
          editButton.contextMenu = { [weak self] in

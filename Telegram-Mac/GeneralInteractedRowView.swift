@@ -412,9 +412,7 @@ class GeneralInteractedRowView: GeneralRowView {
         
         if let item = item as? GeneralInteractedRowItem {
             let insets = item.inset
-            
-            NSLog("block: \(item.blockWidth)")
-            
+                        
             switch item.viewType {
             case .legacy:
                 self.containerView.frame = bounds

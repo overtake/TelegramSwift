@@ -29,6 +29,184 @@ private class WeakScriptMessageHandler: NSObject, WKScriptMessageHandler {
 }
 
 
+private final class WebpageView : View {
+    private var indicator:ProgressIndicator?
+    fileprivate let webview: WKWebView
+    
+    private let loading: LinearProgressControl = LinearProgressControl(progressHeight: 2)
+
+    
+    private class MainButton : Control {
+        private let textView: TextView = TextView()
+        private var loading: InfiniteProgressView?
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            
+            addSubview(textView)
+            textView.isEventLess = true
+            textView.userInteractionEnabled = false
+            textView.isSelectable = false
+            
+        }
+        
+        func update(_ state: WebpageModalController.MainButtonState, animated: Bool) {
+            
+            let textLayout = TextViewLayout(.initialize(string: state.text, color: state.textColor, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .middle)
+            textLayout.measure(width: frame.width - 60)
+            textView.update(textLayout)
+            
+            set(background: state.backgroundColor, for: .Normal)
+            set(background: state.backgroundColor.darker(), for: .Highlight)
+            
+            if state.isLoading {
+                let current: InfiniteProgressView
+                if let view = self.loading {
+                    current = view
+                } else {
+                    current = .init(color: state.textColor, lineWidth: 2)
+                    current.setFrameSize(NSMakeSize(30, 30))
+                    self.loading = current
+                    addSubview(current)
+                }
+                current.progress = nil
+            } else if let view = self.loading {
+                performSubviewRemoval(view, animated: animated)
+                self.loading = nil
+            }
+            needsLayout = true
+        }
+        
+        override func layout() {
+            super.layout()
+            textView.resize(frame.width - 60)
+            textView.center()
+            if let loading = loading {
+                loading.centerY(x: frame.width - loading.frame.width - 10)
+            }
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
+    
+    private var mainButton:MainButton?
+    
+    required init(frame frameRect: NSRect, configuration: WKWebViewConfiguration) {
+        webview = WKWebView(frame: frameRect.size.bounds, configuration: configuration)
+        super.init(frame: frameRect)
+        addSubview(webview)
+        addSubview(loading)
+        
+        self.update(inProgress: true, animated: false)
+        
+        webview.wantsLayer = true
+        
+        updateLocalizationAndTheme(theme: theme)
+
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        loading.style = ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: .clear, highlightColor: .clear)
+    }
+    
+    func load(url: String, animated: Bool) {
+        if let url = URL(string: url) {
+            webview.load(URLRequest(url: url))
+        }
+        self.update(inProgress: true, animated: animated)
+    }
+    
+    func update(inProgress: Bool, animated: Bool) {
+        self.webview._change(opacity: inProgress ? 0 : 1, animated: animated)
+        if inProgress {
+            let current: ProgressIndicator
+            if let view = self.indicator {
+                current = view
+            } else {
+                current = .init(frame: focus(NSMakeSize(30, 30)))
+                self.indicator = current
+                self.addSubview(current)
+            }
+            current.progressColor = theme.colors.text
+        } else if let view = self.indicator {
+            performSubviewRemoval(view, animated: animated)
+            self.indicator = nil
+        }
+        self.needsLayout = true
+    }
+    
+    func set(estimatedProgress: CGFloat?, animated: Bool) {
+        if let estimatedProgress = estimatedProgress {
+            if estimatedProgress == 0 || estimatedProgress == 1 {
+                self.loading.change(opacity: 0, animated: animated)
+            } else {
+                self.loading.change(opacity: 1, animated: animated)
+            }
+            self.loading.set(progress: estimatedProgress, animated: animated)
+        } else {
+            self.loading.change(opacity: 0, animated: animated)
+            self.loading.set(progress: 0, animated: animated)
+        }
+    }
+    
+    func updateMainButton(_ state: WebpageModalController.MainButtonState?, animated: Bool, callback:@escaping()->Void) {
+        if let state = state, state.isVisible, let text = state.text, !text.isEmpty {
+            let current: MainButton
+            if let view = self.mainButton {
+                current = view
+            } else {
+                current = .init(frame: NSMakeRect(0, frame.height, frame.width, 50))
+                self.mainButton = current
+                self.addSubview(current)
+                
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+                
+                current.set(handler: { _ in
+                    callback()
+                }, for: .Click)
+            }
+            current.update(state, animated: animated)
+        } else if let view = self.mainButton {
+            performSubviewRemoval(view, animated: animated)
+            self.mainButton = nil
+        }
+        self.updateLayout(frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+    }
+    
+    
+    override func layout() {
+        super.layout()
+        self.updateLayout(frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(_ size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: self.webview, frame: size.bounds)
+        if let mainButton = mainButton {
+            transition.updateFrame(view: mainButton, frame: NSMakeRect(0, size.height - 50, size.width, 50))
+        }
+        transition.updateFrame(view: self.loading, frame: NSMakeRect(0, 0, size.width, 2))
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        webview.removeFromSuperview()
+        webview.stopLoading()
+        webview.loadHTMLString("", baseURL: nil)
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
+}
+
 
 class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDelegate {
     
@@ -44,15 +222,43 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         case simple(url: String, bot: Peer)
         case normal(url: String?, peerId: PeerId, bot: Peer, replyTo: MessageId?, buttonText: String, payload: String?, complete:(()->Void)?)
     }
+    
+    
+    struct MainButtonState {
+        let text: String?
+        let backgroundColor: NSColor
+        let textColor: NSColor
+        let isVisible: Bool
+        let isLoading: Bool
+        
+        public init(
+            text: String?,
+            backgroundColor: NSColor,
+            textColor: NSColor,
+            isVisible: Bool,
+            isLoading: Bool
+        ) {
+            self.text = text
+            self.backgroundColor = backgroundColor
+            self.textColor = textColor
+            self.isVisible = isVisible
+            self.isLoading = isLoading
+        }
+        
+        static var initial: MainButtonState {
+            return MainButtonState(text: nil, backgroundColor: .clear, textColor: .clear, isVisible: false, isLoading: false)
+        }
+    }
+
+
 
     
-    private var indicator:ProgressIndicator!
+
     private var url:String
     private let context:AccountContext
     private var effectiveSize: NSSize?
     private var data: Data?
     private var requestData: RequestData?
-    private var webview: WKWebView!
     private var locked: Bool = false
     private var counter: Int = 0
     private let title: String
@@ -63,6 +269,10 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     private var installedBots:[PeerId] = []
     private var chatInteraction: ChatInteraction?
+    
+    fileprivate let loadingProgressPromise = Promise<CGFloat?>(nil)
+
+
     
     init(context: AccountContext, url: String, title: String, effectiveSize: NSSize? = nil, requestData: RequestData? = nil, chatInteraction: ChatInteraction? = nil) {
         self.url = url
@@ -77,19 +287,19 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        webview.isHidden = false
-        webview.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-        indicator.isHidden = true
-        indicator.animates = false
+        genericView.update(inProgress: false, animated: true)
+//        self.updateLocalizationAndTheme(theme: theme)
     }
     
     override var dynamicSize:Bool {
         return true
     }
     
+    override func viewClass() -> AnyClass {
+        return WebpageView.self
+    }
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    override func initializer() -> NSView {
         
         let js = "var TelegramWebviewProxyProto = function() {}; " +
         "TelegramWebviewProxyProto.prototype.postEvent = function(eventName, eventData) { " +
@@ -108,28 +318,25 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 strongSelf.handleScriptMessage(message)
             }
         }, name: "performAction")
-
         
         configuration.userContentController = userController
+        
+        return WebpageView(frame: self._frameRect, configuration: configuration)
+    }
     
+    private var genericView: WebpageView {
+        return self.view as! WebpageView
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
         
+                
+        genericView.webview.uiDelegate = self
+        genericView.webview.addObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress), options: [], context: nil)
+        genericView.webview.navigationDelegate = self
         
-        webview = WKWebView(frame: NSZeroRect, configuration: configuration)
-        
-        webview.uiDelegate = self
-        
-        webview.wantsLayer = true
-        webview.removeFromSuperview()
-        addSubview(webview)
-        
-        indicator = ProgressIndicator(frame: NSMakeRect(0,0,30,30))
-        addSubview(indicator)
-        indicator.center()
-        
-        webview.isHidden = true
-        indicator.animates = true
-        
-        webview.navigationDelegate = self
+        updateLocalizationAndTheme(theme: theme)
         
         readyOnce()
         let context = self.context
@@ -142,9 +349,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 let signal = context.engine.messages.requestSimpleWebView(botId: bot.id, url: url, themeParams: generateWebAppThemeParams(theme)) |> deliverOnMainQueue
                 
                 requestWebDisposable.set(signal.start(next: { [weak self] url in
-                    if let url = URL(string: url) {
-                        self?.webview.load(URLRequest(url: url))
-                    }
+                    self?.genericView.load(url: url, animated: true)
                     self?.url = url
                 }, error: { [weak self] error in
                     switch error {
@@ -158,9 +363,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 requestWebDisposable.set(signal.start(next: { [weak self] result in
                     
                     self?.data = .init(queryId: result.queryId, bot: bot, peerId: peerId, buttonText: buttonText, keepAliveSignal: result.keepAliveSignal)
-                    if let url = URL(string: result.url) {
-                        self?.webview.load(URLRequest(url: url))
-                    }
+                    self?.genericView.load(url: result.url, animated: true)
                     self?.keepAliveDisposable = (result.keepAliveSignal
                                                 |> deliverOnMainQueue).start(error: { [weak self] _ in
                                                     self?.close()
@@ -181,9 +384,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             
             
         } else {
-            if let url = URL(string: self.url) {
-                webview.load(URLRequest(url: url))
-            }
+            self.genericView.load(url: url, animated: true)
         }
         
         let bots = self.context.engine.messages.attachMenuBots() |> deliverOnMainQueue
@@ -216,8 +417,14 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         })
     }
     
+    @available(macOS 12.0, *)
+    func webView(_ webView: WKWebView, decideMediaCapturePermissionsFor origin: WKSecurityOrigin, initiatedBy frame: WKFrameInfo, type: WKMediaCaptureType) async -> WKPermissionDecision {
+        
+        return .grant
+    }
+    
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-        if navigationAction.navigationType == .linkActivated, navigationAction.targetFrame == nil {
+        if navigationAction.navigationType == .linkActivated {
             if let url = navigationAction.request.url {
                 if let currentUrl = URL(string: self.url) {
                     if currentUrl.host == url.host {
@@ -245,33 +452,31 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     override func measure(size: NSSize) {
         if let embedSize = effectiveSize {
             let size = embedSize.aspectFitted(NSMakeSize(min(size.width - 100, 800), min(size.height - 100, 800)))
-            webview.setFrameSize(size)
             
             self.modal?.resize(with:size, animated: false)
-            indicator.center()
-
+            self.genericView.updateLayout(size, transition: .immediate)
         } else {
             let size = NSMakeSize(380, 450)
-            webview.setFrameSize(size)
-            
             self.modal?.resize(with:size, animated: false)
-            indicator.center()
-
+            self.genericView.updateLayout(size, transition: .immediate)
         }
     }
     
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        webview.removeFromSuperview()
-        webview.stopLoading()
-        webview.loadHTMLString("", baseURL: nil)
-    }
     
     deinit {
         keepAliveDisposable?.dispose()
         installedBotsDisposable.dispose()
         requestWebDisposable.dispose()
+        self.genericView.webview.removeObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress))
+
     }
+    
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if keyPath == "estimatedProgress" {
+            self.genericView.set(estimatedProgress: CGFloat(genericView.webview.estimatedProgress), animated: true)
+        }
+    }
+
     
     private func handleScriptMessage(_ message: WKScriptMessage) {
         guard let body = message.body as? [String: Any] else {
@@ -287,16 +492,41 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             if let eventData = body["eventData"] as? String {
                 self.handleSendData(data: eventData)
             }
+        case "web_app_setup_main_button":
+            if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
+                if let isVisible = json["is_visible"] as? Bool {
+                    let text = json["text"] as? String
+                    let backgroundColorString = json["color"] as? String
+                    let backgroundColor = backgroundColorString.flatMap({ NSColor(hexString: $0) }) ?? theme.colors.accent
+                    let textColorString = json["text_color"] as? String
+                    let textColor = textColorString.flatMap({ NSColor(hexString: $0) }) ?? theme.colors.underSelectedColor
+                    
+                    let isLoading = json["is_progress_visible"] as? Bool
+                    let state = MainButtonState(text: text, backgroundColor: backgroundColor, textColor: textColor, isVisible: isVisible, isLoading: isLoading ?? false)
+                    self.genericView.updateMainButton(state, animated: true, callback: { [weak self] in
+                        self?.pressMainButton()
+                    })
+                }
+            }
+        case "web_app_request_viewport":
+            self.updateSize()
+        case "web_app_expand":
+            break
         case "web_app_close":
             self.close()
         default:
             break
         }
+
     }
     
-    func sendEvent(name: String, data: String) {
-        let script = "window.TelegramGameProxy.receiveEvent(\"\(name)\", \(data))"
-        self.webview.evaluateJavaScript(script, completionHandler: { _, _ in
+    private func updateSize() {
+        
+    }
+    
+    func sendEvent(name: String, data: String?) {
+        let script = "window.TelegramGameProxy.receiveEvent(\"\(name)\", \(data ?? "null"))"
+        self.genericView.webview.evaluateJavaScript(script, completionHandler: { _, _ in
             
         })
     }
@@ -321,6 +551,11 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         self.sendEvent(name: "theme_changed", data: themeParamsString)
 
     }
+    
+    fileprivate func pressMainButton() {
+        self.sendEvent(name: "main_button_pressed", data: nil)
+    }
+
     
 
     
@@ -347,7 +582,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
 
     private func reloadPage() {
-        self.webview.reload()
+        self.genericView.webview.reload()
     }
     
     override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
@@ -404,7 +639,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         return true
     }
     override func firstResponder() -> NSResponder? {
-        return webview
+        return genericView.webview
     }
     
     override var defaultBarTitle: String {
