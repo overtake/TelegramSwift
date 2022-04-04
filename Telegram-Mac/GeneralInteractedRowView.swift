@@ -298,6 +298,7 @@ class GeneralInteractedRowView: GeneralRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
+        
         nextView.sizeToFit()
         containerView.addSubview(nextView)
         self.containerView.displayDelegate = self
@@ -408,8 +409,11 @@ class GeneralInteractedRowView: GeneralRowView {
     override func layout() {
         super.layout()
         
+        
         if let item = item as? GeneralInteractedRowItem {
             let insets = item.inset
+            
+            NSLog("block: \(item.blockWidth)")
             
             switch item.viewType {
             case .legacy:

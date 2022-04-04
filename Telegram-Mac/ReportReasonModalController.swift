@@ -58,6 +58,8 @@ private let _id_copyright = InputDataIdentifier("_id_copyright")
 private let _id_custom = InputDataIdentifier("_id_custom")
 private let _id_fake = InputDataIdentifier("_id_fake")
 private let _id_custom_input = InputDataIdentifier("_id_custom_input")
+private let _id_personal_details = InputDataIdentifier("_id_personal_details")
+private let _id_illegal_drugs = InputDataIdentifier("_id_illegal_drugs")
 
 extension ReportReason {
     var id: InputDataIdentifier {
@@ -76,6 +78,10 @@ extension ReportReason {
             return _id_custom
         case .fake:
             return _id_fake
+        case .personalDetails:
+            return _id_personal_details
+        case .illegalDrugs:
+            return _id_illegal_drugs
         default:
             fatalError("unsupported")
         }

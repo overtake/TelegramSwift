@@ -1599,30 +1599,31 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         guard let item = item as? ChatRowItem else { return }
         
         
-        let hitTestView = rowView.hitTest(location)
-        if hitTestView == rowView || hitTestView == nil {
-            if let avatar = avatar {
-                if NSPointInRect(location, avatar.frame) {
-                    return
+        if let item = self.item as? ChatRowItem, item.chatInteraction.presentation.state == .normal {
+            if self.hitTest(location) == nil || self.hitTest(location) == self || !clickInContent(point: location) || self.hitTest(location) == rowView || self.hitTest(location) == bubbleView || self.hitTest(location) == replyView {
+                if let avatar = avatar {
+                    if NSPointInRect(location, avatar.frame) {
+                        return
+                    }
                 }
-            }
-            let result: Bool
-            switch FastSettings.forceTouchAction {
-            case .edit:
-                result = item.editAction()
-            case .reply:
-                result = item.replyAction()
-            case .forward:
-                result = item.forwardAction()
-            case .previewMedia:
-                result = false
-            case .react:
-                result = item.reactAction()
-            }
-            if result {
-                focusAnimation(nil)
-            } else {
-             //   NSSound.beep()
+                let result: Bool
+                switch FastSettings.forceTouchAction {
+                case .edit:
+                    result = item.editAction()
+                case .reply:
+                    result = item.replyAction()
+                case .forward:
+                    result = item.forwardAction()
+                case .previewMedia:
+                    result = false
+                case .react:
+                    result = item.reactAction()
+                }
+                if result {
+                    focusAnimation(nil)
+                } else {
+                 //   NSSound.beep()
+                }
             }
         }
         
