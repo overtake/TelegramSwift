@@ -227,6 +227,8 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                             effectiveFile = FileMediaReference.webPage(webPage: webPage, media: file)
                         case let .avatarList(peer: reference, media: media):
                             effectiveFile = FileMediaReference.avatarList(peer: reference, media: media)
+                        case let .attachBot(peer, media):
+                            effectiveFile = FileMediaReference.attachBot(peer: peer, media: media)
                         }
                         
                     }

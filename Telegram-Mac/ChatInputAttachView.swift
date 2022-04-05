@@ -105,7 +105,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                             
                             var value: (NSColor, ContextMenuItem)-> AppMenuItemImageDrawable
                             if let file = attach.icons[.macOSAnimated] {
-                                value = MenuRemoteAnimation(context, file: file, thumb: MenuAnimation.menu_webapp_placeholder).value
+                                value = MenuRemoteAnimation(context, file: file, bot: attach.peer, thumb: MenuAnimation.menu_webapp_placeholder).value
                             } else {
                                 value = MenuAnimation.menu_folder_bot.value
                             }
