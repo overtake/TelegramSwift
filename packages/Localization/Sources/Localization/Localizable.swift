@@ -3415,6 +3415,8 @@ public final class L10n {
   public static var chatListContextPreview: String  { return L10n.tr("Localizable", "ChatList.Context.Preview") }
   /// Return to Group
   public static var chatListContextReturnGroup: String  { return L10n.tr("Localizable", "ChatList.Context.ReturnGroup") }
+  /// Sound
+  public static var chatListContextSound: String  { return L10n.tr("Localizable", "ChatList.Context.Sound") }
   /// Unmute
   public static var chatListContextUnmute: String  { return L10n.tr("Localizable", "ChatList.Context.Unmute") }
   /// Unpin
@@ -11045,6 +11047,20 @@ public final class L10n {
   public static var webAppRemoveBot: String  { return L10n.tr("Localizable", "WebApp.RemoveBot") }
   /// Webpage
   public static var webAppTitle: String  { return L10n.tr("Localizable", "WebApp.Title") }
+  /// Allow
+  public static var webAppAccessAllow: String  { return L10n.tr("Localizable", "WebApp.Access.Allow") }
+  /// Are you sure you want to grant access to %@ to your microphone?
+  public static func webAppAccessAudio(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.Access.Audio", p1)
+  }
+  /// Are you sure you want to grant access to %@ to your microphone and camera?
+  public static func webAppAccessAudioVideo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.Access.AudioVideo", p1)
+  }
+  /// Are you sure you want to grant access to %@ to your camera?
+  public static func webAppAccessVideo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.Access.Video", p1)
+  }
   /// "%@" asks your permission to be added as an option to your attachments menu so you access it from any chat.
   public static func webAppAttachConfirm(_ p1: String) -> String {
     return L10n.tr("Localizable", "WebApp.Attach.Confirm", p1)

@@ -14,6 +14,7 @@ import Postbox
 import ObjcUtils
 import InAppSettings
 import TGUIKit
+import WebKit
 
 enum SendingType :String {
     case enter = "enter"
@@ -200,6 +201,23 @@ class FastSettings {
         UserDefaults.standard.set(true, forKey: "\(peerId)_\(kConfirmWebApp)")
     }
     
+    @available(macOS 12.0, *)
+    static func botAccessTo(_ type: WKMediaCaptureType, peerId: PeerId) -> Bool {
+        let value = UserDefaults.standard.value(forKey: "wk_bot_access_\(type.rawValue)_\(peerId.toInt64())") as? Bool
+        
+        if let value = value {
+            return value
+        } else {
+            return false
+        }
+    }
+    @available(macOS 12.0, *)
+    static func allowBotAccessTo(_ type: WKMediaCaptureType, peerId: PeerId) {
+        UserDefaults.standard.setValue(true, forKey: "wk_bot_access_\(type.rawValue)_\(peerId.toInt64())")
+        UserDefaults.standard.synchronize()
+    }
+    
+        
     static var playingRate: Double {
         return min(max(UserDefaults.standard.double(forKey: kPlayingRate), 1), 2.0)
     }

@@ -22,10 +22,10 @@ func getNotificationMessageId(userInfo:[AnyHashable: Any], for prefix: String) -
     return nil
 }
 
-func getNotificationToneFile(account: Account, inAppNotifications: InAppNotificationSettings) -> Signal<String?, NoError> {
+func getNotificationToneFile(account: Account, sound: PeerMessageSound) -> Signal<String?, NoError> {
     let engine = TelegramEngine(account: account)
     return engine.peers.notificationSoundList() |> take(1) |> mapToSignal { list in
-        return fileNameForNotificationSound(postbox: account.postbox, sound: inAppNotifications.tone, defaultSound: nil, list: list) |> map { resource in
+        return fileNameForNotificationSound(postbox: account.postbox, sound: sound, defaultSound: nil, list: list) |> map { resource in
             if let resource = resource {
                 return resourcePath(account.postbox, resource)
             } else {
@@ -380,18 +380,36 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
             }
             |> mapToSignal { values -> Signal<([Source], [MessageId:NSImage], InAppNotificationSettings, Bool, Peer, String?), NoError> in
             
-            
-            
-                return combineLatest(getNotificationToneFile(account: account, inAppNotifications: values.2), account.postbox.loadedPeerWithId(account.peerId)) |> mapToSignal { soundPath, peer in
+            return account.postbox.loadedPeerWithId(account.peerId) |> mapToSignal { peer in
                     if let message = values.0.first?.messages.first {
-                        return account.postbox.transaction({ transaction in
+                        return account.postbox.transaction { transaction -> Signal<([Source], [MessageId:NSImage], InAppNotificationSettings, Bool, Peer, String?), NoError> in
                             let notifications = transaction.getPeerNotificationSettings(message.id.peerId) as? TelegramPeerNotificationSettings
+                            
                             if notifications == nil || !notifications!.isMuted {
-                                return (values.0, values.1, values.2, values.3, peer, soundPath)
+                                if let messageSound = notifications?.messageSound {
+                                    switch messageSound {
+                                    case .none:
+                                        return .single((values.0, values.1, values.2, values.3, peer, nil))
+                                    case .default:
+                                        return getNotificationToneFile(account: account, sound: values.2.tone) |> map { soundPath in
+                                            return (values.0, values.1, values.2, values.3, peer, soundPath)
+                                        }
+                                    default:
+                                        return getNotificationToneFile(account: account, sound: messageSound) |> map { soundPath in
+                                            return (values.0, values.1, values.2, values.3, peer, soundPath)
+                                        }
+                                    }
+                                } else {
+                                    return getNotificationToneFile(account: account, sound: values.2.tone) |> map { soundPath in
+                                        return (values.0, values.1, values.2, values.3, peer, soundPath)
+                                    }
+                                }
                             } else {
-                                return ([], values.1, values.2, values.3, peer, soundPath)
+                                return getNotificationToneFile(account: account, sound: values.2.tone) |> map { soundPath in
+                                    return (values.0, values.1, values.2, values.3, peer, soundPath)
+                                }
                             }
-                        })
+                        } |> switchToLatest
                     }
                     return .complete()
                 }

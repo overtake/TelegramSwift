@@ -1013,6 +1013,7 @@ class ChatListRowItem: TableRowItem {
         let isPinned = self.isPinned
         let archiveStatus = archiveStatus
         let isSecret = self.isSecret
+        let peerNotificationSettings = self.peerNotificationSettings as? TelegramPeerNotificationSettings
         let isUnread = badgeNode != nil || mentionsCount != nil || isUnreadMarked
         let deleteChat:()->Void = { [weak self] in
             self?.delete()
@@ -1043,7 +1044,17 @@ class ChatListRowItem: TableRowItem {
             cachedData = .single(nil)
         }
         
-        return combineLatest(queue: .mainQueue(), chatListFilterPreferences(engine: context.engine), cachedData) |> take(1) |> map { filters, cachedData -> [ContextMenuItem] in
+        let soundsDataSignal = combineLatest(queue: .mainQueue(), appNotificationSettings(accountManager: context.sharedContext.accountManager), context.engine.peers.notificationSoundList(), context.account.postbox.transaction { transaction -> TelegramPeerNotificationSettings? in
+            if let peerId = peerId {
+                return transaction.getPeerNotificationSettings(peerId) as? TelegramPeerNotificationSettings
+            } else {
+                return nil
+            }
+        })
+
+        
+        
+        return combineLatest(queue: .mainQueue(), chatListFilterPreferences(engine: context.engine), cachedData, soundsDataSignal) |> take(1) |> map { filters, cachedData, soundsData -> [ContextMenuItem] in
             
             var items:[ContextMenuItem] = []
             
@@ -1069,7 +1080,82 @@ class ChatListRowItem: TableRowItem {
                 }
                 
                 if context.peerId != peer.id, !isAd {
-                    let muteItem = ContextMenuItem(isMuted ? strings().chatListContextUnmute : strings().chatListContextMute, handler: toggleMute, itemImage: isMuted ? MenuAnimation.menu_unmuted.value : MenuAnimation.menu_mute.value)
+                    let muteItem = ContextMenuItem(isMuted ? strings().chatListContextUnmute : strings().chatListContextMute, handler: toggleMute, itemImage: isMuted ? MenuAnimation.menu_music.value : MenuAnimation.menu_mute.value)
+                    
+                    let sound: ContextMenuItem = ContextMenuItem(strings().chatListContextSound, handler: {
+                        
+                    }, itemImage: MenuAnimation.menu_moon.value)
+                    
+                    let soundList = ContextMenu()
+                    
+                    
+                    let selectedSound: PeerMessageSound
+                    if let peerNotificationSettings = soundsData.2 {
+                        selectedSound = peerNotificationSettings.messageSound
+                    } else {
+                        selectedSound = .default
+                    }
+                    
+                    let updateSound:(PeerMessageSound)->Void = { tone in
+                        
+                        let effectiveTone: PeerMessageSound
+                        
+                        if tone == .default {
+                            effectiveTone = soundsData.0.tone
+                        } else {
+                            effectiveTone = tone
+                        }
+                        
+                        if effectiveTone != .default && effectiveTone != .none {
+                            let path = fileNameForNotificationSound(postbox: context.account.postbox, sound: effectiveTone, defaultSound: nil, list: soundsData.1)
+                            
+                            _ = path.start(next: { resource in
+                                if let resource = resource {
+                                    let path = resourcePath(context.account.postbox, resource)
+                                    SoundEffectPlay.play(postbox: context.account.postbox, path: path)
+                                }
+                            })
+                        }
+                        _ = context.engine.peers.updatePeerNotificationSoundInteractive(peerId: peerId, sound: tone).start()
+
+                    }
+                    
+                    if let sounds = soundsData.1 {
+                        for sound in sounds.sounds {
+                            let tone: PeerMessageSound = .cloud(fileId: sound.file.fileId.id)
+                            soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: .cloud(fileId: sound.file.fileId.id), default: nil, list: sounds), handler: {
+                                updateSound(tone)
+                            }, state: selectedSound == .cloud(fileId: sound.file.fileId.id) ? .on : nil))
+                        }
+                        if !sounds.sounds.isEmpty {
+                            soundList.addItem(ContextSeparatorItem())
+                        }
+                    }
+                    
+                    soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: .default, default: nil, list: nil), handler: {
+                        updateSound(.default)
+                    }, state: selectedSound == .default ? .on : nil))
+                    soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: .none, default: nil, list: nil), handler: {
+                        updateSound(.none)
+                    }, state: selectedSound == .none ? .on : nil))
+                    soundList.addItem(ContextSeparatorItem())
+                    
+                    for i in 0 ..< 12 {
+                        let sound: PeerMessageSound = .bundledModern(id: Int32(i))
+                        soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: sound, default: nil, list: soundsData.1), handler: {
+                            updateSound(sound)
+                        }, state: selectedSound == sound ? .on : nil))
+                    }
+                    soundList.addItem(ContextSeparatorItem())
+                    for i in 0 ..< 8 {
+                        let sound: PeerMessageSound = .bundledClassic(id: Int32(i))
+                        soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: sound, default: nil, list: soundsData.1), handler: {
+                            updateSound(sound)
+                        }, state: selectedSound == sound ? .on : nil))
+                    }
+                    
+                    sound.submenu = soundList
+                    
                     
                     if !isMuted {
                         let submenu = ContextMenu()
@@ -1085,8 +1171,19 @@ class ChatListRowItem: TableRowItem {
                             _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, muteInterval: Int32.max).start()
                         }, itemImage: MenuAnimation.menu_mute.value))
                         
+                        submenu.addItem(ContextSeparatorItem())
+                        submenu.addItem(sound)
+                        
                         muteItem.submenu = submenu
                     }
+                    /*
+                     else {
+                         let submenu = ContextMenu()
+                         submenu.addItem(sound)
+                         muteItem.submenu = submenu
+                     }
+                     
+                     */
                     
                     firstGroup.append(muteItem)
                 }
