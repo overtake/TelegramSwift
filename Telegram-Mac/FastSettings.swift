@@ -203,7 +203,7 @@ class FastSettings {
     
     @available(macOS 12.0, *)
     static func botAccessTo(_ type: WKMediaCaptureType, peerId: PeerId) -> Bool {
-        let value = UserDefaults.standard.value(forKey: "wk_bot_access_\(type.rawValue)_\(peerId.toInt64())") as? Bool
+        let value = UserDefaults.standard.value(forKey: "wk2_bot_access_\(type.rawValue)_\(peerId.toInt64())") as? Bool
         
         if let value = value {
             return value
@@ -213,7 +213,7 @@ class FastSettings {
     }
     @available(macOS 12.0, *)
     static func allowBotAccessTo(_ type: WKMediaCaptureType, peerId: PeerId) {
-        UserDefaults.standard.setValue(true, forKey: "wk_bot_access_\(type.rawValue)_\(peerId.toInt64())")
+        UserDefaults.standard.setValue(true, forKey: "wk2_bot_access_\(type.rawValue)_\(peerId.toInt64())")
         UserDefaults.standard.synchronize()
     }
     

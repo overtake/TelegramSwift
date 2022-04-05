@@ -27,9 +27,11 @@ struct MenuRemoteAnimation {
     fileprivate let context: AccountContext
     fileprivate let file: TelegramMediaFile
     fileprivate let thumb: LocalAnimatedSticker
-    init(_ context: AccountContext, file: TelegramMediaFile, thumb: LocalAnimatedSticker)  {
+    fileprivate let bot: Peer
+    init(_ context: AccountContext, file: TelegramMediaFile, bot: Peer, thumb: LocalAnimatedSticker)  {
         self.context = context
         self.file = file
+        self.bot = bot
         self.thumb = thumb
     }
     
@@ -113,7 +115,9 @@ final class AppMenuAnimatedRemoteImage : LottiePlayerView, AppMenuItemImageDrawa
         self.color = color
         super.init(frame: NSMakeRect(0, 0, 18, 18))
         
-        _ = fetchedMediaResource(mediaBox: sticker.context.account.postbox.mediaBox, reference: .media(media: .standalone(media: sticker.file), resource: sticker.file.resource)).start()
+        if let reference = PeerReference(sticker.bot) {
+            _ = fetchedMediaResource(mediaBox: sticker.context.account.postbox.mediaBox, reference: .media(media: .attachBot(peer: reference, media: sticker.file), resource: sticker.file.resource)).start()
+        }
         
         let signal = sticker.context.account.postbox.mediaBox.resourceData(sticker.file.resource, attemptSynchronously: true) |> deliverOnMainQueue
         

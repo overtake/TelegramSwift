@@ -172,6 +172,7 @@ private final class WebpageView : View {
             current.update(state, animated: animated)
         } else if let view = self.mainButton {
             performSubviewRemoval(view, animated: animated)
+            view.layer?.animatePosition(from: view.frame.origin, to: view.frame.origin.offset(dx: 0, dy: view.frame.height), removeOnCompletion: false)
             self.mainButton = nil
         }
         self.updateLayout(frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
@@ -491,6 +492,21 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         
     }
     
+    func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+               if navigationAction.targetFrame == nil, let url = navigationAction.request.url {
+                   let link = inApp(for: url.absoluteString.nsstring, context: context, peerId: nil, openInfo: chatInteraction?.openInfo, hashtag: nil, command: nil, applyProxy: chatInteraction?.applyProxy, confirm: true)
+                   switch link {
+                   case .external:
+                       break
+                   default:
+                       self.close()
+                   }
+                   execute(inapp: link)
+               }
+               return nil
+           }
+
+    
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         if navigationAction.navigationType == .linkActivated {
             if let url = navigationAction.request.url {
@@ -558,7 +574,14 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         switch eventName {
         case "web_app_data_send":
             if let eventData = body["eventData"] as? String {
-                self.handleSendData(data: eventData)
+                if let requestData = requestData {
+                    switch requestData {
+                    case .simple:
+                        self.handleSendData(data: eventData)
+                    default:
+                        break
+                    }
+                }
             }
         case "web_app_setup_main_button":
             if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {

@@ -1084,7 +1084,7 @@ class ChatListRowItem: TableRowItem {
                     
                     let sound: ContextMenuItem = ContextMenuItem(strings().chatListContextSound, handler: {
                         
-                    }, itemImage: MenuAnimation.menu_moon.value)
+                    }, itemImage: MenuAnimation.menu_music.value)
                     
                     let soundList = ContextMenu()
                     
@@ -1120,6 +1120,15 @@ class ChatListRowItem: TableRowItem {
 
                     }
                     
+                    soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: .default, default: nil, list: nil), handler: {
+                        updateSound(.default)
+                    }, state: selectedSound == .default ? .on : nil))
+                    soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: .none, default: nil, list: nil), handler: {
+                        updateSound(.none)
+                    }, state: selectedSound == .none ? .on : nil))
+                    soundList.addItem(ContextSeparatorItem())
+                    
+                    
                     if let sounds = soundsData.1 {
                         for sound in sounds.sounds {
                             let tone: PeerMessageSound = .cloud(fileId: sound.file.fileId.id)
@@ -1132,14 +1141,7 @@ class ChatListRowItem: TableRowItem {
                         }
                     }
                     
-                    soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: .default, default: nil, list: nil), handler: {
-                        updateSound(.default)
-                    }, state: selectedSound == .default ? .on : nil))
-                    soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: .none, default: nil, list: nil), handler: {
-                        updateSound(.none)
-                    }, state: selectedSound == .none ? .on : nil))
-                    soundList.addItem(ContextSeparatorItem())
-                    
+                 
                     for i in 0 ..< 12 {
                         let sound: PeerMessageSound = .bundledModern(id: Int32(i))
                         soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: sound, default: nil, list: soundsData.1), handler: {
