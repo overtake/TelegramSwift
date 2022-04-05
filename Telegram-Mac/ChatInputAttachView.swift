@@ -102,9 +102,17 @@ class ChatInputAttachView: ImageButton, Notifable {
                     
                     if chatInteraction.presentation.chatMode == .history {
                         for attach in chatInteraction.presentation.attachItems {
+                            
+                            var value: (NSColor, ContextMenuItem)-> AppMenuItemImageDrawable
+                            if let file = attach.icons[.macOSAnimated] {
+                                value = MenuRemoteAnimation(context, file: file, thumb: MenuAnimation.menu_webapp_placeholder).value
+                            } else {
+                                value = MenuAnimation.menu_folder_bot.value
+                            }
+                            
                             items.append(ContextMenuItem(attach.shortName, handler: { [weak self] in
                                 showModal(with: WebpageModalController(context: context, url: "", title: attach.peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: attach.peer, replyTo: replyTo, buttonText: "", payload: nil, complete: chatInteraction.afterSentTransition), chatInteraction: self?.chatInteraction), for: context.window)
-                            }, itemImage: MenuAnimation.menu_webapp_placeholder.value))
+                            }, itemImage: value))
                         }
                     }
                     

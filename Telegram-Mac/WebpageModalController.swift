@@ -417,10 +417,78 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         })
     }
     
+    
+    
     @available(macOS 12.0, *)
-    func webView(_ webView: WKWebView, decideMediaCapturePermissionsFor origin: WKSecurityOrigin, initiatedBy frame: WKFrameInfo, type: WKMediaCaptureType) async -> WKPermissionDecision {
+    func webView(_ webView: WKWebView, requestMediaCapturePermissionFor origin: WKSecurityOrigin, initiatedByFrame frame: WKFrameInfo, type: WKMediaCaptureType, decisionHandler: @escaping(WKPermissionDecision)->Void) {
         
-        return .grant
+        let context = self.context
+        
+        let request:(Peer)->Void = { peer in
+            if FastSettings.botAccessTo(type, peerId: peer.id) {
+                decisionHandler(.grant)
+            } else {
+                let runConfirm:()->Void = {
+                    let info: String
+                    switch type {
+                    case .camera:
+                        info = strings().webAppAccessVideo(peer.displayTitle)
+                    case .microphone:
+                        info = strings().webAppAccessAudio(peer.displayTitle)
+                    case .cameraAndMicrophone:
+                        info = strings().webAppAccessAudioVideo(peer.displayTitle)
+                    @unknown default:
+                        info = "unknown"
+                    }
+                    confirm(for: context.window, information: info, okTitle: strings().webAppAccessAllow, successHandler: { _ in
+                        decisionHandler(.grant)
+                        FastSettings.allowBotAccessTo(type, peerId: peer.id)
+                    }, cancelHandler: {
+                        decisionHandler(.deny)
+                    })
+                }
+                switch type {
+                case .camera:
+                    _ = requestMediaPermission(.video).start(next: { value in
+                        if value {
+                            runConfirm()
+                        } else {
+                            decisionHandler(.deny)
+                        }
+                    })
+                case .microphone:
+                    _ = requestMediaPermission(.audio).start(next: { value in
+                        if value {
+                            runConfirm()
+                        } else {
+                            decisionHandler(.deny)
+                        }
+                    })
+                case .cameraAndMicrophone:
+                    _ = combineLatest(requestMediaPermission(.video), requestMediaPermission(.audio)).start(next: { audio, video in
+                        if audio && video {
+                            runConfirm()
+                        } else {
+                            decisionHandler(.deny)
+                        }
+                    })
+                @unknown default:
+                    alert(for: context.window, info: strings().unknownError)
+                }
+            }
+        }
+        
+        if let requestData = self.requestData {
+            switch requestData {
+            case .simple(_, let bot):
+                request(bot)
+            case .normal(_, _, let bot, _, _, _, _):
+                request(bot)
+            }
+        } else {
+            return decisionHandler(.deny)
+        }
+        
     }
     
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
