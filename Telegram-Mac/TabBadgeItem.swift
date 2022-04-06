@@ -108,18 +108,18 @@ class TabAllBadgeItem: TabItem {
     override func makeView() -> NSView {
         let context = self.context
         
-        let semaphore = DispatchSemaphore(value: 0)
-        var isMultiple = true
-        _ = (context.sharedContext.activeAccounts |> take(1)).start(next: { accounts in
-            isMultiple = accounts.accounts.count > 1
-            semaphore.signal()
-        })
-
-        semaphore.wait()
-        
-        if !isMultiple {
-            return super.makeView()
-        }
+//        let semaphore = DispatchSemaphore(value: 0)
+//        var isMultiple = true
+//        _ = (context.sharedContext.activeAccounts |> take(1)).start(next: { accounts in
+//            isMultiple = accounts.accounts.count > 1
+//            semaphore.signal()
+//        })
+//
+//        semaphore.wait()
+//
+//        if !isMultiple {
+//            return super.makeView()
+//        }
         
         let view = AvatarTabContainer(frame: NSMakeRect(0, 0, 30, 30))
         /*
