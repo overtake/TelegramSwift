@@ -1080,7 +1080,7 @@ class ChatListRowItem: TableRowItem {
                 }
                 
                 if context.peerId != peer.id, !isAd {
-                    let muteItem = ContextMenuItem(isMuted ? strings().chatListContextUnmute : strings().chatListContextMute, handler: toggleMute, itemImage: isMuted ? MenuAnimation.menu_music.value : MenuAnimation.menu_mute.value)
+                    let muteItem = ContextMenuItem(isMuted ? strings().chatListContextUnmute : strings().chatListContextMute, handler: toggleMute, itemImage: isMuted ? MenuAnimation.menu_unmuted.value : MenuAnimation.menu_mute.value)
                     
                     let sound: ContextMenuItem = ContextMenuItem(strings().chatListContextSound, handler: {
                         
