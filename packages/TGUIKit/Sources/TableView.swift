@@ -2653,10 +2653,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         
         self.reflectScrolledClipView(clipView)
-        self.tile()
-        self.layoutSubtreeIfNeeded()
-        self.setFrameSize(self.frame.size)
-        
+
         
         self.updatedItems?(self.list)
         
