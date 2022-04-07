@@ -340,6 +340,9 @@ class ShareObject {
     var hasCaptionView: Bool {
         return true
     }
+    var blockCaptionView: Bool {
+        return false
+    }
     var interactionOk: String {
         return strings().modalOK
     }
@@ -888,8 +891,8 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
     func notify(with value: Any, oldValue: Any, animated: Bool) {
         if let value = value as? SelectPeerPresentation, let oldValue = oldValue as? SelectPeerPresentation {
             
-            genericView.hasCaptionView = value.multipleSelection
-            genericView.hasSendView = value.multipleSelection
+            genericView.hasCaptionView = value.multipleSelection && !share.blockCaptionView
+            genericView.hasSendView = value.multipleSelection && !share.blockCaptionView
             if value.multipleSelection {
                 search.set(combineLatest(genericView.tokenizedView.textUpdater, genericView.tokenizedView.stateValue.get()) |> map { SearchState(state: $1, request: $0)})
             } else {

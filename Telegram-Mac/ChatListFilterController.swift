@@ -146,6 +146,10 @@ class SelectCallbackObject : ShareObject {
     override var hasCaptionView: Bool {
         return false
     }
+    override var blockCaptionView: Bool {
+        return true
+    }
+    
     
     override func perform(to peerIds:[PeerId], comment: ChatTextInputState? = nil) -> Signal<Never, String> {
         return callback(peerIds) |> mapError { _ in return String() }

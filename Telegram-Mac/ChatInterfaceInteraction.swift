@@ -484,7 +484,7 @@ final class ChatInteraction : InterfaceObserver  {
                 let openAttach:(Peer)->Void = { [weak self] peer in
                     
                     let invoke:()->Void = { [weak self] in
-                        showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, complete: self?.afterSentTransition), chatInteraction: self), for: context.window)
+                        showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, complete: self?.afterSentTransition), chatInteraction: self), for: context.window)
                     }
                     if peer.isVerified {
                         invoke()
@@ -575,6 +575,12 @@ final class ChatInteraction : InterfaceObserver  {
     }
 
     
+    func openWebviewFromMenu(buttonText: String, url: String) {
+        if let bot = peer {
+            let replyTo = self.presentation.interfaceState.replyMessageId
+            showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: true, complete: self.afterSentTransition), chatInteraction: self), for: context.window)
+        }
+    }
     
     func processBotKeyboard(with keyboardMessage:Message) ->ReplyMarkupInteractions {
         if let attribute = keyboardMessage.replyMarkup, !isLogInteraction {
@@ -662,7 +668,7 @@ final class ChatInteraction : InterfaceObserver  {
                                     showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .simple(url: hashUrl, bot: bot), chatInteraction: strongSelf), for: context.window)
                                 })
                             } else {
-                                showModal(with: WebpageModalController(context: context, url: hashUrl, title: bot.displayTitle, requestData: .normal(url: hashUrl, peerId: peerId, bot: bot, replyTo: replyTo, buttonText: button.title, payload: nil, complete: strongSelf.afterSentTransition), chatInteraction: strongSelf), for: context.window)
+                                showModal(with: WebpageModalController(context: context, url: hashUrl, title: bot.displayTitle, requestData: .normal(url: hashUrl, peerId: peerId, bot: bot, replyTo: replyTo, buttonText: button.title, payload: nil, fromMenu: false, complete: strongSelf.afterSentTransition), chatInteraction: strongSelf), for: context.window)
                             }
                             
                         }

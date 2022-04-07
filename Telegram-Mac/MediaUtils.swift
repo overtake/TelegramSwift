@@ -125,6 +125,12 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
             }
         }
 
+        if sources.isEmpty {
+            sources.append(.image(size: largestByteSize))
+        }
+        if let miniThumbnail = imageReference.media.immediateThumbnailData.flatMap(decodeTinyThumbnail) {
+            sources.insert(.miniThumbnail(data: miniThumbnail), at: 0)
+        }
 
         
         return Signal { subscriber in
@@ -1362,7 +1368,7 @@ func chatWebpageSnippetPhotoData(account: Account, imageRefence: ImageMediaRefer
 }
 
 func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReference, scale:CGFloat, small:Bool, synchronousLoad: Bool = false, secureIdAccessContext: SecureIdAccessContext? = nil) -> Signal<ImageDataTransformation, NoError> {
-    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, synchronousLoad: synchronousLoad, secureIdAccessContext: secureIdAccessContext)
+    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, autoFetchFullSize: true, synchronousLoad: synchronousLoad, secureIdAccessContext: secureIdAccessContext)
     return signal |> map { data in
         return ImageDataTransformation(data: data, execute: { arguments, data in
             let context = DrawingContext(size: arguments.drawingSize, scale:scale, clear: true)
