@@ -1096,10 +1096,8 @@ class ChatListRowItem: TableRowItem {
                         selectedSound = .default
                     }
                     
-                    let updateSound:(PeerMessageSound)->Void = { tone in
-                        
+                    let playSound:(PeerMessageSound) -> Void = { tone in
                         let effectiveTone: PeerMessageSound
-                        
                         if tone == .default {
                             effectiveTone = soundsData.0.tone
                         } else {
@@ -1116,17 +1114,27 @@ class ChatListRowItem: TableRowItem {
                                 }
                             })
                         }
+                    }
+                    
+                    let updateSound:(PeerMessageSound)->Void = { tone in
+                        playSound(tone)
                         _ = context.engine.peers.updatePeerNotificationSoundInteractive(peerId: peerId, sound: tone).start()
 
                     }
                     
                     soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: .default, default: nil, list: nil), handler: {
                         updateSound(.default)
+                    }, hover: {
+                        playSound(.default)
                     }, state: selectedSound == .default ? .on : nil))
+                    
                     soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: .none, default: nil, list: nil), handler: {
                         updateSound(.none)
+                    }, hover: {
+                        playSound(.none)
                     }, state: selectedSound == .none ? .on : nil))
                     soundList.addItem(ContextSeparatorItem())
+                    
                     
                     
                     if let sounds = soundsData.1 {
@@ -1134,6 +1142,8 @@ class ChatListRowItem: TableRowItem {
                             let tone: PeerMessageSound = .cloud(fileId: sound.file.fileId.id)
                             soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: .cloud(fileId: sound.file.fileId.id), default: nil, list: sounds), handler: {
                                 updateSound(tone)
+                            }, hover: {
+                                playSound(tone)
                             }, state: selectedSound == .cloud(fileId: sound.file.fileId.id) ? .on : nil))
                         }
                         if !sounds.sounds.isEmpty {
@@ -1146,6 +1156,8 @@ class ChatListRowItem: TableRowItem {
                         let sound: PeerMessageSound = .bundledModern(id: Int32(i))
                         soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: sound, default: nil, list: soundsData.1), handler: {
                             updateSound(sound)
+                        }, hover: {
+                            playSound(sound)
                         }, state: selectedSound == sound ? .on : nil))
                     }
                     soundList.addItem(ContextSeparatorItem())
@@ -1153,8 +1165,11 @@ class ChatListRowItem: TableRowItem {
                         let sound: PeerMessageSound = .bundledClassic(id: Int32(i))
                         soundList.addItem(ContextMenuItem(localizedPeerNotificationSoundString(sound: sound, default: nil, list: soundsData.1), handler: {
                             updateSound(sound)
+                        }, hover: {
+                            playSound(sound)
                         }, state: selectedSound == sound ? .on : nil))
                     }
+                    
                     
                     sound.submenu = soundList
                     

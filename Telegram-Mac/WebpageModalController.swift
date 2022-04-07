@@ -185,9 +185,11 @@ private final class WebpageView : View {
     }
     
     func updateLayout(_ size: NSSize, transition: ContainedViewLayoutTransition) {
-        transition.updateFrame(view: self.webview, frame: size.bounds)
         if let mainButton = mainButton {
             transition.updateFrame(view: mainButton, frame: NSMakeRect(0, size.height - 50, size.width, 50))
+            self.webview.frame = NSMakeRect(0, 0, size.width, size.height - mainButton.frame.height)
+        } else {
+            self.webview.frame = bounds
         }
         transition.updateFrame(view: self.loading, frame: NSMakeRect(0, 0, size.width, 2))
     }
