@@ -447,6 +447,7 @@ struct ChatPresentationInterfaceState: Equatable {
     struct BotMenu : Equatable {
         var commands: [BotCommand]
         var revealed: Bool
+        var menuButton: BotMenuButton
     }
     
     let interfaceState: ChatInterfaceState

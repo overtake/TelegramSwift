@@ -221,7 +221,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     enum RequestData {
         case simple(url: String, bot: Peer)
-        case normal(url: String?, peerId: PeerId, bot: Peer, replyTo: MessageId?, buttonText: String, payload: String?, complete:(()->Void)?)
+        case normal(url: String?, peerId: PeerId, bot: Peer, replyTo: MessageId?, buttonText: String, payload: String?, fromMenu: Bool, complete:(()->Void)?)
     }
     
     
@@ -359,8 +359,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                         self?.close()
                     }
                 }))
-            case .normal(let url, let peerId, let bot, let replyTo, let buttonText, let payload, let complete):
-                let signal = context.engine.messages.requestWebView(peerId: peerId, botId: bot.id, url: url, payload: payload, themeParams: generateWebAppThemeParams(theme), replyToMessageId: replyTo) |> deliverOnMainQueue
+            case .normal(let url, let peerId, let bot, let replyTo, let buttonText, let payload, let fromMenu, let complete):
+                let signal = context.engine.messages.requestWebView(peerId: peerId, botId: bot.id, url: url, payload: payload, themeParams: generateWebAppThemeParams(theme), fromMenu: fromMenu, replyToMessageId: replyTo) |> deliverOnMainQueue
                 requestWebDisposable.set(signal.start(next: { [weak self] result in
                     
                     self?.data = .init(queryId: result.queryId, bot: bot, peerId: peerId, buttonText: buttonText, keepAliveSignal: result.keepAliveSignal)
@@ -483,7 +483,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             switch requestData {
             case .simple(_, let bot):
                 request(bot)
-            case .normal(_, _, let bot, _, _, _, _):
+            case .normal(_, _, let bot, _, _, _, _, _):
                 request(bot)
             }
         } else {

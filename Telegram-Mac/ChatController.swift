@@ -4306,9 +4306,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             .withUpdatedBlocked(cachedData.isBlocked)
                             .withUpdatedCanPinMessage(cachedData.canPinMessages || context.peerId == peerId)
                             .updateBotMenu { current in
-                                if let botInfo = cachedData.botInfo, !botInfo.commands.isEmpty {
-                                    var current = current ?? .init(commands: [], revealed: false)
+                                if let botInfo = cachedData.botInfo {
+                                    var current = current ?? .init(commands: [], revealed: false, menuButton: botInfo.menuButton)
                                     current.commands = botInfo.commands
+                                    current.menuButton = botInfo.menuButton
                                     return current
                                 }
                                 return nil
@@ -4502,9 +4503,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 .withUpdatedPeerStatusSettings(contactStatus)
                                 .withUpdatedCanPinMessage(cachedData.canPinMessages || context.peerId == peerId)
                                 .updateBotMenu { current in
-                                    if let botInfo = cachedData.botInfo, !botInfo.commands.isEmpty {
-                                        var current = current ?? .init(commands: [], revealed: false)
+                                    if let botInfo = cachedData.botInfo {
+                                        var current = current ?? .init(commands: [], revealed: false, menuButton: botInfo.menuButton)
                                         current.commands = botInfo.commands
+                                        current.menuButton = botInfo.menuButton
                                         return current
                                     }
                                     return nil

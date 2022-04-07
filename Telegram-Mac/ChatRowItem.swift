@@ -2251,7 +2251,7 @@ class ChatRowItem: TableRowItem {
                 if item.webpageLayout != nil {
                     replyMarkupModel?.measureSize(_contentSize.width)
                 } else if _contentSize.width < 200 {
-                    replyMarkupModel?.measureSize(max(_contentSize.width, min(blockWidth, 200)))
+                    replyMarkupModel?.measureSize(max(_contentSize.width, min(blockWidth, 320)))
                 } else {
                     replyMarkupModel?.measureSize(_contentSize.width)
                 }
