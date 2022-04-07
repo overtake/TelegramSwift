@@ -20,6 +20,7 @@ open class AppMenuBasicItem : TableRowItem {
         public let action:(ContextMenuItem)->Void
         public let presentSubmenu:(ContextMenuItem)->Void
         public let cancelSubmenu:(ContextMenuItem)->Void
+        public let hover:(ContextMenuItem)->Void
     }
     
     fileprivate(set) public var menuItem: ContextMenuItem?
@@ -280,6 +281,11 @@ open class AppMenuRowView: AppMenuBasicItemView {
         containerView.set(handler: { [weak self] _ in
             self?.drawable?.updateState(.Hover)
             self?.updateState(.Hover)
+            
+            guard let item = self?.item as? AppMenuRowItem else {
+                return
+            }
+            item.interaction?.hover(item.item)
         }, for: .Hover)
         containerView.set(handler: { [weak self] _ in
             self?.drawable?.updateState(.Highlight)

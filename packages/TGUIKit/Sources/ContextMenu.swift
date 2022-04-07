@@ -55,6 +55,9 @@ open class ContextMenuItem : NSMenuItem {
     public var handler:(()->Void)?
     private let dynamicTitle:(()->String)?
     
+    public var hover:(()->Void)?
+
+    
     public var contextObject: Any? = nil
     
     public let itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)?
@@ -62,8 +65,9 @@ open class ContextMenuItem : NSMenuItem {
     
     public let keyEquivalentValue: KeyEquiavalent
     
-    public init(_ title:String, handler: (()->Void)? = nil, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil, itemMode: AppMenu.ItemMode = .normal, itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? = nil, keyEquivalent: KeyEquiavalent = .none) {
+    public init(_ title:String, handler: (()->Void)? = nil, hover: (()->Void)? = nil, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil, itemMode: AppMenu.ItemMode = .normal, itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? = nil, keyEquivalent: KeyEquiavalent = .none) {
         self.handler = handler
+        self.hover = hover
         self.dynamicTitle = dynamicTitle
         self.itemMode = itemMode
         self.itemImage = itemImage
