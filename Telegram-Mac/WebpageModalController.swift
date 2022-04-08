@@ -513,7 +513,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         if navigationAction.navigationType == .linkActivated {
             if let url = navigationAction.request.url {
                 if let currentUrl = URL(string: self.url) {
-                    if currentUrl.host == url.host {
+                    if currentUrl.host == url.host || currentUrl.scheme == "tg://" {
                         decisionHandler(.allow)
                         return
                     }
@@ -585,6 +585,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     }
                 }
             }
+        case "web_app_ready":
+            genericView.update(inProgress: false, animated: true)
         case "web_app_setup_main_button":
             if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
                 if let isVisible = json["is_visible"] as? Bool {

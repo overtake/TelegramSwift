@@ -13,7 +13,7 @@ public final class Reactions {
     private let _isInteractive = Atomic<MessageId?>(value: nil)
     private(set) public var available: AvailableReactions?
     public var stateValue: Signal<AvailableReactions?, NoError> {
-        return state.get() |> deliverOnMainQueue
+        return state.get() |> distinctUntilChanged |> deliverOnMainQueue
     }
     
     public var interactive: MessageId? {

@@ -77,6 +77,9 @@ public func localizedPeerNotificationSoundString(sound: PeerMessageSound, defaul
         }
     case let .cloud(fileId):
         if let list = list, let sound = list.sounds.first(where: { $0.file.fileId.id == fileId }) {
+            if sound.file.fileName == nil || sound.file.fileName!.isEmpty, sound.file.isVoice {
+                return strings().notificationSoundToneVoice
+            }
             return (sound.file.fileName ?? "#").nsstring.deletingPathExtension
         } else {
             return strings().peerInfoNotificationsDefault
