@@ -586,7 +586,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 }
                 
                 if resourceData.complete {
-                    if let file = data.file, file.isMusic, let list = data.notifications {
+                    if let file = data.file, file.isMusic || file.isVoice, let list = data.notifications {
                         let settings = NotificationSoundSettings.extract(from: context.appConfiguration)
                         let size = file.size ?? 0
                         let contains = list.sounds.contains(where: { $0.file.fileId.id == file.fileId.id })

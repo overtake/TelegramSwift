@@ -172,7 +172,7 @@ func NotificationSoundController(context: AccountContext) -> InputDataController
     }
 
     let arguments = Arguments(context: context, selectSound: selectTone, upload: {
-        filePanel(with: ["mp3"], allowMultiple: false, for: context.window, completion: { files in
+        filePanel(with: ["mp3", "ogg"], allowMultiple: false, for: context.window, completion: { files in
             if let files = files {
                 let settings = NotificationSoundSettings.extract(from: context.appConfiguration)
                 var signals:[Signal<NotificationSoundList.NotificationSound, UploadNotificationSoundError>] = []
@@ -180,6 +180,8 @@ func NotificationSoundController(context: AccountContext) -> InputDataController
                     if let data = try? Data(contentsOf: URL(fileURLWithPath: file)) {
                         if data.count < settings.maxSize {
                             signals.append(context.engine.peers.uploadNotificationSound(title: file.nsstring.lastPathComponent, data: data))
+                        } else {
+                            alert(for: context.window, info: strings().notificationSoundTonesSizeError(String.prettySized(with: settings.maxSize)))
                         }
                     }
                 }

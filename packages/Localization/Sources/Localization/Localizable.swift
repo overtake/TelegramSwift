@@ -6331,8 +6331,14 @@ public final class L10n {
   public static var notificationSettingsTurnOnTextTitle: String  { return L10n.tr("Localizable", "NotificationSettings.TurnOn.Text.Title") }
   /// Notification Sound
   public static var notificationSoundTitle: String  { return L10n.tr("Localizable", "NotificationSound.Title") }
+  /// Voice Message
+  public static var notificationSoundToneVoice: String  { return L10n.tr("Localizable", "NotificationSound.Tone.Voice") }
   /// In context menu of any short mp3 file in chat and select "Save for Notifications". It will appear here.
   public static var notificationSoundTonesInfo: String  { return L10n.tr("Localizable", "NotificationSound.Tones.Info") }
+  /// The file should be less or equal to %@
+  public static func notificationSoundTonesSizeError(_ p1: String) -> String {
+    return L10n.tr("Localizable", "NotificationSound.Tones.SizeError", p1)
+  }
   /// TELEGRAM TONES
   public static var notificationSoundTonesTitle: String  { return L10n.tr("Localizable", "NotificationSound.Tones.Title") }
   /// Upload Tone
