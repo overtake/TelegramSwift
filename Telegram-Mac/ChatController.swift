@@ -1753,6 +1753,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         var didSetReadIndex: Bool = false
         
         let chatLocationContextHolder = self.chatLocationContextHolder
+        
+        var wasUsedLocation = false
 
         let historyViewUpdate1 = location.get() |> deliverOn(messagesViewQueue)
             |> mapToSignal { location -> Signal<(ChatHistoryViewUpdate, TableSavingSide?), NoError> in
@@ -1776,6 +1778,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .peer:
                     additionalData.append(.cachedPeerDataMessages(peerId))
                 }
+                
+                wasUsedLocation = false
                 
                 return chatHistoryViewForLocation(location, context: context, chatLocation: chatLocation, fixedCombinedReadStates: { nil }, tagMask: mode.tagMask, mode: mode, additionalData: additionalData, chatLocationContextHolder: chatLocationContextHolder) |> beforeNext { viewUpdate in
                     switch viewUpdate {
@@ -2002,7 +2006,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 view = values.view
                 isLoading = values.view.isLoading
                 updateType = values.type
-                scrollPosition = searchStateUpdated ? nil : values.scrollPosition
+                if !wasUsedLocation {
+                    scrollPosition = searchStateUpdated ? nil : values.scrollPosition
+                    wasUsedLocation = true
+                } else {
+                    scrollPosition = nil
+                }
             }
     
             if let updatedValue = previousUpdatingMedia.swap(updatingMedia), updatingMedia != updatedValue {
