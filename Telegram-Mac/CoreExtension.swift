@@ -2681,7 +2681,7 @@ func canCollagesFromUrl(_ urls:[URL]) -> Bool {
     if canCollage {
         for url in urls {
             let mime = MIMEType(url.path)
-            let attrs = Sender.fileAttributes(for: mime, path: url.path, isMedia: true)
+            let attrs = Sender.fileAttributes(for: mime, path: url.path, isMedia: true, inCollage: true)
             let isGif = attrs.contains(where: { attr -> Bool in
                 switch attr {
                 case .Animated:
@@ -2734,7 +2734,6 @@ func canCollagesFromUrl(_ urls:[URL]) -> Bool {
     if gifCount > 0 {
         return false
     }
-
     return canCollage
 }
 

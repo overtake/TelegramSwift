@@ -2513,6 +2513,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             item._index = i
         }
         
+        self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integersIn: 0..<count))
+        
         //CATransaction.commit()
         if transition.grouping && !transition.isEmpty {
             self.tableView.endUpdates()
@@ -2648,12 +2650,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
         
-        
         self.endUpdates()
         
         
-        self.reflectScrolledClipView(clipView)
-
+//        self.reflectScrolledClipView(clipView)
+//        self.tile()
+//        self.layoutSubtreeIfNeeded()
+//        self.setFrameSize(self.frame.size)
+        
         
         self.updatedItems?(self.list)
         

@@ -249,7 +249,7 @@ class Sender: NSObject {
             |> deliverOnMainQueue
     }
     
-    static func generateMedia(for container:MediaSenderContainer, account: Account, isSecretRelated: Bool) -> Signal<(Media,String), NoError> {
+    static func generateMedia(for container:MediaSenderContainer, account: Account, isSecretRelated: Bool, isCollage: Bool = false) -> Signal<(Media,String), NoError> {
         return Signal { (subscriber) in
             
             let path = container.path
@@ -341,11 +341,11 @@ class Sender: NSObject {
                     
                     
                 } else if mimeType.hasPrefix("video") {
-                    let attrs:[TelegramMediaFileAttribute] = fileAttributes(for:mimeType, path:path, isMedia: true)
+                    let attrs:[TelegramMediaFileAttribute] = fileAttributes(for:mimeType, path:path, isMedia: true, inCollage: isCollage)
                     
                     media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), partialReference: nil, resource: LocalFileVideoMediaResource(randomId: randomId, path: container.path), previewRepresentations: previewForFile(path, isSecretRelated: isSecretRelated, account: account), videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: nil, attributes: attrs)
                 } else if mimeType.hasPrefix("image/gif") {
-                    let attrs:[TelegramMediaFileAttribute] = fileAttributes(for:mimeType, path:path, isMedia: true)
+                    let attrs:[TelegramMediaFileAttribute] = fileAttributes(for:mimeType, path:path, isMedia: true, inCollage: isCollage)
                     
                     media = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: randomId), partialReference: nil, resource: LocalFileGifMediaResource(randomId: randomId, path: container.path), previewRepresentations: previewForFile(path, isSecretRelated: isSecretRelated, account: account), videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: nil, attributes: attrs)
                 } else {
@@ -365,7 +365,7 @@ class Sender: NSObject {
         } |> runOn(resourcesQueue)
     }
     
-    public static func fileAttributes(for mime:String, path:String, isMedia:Bool = false) -> [TelegramMediaFileAttribute] {
+    public static func fileAttributes(for mime:String, path:String, isMedia:Bool = false, inCollage: Bool = false) -> [TelegramMediaFileAttribute] {
         var attrs:[TelegramMediaFileAttribute] = []
         
         if mime.hasPrefix("audio/") {
@@ -396,9 +396,12 @@ class Sender: NSObject {
                 size = NSMakeSize(floor(abs(size.width)), floor(abs(size.height)))
                 attrs.append(TelegramMediaFileAttribute.Video(duration: Int(CMTimeGetSeconds(asset.duration)), size: PixelDimensions(size), flags: []))
                 attrs.append(TelegramMediaFileAttribute.FileName(fileName: path.nsstring.lastPathComponent.nsstring.deletingPathExtension.appending(".mp4")))
-                if audio == nil, let size = fileSize(path), size < Int32(10 * 1024 * 1024), mime.hasSuffix("mp4") {
-                    attrs.append(TelegramMediaFileAttribute.Animated)
+                if !inCollage {
+                    if audio == nil, let size = fileSize(path), size < Int32(10 * 1024 * 1024), mime.hasSuffix("mp4") {
+                        attrs.append(TelegramMediaFileAttribute.Animated)
+                    }
                 }
+                
                 if !mime.hasSuffix("mp4") {
                     attrs.append(.hintFileIsLarge)
                 }
@@ -408,7 +411,9 @@ class Sender: NSObject {
         
         if mime.hasSuffix("gif"), isMedia {
             attrs.append(TelegramMediaFileAttribute.Video(duration: 0, size:TGGifConverter.gifDimensionSize(path).pixel, flags: []))
-            attrs.append(TelegramMediaFileAttribute.Animated)
+            if !inCollage {
+                attrs.append(TelegramMediaFileAttribute.Animated)
+            }
             attrs.append(TelegramMediaFileAttribute.FileName(fileName: path.nsstring.lastPathComponent.nsstring.deletingPathExtension.appending(".mp4")))
 
         } else if mime.hasPrefix("image"), let image = NSImage(contentsOf: URL(fileURLWithPath: path)), !mime.hasPrefix("image/webp") {
