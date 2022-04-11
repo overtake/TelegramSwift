@@ -687,7 +687,7 @@ class SharedAccountContext {
     }
     
     func updateCurrentGroupCallValue(_ value: GroupCallContext?) -> Void {
-        groupCallContextValue.set(.single(crossGroupCall.swap(value)))
+        groupCallContextValue.set(.single(crossGroupCall.modify( { _ in return value } )))
     }
     
     func endGroupCall(terminate: Bool) -> Signal<Bool, NoError> {

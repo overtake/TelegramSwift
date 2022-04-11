@@ -92,7 +92,9 @@ private extension Country {
 final class Auth_CountryManager {
     let list: [Country]
     init(_ countries:[Country]) {
-        self.list = countries
+        self.list = countries.sorted(by: { lhs, rhs in
+            return lhs.name < rhs.name
+        })
     }
     
     private let global: Country = .init(id: "TG", name: "Test", localizedName: "Test", countryCodes: [.init(code: "999", prefixes: [], patterns: ["XXXX X XX"])], hidden: false)

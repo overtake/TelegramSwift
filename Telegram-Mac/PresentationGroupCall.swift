@@ -811,6 +811,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             }
         })
         
+        
         self.displayAsPeersValue.set(accountContext.engine.calls.cachedGroupCallDisplayAsAvailablePeers(peerId: peerId) |> map(Optional.init))
 
         
