@@ -39,7 +39,7 @@ final class ImageRenderData {
     }
 }
 
-private let progressiveRangeMap: [(Int, [Int])] = [
+let progressiveRangeMap: [(Int, [Int])] = [
     (100, [0]),
     (400, [1]),
     (400, [3]),
@@ -101,6 +101,7 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
         enum SizeSource {
             case miniThumbnail(data: Data)
             case image(size: Int)
+            case resource(TelegramMediaResource)
         }
         
         var sources: [SizeSource] = []
@@ -125,13 +126,13 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
             }
         }
 
-        if sources.isEmpty {
-            sources.append(.image(size: largestByteSize))
-        }
+
         if let miniThumbnail = imageReference.media.immediateThumbnailData.flatMap(decodeTinyThumbnail) {
             sources.insert(.miniThumbnail(data: miniThumbnail), at: 0)
         }
-
+        if let largest = imageReference.media.representationForDisplayAtSize(.init(fullRepresentationSize)) {
+            sources.append(.resource(largest.resource))
+        }
         
         return Signal { subscriber in
             let signals: [Signal<(SizeSource, Data?), NoError>] = sources.map { source -> Signal<(SizeSource, Data?), NoError> in
@@ -140,6 +141,12 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
                     return .single((source, data))
                 case let .image(size):
                     return postbox.mediaBox.resourceData(progressiveRepresentation.resource, size: Int(progressiveRepresentation.progressiveSizes.last!), in: 0 ..< size, mode: .incremental, notifyAboutIncomplete: true, attemptSynchronously: synchronousLoad)
+                    |> map { (data, _) -> (SizeSource, Data?) in
+                        return (source, data)
+                    }
+                case let .resource(resource):
+                    let size = resource.size ?? 0
+                    return postbox.mediaBox.resourceData(resource, size: size, in: 0 ..< size, mode: .complete, notifyAboutIncomplete: true, attemptSynchronously: synchronousLoad)
                     |> map { (data, _) -> (SizeSource, Data?) in
                         return (source, data)
                     }
@@ -164,6 +171,15 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
                         subscriber.putNext(ImageRenderData(thumbnailData, nil, false))
                         foundData = true
                         break loop
+                    case .resource:
+                        if let data = results[i].1, data.count != 0 {
+                            subscriber.putNext(ImageRenderData(nil, data, isLastSize))
+                            foundData = true
+                            if isLastSize {
+                                subscriber.putCompletion()
+                            }
+                            break loop
+                        }
                     }
                 }
                 if !foundData {
@@ -1526,20 +1542,23 @@ func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReferen
 
 
 func chatMessagePhotoStatus(account: Account, photo: TelegramMediaImage, approximateSynchronousValue: Bool = false) -> Signal<MediaResourceStatus, NoError> {
-    if let largestRepresentation = photo.representationForDisplayAtSize(PixelDimensions(1280, 1280)) {
-        if largestRepresentation.resource is LocalFileReferenceMediaResource {
+    if let largest = photo.representationForDisplayAtSize(PixelDimensions(NSMakeSize(1280, 1280))) {
+        if largest.resource is LocalFileReferenceMediaResource {
             return .single(.Local)
         } else {
-            return account.postbox.mediaBox.resourceStatus(largestRepresentation.resource, approximateSynchronousValue: approximateSynchronousValue)
+            return account.postbox.mediaBox.resourceStatus(largest.resource, approximateSynchronousValue: approximateSynchronousValue)
         }
     } else {
         return .never()
     }
 }
 
+
+
 func chatMessagePhotoInteractiveFetched(account: Account, imageReference: ImageMediaReference, toRepresentationSize: NSSize = NSMakeSize(1280, 1280)) -> Signal<Void, NoError> {
-    if let largestRepresentation = imageReference.media.representationForDisplayAtSize(PixelDimensions(toRepresentationSize)) {
-        return fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: imageReference.resourceReference(largestRepresentation.resource), statsCategory: .image) |> `catch` { _ in return .complete() } |> map {_ in}
+    
+    if let large = imageReference.media.representationForDisplayAtSize(.init(toRepresentationSize)) {
+        return fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: imageReference.resourceReference(large.resource), range: nil, statsCategory: .image) |> `catch` { _ in return .complete() } |> map {_ in}
     } else {
         return .never()
     }

@@ -493,7 +493,7 @@ final class ChatInteraction : InterfaceObserver  {
                             invoke()
                         } else {
                             if FastSettings.shouldConfirmWebApp(peer.id) {
-                                confirm(for: context.window, information: strings().webAppFirstOpen(peer.displayTitle), successHandler: { _ in
+                                confirm(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer.displayTitle), successHandler: { _ in
                                     invoke()
                                     FastSettings.markWebAppAsConfirmed(peer.id)
                                 })
@@ -578,7 +578,23 @@ final class ChatInteraction : InterfaceObserver  {
     func openWebviewFromMenu(buttonText: String, url: String) {
         if let bot = peer {
             let replyTo = self.presentation.interfaceState.replyMessageId
-            showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: true, complete: self.afterSentTransition), chatInteraction: self), for: context.window)
+            let context = self.context
+            let peerId = self.peerId
+            let invoke:()->Void = { [weak self] in
+                guard let strongSelf = self else {
+                    return
+                }
+                showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: true, complete: strongSelf.afterSentTransition), chatInteraction: strongSelf), for: context.window)
+            }
+            if FastSettings.shouldConfirmWebApp(bot.id) {
+                confirm(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(bot.displayTitle), successHandler: { _ in
+                    invoke()
+                    FastSettings.markWebAppAsConfirmed(bot.id)
+                })
+            } else {
+                invoke()
+            }
+            
         }
     }
     

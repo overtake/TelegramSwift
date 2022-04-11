@@ -498,7 +498,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 if let parent = parent, parent.containsSecretMedia {
                     updateImageSignal = chatSecretPhoto(account: context.account, imageReference: ImageMediaReference.message(message: MessageReference(parent), media: image), scale: backingScaleFactor, synchronousLoad: approximateSynchronousValue)
                 } else {
-                    updateImageSignal = chatMessagePhoto(account: context.account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image), scale: backingScaleFactor, synchronousLoad: approximateSynchronousValue, autoFetchFullSize: autoDownload)
+                    updateImageSignal = chatMessagePhoto(account: context.account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image), scale: backingScaleFactor, synchronousLoad: approximateSynchronousValue)
                 }
                 
                 if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
@@ -815,6 +815,10 @@ class ChatInteractiveContentView: ChatMediaContentView {
     override func cancel() {
         fetchDisposable.set(nil)
         statusDisposable.set(nil)
+    }
+    
+    func effectiveImageResource(_ image: TelegramMediaImage) -> Void {
+        
     }
     
    
