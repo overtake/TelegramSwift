@@ -216,9 +216,7 @@ public struct Translate {
         languageRecognizer.reset()
         
         if let value = hypotheses.sorted(by: { $0.value > $1.value }).first?.key.rawValue {
-            if supportedTranslationLanguages.contains(value) {
-                return value
-            }
+            return value
         }
         return nil
     }
