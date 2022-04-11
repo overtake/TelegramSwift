@@ -30,7 +30,7 @@ private class WeakScriptMessageHandler: NSObject, WKScriptMessageHandler {
 
 
 private final class WebpageView : View {
-    private var indicator:ProgressIndicator?
+    private var indicator:InfiniteProgressView?
     fileprivate let webview: WKWebView
     
     private let loading: LinearProgressControl = LinearProgressControl(progressHeight: 2)
@@ -121,15 +121,17 @@ private final class WebpageView : View {
     func update(inProgress: Bool, animated: Bool) {
         self.webview._change(opacity: inProgress ? 0 : 1, animated: animated)
         if inProgress {
-            let current: ProgressIndicator
+            let current: InfiniteProgressView
             if let view = self.indicator {
                 current = view
             } else {
-                current = .init(frame: focus(NSMakeSize(30, 30)))
+                current = .init(color: theme.colors.text, lineWidth: 2)
+                current.frame = focus(NSMakeSize(30, 30))
                 self.indicator = current
                 self.addSubview(current)
             }
-            current.progressColor = theme.colors.text
+            current.color = theme.colors.text
+            current.progress = nil
         } else if let view = self.indicator {
             performSubviewRemoval(view, animated: animated)
             self.indicator = nil

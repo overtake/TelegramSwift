@@ -11041,10 +11041,6 @@ public final class L10n {
   public static var wallpaperPreviewHeader: String  { return L10n.tr("Localizable", "WallpaperPreview.Header") }
   /// Paste and Match Style
   public static var weT3VZwkTitle: String  { return L10n.tr("Localizable", "WeT-3V-zwk.title") }
-  /// %@ would like to open its web app to proceed.\n\nIt will be able to access your IP adress and basic device info.
-  public static func webAppFirstOpen(_ p1: String) -> String {
-    return L10n.tr("Localizable", "WebApp.FirstOpen", p1)
-  }
   /// Install Bot
   public static var webAppInstallBot: String  { return L10n.tr("Localizable", "WebApp.InstallBot") }
   /// Reload
@@ -11089,6 +11085,12 @@ public final class L10n {
   public static func webAppAttachRemoveSuccess(_ p1: String) -> String {
     return L10n.tr("Localizable", "WebApp.AttachRemove.Success", p1)
   }
+  /// %@ would like to open its web app to proceed.\n\nIt will be able to access your IP adress and basic device info.
+  public static func webAppFirstOpenInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.FirstOpen.Info", p1)
+  }
+  /// Open Web App
+  public static var webAppFirstOpenTitle: String  { return L10n.tr("Localizable", "WebApp.FirstOpen.Title") }
   /// Disconnect
   public static var webAuthorizationsLogout: String  { return L10n.tr("Localizable", "WebAuthorizations.Logout") }
   /// Disconnect All Websites
