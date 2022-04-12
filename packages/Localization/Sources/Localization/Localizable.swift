@@ -2027,6 +2027,8 @@ public final class L10n {
   public static var chatContextTranslate: String  { return L10n.tr("Localizable", "Chat.Context.Translate") }
   /// Unarchive
   public static var chatContextUnarchive: String  { return L10n.tr("Localizable", "Chat.Context.Unarchive") }
+  /// View Statistics
+  public static var chatContextViewStatistics: String  { return L10n.tr("Localizable", "Chat.Context.ViewStatistics") }
   /// Cancel
   public static var chatContextBlockGroupCancel: String  { return L10n.tr("Localizable", "Chat.Context.BlockGroup.Cancel") }
   /// Block Group

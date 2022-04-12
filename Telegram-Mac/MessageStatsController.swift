@@ -77,7 +77,6 @@ private func statsEntries(_ stats: MessageStats?, _ search: (SearchMessagesResul
         
         if !stats.interactionsGraph.isEmpty {
             graphs.append(Graph(graph: stats.interactionsGraph, title: strings().statsMessageInteractionsTitle, identifier: InputDataIdentifier("interactionsGraph"), type: chartType, load: { identifier in
-              //  context.loadDetailedGraph(<#T##graph: StatsGraph##StatsGraph#>, x: <#T##Int64#>)
                 updateIsLoading(identifier, true)
             }))
         }
