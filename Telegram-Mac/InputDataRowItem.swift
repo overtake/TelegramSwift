@@ -591,7 +591,6 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         if let item = item as? InputDataRowItem {
             let updated = item.filter(string)
             if updated != string {
-                
                 textView.setString(updated, animated: true)
             } else {
                 item.currentText = textView.attributedString()
