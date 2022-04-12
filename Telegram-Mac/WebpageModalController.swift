@@ -30,7 +30,7 @@ private class WeakScriptMessageHandler: NSObject, WKScriptMessageHandler {
 
 
 private final class WebpageView : View {
-    private var indicator:InfiniteProgressView?
+    private var indicator: NSView?
     fileprivate let webview: WKWebView
     
     private let loading: LinearProgressControl = LinearProgressControl(progressHeight: 2)
@@ -98,7 +98,6 @@ private final class WebpageView : View {
         addSubview(webview)
         addSubview(loading)
         
-        self.update(inProgress: true, animated: false)
         
         webview.wantsLayer = true
         
@@ -111,27 +110,47 @@ private final class WebpageView : View {
         loading.style = ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: .clear, highlightColor: .clear)
     }
     
-    func load(url: String, animated: Bool) {
+    func load(url: String, preload: (TelegramMediaFile, AccountContext)?, animated: Bool) {
         if let url = URL(string: url) {
             webview.load(URLRequest(url: url))
         }
-        self.update(inProgress: true, animated: animated)
+        self.update(inProgress: true, preload: preload, animated: animated)
     }
     
-    func update(inProgress: Bool, animated: Bool) {
+    func update(inProgress: Bool, preload: (TelegramMediaFile, AccountContext)?, animated: Bool) {
         self.webview._change(opacity: inProgress ? 0 : 1, animated: animated)
         if inProgress {
-            let current: InfiniteProgressView
-            if let view = self.indicator {
-                current = view
+            
+            if let preload = preload {
+                let current: MediaAnimatedStickerView
+                if let view = self.indicator as? MediaAnimatedStickerView {
+                    current = view
+                } else {
+                    current = .init(frame: NSMakeRect(0, 0, 150, 150))
+                    current.frame = focus(current.frame.size)
+                    self.indicator = current
+                    self.addSubview(current)
+                }
+                current.update(with: preload.0, size: current.frame.size, context: preload.1, table: nil, parameters: ChatAnimatedStickerMediaLayoutParameters.init(playPolicy: nil, alwaysAccept: true, media: preload.0, colors: [.init(keyPath: "", color: theme.colors.text)]), animated: false)
+
+                if let animation = current.layer?.makeAnimation(from: NSNumber(value: 1.0), to: NSNumber(value: 0.5), keyPath: "opacity", timingFunction: .easeOut, duration: 0.5) {
+                    animation.repeatCount = 1000
+                    animation.autoreverses = true
+                    
+                    current.layer?.add(animation, forKey: "opacity")
+                }
             } else {
-                current = .init(color: theme.colors.text, lineWidth: 2)
-                current.frame = focus(NSMakeSize(30, 30))
-                self.indicator = current
-                self.addSubview(current)
+                let current: ProgressIndicator
+                if let view = self.indicator as? ProgressIndicator {
+                    current = view
+                } else {
+                    current = .init(frame: NSMakeRect(0, 0, 30, 30))
+                    current.frame = focus(current.frame.size)
+                    self.indicator = current
+                    self.addSubview(current)
+                }
+                current.progressColor = theme.colors.text
             }
-            current.color = theme.colors.text
-            current.progress = nil
         } else if let view = self.indicator {
             performSubviewRemoval(view, animated: animated)
             self.indicator = nil
@@ -267,6 +286,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     private var locked: Bool = false
     private var counter: Int = 0
     private let title: String
+    private let thumbFile: TelegramMediaFile?
     
     private var keepAliveDisposable: Disposable?
     private let installedBotsDisposable = MetaDisposable()
@@ -279,7 +299,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
 
 
     
-    init(context: AccountContext, url: String, title: String, effectiveSize: NSSize? = nil, requestData: RequestData? = nil, chatInteraction: ChatInteraction? = nil) {
+    init(context: AccountContext, url: String, title: String, effectiveSize: NSSize? = nil, requestData: RequestData? = nil, chatInteraction: ChatInteraction? = nil, thumbFile: TelegramMediaFile? = nil) {
         self.url = url
         self.requestData = requestData
         self.data = nil
@@ -287,12 +307,20 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         self.context = context
         self.title = title
         self.effectiveSize = effectiveSize
+        self.thumbFile = thumbFile
         super.init(frame:NSMakeRect(0,0,380,450))
     }
     
+    private var preloadData: (TelegramMediaFile, AccountContext)? {
+        if let thumbFile = self.thumbFile {
+            return (thumbFile, context)
+        } else {
+            return nil
+        }
+    }
     
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        genericView.update(inProgress: false, animated: true)
+        genericView.update(inProgress: false, preload: self.preloadData, animated: true)
 //        self.updateLocalizationAndTheme(theme: theme)
     }
     
@@ -341,6 +369,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         genericView.webview.addObserver(self, forKeyPath: #keyPath(WKWebView.estimatedProgress), options: [], context: nil)
         genericView.webview.navigationDelegate = self
         
+        genericView.update(inProgress: true, preload: self.preloadData, animated: false)
+        
         updateLocalizationAndTheme(theme: theme)
         
         readyOnce()
@@ -354,7 +384,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 let signal = context.engine.messages.requestSimpleWebView(botId: bot.id, url: url, themeParams: generateWebAppThemeParams(theme)) |> deliverOnMainQueue
                 
                 requestWebDisposable.set(signal.start(next: { [weak self] url in
-                    self?.genericView.load(url: url, animated: true)
+                    self?.genericView.load(url: url, preload: self?.preloadData, animated: true)
                     self?.url = url
                 }, error: { [weak self] error in
                     switch error {
@@ -368,7 +398,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 requestWebDisposable.set(signal.start(next: { [weak self] result in
                     
                     self?.data = .init(queryId: result.queryId, bot: bot, peerId: peerId, buttonText: buttonText, keepAliveSignal: result.keepAliveSignal)
-                    self?.genericView.load(url: result.url, animated: true)
+                    self?.genericView.load(url: result.url, preload: self?.preloadData, animated: true)
                     self?.keepAliveDisposable = (result.keepAliveSignal
                                                 |> deliverOnMainQueue).start(error: { [weak self] _ in
                                                     self?.close()
@@ -389,7 +419,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             
             
         } else {
-            self.genericView.load(url: url, animated: true)
+            self.genericView.load(url: url, preload: self.preloadData, animated: true)
         }
         
         let bots = self.context.engine.messages.attachMenuBots() |> deliverOnMainQueue
@@ -515,11 +545,12 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         if navigationAction.navigationType == .linkActivated {
             if let url = navigationAction.request.url {
                 if let currentUrl = URL(string: self.url) {
-                    if currentUrl.host == url.host || currentUrl.scheme == "tg://" {
+                    if currentUrl.host == url.host || url.scheme == "tg" {
                         decisionHandler(.allow)
                         return
                     }
                 }
+                                
                 let link = inApp(for: url.absoluteString.nsstring, context: context, peerId: nil, openInfo: chatInteraction?.openInfo, hashtag: nil, command: nil, applyProxy: chatInteraction?.applyProxy, confirm: true)
                 switch link {
                 case .external:
@@ -588,7 +619,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 }
             }
         case "web_app_ready":
-            genericView.update(inProgress: false, animated: true)
+            genericView.update(inProgress: false, preload: self.preloadData, animated: true)
         case "web_app_setup_main_button":
             if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
                 if let isVisible = json["is_visible"] as? Bool {

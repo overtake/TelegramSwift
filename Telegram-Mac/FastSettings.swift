@@ -198,7 +198,7 @@ class FastSettings {
     }
     
     static func markWebAppAsConfirmed(_ peerId: PeerId) -> Void {
-        UserDefaults.standard.set(true, forKey: "\(peerId)_\(kConfirmWebApp)")
+        UserDefaults.standard.set(false, forKey: "\(peerId)_\(kConfirmWebApp)")
     }
     
     @available(macOS 12.0, *)

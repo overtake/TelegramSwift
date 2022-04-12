@@ -100,30 +100,44 @@ class ChatInputAttachView: ImageButton, Notifable {
                     
   
                     
-                    if chatInteraction.presentation.chatMode == .history {
+                    if chatInteraction.presentation.chatMode == .history, let peer = chatInteraction.presentation.peer {
                         for attach in chatInteraction.presentation.attachItems {
                             
+                            let thumbFile: TelegramMediaFile
                             var value: (NSColor, ContextMenuItem)-> AppMenuItemImageDrawable
                             if let file = attach.icons[.macOSAnimated] {
                                 value = MenuRemoteAnimation(context, file: file, bot: attach.peer, thumb: MenuAnimation.menu_webapp_placeholder).value
+                                thumbFile = file
                             } else {
                                 value = MenuAnimation.menu_folder_bot.value
+                                thumbFile = MenuAnimation.menu_folder_bot.file
                             }
-                            
-                            items.append(ContextMenuItem(attach.shortName, handler: { [weak self] in
-                                let invoke:()->Void = { [weak self] in
-                                    showModal(with: WebpageModalController(context: context, url: "", title: attach.peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: attach.peer, replyTo: replyTo, buttonText: "", payload: nil, fromMenu: false, complete: chatInteraction.afterSentTransition), chatInteraction: self?.chatInteraction), for: context.window)
-                                }
-                                if FastSettings.shouldConfirmWebApp(peer.id) {
-                                    confirm(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(attach.peer.displayTitle), successHandler: { _ in
-                                        invoke()
-                                        FastSettings.markWebAppAsConfirmed(peer.id)
-                                    })
+                            if let botInfo = attach.peer.botInfo {
+                                let canAddAttach: Bool
+                                if peer.isUser {
+                                    canAddAttach = true
+                                } else if botInfo.flags.contains(.worksWithGroups) {
+                                    canAddAttach = true
                                 } else {
-                                    invoke()
+                                    canAddAttach = false
                                 }
-                                
-                            }, itemImage: value))
+                                if canAddAttach {
+                                    items.append(ContextMenuItem(attach.shortName, handler: { [weak self] in
+                                        let invoke:()->Void = { [weak self] in
+                                            showModal(with: WebpageModalController(context: context, url: "", title: attach.peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: attach.peer, replyTo: replyTo, buttonText: "", payload: nil, fromMenu: false, complete: chatInteraction.afterSentTransition), chatInteraction: self?.chatInteraction, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
+                                        }
+                                        if FastSettings.shouldConfirmWebApp(peer.id) {
+                                            confirm(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(attach.peer.displayTitle), successHandler: { _ in
+                                                invoke()
+                                                FastSettings.markWebAppAsConfirmed(peer.id)
+                                            })
+                                        } else {
+                                            invoke()
+                                        }
+                                        
+                                    }, itemImage: value))
+                                }
+                            }
                         }
                     }
                     
