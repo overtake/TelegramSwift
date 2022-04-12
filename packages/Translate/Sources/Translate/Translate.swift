@@ -38,7 +38,6 @@ private func escape(with link:String) -> String {
     return escaped
 }
 
-@available(macOS 10.14, *)
 public struct Translate {
     
     public enum Error {
@@ -209,42 +208,21 @@ public struct Translate {
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36" // 4.8%
         ]
     
+    @available(macOS 10.14, *)
+    private static let languageRecognizer = NLLanguageRecognizer()
+
     public static func detectLanguage(for text: String) -> String? {
         let text = String(text.prefix(64))
-        languageRecognizer.processString(text)
-        let hypotheses = languageRecognizer.languageHypotheses(withMaximum: 3)
-        languageRecognizer.reset()
-        
-        if let value = hypotheses.sorted(by: { $0.value > $1.value }).first?.key.rawValue {
-            return value
+        if #available(macOS 10.14, *) {
+            languageRecognizer.processString(text)
+            let hypotheses = languageRecognizer.languageHypotheses(withMaximum: 3)
+            languageRecognizer.reset()
+            if let value = hypotheses.sorted(by: { $0.value > $1.value }).first?.key.rawValue {
+                return value
+            }
         }
+        
         return nil
-    }
-
-    private static let languageRecognizer = NLLanguageRecognizer()
-    public static func canTranslateText(baseLanguageCode: String, text: String, ignoredLanguages: [String]?) -> Bool {
-        
-        guard text.count > 0 else {
-            return false
-        }
-        var dontTranslateLanguages: [String] = []
-        if let ignoredLanguages = ignoredLanguages {
-            dontTranslateLanguages = ignoredLanguages
-        } else {
-            dontTranslateLanguages = [baseLanguageCode]
-        }
-        
-        let text = String(text.prefix(64))
-        languageRecognizer.processString(text)
-        let hypotheses = languageRecognizer.languageHypotheses(withMaximum: 3)
-        languageRecognizer.reset()
-        
-        let filteredLanguages = hypotheses.filter { supportedTranslationLanguages.contains($0.key.rawValue) }.sorted(by: { $0.value > $1.value })
-        if let language = filteredLanguages.first(where: { supportedTranslationLanguages.contains($0.key.rawValue) }) {
-            return !dontTranslateLanguages.contains(language.key.rawValue)
-        } else {
-            return false
-        }
     }
 
     public static func translateText(text: String, from: String?, to: String) -> Signal<(detect: String?, result: String), Error> {

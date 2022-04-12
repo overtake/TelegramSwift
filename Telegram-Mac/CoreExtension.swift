@@ -2561,40 +2561,6 @@ extension SecureIdDate {
 
 
 
-func clearCache(_ path: String, excludes: [(partial: String, complete: String)]) -> Signal<Void, NoError> {
-    return Signal { subscriber -> Disposable in
-        
-        let fileManager = FileManager.default
-        var enumerator = fileManager.enumerator(atPath: path + "/")
-        
-        while let file = enumerator?.nextObject() as? String {
-            if file != "cache" {
-                if excludes.filter ({ file.contains($0.partial.nsstring.lastPathComponent) || file.contains($0.complete.nsstring.lastPathComponent) }).isEmpty {
-                    unlink(path + "/" + file)
-                }
-            }
-        }
-        
-        var p = path.nsstring.substring(to: path.nsstring.range(of: path.nsstring.lastPathComponent).location)
-        p = p.nsstring.substring(to: p.nsstring.range(of: p.nsstring.lastPathComponent).location) + "cached/"
-        
-        enumerator = fileManager.enumerator(atPath: p)
-        
-        while let file = enumerator?.nextObject() as? String {
-            
-            
-            if excludes.filter ({ file.contains($0.partial) || file.contains($0.complete) }).isEmpty {
-                unlink(p + file)
-            }
-            //try? fileManager.removeItem(atPath: p + file)
-        }
-        
-        subscriber.putNext(Void())
-        subscriber.putCompletion()
-        return EmptyDisposable
-    } |> runOn(resourcesQueue)
-}
-
 func moveWallpaperToCache(postbox: Postbox, resource: TelegramMediaResource, reference: WallpaperReference?, settings: WallpaperSettings, isPattern: Bool) -> Signal<String, NoError> {
     let resourceData: Signal<MediaResourceData, NoError>
     if isPattern {

@@ -593,7 +593,6 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             if updated != string {
                 
                 textView.setString(updated, animated: true)
-                NSSound.beep()
             } else {
                 item.currentText = textView.attributedString()
             }
