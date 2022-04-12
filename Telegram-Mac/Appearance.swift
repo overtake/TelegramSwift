@@ -2448,7 +2448,7 @@ func generateWebAppThemeParams(_ presentationTheme: PresentationTheme) -> [Strin
     return [
         "bg_color": Int32(bitPattern: presentationTheme.colors.background.rgb),
         "text_color": Int32(bitPattern: presentationTheme.colors.text.rgb),
-        "hint_color": Int32(bitPattern: presentationTheme.colors.listBackground.rgb),
+        "hint_color": Int32(bitPattern: presentationTheme.colors.grayText.rgb),
         "link_color": Int32(bitPattern: presentationTheme.colors.link.rgb),
         "button_color": Int32(bitPattern: presentationTheme.colors.accent.rgb),
         "button_text_color": Int32(bitPattern: presentationTheme.colors.underSelectedColor.rgb)
