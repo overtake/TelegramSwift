@@ -448,6 +448,15 @@ struct ChatPresentationInterfaceState: Equatable {
         var commands: [BotCommand]
         var revealed: Bool
         var menuButton: BotMenuButton
+        
+        var isEmpty: Bool {
+            switch self.menuButton {
+            case .webView:
+                return false
+            case .commands:
+                return self.commands.isEmpty
+            }
+        }
     }
     
     let interfaceState: ChatInterfaceState

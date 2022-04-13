@@ -126,7 +126,7 @@ private final class WebpageView : View {
                 if let view = self.indicator as? MediaAnimatedStickerView {
                     current = view
                 } else {
-                    current = .init(frame: NSMakeRect(0, 0, 150, 150))
+                    current = .init(frame: NSMakeRect(0, 0, 80, 80))
                     current.frame = focus(current.frame.size)
                     self.indicator = current
                     self.addSubview(current)
