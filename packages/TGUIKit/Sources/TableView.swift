@@ -2643,9 +2643,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 if isFlipped {
                     if let first = visibleItems.last {
                         if !first.0.canBeAnchor {
-                            saveVisible(.upper)
-                        } else {
                             saveVisible(.lower)
+                        } else {
+                            saveVisible(.upper)
                         }
                     }
                 } else {
