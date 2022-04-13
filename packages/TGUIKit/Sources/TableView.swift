@@ -2513,8 +2513,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             item._index = i
         }
         
-        self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integersIn: 0..<count))
-        
+       
         
         //CATransaction.commit()
         if transition.grouping && !transition.isEmpty {
@@ -2523,10 +2522,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.clipView.justScroll(to: documentOffset)
 
         
-
         for inserted in inserted {
             inserted.0.view?.onInsert(inserted.1)
         }
+        
+        self.tableView.beginUpdates()
+        NSAnimationContext.current.duration = 0
+        self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integersIn: 0..<count))
+        self.tableView.endUpdates()
         
         
         let state: TableScrollState
@@ -2637,7 +2640,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             // print("scroll do nothing")
             animation?.animate(table:self, documentOffset: documentOffset, added: inserted.map{ $0.0 }, removed: removed, previousRange: visibleRange)
             if let animation = animation, !animation.scrollBelow, !transition.isEmpty, contentView.bounds.minY > 0 {
-                saveVisible(.lower)
+                if isFlipped {
+                    if let first = visibleItems.last {
+                        if !first.0.canBeAnchor {
+                            saveVisible(.upper)
+                        } else {
+                            saveVisible(.lower)
+                        }
+                    }
+                } else {
+                    saveVisible(.lower)
+                }
             }
             
         case .bottom, .top, .center:
@@ -2655,19 +2668,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         
         self.reflectScrolledClipView(clipView)
-        self.tile()
-        self.layoutSubtreeIfNeeded()
         let tableFrame = tableView.frame
         self.tableView.frame = tableFrame
         self.tableView.noteNumberOfRowsChanged()
         
         self.updatedItems?(self.list)
-        
-//        for subview in self.tableView.subviews.reversed() {
-//            if self.tableView.row(for: subview) == -1 {
-//                subview.removeFromSuperview()
-//            }
-//        }
         
         if oldEmpty != isEmpty || first {
             updateEmpties(animated: !first)
