@@ -519,6 +519,12 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }, with: self, for: .Minus, priority: .low, modifierFlags: [.control])
         
         
+        #if DEBUG
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            showModal(with: AvatarConstructorController(context, target: .avatar), for: context.window)
+            return .invoked
+        }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
+        #endif
         
         
 //        window.set(handler: { [weak self] _ -> KeyHandlerResult in

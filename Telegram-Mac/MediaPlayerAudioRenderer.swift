@@ -649,8 +649,8 @@ struct AudioAddress {
                                                          mScope: kAudioObjectPropertyScopeGlobal,
                                                          mElement: kAudioObjectPropertyElementMaster)
     
-    static var mixStereo = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyMixStereoToMono,
-                                                         mScope: kAudioObjectPropertyScopeGlobal,
+    static var nominalSampleRates = AudioObjectPropertyAddress(mSelector: kAudioDevicePropertyStreamFormat,
+                                                         mScope: kAudioObjectPropertyScopeOutput,
                                                          mElement: kAudioObjectPropertyElementMaster)
 
     
@@ -678,10 +678,6 @@ enum AudioNotification: String {
 struct AudioListener {
     static var output: AudioObjectPropertyListenerProc = { _, _, _, _ in
         NotificationCenter.default.post(name: AudioNotification.audioOutputDeviceDidChange.notificationName, object: nil)
-        return 0
-    }
-    static var mixStereo: AudioObjectPropertyListenerProc = { _, _, _, _ in
-        NotificationCenter.default.post(name: AudioNotification.mixStereo.notificationName, object: nil)
         return 0
     }
     static var input: AudioObjectPropertyListenerProc = { _, _, _, _ in
@@ -737,12 +733,9 @@ final class MediaPlayerAudioRenderer {
         
         AudioObjectAddPropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.outputDevice, AudioListener.output, nil)
         
-        AudioObjectAddPropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.mixStereo, AudioListener.output, nil)
-
         
         NotificationCenter.default.addObserver(self, selector: #selector(handleNotification(_:)), name: AudioNotification.audioOutputDeviceDidChange.notificationName, object: nil)
         
-        AudioObjectAddPropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.mixStereo, AudioListener.output, nil)
 
         NotificationCenter.default.addObserver(self, selector: #selector(handleNotification(_:)), name: AudioNotification.mixStereo.notificationName, object: nil)
 
