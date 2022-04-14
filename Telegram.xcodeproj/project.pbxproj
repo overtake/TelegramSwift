@@ -30,6 +30,7 @@
 		271D4F3427689DF0004FD034 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 271D4F3327689DF0004FD034 /* WebKit.framework */; };
 		271D4F362769D07E004FD034 /* menu_reactions.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 271D4F352769D07D004FD034 /* menu_reactions.tgs */; };
 		271D4F38276B69BD004FD034 /* ReactionsSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271D4F37276B69BD004FD034 /* ReactionsSettingsController.swift */; };
+		271F78C62806FCBD0040EE8F /* AvatarConstructorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271F78C52806FCBD0040EE8F /* AvatarConstructorController.swift */; };
 		27200F1B257C256E00574365 /* DevicesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27200F1A257C256E00574365 /* DevicesContext.swift */; };
 		2725785B259CF987001558E8 /* AnimatedBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2725785A259CF987001558E8 /* AnimatedBadgeView.swift */; };
 		2728991926CBC0D100F4D288 /* UNUserNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2728991826CBC0D100F4D288 /* UNUserNotifications.swift */; };
@@ -1299,6 +1300,7 @@
 		271D4F3327689DF0004FD034 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		271D4F352769D07D004FD034 /* menu_reactions.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_reactions.tgs; sourceTree = "<group>"; };
 		271D4F37276B69BD004FD034 /* ReactionsSettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionsSettingsController.swift; sourceTree = "<group>"; };
+		271F78C52806FCBD0040EE8F /* AvatarConstructorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarConstructorController.swift; sourceTree = "<group>"; };
 		27200F1A257C256E00574365 /* DevicesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesContext.swift; sourceTree = "<group>"; };
 		2725785A259CF987001558E8 /* AnimatedBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedBadgeView.swift; sourceTree = "<group>"; };
 		2728991826CBC0D100F4D288 /* UNUserNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UNUserNotifications.swift; sourceTree = "<group>"; };
@@ -2649,6 +2651,14 @@
 			path = folders;
 			sourceTree = "<group>";
 		};
+		271F78C42806FC0C0040EE8F /* avatar */ = {
+			isa = PBXGroup;
+			children = (
+				271F78C52806FCBD0040EE8F /* AvatarConstructorController.swift */,
+			);
+			name = avatar;
+			sourceTree = "<group>";
+		};
 		2728991A26CBCD8F00F4D288 /* items */ = {
 			isa = PBXGroup;
 			children = (
@@ -3921,6 +3931,7 @@
 		C230B8ED1DD335780057F596 /* account */ = {
 			isa = PBXGroup;
 			children = (
+				271F78C42806FC0C0040EE8F /* avatar */,
 				C230B8EE1DD3358C0057F596 /* AccountViewController.swift */,
 				C230B8F01DD348970057F596 /* AccountInfoItem.swift */,
 				9F8DF3C7209228B000AED104 /* EditAccountInfoController.swift */,
@@ -6502,6 +6513,7 @@
 				C205DB981EE71127003711DF /* ChannelAdminController.swift in Sources */,
 				C22674381DC125C1000BA9ED /* PeerMediaCollectionInterfaceState.swift in Sources */,
 				C2271F3C1DB4D0630045E719 /* GIFViewController.swift in Sources */,
+				271F78C62806FCBD0040EE8F /* AvatarConstructorController.swift in Sources */,
 				277DFE6627843F5100F78396 /* TranslateTableRowItem.swift in Sources */,
 				C2777B6A1DD211E5008B69DD /* PeerPresenceStatusManager.swift in Sources */,
 				C2303E781D997C3100098E12 /* ChatInputAttachView.swift in Sources */,
