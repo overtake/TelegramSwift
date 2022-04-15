@@ -397,6 +397,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     var result:PeerStatusStringResult {
         didSet {
             nameLayout = TextViewLayout(result.title, maximumNumberOfLines: 1)
+            nameLayout.interactions = globalLinkExecutor
             statusLayout = TextViewLayout(result.status, maximumNumberOfLines: 1, alwaysStaticItems: true)
         }
     }

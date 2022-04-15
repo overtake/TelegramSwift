@@ -168,7 +168,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         return  Bundle.main.bundleIdentifier!
     }
 
-   
+    var currentContext:AccountContext? {
+        return contextValue?.context
+    }
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         

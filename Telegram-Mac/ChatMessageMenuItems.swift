@@ -310,7 +310,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     let text = textLayout.attributedString.string
                     let language = Translate.detectLanguage(for: text)
                     let toLang = appAppearance.language.baseLanguageCode
-                    if language != toLang, Translate.supportedTranslationLanguages.contains(toLang) {
+                    if language != toLang {
                         thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
                             showModal(with: TranslateModalController(context: context, from: language, toLang: toLang, text: text), for: context.window)
                         }, itemImage: MenuAnimation.menu_translate.value))
@@ -349,7 +349,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         let text = selectedText.string
                         let language = Translate.detectLanguage(for: text)
                         let toLang = appAppearance.language.baseLanguageCode
-                        if language != toLang, Translate.supportedTranslationLanguages.contains(toLang) {
+                        if language != toLang {
                             thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
                                 showModal(with: TranslateModalController(context: context, from: language, toLang: toLang, text: text), for: context.window)
                             }, itemImage: MenuAnimation.menu_translate.value))
@@ -601,6 +601,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         }
                     }, itemImage: image))
                 }
+                
                 
                 if resourceData.complete {
                     if let file = data.file, file.isMusic || file.isVoice, let list = data.notifications {
