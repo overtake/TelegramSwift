@@ -133,6 +133,21 @@ class StickerPackPanelRowItem: TableRowItem {
             let rect = NSMakeRect(file.2.x, file.2.y, 60, 60)
             let file = file.0
             if NSPointInRect(location, rect) {
+                
+                if NSApp.currentEvent?.modifierFlags.contains(.control) == true {
+                    if file.isAnimatedSticker, let data = try? Data(contentsOf: URL(fileURLWithPath: context.account.postbox.mediaBox.resourcePath(file.resource))) {
+                        items.append(ContextMenuItem("Copy thumbnail (Dev.)", handler: {
+                        _ = getAnimatedStickerThumb(data: data).start(next: { path in
+                                if let path = path {
+                                    let pb = NSPasteboard.general
+                                    pb.clearContents()
+                                    pb.writeObjects([NSURL(fileURLWithPath: path)])
+                                }
+                            })
+                        }))
+                    }
+                }
+                
                 inner: switch packInfo {
                 case .saved, .recent:
                     if let reference = file.stickerReference {
@@ -188,6 +203,9 @@ class StickerPackPanelRowItem: TableRowItem {
                 break
             }
         }
+        
+       
+        
         return .single(items)
     }
     

@@ -495,6 +495,8 @@ public final class L10n {
   public static var autoremoveMessagesWeek1: String  { return L10n.tr("Localizable", "AutoremoveMessages.Week1") }
   /// Auto-Deletion
   public static var autoremoveMessagesTitleDeleteOnly: String  { return L10n.tr("Localizable", "AutoremoveMessages.Title.DeleteOnly") }
+  /// Preview
+  public static var avatarPreview: String  { return L10n.tr("Localizable", "Avatar.Preview") }
   /// Preferences…
   public static var bofnm1cWTitle: String  { return L10n.tr("Localizable", "BOF-NM-1cW.title") }
   /// Any details such as age, occupation or city.\nExample: 23 y.o. designer from San Francisco

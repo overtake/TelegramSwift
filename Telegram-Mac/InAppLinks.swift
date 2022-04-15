@@ -15,6 +15,7 @@ import Postbox
 import SwiftSignalKit
 import MtProtoKit
 import ThemeSettings
+import Translate
 //import WalletCore
 
 private let inapp:String = "chat://"
@@ -213,6 +214,23 @@ var globalLinkExecutor:TextViewInteractions {
             }
             
             return false
+        }, translate: { text, window in
+            let language = Translate.detectLanguage(for: text)
+            let toLang = appAppearance.language.baseLanguageCode
+            var current: AccountContext?
+            appDelegate?.enumerateAccountContexts({ context in
+                if context.window === window {
+                    current = context
+                }
+            })
+            
+            if language != toLang, let context = current {
+                return ContextMenuItem(strings().chatContextTranslate, handler: {
+                    showModal(with: TranslateModalController(context: context, from: language, toLang: toLang, text: text), for: context.window)
+                }, itemImage: MenuAnimation.menu_translate.value)
+            } else {
+                return nil
+            }
         })
     }
 }

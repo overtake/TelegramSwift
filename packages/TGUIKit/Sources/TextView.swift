@@ -200,7 +200,8 @@ public final class TextViewInteractions {
     public var copyToClipboard:((String)->Void)?
     public var hoverOnLink: (LinkHoverValue)->Void
     public var topWindow:(()->Window?)? = nil
-    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)? = nil, isDomainLink:@escaping(Any, String?)->Bool = {_, _ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}, resolveLink: @escaping(Any)->String? = { _ in return nil }, copyAttributedString: @escaping(NSAttributedString)->Bool = { _ in return false}, copyToClipboard: ((String)->Void)? = nil, hoverOnLink: @escaping(LinkHoverValue)->Void = { _ in }, topWindow:(()->Window?)? = nil) {
+    public var translate:((String, Window)->ContextMenuItem?)? = nil
+    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)? = nil, isDomainLink:@escaping(Any, String?)->Bool = {_, _ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}, resolveLink: @escaping(Any)->String? = { _ in return nil }, copyAttributedString: @escaping(NSAttributedString)->Bool = { _ in return false}, copyToClipboard: ((String)->Void)? = nil, hoverOnLink: @escaping(LinkHoverValue)->Void = { _ in }, topWindow:(()->Window?)? = nil, translate:((String, Window)->ContextMenuItem?)? = nil) {
         self.processURL = processURL
         self.copy = copy
         self.menuItems = menuItems
@@ -212,6 +213,7 @@ public final class TextViewInteractions {
         self.copyToClipboard = copyToClipboard
         self.hoverOnLink = hoverOnLink
         self.topWindow = topWindow
+        self.translate = translate
     }
 }
 
@@ -1537,7 +1539,18 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                             self.copy(self)
                         }
                     }, itemImage: TextView.context_copy_animation)
+                    
+                    
+                    
                     menu.addItem(copy)
+                    
+                    
+                    if resolved == nil, let window = self.kitWindow {
+                        if let text = self.effectiveText, let translate = layout.interactions.translate?(text, window) {
+                            menu.addItem(translate)
+                        }
+                    }
+                    
                     menu.topWindow = layout.interactions.topWindow?()
                     AppMenu.show(menu: menu, event: event, for: self)
                 }
@@ -1998,6 +2011,18 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         }
         
         return super.responds(to: aSelector)
+    }
+    
+    private var effectiveText: String? {
+        if let layout = textLayout {
+            if layout.selectedRange.range.location != NSNotFound {
+                return layout.attributedString.string.nsstring.substring(with: layout.selectedRange.range)
+            } else {
+                return layout.attributedString.string
+            }
+        } else {
+            return nil
+        }
     }
     
     @objc public func copy(_ sender:Any) -> Void {
