@@ -25,6 +25,15 @@ private final class Arguments {
     }
 }
 
+struct AvatarColor : Equatable {
+    enum Content : Equatable {
+        case solid(NSColor)
+        case gradient([NSColor])
+    }
+    var selected: Bool
+    var content: Content
+}
+
 private struct State : Equatable {
     struct Item : Equatable, Identifiable, Comparable {
         
@@ -62,8 +71,9 @@ private struct State : Equatable {
     var items: [Item]
     var preview: Preview?
     
+    
     var emojies:[StickerPackItem] = []
-
+    var colors: [AvatarColor] = []
     
     var selected: Item {
         return self.items.first(where: { $0.selected })!
@@ -86,7 +96,8 @@ private final class AvatarLeftView: View {
             let text = TextViewLayout(.initialize(string: strings().avatarPreview, color: theme.colors.grayText, font: .normal(.text)))
             text.measure(width: .greatestFiniteMagnitude)
             textView.update(text)
-            
+            textView.userInteractionEnabled = false
+            textView.isSelectable = false
             imageView.backgroundColor = .random
         }
         
@@ -339,7 +350,7 @@ private final class AvatarRightView: View {
     func updateState(_ state: State, arguments: Arguments, animated: Bool) {
         self.headerView.updateState(state, arguments: arguments, animated: animated)
         
-        self.updateContent(state, previous: self.state, animated: animated)
+        self.updateContent(state, previous: self.state, arguments: arguments, animated: animated)
         
         self.bottomView.set(text: strings().modalSet, for: .Normal)
         self.bottomView.set(font: .medium(.text), for: .Normal)
@@ -350,7 +361,7 @@ private final class AvatarRightView: View {
     }
 
     
-    private func updateContent(_ state: State, previous: State?, animated: Bool) {
+    private func updateContent(_ state: State, previous: State?, arguments: Arguments, animated: Bool) {
         if state.selected != previous?.selected {
             if let content = content.subviews.last, let previous = previous {
                 if makeContentView(state.selected) != makeContentView(previous.selected) {
@@ -371,13 +382,22 @@ private final class AvatarRightView: View {
                 self.content.addSubview(initiedContent)
             }
         }
+        
+        if let content = self.content.subviews.last as? Avatar_EmojiListView {
+            content.set(list: state.emojies, context: arguments.context, animated: animated)
+        } else if let content = self.content.subviews.last as? Avatar_BgListView {
+            content.set(patterns: [], colors: state.colors, animated: animated)
+        }
+            
     }
     
     private func makeContentView(_ item: State.Item) -> View.Type {
         if item.selectedOption.key == "b" {
             return Avatar_BgListView.self
-        } else {
+        } else if item.key == "e" {
             return Avatar_EmojiListView.self
+        } else {
+            return View.self
         }
     }
     
@@ -510,6 +530,20 @@ final class AvatarConstructorController : ModalViewController {
                     .init(key: "t", title: "Text", selected: true),
                     .init(key: "b", title: "Background", selected: false)
             ]))
+            
+            current.colors = [.init(selected: true, content: .solid(.random)),
+                              .init(selected: false, content: .solid(.random)),
+                                .init(selected: false, content: .solid(.random)),
+                                .init(selected: false, content: .solid(.random)),
+                                .init(selected: false, content: .solid(.random)),
+                                .init(selected: false, content: .solid(.random)),
+                                .init(selected: false, content: .solid(.random)),
+                                .init(selected: false, content: .solid(.random)),
+                                .init(selected: false, content: .solid(.random)),
+                                .init(selected: false, content: .solid(.random)),
+                                .init(selected: false, content: .solid(.random)),
+                                .init(selected: false, content: .solid(.random)),
+            ]
             
             return current
         }

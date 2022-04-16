@@ -15,15 +15,16 @@ import SwiftSignalKit
 
 
 class StickerPackPanelRowItem: TableRowItem {
-    let files: [(TelegramMediaFile, ChatMediaContentView.Type, NSPoint)]
+    private(set) var files: [(TelegramMediaFile, ChatMediaContentView.Type, NSPoint)] = []
     let packNameLayout: TextViewLayout?
     let context: AccountContext
     let arguments: StickerPanelArguments
     let namePoint: NSPoint
     let packInfo: StickerPackInfo
     let collectionId: StickerPackCollectionId
+    let _files:[TelegramMediaFile]
     
-    private let _height: CGFloat
+    private var _height: CGFloat = 0
     override var stableId: AnyHashable {
         return collectionId
     }
@@ -35,7 +36,7 @@ class StickerPackPanelRowItem: TableRowItem {
         self.context = context
         self.arguments = arguments
         self.canSend = canSend
-        var filesAndPoints:[(TelegramMediaFile, ChatMediaContentView.Type, NSPoint)] = []
+        self._files = files
         
         
         let title: String?
@@ -86,33 +87,10 @@ class StickerPackPanelRowItem: TableRowItem {
             self.packNameLayout = nil
         }
         
-        let size: NSSize = NSMakeSize(60, 60)
-
-
-        var point: NSPoint = NSMakePoint(5, title == nil ? 5 : !packInfo.featured ? 35 : 55)
-        for (i, file) in files.enumerated() {
-            var filePoint = point
-            let fileSize = file.dimensions?.size.aspectFitted(size) ?? size
-            filePoint.y += (size.height - fileSize.height) / 2
-            filePoint.x += (size.width - fileSize.width) / 2
-            filesAndPoints.append((file, ChatLayoutUtils.contentNode(for: file, packs: true), filePoint))
-            
-
-            
-            point.x += size.width + 10
-            if (i + 1) % 5 == 0 {
-                point.y += size.height + 5
-                point.x = 5
-            }
-        }
-        
-        self.files = filesAndPoints
         self.packInfo = packInfo
         self.collectionId = collectionId
         
-        let rows = ceil((CGFloat(files.count) / 5.0))
-        _height = (title == nil ? 0 : !packInfo.featured ? 30 : 50) + 60.0 * rows + ((rows + 1) * 5)
-
+        
        
         
         if packInfo.featured, let id = collectionId.itemCollectionId {
@@ -121,6 +99,46 @@ class StickerPackPanelRowItem: TableRowItem {
         
         super.init(initialSize)
         
+        _ = makeSize(initialSize.width, oldWidth: 0)
+        
+    }
+    
+    override func makeSize(_ width: CGFloat = CGFloat.greatestFiniteMagnitude, oldWidth: CGFloat = 0) -> Bool {
+        _ = super.makeSize(width, oldWidth: oldWidth)
+        
+        var filesAndPoints:[(TelegramMediaFile, ChatMediaContentView.Type, NSPoint)] = []
+
+        
+        let size: NSSize = NSMakeSize(60, 60)
+
+        var point: NSPoint = NSMakePoint(5, packNameLayout == nil ? 5 : !packInfo.featured ? 35 : 55)
+        var rowCount: CGFloat = 1
+        var countFixed = false
+        for file in _files {
+            var filePoint = point
+            let fileSize = file.dimensions?.size.aspectFitted(size) ?? size
+            filePoint.y += (size.height - fileSize.height) / 2
+            filePoint.x += (size.width - fileSize.width) / 2
+            filesAndPoints.append((file, ChatLayoutUtils.contentNode(for: file, packs: true), filePoint))
+
+            point.x += size.width + 10
+            if point.x + size.width >= width {
+                point.y += size.height + 5
+                point.x = 5
+                countFixed = true
+            }
+            if !countFixed {
+                rowCount += 1
+            }
+        }
+        
+        self.files = filesAndPoints
+
+        let rows = ceil((CGFloat(_files.count) / rowCount))
+        _height = (packNameLayout == nil ? 0 : !packInfo.featured ? 30 : 50) + 60.0 * rows + ((rows + 1) * 5)
+
+        
+        return true
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
@@ -144,7 +162,7 @@ class StickerPackPanelRowItem: TableRowItem {
                                     pb.writeObjects([NSURL(fileURLWithPath: path)])
                                 }
                             })
-                        }))
+                        }, itemImage: MenuAnimation.menu_copy_media.value))
                     }
                 }
                 
