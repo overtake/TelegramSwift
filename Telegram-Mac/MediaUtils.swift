@@ -337,6 +337,66 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
 }
 
 
+func svgIconImageFile(account: Account, fileReference: FileMediaReference?, scale:CGFloat = 2, stickToTop: Bool = false) -> Signal<(TransformImageArguments) -> DrawingContext?, NoError> {
+    let data: Signal<MediaResourceData, NoError>
+    if let fileReference = fileReference {
+        data = account.postbox.mediaBox.cachedResourceRepresentation(fileReference.media.resource, representation: CachedPreparedSvgRepresentation(), complete: false, fetch: true)
+    } else {
+        data = Signal { subscriber in
+            if let url = Bundle.main.url(forResource: "durgerking", withExtension: "placeholder"), let data = try? Data(contentsOf: url, options: .mappedRead) {
+                subscriber.putNext(MediaResourceData(path: url.path, offset: 0, size: data.count, complete: true))
+                subscriber.putCompletion()
+            }
+            return EmptyDisposable
+        }
+    }
+    
+    return data
+    |> map { value in
+        let fullSizePath = value.path
+        let fullSizeComplete = value.complete
+        return { arguments in
+            let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
+            
+            let drawingRect = arguments.drawingRect
+            var fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize).fitted(arguments.imageSize)
+            
+            var fullSizeImage: CGImage?
+            let imageOrientation: ImageOrientation = .up
+            
+            if fullSizeComplete, let data = try? Data(contentsOf: URL(fileURLWithPath: fullSizePath)) {
+                let renderSize: CGSize
+                if stickToTop {
+                    renderSize = .zero
+                } else {
+                    renderSize = CGSize(width: 90.0, height: 90.0)
+                }
+                fullSizeImage = renderPreparedImage(data, renderSize, .clear, scale)?._cgImage
+                if let image = fullSizeImage {
+                    fittedSize = image.size.aspectFitted(arguments.boundingSize)
+                }
+            }
+            
+            var fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            if stickToTop {
+                fittedRect.origin.y = drawingRect.size.height - fittedSize.height
+            }
+            
+            context.withFlippedContext { c in
+                if let fullSizeImage = fullSizeImage {
+                    c.setBlendMode(.normal)
+                    c.interpolationQuality = .medium
+                    drawImage(context: c, image: fullSizeImage, orientation: imageOrientation, in: fittedRect)
+                }
+            }
+            
+            addCorners(context, arguments: arguments, scale: scale)
+            
+            return context
+        }
+    }
+}
+
 
 private func chatMessageWebFilePhotoDatas(account: Account, photo: TelegramMediaWebFile, synchronousLoad: Bool = false) -> Signal<ImageRenderData, NoError> {
     let maybeFullSize = account.postbox.mediaBox.resourceData(photo.resource, attemptSynchronously: synchronousLoad)

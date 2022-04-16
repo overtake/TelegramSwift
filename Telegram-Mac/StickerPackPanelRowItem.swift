@@ -32,12 +32,13 @@ class StickerPackPanelRowItem: TableRowItem {
     
     private let preloadFeaturedDisposable = MetaDisposable()
     let canSend: Bool
-    init(_ initialSize: NSSize, context: AccountContext, arguments: StickerPanelArguments, files:[TelegramMediaFile], packInfo: StickerPackInfo, collectionId: StickerPackCollectionId, canSend: Bool) {
+    let playOnHover: Bool
+    init(_ initialSize: NSSize, context: AccountContext, arguments: StickerPanelArguments, files:[TelegramMediaFile], packInfo: StickerPackInfo, collectionId: StickerPackCollectionId, canSend: Bool, playOnHover: Bool = false) {
         self.context = context
         self.arguments = arguments
         self.canSend = canSend
         self._files = files
-        
+        self.playOnHover = playOnHover
         
         let title: String?
         var count: Int32 = 0

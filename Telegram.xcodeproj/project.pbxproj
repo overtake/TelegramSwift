@@ -34,6 +34,7 @@
 		271F78C828095A0E0040EE8F /* menu_smile.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 271F78C728095A0E0040EE8F /* menu_smile.tgs */; };
 		271F78CA280972800040EE8F /* Avatar_EmojiList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271F78C9280972800040EE8F /* Avatar_EmojiList.swift */; };
 		271F78CC280985770040EE8F /* Avatar_BgListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271F78CB280985770040EE8F /* Avatar_BgListView.swift */; };
+		271F78CE280AD9520040EE8F /* durgerking.placeholder in Resources */ = {isa = PBXBuildFile; fileRef = 271F78CD280AD9520040EE8F /* durgerking.placeholder */; };
 		27200F1B257C256E00574365 /* DevicesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27200F1A257C256E00574365 /* DevicesContext.swift */; };
 		2725785B259CF987001558E8 /* AnimatedBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2725785A259CF987001558E8 /* AnimatedBadgeView.swift */; };
 		2728991926CBC0D100F4D288 /* UNUserNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2728991826CBC0D100F4D288 /* UNUserNotifications.swift */; };
@@ -1307,6 +1308,7 @@
 		271F78C728095A0E0040EE8F /* menu_smile.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_smile.tgs; sourceTree = "<group>"; };
 		271F78C9280972800040EE8F /* Avatar_EmojiList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Avatar_EmojiList.swift; sourceTree = "<group>"; };
 		271F78CB280985770040EE8F /* Avatar_BgListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Avatar_BgListView.swift; sourceTree = "<group>"; };
+		271F78CD280AD9520040EE8F /* durgerking.placeholder */ = {isa = PBXFileReference; lastKnownFileType = file; path = durgerking.placeholder; sourceTree = "<group>"; };
 		27200F1A257C256E00574365 /* DevicesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesContext.swift; sourceTree = "<group>"; };
 		2725785A259CF987001558E8 /* AnimatedBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedBadgeView.swift; sourceTree = "<group>"; };
 		2728991826CBC0D100F4D288 /* UNUserNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UNUserNotifications.swift; sourceTree = "<group>"; };
@@ -4288,6 +4290,7 @@
 				274B9E3F273008EB009993C7 /* sent.mp3 */,
 				C250B01B1DB670B4004E9FBE /* url-schemes.txt */,
 				C250B0361DB7BB09004E9FBE /* mime-types.txt */,
+				271F78CD280AD9520040EE8F /* durgerking.placeholder */,
 				278926CF2755222700923087 /* Release.xcconfig */,
 				C21A48B11F7D0D3F0095ADB1 /* VideoMessage.fsh */,
 				C21A48B31F7D0D6B0095ADB1 /* VideoMessage.vsh */,
@@ -5823,6 +5826,7 @@
 				2751E79527F340AD003E3937 /* menu_webapp_placeholder.tgs in Resources */,
 				D0E7BE7B256D56DA0068644D /* group_call_member_mute.json in Resources */,
 				27803C0027A3E944007B0FA9 /* menu_folder_book.tgs in Resources */,
+				271F78CE280AD9520040EE8F /* durgerking.placeholder in Resources */,
 				2763A16B261DF65700C12762 /* voice_chat_set_reminder.tgs in Resources */,
 				273367452762584F0027441E /* menu_view_sticker_set.tgs in Resources */,
 				27A7D37D2600F58A00A67737 /* voip_group_unmuted.mp3 in Resources */,

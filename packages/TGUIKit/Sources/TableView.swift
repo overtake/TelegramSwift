@@ -2526,11 +2526,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             inserted.0.view?.onInsert(inserted.1)
         }
         
-        self.tableView.beginUpdates()
-        NSAnimationContext.current.duration = 0
-        self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integersIn: 0..<count))
-        self.tableView.endUpdates()
-        
+//        self.tableView.beginUpdates()
+//        NSAnimationContext.current.duration = 0
+//        self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integersIn: 0..<count))
+//        self.tableView.endUpdates()
+//
         
         let state: TableScrollState
         
