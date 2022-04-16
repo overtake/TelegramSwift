@@ -298,67 +298,68 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
         
-        
+               
+        if parameters?.noThumb == false || parameters == nil {
+            self.thumbView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: updated)
+            
+            let hasPlaceholder = (parent == nil || file.immediateThumbnailData != nil) && self.thumbView.image == nil && size.height >= 30 && (parameters == nil || parameters!.shimmer)
+            if updated {
+                if hasPlaceholder {
+                    let current: StickerShimmerEffectView
+                    if let local = self.placeholderView {
+                        current = local
+                    } else {
+                        current = StickerShimmerEffectView()
+                        current.frame = bounds
+                        self.placeholderView = current
+                        addSubview(current, positioned: .below, relativeTo: playerView)
+                        if animated {
+                            current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        }
+                    }
+                    current.update(backgroundColor: nil, foregroundColor: NSColor(rgb: 0x748391, alpha: 0.2), shimmeringColor: NSColor(rgb: 0x748391, alpha: 0.35), data: file.immediateThumbnailData, size: size)
+                    current.updateAbsoluteRect(bounds, within: size)
+                } else {
+                    self.removePlaceholder(animated: animated)
+                }
+            }
+            
+            self.thumbView.imageUpdated = { [weak self] value in
+                if value != nil {
+                    self?.removePlaceholder(animated: animated)
+                }
+            }
+            
+                    
+            
+            if !self.thumbView.isFullyLoaded {
+
+                let signal: Signal<ImageDataTransformation, NoError>
+                    
+                
+                
+                switch file.mimeType {
+                case "image/webp":
+                    signal = chatMessageSticker(postbox: context.account.postbox, file: reference, small: size.width <= 40, scale: backingScaleFactor, fetched: true)
+                default:
+                    signal = chatMessageAnimatedSticker(postbox: context.account.postbox, file: reference, small: size.width <= 40, scale: backingScaleFactor, size: size, fetched: true, thumbAtFrame: parameters?.thumbAtFrame ?? 0, isVideo: file.fileName == "webm-preview")
+                }
+                self.thumbView.setSignal(signal, cacheImage: { [weak file, weak self] result in
+                    if let file = file {
+                        cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
+                    }
+                    self?.removePlaceholder(animated: false)
+                })
+            }
+            self.thumbView.set(arguments: arguments)
+            if updated {
+                self.playerView.removeFromSuperview()
+                addSubview(self.thumbView)
+            }
+
+        }
         
        
-        
-        self.thumbView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: updated)
-        
-        let hasPlaceholder = (parent == nil || file.immediateThumbnailData != nil) && self.thumbView.image == nil && size.height >= 30 && (parameters == nil || parameters!.shimmer)
-        if updated {
-            if hasPlaceholder {
-                let current: StickerShimmerEffectView
-                if let local = self.placeholderView {
-                    current = local
-                } else {
-                    current = StickerShimmerEffectView()
-                    current.frame = bounds
-                    self.placeholderView = current
-                    addSubview(current, positioned: .below, relativeTo: playerView)
-                    if animated {
-                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                    }
-                }
-                current.update(backgroundColor: nil, foregroundColor: NSColor(rgb: 0x748391, alpha: 0.2), shimmeringColor: NSColor(rgb: 0x748391, alpha: 0.35), data: file.immediateThumbnailData, size: size)
-                current.updateAbsoluteRect(bounds, within: size)
-            } else {
-                self.removePlaceholder(animated: animated)
-            }
-        }
-        
-        self.thumbView.imageUpdated = { [weak self] value in
-            if value != nil {
-                self?.removePlaceholder(animated: animated)
-            }
-        }
-        
-                
-        
-        if !self.thumbView.isFullyLoaded {
-
-            let signal: Signal<ImageDataTransformation, NoError>
-                
-            
-            
-            switch file.mimeType {
-            case "image/webp":
-                signal = chatMessageSticker(postbox: context.account.postbox, file: reference, small: size.width <= 40, scale: backingScaleFactor, fetched: true)
-            default:
-                signal = chatMessageAnimatedSticker(postbox: context.account.postbox, file: reference, small: size.width <= 40, scale: backingScaleFactor, size: size, fetched: true, thumbAtFrame: parameters?.thumbAtFrame ?? 0, isVideo: file.fileName == "webm-preview")
-            }
-            self.thumbView.setSignal(signal, cacheImage: { [weak file, weak self] result in
-                if let file = file {
-                    cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
-                }
-                self?.removePlaceholder(animated: false)
-            })
-        }
-        self.thumbView.set(arguments: arguments)
-        if updated {
-            self.playerView.removeFromSuperview()
-            addSubview(self.thumbView)
-        }
-
         
         fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: mediaResource).start())
         if updated {

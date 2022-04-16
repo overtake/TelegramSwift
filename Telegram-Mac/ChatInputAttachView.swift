@@ -124,7 +124,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                                 if canAddAttach {
                                     items.append(ContextMenuItem(attach.shortName, handler: { [weak self] in
                                         let invoke:()->Void = { [weak self] in
-                                            showModal(with: WebpageModalController(context: context, url: "", title: attach.peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: attach.peer, replyTo: replyTo, buttonText: "", payload: nil, fromMenu: false, complete: chatInteraction.afterSentTransition), chatInteraction: self?.chatInteraction, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
+                                            showModal(with: WebpageModalController(context: context, url: "", title: attach.peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: attach.peer, replyTo: replyTo, buttonText: "", payload: nil, fromMenu: false, complete: chatInteraction.afterSentTransition), chatInteraction: self?.chatInteraction, thumbFile: thumbFile), for: context.window)
                                         }
                                         if FastSettings.shouldConfirmWebApp(peer.id) {
                                             confirm(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(attach.peer.displayTitle), successHandler: { _ in
