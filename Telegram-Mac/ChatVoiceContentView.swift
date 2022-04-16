@@ -179,11 +179,11 @@ class ChatVoiceContentView: ChatAudioContentView {
                     } else {
                         return resourceStatus
                     }
-                } |> deliverOnMainQueue
+                }
         } else if let parent = parent {
-            updatedStatusSignal = chatMessageFileStatus(context: context, message: parent, file: file, approximateSynchronousValue: approximateSynchronousValue) |> deliverOnMainQueue
+            updatedStatusSignal = chatMessageFileStatus(context: context, message: parent, file: file, approximateSynchronousValue: approximateSynchronousValue)
         } else {
-            updatedStatusSignal = context.account.postbox.mediaBox.resourceStatus(file.resource) |> deliverOnMainQueue
+            updatedStatusSignal = context.account.postbox.mediaBox.resourceStatus(file.resource)
         }
         
         self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status in
@@ -192,9 +192,12 @@ class ChatVoiceContentView: ChatAudioContentView {
                 
                 var state: RadialProgressState? = nil
                 switch status {
-                case let .Fetching(_, progress), let .Paused(progress):
+                case let .Fetching(_, progress):
                     state = .Fetching(progress: progress, force: false)
                     strongSelf.progressView.state = .Fetching(progress: progress, force: false)
+                case .Paused:
+                    state = .Remote
+                    strongSelf.progressView.state = .Remote
                 case .Remote:
                     state = .Remote
                     strongSelf.progressView.state = .Remote

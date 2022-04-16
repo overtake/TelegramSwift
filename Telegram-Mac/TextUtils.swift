@@ -456,7 +456,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             let text: String
             if let duration = duration {
                 if peer.isChannel {
-                    text = strings().chatServiceVoiceChatFinishedChannel(autoremoveLocalized(Int(duration)))
+                    text = strings().chatServiceVoiceChatFinishedChannel1(autoremoveLocalized(Int(duration)))
                 } else if authorId == account.peerId {
                     text = strings().chatServiceVoiceChatFinishedYou(autoremoveLocalized(Int(duration)))
                 } else {
@@ -465,9 +465,9 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 if peer.isChannel {
                     if let scheduledDate = scheduledDate {
-                        text = strings().chatListServiceVoiceChatScheduledChannel(stringForMediumDate(timestamp: scheduledDate))
+                        text = strings().chatListServiceVoiceChatScheduledChannel1(stringForMediumDate(timestamp: scheduledDate))
                     } else {
-                        text = strings().chatListServiceVoiceChatStartedChannel
+                        text = strings().chatListServiceVoiceChatStartedChannel1
                     }
                 } else if authorId == account.peerId {
                     if let scheduledDate = scheduledDate {
@@ -536,8 +536,9 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                     text = strings().chatServiceUserJoinedGroupByRequest(authorName)
                 }
             }
-            
             return text
+        case let .webViewData(data):
+            return strings().chatServiceWebData(data)
         }
     }
     
@@ -701,7 +702,7 @@ func autoremoveLocalized(_ ttl: Int, roundToCeil: Bool = false) -> String {
         localized = strings().timerMinutesCountable(ttl / 60)
     } else if ttl <= 86399 {
         localized = strings().timerHoursCountable(ttl / 60 / 60)
-    } else if ttl <= 604800 {
+    } else if ttl <= 604799 {
         if roundToCeil {
             localized = strings().timerDaysCountable(Int(ceil(Float(ttl) / 60 / 60 / 24)))
         } else {

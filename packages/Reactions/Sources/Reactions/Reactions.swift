@@ -13,7 +13,7 @@ public final class Reactions {
     private let _isInteractive = Atomic<MessageId?>(value: nil)
     private(set) public var available: AvailableReactions?
     public var stateValue: Signal<AvailableReactions?, NoError> {
-        return state.get() |> deliverOnMainQueue
+        return state.get() |> distinctUntilChanged |> deliverOnMainQueue
     }
     
     public var interactive: MessageId? {
@@ -22,7 +22,8 @@ public final class Reactions {
     
     public init(_ engine: TelegramEngine) {
         self.engine = engine
-        state.set(engine.stickers.availableReactions())
+        
+        state.set((engine.stickers.availableReactions() |> then(.complete() |> suspendAwareDelay(5.0, queue: .concurrentDefaultQueue()))) |> restart)
         
         disposable.set(self.stateValue.start(next: { [weak self] state in
             self?.available = state

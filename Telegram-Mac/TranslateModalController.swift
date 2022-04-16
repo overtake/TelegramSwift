@@ -39,7 +39,6 @@ private struct State : Equatable {
     var toIsRevealed: Bool
 }
 
-@available(macOS 10.14, *)
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
@@ -114,7 +113,6 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     return entries
 }
-@available(macOS 10.14, *)
 private func translate(context: AccountContext, from: String?, to: String, blocks: [String]) -> Signal<(detect: String?, result: String), Translate.Error> {
     var signals:[Signal<(detect: String?, result: String), Translate.Error>] = []
     for block in blocks {
@@ -137,7 +135,6 @@ private func translate(context: AccountContext, from: String?, to: String, block
     
     return signal
 }
-@available(macOS 10.14, *)
 func TranslateModalController(context: AccountContext, from: String?, toLang: String, text: String) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()

@@ -39,7 +39,7 @@ final class ImageRenderData {
     }
 }
 
-private let progressiveRangeMap: [(Int, [Int])] = [
+let progressiveRangeMap: [(Int, [Int])] = [
     (100, [0]),
     (400, [1]),
     (400, [3]),
@@ -101,6 +101,7 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
         enum SizeSource {
             case miniThumbnail(data: Data)
             case image(size: Int)
+            case resource(TelegramMediaResource)
         }
         
         var sources: [SizeSource] = []
@@ -126,6 +127,12 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
         }
 
 
+        if let miniThumbnail = imageReference.media.immediateThumbnailData.flatMap(decodeTinyThumbnail) {
+            sources.insert(.miniThumbnail(data: miniThumbnail), at: 0)
+        }
+        if let largest = imageReference.media.representationForDisplayAtSize(.init(fullRepresentationSize)) {
+            sources.append(.resource(largest.resource))
+        }
         
         return Signal { subscriber in
             let signals: [Signal<(SizeSource, Data?), NoError>] = sources.map { source -> Signal<(SizeSource, Data?), NoError> in
@@ -134,6 +141,12 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
                     return .single((source, data))
                 case let .image(size):
                     return postbox.mediaBox.resourceData(progressiveRepresentation.resource, size: Int(progressiveRepresentation.progressiveSizes.last!), in: 0 ..< size, mode: .incremental, notifyAboutIncomplete: true, attemptSynchronously: synchronousLoad)
+                    |> map { (data, _) -> (SizeSource, Data?) in
+                        return (source, data)
+                    }
+                case let .resource(resource):
+                    let size = resource.size ?? 0
+                    return postbox.mediaBox.resourceData(resource, size: size, in: 0 ..< size, mode: .complete, notifyAboutIncomplete: true, attemptSynchronously: synchronousLoad)
                     |> map { (data, _) -> (SizeSource, Data?) in
                         return (source, data)
                     }
@@ -158,6 +171,15 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
                         subscriber.putNext(ImageRenderData(thumbnailData, nil, false))
                         foundData = true
                         break loop
+                    case .resource:
+                        if let data = results[i].1, data.count != 0 {
+                            subscriber.putNext(ImageRenderData(nil, data, isLastSize))
+                            foundData = true
+                            if isLastSize {
+                                subscriber.putCompletion()
+                            }
+                            break loop
+                        }
                     }
                 }
                 if !foundData {
@@ -314,6 +336,66 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
     }
 }
 
+
+func svgIconImageFile(account: Account, fileReference: FileMediaReference?, scale:CGFloat = 2, stickToTop: Bool = false) -> Signal<(TransformImageArguments) -> DrawingContext?, NoError> {
+    let data: Signal<MediaResourceData, NoError>
+    if let fileReference = fileReference {
+        data = account.postbox.mediaBox.cachedResourceRepresentation(fileReference.media.resource, representation: CachedPreparedSvgRepresentation(), complete: false, fetch: true)
+    } else {
+        data = Signal { subscriber in
+            if let url = Bundle.main.url(forResource: "durgerking", withExtension: "placeholder"), let data = try? Data(contentsOf: url, options: .mappedRead) {
+                subscriber.putNext(MediaResourceData(path: url.path, offset: 0, size: data.count, complete: true))
+                subscriber.putCompletion()
+            }
+            return EmptyDisposable
+        }
+    }
+    
+    return data
+    |> map { value in
+        let fullSizePath = value.path
+        let fullSizeComplete = value.complete
+        return { arguments in
+            let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
+            
+            let drawingRect = arguments.drawingRect
+            var fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize).fitted(arguments.imageSize)
+            
+            var fullSizeImage: CGImage?
+            let imageOrientation: ImageOrientation = .up
+            
+            if fullSizeComplete, let data = try? Data(contentsOf: URL(fileURLWithPath: fullSizePath)) {
+                let renderSize: CGSize
+                if stickToTop {
+                    renderSize = .zero
+                } else {
+                    renderSize = CGSize(width: 90.0, height: 90.0)
+                }
+                fullSizeImage = renderPreparedImage(data, renderSize, .clear, scale)?._cgImage
+                if let image = fullSizeImage {
+                    fittedSize = image.size.aspectFitted(arguments.boundingSize)
+                }
+            }
+            
+            var fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+            if stickToTop {
+                fittedRect.origin.y = drawingRect.size.height - fittedSize.height
+            }
+            
+            context.withFlippedContext { c in
+                if let fullSizeImage = fullSizeImage {
+                    c.setBlendMode(.normal)
+                    c.interpolationQuality = .medium
+                    drawImage(context: c, image: fullSizeImage, orientation: imageOrientation, in: fittedRect)
+                }
+            }
+            
+            addCorners(context, arguments: arguments, scale: scale)
+            
+            return context
+        }
+    }
+}
 
 
 private func chatMessageWebFilePhotoDatas(account: Account, photo: TelegramMediaWebFile, synchronousLoad: Bool = false) -> Signal<ImageRenderData, NoError> {
@@ -1362,7 +1444,7 @@ func chatWebpageSnippetPhotoData(account: Account, imageRefence: ImageMediaRefer
 }
 
 func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReference, scale:CGFloat, small:Bool, synchronousLoad: Bool = false, secureIdAccessContext: SecureIdAccessContext? = nil) -> Signal<ImageDataTransformation, NoError> {
-    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, synchronousLoad: synchronousLoad, secureIdAccessContext: secureIdAccessContext)
+    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, autoFetchFullSize: true, synchronousLoad: synchronousLoad, secureIdAccessContext: secureIdAccessContext)
     return signal |> map { data in
         return ImageDataTransformation(data: data, execute: { arguments, data in
             let context = DrawingContext(size: arguments.drawingSize, scale:scale, clear: true)
@@ -1520,20 +1602,23 @@ func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReferen
 
 
 func chatMessagePhotoStatus(account: Account, photo: TelegramMediaImage, approximateSynchronousValue: Bool = false) -> Signal<MediaResourceStatus, NoError> {
-    if let largestRepresentation = photo.representationForDisplayAtSize(PixelDimensions(1280, 1280)) {
-        if largestRepresentation.resource is LocalFileReferenceMediaResource {
+    if let largest = photo.representationForDisplayAtSize(PixelDimensions(NSMakeSize(1280, 1280))) {
+        if largest.resource is LocalFileReferenceMediaResource {
             return .single(.Local)
         } else {
-            return account.postbox.mediaBox.resourceStatus(largestRepresentation.resource, approximateSynchronousValue: approximateSynchronousValue)
+            return account.postbox.mediaBox.resourceStatus(largest.resource, approximateSynchronousValue: approximateSynchronousValue)
         }
     } else {
         return .never()
     }
 }
 
+
+
 func chatMessagePhotoInteractiveFetched(account: Account, imageReference: ImageMediaReference, toRepresentationSize: NSSize = NSMakeSize(1280, 1280)) -> Signal<Void, NoError> {
-    if let largestRepresentation = imageReference.media.representationForDisplayAtSize(PixelDimensions(toRepresentationSize)) {
-        return fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: imageReference.resourceReference(largestRepresentation.resource), statsCategory: .image) |> `catch` { _ in return .complete() } |> map {_ in}
+    
+    if let large = imageReference.media.representationForDisplayAtSize(.init(toRepresentationSize)) {
+        return fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: imageReference.resourceReference(large.resource), range: nil, statsCategory: .image) |> `catch` { _ in return .complete() } |> map {_ in}
     } else {
         return .never()
     }

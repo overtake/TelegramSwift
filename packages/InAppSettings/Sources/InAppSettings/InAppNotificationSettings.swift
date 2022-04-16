@@ -45,6 +45,7 @@ private enum PeerMessageSoundValue: Int32 {
     case bundledModern
     case bundledClassic
     case `default`
+    case cloud
 }
 
 final class PeerMessageSoundNativeCodable : Codable {
@@ -66,6 +67,8 @@ final class PeerMessageSoundNativeCodable : Codable {
                 self.value = .bundledClassic(id: try container.decode(Int32.self, forKey: "s1.i"))
             case PeerMessageSoundValue.default.rawValue:
                 self.value = .default
+        case PeerMessageSoundValue.cloud.rawValue:
+            self.value = .cloud(fileId: try container.decode(Int64.self, forKey: "s1.i"))
             default:
                 self.value = .bundledModern(id: 0)
         }
@@ -84,6 +87,9 @@ final class PeerMessageSoundNativeCodable : Codable {
                 try container.encode(id, forKey: "s1.i")
             case .default:
                 try container.encode(PeerMessageSoundValue.default.rawValue, forKey: "s1.v")
+        case .cloud(fileId: let fileId):
+            try container.encode(PeerMessageSoundValue.cloud.rawValue, forKey: "s1.v")
+            try container.encode(fileId, forKey: "s1.i")
         }
     }
 }
@@ -91,6 +97,7 @@ final class PeerMessageSoundNativeCodable : Codable {
 
 
 public struct InAppNotificationSettings: Codable, Equatable {
+    
     public let enabled: Bool
     public let playSounds: Bool
     public let tone: PeerMessageSound

@@ -63,13 +63,10 @@ private struct State : Equatable {
             if address.address1.isEmpty {
                 return _id_checkout_info_address1
             }
-            if address.address2.isEmpty {
-                return _id_checkout_info_address2
-            }
             if address.city.count < 2 {
                 return _id_checkout_info_city
             }
-            if address.state.count < 2 {
+            if address.state.count < 2 && address.country.lowercased() == "us" {
                 return _id_checkout_info_state
             }
             if address.country.isEmpty {

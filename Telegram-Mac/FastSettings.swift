@@ -14,6 +14,7 @@ import Postbox
 import ObjcUtils
 import InAppSettings
 import TGUIKit
+import WebKit
 
 enum SendingType :String {
     case enter = "enter"
@@ -137,7 +138,7 @@ class FastSettings {
     private static let kNeedShowChannelIntro = "kNeedShowChannelIntro"
     
     private static let kNoticeAdChannel = "kNoticeAdChannel"
-    private static let kPlayingRate = "kPlayingRate"
+    private static let kPlayingRate = "kPlayingRate2"
     private static let kPlayingVideoRate = "kPlayingVideoRate"
 
     private static let kSVCShareMicro = "kSVCShareMicro"
@@ -152,6 +153,9 @@ class FastSettings {
     private static let kLeftColumnWidth = "kLeftColumnWidth"
 
     private static let kShowEmptyTips = "kShowEmptyTips"
+
+    
+    private static let kConfirmWebApp = "kConfirmWebApp"
 
     
     static var sendingType:SendingType {
@@ -188,6 +192,32 @@ class FastSettings {
         UserDefaults.standard.set(!isChannelMessagesMuted(peerId), forKey: "\(peerId)_m_muted")
     }
     
+    static func shouldConfirmWebApp(_ peerId: PeerId) -> Bool {
+        let value = UserDefaults.standard.value(forKey: "\(peerId)_\(kConfirmWebApp)")
+        return value as? Bool ?? true
+    }
+    
+    static func markWebAppAsConfirmed(_ peerId: PeerId) -> Void {
+        UserDefaults.standard.set(false, forKey: "\(peerId)_\(kConfirmWebApp)")
+    }
+    
+    @available(macOS 12.0, *)
+    static func botAccessTo(_ type: WKMediaCaptureType, peerId: PeerId) -> Bool {
+        let value = UserDefaults.standard.value(forKey: "wk2_bot_access_\(type.rawValue)_\(peerId.toInt64())") as? Bool
+        
+        if let value = value {
+            return value
+        } else {
+            return false
+        }
+    }
+    @available(macOS 12.0, *)
+    static func allowBotAccessTo(_ type: WKMediaCaptureType, peerId: PeerId) {
+        UserDefaults.standard.setValue(true, forKey: "wk2_bot_access_\(type.rawValue)_\(peerId.toInt64())")
+        UserDefaults.standard.synchronize()
+    }
+    
+        
     static var playingRate: Double {
         return min(max(UserDefaults.standard.double(forKey: kPlayingRate), 1), 2.0)
     }

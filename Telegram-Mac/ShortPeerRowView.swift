@@ -638,6 +638,8 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         contextLabel?.backgroundColor = backdorColor
         needsLayout = true
         self.container.setNeedsDisplayLayer()
+        
+        viewDidMoveToSuperview()
     }
     
     func invokeAction(_ item: ShortPeerRowItem, clickCount: Int) {

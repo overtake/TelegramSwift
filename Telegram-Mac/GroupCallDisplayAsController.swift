@@ -379,7 +379,11 @@ func GroupCallDisplayAsController(context: AccountContext, mode: GroupCallDispla
 func selectGroupCallJoiner(context: AccountContext, peerId: PeerId, completion: @escaping(PeerId, Date?, Bool)->Void, canBeScheduled: Bool = false) {
     let combined = combineLatest(queue: .mainQueue(), context.engine.calls.cachedGroupCallDisplayAsAvailablePeers(peerId: peerId), context.account.postbox.loadedPeerWithId(peerId))
     _ = showModalProgress(signal: combined, for: context.window).start(next: { displayAsList, peer in
-        showModal(with: GroupCallDisplayAsController(context: context, mode: .create, peerId: peerId, list: displayAsList, completion: completion, canBeScheduled: canBeScheduled, isCreator: peer.groupAccess.isCreator), for: context.window)
+        if displayAsList.count > 1 || canBeScheduled {
+            showModal(with: GroupCallDisplayAsController(context: context, mode: .create, peerId: peerId, list: displayAsList, completion: completion, canBeScheduled: canBeScheduled, isCreator: peer.groupAccess.isCreator), for: context.window)
+        } else {
+            completion(context.peerId, nil, false)
+        }
     })
 }
 

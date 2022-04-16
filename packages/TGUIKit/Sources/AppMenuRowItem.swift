@@ -7,6 +7,7 @@
 
 import Foundation
 import AppKit
+import SwiftSignalKit
 
 public protocol AppMenuItemImageDrawable : NSView {
     func updateState(_ controlState: ControlState)
@@ -20,6 +21,7 @@ open class AppMenuBasicItem : TableRowItem {
         public let action:(ContextMenuItem)->Void
         public let presentSubmenu:(ContextMenuItem)->Void
         public let cancelSubmenu:(ContextMenuItem)->Void
+        public let hover:(ContextMenuItem)->Void
     }
     
     fileprivate(set) public var menuItem: ContextMenuItem?
@@ -256,6 +258,9 @@ open class AppMenuRowView: AppMenuBasicItemView {
     private var keyEquivalent: TextView? = nil
     private var drawable: AppMenuItemImageDrawable? = nil
     private var more: ImageView? = nil
+    
+    private let hoverDisposable = MetaDisposable()
+    
     public required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.addSubview(textView)
@@ -280,18 +285,29 @@ open class AppMenuRowView: AppMenuBasicItemView {
         containerView.set(handler: { [weak self] _ in
             self?.drawable?.updateState(.Hover)
             self?.updateState(.Hover)
+            
+            self?.hoverDisposable.set(delaySignal(0.5).start(completed: {
+                guard let item = self?.item as? AppMenuRowItem else {
+                    return
+                }
+                item.interaction?.hover(item.item)
+            }))
+            
         }, for: .Hover)
         containerView.set(handler: { [weak self] _ in
             self?.drawable?.updateState(.Highlight)
             self?.updateState(.Highlight)
+            self?.hoverDisposable.set(nil)
         }, for: .Highlight)
         containerView.set(handler: { [weak self] _ in
             self?.drawable?.updateState(.Normal)
             self?.updateState(.Normal)
+            self?.hoverDisposable.set(nil)
         }, for: .Normal)
         containerView.set(handler: { [weak self] _ in
             self?.drawable?.updateState(.Other)
             self?.updateState(.Other)
+            self?.hoverDisposable.set(nil)
         }, for: .Other)
            
         containerView.set(handler: { [weak self] _ in

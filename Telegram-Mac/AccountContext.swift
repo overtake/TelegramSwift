@@ -618,10 +618,10 @@ final class AccountContext {
     func chatLocationInput(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>) -> ChatLocationInput {
         switch location {
         case let .peer(peerId):
-            return .peer(peerId)
+            return .peer(peerId: peerId)
         case let .replyThread(data):
             let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
-            return .external(data.messageId.peerId, makeMessageThreadId(data.messageId), context.state)
+            return .thread(peerId: data.messageId.peerId, threadId: makeMessageThreadId(data.messageId), data: context.state)
         }
     }
     

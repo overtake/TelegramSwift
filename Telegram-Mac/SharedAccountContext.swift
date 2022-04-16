@@ -659,7 +659,7 @@ class SharedAccountContext {
     }
     
     func endCurrentCall() -> Signal<Bool, NoError> {
-        if let groupCall = crossGroupCall.swap(nil) {
+        if let groupCall = crossGroupCall.with({ $0 }) {
             return groupCall.leaveSignal() |> filter { $0 }
         } else if let callSession = crossCallSession.swap(nil) {
             return callSession.hangUpCurrentCall() |> filter { $0 }
@@ -687,7 +687,7 @@ class SharedAccountContext {
     }
     
     func updateCurrentGroupCallValue(_ value: GroupCallContext?) -> Void {
-        groupCallContextValue.set(.single(crossGroupCall.swap(value)))
+        groupCallContextValue.set(.single(crossGroupCall.modify( { _ in return value } )))
     }
     
     func endGroupCall(terminate: Bool) -> Signal<Bool, NoError> {

@@ -817,6 +817,10 @@ class ChatInteractiveContentView: ChatMediaContentView {
         statusDisposable.set(nil)
     }
     
+    func effectiveImageResource(_ image: TelegramMediaImage) -> Void {
+        
+    }
+    
    
     override func fetch(userInitiated: Bool) {
         if let context = context {

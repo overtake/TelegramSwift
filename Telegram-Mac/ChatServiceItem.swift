@@ -357,7 +357,7 @@ class ChatServiceItem: ChatRowItem {
                     let text: String
                     if let duration = duration {
                         if peer.isChannel {
-                            text = strings().chatServiceVoiceChatFinishedChannel(autoremoveLocalized(Int(duration)))
+                            text = strings().chatServiceVoiceChatFinishedChannel1(autoremoveLocalized(Int(duration)))
                         } else if authorId == context.peerId {
                             text = strings().chatServiceVoiceChatFinishedYou(autoremoveLocalized(Int(duration)))
                         } else {
@@ -367,9 +367,9 @@ class ChatServiceItem: ChatRowItem {
                     } else {
                         if peer.isChannel {
                             if let scheduled = scheduleDate {
-                                text = strings().chatServiceVoiceChatScheduledChannel(stringForMediumDate(timestamp: scheduled))
+                                text = strings().chatServiceVoiceChatScheduledChannel1(stringForMediumDate(timestamp: scheduled))
                             } else {
-                                text = strings().chatServiceVoiceChatStartedChannel
+                                text = strings().chatServiceVoiceChatStartedChannel1
                             }
                         } else if authorId == context.peerId {
                             if let scheduled = scheduleDate {
@@ -508,7 +508,8 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
-
+                case let .webViewData(text):
+                    let _ =  attributedString.append(string: strings().chatServiceWebData(text), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 default:
                     break
                 }

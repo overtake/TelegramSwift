@@ -653,7 +653,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }, itemImage: MenuAnimation.menu_create_group.value),
             ContextMenuItem(strings().composePopoverNewSecretChat, handler: { [weak self] in
                 self?.context.composeCreateSecretChat()
-            }, itemImage: MenuAnimation.menu_secret_chat.value),
+            }, itemImage: MenuAnimation.menu_lock.value),
             ContextMenuItem(strings().composePopoverNewChannel, handler: { [weak self] in
                 self?.context.composeCreateChannel()
             }, itemImage: MenuAnimation.menu_channel.value)];

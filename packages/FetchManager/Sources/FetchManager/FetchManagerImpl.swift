@@ -114,7 +114,7 @@ private final class FetchManagerStatusContext {
             } else if case .Local = originalStatus {
                 return originalStatus
             } else {
-                return .Remote(progress: 0.0)
+                return originalStatus
             }
         } else {
             return nil

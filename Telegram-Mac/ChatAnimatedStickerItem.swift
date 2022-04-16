@@ -21,7 +21,8 @@ final class ChatAnimatedStickerMediaLayoutParameters : ChatMediaLayoutParameters
     let playOnHover: Bool?
     let thumbAtFrame: Int
     let shimmer: Bool
-    init(playPolicy: LottiePlayPolicy?, alwaysAccept: Bool? = nil, cache: ASCachePurpose? = nil, hidePlayer: Bool = false, media: TelegramMediaFile, colors: [LottieColor] = [], playOnHover: Bool? = nil, shimmer: Bool = true, thumbAtFrame: Int = 0) {
+    let noThumb: Bool
+    init(playPolicy: LottiePlayPolicy?, alwaysAccept: Bool? = nil, cache: ASCachePurpose? = nil, hidePlayer: Bool = false, media: TelegramMediaFile, colors: [LottieColor] = [], playOnHover: Bool? = nil, shimmer: Bool = true, thumbAtFrame: Int = 0, noThumb: Bool = false) {
         self.playPolicy = playPolicy
         self.alwaysAccept = alwaysAccept
         self.cache = cache
@@ -30,6 +31,7 @@ final class ChatAnimatedStickerMediaLayoutParameters : ChatMediaLayoutParameters
         self.playOnHover = playOnHover
         self.shimmer = shimmer
         self.thumbAtFrame = thumbAtFrame
+        self.noThumb = noThumb
         super.init(presentation: .empty, media: media, automaticDownload: true, autoplayMedia: AutoplayMediaPreferences.defaultSettings)
     }
 }

@@ -196,8 +196,8 @@ final class DownloadsSummary {
             switch self {
             case .empty:
                 return true
-            case let .downloading(_, _, msgs):
-                return msgs.isEmpty
+            case let .downloading(bytesLoaded, totalBytes, msgs):
+                return msgs.isEmpty || bytesLoaded == totalBytes
             case let .hasUnseen(msgs):
                 return msgs.isEmpty
             }

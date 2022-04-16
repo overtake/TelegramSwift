@@ -58,6 +58,8 @@ private let _id_copyright = InputDataIdentifier("_id_copyright")
 private let _id_custom = InputDataIdentifier("_id_custom")
 private let _id_fake = InputDataIdentifier("_id_fake")
 private let _id_custom_input = InputDataIdentifier("_id_custom_input")
+private let _id_personal_details = InputDataIdentifier("_id_personal_details")
+private let _id_illegal_drugs = InputDataIdentifier("_id_illegal_drugs")
 
 extension ReportReason {
     var id: InputDataIdentifier {
@@ -76,6 +78,10 @@ extension ReportReason {
             return _id_custom
         case .fake:
             return _id_fake
+        case .personalDetails:
+            return _id_personal_details
+        case .illegalDrugs:
+            return _id_illegal_drugs
         default:
             fatalError("unsupported")
         }
@@ -96,6 +102,10 @@ extension ReportReason {
             return strings().reportReasonOther
         case .fake:
             return strings().reportReasonFake
+        case .personalDetails:
+            return strings().reportReasonPersonalDetails
+        case .illegalDrugs:
+            return strings().reportReasonDrugs
         default:
             fatalError("unsupported")
         }
@@ -147,7 +157,7 @@ private func reportReasonEntries(state: ReportReasonState, arguments: ReportReas
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    let reasons:[ReportReason] = [.spam, .fake, .violence, .porno, .childAbuse, .copyright]
+    let reasons:[ReportReason] = [.spam, .fake, .violence, .porno, .childAbuse, .copyright, .personalDetails, .illegalDrugs]
     
     for (i, reason) in reasons.enumerated() {
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: reason.id, data: InputDataGeneralData(name: reason.title, color: theme.colors.text, type: .none, viewType: bestGeneralViewType(reasons, for: i), action: {

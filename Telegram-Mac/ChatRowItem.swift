@@ -143,10 +143,13 @@ class ChatRowItem: TableRowItem {
 
     private var forwardHeaderNode:TextNode?
     private(set) var forwardHeader:(TextNodeLayout, TextNode)?
-    var forwardNameLayout:TextViewLayout?
+    private(set) var forwardNameLayout:TextViewLayout?
     var captionLayouts:[RowCaption] = []
     private(set) var authorText:TextViewLayout?
     private(set) var adminBadge:TextViewLayout?
+    
+    
+    
 
     var replyModel:ReplyModel?
     var replyMarkupModel:ReplyMarkupNode?
@@ -330,13 +333,20 @@ class ChatRowItem: TableRowItem {
     
     var replyOffset:CGFloat {
         var top:CGFloat = defaultContentTopOffset
-        if isBubbled && authorText != nil {
+        if isBubbled && (authorText != nil || forwardNameLayout != nil) {
             top -= topInset
         } 
         if let author = authorText {
             top += author.layoutSize.height + defaultContentInnerInset
         }
-        
+        if let author = forwardNameLayout {
+            top += author.layoutSize.height + defaultContentInnerInset - 2
+            
+            if !isBubbled, let header = forwardHeader?.0 {
+                top += header.size.height
+            }
+        }
+       
         return top
     }
     
@@ -2241,7 +2251,7 @@ class ChatRowItem: TableRowItem {
                 if item.webpageLayout != nil {
                     replyMarkupModel?.measureSize(_contentSize.width)
                 } else if _contentSize.width < 200 {
-                    replyMarkupModel?.measureSize(max(_contentSize.width, blockWidth))
+                    replyMarkupModel?.measureSize(max(_contentSize.width, min(blockWidth, 320)))
                 } else {
                     replyMarkupModel?.measureSize(_contentSize.width)
                 }

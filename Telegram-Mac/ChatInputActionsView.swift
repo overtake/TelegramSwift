@@ -435,8 +435,12 @@ class ChatInputActionsView: View, Notifable {
                     scheduled = nil
                 }
                 updateEntertainmentIcon()
+                
+                updateLayout(size: frame.size, transition: .immediate)
+                
             } else if value.isEmojiSection != oldValue.isEmojiSection {
                 updateEntertainmentIcon()
+                updateLayout(size: frame.size, transition: .immediate)
             }
         }
     }

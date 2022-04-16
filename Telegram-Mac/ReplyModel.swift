@@ -225,7 +225,9 @@ class ReplyModel: ChatAccessoryModel {
         if let message = message {
             
             var title: String? = message.effectiveAuthor?.displayTitle
-        
+            if let info = message.forwardInfo {
+                title = info.authorTitle
+            }
             for attr in message.attributes {
                 if let _ = attr as? SourceReferenceMessageAttribute {
                     if let info = message.forwardInfo {
@@ -234,6 +236,7 @@ class ReplyModel: ChatAccessoryModel {
                     break
                 }
             }
+            
             
             
             var text = message.restrictedText(context.contentSettings) ?? pullText(from:message, mediaViewType: .text) as String

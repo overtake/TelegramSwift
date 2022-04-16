@@ -797,7 +797,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                                 } else if let ssrc = participantUpdate.ssrc, strongSelf.ssrcMapping[ssrc] == nil {
                                 }
                             }
-                        case let .call(isTerminated, _, _, _, _, _):
+                        case let .call(isTerminated, _, _, _, _, _, _):
                             if isTerminated {
                                 strongSelf.markAsCanBeRemoved()
                             }
@@ -810,6 +810,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                 //strongSelf.callContext?.addParticipants(participants: addedParticipants)
             }
         })
+        
         
         self.displayAsPeersValue.set(accountContext.engine.calls.cachedGroupCallDisplayAsAvailablePeers(peerId: peerId) |> map(Optional.init))
 
@@ -2085,11 +2086,9 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             return
         }
         self.markedAsCanBeRemoved = true
-
         self.genericCallContext?.stop()
         self.screencastCallContext?.stop()
         self._canBeRemoved.set(.single(true))
-        
         if self.didConnectOnce {
         }
     }
@@ -2218,6 +2217,10 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             self.isMutedPromise.set(self.isMutedValue)
             let isEffectivelyMuted: Bool
             let isVisuallyMuted: Bool
+            
+            
+            
+            
             switch self.isMutedValue {
             case let .muted(isPushToTalkActive):
                 isEffectivelyMuted = !isPushToTalkActive
@@ -2235,6 +2238,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             } else {
                 self.stateValue.muteState = nil
             }
+            
         })
     }
     
@@ -2864,7 +2868,7 @@ func createVoiceChat(context: AccountContext, peerId: PeerId, displayAsList: [Fo
                 }))
             }
             if let displayAsList = displayAsList {
-                if !displayAsList.isEmpty || canBeScheduled {
+                if displayAsList.count > 1 || canBeScheduled {
                     showModal(with: GroupCallDisplayAsController(context: context, mode: .create, peerId: peerId, list: displayAsList, completion: create, canBeScheduled: canBeScheduled, isCreator: peer.groupAccess.isCreator), for: context.window)
                 } else {
                     create(context.peerId, nil, false)

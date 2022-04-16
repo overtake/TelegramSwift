@@ -22,6 +22,7 @@ import CrashHandler
 import InAppSettings
 import ThemeSettings
 import ColorPalette
+import WebKit
 
 #if !APP_STORE
 import AppCenter
@@ -167,7 +168,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         return  Bundle.main.bundleIdentifier!
     }
 
-   
+    var currentContext:AccountContext? {
+        return contextValue?.context
+    }
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
@@ -300,6 +303,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     private func launchInterface() {
         initializeAccountManagement()
         
+
         let rootPath = containerUrl!
         let window = self.window!
         _ = System.scaleFactor.swap(window.backingScaleFactor)
@@ -1044,9 +1048,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         _ = System.scaleFactor.swap(window.backingScaleFactor)
     }
     
-    func playSound(_ sound: String) {
+    func playSound(_ path: String) {
         if let context = self.contextValue?.context {
-            SoundEffectPlay.play(postbox: context.account.postbox, name: sound, type: "m4a", volume: 0.7)
+            SoundEffectPlay.play(postbox: context.account.postbox, path: path, volume: 0.7)
         }
     }
 

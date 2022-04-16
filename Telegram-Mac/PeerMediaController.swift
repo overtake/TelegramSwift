@@ -645,10 +645,12 @@
          self.doneButton = doneButton
 
          
+         doneButton.set(handler: { [weak self] _ in
+             self?.changeState()
+         }, for: .Click)
+         
          doneButton.isHidden = true
          
-         doneButton.userInteractionEnabled = false
-         editButton.userInteractionEnabled = false
          
          let context = self.context
          editButton.contextMenu = { [weak self] in
@@ -837,7 +839,7 @@
         
         
         let tabItems: [Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>] = self.tagsList.filter { !$0.tagsValue.isEmpty }.map { tags -> Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError> in
-            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId), count: 3, tagMask: tags.tagsValue)
+            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: peerId), count: 3, tagMask: tags.tagsValue)
             |> map { (view, _, _) -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
                 let hasLoaded = view.entries.count >= 3 || (!view.isLoading)
                 return (tag: tags, exists: !view.entries.isEmpty, hasLoaded: hasLoaded)
@@ -1261,6 +1263,12 @@
     
     override func escapeKeyAction() -> KeyHandlerResult {
         if genericView.searchPanelView != nil {
+            if self.mode == .photoOrVideo {
+                if let currentController = currentController as? PeerMediaPhotosController {
+                    currentController.toggleSearch()
+                    return .invoked
+                }
+            }
             self.listControllers[self.currentTagListIndex].toggleSearch()
             return .invoked
         } else if interactions.presentation.state == .selecting {

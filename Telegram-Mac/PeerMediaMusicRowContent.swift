@@ -259,7 +259,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
         if let item = item as? PeerMediaMusicRowItem  {
             if let controller = item.context.audioPlayer, controller.playOrPause(item.message.id) {
             } else {
-                let controller = APChatMusicController(context: item.interface.context, chatLocationInput: .peer(item.message.id.peerId), mode: .history, index: MessageIndex(item.message), messages: item.messages)
+                let controller = APChatMusicController(context: item.interface.context, chatLocationInput: .peer(peerId: item.message.id.peerId), mode: .history, index: MessageIndex(item.message), messages: item.messages)
                 item.interface.inlineAudioPlayer(controller)
                 controller.start()
             }

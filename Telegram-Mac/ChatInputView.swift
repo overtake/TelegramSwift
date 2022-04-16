@@ -438,12 +438,12 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
    
     
     func updateAttachments(_ inputState:ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
-        if let botMenu = inputState.botMenu, inputState.interfaceState.inputState.inputText.isEmpty {
+        if let botMenu = inputState.botMenu, !botMenu.isEmpty, inputState.interfaceState.inputState.inputText.isEmpty {
             let current: ChatInputMenuView
             if let view = self.botMenuView {
                 current = view
             } else {
-                current = ChatInputMenuView(frame: NSMakeRect(0, 0, 60, contentView.frame.height))
+                current = ChatInputMenuView(frame: NSMakeRect(0, 0, 60, 50))
                 self.botMenuView = current
                 contentView.addSubview(current)
                 
@@ -613,6 +613,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             change(size: NSMakeSize(NSWidth(frame), sumHeight), animated: animated)
             
             delegate?.inputChanged(height: sumHeight, animated: animated)
+            
         }
         
     }
