@@ -89,10 +89,12 @@ private extension Country {
     }
 }
 
-private final class Manager {
+final class Auth_CountryManager {
     let list: [Country]
     init(_ countries:[Country]) {
-        self.list = countries
+        self.list = countries.sorted(by: { lhs, rhs in
+            return lhs.name < rhs.name
+        })
     }
     
     private let global: Country = .init(id: "TG", name: "Test", localizedName: "Test", countryCodes: [.init(code: "999", prefixes: [], patterns: ["XXXX X XX"])], hidden: false)
@@ -225,7 +227,7 @@ final class Auth_LoginHeader : View {
     }
 }
 
-private final class Auth_PhoneInput: View, NSTextFieldDelegate {
+final class Auth_PhoneInput: View, NSTextFieldDelegate {
     private let separator = View()
     private let country: TitleButton = TitleButton()
     
@@ -236,7 +238,7 @@ private final class Auth_PhoneInput: View, NSTextFieldDelegate {
     private let numberText:NSTextField = NSTextField()
 
     
-    fileprivate var manager: Manager = .init([]) {
+    var manager: Auth_CountryManager = .init([]) {
         didSet {
             if !manager.list.isEmpty, selected == nil {
                 let code = NSLocale.current.regionCode ?? "US"
@@ -251,7 +253,7 @@ private final class Auth_PhoneInput: View, NSTextFieldDelegate {
         self.numberText.textView?.isEditable = !locked
     }
     
-    fileprivate var selected:Country? {
+    var selected:Country? {
         didSet {
             updatePlaceholder()
         }

@@ -28,15 +28,23 @@ final class ChatInputMenuView : View {
         updateLocalizationAndTheme(theme: theme)
         
         button.set(handler: { [weak self] _ in
-            self?.chatInteraction?.update {
-                $0.updateBotMenu { current in
-                    var current = current
-                    if let value = current {
-                        current?.revealed = !value.revealed
+            if let botMenu = self?.botMenu {
+                switch botMenu.menuButton {
+                case .commands:
+                    self?.chatInteraction?.update {
+                        $0.updateBotMenu { current in
+                            var current = current
+                            if let value = current {
+                                current?.revealed = !value.revealed
+                            }
+                            return current
+                        }
                     }
-                    return current
+                case let .webView(text, url):
+                    self?.chatInteraction?.openWebviewFromMenu(buttonText: text, url: url)
                 }
             }
+            
         }, for: .Click)
         
     }
@@ -81,7 +89,7 @@ final class ChatInputMenuView : View {
     
     override func layout() {
         super.layout()
-        
+                
         button.setFrameSize(NSMakeSize(40, 30))
         button.centerY(x: frame.width - button.frame.width)
         animationView.center()

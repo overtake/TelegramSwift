@@ -40,6 +40,7 @@ private enum DeveloperEntryId : Hashable {
     case accounts
     case enableFilters
     case toggleMenu
+    case crash
     case section(Int32)
     var hashValue: Int {
         switch self {
@@ -57,8 +58,10 @@ private enum DeveloperEntryId : Hashable {
             return 5
         case .toggleMenu:
             return 5
+        case .crash:
+            return 6
         case .section(let section):
-            return 6 + Int(section)
+            return 7 + Int(section)
         }
     }
 }
@@ -72,6 +75,7 @@ private enum DeveloperEntry : TableItemListNodeEntry {
     case accounts(sectionId: Int32)
     case enableFilters(sectionId: Int32, enabled: Bool)
     case toggleMenu(sectionId: Int32, enabled: Bool)
+    case crash(sectionId: Int32)
     case section(Int32)
     
     var stableId:DeveloperEntryId {
@@ -90,6 +94,8 @@ private enum DeveloperEntry : TableItemListNodeEntry {
             return .enableFilters
         case .toggleMenu:
             return .toggleMenu
+        case .crash:
+            return .crash
         case .section(let section):
             return .section(section)
         }
@@ -110,6 +116,8 @@ private enum DeveloperEntry : TableItemListNodeEntry {
         case .enableFilters(let sectionId, _):
             return (sectionId * 1000) + Int32(stableId.hashValue)
         case let .toggleMenu(sectionId, _):
+            return (sectionId * 1000) + Int32(stableId.hashValue)
+        case let .crash(sectionId):
             return (sectionId * 1000) + Int32(stableId.hashValue)
         case .section(let sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -150,6 +158,11 @@ private enum DeveloperEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Native Context Menu (Get Ready for glitches)", type: .switchable(enabled), action: {
                 arguments.toggleMenu(!enabled)
             })
+        case .crash:
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Crash App", type: .none, action: {
+                var array:[Int] = []
+                array[1] = 0
+            })
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         }
@@ -174,6 +187,7 @@ private func developerEntries(loginSettings: LoggingSettings) -> [DeveloperEntry
     
     entries.append(.openLogs(sectionId: sectionId))
     entries.append(.toggleMenu(sectionId: sectionId, enabled: System.legacyMenu))
+    entries.append(.crash(sectionId: sectionId))
 
     entries.append(.section(sectionId))
     sectionId += 1

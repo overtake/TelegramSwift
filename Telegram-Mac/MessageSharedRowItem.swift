@@ -37,7 +37,7 @@ class MessageSharedRowItem: GeneralRowItem {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
         viewsCountLayout.measure(width: .greatestFiniteMagnitude)
-        let titleAndDateWidth: CGFloat = blockWidth - viewType.innerInset.left - viewType.innerInset.right
+        let titleAndDateWidth: CGFloat = blockWidth - viewType.innerInset.left - viewType.innerInset.right - 34 - 10
         
         titleLayout.measure(width: titleAndDateWidth)
         

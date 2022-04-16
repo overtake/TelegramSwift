@@ -206,7 +206,7 @@ class StickerShimmerEffectView: View {
                 renderPath(segments, context: context)
             } else {
                 let path = CGMutablePath()
-                path.addRoundedRect(in: CGRect(origin: CGPoint(), size: size), cornerWidth: min(10, size.height / 2), cornerHeight: min(size.height / 2, 10))
+                path.addRoundedRect(in: CGRect(origin: CGPoint(), size: size), cornerWidth: min(min(10, size.height / 2), size.width / 2), cornerHeight: min(min(size.height / 2, 10), size.height / 2))
                 context.addPath(path)
                 context.fillPath()
             }

@@ -1069,11 +1069,13 @@ public struct ModalHeaderData {
     public let subtitle: String?
     public let image: CGImage?
     public let handler: (()-> Void)?
-    public init(title: String? = nil, subtitle: String? = nil, image: CGImage? = nil, handler: (()->Void)? = nil) {
+    public let contextMenu:(()->[ContextMenuItem])?
+    public init(title: String? = nil, subtitle: String? = nil, image: CGImage? = nil, handler: (()->Void)? = nil, contextMenu:(()->[ContextMenuItem])? = nil) {
         self.title = title
         self.image = image
         self.subtitle = subtitle
         self.handler = handler
+        self.contextMenu = contextMenu
     }
 }
 

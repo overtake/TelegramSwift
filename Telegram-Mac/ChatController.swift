@@ -661,7 +661,7 @@ class ChatControllerView : View, ChatInputDelegate {
                 state = .none(voiceChat)
             }
         } else if let canAdd = interfaceState.canAddContact, canAdd {
-           state = .none(voiceChat)
+            state = .none(voiceChat)
         } else {
             state = .none(voiceChat)
         }
@@ -1753,6 +1753,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         var didSetReadIndex: Bool = false
         
         let chatLocationContextHolder = self.chatLocationContextHolder
+        
+        var wasUsedLocation = false
 
         let historyViewUpdate1 = location.get() |> deliverOn(messagesViewQueue)
             |> mapToSignal { location -> Signal<(ChatHistoryViewUpdate, TableSavingSide?), NoError> in
@@ -1776,6 +1778,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .peer:
                     additionalData.append(.cachedPeerDataMessages(peerId))
                 }
+                
+                wasUsedLocation = false
                 
                 return chatHistoryViewForLocation(location, context: context, chatLocation: chatLocation, fixedCombinedReadStates: { nil }, tagMask: mode.tagMask, mode: mode, additionalData: additionalData, chatLocationContextHolder: chatLocationContextHolder) |> beforeNext { viewUpdate in
                     switch viewUpdate {
@@ -2002,7 +2006,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 view = values.view
                 isLoading = values.view.isLoading
                 updateType = values.type
-                scrollPosition = searchStateUpdated ? nil : values.scrollPosition
+                if !wasUsedLocation {
+                    scrollPosition = searchStateUpdated ? nil : values.scrollPosition
+                    wasUsedLocation = true
+                } else {
+                    scrollPosition = nil
+                }
             }
     
             if let updatedValue = previousUpdatingMedia.swap(updatingMedia), updatingMedia != updatedValue {
@@ -2922,13 +2931,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         
+        chatInteraction.afterSentTransition = afterSentTransition
+        
         chatInteraction.sendInlineResult = { [weak self] (results,result) in
             if let strongSelf = self {
                 func apply(_ controller: ChatController, atDate: Int32?) {
                     let chatInteraction = controller.chatInteraction
-                    
-                    let value = context.engine.messages.enqueueOutgoingMessageWithChatContextResult(to: chatInteraction.peerId, results: results, result: result, replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId ?? chatInteraction.mode.threadId)
-                    
+                    let value = context.engine.messages.enqueueOutgoingMessageWithChatContextResult(to: chatInteraction.peerId, botId: results.botId, result: result, replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId ?? chatInteraction.mode.threadId)
                     if value {
                         controller.nextTransaction.set(handler: afterSentTransition)
                     }
@@ -4306,9 +4315,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             .withUpdatedBlocked(cachedData.isBlocked)
                             .withUpdatedCanPinMessage(cachedData.canPinMessages || context.peerId == peerId)
                             .updateBotMenu { current in
-                                if let botInfo = cachedData.botInfo, !botInfo.commands.isEmpty {
-                                    var current = current ?? .init(commands: [], revealed: false)
+                                if let botInfo = cachedData.botInfo {
+                                    var current = current ?? .init(commands: [], revealed: false, menuButton: botInfo.menuButton)
                                     current.commands = botInfo.commands
+                                    current.menuButton = botInfo.menuButton
                                     return current
                                 }
                                 return nil
@@ -4381,8 +4391,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         let availableGroupCall: Signal<GroupCallPanelData?, NoError> = getGroupCallPanelData(context: context, peerId: peerId)
         
+        let attach = (context.engine.messages.attachMenuBots() |> then(.complete() |> suspendAwareDelay(1, queue: .mainQueue()))) |> restart
         
-        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall).start(next: { [weak self] pinnedMsg, postboxView, groupCallData in
+        
+        
+        peerDisposable.set(combineLatest(queue: .mainQueue(), topPinnedMessage, peerView.get(), availableGroupCall, attach).start(next: { [weak self] pinnedMsg, postboxView, groupCallData, attachItems in
             
                         
             guard let `self` = self else {return}
@@ -4482,6 +4495,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         present = present.withUpdatedDiscussionGroupId(discussionGroupId)
                         present = present.withUpdatedPinnedMessageId(pinnedMsg)
                         
+                        present = present.withUpdatedAttachItems(attachItems)
                         var contactStatus: ChatPeerStatus?
                         if let cachedData = peerView.cachedData as? CachedUserData {
                             contactStatus = ChatPeerStatus(canAddContact: !peerView.peerIsContact, peerStatusSettings: cachedData.peerStatusSettings)
@@ -4498,9 +4512,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 .withUpdatedPeerStatusSettings(contactStatus)
                                 .withUpdatedCanPinMessage(cachedData.canPinMessages || context.peerId == peerId)
                                 .updateBotMenu { current in
-                                    if let botInfo = cachedData.botInfo, !botInfo.commands.isEmpty {
-                                        var current = current ?? .init(commands: [], revealed: false)
+                                    if let botInfo = cachedData.botInfo {
+                                        var current = current ?? .init(commands: [], revealed: false, menuButton: botInfo.menuButton)
                                         current.commands = botInfo.commands
+                                        current.menuButton = botInfo.menuButton
                                         return current
                                     }
                                     return nil
@@ -4993,7 +5008,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 if let view = view as? PeerView, let peer = peerViewMainPeer(view) as? TelegramChannel, !peer.hasPermission(.sendMessages) {
                     return .single(false)
                 } else {
-                    return context.account.viewTracker.scheduledMessagesViewForLocation(.peer(peerId))
+                    return context.account.viewTracker.scheduledMessagesViewForLocation(.peer(peerId: peerId))
                         |> map { view, _, _ in
                             return !view.entries.isEmpty
                     }
@@ -5270,7 +5285,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let tags: [MessageTags] = [.photoOrVideo, .file, .webPage, .music, .voiceOrInstantVideo]
             
             let tabItems: [Signal<Never, NoError>] = tags.map { tags -> Signal<Never, NoError> in
-                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId), count: 20, tagMask: tags)
+                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: peerId), count: 20, tagMask: tags)
                     |> ignoreValues
             }
 //
@@ -5411,6 +5426,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         var activeCall = (peerView.cachedData as? CachedGroupData)?.activeCall
                         activeCall = activeCall ?? (peerView.cachedData as? CachedChannelData)?.activeCall
                         
+                        let canDeleteForAll: Bool? = (peerView.cachedData as? CachedChannelData)?.flags.contains(.canDeleteHistory)
+                        
                         if peer.groupAccess.canMakeVoiceChat {
                             var isLiveStream: Bool = false
                             if let peer = peer as? TelegramChannel {
@@ -5424,7 +5441,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             if !peer.isBot, !peer.isSecretChat {
                                 items.append(ContextMenuItem(strings().peerInfoStartSecretChat, handler: { [weak self] in
                                     self?.startSecretChat()
-                                }, itemImage: MenuAnimation.menu_secret_chat.value))
+                                }, itemImage: MenuAnimation.menu_lock.value))
                             }
                             
                             
@@ -5492,12 +5509,74 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         if !items.isEmpty {
                             items.append(ContextSeparatorItem())
                         }
-                        
+                        if peer.canManageDestructTimer && context.peerId != peer.id {
+                            
+                            let best:(Int32) -> MenuAnimation = { value in
+//                                    if value == Int32.secondsInHour {
+//                                        return MenuAnimation.menu_autodelete_1h
+//                                    }
+                                if value == Int32.secondsInDay {
+                                    return MenuAnimation.menu_autodelete_1d
+                                }
+                                if value == Int32.secondsInWeek {
+                                    return MenuAnimation.menu_autodelete_1w
+                                }
+                                if value == Int32.secondsInMonth {
+                                    return MenuAnimation.menu_autodelete_1m
+                                }
+                                if value == 0 {
+                                    return MenuAnimation.menu_autodelete_never
+                                }
+                                return MenuAnimation.menu_autodelete_customize
+                            }
+                            
+                            var selected: Int32 = 0
+                            var values:[Int32] = [0, .secondsInDay, .secondsInWeek, .secondsInMonth]
+
+                            if let timeout = chatInteraction.presentation.messageSecretTimeout?.timeout {
+                                if !values.contains(timeout.effectiveValue) {
+                                    values.append(timeout.effectiveValue)
+                                }
+                                selected = timeout.effectiveValue
+                            }
+                            
+                            let item = ContextMenuItem(strings().chatContextAutoDelete, handler: {
+                                clearHistory(context: context, peer: peer, mainPeer: mainPeer, canDeleteForAll: canDeleteForAll)
+                            }, itemImage: selected == 0 ?  MenuAnimation.menu_secret_chat.value : best(selected).value)
+                            
+                            let submenu = ContextMenu()
+                            
+                            
+         
+                            
+                            let updateTimer:(Int32)->Void = { value in
+                                _ = showModalProgress(signal: context.engine.peers.setChatMessageAutoremoveTimeoutInteractively(peerId: peerId, timeout: value == 0 ? nil : value), for: context.window).start()
+                            }
+                            
+                            for value in values {
+                                
+                                
+                                
+                                if value == 0 {
+                                    submenu.addItem(ContextMenuItem(strings().autoremoveMessagesNever, handler: {
+                                        updateTimer(value)
+                                    }, state: selected == value ? .on : nil, itemImage: best(value).value))
+                                } else {
+                                    submenu.addItem(ContextMenuItem(autoremoveLocalized(Int(value)), handler: {
+                                        updateTimer(value)
+                                    }, state: selected == value ? .on : nil, itemImage: best(value).value))
+                                }
+                            }
+                            
+                            item.submenu = submenu
+                            items.append(item)
+                        }
                         if peer.canClearHistory || (peer.canManageDestructTimer && context.peerId != peer.id) {
                             items.append(ContextMenuItem(strings().chatContextClearHistory, handler: {
-                                clearHistory(context: context, peer: peer, mainPeer: mainPeer)
+                                clearHistory(context: context, peer: peer, mainPeer: mainPeer, canDeleteForAll: canDeleteForAll)
                             }, itemImage: MenuAnimation.menu_clear_history.value))
                         }
+                       
                         
                         items.append(ContextMenuItem(text, handler: deleteChat, itemMode: .destruct, itemImage: animation.value))
                         

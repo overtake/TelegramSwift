@@ -1378,6 +1378,13 @@ extension Peer {
         return nil
     }
     
+    var botInfo: BotUserInfo? {
+        if let peer = self as? TelegramUser {
+            return peer.botInfo
+        }
+        return nil
+    }
+    
     var isSupergroup:Bool {
         if let peer = self as? TelegramChannel {
             switch peer.info {
@@ -2554,40 +2561,6 @@ extension SecureIdDate {
 
 
 
-func clearCache(_ path: String, excludes: [(partial: String, complete: String)]) -> Signal<Void, NoError> {
-    return Signal { subscriber -> Disposable in
-        
-        let fileManager = FileManager.default
-        var enumerator = fileManager.enumerator(atPath: path + "/")
-        
-        while let file = enumerator?.nextObject() as? String {
-            if file != "cache" {
-                if excludes.filter ({ file.contains($0.partial.nsstring.lastPathComponent) || file.contains($0.complete.nsstring.lastPathComponent) }).isEmpty {
-                    unlink(path + "/" + file)
-                }
-            }
-        }
-        
-        var p = path.nsstring.substring(to: path.nsstring.range(of: path.nsstring.lastPathComponent).location)
-        p = p.nsstring.substring(to: p.nsstring.range(of: p.nsstring.lastPathComponent).location) + "cached/"
-        
-        enumerator = fileManager.enumerator(atPath: p)
-        
-        while let file = enumerator?.nextObject() as? String {
-            
-            
-            if excludes.filter ({ file.contains($0.partial) || file.contains($0.complete) }).isEmpty {
-                unlink(p + file)
-            }
-            //try? fileManager.removeItem(atPath: p + file)
-        }
-        
-        subscriber.putNext(Void())
-        subscriber.putCompletion()
-        return EmptyDisposable
-    } |> runOn(resourcesQueue)
-}
-
 func moveWallpaperToCache(postbox: Postbox, resource: TelegramMediaResource, reference: WallpaperReference?, settings: WallpaperSettings, isPattern: Bool) -> Signal<String, NoError> {
     let resourceData: Signal<MediaResourceData, NoError>
     if isPattern {
@@ -2674,7 +2647,7 @@ func canCollagesFromUrl(_ urls:[URL]) -> Bool {
     if canCollage {
         for url in urls {
             let mime = MIMEType(url.path)
-            let attrs = Sender.fileAttributes(for: mime, path: url.path, isMedia: true)
+            let attrs = Sender.fileAttributes(for: mime, path: url.path, isMedia: true, inCollage: true)
             let isGif = attrs.contains(where: { attr -> Bool in
                 switch attr {
                 case .Animated:
@@ -2727,7 +2700,6 @@ func canCollagesFromUrl(_ urls:[URL]) -> Bool {
     if gifCount > 0 {
         return false
     }
-
     return canCollage
 }
 
@@ -3426,30 +3398,28 @@ extension CachedPeerAutoremoveTimeout {
 
 
 
-func clearHistory(context: AccountContext, peer: Peer, mainPeer: Peer) {
-    if peer.canClearHistory && (context.peerId != peer.id && peer.canManageDestructTimer) && !peer.isSecretChat {
-        showModal(with: AutoremoveMessagesController(context: context, peer: peer), for: context.window)
-    } else if peer.canClearHistory {
-        var thridTitle: String? = nil
-        var canRemoveGlobally: Bool = false
-        if peer.id.namespace == Namespaces.Peer.CloudUser && peer.id != context.account.peerId && !peer.isBot {
-            if context.limitConfiguration.maxMessageRevokeIntervalInPrivateChats == LimitsConfiguration.timeIntervalForever {
-                canRemoveGlobally = true
-            }
+func clearHistory(context: AccountContext, peer: Peer, mainPeer: Peer, canDeleteForAll: Bool? = nil) {
+    var thridTitle: String? = nil
+    var canRemoveGlobally: Bool = canDeleteForAll ?? false
+    if peer.id.namespace == Namespaces.Peer.CloudUser && peer.id != context.account.peerId && !peer.isBot {
+        if context.limitConfiguration.maxMessageRevokeIntervalInPrivateChats == LimitsConfiguration.timeIntervalForever {
+            canRemoveGlobally = true
         }
-        if canRemoveGlobally {
-            thridTitle = strings().chatMessageDeleteForMeAndPerson(peer.displayTitle)
-        }
-        
-        
-        let information = mainPeer is TelegramUser || mainPeer is TelegramSecretChat ? peer.id == context.peerId ? strings().peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peer.id.namespace == Namespaces.Peer.SecretChat ? strings().peerInfoConfirmClearHistoryUserBothSides : strings().peerInfoConfirmClearHistoryUser : strings().peerInfoConfirmClearHistoryGroup
-        
-        modernConfirm(for: context.window, account: context.account, peerId: mainPeer.id, information:information , okTitle: strings().peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
-            context.chatUndoManager.clearHistoryInteractively(engine: context.engine, peerId: peer.id, type: result == .thrid ? .forEveryone : .forLocalPeer)
-        })
-    } else {
-        showModal(with: AutoremoveMessagesController(context: context, peer: peer), for: context.window)
     }
+    if canRemoveGlobally {
+        if let peer = peer as? TelegramUser {
+            thridTitle = strings().chatMessageDeleteForMeAndPerson(peer.displayTitle)
+        } else {
+            thridTitle = strings().chatMessageDeleteForAll
+        }
+    }
+    
+    
+    let information = mainPeer is TelegramUser || mainPeer is TelegramSecretChat ? peer.id == context.peerId ? strings().peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peer.id.namespace == Namespaces.Peer.SecretChat ? strings().peerInfoConfirmClearHistoryUserBothSides : strings().peerInfoConfirmClearHistoryUser : strings().peerInfoConfirmClearHistoryGroup
+    
+    modernConfirm(for: context.window, account: context.account, peerId: mainPeer.id, information:information , okTitle: strings().peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
+        context.chatUndoManager.clearHistoryInteractively(engine: context.engine, peerId: peer.id, type: result == .thrid ? .forEveryone : .forLocalPeer)
+    })
 }
 
 
@@ -3482,9 +3452,9 @@ func showProtectedCopyAlert(_ peer: Peer, for window: Window) {
 extension Peer {
     var isCopyProtected: Bool {
         if let peer = self as? TelegramGroup {
-            return peer.flags.contains(.copyProtectionEnabled)
+            return peer.flags.contains(.copyProtectionEnabled) && !peer.groupAccess.isCreator
         } else if let peer = self as? TelegramChannel {
-            return peer.flags.contains(.copyProtectionEnabled)
+            return peer.flags.contains(.copyProtectionEnabled) && !(peer.adminRights != nil || peer.groupAccess.isCreator)
         } else {
             return false
         }
@@ -3553,4 +3523,16 @@ extension SoftwareVideoSource {
             memcpy(pixelData, bytes, bufferSize)
         })
     }
+}
+
+
+func installAttachMenuBot(context: AccountContext, peer: Peer, completion: @escaping(Bool)->Void) {
+    confirm(for: context.window, information: strings().webAppAttachConfirm(peer.displayTitle), okTitle: strings().webAppAttachConfirmOK, successHandler: { _ in
+        _ = showModalProgress(signal: context.engine.messages.addBotToAttachMenu(botId: peer.id), for: context.window).start(next: { value in
+            if value {
+                showModalText(for: context.window, text: strings().webAppAttachSuccess(peer.displayTitle))
+                completion(value)
+            }
+        })
+    })
 }

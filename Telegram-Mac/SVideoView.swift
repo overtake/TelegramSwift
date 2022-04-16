@@ -11,6 +11,202 @@ import TGUIKit
 import SwiftSignalKit
 import ColorPalette
 
+private final class SVideoPipControls : Control {
+    
+    var bufferingRanges:[Range<CGFloat>] = [] {
+        didSet {
+            progress.set(fetchingProgressRanges: bufferingRanges, animated: oldValue != bufferingRanges)
+        }
+    }
+    
+    var scrubberInsideBuffering: Bool {
+        for range in bufferingRanges {
+            if range.contains(progress.currentValue) {
+                return true
+            }
+        }
+        return bufferingRanges.isEmpty
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    
+    fileprivate func update(with status: MediaPlayerStatus, animated: Bool) {
+        
+        
+        self.forceMouseDownCanMoveWindow = true
+        volumeSlider.userInteractionEnabled = true
+        progress.userInteractionEnabled = true
+
+        
+        self.backgroundColor = NSColor.blackTransparent
+        
+        volumeSlider.set(progress: CGFloat(status.volume))
+        volumeToggle.set(image: status.volume.isZero ? theme.icons.gallery_pip_muted : theme.icons.gallery_pip_unmuted, for: .Normal)
+        
+       
+        playOrPause.isEnabled = status.duration > 0
+        progress.isEnabled = status.duration > 0
+        
+        
+        switch status.status {
+        case .playing:
+            playOrPause.set(image: theme.icons.gallery_pip_pause, for: .Normal)
+            progress.set(progress: status.duration == 0 ? 0 : CGFloat(status.timestamp / status.duration), animated: animated, duration: status.duration, beginTime: status.generationTimestamp, offset: status.timestamp, speed: Float(status.baseRate))
+        case .paused:
+            playOrPause.set(image: status.generationTimestamp == 0 ? theme.icons.gallery_pip_pause : theme.icons.videoPlayerPlay, for: .Normal)
+            progress.set(progress: status.duration == 0 ? 0 : CGFloat(status.timestamp / status.duration), animated: false)
+        case let .buffering(_, whilePlaying):
+            playOrPause.set(image: whilePlaying ? theme.icons.gallery_pip_pause : theme.icons.gallery_pip_play, for: .Normal)
+            progress.set(progress: status.duration == 0 ? 0 : CGFloat(status.timestamp / status.duration), animated: false)
+        }
+        let currentTimeAttr: NSAttributedString = .initialize(string: status.timestamp == 0 && status.duration == 0 ? "--:--" : String.durationTransformed(elapsed: Int(status.timestamp)), color: .white, font: .medium(11))
+        let durationTimeAttr: NSAttributedString = .initialize(string: status.duration == 0 ? "--:--" : String.durationTransformed(elapsed: Int(status.duration)), color: .white, font: .medium(11))
+        
+        let currentTimeLayout = TextViewLayout(currentTimeAttr, alignment: .right)
+        let durationLayout = TextViewLayout(durationTimeAttr, alignment: .center)
+        currentTimeLayout.measure(width: .greatestFiniteMagnitude)
+        durationLayout.measure(width: .greatestFiniteMagnitude)
+        
+        currentTimeView.setFrameSize(currentTimeLayout.layoutSize.width, currentTimeView.frame.height)
+        durationView.setFrameSize(durationLayout.layoutSize.width > 33 ? 40 : 33, durationView.frame.height)
+
+        
+        currentTimeView.set(layout: currentTimeLayout)
+        durationView.set(layout: durationLayout)
+        
+        currentTimeView.needsDisplay = true
+        durationView.needsDisplay = true
+        
+        needsLayout = true
+        
+    }
+    
+    var status: MediaPlayerStatus? {
+        didSet {
+            if let status = status {
+                let animated = oldValue?.seekId == status.seekId && (oldValue?.timestamp ?? 0) <= status.timestamp && !status.generationTimestamp.isZero && status != oldValue
+                update(with: status, animated: animated)
+            } else {
+                playOrPause.isEnabled = false
+            }
+        }
+    }
+    
+    let playOrPause: ImageButton = ImageButton()
+    let close: ImageButton = ImageButton()
+
+    let progress: LinearProgressControl = LinearProgressControl(progressHeight: 2)
+    let fullscreen: ImageButton = ImageButton()
+    
+    
+    let volumeContainer: View = View()
+    let volumeToggle: ImageButton = ImageButton()
+    let volumeSlider: LinearProgressControl = LinearProgressControl(progressHeight: 2)
+    
+    private let durationView: TextView = TextView()
+    private let currentTimeView: TextView = TextView()
+        
+    
+    
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(playOrPause)
+        addSubview(close)
+        addSubview(progress)
+        addSubview(durationView)
+        addSubview(currentTimeView)
+        addSubview(fullscreen)
+        
+        durationView.setFrameSize(33, 13)
+        currentTimeView.setFrameSize(33, 13)
+        
+        durationView.userInteractionEnabled = false
+        durationView.isSelectable = false
+        durationView.backgroundColor = .clear
+        
+        currentTimeView.userInteractionEnabled = false
+        currentTimeView.isSelectable = false
+        currentTimeView.backgroundColor = .clear
+        
+
+        volumeContainer.addSubview(volumeToggle)
+        volumeContainer.addSubview(volumeSlider)
+        
+        volumeToggle.autohighlight = false
+        volumeToggle.set(image: theme.icons.gallery_pip_unmuted, for: .Normal)
+        _ = volumeToggle.sizeToFit()
+        volumeSlider.setFrameSize(NSMakeSize(60, 5))
+        volumeContainer.setFrameSize(NSMakeSize(volumeToggle.frame.width + 60 + 5, volumeToggle.frame.height))
+        
+        volumeSlider.roundCorners = true
+        volumeSlider.alignment = .center
+        volumeSlider.containerBackground = NSColor.grayBackground.withAlphaComponent(0.2)
+        volumeSlider.style = ControlStyle(foregroundColor: .white, backgroundColor: .clear, highlightColor: .clear)
+        volumeSlider.set(progress: 0.8)
+                
+        addSubview(volumeContainer)
+        
+        
+        playOrPause.autohighlight = false
+        fullscreen.autohighlight = false
+
+        playOrPause.scaleOnClick = true
+        fullscreen.scaleOnClick = true
+        
+        fullscreen.set(image: theme.icons.gallery_pip_out, for: .Normal)
+        playOrPause.set(image: theme.icons.gallery_pip_pause, for: .Normal)
+        
+        close.set(image: theme.icons.gallery_pip_close, for: .Normal)
+        close.sizeToFit()
+        close.autohighlight = false
+        close.scaleOnClick = true
+
+        
+        _ = playOrPause.sizeToFit()
+        _ = fullscreen.sizeToFit()
+        
+        progress.insets = NSEdgeInsetsMake(0, 0, 0, 0)
+        progress.roundCorners = true
+        progress.alignment = .center
+        progress.liveScrobbling = false
+        progress.fetchingColor = NSColor.grayBackground.withAlphaComponent(0.6)
+        progress.containerBackground = NSColor.grayBackground.withAlphaComponent(0.2)
+        progress.style = ControlStyle(foregroundColor: .white, backgroundColor: .clear, highlightColor: .clear)
+        progress.set(progress: 0, animated: false, duration: 0)
+        wantsLayer = true
+    }
+    
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+    }
+    
+    override func layout() {
+        super.layout()
+        
+        playOrPause.center()
+        
+        close.setFrameOrigin(5, 5)
+        fullscreen.setFrameOrigin(close.frame.maxX + 5, 5)
+
+        
+        volumeContainer.setFrameOrigin(frame.width - volumeContainer.frame.width - 5, 5)
+        volumeToggle.centerY(x: 0)
+        volumeSlider.centerY(x: volumeToggle.frame.maxX + 5)
+        
+        progress.setFrameSize(NSMakeSize(frame.width - 10, 5))
+
+        progress.setFrameOrigin(5, frame.height - 5 - progress.frame.height)
+
+        currentTimeView.setFrameOrigin(5, progress.frame.minY - 5 - currentTimeView.frame.height)
+        durationView.setFrameOrigin(frame.width - durationView.frame.width - 5, progress.frame.minY - 5 - durationView.frame.height)
+
+    }
+}
+
 enum SVideoControlsStyle : Equatable {
     case regular(pip: Bool, fullScreen: Bool, hideRewind: Bool)
     case compact(pip: Bool, fullScreen: Bool, hideRewind: Bool)
@@ -530,6 +726,11 @@ class SVideoView: NSView {
                 if let status = status {
                     self.controls.update(with: status, animated: false)
                     self.controls.update(with: status, animated: true)
+                    if let controls = self.pipControls {
+                        controls.update(with: status, animated: false)
+                        controls.update(with: status, animated: true)
+
+                    }
                 }
                 let bufferingStatus = self.bufferingStatus
                 self.bufferingStatus = bufferingStatus
@@ -549,6 +750,7 @@ class SVideoView: NSView {
         didSet {
             if status != oldValue {
                 controls.status = status
+                pipControls?.status = status
                 if let status = status {
                     switch status.status {
                     case .buffering:
@@ -574,13 +776,18 @@ class SVideoView: NSView {
                     bufRanges.append(br)
                 }
                 controls.bufferingRanges = bufRanges
+                pipControls?.bufferingRanges = bufRanges
             } else {
                 controls.bufferingRanges = [Range(uncheckedBounds: (lower: -1, upper: -1))]
+                pipControls?.bufferingRanges = [Range(uncheckedBounds: (lower: -1, upper: -1))]
             }
         }
     }
     private let bufferingIndicator: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 40, 40))
+  
     private let controls: SVideoControlsView = SVideoControlsView(frame: NSZeroRect)
+    private var pipControls: SVideoPipControls?
+
     let mediaPlayer: MediaPlayerView = MediaPlayerView()
     private let backgroundView: NSView = NSView()
     override func layout() {
@@ -606,6 +813,7 @@ class SVideoView: NSView {
         bufferingIndicator.center()
         bufferingIndicator.progressColor = .white
         backgroundView.frame = bounds
+        self.pipControls?.frame = bounds
         
     }
     
@@ -626,10 +834,77 @@ class SVideoView: NSView {
                 self?.controls.isHidden = hide
             }
         })
+        if let controls = pipControls {
+            if !hide {
+                controls.isHidden = false
+            }
+            controls.change(opacity: hide ? 0 : 1, animated: animated, duration: 0.2, timingFunction: .linear, completion: { [weak self] completed in
+                if completed {
+                    self?.pipControls?.isHidden = hide
+                }
+            })
+        }
     }
     
     override var isOpaque: Bool {
         return true
+    }
+    
+    func setMode(_ mode: PictureInPictureControlMode, animated: Bool) {
+        switch mode {
+        case .pip:
+            let current: SVideoPipControls
+            if let view = self.pipControls {
+                current = view
+            } else {
+                current = SVideoPipControls(frame: self.bounds)
+                addSubview(current)
+                self.pipControls = current
+                
+                current.playOrPause.set(handler: { [weak self] _ in
+                    self?.interactions?.playOrPause()
+                }, for: .Click)
+                
+                current.progress.onUserChanged = { [weak self] value in
+                    guard let `self` = self else {return}
+                    if let status = self.status {
+                        let result = min(status.duration * Double(value), status.duration)
+                        self.status = status.withUpdatedTimestamp(result)
+                        self.interactions?.rewind(result)
+                    }
+                }
+                current.volumeSlider.onUserChanged = { [weak self] value in
+                    guard let `self` = self else {return}
+                    self.interactions?.volume(value)
+                }
+                current.volumeToggle.set(handler: { [weak self] _ in
+                    guard let `self` = self else {return}
+                    if let status = self.status {
+                        self.interactions?.volume(status.volume == 0 ? 0.8 : 0)
+                    }
+                }, for: .Click)
+                
+                current.close.set(handler: { [weak self] _ in
+                    self?.interactions?.closePictureInPicture()
+                }, for: .Click)
+                
+                current.fullscreen.set(handler: { [weak self] _ in
+                    self?.interactions?.togglePictureInPicture()
+                }, for: .Click)
+                
+                
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            performSubviewRemoval(self.controls, animated: animated)
+        case .normal:
+            if let view = pipControls {
+                performSubviewRemoval(view, animated: animated)
+                self.pipControls = nil
+            }
+            self.addSubview(self.controls)
+        }
     }
     
     override func setFrameSize(_ newSize: NSSize) {
@@ -654,6 +929,11 @@ class SVideoView: NSView {
     var insideControls: Bool {
         guard let window = window else {return false}
         let point = self.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+        if pipControls != nil {
+            if NSPointInRect(point, bounds) {
+                return !controls.isHidden
+            }
+        }
         return NSPointInRect(point, controls.frame) && !controls.isHidden
     }
     

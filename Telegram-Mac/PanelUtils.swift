@@ -17,7 +17,7 @@ import TelegramCore
 let mediaExts:[String] = ["png","jpg","jpeg","tiff", "heic","mp4","mov","avi", "gif", "m4v"]
 let photoExts:[String] = ["png","jpg","jpeg","tiff", "heic"]
 let videoExts:[String] = ["mp4","mov","avi", "m4v"]
-let audioExts:[String] = ["mp3","wav", "m4a"]
+let audioExts:[String] = ["mp3","wav", "m4a", "ogg"]
 
 func filePanel(with exts:[String]? = nil, allowMultiple:Bool = true, canChooseDirectories: Bool = false, for window:Window, completion:@escaping ([String]?)->Void) {
     delay(0.01, closure: {

@@ -495,6 +495,8 @@ public final class L10n {
   public static var autoremoveMessagesWeek1: String  { return L10n.tr("Localizable", "AutoremoveMessages.Week1") }
   /// Auto-Deletion
   public static var autoremoveMessagesTitleDeleteOnly: String  { return L10n.tr("Localizable", "AutoremoveMessages.Title.DeleteOnly") }
+  /// Preview
+  public static var avatarPreview: String  { return L10n.tr("Localizable", "Avatar.Preview") }
   /// Preferences…
   public static var bofnm1cWTitle: String  { return L10n.tr("Localizable", "BOF-NM-1cW.title") }
   /// Any details such as age, occupation or city.\nExample: 23 y.o. designer from San Francisco
@@ -905,6 +907,36 @@ public final class L10n {
   public static var channelUsernameAboutGroup: String  { return L10n.tr("Localizable", "Channel.UsernameAboutGroup") }
   /// USER RESTRICTIONS
   public static var channelUserRestriction: String  { return L10n.tr("Localizable", "Channel.UserRestriction") }
+  /// Admin Rights
+  public static var channelAddBotAdminRights: String  { return L10n.tr("Localizable", "Channel.AddBot.AdminRights") }
+  /// Admin
+  public static var channelAddBotCustomTitle: String  { return L10n.tr("Localizable", "Channel.AddBot.CustomTitle") }
+  /// Add Bot
+  public static var channelAddBotTitle: String  { return L10n.tr("Localizable", "Channel.AddBot.Title") }
+  /// Add Bot as Admin
+  public static var channelAddBotButtonAdmin: String  { return L10n.tr("Localizable", "Channel.AddBot.Button.Admin") }
+  /// Add Bot as Member
+  public static var channelAddBotButtonMember: String  { return L10n.tr("Localizable", "Channel.AddBot.Button.Member") }
+  /// Are you sure you want to add this bot as an admin in the group %@?
+  public static func channelAddBotConfirmInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.AddBot.Confirm.Info", p1)
+  }
+  /// Add as Admin?
+  public static var channelAddBotConfirmOkAdmin: String  { return L10n.tr("Localizable", "Channel.AddBot.Confirm.Ok.Admin") }
+  /// Add as Member?
+  public static var channelAddBotConfirmOkMember: String  { return L10n.tr("Localizable", "Channel.AddBot.Confirm.Ok.Member") }
+  /// Add Bot as Admin?
+  public static var channelAddBotConfirmTitleAdmin: String  { return L10n.tr("Localizable", "Channel.AddBot.Confirm.Title.Admin") }
+  /// Add Bot as Member?
+  public static var channelAddBotConfirmTitleMember: String  { return L10n.tr("Localizable", "Channel.AddBot.Confirm.Title.Member") }
+  /// You successfully added "%@" to "%@" as admin.
+  public static func channelAddBotSuccessAdmin(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.AddBot.Success.Admin", p1, p2)
+  }
+  /// You successfully added "%@" to "%@" as member
+  public static func channelAddBotSuccessMember(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.AddBot.Success.Member", p1, p2)
+  }
   /// This Admin will be able to add new admins with the same (or more limited) permissions than he/she has.
   public static var channelAdminAdminAccess: String  { return L10n.tr("Localizable", "Channel.Admin.AdminAccess") }
   /// This admin will not be able to add new admins.
@@ -1425,10 +1457,14 @@ public final class L10n {
   public static var channelMembersAddMembers: String  { return L10n.tr("Localizable", "ChannelMembers.AddMembers") }
   /// Add Subscribers
   public static var channelMembersAddSubscribers: String  { return L10n.tr("Localizable", "ChannelMembers.AddSubscribers") }
+  /// CONTACTS IN THIS CHANNEL
+  public static var channelMembersContacts: String  { return L10n.tr("Localizable", "ChannelMembers.Contacts") }
   /// Invite via Link
   public static var channelMembersInviteLink: String  { return L10n.tr("Localizable", "ChannelMembers.InviteLink") }
   /// Only channel admins can see this list.
   public static var channelMembersMembersListDesc: String  { return L10n.tr("Localizable", "ChannelMembers.MembersListDesc") }
+  /// OTHER SUBSCRIBERS
+  public static var channelMembersOtherMembers: String  { return L10n.tr("Localizable", "ChannelMembers.OtherMembers") }
   /// Add Members
   public static var channelMembersSelectTitle: String  { return L10n.tr("Localizable", "ChannelMembers.Select.Title") }
   /// OVERVIEW
@@ -1993,6 +2029,8 @@ public final class L10n {
   public static var chatContextTranslate: String  { return L10n.tr("Localizable", "Chat.Context.Translate") }
   /// Unarchive
   public static var chatContextUnarchive: String  { return L10n.tr("Localizable", "Chat.Context.Unarchive") }
+  /// View Statistics
+  public static var chatContextViewStatistics: String  { return L10n.tr("Localizable", "Chat.Context.ViewStatistics") }
   /// Cancel
   public static var chatContextBlockGroupCancel: String  { return L10n.tr("Localizable", "Chat.Context.BlockGroup.Cancel") }
   /// Block Group
@@ -2027,6 +2065,14 @@ public final class L10n {
   public static var chatContextForwardMore: String  { return L10n.tr("Localizable", "Chat.Context.Forward.More") }
   /// Set As Quick
   public static var chatContextReactionQuick: String  { return L10n.tr("Localizable", "Chat.Context.Reaction.Quick") }
+  /// Save for Notifications
+  public static var chatContextSaveRingtoneAdd: String  { return L10n.tr("Localizable", "Chat.Context.SaveRingtone.Add") }
+  /// Ringtone successfully saved
+  public static var chatContextSaveRingtoneAddSuccess: String  { return L10n.tr("Localizable", "Chat.Context.SaveRingtone.AddSuccess") }
+  /// Remove Ringtone
+  public static var chatContextSaveRingtoneRemove: String  { return L10n.tr("Localizable", "Chat.Context.SaveRingtone.Remove") }
+  /// Ringtone successfully removed
+  public static var chatContextSaveRingtoneRemoveSuccess: String  { return L10n.tr("Localizable", "Chat.Context.SaveRingtone.RemoveSuccess") }
   /// Reschedule
   public static var chatContextScheduledReschedule: String  { return L10n.tr("Localizable", "Chat.Context.Scheduled.Reschedule") }
   /// Send Now
@@ -2351,6 +2397,8 @@ public final class L10n {
   }
   /// Updated just now
   public static var chatLiveLocationUpdatedNow: String  { return L10n.tr("Localizable", "Chat.LiveLocation.UpdatedNow") }
+  /// Delete for All
+  public static var chatMessageDeleteForAll: String  { return L10n.tr("Localizable", "Chat.Message.DeleteForAll") }
   /// Delete for everyone
   public static var chatMessageDeleteForEveryone: String  { return L10n.tr("Localizable", "Chat.Message.DeleteForEveryone") }
   /// Delete for me
@@ -2865,6 +2913,10 @@ public final class L10n {
   }
   /// You started a [voice chat](open)
   public static var chatServiceVoiceChatStartedYou: String  { return L10n.tr("Localizable", "Chat.Service.VoiceChatStartedYou") }
+  /// You have just successfully transferred data from the "%@" button to the bot.
+  public static func chatServiceWebData(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.WebData", p1)
+  }
   /// You
   public static var chatServiceYou: String  { return L10n.tr("Localizable", "Chat.Service.You") }
   /// Cancelled
@@ -2967,16 +3019,16 @@ public final class L10n {
   public static func chatServiceUpdateThemeYou(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.UpdateTheme.You", p1)
   }
-  /// Voice chat ended (%1$@)
-  public static func chatServiceVoiceChatFinishedChannel(_ p1: String) -> String {
-    return L10n.tr("Localizable", "Chat.Service.VoiceChatFinished.Channel", p1)
+  /// Live stream ended (%1$@)
+  public static func chatServiceVoiceChatFinishedChannel1(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.VoiceChatFinished.Channel1", p1)
   }
-  /// [Voice Chat](open) scheduled for %@
-  public static func chatServiceVoiceChatScheduledChannel(_ p1: String) -> String {
-    return L10n.tr("Localizable", "Chat.Service.VoiceChatScheduled.Channel", p1)
+  /// [Live Stream](open) scheduled for %@
+  public static func chatServiceVoiceChatScheduledChannel1(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.VoiceChatScheduled.Channel1", p1)
   }
-  /// [Voice Chat](open) started
-  public static var chatServiceVoiceChatStartedChannel: String  { return L10n.tr("Localizable", "Chat.Service.VoiceChatStarted.Channel") }
+  /// [Live stream](open) started
+  public static var chatServiceVoiceChatStartedChannel1: String  { return L10n.tr("Localizable", "Chat.Service.VoiceChatStarted.Channel1") }
   /// %d
   public static func chatTitleCommentsCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Title.Comments_countable", p1)
@@ -3367,6 +3419,8 @@ public final class L10n {
   public static var chatListContextPreview: String  { return L10n.tr("Localizable", "ChatList.Context.Preview") }
   /// Return to Group
   public static var chatListContextReturnGroup: String  { return L10n.tr("Localizable", "ChatList.Context.ReturnGroup") }
+  /// Sound
+  public static var chatListContextSound: String  { return L10n.tr("Localizable", "ChatList.Context.Sound") }
   /// Unmute
   public static var chatListContextUnmute: String  { return L10n.tr("Localizable", "ChatList.Context.Unmute") }
   /// Unpin
@@ -3689,16 +3743,16 @@ public final class L10n {
   public static func chatListServiceVideoCallOutgoing(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatList.Service.VideoCall.outgoing", p1)
   }
-  /// voice chat ended (%1$@)
-  public static func chatListServiceVoiceChatFinishedChannel(_ p1: String) -> String {
-    return L10n.tr("Localizable", "ChatList.Service.VoiceChatFinished.Channel", p1)
+  /// Live stream ended (%1$@)
+  public static func chatListServiceVoiceChatFinishedChannel1(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatList.Service.VoiceChatFinished.Channel1", p1)
   }
-  /// voice chat scheduled for %@
-  public static func chatListServiceVoiceChatScheduledChannel(_ p1: String) -> String {
-    return L10n.tr("Localizable", "ChatList.Service.VoiceChatScheduled.Channel", p1)
+  /// live stream scheduled for %@
+  public static func chatListServiceVoiceChatScheduledChannel1(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChatList.Service.VoiceChatScheduled.Channel1", p1)
   }
-  /// voice chat started
-  public static var chatListServiceVoiceChatStartedChannel: String  { return L10n.tr("Localizable", "ChatList.Service.VoiceChatStarted.Channel") }
+  /// Live stream started
+  public static var chatListServiceVoiceChatStartedChannel1: String  { return L10n.tr("Localizable", "ChatList.Service.VoiceChatStarted.Channel1") }
   /// Archive
   public static var chatListSwipingArchive: String  { return L10n.tr("Localizable", "ChatList.Swiping.Archive") }
   /// Delete
@@ -3733,6 +3787,10 @@ public final class L10n {
   public static func chatServiceUserJoinedGroupByRequest(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatService.UserJoinedGroupByRequest", p1)
   }
+  /// Colorful
+  public static var chatThemeColorful: String  { return L10n.tr("Localizable", "ChatTheme.Colorful") }
+  /// Chat Theme
+  public static var chatThemeTheme: String  { return L10n.tr("Localizable", "ChatTheme.Theme") }
   /// Report Messages
   public static var chatTitleReportMessages: String  { return L10n.tr("Localizable", "ChatTitle.ReportMessages") }
   /// Default
@@ -3991,6 +4049,8 @@ public final class L10n {
   public static var contextOpenInQuickLook: String  { return L10n.tr("Localizable", "Context.OpenInQuickLook") }
   /// Remove
   public static var contextRecentGifRemove: String  { return L10n.tr("Localizable", "Context.RecentGifRemove") }
+  /// Remove
+  public static var contextRemove: String  { return L10n.tr("Localizable", "Context.Remove") }
   /// Remove
   public static var contextRemoveFaveSticker: String  { return L10n.tr("Localizable", "Context.RemoveFaveSticker") }
   /// Save as...
@@ -5745,7 +5805,7 @@ public final class L10n {
   public static var mediaSenderDiscardChangesOK: String  { return L10n.tr("Localizable", "MediaSender.DiscardChanges.OK") }
   /// Are you sure you want to discard all changes?
   public static var mediaSenderDiscardChangesText: String  { return L10n.tr("Localizable", "MediaSender.DiscardChanges.Text") }
-  /// INVOICE
+  /// Invoice
   public static var messageInvoiceLabel: String  { return L10n.tr("Localizable", "Message.InvoiceLabel") }
   /// Payment: %@
   public static func messagePaymentSent(_ p1: String) -> String {
@@ -6273,6 +6333,20 @@ public final class L10n {
   public static var notificationSettingsTurnOnTextText: String  { return L10n.tr("Localizable", "NotificationSettings.TurnOn.Text.Text") }
   /// Allow Notifications
   public static var notificationSettingsTurnOnTextTitle: String  { return L10n.tr("Localizable", "NotificationSettings.TurnOn.Text.Title") }
+  /// Notification Sound
+  public static var notificationSoundTitle: String  { return L10n.tr("Localizable", "NotificationSound.Title") }
+  /// Voice Message
+  public static var notificationSoundToneVoice: String  { return L10n.tr("Localizable", "NotificationSound.Tone.Voice") }
+  /// In context menu of any short mp3 file in chat and select "Save for Notifications". It will appear here.
+  public static var notificationSoundTonesInfo: String  { return L10n.tr("Localizable", "NotificationSound.Tones.Info") }
+  /// The file should be less or equal to %@
+  public static func notificationSoundTonesSizeError(_ p1: String) -> String {
+    return L10n.tr("Localizable", "NotificationSound.Tones.SizeError", p1)
+  }
+  /// TELEGRAM TONES
+  public static var notificationSoundTonesTitle: String  { return L10n.tr("Localizable", "NotificationSound.Tones.Title") }
+  /// Upload Tone
+  public static var notificationSoundTonesUpload: String  { return L10n.tr("Localizable", "NotificationSound.Tones.Upload") }
   /// Mute
   public static var notificationsSnooze: String  { return L10n.tr("Localizable", "Notifications.Snooze") }
   /// Alert
@@ -6795,6 +6869,8 @@ public final class L10n {
   public static var peerInfoBlackList: String  { return L10n.tr("Localizable", "PeerInfo.BlackList") }
   /// Block User
   public static var peerInfoBlockUser: String  { return L10n.tr("Localizable", "PeerInfo.BlockUser") }
+  /// Add To Group or Channel
+  public static var peerInfoBotAddTo: String  { return L10n.tr("Localizable", "PeerInfo.BotAddTo") }
   /// Thank you! Your report will be reviewed by our team soon.
   public static var peerInfoChannelReported: String  { return L10n.tr("Localizable", "PeerInfo.ChannelReported") }
   /// Channel Type
@@ -6981,6 +7057,8 @@ public final class L10n {
   public static var peerInfoBotSettings: String  { return L10n.tr("Localizable", "PeerInfo.Bot.Settings") }
   /// Share
   public static var peerInfoBotShare: String  { return L10n.tr("Localizable", "PeerInfo.Bot.Share") }
+  /// This bot is able to manage group or channel
+  public static var peerInfoBotAddToInfo: String  { return L10n.tr("Localizable", "PeerInfo.BotAddTo.Info") }
   /// has access to messages
   public static var peerInfoBotStatusHasAccess: String  { return L10n.tr("Localizable", "PeerInfo.BotStatus.HasAccess") }
   /// has no access to messages
@@ -7325,6 +7403,18 @@ public final class L10n {
   }
   /// Invite to Group via Link
   public static var peerSelectInviteViaLink: String  { return L10n.tr("Localizable", "PeerSelect.InviteViaLink") }
+  /// Change Phone Number
+  public static var phoneNumberChangePhoneNumber: String  { return L10n.tr("Localizable", "PhoneNumber.ChangePhoneNumber") }
+  /// We will send an SMS with a confirmation code to your new number.
+  public static var phoneNumberInfo: String  { return L10n.tr("Localizable", "PhoneNumber.Info") }
+  /// Send Code
+  public static var phoneNumberSendCode: String  { return L10n.tr("Localizable", "PhoneNumber.SendCode") }
+  /// NEW PHONE NUMBER
+  public static var phoneNumberTitle: String  { return L10n.tr("Localizable", "PhoneNumber.Title") }
+  /// We have sent you SMS with a confirmation code, please enter to finish process.
+  public static var phoneNumberCodeInfo: String  { return L10n.tr("Localizable", "PhoneNumber.Code.Info") }
+  /// Enter Code
+  public static var phoneNumberCodeTitle: String  { return L10n.tr("Localizable", "PhoneNumber.Code.Title") }
   /// Sorry, public polls can’t be forwarded to channels.
   public static var pollForwardError: String  { return L10n.tr("Localizable", "Poll.Forward.Error") }
   /// [Collapse]()
@@ -7965,10 +8055,14 @@ public final class L10n {
   public static var reportReasonChildAbuse: String  { return L10n.tr("Localizable", "ReportReason.ChildAbuse") }
   /// Copyright
   public static var reportReasonCopyright: String  { return L10n.tr("Localizable", "ReportReason.Copyright") }
+  /// Illegal Drugs
+  public static var reportReasonDrugs: String  { return L10n.tr("Localizable", "ReportReason.Drugs") }
   /// Fake
   public static var reportReasonFake: String  { return L10n.tr("Localizable", "ReportReason.Fake") }
   /// Other
   public static var reportReasonOther: String  { return L10n.tr("Localizable", "ReportReason.Other") }
+  /// Personal Details
+  public static var reportReasonPersonalDetails: String  { return L10n.tr("Localizable", "ReportReason.PersonalDetails") }
   /// Pornography
   public static var reportReasonPorno: String  { return L10n.tr("Localizable", "ReportReason.Porno") }
   /// Report
@@ -8629,6 +8723,8 @@ public final class L10n {
   public static var selectPeersTitleSearchMembers: String  { return L10n.tr("Localizable", "SelectPeers.Title.SearchMembers") }
   /// Select Chat
   public static var selectPeersTitleSelectChat: String  { return L10n.tr("Localizable", "SelectPeers.Title.SelectChat") }
+  /// Add to Group or Channel
+  public static var selectPeersTitleSelectGroupOrChannel: String  { return L10n.tr("Localizable", "SelectPeers.Title.SelectGroupOrChannel") }
   /// clear
   public static var separatorClear: String  { return L10n.tr("Localizable", "Separator.Clear") }
   /// show less
@@ -8877,6 +8973,8 @@ public final class L10n {
   public static var shareExtensionUnauthorizedDescription: String  { return L10n.tr("Localizable", "ShareExtension.Unauthorized.Description") }
   /// OK
   public static var shareExtensionUnauthorizedOK: String  { return L10n.tr("Localizable", "ShareExtension.Unauthorized.OK") }
+  /// Select
+  public static var shareModalSelect: String  { return L10n.tr("Localizable", "ShareModal.Select") }
   /// Forward to...
   public static var shareModalSearchForwardPlaceholder: String  { return L10n.tr("Localizable", "ShareModal.Search.ForwardPlaceholder") }
   /// Share to...
@@ -9255,7 +9353,7 @@ public final class L10n {
   public static func stickerPackAdd1Zero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StickerPack.Add1_zero", p1)
   }
-  /// Show More
+  /// Discover More
   public static var stickerPackShowMore: String  { return L10n.tr("Localizable", "StickerPack.ShowMore") }
   /// Featured Packs
   public static var stickerPackFeaturedTitle: String  { return L10n.tr("Localizable", "StickerPack.Featured.Title") }
@@ -10801,6 +10899,32 @@ public final class L10n {
   public static var voiceChatStatusSpeaking: String  { return L10n.tr("Localizable", "VoiceChat.Status.Speaking") }
   /// Live Stream
   public static var voiceChatStatusStream: String  { return L10n.tr("Localizable", "VoiceChat.Status.Stream") }
+  /// %d
+  public static func voiceChatStatusViewersCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.Status.Viewers_countable", p1)
+  }
+  /// %d viewers
+  public static func voiceChatStatusViewersFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.Status.Viewers_few", p1)
+  }
+  /// %d viewers
+  public static func voiceChatStatusViewersMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.Status.Viewers_many", p1)
+  }
+  /// %d viewer
+  public static func voiceChatStatusViewersOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.Status.Viewers_one", p1)
+  }
+  /// %d viewers
+  public static func voiceChatStatusViewersOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.Status.Viewers_other", p1)
+  }
+  /// %d viewers
+  public static func voiceChatStatusViewersTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "VoiceChat.Status.Viewers_two", p1)
+  }
+  /// no viewers
+  public static var voiceChatStatusViewersZero: String  { return L10n.tr("Localizable", "VoiceChat.Status.Viewers_zero") }
   /// wants to speak
   public static var voiceChatStatusWantsSpeak: String  { return L10n.tr("Localizable", "VoiceChat.Status.WantsSpeak") }
   /// This is you
@@ -10921,6 +11045,56 @@ public final class L10n {
   public static var wallpaperPreviewHeader: String  { return L10n.tr("Localizable", "WallpaperPreview.Header") }
   /// Paste and Match Style
   public static var weT3VZwkTitle: String  { return L10n.tr("Localizable", "WeT-3V-zwk.title") }
+  /// Install Bot
+  public static var webAppInstallBot: String  { return L10n.tr("Localizable", "WebApp.InstallBot") }
+  /// Reload
+  public static var webAppReload: String  { return L10n.tr("Localizable", "WebApp.Reload") }
+  /// Remove Bot
+  public static var webAppRemoveBot: String  { return L10n.tr("Localizable", "WebApp.RemoveBot") }
+  /// Webpage
+  public static var webAppTitle: String  { return L10n.tr("Localizable", "WebApp.Title") }
+  /// Allow
+  public static var webAppAccessAllow: String  { return L10n.tr("Localizable", "WebApp.Access.Allow") }
+  /// Are you sure you want to grant access to %@ to your microphone?
+  public static func webAppAccessAudio(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.Access.Audio", p1)
+  }
+  /// Are you sure you want to grant access to %@ to your microphone and camera?
+  public static func webAppAccessAudioVideo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.Access.AudioVideo", p1)
+  }
+  /// Are you sure you want to grant access to %@ to your camera?
+  public static func webAppAccessVideo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.Access.Video", p1)
+  }
+  /// "%@" asks your permission to be added as an option to your attachments menu so you access it from any chat.
+  public static func webAppAttachConfirm(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.Attach.Confirm", p1)
+  }
+  /// Sorry, %@ doesn't seem to exist.
+  public static func webAppAttachDoenstExist(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.Attach.DoenstExist", p1)
+  }
+  /// Sorry, %@ can't be used from attach menu.
+  public static func webAppAttachNotSupport(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.Attach.NotSupport", p1)
+  }
+  /// You sucessfully added "%@" to attach menu.
+  public static func webAppAttachSuccess(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.Attach.Success", p1)
+  }
+  /// Add
+  public static var webAppAttachConfirmOK: String  { return L10n.tr("Localizable", "WebApp.Attach.Confirm.OK") }
+  /// You sucessfully removed "%@" from attach menu.
+  public static func webAppAttachRemoveSuccess(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.AttachRemove.Success", p1)
+  }
+  /// %@ would like to open its web app to proceed.\n\nIt will be able to access your IP adress and basic device info.
+  public static func webAppFirstOpenInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.FirstOpen.Info", p1)
+  }
+  /// Open Web App
+  public static var webAppFirstOpenTitle: String  { return L10n.tr("Localizable", "WebApp.FirstOpen.Title") }
   /// Disconnect
   public static var webAuthorizationsLogout: String  { return L10n.tr("Localizable", "WebAuthorizations.Logout") }
   /// Disconnect All Websites

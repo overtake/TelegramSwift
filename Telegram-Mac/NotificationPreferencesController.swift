@@ -55,47 +55,68 @@ private func soundName(sound: PeerMessageSound) -> String {
                 return classicSoundNamePaths[Int(id)]
             }
             return "Sound \(id)"
+    case let .cloud(fileId):
+        return "Sound \(fileId)"
     }
 }
 
-public func localizedPeerNotificationSoundString(sound: PeerMessageSound, default: PeerMessageSound? = nil) -> String {
+public func localizedPeerNotificationSoundString(sound: PeerMessageSound, default: PeerMessageSound? = nil, list: NotificationSoundList? = nil) -> String {
     switch sound {
-        case .default:
-            if let defaultSound = `default` {
-                let name = soundName(sound: defaultSound)
-                let actualName: String
-                if name.isEmpty {
-                    actualName = soundName(sound: .bundledModern(id: 0))
-                } else {
-                    actualName = name
-                }
-                return strings().peerInfoNotificationsDefaultSound(actualName)
+    case .`default`:
+        if let defaultSound = `default` {
+            let name = soundName(sound: defaultSound)
+            let actualName: String
+            if name.isEmpty {
+                actualName = soundName(sound: .bundledModern(id: 0))
             } else {
-                return strings().peerInfoNotificationsDefault
+                actualName = name
             }
-        default:
-            return soundName(sound: sound)
+            return strings().peerInfoNotificationsDefaultSound(actualName)
+        } else {
+            return strings().peerInfoNotificationsDefault
+        }
+    case let .cloud(fileId):
+        if let list = list, let sound = list.sounds.first(where: { $0.file.fileId.id == fileId }) {
+            if sound.file.fileName == nil || sound.file.fileName!.isEmpty, sound.file.isVoice {
+                return strings().notificationSoundToneVoice
+            }
+            return (sound.file.fileName ?? "#").nsstring.deletingPathExtension
+        } else {
+            return strings().peerInfoNotificationsDefault
+        }
+    default:
+        return soundName(sound: sound)
     }
 }
 
-func fileNameForNotificationSound(_ sound: PeerMessageSound, defaultSound: PeerMessageSound?) -> String {
+func fileNameForNotificationSound(postbox: Postbox, sound: PeerMessageSound, defaultSound: PeerMessageSound?, list: NotificationSoundList? = nil) -> Signal<TelegramMediaResource?, NoError> {
     switch sound {
-        case .none:
-            return ""
-        case .default:
-            if let defaultSound = defaultSound {
-                if case .default = defaultSound {
-                    return "\(100)"
-                } else {
-                    return fileNameForNotificationSound(defaultSound, defaultSound: nil)
-                }
+    case .none:
+        return .single(nil)
+    case .`default`:
+        if let defaultSound = defaultSound {
+            if case .default = defaultSound {
+                return .single(SoundEffectPlay.resource(name: "100", type: "m4a"))
             } else {
-                return "default"
+                return fileNameForNotificationSound(postbox: postbox, sound: defaultSound, defaultSound: nil, list: list)
             }
-        case let .bundledModern(id):
-            return "\(id + 100)"
-        case let .bundledClassic(id):
-            return "\(id + 2)"
+        } else {
+            return .single(LocalFileReferenceMediaResource(localFilePath: "default", randomId: arc4random64()))
+        }
+    case let .bundledModern(id):
+        return .single(SoundEffectPlay.resource(name: "\(id + 100)", type: "m4a"))
+    case let .bundledClassic(id):
+        return .single(SoundEffectPlay.resource(name: "\(id + 2)", type: "m4a"))
+    case let .cloud(fileId):
+        if let list = list {
+            if let file = list.sounds.first(where: { $0.file.fileId.id == fileId})?.file {
+                _ = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: .standalone(resource: file.resource), ranges: nil, statsCategory: .audio, reportResultStatus: true).start()
+                return postbox.mediaBox.resourceData(id: file.resource.id) |> filter { $0.complete } |> take(1) |> map { _ in
+                    return file.resource
+                }
+            }
+        }
+        return .single(nil)
     }
 }
 
@@ -141,7 +162,7 @@ private final class NotificationArguments {
     let resetAllNotifications:() -> Void
     let toggleMessagesPreview:() -> Void
     let toggleNotifications:() -> Void
-    let notificationTone:(PeerMessageSound) -> Void
+    let notificationTone:() -> Void
     let toggleIncludeUnreadChats:(Bool) -> Void
     let toggleCountUnreadMessages:(Bool) -> Void
     let toggleIncludeGroups:(Bool) -> Void
@@ -152,7 +173,7 @@ private final class NotificationArguments {
     let toggleBadge: (Bool)->Void
     let toggleRequestUserAttention: ()->Void
     let toggleInAppSounds:(Bool)->Void
-    init(resetAllNotifications: @escaping() -> Void, toggleMessagesPreview:@escaping() -> Void, toggleNotifications:@escaping() -> Void, notificationTone:@escaping(PeerMessageSound) -> Void, toggleIncludeUnreadChats:@escaping(Bool) -> Void, toggleCountUnreadMessages:@escaping(Bool) -> Void, toggleIncludeGroups:@escaping(Bool) -> Void, toggleIncludeChannels:@escaping(Bool) -> Void, allAcounts: @escaping()-> Void, snoof: @escaping()-> Void, updateJoinedNotifications: @escaping(Bool) -> Void, toggleBadge: @escaping(Bool)->Void, toggleRequestUserAttention: @escaping ()->Void, toggleInAppSounds: @escaping(Bool)->Void) {
+    init(resetAllNotifications: @escaping() -> Void, toggleMessagesPreview:@escaping() -> Void, toggleNotifications:@escaping() -> Void, notificationTone:@escaping() -> Void, toggleIncludeUnreadChats:@escaping(Bool) -> Void, toggleCountUnreadMessages:@escaping(Bool) -> Void, toggleIncludeGroups:@escaping(Bool) -> Void, toggleIncludeChannels:@escaping(Bool) -> Void, allAcounts: @escaping()-> Void, snoof: @escaping()-> Void, updateJoinedNotifications: @escaping(Bool) -> Void, toggleBadge: @escaping(Bool)->Void, toggleRequestUserAttention: @escaping ()->Void, toggleInAppSounds: @escaping(Bool)->Void) {
         self.resetAllNotifications = resetAllNotifications
         self.toggleMessagesPreview = toggleMessagesPreview
         self.toggleNotifications = toggleNotifications
@@ -190,7 +211,7 @@ private let _id_turnon_notifications_title = InputDataIdentifier("_id_turnon_not
 
 private let _id_message_effect = InputDataIdentifier("_id_message_effect")
 
-private func notificationEntries(settings:InAppNotificationSettings, globalSettings: GlobalNotificationSettingsSet, accounts: [AccountWithInfo], unAuthStatus: UNUserNotifications.AuthorizationStatus, arguments: NotificationArguments) -> [InputDataEntry] {
+private func notificationEntries(settings:InAppNotificationSettings, soundList: NotificationSoundList?, globalSettings: GlobalNotificationSettingsSet, accounts: [AccountWithInfo], unAuthStatus: UNUserNotifications.AuthorizationStatus, arguments: NotificationArguments) -> [InputDataEntry] {
     
     var entries:[InputDataEntry] = []
     
@@ -249,31 +270,8 @@ private func notificationEntries(settings:InAppNotificationSettings, globalSetti
     })))
     index += 1
     
-    var tonesItems:[SPopoverItem] = []
     
-    tonesItems.append(SPopoverItem(localizedPeerNotificationSoundString(sound: .default), {
-        arguments.notificationTone(.default)
-    }))
-
-    tonesItems.append(SPopoverItem(localizedPeerNotificationSoundString(sound: .none), {
-        arguments.notificationTone(.none)
-    }))
-    
-    
-    for i in 0 ..< 12 {
-        let sound: PeerMessageSound = .bundledModern(id: Int32(i))
-        tonesItems.append(SPopoverItem(localizedPeerNotificationSoundString(sound: sound), {
-            arguments.notificationTone(sound)
-        }))
-    }
-    for i in 0 ..< 8 {
-        let sound: PeerMessageSound = .bundledClassic(id: Int32(i))
-        tonesItems.append(SPopoverItem(localizedPeerNotificationSoundString(sound: sound), {
-            arguments.notificationTone(sound)
-        }))
-    }
-    
-    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_tone, data: InputDataGeneralData(name: strings().notificationSettingsNotificationTone, color: theme.colors.text, type: .contextSelector(localizedPeerNotificationSoundString(sound: settings.tone), tonesItems), viewType: .innerItem)))
+    entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_tone, data: InputDataGeneralData(name: strings().notificationSettingsNotificationTone, color: theme.colors.text, type: .nextContext(localizedPeerNotificationSoundString(sound: settings.tone, list: soundList)), viewType: .innerItem, action: arguments.notificationTone)))
     index += 1
 
     entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_bounce, data: InputDataGeneralData(name: strings().notificationSettingsBounceDockIcon, color: theme.colors.text, type: .switchable(settings.requestUserAttention), viewType: .innerItem, action: {
@@ -377,14 +375,8 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedDisplayPreviews(!$0.displayPreviews)}).start()
     }, toggleNotifications: {
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedEnables(!$0.enabled)}).start()
-    }, notificationTone: { tone in
-        if tone == .default {
-            
-        } else if tone != .none {
-            let name = fileNameForNotificationSound(tone, defaultSound: nil)
-            SoundEffectPlay.play(postbox: context.account.postbox, name: name, type: "m4a")
-        }
-        _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedTone(tone)}).start()
+    }, notificationTone: {
+        context.bindings.rootNavigation().push(NotificationSoundController(context: context))
     }, toggleIncludeUnreadChats: { enable in
         _ = updateInAppNotificationSettingsInteractively(accountManager: context.sharedContext.accountManager, {$0.withUpdatedTotalUnreadCountDisplayStyle(enable ? .raw : .filtered)}).start()
     }, toggleCountUnreadMessages: { enable in
@@ -437,12 +429,13 @@ func NotificationPreferencesController(_ context: AccountContext, focusOnItemTag
     
     
     
-    let entriesSignal = combineLatest(queue: prepareQueue, appNotificationSettings(accountManager: context.sharedContext.accountManager), globalNotificationSettings(postbox: context.account.postbox), context.sharedContext.activeAccountsWithInfo |> map { $0.accounts }, UNUserNotifications.recurrentAuthorizationStatus(context)) |> map { inAppSettings, globalSettings, accounts, unAuthStatus -> [InputDataEntry] in
-        return notificationEntries(settings: inAppSettings, globalSettings: globalSettings, accounts: accounts, unAuthStatus: unAuthStatus, arguments: arguments)
+    let entriesSignal = combineLatest(queue: prepareQueue, appNotificationSettings(accountManager: context.sharedContext.accountManager), globalNotificationSettings(postbox: context.account.postbox), context.sharedContext.activeAccountsWithInfo |> map { $0.accounts }, UNUserNotifications.recurrentAuthorizationStatus(context), context.engine.peers.notificationSoundList()) |> map { inAppSettings, globalSettings, accounts, unAuthStatus, soundList -> [InputDataEntry] in
+        return notificationEntries(settings: inAppSettings, soundList: soundList, globalSettings: globalSettings, accounts: accounts, unAuthStatus: unAuthStatus, arguments: arguments)
     }
 
     
-    let controller = InputDataController(dataSignal: entriesSignal |> map { InputDataSignalValue(entries: $0) }, title: strings().telegramNotificationSettingsViewController, hasDone: false, identifier: "notification-settings")
+    let controller = InputDataController(dataSignal: entriesSignal |> map { InputDataSignalValue(entries: $0) }, title: strings().telegramNotificationSettingsViewController, removeAfterDisappear: false, hasDone: false, identifier: "notification-settings")
+    
     
     
     controller.didLoaded = { controller, _ in

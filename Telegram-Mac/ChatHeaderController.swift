@@ -523,6 +523,9 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
     private let dismiss:ImageButton = ImageButton()
     private let loadMessageDisposable = MetaDisposable()
     private var pinnedMessage: ChatPinnedMessage?
+    
+    private var inlineButton: TitleButton? = nil
+    
     private let particleList: VerticalParticleListControl = VerticalParticleListControl()
     required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
 
@@ -622,6 +625,12 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
                 oldContainer.removeFromSuperview()
             }
             
+            if let message = pinnedMessage.message, let replyMarkup = pinnedMessage.message?.replyMarkup, replyMarkup.hasButtons, replyMarkup.rows.count == 1, replyMarkup.rows[0].buttons.count == 1 {
+                self.installReplyMarkup(replyMarkup.rows[0].buttons[0], message: message, animated: animated)
+            } else {
+                self.deinstallReplyMarkup(animated: animated)
+            }
+            
             self.container = newContainer
             self.node = newNode
         }
@@ -629,6 +638,45 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
 
         updateLocalizationAndTheme(theme: theme)
     }
+    
+    private func installReplyMarkup(_ button: ReplyMarkupButton, message: Message, animated: Bool) {
+        self.dismiss.isHidden = true
+        let current: TitleButton
+        if let view = self.inlineButton {
+            current = view
+        } else {
+            current = TitleButton()
+            current.autohighlight = false
+            current.scaleOnClick = true
+            
+            current.set(handler: { [weak self] _ in
+                self?.chatInteraction.processBotKeyboard(with: message).proccess(button, { _ in
+                    
+                })
+            }, for: .Click)
+            
+            if animated {
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+            
+            self.inlineButton = current
+            addSubview(current)
+        }
+        current.set(text: button.title, for: .Normal)
+        current.set(font: .medium(.text), for: .Normal)
+        current.set(color: theme.colors.underSelectedColor, for: .Normal)
+        current.set(background: theme.colors.accent, for: .Normal)
+        current.sizeToFit(NSMakeSize(6, 8), .zero, thatFit: false)
+        current.layer?.cornerRadius = current.frame.height / 2
+    }
+    private func deinstallReplyMarkup(animated: Bool) {
+        self.dismiss.isHidden = false
+        if let view = self.inlineButton {
+            performSubviewRemoval(view, animated: animated)
+            self.inlineButton = nil
+        }
+    }
+    
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
@@ -641,6 +689,11 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
         self.dismiss.sizeToFit()
         container.backgroundColor = theme.colors.background
         
+        if let current = inlineButton {
+            current.set(color: theme.colors.underSelectedColor, for: .Normal)
+            current.set(background: theme.colors.accent, for: .Normal)
+        }
+        
         needsLayout = true
     }
     
@@ -651,11 +704,19 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
  
     override func layout() {
         if let node = node {
-            node.measureSize(frame.width - (40 + (dismiss.isHidden ? 0 : 30)))
+            if let view = inlineButton {
+                node.measureSize(frame.width - (40 + view.frame.width))
+            } else {
+                node.measureSize(frame.width - (40 + (dismiss.isHidden ? 0 : 30)))
+            }
             container.setFrameSize(frame.width - (40 + (dismiss.isHidden ? 0 : 30)), node.size.height)
         }
         container.centerY(x: 24)
         dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
+        
+        if let view = inlineButton {
+            view.centerY(x: frame.width - 20 - view.frame.width)
+        }
         node?.setNeedDisplay()
     }
     

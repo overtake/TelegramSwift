@@ -204,7 +204,7 @@ private final class PlayerListHandlingView: View {
     override func layout() {
         super.layout()
         playPause.centerX()
-        playPause.centerY(addition: -3)
+        playPause.centerY(addition: -1)
         prev.centerY(x: playPause.frame.minX - prev.frame.width - 10)
         next.centerY(x: playPause.frame.maxX + 10)
         iteration.centerY(x: frame.width - iteration.frame.width)

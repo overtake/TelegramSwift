@@ -564,9 +564,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         var frame: NSRect = NSMakeRect(contentFrame.minX + item.elementsContentInset, item.replyOffset, reply.size.width, reply.size.height)
         if item.isBubbled, !item.hasBubble {
             if item.isIncoming {
-                frame.origin.x = contentFrame.maxX + 10
+                frame.origin.x = contentFrame.maxX + 6
             } else {
-                frame.origin.x = contentFrame.minX - reply.size.width - 10
+                frame.origin.x = contentFrame.minX - reply.size.width - 6
             }
             if item.isSharable || item.hasSource || item.commentsBubbleDataOverlay != nil {
                 if item.isIncoming {
@@ -756,7 +756,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     forwardAccessory = ChatBubbleAccessoryForward(frame: CGRect(origin: forwardNamePoint(item), size: forwardNameLayout.layoutSize))
                     rowView.addSubview(forwardAccessory!)
                 }
-                forwardAccessory?.updateText(layout: forwardNameLayout)
+                forwardAccessory?.updateText(layout: forwardNameLayout, replyView: self.replyView)
                 
             } else {
                 if let view = forwardAccessory {
@@ -1517,7 +1517,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             transition.updateFrame(view: view, frame: CGRect(origin: viaAccesoryPoint(item), size: view.frame.size))
         }
         
-        if let view = item.replyModel?.view {
+        if let view = item.replyModel?.view, view.superview == rowView {
             transition.updateFrame(view: view, frame: replyFrame(item))
             view.needsDisplay = true
         }
@@ -1599,30 +1599,31 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         guard let item = item as? ChatRowItem else { return }
         
         
-        let hitTestView = rowView.hitTest(location)
-        if hitTestView == rowView || hitTestView == nil {
-            if let avatar = avatar {
-                if NSPointInRect(location, avatar.frame) {
-                    return
+        if let item = self.item as? ChatRowItem, item.chatInteraction.presentation.state == .normal {
+            if self.hitTest(location) == nil || self.hitTest(location) == self || !clickInContent(point: location) || self.hitTest(location) == rowView || self.hitTest(location) == bubbleView || self.hitTest(location) == replyView {
+                if let avatar = avatar {
+                    if NSPointInRect(location, avatar.frame) {
+                        return
+                    }
                 }
-            }
-            let result: Bool
-            switch FastSettings.forceTouchAction {
-            case .edit:
-                result = item.editAction()
-            case .reply:
-                result = item.replyAction()
-            case .forward:
-                result = item.forwardAction()
-            case .previewMedia:
-                result = false
-            case .react:
-                result = item.reactAction()
-            }
-            if result {
-                focusAnimation(nil)
-            } else {
-             //   NSSound.beep()
+                let result: Bool
+                switch FastSettings.forceTouchAction {
+                case .edit:
+                    result = item.editAction()
+                case .reply:
+                    result = item.replyAction()
+                case .forward:
+                    result = item.forwardAction()
+                case .previewMedia:
+                    result = false
+                case .react:
+                    result = item.reactAction()
+                }
+                if result {
+                    focusAnimation(nil)
+                } else {
+                 //   NSSound.beep()
+                }
             }
         }
         

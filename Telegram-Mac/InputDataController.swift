@@ -21,7 +21,7 @@ public class InputDataModalController : ModalViewController {
     init(_ controller: InputDataController, modalInteractions: ModalInteractions? = nil, closeHandler: @escaping(@escaping()-> Void) -> Void = { $0() }, size: NSSize = NSMakeSize(380, 300)) {
         self.controller = controller
         self._modalInteractions = modalInteractions
-        self.controller._frameRect = NSMakeRect(0, 0, max(size.width, 330), size.height)
+        self.controller._frameRect = NSMakeRect(0, 0, max(size.width, 340), size.height)
         self.controller.prepareAllItems = true
         self.closeHandler = closeHandler
         super.init(frame: controller._frameRect)
@@ -133,10 +133,11 @@ public class InputDataModalController : ModalViewController {
         viewDidResized(frame.size)
     }
     
+    private var first: Bool = true
     public override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
         
-        updateSize(true)
+        updateSize(!first)
     }
     
     var dynamicSizeImpl:(()->Bool)? = nil
@@ -183,7 +184,8 @@ public class InputDataModalController : ModalViewController {
         
         controller.modalTransitionHandler = { [weak self] animated in
             if self?.dynamicSize == true {
-                self?.updateSize(animated)
+                self?.updateSize(animated && self?.first == false)
+                self?.first = false
             }
         }
     }
@@ -324,7 +326,14 @@ final class InputDataView : BackgroundView {
     }
     override func layout() {
         super.layout()
+        let size = tableView.frame.size
         tableView.frame = bounds
+        
+        if size.height > bounds.height {
+            self.tableView.beginTableUpdates()
+            self.tableView.layoutSubtreeIfNeeded()
+            self.tableView.endTableUpdates()
+        }
     }
 }
 
@@ -594,6 +603,7 @@ class InputDataController: GenericViewController<InputDataView> {
             }
             
             self.afterTransaction(self)
+
             self.modalTransitionHandler?(transition.animated)
             
             let wasReady: Bool = self.didSetReady

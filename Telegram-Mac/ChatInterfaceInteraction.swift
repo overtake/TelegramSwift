@@ -150,6 +150,7 @@ final class ChatInteraction : InterfaceObserver  {
     var blockContact: ()->Void = {}
     var openScheduledMessages: ()->Void = {}
     var openBank: (String)->Void = { _ in }
+    var afterSentTransition:()->Void = {}
     var getGradientOffsetRect:()->NSRect = {  return .zero }
     var contextHolder:()->Atomic<ChatLocationContextHolder?> = { Atomic(value: nil) }
     
@@ -390,8 +391,8 @@ final class ChatInteraction : InterfaceObserver  {
         
     }
     
-    func invokeInitialAction(includeAuto:Bool = false, animated: Bool = true) {
-        if let action = presentation.initialAction {
+    func invokeInitialAction(includeAuto:Bool = false, animated: Bool = true, action: ChatInitialAction? = nil) {
+        if let action = action ?? presentation.initialAction {
             switch action {
             case let .start(parameter: parameter, behavior: behavior):
                 var invoke:Bool = !includeAuto
@@ -461,6 +462,81 @@ final class ChatInteraction : InterfaceObserver  {
                 update(animated: animated, {
                     $0.withSelectionState().withoutInitialAction().withUpdatedRepotMode(reason)
                 })
+            case let .attachBot(botname, payload):
+                update({
+                    $0.withoutInitialAction()
+                })
+                
+                let context = self.context
+                
+                let installed: Signal<Peer?, NoError> = context.engine.messages.attachMenuBots() |> map { items in
+                    for item in items {
+                        if item.peer.username?.lowercased() == botname.lowercased() {
+                            return item.peer
+                        }
+                    }
+                    return nil
+                } |> take(1) |> deliverOnMainQueue
+                
+                let replyId = presentation.interfaceState.replyMessageId
+                let peerId = self.peerId
+                
+                let openAttach:(Peer)->Void = { [weak self] peer in
+                    
+                    let invoke:()->Void = { [weak self] in
+                        _ = showModalProgress(signal: context.engine.messages.getAttachMenuBot(botId: peer.id, cached: true), for: context.window).start(next: { attach in
+                            
+                            let thumbFile: TelegramMediaFile
+                            if let file = attach.icons[.macOSAnimated] {
+                                thumbFile = file
+                            } else {
+                                thumbFile = MenuAnimation.menu_folder_bot.file
+                            }
+                            
+                            showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, complete: self?.afterSentTransition), chatInteraction: self, thumbFile: thumbFile), for: context.window)
+                            
+                        })
+                    }
+                    if peer.isVerified {
+                        invoke()
+                    } else if let info = peer.botInfo {
+                        if info.flags.contains(.canBeAddedToAttachMenu) {
+                            invoke()
+                        } else {
+                            if FastSettings.shouldConfirmWebApp(peer.id) {
+                                confirm(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(peer.displayTitle), successHandler: { _ in
+                                    invoke()
+                                    FastSettings.markWebAppAsConfirmed(peer.id)
+                                })
+                            } else {
+                                invoke()
+                            }
+                        }
+                    }
+                }
+                _ = installed.start(next: { peer in
+                    if let peer = peer {
+                        openAttach(peer)
+                    } else {
+                        _ = showModalProgress(signal: resolveUsername(username: botname, context: context), for: context.window).start(next: { peer in
+                            if let peer = peer {
+                                if let botInfo = peer.botInfo {
+                                    if botInfo.flags.contains(.canBeAddedToAttachMenu) {
+                                        installAttachMenuBot(context: context, peer: peer, completion: { value in
+                                            if value {
+                                                openAttach(peer)
+                                            }
+                                        })
+                                    } else {
+                                        openAttach(peer)
+                                    }
+                                }
+                            } else {
+                                alert(for: context.window, info: strings().webAppAttachDoenstExist("@\(botname)"))
+                            }
+                        })
+                    }
+                })
             case let .joinVoiceChat(joinHash):
                 update(animated: animated, {
                     $0.updatedGroupCall { $0?.withUpdatedJoinHash(joinHash) }.withoutInitialAction()
@@ -508,10 +584,50 @@ final class ChatInteraction : InterfaceObserver  {
            
         }
     }
+
     
+    func openWebviewFromMenu(buttonText: String, url: String) {
+        if let bot = peer {
+            let replyTo = self.presentation.interfaceState.replyMessageId
+            let context = self.context
+            let peerId = self.peerId
+            let invoke:()->Void = { [weak self] in
+                guard let strongSelf = self else {
+                    return
+                }
+                
+                let invoke:()->Void = { [weak self] in
+                    _ = showModalProgress(signal: context.engine.messages.getAttachMenuBot(botId: bot.id, cached: true), for: context.window).start(next: { attach in
+                        
+                        let thumbFile: TelegramMediaFile
+                        if let file = attach.icons[.macOSAnimated] {
+                            thumbFile = file
+                        } else {
+                            thumbFile = MenuAnimation.menu_folder_bot.file
+                        }
+                        showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: true, complete: strongSelf.afterSentTransition), chatInteraction: strongSelf, thumbFile: thumbFile), for: context.window)
+
+                    })
+                }
+                
+            }
+            if FastSettings.shouldConfirmWebApp(bot.id) {
+                confirm(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(bot.displayTitle), successHandler: { _ in
+                    invoke()
+                    FastSettings.markWebAppAsConfirmed(bot.id)
+                })
+            } else {
+                invoke()
+            }
+            
+        }
+    }
     
     func processBotKeyboard(with keyboardMessage:Message) ->ReplyMarkupInteractions {
         if let attribute = keyboardMessage.replyMarkup, !isLogInteraction {
+            
+            let context = self.context
+            let peerId = self.peerId
             
             return ReplyMarkupInteractions(proccess: { [weak self] (button, progress) in
                 if let strongSelf = self {
@@ -582,6 +698,78 @@ final class ChatInteraction : InterfaceObserver  {
                         showModal(with: NewPollController(chatInteraction: strongSelf, isQuiz: isQuiz), for: strongSelf.context.window)
                     case let .openUserProfile(peerId: peerId):
                         strongSelf.openInfo(peerId, false, nil, nil)
+                    case let .openWebView(hashUrl, simple):
+                        let bot = keyboardMessage.inlinePeer ?? keyboardMessage.author
+                        let replyTo = strongSelf.presentation.interfaceState.replyMessageId
+                        if let bot = bot {
+                            let botId = bot.id
+                            if simple {
+                                let signal = context.engine.messages.requestSimpleWebView(botId: botId, url: hashUrl, themeParams: generateWebAppThemeParams(theme))
+                                _ = showModalProgress(signal: signal, for: context.window).start(next: { url in
+                                    showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .simple(url: hashUrl, bot: bot), chatInteraction: strongSelf, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
+                                })
+                            } else {
+                                
+                                _ = showModalProgress(signal: context.engine.messages.getAttachMenuBot(botId: bot.id, cached: true), for: context.window).start(next: { attach in
+                                    
+                                    let thumbFile: TelegramMediaFile
+                                    if let file = attach.icons[.macOSAnimated] {
+                                        thumbFile = file
+                                    } else {
+                                        thumbFile = MenuAnimation.menu_folder_bot.file
+                                    }
+                                    showModal(with: WebpageModalController(context: context, url: hashUrl, title: bot.displayTitle, requestData: .normal(url: hashUrl, peerId: peerId, bot: bot, replyTo: replyTo, buttonText: button.title, payload: nil, fromMenu: false, complete: strongSelf.afterSentTransition), chatInteraction: strongSelf, thumbFile: thumbFile), for: context.window)
+
+                                })
+                            }
+                            
+                        }
+                        
+//                    case .addToChat:
+//                        let result = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectGroupOrChannel, behavior: SelectGroupOrChannelBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
+//                            return .single(true)
+//                        })
+//                        |> filter { $0.first != nil }
+//                        |> map { $0.first! }
+//                        |> mapToSignal { sourceId in
+//                            return combineLatest(context.account.postbox.loadedPeerWithId(peerId), context.account.postbox.loadedPeerWithId(sourceId)) |> map {
+//                                (dest: $0, source: $1)
+//                            }
+//                        } |> deliverOnMainQueue
+//
+//                        _ = result.start(next: { [weak self] values in
+//
+//                            let addAdmin:()->Void = {
+//                                showModal(with: ChannelBotAdminController(context: context, peer: values.source, admin: values.dest, callback: { [weak self] peerId in
+//                                    self?.openInfo(peerId, true, nil, nil)
+//                                }), for: context.window)
+//                            }
+//                            let addSimple:()->Void = {
+//                                confirm(for: context.window, information: strings().confirmAddBotToGroup(values.dest.displayTitle), successHandler: { [weak self] _ in
+//                                    addBotAsMember(context: context, peer: values.source, to: values.dest, completion: { [weak self] peerId in
+//                                        self?.openInfo(peerId, true, nil, nil)
+//                                    }, error: { error in
+//                                        alert(for: context.window, info: error)
+//                                    })
+//                                })
+//                            }
+//                            if let peer = values.source as? TelegramChannel {
+//                                if peer.groupAccess.isCreator {
+//                                    addAdmin()
+//                                } else if let adminRights = peer.adminRights, adminRights.rights.contains(.canAddAdmins) {
+//                                    addAdmin()
+//                                } else {
+//                                    addSimple()
+//                                }
+//                            } else if let peer = values.source as? TelegramGroup {
+//                                switch peer.role {
+//                                case .creator:
+//                                    addAdmin()
+//                                default:
+//                                    addSimple()
+//                                }
+//                            }
+//                        })
                     default:
                         break
                     }

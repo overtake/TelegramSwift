@@ -456,7 +456,7 @@ class AuthController : GenericViewController<AuthView> {
             }
         }))
         
-        self.stateDisposable.set((statePromise.get() |> filter { $0.state != nil } |> deliverOnMainQueue).start(next: { [weak self] state in
+        self.stateDisposable.set((statePromise.get() |> deliverOnMainQueue).start(next: { [weak self] state in
             self?.updateState(state, refreshToken: refreshToken, updateState: updateState)
         }))
         

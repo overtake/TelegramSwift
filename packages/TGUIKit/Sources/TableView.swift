@@ -881,10 +881,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         return self.findBackgroundControllerView(view: self)
     }
     
+    
     open override func layout() {
         super.layout()
-        
-
         
         if let emptyView = emptyView, let superview = superview {
             emptyView.frame = findBackgroundControllerView?.bounds ?? bounds
@@ -1842,6 +1841,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         endTableUpdates()
     }
     
+    public func fitToSize() {
+    }
+    
+    
     public func moveItem(from:Int, to:Int, changeItem:TableRowItem? = nil, redraw:Bool = true, animation:NSTableView.AnimationOptions = .none) -> Void {
         
         
@@ -2510,6 +2513,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             item._index = i
         }
         
+       
+        
         //CATransaction.commit()
         if transition.grouping && !transition.isEmpty {
             self.tableView.endUpdates()
@@ -2517,11 +2522,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.clipView.justScroll(to: documentOffset)
 
         
-        
         for inserted in inserted {
             inserted.0.view?.onInsert(inserted.1)
         }
         
+//        self.tableView.beginUpdates()
+//        NSAnimationContext.current.duration = 0
+//        self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integersIn: 0..<count))
+//        self.tableView.endUpdates()
+//
         
         let state: TableScrollState
         
@@ -2631,8 +2640,19 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             // print("scroll do nothing")
             animation?.animate(table:self, documentOffset: documentOffset, added: inserted.map{ $0.0 }, removed: removed, previousRange: visibleRange)
             if let animation = animation, !animation.scrollBelow, !transition.isEmpty, contentView.bounds.minY > 0 {
-                saveVisible(.lower)
+                if isFlipped {
+                    if let first = visibleItems.last {
+                        if !first.0.canBeAnchor {
+                            saveVisible(.lower)
+                        } else {
+                            saveVisible(.upper)
+                        }
+                    }
+                } else {
+                    saveVisible(.lower)
+                }
             }
+            
         case .bottom, .top, .center:
             self.scroll(to: transition.state)
         case .up, .down, .upOffset:
@@ -2642,18 +2662,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             break
         }
-        //reflectScrolledClipView(clipView)
-     //   self.tableView.endUpdates()
+        
+        
         self.endUpdates()
         
         
-       self.updatedItems?(self.list)
+        self.reflectScrolledClipView(clipView)
+        let tableFrame = tableView.frame
+        self.tableView.frame = tableFrame
+        self.tableView.noteNumberOfRowsChanged()
         
-//        for subview in self.tableView.subviews.reversed() {
-//            if self.tableView.row(for: subview) == -1 {
-//                subview.removeFromSuperview()
-//            }
-//        }
+        self.updatedItems?(self.list)
         
         if oldEmpty != isEmpty || first {
             updateEmpties(animated: !first)

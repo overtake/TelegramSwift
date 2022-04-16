@@ -51,7 +51,7 @@ private final class ChatThemeRowView: HorizontalRowView {
     private let textView = TextView()
     private let selectionView: View = View()
     
-    private let overlay = OverlayControl()
+    private let overlay = Control()
     
     private var noThemeTextView: TextView?
     

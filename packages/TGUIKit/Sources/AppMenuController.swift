@@ -639,6 +639,8 @@ final class AppMenuController : NSObject  {
             }
         }, cancelSubmenu: { [weak self] item in
             self?.cancelSubmenu(item)
+        }, hover: { item in
+            item.hover?()
         })
         
         
