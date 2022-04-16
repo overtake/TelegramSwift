@@ -44,7 +44,7 @@ final class Avatar_EmojiListView : View {
         super.init(frame: frameRect)
         addSubview(tableView)
         tableView.getBackgroundColor = {
-            .random
+            theme.colors.listBackground
         }
     }
     

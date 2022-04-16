@@ -97,7 +97,7 @@ private final class WebpageView : View {
         super.init(frame: frameRect)
         addSubview(webview)
         addSubview(loading)
-        
+        self.webview.background = theme.colors.background
         
         webview.wantsLayer = true
         
@@ -126,14 +126,14 @@ private final class WebpageView : View {
                 if let view = self.indicator as? MediaAnimatedStickerView {
                     current = view
                 } else {
-                    current = .init(frame: NSMakeRect(0, 0, 80, 80))
+                    current = .init(frame: NSMakeRect(0, 0, 50, 50))
                     current.frame = focus(current.frame.size)
                     self.indicator = current
                     self.addSubview(current)
                 }
-                current.update(with: preload.0, size: current.frame.size, context: preload.1, table: nil, parameters: ChatAnimatedStickerMediaLayoutParameters.init(playPolicy: nil, alwaysAccept: true, media: preload.0, colors: [.init(keyPath: "", color: theme.colors.text)]), animated: false)
+                current.update(with: preload.0, size: current.frame.size, context: preload.1, table: nil, parameters: ChatAnimatedStickerMediaLayoutParameters(playPolicy: nil, alwaysAccept: true, media: preload.0, colors: [.init(keyPath: "", color: theme.colors.grayText)]), animated: false)
 
-                if let animation = current.layer?.makeAnimation(from: NSNumber(value: 1.0), to: NSNumber(value: 0.5), keyPath: "opacity", timingFunction: .easeOut, duration: 0.5) {
+                if let animation = current.layer?.makeAnimation(from: NSNumber(value: 1.0), to: NSNumber(value: 0.5), keyPath: "opacity", timingFunction: .easeOut, duration: 2.0) {
                     animation.repeatCount = 1000
                     animation.autoreverses = true
                     
@@ -619,7 +619,9 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 }
             }
         case "web_app_ready":
-            genericView.update(inProgress: false, preload: self.preloadData, animated: true)
+            delay(0.1, closure: { [weak self] in
+                self?.webAppReady()
+            })
         case "web_app_setup_main_button":
             if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
                 if let isVisible = json["is_visible"] as? Bool {
@@ -646,6 +648,10 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             break
         }
 
+    }
+    
+    private func webAppReady() {
+        genericView.update(inProgress: false, preload: self.preloadData, animated: true)
     }
     
     private func updateSize() {
