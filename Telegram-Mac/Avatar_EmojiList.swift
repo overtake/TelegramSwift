@@ -77,7 +77,7 @@ final class Avatar_EmojiListView : View {
             
         }, mode: .common)
         
-        let item = StickerPackPanelRowItem(frame.size, context: context, arguments: arguments, files: list.map { $0.file }, packInfo: .emojiRelated, collectionId: .pack(ItemCollectionId(namespace: 0, id: 0)), canSend: true)
+        let item = StickerPackPanelRowItem(frame.size, context: context, arguments: arguments, files: list.map { $0.file }, packInfo: .emojiRelated, collectionId: .pack(ItemCollectionId(namespace: 0, id: 0)), canSend: true, playOnHover: true)
         _ = item.makeSize(frame.width)
         
         

@@ -11,17 +11,21 @@ import TGUIKit
 import Postbox
 import TelegramCore
 import SwiftSignalKit
+import ThemeSettings
+import ColorPalette
 
 private final class Arguments {
     let context: AccountContext
     let dismiss:()->Void
     let select:(State.Item)->Void
     let selectOption:(State.Item.Option)->Void
-    init(context: AccountContext, dismiss:@escaping()->Void, select:@escaping(State.Item)->Void, selectOption:@escaping(State.Item.Option)->Void) {
+    let selectColor:(AvatarColor)->Void
+    init(context: AccountContext, dismiss:@escaping()->Void, select:@escaping(State.Item)->Void, selectOption:@escaping(State.Item.Option)->Void, selectColor:@escaping(AvatarColor)->Void) {
         self.context = context
         self.dismiss = dismiss
         self.select = select
         self.selectOption = selectOption
+        self.selectColor = selectColor
     }
 }
 
@@ -29,9 +33,27 @@ struct AvatarColor : Equatable {
     enum Content : Equatable {
         case solid(NSColor)
         case gradient([NSColor])
+        case wallpaper(Wallpaper)
     }
     var selected: Bool
     var content: Content
+    
+    var isWallpaper: Bool {
+        switch content {
+        case .wallpaper:
+            return true
+        default:
+            return false
+        }
+    }
+    var wallpaper: Wallpaper? {
+        switch content {
+        case let .wallpaper(wallpaper):
+            return wallpaper
+        default:
+            return nil
+        }
+    }
 }
 
 private struct State : Equatable {
@@ -74,7 +96,6 @@ private struct State : Equatable {
     
     var emojies:[StickerPackItem] = []
     var colors: [AvatarColor] = []
-    
     var selected: Item {
         return self.items.first(where: { $0.selected })!
     }
@@ -386,7 +407,7 @@ private final class AvatarRightView: View {
         if let content = self.content.subviews.last as? Avatar_EmojiListView {
             content.set(list: state.emojies, context: arguments.context, animated: animated)
         } else if let content = self.content.subviews.last as? Avatar_BgListView {
-            content.set(patterns: [], colors: state.colors, animated: animated)
+            content.set(colors: state.colors, context: arguments.context, select: arguments.selectColor, animated: animated)
         }
             
     }
@@ -474,7 +495,7 @@ final class AvatarConstructorController : ModalViewController {
     
     func effectiveSize(_ size: NSSize) -> NSSize {
         let updated = size - NSMakeSize(50, 20)
-        return NSMakeSize(min(updated.width, 600), min(updated.height, 500))
+        return NSMakeSize(min(updated.width, 540), min(updated.height, 540))
     }
     
     func updateSize(_ animated: Bool) {
@@ -531,31 +552,41 @@ final class AvatarConstructorController : ModalViewController {
                     .init(key: "b", title: "Background", selected: false)
             ]))
             
-            current.colors = [.init(selected: true, content: .solid(.random)),
-                              .init(selected: false, content: .solid(.random)),
-                                .init(selected: false, content: .solid(.random)),
-                                .init(selected: false, content: .solid(.random)),
-                                .init(selected: false, content: .solid(.random)),
-                                .init(selected: false, content: .solid(.random)),
-                                .init(selected: false, content: .solid(.random)),
-                                .init(selected: false, content: .solid(.random)),
-                                .init(selected: false, content: .solid(.random)),
-                                .init(selected: false, content: .solid(.random)),
-                                .init(selected: false, content: .solid(.random)),
-                                .init(selected: false, content: .solid(.random)),
-            ]
+            var colors: [AvatarColor] = []
+            colors.append(.init(selected: true, content: .gradient([dayClassicPalette.peerColors(0).top, dayClassicPalette.peerColors(0).bottom])))
+            colors.append(.init(selected: false, content: .gradient([dayClassicPalette.peerColors(1).top, dayClassicPalette.peerColors(1).bottom])))
+            colors.append(.init(selected: false, content: .gradient([dayClassicPalette.peerColors(2).top, dayClassicPalette.peerColors(2).bottom])))
+            colors.append(.init(selected: false, content: .gradient([dayClassicPalette.peerColors(3).top, dayClassicPalette.peerColors(3).bottom])))
+            colors.append(.init(selected: false, content: .gradient([dayClassicPalette.peerColors(4).top, dayClassicPalette.peerColors(4).bottom])))
+            colors.append(.init(selected: false, content: .gradient([dayClassicPalette.peerColors(5).top, dayClassicPalette.peerColors(5).bottom])))
+            colors.append(.init(selected: false, content: .gradient([dayClassicPalette.peerColors(6).top, dayClassicPalette.peerColors(6).bottom])))
+
+            current.colors = colors
             
             return current
         }
         
         let emojies = context.engine.stickers.loadedStickerPack(reference: .animatedEmoji, forceActualized: false)
+                
+        let wallpapers = telegramWallpapers(postbox: context.account.postbox, network: context.account.network) |> map { wallpapers -> [Wallpaper] in
+            return wallpapers.compactMap { wallpaper in
+                switch wallpaper {
+                case let .file(file):
+                    return file.isPattern ? Wallpaper(wallpaper) : nil
+                default:
+                    return nil
+                }
+            }
+        } |> deliverOnMainQueue
         
-        actionsDisposable.add(emojies.start(next: { pack in
+        actionsDisposable.add(combineLatest(wallpapers, emojies).start(next: { wallpapers, pack in
+                        
             switch pack {
-            case let .result(info, items, _):
+            case let .result(_, items, _):
                 updateState { current in
                     var current = current
                     current.emojies = items
+                    current.colors += wallpapers.map { .init(selected: false, content: .wallpaper($0)) }
                     return current
                 }
             default:
@@ -596,6 +627,16 @@ final class AvatarConstructorController : ModalViewController {
                     items[i] = item
                 }
                 current.items = items
+                return current
+            }
+        }, selectColor: { selected in
+            updateState { current in
+                var current = current
+                for i in 0 ..< current.colors.count {
+                    var color = current.colors[i]
+                    color.selected = color.content == selected.content
+                    current.colors[i] = color
+                }
                 return current
             }
         })
