@@ -24,6 +24,14 @@ class StickerMediaContentView: ChatMediaContentView {
        
     }
     
+    var overridePlayValue: Bool? = nil {
+        didSet {
+            if let content = content as? MediaAnimatedStickerView {
+                content.overridePlayValue = overridePlayValue
+            }
+        }
+    }
+    
     override func clean() {
         content?.clean()
     }
