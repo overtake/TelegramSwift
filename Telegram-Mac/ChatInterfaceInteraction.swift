@@ -596,19 +596,17 @@ final class ChatInteraction : InterfaceObserver  {
                     return
                 }
                 
-                let invoke:()->Void = { [weak self] in
-                    _ = showModalProgress(signal: context.engine.messages.getAttachMenuBot(botId: bot.id, cached: true), for: context.window).start(next: { attach in
-                        
-                        let thumbFile: TelegramMediaFile
-                        if let file = attach.icons[.macOSAnimated] {
-                            thumbFile = file
-                        } else {
-                            thumbFile = MenuAnimation.menu_folder_bot.file
-                        }
-                        showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: true, complete: strongSelf.afterSentTransition), chatInteraction: strongSelf, thumbFile: thumbFile), for: context.window)
+                _ = showModalProgress(signal: context.engine.messages.getAttachMenuBot(botId: bot.id, cached: true), for: context.window).start(next: { attach in
+                    
+                    let thumbFile: TelegramMediaFile
+                    if let file = attach.icons[.macOSAnimated] {
+                        thumbFile = file
+                    } else {
+                        thumbFile = MenuAnimation.menu_folder_bot.file
+                    }
+                    showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: true, complete: strongSelf.afterSentTransition), chatInteraction: strongSelf, thumbFile: thumbFile), for: context.window)
 
-                    })
-                }
+                })
                 
             }
             if FastSettings.shouldConfirmWebApp(bot.id) {
