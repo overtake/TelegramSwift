@@ -24,6 +24,8 @@ class MediaAnimatedStickerView: ChatMediaContentView {
     private let playerView: LottiePlayerView = LottiePlayerView(frame: NSMakeRect(0, 0, 240, 240))
     private var placeholderView: StickerShimmerEffectView?
 
+    var playOnHover: Bool? = nil
+    
     private let thumbView = TransformImageView()
     private var sticker:LottieAnimation? = nil {
         didSet {
@@ -40,11 +42,18 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         super.init(frame: frameRect)
         addSubview(self.playerView)
         addSubview(self.thumbView)
-
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    func play() {
+        if self.playerView.animation?.playPolicy == .framesCount(1) {
+            playerView.set(self.playerView.animation?.withUpdatedPolicy(.onceEnd), reset: false)
+        } else {
+            playerView.playAgain()
+        }
     }
     
     override func clean() {
@@ -79,12 +88,16 @@ class MediaAnimatedStickerView: ChatMediaContentView {
     }
     
     @objc func updatePlayerIfNeeded() {
+        
         var accept = ((self.window != nil && self.window!.isKeyWindow) || (self.window != nil && !(self.window is Window))) && !NSIsEmptyRect(self.visibleRect) && !self.isDynamicContentLocked && self.sticker != nil
         
         let parameters = self.parameters as? ChatAnimatedStickerMediaLayoutParameters
         
         accept = parameters?.alwaysAccept ?? accept
 
+        if playOnHover == true {
+            accept = true
+        }
         
         if NSIsEmptyRect(self.visibleRect) || self.window == nil {
             accept = false
@@ -150,7 +163,6 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 showModal(with:StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for:window)
             } else if let media = media as? TelegramMediaFile, let sticker = media.stickerText, !sticker.isEmpty {
                 self.playerView.playIfNeeded(true)
-                
                 parameters?.runEmojiScreenEffect(sticker)
                 
             }
@@ -266,7 +278,11 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             return nil
         } |> deliverOnMainQueue).start(next: { [weak file, weak self] data in
             if let data = data, let file = file, let `self` = self {
-                let playPolicy: LottiePlayPolicy = parameters?.playPolicy ?? (file.isEmojiAnimatedSticker || !self.chatLoopAnimated ? (self.parameters == nil ? .framesCount(1) : .once) : .loop)
+                var playPolicy: LottiePlayPolicy = parameters?.playPolicy ?? (file.isEmojiAnimatedSticker || !self.chatLoopAnimated ? (self.parameters == nil ? .framesCount(1) : .once) : .loop)
+                
+                if self.playOnHover == true {
+                    playPolicy = .framesCount(1)
+                }
                 var soundEffect: LottieSoundEffect? = nil
                 if file.isEmojiAnimatedSticker, let emoji = file.stickerText {
                     let emojies = EmojiesSoundConfiguration.with(appConfiguration: context.appConfiguration)
@@ -401,6 +417,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
     override var contents: Any? {
         return self.thumbView.image
     }
+    
     
     override func layout() {
         super.layout()

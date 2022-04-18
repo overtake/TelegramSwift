@@ -46,6 +46,7 @@ final class Avatar_EmojiListView : View {
         tableView.getBackgroundColor = {
             theme.colors.listBackground
         }
+        _ = tableView.addItem(item: GeneralRowItem(.zero))
     }
     
     override func layout() {
@@ -57,10 +58,12 @@ final class Avatar_EmojiListView : View {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func set(list: [StickerPackItem], context: AccountContext, animated: Bool) {
+    func set(list: [StickerPackItem], context: AccountContext, selectForeground: @escaping(TelegramMediaFile)->Void, animated: Bool) {
         
         let arguments = StickerPanelArguments(context: context, sendMedia: {  media, view, silent, schedule in
-            
+            if let media = media as? TelegramMediaFile {
+                selectForeground(media)
+            }
         }, showPack: { _ in
             
         }, addPack: { _ in
@@ -82,8 +85,7 @@ final class Avatar_EmojiListView : View {
         
         
         tableView.beginTableUpdates()
-        tableView.removeAll()
-        _ = tableView.addItem(item: item, animation: .effectFade)
+        tableView.replace(item: item, at: 0, animated: animated)
         tableView.endTableUpdates()
 
         needsLayout = true

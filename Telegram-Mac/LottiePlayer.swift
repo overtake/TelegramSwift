@@ -500,7 +500,7 @@ private final class PlayerRenderer {
                                 finish()
                             }
                         case .onceEnd, .toEnd:
-                            if let state = currentState(stateValue), state.endFrame - current.frame <= 1  {
+                            if let state = currentState(stateValue), state.endFrame - current.frame <= 2  {
                                 finish()
                             }
                         case .toStart:
@@ -770,7 +770,7 @@ enum LottiePlayerTriggerFrame : Equatable {
     case custom(Int32)
 }
 
-private protocol RenderContainer : AnyObject {
+protocol RenderContainer : AnyObject {
     func render(at frame: Int32, frames: [RenderedFrame], previousFrame: RenderedFrame?) -> RenderedFrame?
     func cacheFrame(_ previous: RenderedFrame?, _ current: RenderedFrame)
     func markFinished()
@@ -1092,7 +1092,7 @@ final class LottieAnimation : Equatable {
     }
     
     
-    fileprivate func initialize() -> RenderContainer? {
+    func initialize() -> RenderContainer? {
         switch type {
         case .lottie:
             let decompressed = TGGUnzipData(self.compressed, 8 * 1024 * 1024)

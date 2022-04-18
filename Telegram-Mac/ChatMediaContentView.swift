@@ -46,9 +46,6 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     
     weak var table:TableView?
     
-    override func updateTrackingAreas() {
-        
-    }
     
     override init() {
         super.init()
