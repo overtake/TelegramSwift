@@ -2640,17 +2640,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             // print("scroll do nothing")
             animation?.animate(table:self, documentOffset: documentOffset, added: inserted.map{ $0.0 }, removed: removed, previousRange: visibleRange)
             if let animation = animation, !animation.scrollBelow, !transition.isEmpty, contentView.bounds.minY > 0 {
-                if isFlipped {
-                    if let first = visibleItems.last {
-                        if !first.0.canBeAnchor {
-                            saveVisible(.lower)
-                        } else {
-                            saveVisible(.upper)
-                        }
-                    }
-                } else {
-                    saveVisible(.lower)
-                }
+                saveVisible(.lower)
             }
             
         case .bottom, .top, .center:
