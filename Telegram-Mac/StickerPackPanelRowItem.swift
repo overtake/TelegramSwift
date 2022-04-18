@@ -277,7 +277,6 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         packNameView.userInteractionEnabled = false
         packNameView.isSelectable = false
         wantsLayer = false
-        
     }
     private var isMouseDown: Bool = false
     
@@ -311,6 +310,20 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         
     }
     
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        
+        let point = convert(event.locationInWindow, from: nil)
+        for subview in self.subviews {
+            if NSPointInRect(point, subview.frame) {
+                if let subview = subview as? StickerMediaContentView {
+                    subview.play()
+                }
+                return
+            }
+        }
+    }
+
     override func mouseUp(with event: NSEvent) {
         //super.mouseUp(with: event)
         longDisposable.set(nil)
@@ -430,6 +443,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                 } else {
                     view = self.contentViews[i]!
                 }
+                (view as? StickerMediaContentView)?.playOnHover = item.playOnHover
                 if view.media?.id != file.id {
                     let size = file.dimensions?.size.aspectFitted(size) ?? size
                     view.update(with: file, size: size, context: item.context, parent: nil, table: item.table)

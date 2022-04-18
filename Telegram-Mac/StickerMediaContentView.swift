@@ -24,6 +24,20 @@ class StickerMediaContentView: ChatMediaContentView {
        
     }
     
+    func play() {
+        if let content = content as? MediaAnimatedStickerView {
+            content.play()
+        }
+    }
+    
+    var playOnHover: Bool? = nil {
+        didSet {
+            if let content = content as? MediaAnimatedStickerView {
+                content.playOnHover = playOnHover
+            }
+        }
+    }
+    
     var overridePlayValue: Bool? = nil {
         didSet {
             if let content = content as? MediaAnimatedStickerView {
@@ -97,6 +111,9 @@ class StickerMediaContentView: ChatMediaContentView {
         
         guard let content = self.content else {
             return
+        }
+        if let content = content as? MediaAnimatedStickerView {
+            content.playOnHover = playOnHover
         }
         content.update(with: file, size: size, context: context, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags, approximateSynchronousValue: approximateSynchronousValue)
         

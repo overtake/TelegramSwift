@@ -20,12 +20,18 @@ private final class Arguments {
     let select:(State.Item)->Void
     let selectOption:(State.Item.Option)->Void
     let selectColor:(AvatarColor)->Void
-    init(context: AccountContext, dismiss:@escaping()->Void, select:@escaping(State.Item)->Void, selectOption:@escaping(State.Item.Option)->Void, selectColor:@escaping(AvatarColor)->Void) {
+    let selectForeground:(TelegramMediaFile)->Void
+    let set:()->Void
+    let zoom:(CGFloat)->Void
+    init(context: AccountContext, dismiss:@escaping()->Void, select:@escaping(State.Item)->Void, selectOption:@escaping(State.Item.Option)->Void, selectColor:@escaping(AvatarColor)->Void, selectForeground:@escaping(TelegramMediaFile)->Void, set: @escaping()->Void, zoom:@escaping(CGFloat)->Void) {
         self.context = context
         self.dismiss = dismiss
         self.select = select
         self.selectOption = selectOption
         self.selectColor = selectColor
+        self.selectForeground = selectForeground
+        self.set = set
+        self.zoom = zoom
     }
 }
 
@@ -91,13 +97,19 @@ private struct State : Equatable {
         var animated: Bool?
     }
     var items: [Item]
-    var preview: Preview?
+    var preview: Preview = Preview()
     
     
     var emojies:[StickerPackItem] = []
     var colors: [AvatarColor] = []
+    
+    var foreground: TelegramMediaFile?
+    
     var selected: Item {
         return self.items.first(where: { $0.selected })!
+    }
+    var selectedColor: AvatarColor {
+        return self.colors.first(where: { $0.selected })!
     }
 }
 
@@ -106,12 +118,38 @@ private final class AvatarLeftView: View {
     
     private final class PreviewView: View {
         private let imageView: View = View(frame: NSMakeRect(0, 0, 150, 150))
+        private var backgroundColorView: ImageView?
+        private var backgroundPatternView: TransformImageView?
+
+        
+        private var foregroundView: StickerMediaContentView? = nil
         private let textView = TextView()
         private var state: State?
+        
+        private let slider: LinearProgressControl = LinearProgressControl(progressHeight: 4)
+
+
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
             addSubview(textView)
             addSubview(imageView)
+            addSubview(slider)
+            
+            slider.scrubberImage = generateImage(NSMakeSize(14, 14), contextGenerator: { size, ctx in
+                let rect = CGRect(origin: .zero, size: size)
+                ctx.clear(rect)
+                ctx.setFillColor(theme.colors.accent.cgColor)
+                ctx.fillEllipse(in: rect)
+                ctx.setFillColor(theme.colors.background.cgColor)
+                ctx.fillEllipse(in: rect.insetBy(dx: 2, dy: 2))
+
+            })
+            slider.roundCorners = true
+            slider.alignment = .center
+            slider.containerBackground = theme.colors.grayBackground
+            slider.style = ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: .clear, highlightColor: .clear)
+            slider.set(progress: 0.8)
+            
             imageView.layer?.cornerRadius = imageView.frame.height / 2
             
             let text = TextViewLayout(.initialize(string: strings().avatarPreview, color: theme.colors.grayText, font: .normal(.text)))
@@ -119,17 +157,180 @@ private final class AvatarLeftView: View {
             textView.update(text)
             textView.userInteractionEnabled = false
             textView.isSelectable = false
-            imageView.backgroundColor = .random
+            imageView.backgroundColor = theme.colors.listBackground
         }
         
         func updateState(_ state: State, arguments: Arguments, animated: Bool) {
             self.state = state
+            
+            self.slider.set(progress: state.preview.zoom)
+            
+            let selectedBg = state.colors.first(where: { $0.selected })!
+            
+            self.applyBg(selectedBg, context: arguments.context, animated: animated)
+            self.applyFg(state.foreground, context: arguments.context, animated: animated)
+            
+            slider.onUserChanged = { value in
+                arguments.zoom(CGFloat(value))
+            }
+            needsLayout = true
+        }
+        
+        private var previousFile: TelegramMediaFile?
+        
+        private func applyFg(_ file: TelegramMediaFile?, context: AccountContext, animated: Bool) {
+            if let file = file, self.previousFile != file {
+                
+                if let view = foregroundView {
+                    performSubviewRemoval(view, animated: animated, scale: true)
+                    self.foregroundView = nil
+                }
+                let foregroundView = StickerMediaContentView(frame: NSMakeRect(0, 0, 120, 120))
+                
+                foregroundView.update(with: file, size: foregroundView.frame.size, context: context, parent: nil, table: nil)
+                
+                self.imageView.addSubview(foregroundView)
+                foregroundView.center()
+                
+                self.foregroundView = foregroundView
+                
+                if animated {
+                    foregroundView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    foregroundView.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+                }
+            }
+            self.previousFile = file
+        }
+
+        
+        private func applyBg(_ color: AvatarColor, context: AccountContext, animated: Bool) {
+            var colors: [NSColor] = []
+            switch color.content {
+            case let .solid(color):
+                colors = [color]
+            case let .gradient(c):
+                colors = c
+            default:
+                break
+            }
+            
+            if !colors.isEmpty {
+                
+                if let view = backgroundPatternView {
+                    performSubviewRemoval(view, animated: animated)
+                    self.backgroundPatternView = nil
+                }
+                
+                let current: ImageView
+                if let view = backgroundColorView {
+                    current = view
+                } else {
+                    current = ImageView(frame: imageView.bounds)
+                    self.backgroundColorView = current
+                    self.imageView.addSubview(current, positioned: .below, relativeTo: foregroundView)
+                }
+                
+                current.animates = animated
+                
+                current.image = generateImage(current.frame.size, contextGenerator: { size, ctx in
+                    ctx.clear(size.bounds)
+                    let imageRect = size.bounds
+                    if colors.count == 1, let color = colors.first {
+                        ctx.setFillColor(color.cgColor)
+                        ctx.fill(imageRect)
+                    } else {
+                        let gradientColors = colors.map { $0.cgColor } as CFArray
+                        let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                        
+                        var locations: [CGFloat] = []
+                        for i in 0 ..< colors.count {
+                            locations.append(delta * CGFloat(i))
+                        }
+                        let colorSpace = CGColorSpaceCreateDeviceRGB()
+                        let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                                            
+                        ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: imageRect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                    }
+                })
+            } else if let wallpaper = color.wallpaper {
+                if let view = backgroundColorView {
+                    performSubviewRemoval(view, animated: animated)
+                    self.backgroundColorView = nil
+                }
+                
+                let current: TransformImageView
+                if let view = backgroundPatternView {
+                    current = view
+                } else {
+                    current = TransformImageView(frame: imageView.bounds)
+                    self.backgroundPatternView = current
+                    self.imageView.addSubview(current, positioned: .below, relativeTo: foregroundView)
+                }
+                
+                let emptyColor: TransformImageEmptyColor
+                
+                let colors = wallpaper.settings.colors.compactMap { NSColor($0) }
+                
+                if colors.count > 1 {
+                    let colors = colors.map {
+                        return $0.withAlphaComponent($0.alpha == 0 ? 0.5 : $0.alpha)
+                    }
+                    emptyColor = .gradient(colors: colors, intensity: colors.first!.alpha, rotation: nil)
+                } else if let color = colors.first {
+                    emptyColor = .color(color)
+                } else {
+                    emptyColor = .color(NSColor(rgb: 0xd6e2ee, alpha: 0.5))
+                }
+                
+                let arguments = TransformImageArguments(corners: ImageCorners(radius: 0), imageSize: wallpaper.dimensions.aspectFilled(NSMakeSize(300, 300)), boundingSize: current.frame.size, intrinsicInsets: NSEdgeInsets(), emptyColor: emptyColor)
+                
+                current.set(arguments: arguments)
+
+                switch wallpaper {
+                case let .file(_, file, _, _):
+                    var representations:[TelegramMediaImageRepresentation] = []
+                    if let dimensions = file.dimensions {
+                        representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil))
+                    } else {
+                        representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(current.frame.size), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil))
+                    }
+                    
+                    let updateImageSignal = chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: true, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false, drawPatternOnly: false, palette: dayClassicPalette)
+                    
+                    current.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: false)
+                     
+                     if !current.isFullyLoaded {
+                         current.setSignal(updateImageSignal, animate: true, cacheImage: { result in
+                             cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
+                         })
+                     }
+                    
+                default:
+                    break
+                }
+            } else {
+                if let view = backgroundColorView {
+                    performSubviewRemoval(view, animated: animated)
+                    self.backgroundColorView = nil
+                }
+                if let view = backgroundPatternView {
+                    performSubviewRemoval(view, animated: animated)
+                    self.backgroundPatternView = nil
+                }
+            }
+            
+            
         }
         
         override func layout() {
             super.layout()
             textView.centerX(y: 0)
             imageView.centerX(y: textView.frame.maxY + 10)
+            backgroundColorView?.frame = imageView.bounds
+            backgroundPatternView?.frame = imageView.bounds
+            foregroundView?.center()
+            slider.setFrameSize(NSMakeSize(imageView.frame.width, 14))
+            slider.centerX(y: imageView.frame.maxY + 20)
         }
         
         required init?(coder: NSCoder) {
@@ -238,6 +439,8 @@ private final class AvatarLeftView: View {
     func updateState(_ state: State, arguments: Arguments, animated: Bool) {
         
         
+        previewView.updateState(state, arguments: arguments, animated: animated)
+        
         let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.state?.items ?? [], rightList: state.items)
         
         
@@ -304,7 +507,6 @@ private final class AvatarRightView: View {
             
             if state.selected.key != self.state?.selected.key {
                 segment.removeAll()
-                
                 for option in state.selected.options {
                     segment.add(segment: .init(title: option.title, handler: {
                         arguments.selectOption(option)
@@ -377,6 +579,11 @@ private final class AvatarRightView: View {
         self.bottomView.set(font: .medium(.text), for: .Normal)
         self.bottomView.set(color: theme.colors.accent, for: .Normal)
         
+        bottomView.removeAllHandlers()
+        bottomView.set(handler: { _ in
+            arguments.set()
+        }, for: .Click)
+        
         self.state = state
         needsLayout = true
     }
@@ -405,7 +612,7 @@ private final class AvatarRightView: View {
         }
         
         if let content = self.content.subviews.last as? Avatar_EmojiListView {
-            content.set(list: state.emojies, context: arguments.context, animated: animated)
+            content.set(list: state.emojies, context: arguments.context, selectForeground: arguments.selectForeground, animated: animated)
         } else if let content = self.content.subviews.last as? Avatar_BgListView {
             content.set(colors: state.colors, context: arguments.context, select: arguments.selectColor, animated: animated)
         }
@@ -480,6 +687,9 @@ final class AvatarConstructorController : ModalViewController {
     private let context: AccountContext
     private let target: Target
     private let disposable = MetaDisposable()
+    
+    private var contextObject: AnyObject?
+    
     init(_ context: AccountContext, target: Target) {
         self.context = context
         self.target = target
@@ -520,13 +730,15 @@ final class AvatarConstructorController : ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        let context = self.context
+        
         let actionsDisposable = DisposableSet()
         
         onDeinit = {
             actionsDisposable.dispose()
         }
 
-        let initialState = State.init(items: [], preview: nil)
+        let initialState = State.init(items: [])
         
         let statePromise = ValuePromise(initialState, ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -553,11 +765,11 @@ final class AvatarConstructorController : ModalViewController {
             ]))
             
             var colors: [AvatarColor] = []
-            colors.append(.init(selected: true, content: .gradient([dayClassicPalette.peerColors(0).top, dayClassicPalette.peerColors(0).bottom])))
+            colors.append(.init(selected: false, content: .gradient([dayClassicPalette.peerColors(0).top, dayClassicPalette.peerColors(0).bottom])))
             colors.append(.init(selected: false, content: .gradient([dayClassicPalette.peerColors(1).top, dayClassicPalette.peerColors(1).bottom])))
             colors.append(.init(selected: false, content: .gradient([dayClassicPalette.peerColors(2).top, dayClassicPalette.peerColors(2).bottom])))
             colors.append(.init(selected: false, content: .gradient([dayClassicPalette.peerColors(3).top, dayClassicPalette.peerColors(3).bottom])))
-            colors.append(.init(selected: false, content: .gradient([dayClassicPalette.peerColors(4).top, dayClassicPalette.peerColors(4).bottom])))
+            colors.append(.init(selected: true, content: .gradient([dayClassicPalette.peerColors(4).top, dayClassicPalette.peerColors(4).bottom])))
             colors.append(.init(selected: false, content: .gradient([dayClassicPalette.peerColors(5).top, dayClassicPalette.peerColors(5).bottom])))
             colors.append(.init(selected: false, content: .gradient([dayClassicPalette.peerColors(6).top, dayClassicPalette.peerColors(6).bottom])))
 
@@ -579,6 +791,22 @@ final class AvatarConstructorController : ModalViewController {
             }
         } |> deliverOnMainQueue
         
+        let runConvertor:(MediaObjectToAvatar)->Void = { [weak self] convertor in
+            _ = showModalProgress(signal: convertor.start(), for: context.window).start(next: { [weak self] result in
+                switch result {
+                case let .image(image):
+                    var bp = 0
+                    bp += 1
+                case let .video(path):
+                    NSLog("path: \(path)")
+                    var bp = 0
+                    bp += 1
+                }
+                self?.contextObject = nil
+            })
+            self?.contextObject = convertor
+        }
+        
         actionsDisposable.add(combineLatest(wallpapers, emojies).start(next: { wallpapers, pack in
                         
             switch pack {
@@ -586,6 +814,7 @@ final class AvatarConstructorController : ModalViewController {
                 updateState { current in
                     var current = current
                     current.emojies = items
+                    current.foreground = items.first(where: { $0.file.stickerText == "🤖" })?.file ?? items.first?.file
                     current.colors += wallpapers.map { .init(selected: false, content: .wallpaper($0)) }
                     return current
                 }
@@ -637,6 +866,33 @@ final class AvatarConstructorController : ModalViewController {
                     color.selected = color.content == selected.content
                     current.colors[i] = color
                 }
+                return current
+            }
+        }, selectForeground: { file in
+            updateState { current in
+                var current = current
+                current.foreground = file
+                return current
+            }
+        }, set: {
+            let state = stateValue.with { $0 }
+            if let file = state.foreground {
+                let background:MediaObjectToAvatar.Object.Background
+                switch state.selectedColor.content {
+                case let .gradient(colors):
+                    background = .colors(colors)
+                case let .solid(color):
+                    background = .colors([color])
+                case let .wallpaper(wallpaper):
+                    background = .pattern(wallpaper)
+                }
+                let object = MediaObjectToAvatar(context: context, object: .init(foreground: .animated(file), background: background))
+                runConvertor(object)
+            }
+        }, zoom: { value in
+            updateState { current in
+                var current = current
+                current.preview.zoom = value
                 return current
             }
         })

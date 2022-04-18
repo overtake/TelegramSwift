@@ -14,8 +14,11 @@ import RLottie
 import CoreMedia
 import libwebp
 import GZIP
+import Postbox
+import ColorPalette
+import ThemeSettings
 
-private func buffer(from image: CGImage, bg: Bool = false) -> CVPixelBuffer? {
+private func buffer(from image: CGImage, background: CGImage? = nil) -> CVPixelBuffer? {
     let attrs = [kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue, kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue] as CFDictionary
     var pixelBuffer : CVPixelBuffer?
     let status = CVPixelBufferCreate(kCFAllocatorDefault, Int(image.size.width), Int(image.size.height), kCVPixelFormatType_32ARGB, attrs, &pixelBuffer)
@@ -32,17 +35,23 @@ private func buffer(from image: CGImage, bg: Bool = false) -> CVPixelBuffer? {
     let context = CGContext(data: pixelData, width: Int(image.size.width), height: Int(image.size.height), bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(pixelBuffer!), space: rgbColorSpace, bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue)
     
     context?.clear(rect)
-    if bg {
-        context?.setFillColor(.black)
-        context?.fill(rect)
-        context?.clip(to: rect, mask: image)
-        context?.setFillColor(.white)
-        context?.fill(rect)
-    } else {
-        context?.setFillColor(.white)
-        context?.fill(rect)
-        context?.draw(image, in: rect)
+    if let background = background {
+        context?.draw(background, in: rect)
     }
+    
+    context?.draw(image, in: rect)
+
+//    if bg {
+//        context?.setFillColor(.black)
+//        context?.fill(rect)
+//        context?.clip(to: rect, mask: image)
+//        context?.setFillColor(.white)
+//        context?.fill(rect)
+//    } else {
+//        context?.setFillColor(.white)
+//        context?.fill(rect)
+//        context?.draw(image, in: rect)
+//    }
     
     CVPixelBufferUnlockBaseAddress(pixelBuffer!, CVPixelBufferLockFlags(rawValue: 0))
     return pixelBuffer
@@ -108,11 +117,13 @@ private final class StickerToMp4Context {
     
     private let dataDisposable = MetaDisposable()
     private let fetchDisposable = MetaDisposable()
+    private let background: Signal<CGImage, NoError>
     private let fileReference: FileMediaReference
     private let context: AccountContext
-    init(context: AccountContext, fileReference: FileMediaReference) {
+    init(context: AccountContext, background: Signal<CGImage, NoError>, fileReference: FileMediaReference) {
         self.export = try? Export()
         self.context = context
+        self.background = background
         self.fileReference = fileReference
     }
     
@@ -129,93 +140,83 @@ private final class StickerToMp4Context {
                 $0.path
             }
         
-        dataDisposable.set(signal.start(next: { [weak self] path in
-            if let data = try? Data(contentsOf: URL.init(fileURLWithPath: path)) {
-                if let data = TGGUnzipData(data, 8 * 1024 * 1024) {
-                    if let json = String(data: data, encoding: .utf8) {
-                        if let bridge = RLottieBridge(json: json, key: "\(arc4random())") {
-                            self?.process(bridge)
-                        }
-                    }
-                }
+        
+        
+        dataDisposable.set(combineLatest(signal, background).start(next: { [weak self] path, background in
+            if let data = try? Data(contentsOf: URL(fileURLWithPath: path)) {
+                let animation = LottieAnimation(compressed: data, key: .init(key: .bundle(""), size: NSMakeSize(640, 640)))
+                self?.process(animation, background: background)
             }
         }))
         fetchDisposable.set(freeMediaFileInteractiveFetched(context: context, fileReference: fileReference).start())
     }
     
-    private func process(_ rlottie: RLottieBridge) -> Void {
-        
-        let image = rlottie.renderFrame(rlottie.startFrame(), width: 640, height: 640).takeRetainedValue()
-        
-        var randomId: Int64 = 0
-        arc4random_buf(&randomId, 8)
-        let thumbPath = NSTemporaryDirectory() + "\(randomId)"
-        let url = URL(fileURLWithPath: thumbPath)
-        
-        if let colorDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
-            CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
+    private func process(_ lottie: LottieAnimation, background: CGImage) -> Void {
+                
+        if let renderer = lottie.initialize() {
+            var randomId: Int64 = 0
+            arc4random_buf(&randomId, 8)
+            let thumbPath = NSTemporaryDirectory() + "\(randomId)"
+            let url = URL(fileURLWithPath: thumbPath)
             
-            let colorQuality: Float = 0.6
+            let image = renderer.render(at: 0, frames: [], previousFrame: nil)?.image
             
-            let options = NSMutableDictionary()
-            options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
-            
-            CGImageDestinationAddImage(colorDestination, image, options as CFDictionary)
-            CGImageDestinationFinalize(colorDestination)
+            if let colorDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil), let image = image {
+                CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
+    
+                let colorQuality: Float = 0.6
+    
+                let options = NSMutableDictionary()
+                options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+    
+                CGImageDestinationAddImage(colorDestination, image, options as CFDictionary)
+                CGImageDestinationFinalize(colorDestination)
+            }
+    
+            self.status = .initializing(thumbPath)
+            export?.start()
+    
+            let fps = renderer.fps
+            let effectiveFps = min(30, fps)
+    
+            let framesCount = renderer.endFrame - renderer.startFrame
+            var frame: Int32 = renderer.startFrame
+            var index: Int32 = 0
+            while true {
+                let image = renderer.render(at: frame, frames: [], previousFrame: nil)?.image
+                if let image = image {
+                    let pixelBuffer = buffer(from: image, background: background)!
+        
+                    let frameTime: CMTime  = CMTimeMake(value: 20, timescale: 600);
+                    let lastTime: CMTime = CMTimeMake(value: Int64(index) * 20, timescale: 600);
+                    var presentTime: CMTime = CMTimeAdd(lastTime, frameTime);
+                    if frame == renderer.startFrame {
+                        presentTime = CMTimeMake(value: 0, timescale: 600);
+                    }
+        
+                    export?.append(pixelBuffer, time: presentTime)
+        
+                    if frame % Int32(round(Float(fps) / Float(effectiveFps))) != 0 {
+                        frame += 1
+                    }
+                    frame += 1
+                    index += 1
+                    if frame > framesCount {
+                        break
+                    }
+                } else {
+                    break
+                }
+                self.status = .converting(min((Float(frame) / Float(framesCount)), 1))
+            }
+    
+            export?.finish({ [weak self] path in
+                self?.status = .done(path, thumbPath)
+            })
         }
         
-        self.status = .initializing(thumbPath)
-        export?.start()
-
-        let fps = rlottie.fps()
-        let effectiveFps = min(30, fps)
         
-        let framesCount = rlottie.endFrame() - rlottie.startFrame()
-        var frame: Int32 = rlottie.startFrame()
-        var index: Int32 = 0
-        while true {
-            let image = rlottie.renderFrame(frame, width: 640, height: 640).takeRetainedValue()
-            
-//            func pixellated(image: CGImage) -> CGImage? {
-//                let ciImage = CIImage(cgImage: image)
-//                guard let filter = CIFilter(name: "CIPixellate") else { return nil }
-//                filter.setValue(ciImage, forKey: "inputImage")
-//                filter.setValue(12, forKey: kCIInputScaleKey)
-//
-//                guard let output = filter.outputImage else { return nil }
-//
-//                return generateImage(image.size, contextGenerator: { size, ctx in
-//                    ctx.clear(size.bounds)
-//                    let ciContext = CIContext(cgContext: ctx, options: [CIContextOption.useSoftwareRenderer : NSNumber(value: true)])
-//                    ciContext.draw(output, in: CGRect(x: 0, y: 0, width: size.width, height: size.height), from: output.extent)
-//                })!
-//            }
-            
-            let pixelBuffer = buffer(from: image)!
-            
-            let frameTime: CMTime  = CMTimeMake(value: 20, timescale: 600);
-            let lastTime: CMTime = CMTimeMake(value: Int64(index) * 20, timescale: 600);
-            var presentTime: CMTime = CMTimeAdd(lastTime, frameTime);
-            if frame == rlottie.startFrame() {
-                presentTime = CMTimeMake(value: 0, timescale: 600);
-            }
-            
-            export?.append(pixelBuffer, time: presentTime)
-            
-            if frame % Int32(round(Float(fps) / Float(effectiveFps))) != 0 {
-                frame += 1
-            }
-            frame += 1
-            index += 1
-            if frame > framesCount {
-                break
-            }
-            self.status = .converting(min((Float(frame) / Float(framesCount)), 1))
-        }
         
-        export?.finish({ [weak self] path in
-            self?.status = .done(path, thumbPath)
-        })
     }
     
     func cancel() {
@@ -354,7 +355,7 @@ private final class WebpToMp4Context {
                 continue
             }
             let pixelBuffer = buffer(from: image)!
-            let pixelBufferBg = buffer(from: image, bg: true)!
+            let pixelBufferBg = buffer(from: image)!
 
             let frameTime: CMTime  = CMTimeMake(value: 20, timescale: 600);
             let lastTime: CMTime = CMTimeMake(value: Int64(index) * 20, timescale: 600);
@@ -400,9 +401,9 @@ private final class StickerToMp4 {
     }
     
     private let context:QueueLocalObject<StickerToMp4Context>
-    init(context _context: AccountContext, fileReference: FileMediaReference) {
+    init(context _context: AccountContext, background: Signal<CGImage, NoError>, fileReference: FileMediaReference) {
         self.context = .init(queue: StickerToMp4Context.queue, generate: {
-            return StickerToMp4Context(context: _context, fileReference: fileReference)
+            return StickerToMp4Context(context: _context, background: background, fileReference: fileReference)
         })
     }
     
@@ -556,12 +557,20 @@ private final class FetchStickerToImage {
 }
 
 final class MediaObjectToAvatar {
-    enum Object {
-        case emoji(String)
-        case sticker(TelegramMediaFile)
-        case animated(TelegramMediaFile)
-        case gif(TelegramMediaFile)
-        case webp(TelegramMediaFile)
+    struct Object {
+        enum Foregroud {
+            case emoji(String)
+            case sticker(TelegramMediaFile)
+            case animated(TelegramMediaFile)
+            case gif(TelegramMediaFile)
+            case webp(TelegramMediaFile)
+        }
+        enum Background {
+            case colors([NSColor])
+            case pattern(Wallpaper)
+        }
+        let foreground: Foregroud
+        let background: Background
     }
     
     enum Result {
@@ -589,10 +598,82 @@ final class MediaObjectToAvatar {
     
     func start() -> Signal<Result, NoError> {
         
+        let background: Signal<CGImage, NoError>
+        
+        switch object.background {
+        case let .colors(colors):
+            background = Signal { subscriber in
+                
+                let image = generateImage(NSMakeSize(640, 640), contextGenerator: { size, ctx in
+                    ctx.clear(size.bounds)
+                    let imageRect = size.bounds
+                    if colors.count == 1, let color = colors.first {
+                        ctx.setFillColor(color.cgColor)
+                        ctx.fill(imageRect)
+                    } else {
+                        let gradientColors = colors.map { $0.cgColor } as CFArray
+                        let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                        
+                        var locations: [CGFloat] = []
+                        for i in 0 ..< colors.count {
+                            locations.append(delta * CGFloat(i))
+                        }
+                        let colorSpace = CGColorSpaceCreateDeviceRGB()
+                        let gradient = CGGradient(colorsSpace: colorSpace, colors: gradientColors, locations: &locations)!
+                                            
+                        ctx.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: 0.0, y: imageRect.height), options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+                    }
+                })!
+                
+                subscriber.putNext(image)
+                subscriber.putCompletion()
+                
+                return ActionDisposable(action: {
+                    
+                })
+            }
+        case let .pattern(wallpaper):
+            let emptyColor: TransformImageEmptyColor
+            
+            let colors = wallpaper.settings.colors.compactMap { NSColor($0) }
+            
+            if colors.count > 1 {
+                let colors = colors.map {
+                    return $0.withAlphaComponent($0.alpha == 0 ? 0.5 : $0.alpha)
+                }
+                emptyColor = .gradient(colors: colors, intensity: colors.first!.alpha, rotation: nil)
+            } else if let color = colors.first {
+                emptyColor = .color(color)
+            } else {
+                emptyColor = .color(NSColor(rgb: 0xd6e2ee, alpha: 0.5))
+            }
+            
+            let arguments = TransformImageArguments(corners: ImageCorners(radius: 0), imageSize: wallpaper.dimensions.aspectFilled(NSMakeSize(640, 640)), boundingSize: NSMakeSize(640, 640), intrinsicInsets: NSEdgeInsets(), emptyColor: emptyColor)
+            
+            switch wallpaper {
+            case let .file(_, file, _, _):
+                var representations:[TelegramMediaImageRepresentation] = []
+                if let dimensions = file.dimensions {
+                    representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil))
+                } else {
+                    representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(NSMakeSize(640, 640)), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil))
+                }
+
+                let updateImageSignal = chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: true, autoFetchFullSize: true, scale: 2, isBlurred: false, synchronousLoad: false, drawPatternOnly: false, palette: dayClassicPalette)
+
+                background = updateImageSignal |> map { value in
+                    return value.execute(arguments, value.data)!.generateImage()!
+                }
+                
+            default:
+                background = .complete()
+            }
+        }
+        
         let signal: Signal<Result, NoError>
-        switch object {
+        switch object.foreground {
         case let .animated(file):
-            let stickerToMp4: StickerToMp4 = .init(context: context, fileReference: .standalone(media: file))
+            let stickerToMp4: StickerToMp4 = .init(context: context, background: background, fileReference: .standalone(media: file))
             self.animated_c = stickerToMp4
             
             signal = stickerToMp4.status |> map { value -> String? in
