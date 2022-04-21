@@ -1,0 +1,617 @@
+iMac 17"
+iMac4,1
+
+iMac 17"
+iMac4,2
+
+iMac 17"
+iMac5,2
+
+iMac 17"
+iMac5,1
+
+iMac 17"
+iMac5,1
+
+iMac 20"
+iMac4,1
+
+iMac 20"
+iMac5,1
+
+iMac 20"
+iMac5,1
+
+iMac 20"
+iMac7,1
+
+iMac 20"
+iMac7,1
+
+iMac 20"
+iMac8,1
+
+iMac 20"
+iMac8,1
+
+iMac 20"
+iMac9,1
+
+iMac 20"
+iMac9,1
+
+iMac 20"
+iMac9,1
+
+iMac 21.5"
+iMac10,1
+
+iMac 21.5"
+iMac10,1
+
+iMac 21.5"
+iMac11,2
+
+iMac 21.5"
+iMac11,2
+
+iMac 21.5"
+iMac11,2
+
+iMac 21.5"
+iMac12,1
+
+iMac 21.5"
+iMac12,1
+
+iMac 21.5"
+iMac12,1
+
+iMac 21.5"
+iMac12,1
+
+iMac 21.5"
+iMac13,1
+
+iMac 21.5"
+iMac13,1
+
+iMac 21.5"
+iMac13,1
+
+iMac 21.5"
+iMac13,1
+
+iMac 21.5"
+iMac14,1
+
+iMac 21.5"
+iMac14,3
+
+iMac 21.5"
+iMac14,3
+
+iMac 21.5"
+iMac14,4
+
+iMac 21.5"
+iMac16,1
+
+iMac 21.5"
+iMac16,2
+
+iMac 21.5"
+iMac16,2
+
+iMac 21.5"
+iMac16,2
+
+iMac 21.5"
+iMac18,1
+
+iMac 21.5"
+iMac18,2
+
+iMac 21.5"
+iMac18,2
+
+iMac 21.5"
+iMac18,2
+
+iMac 21.5"
+iMac19,2
+
+iMac 21.5"
+iMac19,2
+
+iMac 21.5"
+iMac19,2
+
+iMac 24"
+iMac6,1
+
+iMac 24"
+iMac6,1
+
+iMac 24"
+iMac7,1
+
+iMac 24"
+iMac7,1
+
+iMac 24"
+iMac8,1
+
+iMac 24"
+iMac8,1
+
+iMac 24"
+iMac9,1
+
+iMac 24"
+iMac9,1
+
+iMac 24"
+iMac9,1
+
+iMac 24" M1
+iMac21,2
+
+iMac 24" M1
+iMac21,1
+
+iMac 27"
+iMac10,1
+
+iMac 27"
+iMac10,1
+
+iMac 27"
+iMac11,1
+
+iMac 27"
+iMac11,1
+
+iMac 27"
+iMac11,3
+
+iMac 27"
+iMac11,3
+
+iMac 27"
+iMac11,3
+
+iMac 27"
+iMac11,3
+
+iMac 27"
+iMac12,2
+
+iMac 27"
+iMac12,2
+
+iMac 27"
+iMac12,2
+
+iMac 27"
+iMac13,2
+
+iMac 27"
+iMac13,2
+
+iMac 27"
+iMac13,2
+
+iMac 27"
+iMac14,2
+
+iMac 27"
+iMac14,2
+
+iMac 27"
+iMac14,2
+
+iMac 27"
+iMac15,1
+
+iMac 27"
+iMac15,1
+
+iMac 27"
+iMac15,1
+
+iMac 27"
+iMac17,1
+
+iMac 27"
+iMac17,1
+
+iMac 27"
+iMac17,1
+
+iMac 27"
+iMac18,3
+
+iMac 27"
+iMac19,1
+
+iMac 27"
+iMac20,1
+
+iMac 27"
+iMac20,2
+
+iMac Pro
+iMacPro1,1
+
+iMac Pro
+iMacPro1,1
+
+Mac mini
+Macmini1,1
+
+Mac mini
+Macmini2,1
+
+Mac mini
+Macmini3,1
+
+Mac mini
+Macmini3,1
+
+Mac mini
+Macmini4,1
+
+Mac mini
+Macmini5,1
+
+Mac mini
+Macmini5,2
+
+Mac mini
+Macmini5,2
+
+Mac mini
+Macmini5,3
+
+Mac mini
+Macmini6,1
+
+Mac mini
+Macmini6,2
+
+Mac mini
+Macmini7,1
+
+Mac mini
+Macmini8,1
+
+Mac mini Developer Transition Kit
+ADP3,2
+
+Mac mini M1
+Macmini9,1
+
+Mac Pro
+MacPro1,1*
+
+Mac Pro
+MacPro2,1
+
+Mac Pro
+MacPro3,1
+
+Mac Pro
+MacPro4,1
+
+Mac Pro
+MacPro5,1
+
+Mac Pro
+MacPro6,1
+
+Mac Pro
+MacPro7,1
+
+
+Mac Pro
+MacPro7,1
+
+MacBook
+MacBook1,1
+
+MacBook
+MacBook2,1
+
+MacBook
+MacBook3,1
+
+MacBook
+MacBook4,1
+
+MacBook
+MacBook5,1
+
+MacBook
+MacBook5,2
+
+MacBook
+MacBook6,1
+
+MacBook
+MacBook7,1
+
+MacBook
+MacBook8,1
+
+MacBook
+MacBook8,1
+
+MacBook
+MacBook9,1
+
+MacBook
+MacBook10,1
+
+MacBook
+MacBookAir1,1
+
+MacBook Air
+MacBookAir1,1
+
+MacBook Air
+MacBookAir2,1
+
+MacBook Air
+MacBookAir3,1
+
+MacBook Air
+MacBookAir3,1
+
+MacBook Air
+MacBookAir3,2
+
+MacBook Air
+MacBookAir3,2
+
+MacBook Air
+MacBookAir4,1
+
+MacBook Ai
+MacBookAir4,2
+
+MacBook Air
+MacBookAir5,1
+
+MacBook Air
+MacBookAir5,2
+
+MacBook Air
+MacBookAir6,1
+
+MacBook Air
+MacBookAir6,2
+
+
+MacBook Air
+MacBookAir7,1
+
+MacBook Air
+MacBookAir7,2
+
+MacBook Air
+MacBookAir8,1
+
+MacBook Air
+MacBookAir8,2
+
+MacBook Air
+MacBookAir9,1
+
+MacBook Air M1
+MacBookAir10,1
+
+MacBook Pro 13"
+MacBookPro5,5
+
+MacBook Pro 13"
+MacBookPro5,5
+
+MacBook Pro 13"
+MacBookPro7,1
+
+MacBook Pro
+MacBookPro8,1
+
+MacBook Pro 13"
+MacBookPro8,1
+
+MacBook Pro 13"
+MacBookPro8,1
+
+MacBook Pro 13"
+MacBookPro8,1
+
+MacBook Pro 13"
+MacBookPro9,2
+
+MacBook Pro 13"
+MacBookPro9,2
+
+MacBook Pro 13"
+MacBookPro10,2
+
+MacBook Pro 13"
+MacBookPro10,2
+
+MacBook Pro 13"
+MacBookPro10,2
+
+MacBook Pro 13"
+MacBookPro10,2
+
+MacBook Pro 13"
+MacBookPro11,1
+
+MacBook Pro 13"
+MacBookPro11,1
+
+MacBook Pro 13"
+MacBookPro11,1
+
+MacBook Pro 13"
+MacBookPro11,1
+
+MacBook Pro 13"
+MacBookPro11,1
+
+MacBook Pro 13"
+MacBookPro11,1
+
+MacBook Pro 13"
+MacBookPro12,1
+
+MacBook Pro 13"
+MacBookPro12,1
+
+MacBook Pro 13"
+MacBookPro12,1
+
+MacBook Pro 13"
+MacBookPro13,1
+
+MacBook Pro 13"
+MacBookPro13,1
+
+MacBook Pro 13"
+MacBookPro13,2
+
+MacBook Pro 13"
+MacBookPro14,1
+
+MacBook Pro 13"
+MacBookPro14,2
+
+
+MacBook Pro 13"
+MacBookPro15,2
+
+MacBook Pro 13"
+MacBookPro15,4
+
+MacBook Pro 13"
+MacBookPro16,3
+
+MacBook Pro 13"
+MacBookPro16,2
+
+MacBook Pro 13" M1
+MacBookPro17,1
+
+MacBook Pro 14" M1 Pro
+MacBookPro18,3
+
+MacBook Pro 14" M1 Max
+MacBookPro18,4
+
+MacBook Pro 15"
+MacBookPro1,1
+
+MacBook Pro 15"
+MacBookPro2,2
+
+MacBook Pro 15"
+MacBookPro3,1
+
+MacBook Pro 15"
+MacBookPro4,1
+
+MacBook Pro 15"
+MacBookPro5,1
+
+MacBook Pro 15"
+MacBookPro5,4
+
+MacBook Pro 15"
+MacBookPro5,3
+
+MacBook Pro 15"
+MacBookPro6,2
+
+MacBook Pro 15"
+MacBookPro8,2
+
+MacBook Pro 15"
+MacBookPro8,2
+
+MacBook Pro 15"
+MacBookPro9,1
+
+MacBook Pro 15"
+MacBookPro10,1
+
+MacBook Pro 15"
+MacBookPro11,2
+
+MacBook Pro 15"
+MacBookPro11,3
+
+MacBook Pro 15"
+MacBookPro11,2
+
+MacBook Pro 15"
+MacBookPro11,3
+
+MacBook Pro 15"
+MacBookPro11,4
+
+MacBook Pro 15"
+MacBookPro11,5
+
+MacBook Pro 15
+MacBookPro13,3
+
+MacBook Pro 15"
+MacBookPro14,3
+
+MacBook Pro 15"
+MacBookPro15,1
+
+MacBook Pro 15"
+MacBookPro15,3
+
+MacBook Pro 15"
+MacBookPro15,1
+
+MacBook Pro 16"
+MacBookPro16,1
+
+MacBook Pro 16"
+MacBookPro16,4
+
+MacBook Pro 16" M1 Pro
+MacBookPro18,1
+
+MacBook Pro 16" M1 Max
+MacBookPro18,2
+
+MacBook Pro 17"
+MacBookPro1,2
+
+MacBook Pro 17"
+MacBookPro2,1
+
+MacBook Pro 17"
+MacBookPro3,1
+
+MacBook Pro 17"
+MacBookPro4,1
+
+MacBook Pro 17"
+MacBookPro5,2
+
+MacBook Pro 17"
+MacBookPro6,1
+
+MacBook Pro 17"
+MacBookPro8,3

@@ -15,13 +15,12 @@ final class ChatInputMenuView : View {
     private let button = Control()
     private let animationView: LottiePlayerView = LottiePlayerView(frame: NSMakeRect(0, 0, 30, 30))
     weak var chatInteraction: ChatInteraction?
+    private var botMenu: ChatPresentationInterfaceState.BotMenu?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
         addSubview(button)
-        
-        animationView.background = .random
-        
+                
         button.addSubview(animationView)
         button.scaleOnClick = true
         button.layer?.cornerRadius = 15
@@ -29,20 +28,27 @@ final class ChatInputMenuView : View {
         updateLocalizationAndTheme(theme: theme)
         
         button.set(handler: { [weak self] _ in
-            self?.chatInteraction?.update {
-                $0.updateBotMenu { current in
-                    var current = current
-                    if let value = current {
-                        current?.revealed = !value.revealed
+            if let botMenu = self?.botMenu {
+                switch botMenu.menuButton {
+                case .commands:
+                    self?.chatInteraction?.update {
+                        $0.updateBotMenu { current in
+                            var current = current
+                            if let value = current {
+                                current?.revealed = !value.revealed
+                            }
+                            return current
+                        }
                     }
-                    return current
+                case let .webView(text, url):
+                    self?.chatInteraction?.openWebviewFromMenu(buttonText: text, url: url)
                 }
             }
+            
         }, for: .Click)
         
     }
     
-    private var botMenu: ChatPresentationInterfaceState.BotMenu?
     
     func update(_ botMenu: ChatPresentationInterfaceState.BotMenu, animated: Bool) {
         
@@ -83,7 +89,7 @@ final class ChatInputMenuView : View {
     
     override func layout() {
         super.layout()
-        
+                
         button.setFrameSize(NSMakeSize(40, 30))
         button.centerY(x: frame.width - button.frame.width)
         animationView.center()

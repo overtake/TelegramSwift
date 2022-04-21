@@ -87,19 +87,18 @@ private func <(lhs: ContactsEntry, rhs: ContactsEntry) -> Bool {
 }
 
 
-private func entriesForView(_ view: ContactPeersView) -> [ContactsEntry] {
+private func entriesForView(_ view: EngineContactList, accountPeer: Peer?) -> [ContactsEntry] {
     var entries: [ContactsEntry] = []
-    if let accountPeer = view.accountPeer {
+    if let accountPeer = accountPeer {
         
         entries.append(.addContact)
         
         var peerIds: Set<PeerId> = Set()
         var index: Int32 = 0
-        
-        let orderedPeers = view.peers.sorted(by: { lhsPeer, rhsPeer in
-            let lhsPresence = view.peerPresences[lhsPeer.id]
-            let rhsPresence = view.peerPresences[rhsPeer.id]
-            if let lhsPresence = lhsPresence as? TelegramUserPresence, let rhsPresence = rhsPresence as? TelegramUserPresence {
+        let orderedPeers = view.peers.map { $0._asPeer() }.sorted(by: { lhsPeer, rhsPeer in
+            let lhsPresence = view.presences[lhsPeer.id]
+            let rhsPresence = view.presences[rhsPeer.id]
+            if let lhsPresence = lhsPresence?._asPresence() as? TelegramUserPresence, let rhsPresence = rhsPresence?._asPresence() as? TelegramUserPresence {
                 if lhsPresence.status < rhsPresence.status {
                     return false
                 } else if lhsPresence.status > rhsPresence.status {
@@ -115,7 +114,7 @@ private func entriesForView(_ view: ContactPeersView) -> [ContactsEntry] {
         
         for peer in orderedPeers {
             if !peer.isEqual(accountPeer), !peerIds.contains(peer.id) {
-                entries.append(.peer(peer, view.peerPresences[peer.id], index))
+                entries.append(.peer(peer, view.presences[peer.id]?._asPresence(), index))
                 peerIds.insert(peer.id)
                 index += 1
             }
@@ -144,16 +143,12 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ContactsEntry>]?, t
             switch entry {
             case let .peer(peer, presence, _):
                 var color:NSColor = theme.colors.grayText
-                var string:String = L10n.peerStatusRecently
+                var string:String = strings().peerStatusRecently
                 if let presence = presence as? TelegramUserPresence {
                     let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                     (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp))
                 }
-                item = ShortPeerRowItem(initialSize, peer: peer, account: context.account, stableId: entry.stableId,statusStyle: ControlStyle(foregroundColor:color), status: string, borderType: [.Right], contextMenuItems: {
-                    return .single([ContextMenuItem(L10n.chatListContextPreview, handler: {
-                        showModal(with: ChatModalPreviewController(location: .peer(peer.id), context: context), for: context.window)
-                    })])
-                })
+                item = ShortPeerRowItem(initialSize, peer: peer, account: context.account, stableId: entry.stableId,statusStyle: ControlStyle(foregroundColor:color), status: string, borderType: [.Right])
             case .addContact:
                 item = AddContactTableItem(initialSize, stableId: entry.stableId, addContact: {
                     arguments.addContact()
@@ -251,14 +246,20 @@ class ContactsController: PeersListController {
         let first:Atomic<Bool> = Atomic(value:false)
         
         let arguments = ContactsArguments(addContact: {
-            showModal(with: AddContactModalController(context), for: mainWindow)
+            showModal(with: AddContactModalController(context), for: context.window)
         })
         
         
-        let transition = combineLatest(queue: prepareQueue, context.account.postbox.contactPeersView(accountPeerId: context.peerId, includePresences: true), appearanceSignal)
-            |> mapToQueue { view, appearance -> Signal<TableUpdateTransition, NoError> in
+        let contacts = context.engine.data.subscribe(TelegramEngine.EngineData.Item.Contacts.List(includePresences: true))
+        
+        let accountPeer = context.engine.data.get(
+            TelegramEngine.EngineData.Item.Peer.Peer(id: context.peerId)
+        ) |> map { $0?._asPeer() }
+        
+        let transition = combineLatest(queue: prepareQueue, contacts, accountPeer, appearanceSignal)
+            |> mapToQueue { view, accountPeer, appearance -> Signal<TableUpdateTransition, NoError> in
                 let first:Bool = !first.swap(true)
-                let entries = entriesForView(view).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+                let entries = entriesForView(view, accountPeer: accountPeer).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
 
                 return prepareEntries(from: previousEntries.swap(entries), to: entries, context: context, initialSize: initialSize.modify({$0}), arguments: arguments, animated: !first) |> runOn(first ? .mainQueue() : prepareQueue)
 

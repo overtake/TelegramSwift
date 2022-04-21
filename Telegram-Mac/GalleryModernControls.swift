@@ -187,25 +187,29 @@ class GalleryModernControlsView: View {
                 }
             }
         case let .message(message):
-            if let message = message.message, message.containsSecretMedia {
-                
-            }
+            let cantSave = message.message?.containsSecretMedia == true || message.message?.isCopyProtected() == true
+            
             if message.message?.media.first is TelegramMediaImage {
                 zoomInControl.isHidden = false
                 zoomOutControl.isHidden = false
                 rotateControl.isHidden = false
-                fastSaveControl.isHidden = message.message?.containsSecretMedia == true
+                fastSaveControl.isHidden = cantSave
             } else if let file = message.message?.media.first as? TelegramMediaFile {
                 if file.isVideo {
                     zoomInControl.isHidden = false
                     zoomOutControl.isHidden = false
                     rotateControl.isHidden = true
-                    fastSaveControl.isHidden = message.message?.containsSecretMedia == true
+                    fastSaveControl.isHidden = cantSave
                 } else if !file.isGraphicFile {
                     zoomInControl.isHidden = false
                     zoomOutControl.isHidden = false
                     rotateControl.isHidden = true
-                    fastSaveControl.isHidden = message.message?.containsSecretMedia == true
+                    fastSaveControl.isHidden = cantSave
+                } else {
+                    zoomInControl.isHidden = false
+                    zoomOutControl.isHidden = false
+                    rotateControl.isHidden = false
+                    fastSaveControl.isHidden = cantSave
                 }
             } else if let webpage = message.message?.media.first as? TelegramMediaWebpage {
                 if case let .Loaded(content) = webpage.content {
@@ -265,7 +269,7 @@ class GalleryModernControlsView: View {
             formatter.timeStyle = .short
             formatter.doesRelativeDateFormatting = true
             formatter.timeZone = NSTimeZone.local
-            nameNode = TextNode.layoutText(.initialize(string: currentState.peer?.displayTitle.prefixWithDots(30) ?? L10n.peerDeletedUser, color: NSPointInRect(point, nameRect) ? .white : .grayText, font: .medium(.huge)), nil, 1, .end, NSMakeSize(frame.width, 20), nil, false, .left)
+            nameNode = TextNode.layoutText(.initialize(string: currentState.peer?.displayTitle.prefixWithDots(30) ?? strings().peerDeletedUser, color: NSPointInRect(point, nameRect) ? .white : .grayText, font: .medium(.huge)), nil, 1, .end, NSMakeSize(frame.width, 20), nil, false, .left)
             dateNode = currentState.timestamp == 0 ? nil : TextNode.layoutText(.initialize(string: formatter.string(from: Date(timeIntervalSince1970: currentState.timestamp)), color: NSPointInRect(point, dateRect) ? .white : .grayText, font: .normal(.title)), nil, 1, .end, NSMakeSize(frame.width, 20), nil, false, .left)
         }
         

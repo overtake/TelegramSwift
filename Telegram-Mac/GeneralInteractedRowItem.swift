@@ -35,6 +35,8 @@ class GeneralInteractedRowItem: GeneralRowItem {
     let switchAppearance: SwitchViewAppearance
     let autoswitch: Bool
     
+    let badgeNode:BadgeNode?
+    
     let disabledAction:()->Void
     
     var nameWidth:CGFloat {
@@ -77,6 +79,8 @@ class GeneralInteractedRowItem: GeneralRowItem {
     private let menuItems:(()->[ContextMenuItem])?
     let disableBorder: Bool
     init(_ initialSize:NSSize, stableId:AnyHashable = arc4random(), name:String, icon: CGImage? = nil, activeIcon: CGImage? = nil, nameStyle:ControlStyle = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text), description: String? = nil, descTextColor: NSColor = theme.colors.grayText, type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping ()->Void = {}, drawCustomSeparator:Bool = true, thumb:GeneralThumbAdditional? = nil, border:BorderType = [], inset: NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, switchAppearance: SwitchViewAppearance = switchViewAppearance, error: InputDataValueError? = nil, autoswitch: Bool = true, disabledAction: @escaping()-> Void = {}, menuItems:(()->[ContextMenuItem])? = nil, customTheme: GeneralRowItem.Theme? = nil, disableBorder: Bool = false) {
+        
+        
         self.name = name
         self.menuItems = menuItems
         self.disableBorder = disableBorder
@@ -90,6 +94,11 @@ class GeneralInteractedRowItem: GeneralRowItem {
             self.thumb = GeneralThumbAdditional(thumb: icon, textInset: nil)
         } else {
             self.thumb = thumb
+        }
+        if case let .badge(text, color) = type {
+            self.badgeNode = .init(.initialize(string: text, color: .white, font: .medium(.short)), color)
+        } else {
+            self.badgeNode = nil
         }
         self.disabledAction = disabledAction
         self.autoswitch = autoswitch
@@ -121,6 +130,8 @@ class GeneralInteractedRowItem: GeneralRowItem {
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         let result = super.makeSize(width, oldWidth: oldWidth)
+        
+        
         nameLayout = TextNode.layoutText(maybeNode: nil,  NSAttributedString.initialize(string: name, color: enabled ? nameStyle.foregroundColor : theme.colors.grayText, font: nameStyle.font), nil, 1, .end, NSMakeSize(nameWidth, .greatestFiniteMagnitude), nil, isSelected, .left)
         nameLayoutSelected = TextNode.layoutText(maybeNode: nil,  NSAttributedString.initialize(string: name, color: theme.colors.underSelectedColor, font: nameStyle.font), nil, 1, .end, NSMakeSize(nameWidth, .greatestFiniteMagnitude), nil, isSelected, .left)
         descLayout?.measure(width: nameWidth)

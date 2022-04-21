@@ -9,6 +9,7 @@
 import Cocoa
 import TGUIKit
 import SwiftSignalKit
+import InAppSettings
 
 extension CATiledLayer {
     func fadeDuration() -> CFTimeInterval {

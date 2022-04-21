@@ -110,7 +110,7 @@ class GifPreviewModalView : View, ModalPreviewControllerView {
             
             
             let iconSignal: Signal<ImageDataTransformation, NoError>
-            iconSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: reference, scale: backingScaleFactor)
+            iconSignal = chatMessageSticker(postbox: context.account.postbox, file: reference, small: false, scale: backingScaleFactor)
 
             player.update(with: reference, size: size, viewSize: size, context: context, table: nil, iconSignal: iconSignal)
             player.frame = NSMakeRect(0, frame.height - size.height, size.width, size.height)
@@ -281,8 +281,12 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
             self.player?.removeFromSuperview()
             self.player = nil
             
-            let size = NSMakeSize(frame.width - 80, frame.height - 80)
-
+            let dimensions = reference.media.dimensions?.size
+            
+            var size = NSMakeSize(frame.width - 80, frame.height - 80)
+            if let dimensions = dimensions {
+                size = dimensions.aspectFitted(size)
+            }
 
             self.player = LottiePlayerView(frame: NSMakeRect(0, 0, size.width, size.height))
             addSubview(self.player!)
@@ -306,6 +310,9 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
             self.loadResourceDisposable.set((data |> map { resourceData -> Data? in
                 
                 if resourceData.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
+                    if reference.media.isWebm {
+                        return resourceData.path.data(using: .utf8)!
+                    }
                     return data
                 }
                 return nil
@@ -313,7 +320,9 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
                 if let data = data {
                     
                     let type: LottieAnimationType
-                    if reference.media.mimeType == "image/webp" {
+                    if reference.media.isWebm {
+                        type = .webm
+                    } else if reference.media.mimeType == "image/webp" {
                         type = .webp
                     } else {
                         type = .lottie

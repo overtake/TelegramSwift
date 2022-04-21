@@ -156,7 +156,7 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                     return (.file(data.file, GifPreviewModalView.self), self.subviews[i])
                 case let .sticker(_, file):
                     let reference = file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)
-                    if file.isAnimatedSticker {
+                    if file.isAnimatedSticker || file.isWebm {
                         return (.file(reference, AnimatedStickerPreviewModalView.self), self.subviews[i])
                     } else {
                         return (.file(reference, StickerPreviewModalView.self), self.subviews[i])
@@ -227,6 +227,8 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                             effectiveFile = FileMediaReference.webPage(webPage: webPage, media: file)
                         case let .avatarList(peer: reference, media: media):
                             effectiveFile = FileMediaReference.avatarList(peer: reference, media: media)
+                        case let .attachBot(peer, media):
+                            effectiveFile = FileMediaReference.attachBot(peer: peer, media: media)
                         }
                         
                     }

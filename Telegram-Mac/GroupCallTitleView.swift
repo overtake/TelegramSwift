@@ -207,7 +207,7 @@ final class GroupCallTitleView : Control {
         
         if let recordingView = recordingView {
             
-            let layout = titleView.layout
+            let layout = titleView.textLayout
             
             layout?.measure(width: backgroundView.frame.width - 125 - recordingView.frame.width - 10 - 30 - add)
             titleView.update(layout)
@@ -220,7 +220,7 @@ final class GroupCallTitleView : Control {
             
         } else {
             
-            let layout = titleView.layout
+            let layout = titleView.textLayout
             layout?.measure(width: backgroundView.frame.width - 125 - add)
             titleView.update(layout)
             
@@ -247,6 +247,12 @@ final class GroupCallTitleView : Control {
         let mode: Mode = .normal
         
         self.updateMode(mode, animated: animated)
+        
+        let windowIsPinned = window?.level == NSWindow.Level.popUpMenu
+        
+        pinWindow.set(image: !windowIsPinned ?  GroupCallTheme.pin_window : GroupCallTheme.unpin_window, for: .Normal)
+        pinWindow.sizeToFit()
+
                 
         let title: String = state.title
         let oldTitle: String? = currentState?.title
@@ -316,9 +322,9 @@ final class GroupCallTitleView : Control {
         let oldHidePeers = currentState?.hideParticipants == true
         
         
-        let hidePeersButtonHide = state.mode != .video || state.activeVideoViews.isEmpty || !state.isFullScreen
+        let hidePeersButtonHide = state.mode != .video || state.activeVideoViews.isEmpty || !state.isFullScreen || state.isStream
         
-        let oldHidePeersButtonHide = currentState?.mode != .video || currentState?.activeVideoViews.isEmpty == true || currentState?.isFullScreen == false
+        let oldHidePeersButtonHide = currentState?.mode != .video || currentState?.activeVideoViews.isEmpty == true || currentState?.isFullScreen == false || currentState?.isStream == true
 
         
         let updated = titleUpdated || recordingUpdated || participantsUpdated || mode != oldMode || hidePeers != oldHidePeers || oldHidePeersButtonHide != hidePeersButtonHide
@@ -387,13 +393,22 @@ final class GroupCallTitleView : Control {
             let status: String
             let count: Int
             if state.state.scheduleTimestamp != nil {
-                status = L10n.voiceChatTitleScheduledSoon
+                status = strings().voiceChatTitleScheduledSoon
                 count = 0
             }  else if let summaryState = state.summaryState {
-                status = L10n.voiceChatStatusMembersCountable(summaryState.participantCount)
-                count = summaryState.participantCount
+                if summaryState.participantCount == 0 {
+                    status = strings().voiceChatStatusStream
+                    count = summaryState.participantCount
+                } else {
+                    if state.isStream {
+                        status = strings().voiceChatStatusViewersCountable(summaryState.participantCount)
+                    } else {
+                        status = strings().voiceChatStatusMembersCountable(summaryState.participantCount)
+                    }
+                    count = summaryState.participantCount
+                }
             } else {
-                status = L10n.voiceChatStatusLoading
+                status = strings().voiceChatStatusLoading
                 count = 0
             }
 
@@ -410,10 +425,6 @@ final class GroupCallTitleView : Control {
             needsLayout = true
         }
         
-        let windowIsPinned = window?.level == NSWindow.Level.popUpMenu
-        
-        pinWindow.set(image: !windowIsPinned ?  GroupCallTheme.pin_window : GroupCallTheme.unpin_window, for: .Normal)
-        pinWindow.sizeToFit()
         
         pinWindow.removeAllHandlers()
         pinWindow.set(handler: { control in
@@ -424,7 +435,7 @@ final class GroupCallTitleView : Control {
             control.window?.level = (windowIsPinned ? NSWindow.Level.normal : NSWindow.Level.popUpMenu)
             (control as? ImageButton)?.set(image: windowIsPinned ?  GroupCallTheme.pin_window : GroupCallTheme.unpin_window, for: .Normal)
             
-            showModalText(for: window, text: !windowIsPinned ? L10n.voiceChatTooltipPinWindow : L10n.voiceChatTooltipUnpinWindow)
+            showModalText(for: window, text: !windowIsPinned ? strings().voiceChatTooltipPinWindow : strings().voiceChatTooltipUnpinWindow)
             
         }, for: .Click)
 

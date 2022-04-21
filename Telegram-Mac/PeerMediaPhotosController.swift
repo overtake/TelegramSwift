@@ -19,7 +19,7 @@ extension Message : Equatable {
 }
 
 private enum PeerMediaMonthEntry : TableItemListNodeEntry {
-    case month(index: MessageIndex, items: [Message], galleryType: GalleryAppearType, viewType: GeneralViewType)
+    case line(index: MessageIndex, stableId: MessageIndex, items: [Message], galleryType: GalleryAppearType, viewType: GeneralViewType)
     case date(index: MessageIndex)
     case section(index: MessageIndex)
         
@@ -31,7 +31,7 @@ private enum PeerMediaMonthEntry : TableItemListNodeEntry {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMMM yyyy";
         switch self {
-        case let .month(index, _, _, _):
+        case let .line(index, _, _, _, _):
             let date = Date(timeIntervalSince1970: TimeInterval(index.timestamp))
             return "items: \(formatter.string(from: date))"
         case let .date(index):
@@ -45,7 +45,7 @@ private enum PeerMediaMonthEntry : TableItemListNodeEntry {
     
     func item(_ arguments: PeerMediaPhotosArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case let .month(_, items, galleryType, viewType):
+        case let .line(_, stableId, items, galleryType, viewType):
             return PeerPhotosMonthItem(initialSize, stableId: stableId, viewType: viewType, context: arguments.context, chatInteraction: arguments.chatInteraction, gallerySupplyment: arguments.gallerySupplyment, items: items, galleryType: galleryType)
         case .date:
             return PeerMediaDateItem(initialSize, index: index, stableId: stableId)
@@ -55,12 +55,17 @@ private enum PeerMediaMonthEntry : TableItemListNodeEntry {
     }
     
     var stableId: MessageIndex {
-        return self.index
+        switch self {
+        case let .line(_, stableId, _, _, _):
+            return stableId
+        default:
+            return self.index
+        }
     }
     
     var index: MessageIndex {
         switch self {
-        case let .month(index, _, _, _):
+        case let .line(index, _, _, _, _):
             return index
         case let .date(index):
             return index
@@ -84,29 +89,28 @@ private final class PeerMediaPhotosArguments {
 
 
 private struct PeerMediaPhotosState : Equatable {
-    let isLoading: Bool
-    let messages:[Message]
-    let searchState: SearchState
-    let contentSettings: ContentSettings
-    init(isLoading: Bool, messages: [Message], searchState: SearchState, contentSettings: ContentSettings) {
+    static func == (lhs: PeerMediaPhotosState, rhs: PeerMediaPhotosState) -> Bool {
+        return lhs.isLoading == rhs.isLoading && lhs.messages == rhs.messages && lhs.searchState == rhs.searchState && lhs.contentSettings == rhs.contentSettings && lhs.scrollPosition == rhs.scrollPosition && lhs.updateType == rhs.updateType && lhs.side == rhs.side && lhs.perRowCount == rhs.perRowCount
+    }
+    
+    var isLoading: Bool
+    var messages:[Message]
+    var searchState: SearchState
+    var contentSettings: ContentSettings
+    var scrollPosition: ChatHistoryViewScrollPosition?
+    var updateType: ChatHistoryViewUpdateType?
+    var side: TableSavingSide?
+    var view: MessageHistoryView?
+    var perRowCount: Int
+    init(isLoading: Bool, messages: [Message], searchState: SearchState, contentSettings: ContentSettings, scrollPosition: ChatHistoryViewScrollPosition?, updateType: ChatHistoryViewUpdateType?, side: TableSavingSide?, perRowCount: Int) {
         self.isLoading = isLoading
         self.messages = messages.reversed().filter { $0.restrictedText(contentSettings) == nil }
         self.searchState = searchState
         self.contentSettings = contentSettings
-    }
-    func withAppendMessages(_ collection: [Message]) -> PeerMediaPhotosState {
-        var messages = self.messages
-        messages.append(contentsOf: collection)
-        return PeerMediaPhotosState(isLoading: self.isLoading, messages: messages, searchState: self.searchState, contentSettings: self.contentSettings)
-    }
-    func withUpdatedMessages(_ collection: [Message]) -> PeerMediaPhotosState {
-        return PeerMediaPhotosState(isLoading: self.isLoading, messages: collection, searchState: self.searchState, contentSettings: self.contentSettings)
-    }
-    func withUpdatedLoading(_ isLoading: Bool) -> PeerMediaPhotosState {
-        return PeerMediaPhotosState(isLoading: isLoading, messages: self.messages, searchState: self.searchState, contentSettings: self.contentSettings)
-    }
-    func withUpdatedSeachState(_ searchState: SearchState) -> PeerMediaPhotosState {
-        return PeerMediaPhotosState(isLoading: isLoading, messages: self.messages, searchState: searchState, contentSettings: self.contentSettings)
+        self.updateType = updateType
+        self.scrollPosition = scrollPosition
+        self.side = side
+        self.perRowCount = perRowCount
     }
 }
 
@@ -142,7 +146,7 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
                         viewType = .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 1, 0))
                     }
                 }
-                entries.append(.month(index: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: viewType))
+                entries.append(.line(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: viewType))
                 temp.removeAll()
             }
         } else {
@@ -151,23 +155,23 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
             
             if !entries.isEmpty {
                 switch entries[entries.count - 1] {
-                case let .month(prevIndex, items, galleryType, viewType):
+                case let .line(prevIndex, stableId, items, galleryType, viewType):
                     let prevDateId = mediaDateId(for: prevIndex.timestamp)
                     if prevDateId != dateId {
                         entries.append(.section(index: index.peerLocalSuccessor()))
                         entries.append(.date(index: index))
-                        entries.append(.month(index: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
+                        entries.append(.line(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
                     } else {
-                        entries[entries.count - 1] = .month(index: prevIndex, items: items + temp, galleryType: galleryType, viewType: viewType)
+                        entries[entries.count - 1] = .line(index: prevIndex, stableId: stableId, items: items + temp, galleryType: galleryType, viewType: viewType)
                     }
                 default:
                     assertionFailure()
                 }
             } else {
                 if isExternalSearch {
-                    entries.append(.month(index: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
+                    entries.append(.line(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
                 } else {
-                    entries.append(.month(index: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
+                    entries.append(.line(index: index.peerLocalPredecessor(), stableId: index.peerLocalPredecessor(), items: temp, galleryType: galleryType, viewType: .modern(position: .last, insets: NSEdgeInsetsMake(0, 0, 1, 0))))
                 }
             }
             
@@ -176,15 +180,68 @@ private func mediaEntires(state: PeerMediaPhotosState, arguments: PeerMediaPhoto
     if !state.messages.isEmpty {
         entries.append(.section(index: MessageIndex.absoluteLowerBound()))
     }
+    
+    var updated:[PeerMediaMonthEntry] = []
+    
+    
+    
+    var j: Int = 0
+    for entry in entries {
+        switch entry {
+        case let .line(index, _, items, galleryType, _):
+            let chunks = items.chunks(state.perRowCount)
+            for (i, chunk) in chunks.enumerated() {
+                let message = chunk[0]
+                let stableId = MessageIndex(message)
 
-    return entries
+                var viewType: GeneralViewType = bestGeneralViewType(chunks, for: i)
+                if i == 0 && j == 0 {
+                    viewType = chunks.count > 1 ? .innerItem : .lastItem
+                }
+                let updatedViewType: GeneralViewType = .modern(position: viewType.position, insets: NSEdgeInsetsMake(0, 0, 1, 0))
+                updated.append(.line(index: index, stableId: stableId, items: chunk, galleryType: galleryType, viewType: updatedViewType))
+            }
+            j += 1
+        case .date:
+            updated.append(entry)
+        case .section:
+            updated.append(entry)
+        }
+    }
+
+    return updated
 }
 
-fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PeerMediaMonthEntry>], right: [AppearanceWrapperEntry<PeerMediaMonthEntry>], animated: Bool, initialSize:NSSize, arguments: PeerMediaPhotosArguments) -> TableUpdateTransition {
+fileprivate func prepareTransition(left:[AppearanceWrapperEntry<PeerMediaMonthEntry>], right: [AppearanceWrapperEntry<PeerMediaMonthEntry>], animated: Bool, scrollPostion: ChatHistoryViewScrollPosition?, updateType: ChatHistoryViewUpdateType?, side: TableSavingSide?, initialSize:NSSize, arguments: PeerMediaPhotosArguments) -> TableUpdateTransition {
     let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right) { entry -> TableRowItem in
         return entry.entry.item(arguments, initialSize: initialSize)
     }
-    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: animated)
+    
+    var scrollState: TableScrollState = .none(nil)
+    if let scrollPostion = scrollPostion {
+        switch scrollPostion {
+        case .index(_, let position, _, _):
+            scrollState = position
+        default:
+            break
+        }
+    } else {
+        if let updateType = updateType {
+            switch updateType {
+            case .Initial:
+                scrollState = .none(nil)
+            case .Generic(let type):
+                switch type {
+                case .Initial, .FillHole, .UpdateVisible:
+                    scrollState = .saveVisible(side ?? .upper)
+                default:
+                    break
+                }
+            }
+        }
+    }
+    
+    return TableUpdateTransition(deleted: removed, inserted: inserted, updated: updated, animated: animated, state: scrollState)
 }
 
 
@@ -251,11 +308,60 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
     private let previous: Atomic<[AppearanceWrapperEntry<PeerMediaMonthEntry>]> = Atomic(value: [])
     private let tags: MessageTags
     private var isExternalSearch: Bool = false
+    private let location: ValuePromise<ChatHistoryLocation> = ValuePromise(ignoreRepeated: false)
+    private var locationValue: ChatHistoryLocation? = nil
+    private var isTopHistory: (()->Bool)? = nil
+    private var updatePerRowCount:((Int) -> Void)? = nil
+    private func setLocation(_ location: ChatHistoryLocation) -> Void {
+        self.location.set(location)
+        self.locationValue = location
+    }
+    
     init(_ context: AccountContext, chatInteraction: ChatInteraction, peerId: PeerId, tags: MessageTags) {
         self.peerId = peerId
         self.chatInteraction = chatInteraction
         self.tags = tags
         super.init(context)
+    }
+    
+    private var perRowCount: Int {
+        var rowCount:Int = 4
+        var perWidth: CGFloat = 0
+        let blockWidth = min(600, atomicSize.with { $0.width })
+        while true {
+            let maximum = blockWidth - CGFloat(rowCount * 2)
+            perWidth = maximum / CGFloat(rowCount)
+            if perWidth >= 90 {
+                break
+            } else {
+                rowCount -= 1
+            }
+        }
+        return rowCount
+    }
+    
+    private func perPageCount() -> Int {
+        var rowCount:Int = 4
+        var perWidth: CGFloat = 0
+        let blockWidth = min(600, atomicSize.with { $0.width })
+        while true {
+            let maximum = blockWidth - CGFloat(rowCount * 2)
+            perWidth = maximum / CGFloat(rowCount)
+            if perWidth >= 90 {
+                break
+            } else {
+                rowCount -= 1
+            }
+        }
+        let pageCount = Int((atomicSize.with { $0.height } / perWidth) * CGFloat(rowCount) + CGFloat(rowCount)) * 2
+//        pageCount -= (pageCount % rowCount)
+        return pageCount * 5
+    }
+    
+    override func viewDidResized(_ size: NSSize) {
+        super.viewDidResized(size)
+        
+        updatePerRowCount?(self.perRowCount)
     }
     
     override func viewDidLoad() {
@@ -266,6 +372,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
         let initialSize = self.atomicSize
         let tags = self.tags
         let isExternalSearch = self.isExternalSearch
+        let perPageCount = self.perPageCount
 
         self.genericView.set(stickClass: PeerMediaDateItem.self, handler: { item in
             
@@ -275,75 +382,78 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
         self.searchState.set(.single(SearchState(state: .None, request: nil)))
         self.genericView.emptyItem = PeerMediaEmptyRowItem(NSZeroSize, tags: self.tags)
         
-        let perPageCount:()->Int = {
-            var rowCount:Int = 4
-            var perWidth: CGFloat = 0
-            let blockWidth = min(600, initialSize.with { $0.width } - 60)
-            while true {
-                let maximum = blockWidth - 7 - 7 - CGFloat(rowCount * 2)
-                perWidth = maximum / CGFloat(rowCount)
-                if perWidth >= 90 {
-                    break
-                } else {
-                    rowCount -= 1
-                }
-            }
-            return Int((initialSize.with { $0.height } / perWidth) * CGFloat(rowCount) + CGFloat(rowCount))
-        }
 
-        var requestCount = perPageCount() + 20
+        let requestCount = perPageCount()
         
-        let location: ValuePromise<ChatHistoryLocation> = ValuePromise(.Initial(count: requestCount), ignoreRepeated: true)
+        setLocation(.Initial(count: requestCount))
         
-        let initialState = PeerMediaPhotosState(isLoading: false, messages: [], searchState: SearchState(state: .None, request: nil), contentSettings: context.contentSettings)
-        let state: ValuePromise<PeerMediaPhotosState> = ValuePromise()
+        
+        let initialState = PeerMediaPhotosState(isLoading: false, messages: [], searchState: SearchState(state: .None, request: nil), contentSettings: context.contentSettings, scrollPosition: nil, updateType: nil, side: nil, perRowCount: self.perPageCount())
+        let state: ValuePromise<PeerMediaPhotosState> = ValuePromise(ignoreRepeated: true)
         let stateValue: Atomic<PeerMediaPhotosState> = Atomic(value: initialState)
         let updateState:((PeerMediaPhotosState)->PeerMediaPhotosState) -> Void = { f in
             state.set(stateValue.modify(f))
         }
         
+        updatePerRowCount = { value in
+            updateState { current in
+                var current = current
+                current.perRowCount = value
+                return current
+            }
+        }
+        
         let supplyment = PeerMediaSupplyment(tableView: genericView)
         
         let arguments = PeerMediaPhotosArguments(context: context, chatInteraction: chatInteraction, gallerySupplyment: supplyment)
+        let animated:Atomic<Bool> = Atomic(value:false)
+
         
-        
-        let applyHole:() -> Void = {
-            location.set(.Initial(count: requestCount))
+        let applyHole:() -> Void = { [weak self] in
+            guard let `self` = self, let value = self.locationValue else {
+                return
+            }
+            self.setLocation(value)
         }
         
         struct SearchResult {
             let result: [Message]?
         }
         
-        let history: Signal<(ChatHistoryViewUpdate?, SearchResult?, SearchState), NoError> = combineLatest(searchState.get(), location.get(), externalSearch.get()) |> mapToSignal { search, location, externalSearch in
+        let history: Signal<(ChatHistoryViewUpdate?, SearchResult?, SearchState, TableSavingSide?), NoError> = combineLatest(searchState.get(), location.get(), externalSearch.get()) |> mapToSignal { search, location, externalSearch in
             if let externalSearch = externalSearch {
-                return .single((nil, SearchResult(result: externalSearch.messages), search))
+                return .single((nil, SearchResult(result: externalSearch.messages), search, nil))
             } else if !search.request.isEmpty {
                 
                 let req = context.engine.messages.searchMessages(location: .peer(peerId: peerId, fromId: nil, tags: .photoOrVideo, topMsgId: nil, minDate: nil, maxDate: nil), query: search.request, state: nil)
                 
-                return .single((nil, SearchResult(result: nil), search)) |> then(req |> delay(0.2, queue: .concurrentDefaultQueue()) |> map { (nil, SearchResult(result: $0.0.messages), search) })
+                return .single((nil, SearchResult(result: nil), search, nil)) |> then(req |> delay(0.2, queue: .concurrentDefaultQueue()) |> map { (nil, SearchResult(result: $0.0.messages), search, nil) })
             } else {
-                return chatHistoryViewForLocation(location, context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: tags) |> map { ($0, nil, search) }
+                return chatHistoryViewForLocation(location, context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: tags) |> map { ($0, nil, search, location.side) }
             }
         }
+        
+        let historyView: Atomic<MessageHistoryView?> = Atomic(value: nil)
         
         historyDisposable.set(history.start(next: { update in
             
             var messages:[Message]? = nil
             var isLoading: Bool = false
+            let view: MessageHistoryView?
+            let updateType: ChatHistoryViewUpdateType?
+
+            var scroll: ChatHistoryViewScrollPosition?
             if let update = update.0 {
-                let view: MessageHistoryView?
-                let updateType: ChatHistoryViewUpdateType
                 switch update {
                 case let .Loading(_, ut):
                     view = nil
                     isLoading = true
                     updateType = ut
-                case let .HistoryView(values):
-                    view = values.view
-                    isLoading = values.view.isLoading
-                    updateType = values.type
+                case let .HistoryView(_view, _type, _scroll, _):
+                    view = _view
+                    scroll = _scroll
+                    isLoading = _view.isLoading
+                    updateType = _type
                 }
                 
                 switch updateType {
@@ -366,28 +476,42 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
                 } else {
                     isLoading = true
                 }
+                view = nil
+                updateType = nil
+            } else {
+                view = nil
+                updateType = nil
             }
+            
             
             updateState { state in
                 var state = state
-                state = state.withUpdatedLoading(isLoading)
+                state.isLoading = isLoading
                 if let messages = messages {
                     if !isExternalSearch {
-                        state = state.withUpdatedMessages(messages.reversed())
+                        state.messages = messages.reversed()
                     } else {
-                        state = state.withUpdatedMessages(messages)
+                        state.messages = messages
                     }
                 }
-                state = state.withUpdatedSeachState(update.2)
+                state.searchState = update.2
+                state.scrollPosition = scroll
+                state.updateType = updateType
+                state.side = update.3
+                state.view = view
                 return state
             }
         }))
         
         let previous = self.previous
         
+        
+        let animate = animated.swap(true)
+
+        
         let transition: Signal<(TableUpdateTransition, PeerMediaPhotosState), NoError> = combineLatest(queue: prepareQueue, state.get(), appearanceSignal) |> map { state, appearance in
             let entries = mediaEntires(state: state, arguments: arguments, isExternalSearch: isExternalSearch).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
-            return (prepareTransition(left: previous.swap(entries), right: entries, animated: true, initialSize: initialSize.with { $0 }, arguments: arguments), state)
+            return (prepareTransition(left: previous.swap(entries), right: entries, animated: animate, scrollPostion: state.scrollPosition, updateType: state.updateType, side: state.side, initialSize: initialSize.with { $0 }, arguments: arguments), state)
         } |> deliverOnMainQueue
         
         
@@ -404,19 +528,63 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
             previousSearch = state.searchState
             
             self.genericView.merge(with: transition)
-            let state = MediaSearchState(state: state.searchState, animated: transition.animated, isLoading: state.isLoading)
-            self.mediaSearchState.set(state)
+            let searchState = MediaSearchState(state: state.searchState, animated: transition.animated, isLoading: state.isLoading)
+            self.mediaSearchState.set(searchState)
             self.readyOnce()
+            
+            _ = historyView.swap(state.view)
         }))
         
-        genericView.setScrollHandler { position in
-            switch position.direction {
-            case .bottom:
-                requestCount += perPageCount() * 10
-                location.set(.Initial(count: requestCount))
-            default:
-                break
+        genericView.setScrollHandler { [weak self] scroll in
+            let view = historyView.with { $0 }
+            if let view = view, let strongSelf = self {
+                var messageIndex:MessageIndex?
+                
+                let visible = strongSelf.genericView.visibleRows()
+                
+                switch scroll.direction {
+                case .top:
+                    if view.laterId != nil {
+                        for i in visible.min ..< visible.max {
+                            if let item = self?.genericView.item(at: i) as? PeerPhotosMonthItem {
+                                if let message = item.items.first {
+                                    messageIndex = MessageIndex(message)
+                                    break
+                                }
+                            }
+                        }
+                    } else if view.laterId == nil, !view.holeLater, let locationValue = strongSelf.locationValue, !locationValue.isAtUpperBound, view.anchorIndex != .upperBound {
+                        messageIndex = .upperBound(peerId: strongSelf.chatInteraction.peerId)
+                    }
+                case .bottom:
+                    if view.earlierId != nil {
+                        for i in stride(from: visible.max - 1, to: -1, by: -1) {
+                            if let item = strongSelf.genericView.item(at: i) as? PeerPhotosMonthItem {
+                                if let message = item.items.last {
+                                    messageIndex = MessageIndex(message)
+                                    break
+                                }
+                            }
+                        }
+                    }
+                case .none:
+                    break
+                }
+                if let messageIndex = messageIndex {
+                    let location: ChatHistoryLocation = .Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex), count: strongSelf.perPageCount(), side: scroll.direction == .bottom ? .upper : .lower)
+                    guard location != strongSelf.locationValue else {
+                        return
+                    }
+                    strongSelf.setLocation(location)
+                }
             }
+        }
+        
+        onDeinit = {
+            _ = historyView.swap(nil)
+        }
+        isTopHistory = {
+            return historyView.with { $0?.laterId == nil }
         }
     }
     
@@ -434,6 +602,45 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
         self.isExternalSearch = true
     }
     
+    func jumpTo(_ toMessage: Message) -> Void {
+
+        let historyView = chatHistoryViewForLocation(.InitialSearch(location: .id(toMessage.id), count: perPageCount()), context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: .photoOrVideo, additionalData: [])
+        
+        struct FindSearchMessage {
+            let message:Message?
+            let loaded:Bool
+        }
+        
+        let signal = historyView
+            |> mapToSignal { historyView -> Signal<(Message?, Bool), NoError> in
+                switch historyView {
+                case .Loading:
+                    return .single((nil, true))
+                case let .HistoryView(view, _, _, _):
+                    for entry in view.entries {
+                        if entry.message.id == toMessage.id {
+                            return .single((entry.message, false))
+                        }
+                    }
+                    return .single((nil, false))
+                }
+            } |> take(until: { index in
+                return SignalTakeAction(passthrough: index.0 != nil, complete: !index.1)
+            }) |> map { $0.0 }
+        
+        _ = showModalProgress(signal: signal, for: context.window).start(next: { [weak self] message in
+            if let strongSelf = self, let message = message {
+                let message = message
+                let toIndex = MessageIndex(message)
+                let requestCount = strongSelf.perPageCount()
+                
+                DispatchQueue.main.async { [weak strongSelf] in
+                    strongSelf?.location.set(.Scroll(index: .message(toIndex), anchorIndex: .message(toIndex), sourceIndex: .message(toIndex), scrollPosition: .top(id: MessageIndex(message), innerId: nil, animated: true, focus: .init(focus: true), inset: 0), count: requestCount, animated: true))
+                }
+            }
+        })
+    }
+    
     var mediaSearchValue:Signal<MediaSearchState, NoError> {
         return mediaSearchState.get()
     }
@@ -446,6 +653,27 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
             }
         }
     }
+    
+    override func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        var updatedStableId: AnyHashable?
+        if let stableId = stableId.base as? MessageIndex {
+            self.genericView.enumerateItems(with: { item in
+                if let item = item as? PeerPhotosMonthItem {
+                    if item.items.contains(where: { $0.id == stableId.id }) {
+                        updatedStableId = item.stableId
+                        return false
+                    }
+                }
+                return true
+            })
+        }
+        return updatedStableId
+    }
+    
+    var onTheTop: Bool {
+        return self.isTopHistory?() ?? true
+    }
+    
     func toggleSearch() {
         let old = self.isSearch
         self.isSearch = !old

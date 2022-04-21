@@ -9,6 +9,7 @@
 import Cocoa
 import TGUIKit
 import SwiftSignalKit
+import TGModernGrowingTextView
 
 enum GeneralInputRowType {
     case plain

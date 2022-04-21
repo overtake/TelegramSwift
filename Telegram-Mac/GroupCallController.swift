@@ -10,11 +10,11 @@ import Foundation
 import TGUIKit
 import SwiftSignalKit
 import Postbox
-
+import ColorPalette
 import TelegramCore
 import HotKey
 import TgVoipWebrtc
-
+import InAppSettings
 
 final class GroupCallsConfig {
     let videoLimit: Int
@@ -28,7 +28,7 @@ final class GroupCallsConfig {
 }
 
 private struct Tooltips : Equatable {
-    var dismissed: Set<GroupCallUIState.ControlsTooltip>
+    var dismissed: Set<GroupCallUIState.ControlsTooltip.`Type`>
     var speachDetected: Bool
     
     static var initialValue: Tooltips {
@@ -191,7 +191,6 @@ struct PeerGroupCallData : Equatable, Comparable {
     
     let videoEndpointId: String?
     let presentationEndpointId: String?
-    let visualEffects: Bool
 
     var isRaisedHand: Bool {
         return self.state?.hasRaiseHand == true
@@ -232,38 +231,38 @@ struct PeerGroupCallData : Equatable, Comparable {
     }
     
     func videoStatus(_ mode: VideoSourceMacMode) -> String {
-        var string:String = L10n.voiceChatStatusListening
+        var string:String = strings().voiceChatStatusListening
         switch mode {
         case .video:
             string = self.status.0
             if string == self.about {
-                string = L10n.voiceChatStatusListening
+                string = strings().voiceChatStatusListening
             }
         case .screencast:
-            string = L10n.voiceChatStatusScreensharing
+            string = strings().voiceChatStatusScreensharing
         }
         return string
     }
     
     var status: (String, NSColor) {
-        var string:String = L10n.peerStatusRecently
+        var string:String = strings().peerStatusRecently
         var color:NSColor = GroupCallTheme.grayStatusColor
         if let state = state {
             if wantsToSpeak, let _ = state.muteState {
-                string = L10n.voiceChatStatusWantsSpeak
+                string = strings().voiceChatStatusWantsSpeak
                 color = GroupCallTheme.blueStatusColor
             } else if let muteState = state.muteState, muteState.mutedByYou {
-                string = muteState.mutedByYou ? L10n.voiceChatStatusMutedForYou : L10n.voiceChatStatusMuted
+                string = muteState.mutedByYou ? strings().voiceChatStatusMutedForYou : strings().voiceChatStatusMuted
                 color = GroupCallTheme.speakLockedColor
             } else if isSpeaking, state.muteState == nil {
-                string = L10n.voiceChatStatusSpeaking
+                string = strings().voiceChatStatusSpeaking
                 color = GroupCallTheme.greenStatusColor
             } else {
                 if let about = about {
                     string = about
                     color = GroupCallTheme.grayStatusColor
                 } else {
-                    string = L10n.voiceChatStatusListening
+                    string = strings().voiceChatStatusListening
                     color = GroupCallTheme.grayStatusColor
                 }
             }
@@ -272,11 +271,11 @@ struct PeerGroupCallData : Equatable, Comparable {
                 string = about
                 color = GroupCallTheme.grayStatusColor.withAlphaComponent(0.6)
             } else {
-                string = L10n.voiceChatStatusConnecting.lowercased()
+                string = strings().voiceChatStatusConnecting.lowercased()
                 color = GroupCallTheme.grayStatusColor.withAlphaComponent(0.6)
             }
         } else if isInvited {
-            string = L10n.voiceChatStatusInvited
+            string = strings().voiceChatStatusInvited
         }
         return (string, color)
     }
@@ -337,9 +336,6 @@ struct PeerGroupCallData : Equatable, Comparable {
         if lhs.isFullscreen != rhs.isFullscreen {
             return false
         }
-        if lhs.visualEffects != rhs.visualEffects {
-            return false
-        }
         return true
     }
     
@@ -363,7 +359,7 @@ private func _id_peer_id(_ data: PeerGroupCallData, endpoint: String? = nil) -> 
     }
 }
 
-private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: PresentationGroupCallState, isMuted: Bool, invitedPeers: [Peer], peerStates: PresentationGroupCallMembers?, myAudioLevel: Float, summaryState: PresentationGroupCallSummaryState?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, accountPeer: (Peer, String?), unsyncVolumes: [PeerId: Int32], pinnedData: GroupCallUIState.PinnedData, hideWantsToSpeak: Set<PeerId>, isFullScreen: Bool, videoSources: GroupCallUIState.VideoSources, activeVideoViews: [GroupCallUIState.ActiveVideo], hideParticipants: Bool, tooltips: Tooltips, version: Int) -> GroupCallUIState {
+private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: PresentationGroupCallState, isMuted: Bool, invitedPeers: [Peer], peerStates: PresentationGroupCallMembers?, myAudioLevel: Float, summaryState: PresentationGroupCallSummaryState?, voiceSettings: VoiceCallSettings, isWindowVisible: Bool, accountPeer: (Peer, String?), unsyncVolumes: [PeerId: Int32], pinnedData: GroupCallUIState.PinnedData, hideWantsToSpeak: Set<PeerId>, isFullScreen: Bool, videoSources: GroupCallUIState.VideoSources, activeVideoViews: [GroupCallUIState.ActiveVideo], hideParticipants: Bool, tooltips: Tooltips, version: Int, isStream: Bool, windowIsFullscreen: Bool, initialTimestamp: TimeInterval) -> GroupCallUIState {
     
     var memberDatas: [PeerGroupCallData] = []
     
@@ -413,7 +409,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
     
     if !activeParticipants.contains(where: { $0.peer.id == accountPeerId }) {
 
-        memberDatas.append(PeerGroupCallData(peer: accountPeer.0, state: nil, isSpeaking: false, isInvited: false, unsyncVolume: unsyncVolumes[accountPeerId], accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(accountPeerId), activityTimestamp: startIndex - 1 - index, firstTimestamp: 0, videoMode: !activeVideoViews.isEmpty, isVertical: false, hasVideo: hasVideo(accountPeerId), activeVideos: Set(), adminIds: state.adminIds, isFullscreen: isFullScreen, videoEndpointId: nil, presentationEndpointId: nil, visualEffects: voiceSettings.visualEffects))
+        memberDatas.append(PeerGroupCallData(peer: accountPeer.0, state: nil, isSpeaking: false, isInvited: false, unsyncVolume: unsyncVolumes[accountPeerId], accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(accountPeerId), activityTimestamp: startIndex - 1 - index, firstTimestamp: 0, videoMode: !activeVideoViews.isEmpty, isVertical: false, hasVideo: hasVideo(accountPeerId), activeVideos: Set(), adminIds: state.adminIds, isFullscreen: isFullScreen, videoEndpointId: nil, presentationEndpointId: nil))
         index += 1
     } 
 
@@ -428,7 +424,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
         
         
         
-        memberDatas.append(PeerGroupCallData(peer: value.peer, state: value, isSpeaking: isSpeaking, isInvited: false, unsyncVolume: unsyncVolumes[value.peer.id], accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(value.peer.id), activityTimestamp: activityIndex, firstTimestamp: value.joinTimestamp, videoMode: !activeVideoViews.isEmpty, isVertical: isVertical, hasVideo: hasVideo(value.peer.id), activeVideos: activeVideos, adminIds: state.adminIds, isFullscreen: isFullScreen, videoEndpointId: value.videoEndpointId, presentationEndpointId: value.presentationEndpointId, visualEffects: voiceSettings.visualEffects))
+        memberDatas.append(PeerGroupCallData(peer: value.peer, state: value, isSpeaking: isSpeaking, isInvited: false, unsyncVolume: unsyncVolumes[value.peer.id], accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: hideWantsToSpeak.contains(value.peer.id), activityTimestamp: activityIndex, firstTimestamp: value.joinTimestamp, videoMode: !activeVideoViews.isEmpty, isVertical: isVertical, hasVideo: hasVideo(value.peer.id), activeVideos: activeVideos, adminIds: state.adminIds, isFullscreen: isFullScreen, videoEndpointId: value.videoEndpointId, presentationEndpointId: value.presentationEndpointId))
     }
     
     var indexes:[PeerId: Int] = [:]
@@ -475,7 +471,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
     
     for invited in invitedPeers {
         if !activeParticipants.contains(where: { $0.peer.id == invited.id}) {
-            memberDatas.append(PeerGroupCallData(peer: invited, state: nil, isSpeaking: false, isInvited: true, unsyncVolume: nil, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: false, activityTimestamp: startIndex - 1 - index, firstTimestamp: 0, videoMode: !activeVideoViews.isEmpty, isVertical: false, hasVideo: false, activeVideos: Set(), adminIds: state.adminIds, isFullscreen: isFullScreen, videoEndpointId: nil, presentationEndpointId: nil, visualEffects: voiceSettings.visualEffects))
+            memberDatas.append(PeerGroupCallData(peer: invited, state: nil, isSpeaking: false, isInvited: true, unsyncVolume: nil, accountPeerId: accountPeerId, accountAbout: accountPeerAbout, canManageCall: state.canManageCall, hideWantsToSpeak: false, activityTimestamp: startIndex - 1 - index, firstTimestamp: 0, videoMode: !activeVideoViews.isEmpty, isVertical: false, hasVideo: false, activeVideos: Set(), adminIds: state.adminIds, isFullscreen: isFullScreen, videoEndpointId: nil, presentationEndpointId: nil))
             index += 1
         }
     }
@@ -486,19 +482,23 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
     
     let main = activeParticipants.first(where: { $0.peer.id == accountPeerId })
 
-    if main?.joinedVideo == false {
-        mode = .voice
+    if isStream {
+        mode = .video
     } else {
-        switch isVideoEnabled || !videoSources.isEmpty || !activeVideoViews.isEmpty  {
-        case true:
-            mode = .video
-        case false:
+        if main?.joinedVideo == false {
             mode = .voice
+        } else {
+            switch isVideoEnabled || !videoSources.isEmpty || !activeVideoViews.isEmpty  {
+            case true:
+                mode = .video
+            case false:
+                mode = .voice
+            }
         }
     }
     
     var tooltipSpeaker: PeerGroupCallData? = nil
-    if !activeVideoViews.isEmpty && isFullScreen {
+    if !activeVideoViews.isEmpty && isFullScreen && hideParticipants {
         if current != nil {
             if let previous = previous?.tooltipSpeaker {
                 let member = memberDatas.first(where: { $0.peer.id == previous.peer.id })
@@ -521,7 +521,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
     var controlsTooltip: GroupCallUIState.ControlsTooltip? = previous?.controlsTooltip
     
     
-    if let current = controlsTooltip, tooltips.dismissed.contains(current) {
+    if let current = controlsTooltip, tooltips.dismissed.contains(current.type) {
         controlsTooltip = nil
     }
     
@@ -529,7 +529,7 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
         if let member = memberDatas.first(where: { $0.peer.id == $0.accountPeerId }) {
             if member.isSpeaking, !member.hasVideo, !activeVideoViews.isEmpty {
                 if !tooltips.dismissed.contains(.camera) {
-                    controlsTooltip = .camera
+                    controlsTooltip = .init(type: .camera, timestamp: Date().timeIntervalSince1970)
                 }
             }
         }
@@ -537,17 +537,19 @@ private func makeState(previous:GroupCallUIState?, peerView: PeerView, state: Pr
         
     if controlsTooltip == nil {
         if tooltips.speachDetected, !tooltips.dismissed.contains(.micro) {
-            controlsTooltip = .micro
+            controlsTooltip = .init(type: .micro, timestamp: Date().timeIntervalSince1970)
         }
+    }
+    
+    if let current = controlsTooltip, current.timestamp + 30 < Date().timeIntervalSince1970 {
+        controlsTooltip = nil
     }
     
     if state.networkState == .connecting {
         controlsTooltip = nil
     }
-    
-    //voiceSettings.visualEffects
-    
-    return GroupCallUIState(memberDatas: memberDatas.sorted(by: <), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, dominantSpeaker: current, pinnedData: pinnedData, isFullScreen: isFullScreen, mode: mode, videoSources: videoSources, version: version, activeVideoViews: activeVideoViews.sorted(by: { $0.index < $1.index }), hideParticipants: hideParticipants, isVideoEnabled: main?.joinedVideo ?? summaryState?.info?.isVideoEnabled ?? false, tooltipSpeaker: tooltipSpeaker, controlsTooltip: controlsTooltip, dismissedTooltips: tooltips.dismissed, videoJoined: main?.joinedVideo ?? isVideoEnabled, visualEffects: false)
+        
+    return GroupCallUIState(memberDatas: memberDatas.sorted(by: <), state: state, isMuted: isMuted, summaryState: summaryState, myAudioLevel: myAudioLevel, peer: peerViewMainPeer(peerView)!, cachedData: peerView.cachedData as? CachedChannelData, voiceSettings: voiceSettings, isWindowVisible: isWindowVisible, dominantSpeaker: current, pinnedData: pinnedData, isFullScreen: isFullScreen, mode: mode, videoSources: videoSources, version: version, activeVideoViews: activeVideoViews.sorted(by: { $0.index < $1.index }), hideParticipants: hideParticipants || isStream, isVideoEnabled: main?.joinedVideo ?? summaryState?.info?.isVideoEnabled ?? false, tooltipSpeaker: tooltipSpeaker, controlsTooltip: controlsTooltip, dismissedTooltips: tooltips.dismissed, videoJoined: main?.joinedVideo ?? isVideoEnabled, isStream: isStream, windowIsFullscreen: windowIsFullscreen, initialTimestamp: initialTimestamp)
 }
 
 
@@ -556,6 +558,10 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
     
     let index: Int32 = 0
     
+    
+    if state.isStream {
+        return []
+    }
     
     let members = state.memberDatas
 
@@ -693,7 +699,7 @@ final class GroupCallUIController : ViewController {
     private let connecting = MetaDisposable()
     private let isFullScreen = ValuePromise(false, ignoreRepeated: true)
     private weak var sharing: DesktopCapturerWindow?
-
+    private var statusBar: GroupCallStatusBar?
     private var requestedVideoSources = Set<String>()
     private var videoViews: [(DominantVideo, GroupCallUIState.ActiveVideo.Mode, GroupVideoView)] = []
 
@@ -757,6 +763,8 @@ final class GroupCallUIController : ViewController {
         
         let callState: ValuePromise<GroupCallUIState> = ValuePromise(ignoreRepeated: true)
         
+        
+        
         struct ActiveVideos : Equatable {
             var set: [GroupCallUIState.ActiveVideo]
             var index: Int
@@ -808,7 +816,7 @@ final class GroupCallUIController : ViewController {
                 return
             }
             if self.canManageCall {
-                modernConfirm(for: window, account: account, peerId: nil, header: L10n.voiceChatEndTitle, information: L10n.voiceChatEndText, okTitle: L10n.voiceChatEndOK, thridTitle: L10n.voiceChatEndThird, thridAutoOn: false, successHandler: {
+                modernConfirm(for: window, account: account, peerId: nil, header: strings().voiceChatEndTitle, information: strings().voiceChatEndText, okTitle: strings().voiceChatEndOK, thridTitle: strings().voiceChatEndThird, thridAutoOn: false, successHandler: {
                     [weak self] result in
                     _ = self?.data.call.sharedContext.endGroupCall(terminate: result == .thrid).start()
                 })
@@ -831,7 +839,7 @@ final class GroupCallUIController : ViewController {
                 return
             }
             let isChannel = self?.data.call.peer?.isChannel == true
-            modernConfirm(for: window, account: account, peerId: peer.id, information: isChannel ? L10n.voiceChatRemovePeerConfirmChannel(peer.displayTitle) : L10n.voiceChatRemovePeerConfirm(peer.displayTitle), okTitle: L10n.voiceChatRemovePeerConfirmOK, cancelTitle: L10n.voiceChatRemovePeerConfirmCancel, successHandler: { [weak window] _ in
+            modernConfirm(for: window, account: account, peerId: peer.id, information: isChannel ? strings().voiceChatRemovePeerConfirmChannel(peer.displayTitle) : strings().voiceChatRemovePeerConfirm(peer.displayTitle), okTitle: strings().voiceChatRemovePeerConfirmOK, cancelTitle: strings().voiceChatRemovePeerConfirmCancel, successHandler: { [weak window] _ in
                 if peerId.namespace == Namespaces.Peer.CloudChannel {
                     _ = self?.data.peerMemberContextsManager.updateMemberBannedRights(peerId: peerId, memberId: peer.id, bannedRights: TelegramChatBannedRights(flags: [.banReadMessages], untilDate: 0)).start()
                 } else if let window = window {
@@ -842,7 +850,7 @@ final class GroupCallUIController : ViewController {
             guard let strongSelf = self else {
                 return
             }
-            strongSelf.data.call.sharedContext.bindings.rootNavigation().push(PeerInfoController.init(context: strongSelf.data.call.accountContext, peerId: peer.id))
+            strongSelf.data.call.accountContext.bindings.rootNavigation().push(PeerInfoController.init(context: strongSelf.data.call.accountContext, peerId: peer.id))
             strongSelf.data.call.accountContext.window.orderFrontRegardless()
         }, inviteMembers: { [weak self] in
             guard let window = self?.window, let data = self?.data else {
@@ -864,9 +872,9 @@ final class GroupCallUIController : ViewController {
                 let text: String
                 switch mode {
                 case .screencast:
-                    text = L10n.voiceChatShareVideoMutedError
+                    text = strings().voiceChatShareVideoMutedError
                 case .video:
-                    text = L10n.voiceChatShareScreenMutedError
+                    text = strings().voiceChatShareScreenMutedError
                 }
                 alert(for: window, info: text)
                 return
@@ -881,9 +889,9 @@ final class GroupCallUIController : ViewController {
                 let config = GroupCallsConfig(data.call.accountContext.appConfiguration)
                 switch mode {
                 case .video:
-                    alert(for: window, info: L10n.voiceChatTooltipErrorVideoUnavailable(config.videoLimit))
+                    alert(for: window, info: strings().voiceChatTooltipErrorVideoUnavailable(config.videoLimit))
                 case .screencast:
-                    alert(for: window, info: L10n.voiceChatTooltipErrorScreenUnavailable(config.videoLimit))
+                    alert(for: window, info: strings().voiceChatTooltipErrorScreenUnavailable(config.videoLimit))
                 }
                 return
             }
@@ -893,7 +901,7 @@ final class GroupCallUIController : ViewController {
                     case .screencast:
                         let presentingPeer = state.videoActive(.main).first(where: { $0.presentationEndpoint != nil })
                         if let peer = presentingPeer {
-                            confirm(for: window, header: L10n.voiceChatScreencastConfirmHeader, information: L10n.voiceChatScreencastConfirmText(peer.peer.compactDisplayTitle), okTitle: L10n.voiceChatScreencastConfirmOK, successHandler: { _ in
+                            confirm(for: window, header: strings().voiceChatScreencastConfirmHeader, information: strings().voiceChatScreencastConfirmText(peer.peer.compactDisplayTitle), okTitle: strings().voiceChatScreencastConfirmOK, successHandler: { _ in
                                 f(true)
                             }, cancelHandler: {
                                 f(false)
@@ -984,16 +992,13 @@ final class GroupCallUIController : ViewController {
                             toggleMicro(wantsToSpeak, {
                                 select(source)
                             })
-//                            DispatchQueue.main.async {
-//
-//                            }
-                        }, devices: sharedContext.devicesContext)
+                        }, devices: sharedContext.devicesContext, microIsOff: self?.genericView.state?.isMuted ?? true)
                         self?.sharing = sharing
                         sharing?.level = self?.window?.level ?? .normal
                         if sharing == nil, let window = self?.window {
                             switch mode {
                             case .video:
-                                showModalText(for: window, text: L10n.voiceChatTooltipNoCameraFound)
+                                showModalText(for: window, text: strings().voiceChatTooltipNoCameraFound)
                             default:
                                 break
                             }
@@ -1082,14 +1087,14 @@ final class GroupCallUIController : ViewController {
         }, recordClick: { [weak self] state in
             if let window = self?.window {
                 if state.canManageCall {
-                    confirm(for: window, header: L10n.voiceChatRecordingStopTitle, information: L10n.voiceChatRecordingStopText, okTitle: L10n.voiceChatRecordingStopOK, successHandler: { [weak window] _ in
+                    confirm(for: window, header: strings().voiceChatRecordingStopTitle, information: strings().voiceChatRecordingStopText, okTitle: strings().voiceChatRecordingStopOK, successHandler: { [weak window] _ in
                         self?.data.call.setShouldBeRecording(false, title: nil, videoOrientation: nil)
                         if let window = window {
-                            showModalText(for: window, text: L10n.voiceChatToastStop)
+                            showModalText(for: window, text: strings().voiceChatToastStop)
                         }
                     })
                 } else {
-                    showModalText(for: window, text: L10n.voiceChatAlertRecording)
+                    showModalText(for: window, text: strings().voiceChatAlertRecording)
                 }
             }
         }, audioLevel: { [weak self] peerId in
@@ -1120,7 +1125,7 @@ final class GroupCallUIController : ViewController {
             self?.data.call.startScheduled()
         }, toggleReminder: { [weak self] subscribe in
             if subscribe, let window = self?.window {
-                showModalText(for: window, text: L10n.voiceChatTooltipSubscribe)
+                showModalText(for: window, text: strings().voiceChatTooltipSubscribe)
             }
             self?.data.call.toggleScheduledSubscription(subscribe)
         }, toggleScreenMode: {
@@ -1134,7 +1139,7 @@ final class GroupCallUIController : ViewController {
         }, dismissTooltip: { [weak self] tooltip in
             self?.updateTooltips { current in
                 var current = current
-                current.dismissed.insert(tooltip)
+                current.dismissed.insert(tooltip.type)
                 return current
             }
         }, focusVideo: { [weak self] endpointId in
@@ -1169,77 +1174,60 @@ final class GroupCallUIController : ViewController {
             }
         })
         
+        self.statusBar = .init(callState.get() |> deliverOnMainQueue, arguments: arguments, sharedContext: data.call.sharedContext)
+        
         contextMenuItems = { [weak arguments, weak self] data in
             
             guard let arguments = arguments else {
                 return []
             }
             
-            var items: [ContextMenuItem] = []
+            var firstBlock:[ContextMenuItem] = []
+            var secondBlock:[ContextMenuItem] = []
+            var thirdBlock: [ContextMenuItem] = []
+
 
             if let state = data.state, let accountContext = self?.data.call.accountContext {
                 
-                let headerItem: ContextMenuItem = .init("headerItem", handler: {
-
-                })
-                let headerView = GroupCallContextMenuHeaderView(frame: NSMakeRect(0, 0, 200, 200))
+                firstBlock.append(GroupCallAvatarMenuItem(state.peer, context: accountContext))
                 
-                let videos = [arguments.takeVideo(state.peer.id, .video, .profile), arguments.takeVideo(state.peer.id, .screencast, .profile)].compactMap { $0}
-                
-                headerView.setPeer(state.peer, about: data.about, context: accountContext, videos: videos)
-                headerItem.view = headerView
-
-
-                items.append(headerItem)
-                items.append(ContextSeparatorItem())
-
-                if data.peer.id == data.accountPeerId, data.isRaisedHand {
-                    items.append(ContextMenuItem(L10n.voiceChatDownHand, handler: arguments.toggleRaiseHand))
-                }
+                firstBlock.append(ContextMenuItem(state.peer.displayTitle, handler: {
+                    arguments.openInfo(state.peer)
+                }, itemImage: MenuAnimation.menu_open_profile.value))
                 
                 if data.peer.id != data.accountPeerId, state.muteState == nil || state.muteState?.canUnmute == true {
-                    let volume: ContextMenuItem = .init("Volume", handler: {
-
-                    })
-
-                    let volumeControl = VolumeMenuItemView(frame: NSMakeRect(0, 0, 200, 26))
-                    volumeControl.stateImages = (on: NSImage(named: "Icon_VolumeMenu_On")!.precomposed(.white),
-                                                 off: NSImage(named: "Icon_VolumeMenu_Off")!.precomposed(.white))
-                    volumeControl.value = CGFloat((state.volume ?? 10000)) / 10000.0
-                    volumeControl.lineColor = GroupCallTheme.memberSeparatorColor.lighter()
-                    volume.view = volumeControl
-
-                    volumeControl.didUpdateValue = { value, sync in
+                    secondBlock.append(GroupCallVolumeMenuItem(volume: CGFloat((state.volume ?? 10000)) / 10000.0, { value, sync in
                         if value == 0 {
                             arguments.mute(data.peer.id, true)
                         } else {
                             arguments.setVolume(data.peer.id, Double(value), sync)
                         }
-                    }
-
-                    items.append(volume)
-                    items.append(ContextSeparatorItem())
+                    }))
                 }
+                if data.peer.id == data.accountPeerId, data.isRaisedHand {
+                    secondBlock.append(ContextMenuItem(strings().voiceChatDownHand, handler: arguments.toggleRaiseHand, itemImage: MenuAnimation.menu_unblock.value))
+                }
+                
                 if let endpointId = data.videoEndpoint {
                     if !arguments.isPinnedVideo(data.peer.id, .video) {
-                        items.append(ContextMenuItem(L10n.voiceChatPinVideo, handler: {
+                        secondBlock.append(ContextMenuItem(strings().voiceChatPinVideo, handler: {
                             arguments.pinVideo(.init(data.peer.id, endpointId, .video, .permanent))
-                        }))
+                        }, itemImage: MenuAnimation.menu_pin.value))
                     } else if arguments.canUnpinVideo(data.peer.id, .video) {
-                        items.append(ContextMenuItem(L10n.voiceChatUnpinVideo, handler: {
+                        secondBlock.append(ContextMenuItem(strings().voiceChatUnpinVideo, handler: {
                             arguments.unpinVideo()
-                        }))
+                        }, itemImage: MenuAnimation.menu_unpin.value))
                     }
                 }
                 if let endpointId = data.presentationEndpoint {
                     if !arguments.isPinnedVideo(data.peer.id, .screencast) {
-                        items.append(ContextMenuItem(L10n.voiceChatPinScreencast, handler: {
+                        secondBlock.append(ContextMenuItem(strings().voiceChatPinScreencast, handler: {
                             arguments.pinVideo(.init(data.peer.id, endpointId, .screencast, .permanent))
-                        }))
+                        }, itemImage: MenuAnimation.menu_sharescreen.value))
                     } else if arguments.canUnpinVideo(data.peer.id, .screencast) {
-                        items.append(ContextMenuItem(L10n.voiceChatUnpinScreencast, handler: {
+                        secondBlock.append(ContextMenuItem(strings().voiceChatUnpinScreencast, handler: {
                             arguments.unpinVideo()
-                        }))
+                        }, itemImage: MenuAnimation.menu_sharescreen_slash.value))
                     }
                 }
                 
@@ -1248,57 +1236,60 @@ final class GroupCallUIController : ViewController {
                 if !data.canManageCall, data.peer.id != data.accountPeerId {
                     if let muteState = state.muteState {
                         if muteState.mutedByYou {
-                            items.append(.init(L10n.voiceChatUnmuteForMe, handler: {
+                            secondBlock.append(.init(strings().voiceChatUnmuteForMe, handler: {
                                 arguments.mute(data.peer.id, false)
-                            }))
+                            }, itemImage: MenuAnimation.menu_unmuted.value))
                         } else {
-                            items.append(.init(L10n.voiceChatMuteForMe, handler: {
+                            secondBlock.append(.init(strings().voiceChatMuteForMe, handler: {
                                 arguments.mute(data.peer.id, true)
-                            }))
+                            }, itemImage: MenuAnimation.menu_mute.value))
                         }
                     } else {
-                        items.append(.init(L10n.voiceChatMuteForMe, handler: {
+                        secondBlock.append(.init(strings().voiceChatMuteForMe, handler: {
                             arguments.mute(data.peer.id, true)
-                        }))
+                        }, itemImage: MenuAnimation.menu_mute.value))
                     }
-                    items.append(ContextSeparatorItem())
                 }
                 
                 if data.canManageCall, data.peer.id != data.accountPeerId {
                     if data.adminIds.contains(data.peer.id) {
                         if state.muteState == nil {
-                            items.append(.init(L10n.voiceChatMutePeer, handler: {
+                            secondBlock.append(.init(strings().voiceChatMutePeer, handler: {
                                 arguments.mute(data.peer.id, true)
-                            }))
+                            }, itemImage: MenuAnimation.menu_mute.value))
                         }
                         if !data.adminIds.contains(data.peer.id), !data.peer.isChannel {
-                            items.append(.init(L10n.voiceChatRemovePeer, handler: {
+                            thirdBlock.append(.init(strings().voiceChatRemovePeer, handler: {
                                 arguments.remove(data.peer)
-                            }))
-                        }
-                        if !items.isEmpty {
-                            items.append(ContextSeparatorItem())
+                            }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                         }
                     } else if let muteState = state.muteState, !muteState.canUnmute {
-                        items.append(.init(L10n.voiceChatUnmutePeer, handler: {
+                        secondBlock.append(.init(strings().voiceChatUnmutePeer, handler: {
                             arguments.mute(data.peer.id, false)
-                        }))
+                        }, itemImage: MenuAnimation.menu_voice.value))
                     } else {
-                        items.append(.init(L10n.voiceChatMutePeer, handler: {
+                        secondBlock.append(.init(strings().voiceChatMutePeer, handler: {
                             arguments.mute(data.peer.id, true)
-                        }))
+                        }, itemImage: MenuAnimation.menu_mute.value))
                     }
                     if !data.adminIds.contains(data.peer.id), !data.peer.isChannel {
-                        items.append(.init(L10n.voiceChatRemovePeer, handler: {
+                        thirdBlock.append(.init(strings().voiceChatRemovePeer, handler: {
                             arguments.remove(data.peer)
-                        }))
+                        }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                     }
                 }
-                if data.peer.id != data.accountPeerId {
-                    items.append(.init(L10n.voiceChatOpenProfile, handler: {
-                        arguments.openInfo(data.peer)
-                    }))
+            }
+            
+            let blocks:[[ContextMenuItem]] = [firstBlock,
+                                              secondBlock,
+                                              thirdBlock].filter { !$0.isEmpty }
+            var items: [ContextMenuItem] = []
+
+            for (i, block) in blocks.enumerated() {
+                if i != 0 {
+                    items.append(ContextSeparatorItem())
                 }
+                items.append(contentsOf: block)
             }
             return items
             
@@ -1465,16 +1456,16 @@ final class GroupCallUIController : ViewController {
                     if !state.videoSources.failed {
                         if (previous.videoSources.screencast != nil) != (state.videoSources.screencast != nil) {
                             if let _ = state.videoSources.screencast {
-                                showModalText(for: window, text: L10n.voiceChatTooltipShareScreen)
+                                showModalText(for: window, text: strings().voiceChatTooltipShareScreen)
                             } else if let _ = previous.videoSources.screencast {
-                                showModalText(for: window, text: L10n.voiceChatTooltipStopScreen)
+                                showModalText(for: window, text: strings().voiceChatTooltipStopScreen)
                             }
                         }
                         if (previous.videoSources.video != nil) != (state.videoSources.video != nil) {
                             if let _ = state.videoSources.video {
-                                showModalText(for: window, text: L10n.voiceChatTooltipShareVideo)
+                                showModalText(for: window, text: strings().voiceChatTooltipShareVideo)
                             } else if let _ = previous.videoSources.video {
-                                showModalText(for: window, text: L10n.voiceChatTooltipStopVideo)
+                                showModalText(for: window, text: strings().voiceChatTooltipStopVideo)
                             }
                         }
                     }
@@ -1482,11 +1473,11 @@ final class GroupCallUIController : ViewController {
                 if notifyCanSpeak {
                     askedForSpeak = false
                     SoundEffectPlay.play(postbox: account.postbox, name: "voip_group_unmuted")
-                    showModalText(for: window, text: L10n.voiceChatToastYouCanSpeak)
+                    showModalText(for: window, text: strings().voiceChatToastYouCanSpeak)
                 }
                 if notifyStartRecording {
                     SoundEffectPlay.play(postbox: account.postbox, name: "voip_group_recording_started")
-                    showModalText(for: window, text: L10n.voiceChatAlertRecording)
+                    showModalText(for: window, text: strings().voiceChatAlertRecording)
                 }
             case .connecting:
                 break
@@ -1501,7 +1492,7 @@ final class GroupCallUIController : ViewController {
             }
             arguments?.cancelShareVideo()
             if let window = window {
-                showModalText(for: window, text: L10n.voiceChatTooltipVideoFailed)
+                showModalText(for: window, text: strings().voiceChatTooltipVideoFailed)
             }
             delay(0.2, closure: {
                 updateVideoSources { current in
@@ -1519,7 +1510,7 @@ final class GroupCallUIController : ViewController {
             }
             arguments?.cancelShareScreencast()
             if let window = window {
-                showModalText(for: window, text: L10n.voiceChatTooltipScreencastFailed)
+                showModalText(for: window, text: strings().voiceChatTooltipScreencastFailed)
             }
             delay(0.2, closure: {
                 updateVideoSources { current in
@@ -1533,15 +1524,17 @@ final class GroupCallUIController : ViewController {
         genericView.arguments = arguments
         let members = data.call.members
         
+        let signal: Signal<Bool, NoError> = (.single(true) |> then(.single(true) |> delay(1.0, queue: Queue.mainQueue()))) |> restart
         
-        let videoData = combineLatest(queue: .mainQueue(), members, dominantSpeakerSignal.get(), isFullScreen.get(), self.data.call.joinAsPeerIdValue, self.data.call.stateVersion |> filter { $0 > 0 }, size.get(), videoSources.get())
+        let videoData = combineLatest(queue: .mainQueue(), members, dominantSpeakerSignal.get(), isFullScreen.get(), self.data.call.joinAsPeerIdValue, self.data.call.stateVersion |> filter { $0 > 0 }, size.get(), videoSources.get(), signal, self.data.call.state)
         
                 
-        actionsDisposable.add(videoData.start(next: { [weak self] members, dominant, isFullScreen, accountId, stateVersion, size, videoSources in
+        actionsDisposable.add(videoData.start(next: { [weak self] members, dominant, isFullScreen, accountId, stateVersion, size, videoSources, _, state in
             DispatchQueue.main.async {
                 guard let strongSelf = self else {
                     return
                 }
+                
                 let types:[GroupCallUIState.ActiveVideo.Mode] = GroupCallUIState.ActiveVideo.allModes
 
                 let mainMember = members?.participants.first(where: { $0.peer.id == accountId })
@@ -1576,9 +1569,15 @@ final class GroupCallUIController : ViewController {
                         }
                     }
                     
-                    let minVideo: PresentationGroupCallRequestedVideo.Quality = .thumbnail
-                    let maxVideo: PresentationGroupCallRequestedVideo.Quality = videoQuality
+                    var minVideo: PresentationGroupCallRequestedVideo.Quality = .thumbnail
 
+                    
+                    if state.isStream {
+                        videoQuality = .full
+                        screencastQuality = .full
+                        minVideo = .full
+                    }
+                    let maxVideo: PresentationGroupCallRequestedVideo.Quality = videoQuality
                     
                     if let item = member.requestedVideoChannel(minQuality: minVideo, maxQuality: maxVideo) {
                         items.append(item)
@@ -1603,7 +1602,7 @@ final class GroupCallUIController : ViewController {
                 for item in items {
                     let endpointId = item.endpointId
                     let member = members?.participants.first(where: { participant in
-                        if participant.peer.id == accountId {
+                        if participant.peer.id == accountId, !state.isStream {
                             if participant.videoEndpointId == item.endpointId {
                                 return videoSources.video != nil
                             }
@@ -1640,7 +1639,6 @@ final class GroupCallUIController : ViewController {
                                     case .profile:
                                         videoView.setVideoContentMode(.resizeAspectFill)
                                     }
-                                    
                                     videoView.setOnFirstFrameReceived( { [weak self] f in
                                         if let videoViewValue = videoViewValue {
                                             self?.videoViews.append((DominantVideo(member.peer.id, endpointId, videoMode, nil), type, videoViewValue))
@@ -1689,6 +1687,7 @@ final class GroupCallUIController : ViewController {
             }
         }))
         
+      
                 
         let invited: Signal<[Peer], NoError> = self.data.call.invitedPeers |> mapToSignal { ids in
             return account.postbox.transaction { transaction -> [Peer] in
@@ -1723,7 +1722,9 @@ final class GroupCallUIController : ViewController {
 
         let previousState: Atomic<GroupCallUIState?> = Atomic(value: nil)
         
-        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: .mainQueue(), self.data.call.state, members, (.single(0) |> then(data.call.myAudioLevel)) |> distinctUntilChanged, account.viewTracker.peerView(peerId), invited, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), some, displayedRaisedHandsPromise.get(), videoSources.get(), tooltipsValue.get()) |> mapToQueue { values in
+        let initialTimestamp = Date().timeIntervalSince1970
+        
+        let state: Signal<GroupCallUIState, NoError> = combineLatest(queue: .mainQueue(), self.data.call.state, members, (.single(0) |> then(data.call.myAudioLevel)) |> distinctUntilChanged, account.viewTracker.peerView(peerId), invited, self.data.call.summaryState, voiceCallSettings(data.call.sharedContext.accountManager), some, displayedRaisedHandsPromise.get(), videoSources.get(), tooltipsValue.get(), window.fullScreen) |> mapToQueue { values in
             let value = previousState.modify { previous in
                 return makeState(previous: previous,
                                         peerView: values.3,
@@ -1744,7 +1745,10 @@ final class GroupCallUIController : ViewController {
                                         activeVideoViews: values.7.5.set,
                                         hideParticipants: values.7.8,
                                         tooltips: values.10,
-                                        version: values.7.7)
+                                        version: values.7.7,
+                                        isStream: values.0.isStream,
+                                        windowIsFullscreen: values.11,
+                                        initialTimestamp: initialTimestamp)
             }
             return .single(value!)
         } |> distinctUntilChanged
@@ -1876,7 +1880,7 @@ final class GroupCallUIController : ViewController {
             guard let window = self?.window else {
                 return
             }
-            confirm(for: window, information: L10n.voiceChatRequestAccess, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
+            confirm(for: window, information: strings().voiceChatRequestAccess, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { result in
                 switch result {
                 case .thrid:
                     openSystemSettings(.microphone)
@@ -1936,26 +1940,35 @@ final class GroupCallUIController : ViewController {
         }, with: self, for: .mouseExited, priority: .modal)
         
         
-        window.set(handler: { [weak arguments] event in
-            if videoSourcesValue.with ({ $0.screencast == nil }) {
-                arguments?.shareSource(.screencast, true)
-            } else {
-                arguments?.cancelShareScreencast()
+        window.set(handler: { [weak arguments, weak self] event in
+            if self?.data.call.isStream == false {
+                if videoSourcesValue.with ({ $0.screencast == nil }) {
+                    arguments?.shareSource(.screencast, true)
+                } else {
+                    arguments?.cancelShareScreencast()
+                }
             }
             return .invokeNext
         }, with: self, for: .T, priority: .modal, modifierFlags: [.command])
         
-        window.set(handler: { [weak arguments] event in
-            if videoSourcesValue.with ({ $0.video == nil }) {
-                arguments?.shareSource(.video, true)
-            } else {
-                arguments?.cancelShareVideo()
+        window.set(handler: { [weak arguments, weak self] event in
+            if self?.data.call.isStream == false {
+                if videoSourcesValue.with ({ $0.video == nil }) {
+                    arguments?.shareSource(.video, true)
+                } else {
+                    arguments?.cancelShareVideo()
+                }
             }
             return .invokeNext
         }, with: self, for: .E, priority: .modal, modifierFlags: [.command])
         
-        window.set(handler: { [weak arguments] event in
-            arguments?.focusVideo(nil)
+        window.set(handler: { [weak arguments, weak self] event in
+            let settings = self?.navigationController?.controller as? GroupCallSettingsController
+            if let _ = settings {
+                self?.navigationController?.back()
+            } else {
+                arguments?.focusVideo(nil)
+            }
             return .invokeNext
         }, with: self, for: .Escape, priority: .modal)
         
@@ -2148,29 +2161,29 @@ final class GroupCallUIController : ViewController {
 //                        case .video:
 //                            if isPinned {
 //                                if participant.accountPeerId == participant.peer.id {
-//                                    showModalText(for: window, text: L10n.voiceChatTooltipYourVideoPinned)
+//                                    showModalText(for: window, text: strings().voiceChatTooltipYourVideoPinned)
 //                                } else {
-//                                    showModalText(for: window, text: L10n.voiceChatTooltipVideoPinned(text))
+//                                    showModalText(for: window, text: strings().voiceChatTooltipVideoPinned(text))
 //                                }
 //                            } else {
 //                                if participant.accountPeerId == participant.peer.id {
-//                                    showModalText(for: window, text: L10n.voiceChatTooltipYourVideoUnpinned)
+//                                    showModalText(for: window, text: strings().voiceChatTooltipYourVideoUnpinned)
 //                                } else {
-//                                    showModalText(for: window, text: L10n.voiceChatTooltipVideoUnpinned(text))
+//                                    showModalText(for: window, text: strings().voiceChatTooltipVideoUnpinned(text))
 //                                }
 //                            }
 //                        case .screencast:
 //                            if isPinned {
 //                                if participant.accountPeerId == participant.peer.id {
-//                                    showModalText(for: window, text: L10n.voiceChatTooltipYourScreenPinned)
+//                                    showModalText(for: window, text: strings().voiceChatTooltipYourScreenPinned)
 //                                } else {
-//                                    showModalText(for: window, text: L10n.voiceChatTooltipScreenPinned(text))
+//                                    showModalText(for: window, text: strings().voiceChatTooltipScreenPinned(text))
 //                                }
 //                            } else {
 //                                if participant.accountPeerId == participant.peer.id {
-//                                    showModalText(for: window, text: L10n.voiceChatTooltipYourScreenUnpinned)
+//                                    showModalText(for: window, text: strings().voiceChatTooltipYourScreenUnpinned)
 //                                } else {
-//                                    showModalText(for: window, text: L10n.voiceChatTooltipScreenUnpinned(text))
+//                                    showModalText(for: window, text: strings().voiceChatTooltipScreenUnpinned(text))
 //                                }
 //                            }
 //                        }

@@ -117,28 +117,59 @@ class ChatInputAccessory: Node {
                     }
                 }
             }
+            let setHideCaption = { [weak self] hide in
+                self?.chatInteraction.update {
+                    $0.updatedInterfaceState {
+                        $0.withUpdatedHideCaption(hide)
+                    }
+                }
+            }
             
-            var items:[SPopoverItem] = []
-            
-            let authors = state.interfaceState.forwardMessages.compactMap { $0.author?.id }.uniqueElements.count
 
-            
-            items.append(SPopoverItem(L10n.chatAlertForwardActionShow1Countable(authors), {
-                setHideAction(false)
-            }, !state.interfaceState.hideSendersName ? theme.icons.chat_action_menu_selected : nil))
-            
-            items.append(SPopoverItem(L10n.chatAlertForwardActionHide1Countable(authors), {
-                setHideAction(true)
-            }, state.interfaceState.hideSendersName ? theme.icons.chat_action_menu_selected : nil))
-        
-            items.append(SPopoverItem(true))
-            
-            items.append(SPopoverItem(L10n.chatAlertForwardActionAnother, anotherAction, theme.icons.chat_action_menu_update_chat))
+            container.contextMenu = {
+                var items:[ContextMenuItem] = []
+                
+                let authors = state.interfaceState.forwardMessages.compactMap { $0.author?.id }.uniqueElements.count
 
-        
-            container.set(handler: { control in
-                showPopover(for: control, with: SPopoverViewController(items: items), inset: NSMakePoint(-5, 3))
-            }, for: .Hover)
+                let hideSendersName = (state.interfaceState.hideSendersName || state.interfaceState.hideCaptions)
+                
+                items.append(ContextMenuItem(strings().chatAlertForwardActionShow1Countable(authors), handler: {
+                    setHideAction(false)
+                }, itemImage: !hideSendersName ? MenuAnimation.menu_check_selected.value : nil))
+                
+                items.append(ContextMenuItem(strings().chatAlertForwardActionHide1Countable(authors), handler: {
+                    setHideAction(true)
+                }, itemImage: hideSendersName ? MenuAnimation.menu_check_selected.value : nil))
+            
+                items.append(ContextSeparatorItem())
+                
+                let messagesWithCaption = state.interfaceState.forwardMessages.filter {
+                    !$0.text.isEmpty && $0.media.first != nil
+                }.count
+                
+                if messagesWithCaption > 0 {
+                    
+                    items.append(ContextMenuItem(strings().chatAlertForwardActionShowCaptionCountable(messagesWithCaption), handler: {
+                        setHideCaption(false)
+                    }, itemImage: !state.interfaceState.hideCaptions ? MenuAnimation.menu_check_selected.value : nil))
+                    
+                    items.append(ContextMenuItem(strings().chatAlertForwardActionHideCaptionCountable(messagesWithCaption), handler: {
+                        setHideCaption(true)
+                    }, itemImage: state.interfaceState.hideCaptions ? MenuAnimation.menu_check_selected.value : nil))
+                    
+                    items.append(ContextSeparatorItem())
+
+                }
+                
+                items.append(ContextMenuItem(strings().chatAlertForwardActionAnother, handler: anotherAction, itemImage: MenuAnimation.menu_replace.value))
+                
+                let menu = ContextMenu()
+                for item in items {
+                    menu.addItem(item)
+                }
+                return menu
+
+            }
             
             dismiss.set(handler: { [weak self] _ in
                 self?.dismissForward()
@@ -146,7 +177,7 @@ class ChatInputAccessory: Node {
             
             
         } else if let replyMessageId = state.interfaceState.replyMessageId {
-            displayNode = ReplyModel(replyMessageId: replyMessageId, context: chatInteraction.context, replyMessage: state.interfaceState.replyMessage)
+            displayNode = ReplyModel(replyMessageId: replyMessageId, context: chatInteraction.context, replyMessage: state.interfaceState.replyMessage, dismissReply: dismissReply)
             iconView.image = theme.icons.chat_action_reply_message
             dismiss.set(handler: { [weak self ] _ in
                 self?.dismissReply()
@@ -204,12 +235,20 @@ class ChatInputAccessory: Node {
         }
         set {
             super.frame = newValue
-            self.container.frame = NSMakeRect(49, 0, measuredWidth, size.height)
-            iconView.centerY(x: 2)
-            dismiss.centerY(x: newValue.width - dismiss.frame.width)
-            progress?.centerY(x: 5)
-            displayNode?.setNeedDisplay()
+            updateLayout(newValue.size, transition: .immediate)
         }
+    }
+    
+    func updateLayout(_ size: NSSize, transition: ContainedViewLayoutTransition) {
+        
+        transition.updateFrame(view: self.container, frame: NSMakeRect(49, 0, measuredWidth, size.height))
+        transition.updateFrame(view: iconView, frame: iconView.centerFrameY(x: 2))
+        transition.updateFrame(view: dismiss, frame: dismiss.centerFrameY(x: size.width - dismiss.frame.width))
+        if let view = progress {
+            transition.updateFrame(view: view, frame: view.centerFrameY(x: 5))
+        }
+        displayNode?.setNeedDisplay()
+        
     }
     
     override var view: View? {

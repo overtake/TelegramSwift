@@ -64,17 +64,22 @@ class GeneralContainableRowView : TableRowView {
     
     override func layout() {
         super.layout()
+        
+    }
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        
         guard let item = item as? GeneralRowItem else {
             return
         }
         let blockWidth = min(maxBlockWidth, frame.width - item.inset.left - item.inset.right)
         
-        self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (maxWidth - blockWidth) / 2), item.inset.top, blockWidth, maxHeight - item.inset.bottom - item.inset.top)
+        transition.updateFrame(view: self.containerView, frame:  NSMakeRect(floorToScreenPixels(backingScaleFactor, (maxWidth - blockWidth) / 2), item.inset.top, blockWidth, maxHeight - item.inset.bottom - item.inset.top))
+        
         self.containerView.setCorners(item.viewType.corners)
 
-
-
-        borderView.frame = NSMakeRect(item.viewType.innerInset.left + additionBorderInset, containerView.frame.height - .borderSize, containerView.frame.width - item.viewType.innerInset.left - item.viewType.innerInset.right - additionBorderInset, .borderSize)
+        transition.updateFrame(view: borderView, frame: NSMakeRect(item.viewType.innerInset.left + additionBorderInset, containerView.frame.height - .borderSize, containerView.frame.width - item.viewType.innerInset.left - item.viewType.innerInset.right - additionBorderInset, .borderSize))
     }
 
     var additionBorderInset: CGFloat {

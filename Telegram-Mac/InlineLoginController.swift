@@ -73,7 +73,7 @@ private func inlineLoginEntries(_ state: InlineLoginState, url: String, accountP
     entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("title"), equatable: nil, comparable: nil, item: { initialSize, stableId in
         
         let attributedString = NSMutableAttributedString()
-        let string = L10n.botInlineAuthTitle(url)
+        let string = strings().botInlineAuthTitle(url)
         let _ = attributedString.append(string: string, color: theme.colors.text, font: .normal(.text))
         let range = string.nsstring.range(of: url)
         attributedString.addAttribute(.font, value: NSFont.medium(.text), range: range)
@@ -91,7 +91,7 @@ private func inlineLoginEntries(_ state: InlineLoginState, url: String, accountP
     entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option_login, equatable: InputDataEquatable(loginEnabled), comparable: nil, item: { initialSize, stableId in
         
         let attributeString = NSMutableAttributedString()
-        let string = L10n.botInlineAuthOptionLogin(host, accountPeer.displayTitle)
+        let string = strings().botInlineAuthOptionLogin(host, accountPeer.displayTitle)
         let hostRange = string.nsstring.range(of: host)
         _ = attributeString.append(string: string, color: theme.colors.text, font: .normal(.text))
         attributeString.addAttribute(.font, value: NSFont.medium(.text), range: hostRange)
@@ -108,7 +108,7 @@ private func inlineLoginEntries(_ state: InlineLoginState, url: String, accountP
         entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_option_allow_send_messages, equatable: InputDataEquatable(allowMessagesEnabled), comparable: nil, item: { initialSize, stableId in
             
             let attributeString = NSMutableAttributedString()
-            let string = L10n.botInlineAuthOptionAllowSendMessages(botPeer.displayTitle)
+            let string = strings().botInlineAuthOptionAllowSendMessages(botPeer.displayTitle)
             let titleRange = string.nsstring.range(of: botPeer.displayTitle)
             _ = attributeString.append(string: string, color: theme.colors.text, font: .normal(.text))
             attributeString.addAttribute(.font, value: NSFont.medium(.text), range: titleRange)
@@ -152,7 +152,7 @@ func InlineLoginController(context: AccountContext, url: String, originalURL: St
     
     var close:(()->Void)?
     
-    let interactions = ModalInteractions(acceptTitle: L10n.botInlineAuthOpen, accept: {
+    let interactions = ModalInteractions(acceptTitle: strings().botInlineAuthOpen, accept: {
         let state = stateValue.with { $0 }
         
         if state.options.isEmpty {
@@ -163,7 +163,7 @@ func InlineLoginController(context: AccountContext, url: String, originalURL: St
         close?()
     }, drawBorder: true, height: 50, singleButton: true)
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.botInlineAuthHeader)
+    let controller = InputDataController(dataSignal: signal, title: strings().botInlineAuthHeader)
     
     controller.getBackgroundColor = {
         theme.colors.background

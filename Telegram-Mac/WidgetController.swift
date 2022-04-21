@@ -21,9 +21,11 @@ private final class WidgetNavigationButton : Control {
     private let textView = TextView()
     private let imageView = ImageView()
     private let view = View()
+    private let visualEffect = VisualEffect()
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        addSubview(visualEffect)
         addSubview(view)
         view.addSubview(textView)
         view.addSubview(imageView)
@@ -38,7 +40,9 @@ private final class WidgetNavigationButton : Control {
         super.updateLocalizationAndTheme(theme: theme)
         
         let theme = theme as! TelegramPresentationTheme
-        self.background = theme.chatServiceItemColor
+        self.background = theme.shouldBlurService ? .clear : theme.chatServiceItemColor
+        self.visualEffect.bgColor = theme.blurServiceColor
+        self.visualEffect.isHidden = !theme.shouldBlurService
     }
     
     private var direction: Direction?
@@ -57,6 +61,8 @@ private final class WidgetNavigationButton : Control {
     
     override func layout() {
         super.layout()
+        
+        visualEffect.frame = bounds
         
         view.setFrameSize(NSMakeSize(textView.frame.width + 4 + imageView.frame.width, frame.height))
         view.center()
@@ -195,11 +201,11 @@ final class WidgetListView: View {
         let theme = theme as! TelegramPresentationTheme
         
         if let prev = prev {
-            prev.setup(L10n.emptyChatNavigationPrev, image: theme.emptyChatNavigationPrev, direction: .left)
+            prev.setup(strings().emptyChatNavigationPrev, image: theme.emptyChatNavigationPrev, direction: .left)
             prev.setFrameSize(prev.size())
         }
         if let next = next {
-            next.setup(L10n.emptyChatNavigationNext, image: theme.emptyChatNavigationNext, direction: .right)
+            next.setup(strings().emptyChatNavigationNext, image: theme.emptyChatNavigationNext, direction: .right)
             next.setFrameSize(next.size())
         }
         needsLayout = true
@@ -278,8 +284,8 @@ final class WidgetController : TelegramGenericViewController<WidgetListView> {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        controllers.append(WidgetRecentPeersController(context))
         controllers.append(WidgetAppearanceController(context))
+        controllers.append(WidgetRecentPeersController(context))
         controllers.append(WidgetStorageController(context))
         controllers.append(WidgetStickersController(context))
 
@@ -297,5 +303,10 @@ final class WidgetController : TelegramGenericViewController<WidgetListView> {
         genericView._prev = { [weak self] in
             self?.prev()
         }
+    }
+    
+    deinit {
+        var bp = 0
+        bp += 1
     }
 }

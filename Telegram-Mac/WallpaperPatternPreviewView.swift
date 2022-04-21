@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import ThemeSettings
 import Postbox
 import SwiftSignalKit
 
@@ -46,7 +46,7 @@ class WallpaperPatternView : Control {
         self.pattern = pattern
         
 
-        let layout = TextViewLayout(.initialize(string: L10n.chatWPPatternNone, color: colors.first!.brightnessAdjustedColor, font: .normal(.title)))
+        let layout = TextViewLayout(.initialize(string: strings().chatWPPatternNone, color: colors.first!.brightnessAdjustedColor, font: .normal(.title)))
         layout.measure(width: 80)
         emptyTextView.update(layout)
         
@@ -70,7 +70,9 @@ class WallpaperPatternView : Control {
                 emptyColor = .color(NSColor(rgb: 0xd6e2ee, alpha: 0.5))
             }
             
-            imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: pattern.dimensions.aspectFilled(NSMakeSize(300, 300)), boundingSize: bounds.size, intrinsicInsets: NSEdgeInsets(), emptyColor: emptyColor))
+            let arguments = TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: pattern.dimensions.aspectFilled(NSMakeSize(300, 300)), boundingSize: bounds.size, intrinsicInsets: NSEdgeInsets(), emptyColor: emptyColor)
+            
+            imageView.set(arguments: arguments)
             switch pattern {
             case let .file(_, file, _, _):
                 var representations:[TelegramMediaImageRepresentation] = []
@@ -79,7 +81,18 @@ class WallpaperPatternView : Control {
                 } else {
                     representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(width: 300, height: 300), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil))
                 }
-                imageView.setSignal(chatWallpaper(account: account, representations: representations, file: file, mode: .thumbnail, isPattern: true, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false, drawPatternOnly: false), animate: false, synchronousLoad: false)
+                
+                let updateImageSignal = chatWallpaper(account: account, representations: representations, file: file, mode: .thumbnail, isPattern: true, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false, drawPatternOnly: false)
+                
+                
+                imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: false)
+                 
+                 if !imageView.isFullyLoaded {
+                     imageView.setSignal(updateImageSignal, animate: true, cacheImage: { result in
+                         cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
+                     })
+                 }
+                
             default:
                 break
             }

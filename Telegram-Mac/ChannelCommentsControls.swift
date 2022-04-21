@@ -29,7 +29,7 @@ protocol ChannelCommentRenderer {
 }
 
 
-class CommentsBasicControl : Control, ChannelCommentRenderer {
+class CommentsBasicControl : Button, ChannelCommentRenderer {
     
     fileprivate var textViews: [ChannelCommentsRenderData.Text : (TextView, ChannelCommentsRenderData.Text)] = [:]
     fileprivate var renderData: ChannelCommentsRenderData?
@@ -363,15 +363,15 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
         
         if render.peers.isEmpty {
             var f = focus(theme.icons.channel_comments_bubble.backingSize)
-            f.origin.x = 15 + 6
+            f.origin.x = 18 + 6
             rect = f
         } else {
             if render.peers.count == 1 {
                 rect = focus(NSMakeSize(24 * CGFloat(render.peers.count), 22))
             } else {
-                rect = focus(NSMakeSize(22 + (22 * CGFloat(render.peers.count - 1)), 22))
+                rect = focus(NSMakeSize(22 + (17 * CGFloat(render.peers.count - 1)), 22))
             }
-            rect.origin.x = 13 + 6
+            rect.origin.x = 18 + 6
         }
         
         var f = focus(render.titleSize)
@@ -439,12 +439,12 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
             control.updateLayout(size: NSMakeSize(22, 22), isClipped: inserted.0 != 0, animated: animated)
             control.userInteractionEnabled = false
             control.setFrameSize(NSMakeSize(22, 22))
-            control.setFrameOrigin(NSMakePoint(CGFloat(inserted.0) * 19, 0))
+            control.setFrameOrigin(NSMakePoint(CGFloat(inserted.0) * 18, 0))
             avatars.insert(control, at: inserted.0)
             avatarsContainer.subviews.insert(control, at: inserted.0)
             if animated {
                 if let index = inserted.2 {
-                    control.layer?.animatePosition(from: NSMakePoint(CGFloat(index) * 19, 0), to: control.frame.origin, timingFunction: timingFunction)
+                    control.layer?.animatePosition(from: NSMakePoint(CGFloat(index) * 18, 0), to: control.frame.origin, timingFunction: timingFunction)
                 } else {
                     control.layer?.animateAlpha(from: 0, to: 1, duration: duration, timingFunction: timingFunction)
                     control.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: duration)
@@ -454,7 +454,7 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
         for updated in updated {
             let control = avatars[updated.0]
             control.updateLayout(size: NSMakeSize(22, 22), isClipped: updated.0 != 0, animated: animated)
-            let updatedPoint = NSMakePoint(CGFloat(updated.0) * 19, 0)
+            let updatedPoint = NSMakePoint(CGFloat(updated.0) * 18, 0)
             if animated {
                 control.layer?.animatePosition(from: control.frame.origin - updatedPoint, to: .zero, duration: duration, timingFunction: timingFunction, additive: true)
             }
@@ -673,7 +673,7 @@ final class ChannelCommentsSmallControl : CommentsBasicControl {
         } else {
             imageView.image = theme.icons.channel_comments_overlay
         }
-        _ = imageView.sizeToFit()
+        imageView.sizeToFit()
         
         layer?.cornerRadius = min(size.height, size.width) / 2
         

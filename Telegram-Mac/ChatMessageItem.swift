@@ -9,10 +9,10 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import InAppVideoServices
 import Postbox
 import SwiftSignalKit
-
+import InAppSettings
 
 
 class ChatMessageItem: ChatRowItem {
@@ -72,19 +72,19 @@ class ChatMessageItem: ChatRowItem {
     
     let containsBigEmoji: Bool
     
-    var unsupported: Bool {
 
-        if let message = message, message.text.isEmpty && (message.media.isEmpty || message.media.first is TelegramMediaUnsupported) {
-            return message.inlinePeer == nil
-        } else {
-            return false
-        }
+    override var isBigEmoji: Bool {
+        return containsBigEmoji
     }
     
     var actionButtonWidth: CGFloat {
         if let webpage = webpageLayout {
             if webpage.isTheme {
                 return webpage.size.width
+            }
+        } else if message?.adAttribute != nil {
+            if isBubbled {
+                return bubbleFrame.width - bubbleDefaultInnerInset
             }
         }
         return self.contentSize.width
@@ -93,11 +93,11 @@ class ChatMessageItem: ChatRowItem {
     var actionButtonText: String? {
         if let _ = message?.adAttribute, let author = message?.author {
             if author.isBot {
-                return L10n.chatMessageViewBot
+                return strings().chatMessageViewBot
             } else if author.isGroup || author.isSupergroup {
-                return L10n.chatMessageViewGroup
+                return strings().chatMessageViewGroup
             } else {
-                return L10n.chatMessageViewChannel
+                return strings().chatMessageViewChannel
             }
         }
         if let webpage = webpageLayout, !webpage.hasInstantPage {
@@ -108,30 +108,30 @@ class ChatMessageItem: ChatRowItem {
                     inner: switch action {
                     case let .joinVoiceChat(hash):
                         if hash != nil {
-                            return L10n.chatMessageJoinVoiceChatAsSpeaker
+                            return strings().chatMessageJoinVoiceChatAsSpeaker
                         } else {
-                            return L10n.chatMessageJoinVoiceChatAsListener
+                            return strings().chatMessageJoinVoiceChatAsListener
                         }
                     default:
                         break inner
                     }
                 }
                 if let postId = postId, postId > 0 {
-                    return L10n.chatMessageActionShowMessage
+                    return strings().chatMessageActionShowMessage
                 }
             default:
                 break
             }
             if webpage.wallpaper != nil {
-                return L10n.chatViewBackground
+                return strings().chatViewBackground
             }
             if webpage.isTheme {
-                return L10n.chatActionViewTheme
+                return strings().chatActionViewTheme
             }
         }
         
         if unsupported {
-            return L10n.chatUnsupportedUpdatedApp
+            return strings().chatUnsupportedUpdatedApp
         }
         
         return nil
@@ -146,8 +146,20 @@ class ChatMessageItem: ChatRowItem {
     }
     
     func invokeAction() {
-        if let _ = message?.adAttribute, let peer = peer {
-            let link = inAppLink.peerInfo(link: "", peerId: peer.id, action:nil, openChat: peer.isChannel, postId: nil, callback: chatInteraction.openInfo)
+        if let adAttribute = message?.adAttribute, let peer = peer {
+            let link: inAppLink
+            switch adAttribute.target {
+            case let .peer(id, messageId, startParam):
+                let action: ChatInitialAction?
+                if let startParam = startParam {
+                    action = .start(parameter: startParam, behavior: .none)
+                } else {
+                    action = nil
+                }
+                link = inAppLink.peerInfo(link: "", peerId: id, action: action, openChat: peer.isChannel, postId: messageId?.id, callback: chatInteraction.openInfo)
+            case let .join(_, joinHash):
+                link = .joinchat(link: "", joinHash, context: context, callback: chatInteraction.openInfo)
+            }
             execute(inapp: link)
         } else if let webpage = webpageLayout {
             let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
@@ -176,7 +188,7 @@ class ChatMessageItem: ChatRowItem {
             let messageAttr:NSMutableAttributedString
             if message.inlinePeer == nil, message.text.isEmpty && (message.media.isEmpty || message.media.first is TelegramMediaUnsupported) {
                 let attr = NSMutableAttributedString()
-                _ = attr.append(string: L10n.chatMessageUnsupportedNew, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: .code(theme.fontSize))
+                _ = attr.append(string: strings().chatMessageUnsupportedNew, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: .code(theme.fontSize))
                 messageAttr = attr
             } else {
                 
@@ -219,7 +231,7 @@ class ChatMessageItem: ChatRowItem {
                 }
                 
                 
-                messageAttr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, message: message, context: context, fontSize: theme.fontSize, openInfo:openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.modalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in
+                messageAttr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, message: message, context: context, fontSize: theme.fontSize, openInfo:openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.context.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in
                     openSpecificTimecodeFromReply?(timecode)
                 }).mutableCopy() as! NSMutableAttributedString
 
@@ -270,7 +282,7 @@ class ChatMessageItem: ChatRowItem {
                 
 //                if message.isScam {
 //                    _ = messageAttr.append(string: "\n\n")
-//                    _ = messageAttr.append(string: L10n.chatScamWarning, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: .normal(theme.fontSize))
+//                    _ = messageAttr.append(string: strings().chatScamWarning, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: .normal(theme.fontSize))
 //                }
             }
             
@@ -315,9 +327,34 @@ class ChatMessageItem: ChatRowItem {
                 self.messageText = copy
             }
            
-           
-            
-            textLayout = TextViewLayout(self.messageText, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble && !containsBigEmoji, alwaysStaticItems: true, disableTooltips: false)
+             var spoilers:[TextViewLayout.Spoiler] = []
+             for attr in message.attributes {
+                 if let attr = attr as? TextEntitiesMessageAttribute {
+                     for entity in attr.entities {
+                         switch entity.type {
+                         case .Spoiler:
+                             let color: NSColor
+                             if entry.renderType == .bubble {
+                                 color = theme.chat.grayText(isIncoming, entry.renderType == .bubble)
+                             } else {
+                                 color = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
+                             }
+                             spoilers.append(.init(range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound), color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
+                         default:
+                             break
+                         }
+                     }
+                 }
+             }
+             
+             
+             textLayout = TextViewLayout(self.messageText, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble && !containsBigEmoji, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
+                 chatInteraction?.update({
+                     $0.updatedInterfaceState({
+                         $0.withRevealedSpoiler(message.id)
+                     })
+                 })
+             })
             textLayout.mayBlocked = entry.renderType != .bubble
             
             if let highlightFoundText = entry.additionalData.highlightFoundText {
@@ -377,9 +414,9 @@ class ChatMessageItem: ChatRowItem {
                         forceArticle = true
                     }
                     if content.file == nil || forceArticle {
-                        webpageLayout = WPArticleLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme)
+                        webpageLayout = WPArticleLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: !message.isCopyProtected())
                     } else {
-                        webpageLayout = WPMediaLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme)
+                        webpageLayout = WPMediaLayout(with: content, context: context, chatInteraction: chatInteraction, parent:message, fontSize: theme.fontSize, presentation: wpPresentation, approximateSynchronousValue: Thread.isMainThread, downloadSettings: downloadSettings, autoplayMedia: entry.autoplayMedia, theme: theme, mayCopyText: !message.isCopyProtected())
                     }
                 default:
                     break
@@ -393,12 +430,22 @@ class ChatMessageItem: ChatRowItem {
                 if let webpage = message.media.first as? TelegramMediaWebpage {
                     switch webpage.content {
                     case let .Loaded(content):
-                        if content.embedType == "iframe" && content.type != kBotInlineTypeGif {
-                            showModal(with: WebpageModalController(content: content, context: context), for: mainWindow)
+                        if content.embedType == "iframe" && content.type != kBotInlineTypeGif, let url = content.embedUrl {
+                            showModal(with: WebpageModalController(context: context, url: url, title: content.websiteName ?? content.title ?? strings().webAppTitle, effectiveSize: content.embedSize?.size, chatInteraction: self?.chatInteraction), for: context.window)
                             return
                         }
                     default:
                         break
+                    }
+                } else if let keybaord = message.replyMarkup {
+                    if let button = keybaord.rows.first?.buttons.first {
+                        switch button.action {
+                        case .openWebApp:
+                            self?.chatInteraction.requestMessageActionCallback(message.id, true, nil)
+                            return
+                        default:
+                            break
+                        }
                     }
                 }
                 showChatGallery(context: context, message: message, self?.table, (self?.webpageLayout as? WPMediaLayout)?.parameters, type: .alone)
@@ -468,81 +515,13 @@ class ChatMessageItem: ChatRowItem {
             }
             interactions.copyToClipboard = { text in
                 copyToClipboard(text)
-                context.sharedContext.bindings.rootNavigation().controller.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
+            }
+            interactions.topWindow = { [weak self] in
+                return self?.menuAdditionView
             }
             interactions.menuItems = { [weak self] type in
-                var items:[ContextMenuItem] = []
-                if let strongSelf = self, let layout = self?.textLayout {
-                    
-                    let text: String
-                    if let type = type {
-                        text = copyContextText(from: type)
-                        items.append(ContextMenuItem(text, handler: {
-                            if let strongSelf = self {
-                                let pb = NSPasteboard.general
-                                pb.clearContents()
-                                pb.declareTypes([.string], owner: strongSelf)
-                                let layout = strongSelf.textLayout
-                                var effectiveRange = layout.selectedRange.range
-                                if layout.attributedString.range.intersection(effectiveRange) != nil {
-                                    let selectedText = layout.attributedString.attributedSubstring(from: effectiveRange)
-                                    let attribute = layout.attributedString.attribute(NSAttributedString.Key.link, at: layout.selectedRange.range.location, effectiveRange: &effectiveRange)
-                                    if let attribute = attribute as? inAppLink {
-                                        pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
-                                    } else {
-                                        pb.setString(selectedText.string, forType: .string)
-                                    }
-                                }
-                            }
-                        }))
-                        
-                    }
-                    
-                    items.append(ContextMenuItem(layout.selectedRange.hasSelectText ? L10n.chatCopySelectedText : L10n.textCopy, handler: {
-                        let result = self?.textLayout.interactions.copy?()
-                        if let result = result, let strongSelf = self, !result {
-                            if strongSelf.textLayout.selectedRange.hasSelectText {
-                                let pb = NSPasteboard.general
-                                pb.clearContents()
-                                pb.declareTypes([.string], owner: strongSelf)
-                                var effectiveRange = strongSelf.textLayout.selectedRange.range
-                                let selectedText = strongSelf.textLayout.attributedString.attributedSubstring(from: strongSelf.textLayout.selectedRange.range)
-                                let isCopied = globalLinkExecutor.copyAttributedString(selectedText)
-                                if !isCopied {
-                                    let attribute = strongSelf.textLayout.attributedString.attribute(NSAttributedString.Key.link, at: strongSelf.textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
-                                    
-                                    if let attribute = attribute as? inAppLink {
-                                        pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
-                                    } else {
-                                        pb.setString(selectedText.string, forType: .string)
-                                    }
-                                }
-                            }
-                            
-                        }
-                    }))
-                   
-                    
-                    if strongSelf.textLayout.selectedRange.hasSelectText {
-                        var effectiveRange: NSRange = NSMakeRange(NSNotFound, 0)
-                        if let _ = strongSelf.textLayout.attributedString.attribute(.preformattedPre, at: strongSelf.textLayout.selectedRange.range.location, effectiveRange: &effectiveRange) {
-                            let blockText = strongSelf.textLayout.attributedString.attributedSubstring(from: effectiveRange).string
-                            items.append(ContextMenuItem(tr(L10n.chatContextCopyBlock), handler: {
-                                copyToClipboard(blockText)
-                            }))
-                        }
-                    }
-                    
-                    
-                    return strongSelf.menuItems(in: NSZeroPoint) |> map { basic in
-                        var basic = basic
-                        if basic.count > 1 {
-                            basic.remove(at: 1)
-                            basic.insert(contentsOf: items, at: 1)
-                        }
-                        
-                        return basic
-                    }
+                if let strongSelf = self, let message = strongSelf.message {
+                    return chatMenuItems(for: message, entry: strongSelf.entry, textLayout: (strongSelf.textLayout, type), chatInteraction: strongSelf.chatInteraction)
                 }
                 return .complete()
             }
@@ -567,85 +546,39 @@ class ChatMessageItem: ChatRowItem {
         }
     }
     
+    override var ignoreAtInitialization: Bool {
+        return message?.adAttribute != nil
+    }
+    
     override var isForceRightLine: Bool {
+        if actionButtonText != nil  {
+            return true
+        }
+         if let webpageLayout = webpageLayout {
+             if let webpageLayout = webpageLayout as? WPArticleLayout {
+                 if webpageLayout.hasInstantPage {
+                     return true
+                 }
+                 if let _ = webpageLayout.imageSize {
+                     return true
+                 }
+                 if actionButtonText != nil {
+                     return true
+                 }
+                 if webpageLayout.groupLayout != nil {
+                     return true
+                 }
+                 
+             } else if webpageLayout is WPMediaLayout {
+                 return true
+             }
+         }
+        
         if self.webpageLayout?.content.type == "proxy" {
             return true
         } else {
             return super.isForceRightLine
         }
-    }
-    
-    override var isFixedRightPosition: Bool {
-        if containsBigEmoji {
-            return true
-        }
-        if let webpageLayout = webpageLayout {
-            if let webpageLayout = webpageLayout as? WPArticleLayout, let textLayout = webpageLayout.textLayout {
-                if textLayout.lines.count > 1, let line = textLayout.lines.last, line.frame.width < contentSize.width - (rightSize.width + insetBetweenContentAndDate) {
-                    return true
-                }
-            }
-            return super.isFixedRightPosition
-        }
-        
-        if textLayout.lines.count > 1, let line = textLayout.lines.last, line.frame.width < contentSize.width - (rightSize.width + insetBetweenContentAndDate) {
-            return true
-        }
-        return super.isForceRightLine
-    }
-    
-    override var additionalLineForDateInBubbleState: CGFloat? {
-
-        if containsBigEmoji {
-            return rightSize.height + 3
-        }
-        if isForceRightLine {
-            return rightSize.height
-        }
-        if unsupported {
-            return rightSize.height
-        }
-        if rightSize.width + insetBetweenContentAndDate + bubbleDefaultInnerInset + contentSize.width + 30 > self.width {
-           // return rightSize.height
-        }
-       
-        if let webpageLayout = webpageLayout {
-            if let webpageLayout = webpageLayout as? WPArticleLayout {
-                if let textLayout = webpageLayout.textLayout {
-                    if webpageLayout.hasInstantPage {
-                        return rightSize.height + 4
-                    }
-                    if textLayout.lines.count > 1, let line = textLayout.lines.last, line.frame.width > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
-                        return rightSize.height
-                    }
-                    if let _ = webpageLayout.imageSize, webpageLayout.isFullImageSize || textLayout.layoutSize.height - 10 <= webpageLayout.contrainedImageSize.height {
-                        return rightSize.height
-                    }
-                    if actionButtonText != nil {
-                        return rightSize.height + 4
-                    }
-                    if webpageLayout.groupLayout != nil {
-                        return rightSize.height
-                    }
-                } else {
-                    return rightSize.height
-                }
-                
-                
-            } else if webpageLayout is WPMediaLayout {
-                return rightSize.height
-            }
-            return nil
-        }
-        
-        if textLayout.lines.count == 1 {
-            if contentOffset.x + textLayout.layoutSize.width - (rightSize.width + insetBetweenContentAndDate) > width {
-                return rightSize.height
-            }
-        } else if let line = textLayout.lines.last, max(realContentSize.width, maxTitleWidth) < line.frame.width + (rightSize.width + insetBetweenContentAndDate) {
-            return rightSize.height
-        }
-        return nil
     }
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
@@ -699,145 +632,11 @@ class ChatMessageItem: ChatRowItem {
    
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
-        var items = super.menuItems(in: location)
-        
-        if message?.adAttribute != nil {
-            return items
+        if let message = message {
+            return chatMenuItems(for: message, entry: entry, textLayout: (self.textLayout, nil), chatInteraction: self.chatInteraction)
         }
+        return super.menuItems(in: location)
         
-        let text = messageText.string
-        
-        let context = self.context
-        
-        var media: Media? =  webpageLayout?.content.file ?? webpageLayout?.content.image
-        
-        if let groupLayout = (webpageLayout as? WPArticleLayout)?.groupLayout {
-            if let message = groupLayout.message(at: location) {
-                media = message.media.first
-            }
-        }
-        
-        if let file = media as? TelegramMediaFile, let message = message {
-            items = items |> mapToSignal { items -> Signal<[ContextMenuItem], NoError> in
-                var items = items
-                return context.account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> mapToSignal { data in
-                    if data.complete {
-                        items.append(ContextMenuItem(L10n.contextCopyMedia, handler: {
-                            saveAs(file, account: context.account)
-                        }))
-                    }
-                    
-                    if file.isStaticSticker, let fileId = file.id {
-                        return context.account.postbox.transaction { transaction -> [ContextMenuItem] in
-                            let saved = getIsStickerSaved(transaction: transaction, fileId: fileId)
-                            items.append(ContextMenuItem( !saved ? L10n.chatContextAddFavoriteSticker : L10n.chatContextRemoveFavoriteSticker, handler: {
-                                
-                                if !saved {
-                                    _ = addSavedSticker(postbox: context.account.postbox, network: context.account.network, file: file).start()
-                                } else {
-                                    _ = removeSavedSticker(postbox: context.account.postbox, mediaId: fileId).start()
-                                }
-                            }))
-                            
-                            return items
-                        }
-                    } else if file.isVideo && file.isAnimated {
-                        items.append(ContextMenuItem(L10n.messageContextSaveGif, handler: {
-                            let _ = addSavedGif(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: file)).start()
-                        }))
-                    }
-                    return .single(items)
-                }
-            }
-        } else if let image = media as? TelegramMediaImage {
-            items = items |> mapToSignal { items -> Signal<[ContextMenuItem], NoError> in
-                var items = items
-                if let resource = image.representations.last?.resource {
-                    return context.account.postbox.mediaBox.resourceData(resource) |> take(1) |> deliverOnMainQueue |> map { data in
-                        if data.complete {
-                            items.append(ContextMenuItem(L10n.galleryContextCopyToClipboard, handler: {
-                                if let path = link(path: data.path, ext: "jpg") {
-                                    let pb = NSPasteboard.general
-                                    pb.clearContents()
-                                    pb.writeObjects([NSURL(fileURLWithPath: path)])
-                                }
-                            }))
-                            items.append(ContextMenuItem(L10n.contextCopyMedia, handler: {
-                                savePanel(file: data.path, ext: "jpg", for: mainWindow)
-                            }))
-                        }
-                        return items
-                    }
-                } else {
-                    return .single(items)
-                }
-            }
-        }
-
-        
-        return items |> deliverOnMainQueue |> map { [weak self] items in
-            var items = items
-            
-            var index: Int? = nil
-            for i in 0 ..< items.count {
-                if items[i].title == tr(L10n.messageContextCopyMessageLink1) {
-                    index = i
-                }
-            }
-            
-            if index == nil {
-                for i in 0 ..< items.count {
-                    if items[i].title == L10n.messageContextReply1 {
-                        index = i + 1
-                    }
-                }
-            }
-            
-            let insert = min(index ?? 0, items.count)
-            items.insert(ContextMenuItem(L10n.textCopyText, handler: { [weak self] in
-                if let string = self?.textLayout.attributedString {
-                    if !globalLinkExecutor.copyAttributedString(string) {
-                        copyToClipboard(string.string)
-                    }
-                }
-            }), at: insert)
-
-            
-            
-            if let view = self?.view as? ChatRowView, let textView = view.selectableTextViews.first, let window = textView.window, index == nil {
-                let point = textView.convert(window.mouseLocationOutsideOfEventStream, from: nil)
-                if let layout = textView.layout {
-                    if let (link, _, range, _) = layout.link(at: point) {
-                        var text:String = layout.attributedString.string.nsstring.substring(with: range)
-                        if let link = link as? inAppLink {
-                            if case let .external(link, _) = link {
-                                text = link
-                            }
-                        }
-                        
-                        for i in 0 ..< items.count {
-                            if items[i].title == tr(L10n.messageContextCopyMessageLink1) {
-                                items.remove(at: i)
-                                break
-                            }
-                        }
-                        
-                        items.insert(ContextMenuItem(tr(L10n.messageContextCopyMessageLink1), handler: {
-                            copyToClipboard(text)
-                        }), at: min(1, items.count))
-                        
-                      
-                    }
-                }
-            }
-            if let content = self?.webpageLayout?.content, content.type == "proxy" {
-                items.insert(ContextMenuItem(L10n.chatCopyProxyConfiguration, handler: {
-                    copyToClipboard(content.url)
-                }), at: items.isEmpty ? 0 : 1)
-            }
-            
-            return items
-        }
     }
     
     deinit {
@@ -857,7 +656,7 @@ class ChatMessageItem: ChatRowItem {
             }
         }
         
-        var fontAttributes: [NSRange: ChatTextFontAttributes] = [:]
+        var fontAttributes: [(NSRange, ChatTextFontAttributes)] = []
         
 
         
@@ -888,20 +687,12 @@ class ChatMessageItem: ChatRowItem {
                 if nsString == nil {
                     nsString = text as NSString
                 }
-                
                 string.addAttribute(NSAttributedString.Key.link, value: inApp(for: url as NSString, context: context, openInfo: openInfo, hashtag: hashtag, command: botCommand,  applyProxy: applyProxy, confirm: nsString?.substring(with: range).trimmed != url), range: range)
             case .Bold:
-                if let fontAttribute = fontAttributes[range] {
-                    fontAttributes[range] = fontAttribute.union(.bold)
-                } else {
-                    fontAttributes[range] = .bold
-                }
+                fontAttributes.append((range, .bold))
             case .Italic:
-                if let fontAttribute = fontAttributes[range] {
-                    fontAttributes[range] = fontAttribute.union(.italic)
-                } else {
-                    fontAttributes[range] = .italic
-                }
+                fontAttributes.append((range, .italic))
+
             case .Mention:
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: linkColor, range: range)
                 if nsString == nil {
@@ -920,23 +711,16 @@ class ChatMessageItem: ChatRowItem {
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.botCommand(nsString!.substring(with: range), botCommand), range: range)
             case .Code:
                 string.addAttribute(.preformattedCode, value: 4.0, range: range)
-                if let fontAttribute = fontAttributes[range] {
-                    fontAttributes[range] = fontAttribute.union(.monospace)
-                } else {
-                    fontAttributes[range] = .monospace
-                }
+                fontAttributes.append((range, .monospace))
+
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedCode, range: range)
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.code(text.nsstring.substring(with: range), {  link in
                     copyToClipboard(link)
-                    context.sharedContext.bindings.showControllerToaster(ControllerToaster(text: L10n.shareLinkCopied), true)
+                    context.bindings.showControllerToaster(ControllerToaster(text: strings().shareLinkCopied), true)
                 }), range: range)
             case  .Pre:
                 string.addAttribute(.preformattedCode, value: 4.0, range: range)
-                if let fontAttribute = fontAttributes[range] {
-                    fontAttributes[range] = fontAttribute.union(.monospace)
-                } else {
-                    fontAttributes[range] = .monospace
-                }
+                fontAttributes.append((range, .monospace))
                // string.addAttribute(.preformattedPre, value: 4.0, range: range)
                 string.addAttribute(NSAttributedString.Key.foregroundColor, value: monospacedPre, range: range)
             case .Hashtag:
@@ -945,35 +729,6 @@ class ChatMessageItem: ChatRowItem {
                     nsString = text as NSString
                 }
                 string.addAttribute(NSAttributedString.Key.link, value: inAppLink.hashtag(nsString!.substring(with: range), hashtag), range: range)
-                if let color = NSColor(hexString: nsString!.substring(with: range)) {
-                    
-                    struct RunStruct {
-                        let ascent: CGFloat
-                        let descent: CGFloat
-                        let width: CGFloat
-                    }
-                    
-                    let dimensions = NSMakeSize(theme.fontSize + 6, theme.fontSize + 6)
-                    let extentBuffer = UnsafeMutablePointer<RunStruct>.allocate(capacity: 1)
-                    extentBuffer.initialize(to: RunStruct(ascent: 0.0, descent: 0.0, width: dimensions.width))
-                    var callbacks = CTRunDelegateCallbacks(version: kCTRunDelegateVersion1, dealloc: { (pointer) in
-                    }, getAscent: { (pointer) -> CGFloat in
-                        let d = pointer.assumingMemoryBound(to: RunStruct.self)
-                        return d.pointee.ascent
-                    }, getDescent: { (pointer) -> CGFloat in
-                        let d = pointer.assumingMemoryBound(to: RunStruct.self)
-                        return d.pointee.descent
-                    }, getWidth: { (pointer) -> CGFloat in
-                        let d = pointer.assumingMemoryBound(to: RunStruct.self)
-                        return d.pointee.width
-                    })
-                    let delegate = CTRunDelegateCreate(&callbacks, extentBuffer)
-                    let key = kCTRunDelegateAttributeName as String
-                    let attrDictionaryDelegate:[NSAttributedString.Key : Any] = [NSAttributedString.Key(key): delegate as Any, .hexColorMark : color, .hexColorMarkDimensions: dimensions]
-                    
-                    string.addAttributes(attrDictionaryDelegate, range: NSMakeRange(range.upperBound - 1, 1))
-                }
-                
             case .Strikethrough:
                 string.addAttribute(NSAttributedString.Key.strikethroughStyle, value: true, range: range)
             case .Underline:
@@ -1023,24 +778,90 @@ class ChatMessageItem: ChatRowItem {
                 break
             }
         }
-        for (range, fontAttributes) in fontAttributes {
+        for (i, (range, attr)) in fontAttributes.enumerated() {
             var font: NSFont?
-            if fontAttributes.contains(.blockQuote) {
+            var intersects:[(NSRange, ChatTextFontAttributes)] = []
+            
+            for (j, value) in fontAttributes.enumerated() {
+                if j != i {
+                    if let intersection = value.0.intersection(range) {
+                        intersects.append((intersection, value.1))
+                    }
+                }
+            }
+                        
+            switch attr {
+            case .monospace, .blockQuote:
                 font = .code(fontSize)
-            } else if fontAttributes == [.bold, .italic] {
-                font = .boldItalic(fontSize)
-            } else if fontAttributes == [.bold] {
-                font = .bold(fontSize)
-            } else if fontAttributes == [.italic] {
+            case .italic:
                 font = .italic(fontSize)
-            } else if fontAttributes == [.monospace] {
-                font = .code(fontSize)
+            case .bold:
+                font = .bold(fontSize)
+            default:
+                break
             }
             if let font = font {
                 string.addAttribute(.font, value: font, range: range)
             }
+            
+             for intersect in intersects {
+                 var font: NSFont? = nil
+                 loop: switch intersect.1 {
+                 case .italic:
+                     switch attr {
+                     case .bold:
+                         font = .boldItalic(fontSize)
+                     default:
+                         break loop
+                     }
+                 case .bold:
+                    switch attr {
+                    case .bold:
+                        font = .boldItalic(fontSize)
+                    default:
+                        break loop
+                    }
+                 default:
+                     break loop
+                     
+                 }
+                 if let font = font {
+                     string.addAttribute(.font, value: font, range: range)
+                 }
+             }
         }
-
         return string.copy() as! NSAttributedString
     }
 }
+
+
+/*
+ if let color = NSColor(hexString: nsString!.substring(with: range)) {
+     
+     struct RunStruct {
+         let ascent: CGFloat
+         let descent: CGFloat
+         let width: CGFloat
+     }
+     
+     let dimensions = NSMakeSize(theme.fontSize + 6, theme.fontSize + 6)
+     let extentBuffer = UnsafeMutablePointer<RunStruct>.allocate(capacity: 1)
+     extentBuffer.initialize(to: RunStruct(ascent: 0.0, descent: 0.0, width: dimensions.width))
+     var callbacks = CTRunDelegateCallbacks(version: kCTRunDelegateVersion1, dealloc: { (pointer) in
+     }, getAscent: { (pointer) -> CGFloat in
+         let d = pointer.assumingMemoryBound(to: RunStruct.self)
+         return d.pointee.ascent
+     }, getDescent: { (pointer) -> CGFloat in
+         let d = pointer.assumingMemoryBound(to: RunStruct.self)
+         return d.pointee.descent
+     }, getWidth: { (pointer) -> CGFloat in
+         let d = pointer.assumingMemoryBound(to: RunStruct.self)
+         return d.pointee.width
+     })
+     let delegate = CTRunDelegateCreate(&callbacks, extentBuffer)
+     let key = kCTRunDelegateAttributeName as String
+     let attrDictionaryDelegate:[NSAttributedString.Key : Any] = [NSAttributedString.Key(key): delegate as Any, .hexColorMark : color, .hexColorMarkDimensions: dimensions]
+     
+     string.addAttributes(attrDictionaryDelegate, range: NSMakeRange(range.upperBound - 1, 1))
+ }
+ */

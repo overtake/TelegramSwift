@@ -12,7 +12,7 @@ import MapKit
 import TelegramCore
 import SwiftSignalKit
 import Postbox
-
+import HackUtils
 
 
 private enum PickLocationState : Equatable {
@@ -136,7 +136,7 @@ private final class LocationMapView : View {
         loadingView.progressColor = theme.colors.accent
         expandContainer.border = [.Top]
         expandContainer.backgroundColor = theme.colors.background
-        let title = TextViewLayout(.initialize(string: L10n.locationSendTitle, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
+        let title = TextViewLayout(.initialize(string: strings().locationSendTitle, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1)
         title.measure(width: frame.width - 20)
         
         headerTextView.update(title)
@@ -166,7 +166,7 @@ private final class LocationMapView : View {
             }
             locationPinView.change(opacity: loading ? 0 : 1, animated: animated)
             locationPinView.updateState(pickState, animated: animated)
-            expandButton.set(text: L10n.locationSendShowNearby, for: .Normal)
+            expandButton.set(text: strings().locationSendShowNearby, for: .Normal)
             tableView.change(size: NSMakeSize(frame.width, 60), animated: animated, timingFunction: CAMediaTimingFunctionName.spring)
             tableView.change(pos: NSMakePoint(0, frame.height - 60 - (hasExpand ? expandContainer.frame.height : 0)), animated: animated, duration: duration, timingFunction: timingFunction)
             mapY = header.frame.height
@@ -175,7 +175,7 @@ private final class LocationMapView : View {
             locateButton.userInteractionEnabled = false
             locateButton.set(image: theme.icons.locationMapLocate, for: .Normal)
             locationPinView.change(opacity: 0, animated: animated)
-            expandButton.set(text: L10n.locationSendHideNearby, for: .Normal)
+            expandButton.set(text: strings().locationSendHideNearby, for: .Normal)
             let tableHeight = min(tableView.listHeight, frame.height - (hasExpand ? expandContainer.frame.height : 0) - header.frame.height - 50)
             tableView.change(size: NSMakeSize(frame.width, tableHeight), animated: animated, duration: duration, timingFunction: timingFunction)
             tableView.change(pos: NSMakePoint(0, frame.height - (hasExpand ? expandContainer.frame.height : 0) - tableHeight), animated: animated, duration: duration, timingFunction: timingFunction)
@@ -361,9 +361,9 @@ private func mapEntries(result: [ChatContextResult], loading: Bool, location: CL
         case let .custom(_, name):
             let text: String
             if let name = name {
-                text = name.isEmpty ? L10n.locationSendThisLocationUnknown : name
+                text = name.isEmpty ? strings().locationSendThisLocationUnknown : name
             } else {
-                text = L10n.locationSendLocating
+                text = strings().locationSendLocating
             }
             selectState = .selected(location: text)
         }

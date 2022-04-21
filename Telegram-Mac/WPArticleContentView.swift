@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-
+import InAppVideoServices
 import SwiftSignalKit
 
 
@@ -93,25 +93,8 @@ class WPArticleContentView: WPContentView {
                 return
             }
             
-            if ExternalVideoLoader.isPlayable(content) {
-                openExternalDisposable.set((sharedVideoLoader.status(for: content) |> deliverOnMainQueue).start(next: { (status) in
-                    if let status = status {
-                        switch status {
-                        case .fail:
-                            execute(inapp: .external(link: content.url, false))
-                        case .loaded:
-                            showChatGallery(context: layout.context, message: layout.parent, layout.table)
-                        default:
-                            break
-                        }
-                    }
-                }))
-                
-                _ = sharedVideoLoader.fetch(for: content).start()
-                return
-            }
-            if content.embedType == "iframe" {
-                showModal(with: WebpageModalController(content:content, context: layout.context), for: window)
+            if content.embedType == "iframe", content.type != "video", let url = content.embedUrl {
+                showModal(with: WebpageModalController(context: layout.context, url: url, title: content.websiteName ?? content.title ?? strings().webAppTitle, effectiveSize: content.embedSize?.size), for: window)
             } else if layout.isGalleryAssemble {
                 showChatGallery(context: layout.context, message: layout.parent, layout.table, type: .alone)
             } else if let wallpaper = layout.wallpaper {
@@ -296,7 +279,7 @@ class WPArticleContentView: WPContentView {
                         var initProgress: Bool = false
                         var state: RadialProgressState = .None
                         switch status {
-                        case .Fetching:
+                        case .Fetching, .Paused:
                             state = .Fetching(progress: 0.3, force: false)
                             initProgress = true
                         case .Local:
@@ -351,7 +334,7 @@ class WPArticleContentView: WPContentView {
                             switch status {
                             case .Remote:
                                 self?.fetch()
-                            case .Fetching:
+                            case .Fetching, .Paused:
                                 self?.cancelFetching()
                             case .Local:
                                 self?.open()
@@ -469,7 +452,7 @@ class WPArticleContentView: WPContentView {
                     countAccessoryView = ChatMessageAccessoryView(frame: NSZeroRect)
                     imageView?.addSubview(countAccessoryView!)
                 }
-                countAccessoryView?.updateText(L10n.chatWebpageMediaCount1(1, mediaCount), maxWidth: 40, status: nil, isStreamable: false)
+                countAccessoryView?.updateText(strings().chatWebpageMediaCount1(1, mediaCount), maxWidth: 40, status: nil, isStreamable: false)
             } else {
                 countAccessoryView?.removeFromSuperview()
                 countAccessoryView = nil

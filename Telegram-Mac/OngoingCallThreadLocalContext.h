@@ -7,7 +7,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "OngoingCallConnectionDescription.h"
 
 @protocol OngoingCallThreadLocalContextQueue <NSObject>
 

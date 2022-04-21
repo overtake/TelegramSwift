@@ -104,7 +104,7 @@ class MessageActionsPanelView: Control, Notifable {
         forwardButton.set(color: !forwardButton.userInteractionEnabled ? theme.colors.grayIcon : rightColor, for: .Normal)
 
 
-        countTitle.set(text: count == 0 ? L10n.messageActionsPanelEmptySelected : L10n.messageActionsPanelSelectedCountCountable(count), for: .Normal)
+        countTitle.set(text: count == 0 ? strings().messageActionsPanelEmptySelected : strings().messageActionsPanelSelectedCountCountable(count), for: .Normal)
         countTitle.set(color: (!canForward && !canDelete) || count == 0 ? theme.colors.grayText : theme.colors.text, for: .Normal)
         countTitle.sizeToFit(NSZeroSize, NSMakeSize(frame.width - deleteButton.frame.width - forwardButton.frame.width - 80, frame.height))
         countTitle.center()
@@ -163,15 +163,15 @@ class MessageActionsPanelView: Control, Notifable {
 
     private var leftText: String {
         if chatInteraction?.presentation.reportMode != nil {
-            return L10n.modalCancel
+            return strings().modalCancel
         }
-        return L10n.messageActionsPanelDelete
+        return strings().messageActionsPanelDelete
     }
     private var rightText: String {
         if chatInteraction?.presentation.reportMode != nil {
-            return L10n.modalReport
+            return strings().modalReport
         }
-        return L10n.messageActionsPanelForward
+        return strings().messageActionsPanelForward
     }
     private var leftIcon: CGImage? {
         if chatInteraction?.presentation.reportMode != nil {

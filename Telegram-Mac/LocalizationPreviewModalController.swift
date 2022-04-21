@@ -31,16 +31,16 @@ private final class LocalizationPreviewView : Control {
     }
     
     func update(with info: LocalizationInfo, width: CGFloat) -> CGFloat {
-        let titleLayout = TextViewLayout(.initialize(string: L10n.applyLanguageChangeLanguageTitle, color: theme.colors.text, font: .medium(.title)), alwaysStaticItems: true)
+        let titleLayout = TextViewLayout(.initialize(string: strings().applyLanguageChangeLanguageTitle, color: theme.colors.text, font: .medium(.title)), alwaysStaticItems: true)
         titleLayout.measure(width: width)
         titleView.update(titleLayout)
         
         
         let text: String
         if info.isOfficial {
-            text = L10n.applyLanguageChangeLanguageOfficialText(info.title)
+            text = strings().applyLanguageChangeLanguageOfficialText(info.title)
         } else {
-            text = L10n.applyLanguageChangeLanguageUnofficialText1(info.title, "\(Int(Float(info.translatedStringCount) / Float(info.totalStringCount) * 100.0))")
+            text = strings().applyLanguageChangeLanguageUnofficialText1(info.title, "\(Int(Float(info.translatedStringCount) / Float(info.totalStringCount) * 100.0))")
         }
         
         let attributedText = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.text), textColor: theme.colors.link), linkAttribute: { contents in
@@ -92,9 +92,9 @@ class LocalizationPreviewModalController: ModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: L10n.applyLanguageApplyLanguageAction, accept: { [weak self] in
+        return ModalInteractions(acceptTitle: strings().applyLanguageApplyLanguageAction, accept: { [weak self] in
             self?.applyLocalization()
-        }, cancelTitle: L10n.modalCancel, height: 50)
+        }, cancelTitle: strings().modalCancel, height: 50)
     }
     
     override func viewClass() -> AnyClass {

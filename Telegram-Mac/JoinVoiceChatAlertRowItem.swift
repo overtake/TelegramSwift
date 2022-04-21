@@ -24,7 +24,7 @@ final class JoinVoiceChatAlertRowItem : GeneralRowItem {
         
         _ = attr.append(string: title, color: theme.colors.text, font: .medium(.title))
         _ = attr.append(string: "\n")
-        _ = attr.append(string: L10n.chatVoiceChatJoinLinkParticipantsCountable(participantsCount), color: theme.colors.grayText, font: .normal(.text))
+        _ = attr.append(string: strings().chatVoiceChatJoinLinkParticipantsCountable(participantsCount), color: theme.colors.grayText, font: .normal(.text))
         
         
         self.titleLayout = TextViewLayout(attr, alignment: .center)

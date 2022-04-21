@@ -117,25 +117,29 @@ final class CachedBlurredWallpaperRepresentation: CachedMediaResourceRepresentat
 final class CachedAnimatedStickerRepresentation: CachedMediaResourceRepresentation {
     var keepDuration: CachedMediaRepresentationKeepDuration = .general
     var uniqueId: String {
-        let version: Int = 1
+        let version: Int = 8
         if let fitzModifier = self.fitzModifier {
-            return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-fitz\(fitzModifier.rawValue)"
+            return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-fitz\(fitzModifier.rawValue)-f\(frame)-m1\(self.isVideo)"
         } else {
-            return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)"
+            return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-f\(frame)-m1\(self.isVideo)"
         }
     }
     let thumb: Bool
     let size: NSSize
     let fitzModifier: EmojiFitzModifier?
-    init(thumb: Bool, size: NSSize, fitzModifier: EmojiFitzModifier? = nil) {
+    let frame: Int
+    let isVideo: Bool
+    init(thumb: Bool, size: NSSize, fitzModifier: EmojiFitzModifier? = nil, frame: Int = 0, isVideo: Bool = false) {
         self.thumb = thumb
         self.size = size
         self.fitzModifier = fitzModifier
+        self.frame = frame
+        self.isVideo = isVideo
     }
     
     func isEqual(to: CachedMediaResourceRepresentation) -> Bool {
         if let to = to as? CachedAnimatedStickerRepresentation {
-            return self.thumb == to.thumb && self.size == to.size && self.fitzModifier == to.fitzModifier
+            return self.thumb == to.thumb && self.size == to.size && self.fitzModifier == to.fitzModifier && self.frame == to.frame && self.isVideo == to.isVideo
         } else {
             return false
         }
@@ -246,6 +250,27 @@ public enum EmojiFitzModifier: Int32, Equatable {
             self = .type6
         default:
             return nil
+        }
+    }
+}
+
+
+
+final class CachedPreparedSvgRepresentation: CachedMediaResourceRepresentation {
+    public let keepDuration: CachedMediaRepresentationKeepDuration = .general
+    
+    public var uniqueId: String {
+        return "prepared-svg"
+    }
+    
+    public init() {
+    }
+    
+    public func isEqual(to: CachedMediaResourceRepresentation) -> Bool {
+        if to is CachedPreparedSvgRepresentation {
+            return true
+        } else {
+            return false
         }
     }
 }

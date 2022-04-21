@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import InAppSettings
 import Postbox
 import SwiftSignalKit
 import Contacts
@@ -67,26 +67,12 @@ class ChatContactRowItem: ChatRowItem {
         super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
     }
     
-    override var additionalLineForDateInBubbleState: CGFloat? {
-        if vCard != nil {
-            return rightSize.height
-        }
+    override var isForceRightLine: Bool {
         if let line = phoneLayout.lines.last, (line.frame.width + 50) > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
-            return rightSize.height
-        }
-        return nil
-    }
-    
-    override var isFixedRightPosition: Bool {
-        if vCard != nil {
-            return super.isForceRightLine
-        }
-        
-        if let line = phoneLayout.lines.last, (line.frame.width + 50) < contentSize.width - (rightSize.width + insetBetweenContentAndDate) {
             return true
         }
         return super.isForceRightLine
-    }
+    }   
     
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         nameLayout.measure(width: width - 50)
@@ -168,12 +154,7 @@ class ChatContactRowView : ChatRowView {
                     addSubview(actionButton!)
                 }
                 actionButton?.removeAllHandlers()
-//                actionButton?.set(handler: { [weak item] _ in
-//                    guard let item = item, let vCard = item.vCard else {return}
-//                    let controller = VCardModalController(item.account, vCard: vCard, contact: item.contact)
-//                    showModal(with: controller, for: mainWindow)
-//                }, for: .Click)
-                actionButton?.set(text: L10n.chatViewContact, for: .Normal)
+                actionButton?.set(text: strings().chatViewContact, for: .Normal)
                 actionButton?.layer?.borderColor = item.appearance.activity.cgColor
                 actionButton?.set(color: item.appearance.activity, for: .Normal)
                 _ = actionButton?.sizeToFit(NSZeroSize, NSMakeSize(item.contentSize.width, 30), thatFit: true)

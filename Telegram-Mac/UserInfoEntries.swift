@@ -134,12 +134,12 @@ class UserInfoArguments : PeerInfoArguments {
         
         _ = peer.start(next: { [weak self] peer in
             if let peer = peer {
-                confirm(for: mainWindow, information: L10n.peerInfoConfirmShareInfo(peer.displayTitle), successHandler: { [weak self] _ in
+                confirm(for: context.window, information: strings().peerInfoConfirmShareInfo(peer.displayTitle), successHandler: { [weak self] _ in
                     let signal: Signal<Void, NoError> = context.account.postbox.loadedPeerWithId(context.peerId) |> map { $0 as! TelegramUser } |> mapToSignal { peer in
                         let signal = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil)), replyToMessageId: nil, localGroupingKey: nil, correlationId: nil), context: context, peerId: peerId)
                         return signal  |> map { _ in}
                     }
-                    self?.shareDisposable.set(showModalProgress(signal: signal, for: mainWindow).start())
+                    self?.shareDisposable.set(showModalProgress(signal: signal, for: context.window).start())
                 })
             }
         })
@@ -204,7 +204,7 @@ class UserInfoArguments : PeerInfoArguments {
             let updateNames: Signal<Void, UpdateContactNameError>
             
             if let firstName = updateValues.firstName {
-                updateNames = showModalProgress(signal: context.engine.contacts.updateContactName(peerId: peerId, firstName: firstName, lastName: updateValues.lastName ?? "") |> deliverOnMainQueue, for: mainWindow)
+                updateNames = showModalProgress(signal: context.engine.contacts.updateContactName(peerId: peerId, firstName: firstName, lastName: updateValues.lastName ?? "") |> deliverOnMainQueue, for: context.window)
             } else {
                 updateNames = .complete()
             }
@@ -235,39 +235,66 @@ class UserInfoArguments : PeerInfoArguments {
         } |> filter { $0 != nil } |> map { $0! }
         
         let call = peer |> mapToSignal {
-            phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: $0, isVideo: isVideo)
+            phoneCall(context: context, peerId: $0, isVideo: isVideo)
         } |> deliverOnMainQueue
         
         self.callDisposable.set(call.start(next: { result in
-            applyUIPCallResult(context.sharedContext, result)
+            applyUIPCallResult(context, result)
         }))
     }
-    
+        
     func botAddToGroup() {
         let context = self.context
         let peerId = self.peerId
         
-        let result = selectModalPeers(window: context.window, context: context, title: L10n.selectPeersTitleSelectChat, behavior: SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
-            if let peerId = peerIds.first {
-                return context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { peer -> Signal<Bool, NoError> in
-                    return confirmSignal(for: context.window, information: L10n.confirmAddBotToGroup(peer.displayTitle))
+        let result = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectGroupOrChannel, behavior: SelectGroupOrChannelBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
+            return .single(true)
+        })
+        |> filter { $0.first != nil }
+        |> map { $0.first! }
+        |> mapToSignal { sourceId in
+            return combineLatest(context.account.postbox.loadedPeerWithId(peerId), context.account.postbox.loadedPeerWithId(sourceId)) |> map {
+                (dest: $0, source: $1)
+            }
+        } |> deliverOnMainQueue
+        
+        
+        _ = result.start(next: { [weak self] values in
+            
+            let addAdmin:()->Void = {
+                showModal(with: ChannelBotAdminController(context: context, peer: values.source, admin: values.dest, callback: { [weak self] peerId in
+                    self?.peerChat(peerId)
+                }), for: context.window)
+            }
+            let addSimple:()->Void = {
+                confirm(for: context.window, information: strings().confirmAddBotToGroup(values.dest.displayTitle), successHandler: { [weak self] _ in
+                    addBotAsMember(context: context, peer: values.source, to: values.dest, completion: { [weak self] peerId in
+                        self?.peerChat(peerId, postId: nil)
+                    }, error: { error in 
+                        alert(for: context.window, info: error)
+                    })
+                })
+            }
+            if let peer = values.source as? TelegramChannel {
+                if peer.groupAccess.isCreator {
+                    addAdmin()
+                } else if let adminRights = peer.adminRights, adminRights.rights.contains(.canAddAdmins) {
+                    addAdmin()
+                } else {
+                    addSimple()
+                }
+            } else if let peer = values.source as? TelegramGroup {
+                switch peer.role {
+                case .creator:
+                    addAdmin()
+                default:
+                    addSimple()
                 }
             }
-            return .single(false)
-        }) |> deliverOnMainQueue |> filter {$0.first != nil} |> map {$0.first!} |> mapToSignal { groupId -> Signal<PeerId, NoError> in
-            if groupId.namespace == Namespaces.Peer.CloudGroup {
-                return showModalProgress(signal: context.engine.peers.addGroupMember(peerId: groupId, memberId: peerId), for: context.window) |> `catch` {_ in .complete()} |> map {groupId}
-            } else {
-                return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMember(peerId: groupId, memberId: peerId), for: context.window) |> map { groupId }
-            }
-        }
-        
-        _ = result.start(next: { [weak self] peerId in
-            self?.peerChat(peerId)
         })
     }
     func botShare(_ botName: String) {
-        showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/\(botName)")), for: mainWindow)
+        showModal(with: ShareModalController(ShareLinkObject(context, link: "https://t.me/\(botName)")), for: context.window)
     }
     func botSettings() {
         _ = Sender.enqueue(input: ChatTextInputState(inputText: "/settings"), context: context, peerId: peerId, replyId: nil).start()
@@ -292,9 +319,9 @@ class UserInfoArguments : PeerInfoArguments {
             
         } |> deliverOnMainQueue  |> mapToSignal { peer -> Signal<PeerId, NoError> in
             if let peer = peer {
-                let confirm = confirmSignal(for: context.window, header: L10n.peerInfoConfirmSecretChatHeader, information: L10n.peerInfoConfirmStartSecretChat(peer.displayTitle), okTitle: L10n.peerInfoConfirmSecretChatOK)
+                let confirm = confirmSignal(for: context.window, header: strings().peerInfoConfirmSecretChatHeader, information: strings().peerInfoConfirmStartSecretChat(peer.displayTitle), okTitle: strings().peerInfoConfirmSecretChatOK)
                 return confirm |> filter {$0} |> mapToSignal { (_) -> Signal<PeerId, NoError> in
-                    return showModalProgress(signal: context.engine.peers.createSecretChat(peerId: peer.id) |> `catch` { _ in return .complete()}, for: mainWindow)
+                    return showModalProgress(signal: context.engine.peers.createSecretChat(peerId: peer.id) |> `catch` { _ in return .complete()}, for: context.window)
                 }
             } else {
                 return .complete()
@@ -328,24 +355,28 @@ class UserInfoArguments : PeerInfoArguments {
     
     func updateBlocked(peer: Peer,_ blocked:Bool, _ isBot: Bool) {
         let context = self.context
+        var peerId = peer.id
+        if let peer = peer as? TelegramSecretChat {
+            peerId = peer.regularPeerId
+        }
         if blocked {
-            confirm(for: context.window, header: L10n.peerInfoBlockHeader, information: L10n.peerInfoBlockText(peer.displayTitle), okTitle: L10n.peerInfoBlockOK, successHandler: { [weak self] _ in
-                let signal = showModalProgress(signal: context.blockedPeersContext.add(peerId: peer.id) |> deliverOnMainQueue, for: context.window)
+            confirm(for: context.window, header: strings().peerInfoBlockHeader, information: strings().peerInfoBlockText(peer.displayTitle), okTitle: strings().peerInfoBlockOK, successHandler: { [weak self] _ in
+                let signal = showModalProgress(signal: context.blockedPeersContext.add(peerId: peerId) |> deliverOnMainQueue, for: context.window)
                 self?.blockDisposable.set(signal.start(error: { error in
                     switch error {
                     case .generic:
-                        alert(for: context.window, info: L10n.unknownError)
+                        alert(for: context.window, info: strings().unknownError)
                     }
                 }, completed: {
                     
                 }))
             })
         } else {
-            let signal = showModalProgress(signal: context.blockedPeersContext.remove(peerId: peer.id) |> deliverOnMainQueue, for: context.window)
+            let signal = showModalProgress(signal: context.blockedPeersContext.remove(peerId: peerId) |> deliverOnMainQueue, for: context.window)
             blockDisposable.set(signal.start(error: { error in
                 switch error {
                 case .generic:
-                    alert(for: context.window, info: L10n.unknownError)
+                    alert(for: context.window, info: strings().unknownError)
                 }
             }, completed: {
                 
@@ -361,7 +392,7 @@ class UserInfoArguments : PeerInfoArguments {
     func deleteContact() {
         let context = self.context
         let peerId = self.peerId
-        deletePeerContactDisposable.set((confirmSignal(for: context.window, information: tr(L10n.peerInfoConfirmDeleteContact))
+        deletePeerContactDisposable.set((confirmSignal(for: context.window, information: strings().peerInfoConfirmDeleteContact)
             |> filter {$0}
             |> mapToSignal { _ in
                 showModalProgress(signal: context.engine.contacts.deleteContactPeerInteractively(peerId: peerId) |> deliverOnMainQueue, for: context.window)
@@ -404,6 +435,7 @@ enum UserInfoEntry: PeerInfoEntry {
     case shareMyInfo(sectionId:Int, viewType: GeneralViewType)
     case addContact(sectionId:Int, viewType: GeneralViewType)
     case botAddToGroup(sectionId: Int, viewType: GeneralViewType)
+    case botAddToGroupInfo(sectionId: Int, viewType: GeneralViewType)
     case botShare(sectionId: Int, name: String, viewType: GeneralViewType)
     case botHelp(sectionId: Int, viewType: GeneralViewType)
     case botSettings(sectionId: Int, viewType: GeneralViewType)
@@ -434,6 +466,7 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .shareMyInfo(sectionId, _): return .shareMyInfo(sectionId: sectionId, viewType: viewType)
         case let .addContact(sectionId, _): return .addContact(sectionId: sectionId, viewType: viewType)
         case let .botAddToGroup(sectionId, _): return .botAddToGroup(sectionId: sectionId, viewType: viewType)
+        case let .botAddToGroupInfo(sectionId, _): return .botAddToGroupInfo(sectionId: sectionId, viewType: viewType)
         case let .botShare(sectionId, name, _): return .botShare(sectionId: sectionId, name: name, viewType: viewType)
         case let .botHelp(sectionId, _): return .botHelp(sectionId: sectionId, viewType: viewType)
         case let .botSettings(sectionId, _): return .botSettings(sectionId: sectionId, viewType: viewType)
@@ -569,6 +602,13 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .botAddToGroup(sectionId, viewType):
             switch entry {
             case .botAddToGroup(sectionId, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .botAddToGroupInfo(sectionId, viewType):
+            switch entry {
+            case .botAddToGroupInfo(sectionId, viewType):
                 return true
             default:
                 return false
@@ -722,38 +762,40 @@ enum UserInfoEntry: PeerInfoEntry {
             return 8
         case .botAddToGroup:
             return 9
-        case .botShare:
+        case .botAddToGroupInfo:
             return 10
-        case .botSettings:
+        case .botShare:
             return 11
-        case .botHelp:
+        case .botSettings:
             return 12
-        case .botPrivacy:
+        case .botHelp:
             return 13
-        case .shareContact:
+        case .botPrivacy:
             return 14
-        case .shareMyInfo:
+        case .shareContact:
             return 15
-        case .addContact:
+        case .shareMyInfo:
             return 16
-        case .startSecretChat:
+        case .addContact:
             return 17
-        case .sharedMedia:
+        case .startSecretChat:
             return 18
-        case .notifications:
+        case .sharedMedia:
             return 19
-        case .encryptionKey:
+        case .notifications:
             return 20
-        case .groupInCommon:
+        case .encryptionKey:
             return 21
-        case .block:
+        case .groupInCommon:
             return 22
-        case .deleteChat:
+        case .block:
             return 23
-        case .deleteContact:
+        case .deleteChat:
             return 24
-        case .media:
+        case .deleteContact:
             return 25
+        case .media:
+            return 26
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -780,6 +822,8 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .sendMessage(sectionId, _):
             return (sectionId * 1000) + stableIndex
         case let .botAddToGroup(sectionId, _):
+            return (sectionId * 1000) + stableIndex
+        case let .botAddToGroupInfo(sectionId, _):
             return (sectionId * 1000) + stableIndex
         case let .botShare(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
@@ -840,23 +884,23 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .info(_, peerView, editable, viewType):
             return PeerInfoHeadItem(initialSize, stableId:stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, viewType: viewType, editing: editable)
         case let .setFirstName(_, text, viewType):
-            return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: L10n.peerInfoFirstNamePlaceholder, filter: { $0 }, updated: {
+            return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoFirstNamePlaceholder, filter: { $0 }, updated: {
                 arguments.updateEditingNames(firstName: $0, lastName: state.editingState?.editingLastName)
             }, limit: 255)
         case let .setLastName(_, text, viewType):
-            return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: L10n.peerInfoLastNamePlaceholder, filter: { $0 }, updated: {
+            return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoLastNamePlaceholder, filter: { $0 }, updated: {
                 arguments.updateEditingNames(firstName: state.editingState?.editingFirstName, lastName: $0)
             }, limit: 255)
         case let .about(_, text, viewType):
-            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoAbout, copyMenuText: L10n.textCopyLabelAbout, text:text, context: arguments.context, viewType: viewType, detectLinks: true, openInfo: { peerId, toChat, postId, _ in
+            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoAbout, copyMenuText: strings().textCopyLabelAbout, text:text, context: arguments.context, viewType: viewType, detectLinks: true, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
                     arguments.peerChat(peerId, postId: postId)
                 } else {
                     arguments.peerInfo(peerId)
                 }
-            }, hashtag: arguments.context.sharedContext.bindings.globalSearch)
+            }, hashtag: arguments.context.bindings.globalSearch)
         case let .bio(_, text, viewType):
-            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: L10n.peerInfoBio, copyMenuText: L10n.textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, detectLinks: true, onlyInApp: true, openInfo: { peerId, toChat, postId, _ in
+            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoBio, copyMenuText: strings().textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, detectLinks: true, onlyInApp: true, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
                     arguments.peerChat(peerId, postId: postId)
                 } else {
@@ -864,60 +908,62 @@ enum UserInfoEntry: PeerInfoEntry {
                 }
             })
         case let .phoneNumber(_, _, value, canCopy, viewType):
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:value.label, copyMenuText: L10n.textCopyLabelPhoneNumber, text: value.number, context: arguments.context, viewType: viewType, canCopy: canCopy)
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:value.label, copyMenuText: strings().textCopyLabelPhoneNumber, text: value.number, context: arguments.context, viewType: viewType, canCopy: canCopy)
         case let .userName(_, value, viewType):
             let link = "https://t.me/\(value)"
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoUsername, copyMenuText: L10n.textCopyLabelUsername, text:"@\(value)", context: arguments.context, viewType: viewType, _copyToClipboard: {
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoUsername, copyMenuText: strings().textCopyLabelUsername, text:"@\(value)", context: arguments.context, viewType: viewType, _copyToClipboard: {
                 arguments.copy(link)
             })
         case let .scam(_, title, text, viewType):
-            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: title, copyMenuText: L10n.textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
+            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: title, copyMenuText: strings().textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
         case let .sendMessage(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSendMessage, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoSendMessage, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.peerChat(arguments.peerId)
             })
         case let .botAddToGroup(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoBotAddToGroup, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotAddTo, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.botAddToGroup()
             })
+        case let .botAddToGroupInfo(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: strings().peerInfoBotAddToInfo, viewType: viewType)
         case let .botShare(_, name, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoBotShare, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotShare, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.botShare(name)
             })
         case let .botSettings(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoBotSettings, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotSettings, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.botSettings()
             })
         case let .botHelp(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoBotHelp, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotHelp, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.botHelp()
             })
         case let .botPrivacy(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoBotPrivacy, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBotPrivacy, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.botPrivacy()
             })
         case let .shareContact(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoShareContact, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoShareContact, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.shareContact()
             })
         case let .shareMyInfo(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoShareMyInfo, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoShareMyInfo, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.shareMyInfo()
             })
         case let .addContact(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAddContact, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoAddContact, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.addContact()
             })
         case let .startSecretChat(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoStartSecretChat, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoStartSecretChat, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.startSecretChat()
             })
         case let .sharedMedia(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSharedMedia, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoSharedMedia, type: .next, viewType: viewType, action: {
                 arguments.sharedMedia()
             })
         case let .groupInCommon(sectionId: _, count, peerId, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoGroupsInCommon, type: .nextContext("\(count)"), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoGroupsInCommon, type: .nextContext("\(count)"), viewType: viewType, action: {
                 arguments.groupInCommon(peerId)
             })
             
@@ -926,21 +972,21 @@ enum UserInfoEntry: PeerInfoEntry {
             let settings = settings as? TelegramPeerNotificationSettings
             let enabled = !(settings?.isMuted ?? false)
             
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoNotifications, type: .switchable(enabled), viewType: viewType, action: {}, enabled: settings != nil)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoNotifications, type: .switchable(enabled), viewType: viewType, action: {}, enabled: settings != nil)
         case let .encryptionKey(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoEncryptionKey, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoEncryptionKey, type: .next, viewType: viewType, action: {
                 arguments.encryptionKey()
             })
         case let .block(_, peer, isBlocked, isBot, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: isBot ? (!isBlocked ? L10n.peerInfoStopBot : L10n.peerInfoRestartBot) : (!isBlocked ? L10n.peerInfoBlockUser : L10n.peerInfoUnblockUser), nameStyle:redActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: isBot ? (!isBlocked ? strings().peerInfoStopBot : strings().peerInfoRestartBot) : (!isBlocked ? strings().peerInfoBlockUser : strings().peerInfoUnblockUser), nameStyle:redActionButton, type: .none, viewType: viewType, action: {
                 arguments.updateBlocked(peer: peer, !isBlocked, isBot)
             })
         case let .deleteChat(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoDeleteSecretChat, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoDeleteSecretChat, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
                 arguments.delete()
             })
         case let .deleteContact(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoDeleteContact, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoDeleteContact, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
                 arguments.deleteContact()
             })
         case let .media(_, controller, isVisible, viewType):
@@ -1000,9 +1046,9 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
             
             if state.editingState == nil {
                 if user.isScam {
-                    infoBlock.append(UserInfoEntry.scam(sectionId: sectionId, title: L10n.peerInfoScam, text: L10n.peerInfoScamWarning, viewType: .singleItem))
+                    infoBlock.append(UserInfoEntry.scam(sectionId: sectionId, title: strings().peerInfoScam, text: strings().peerInfoScamWarning, viewType: .singleItem))
                 } else if user.isFake {
-                    infoBlock.append(UserInfoEntry.scam(sectionId: sectionId, title: L10n.peerInfoFake, text: L10n.peerInfoFakeWarning, viewType: .singleItem))
+                    infoBlock.append(UserInfoEntry.scam(sectionId: sectionId, title: strings().peerInfoFake, text: strings().peerInfoFakeWarning, viewType: .singleItem))
                 }
                 
                 if let cachedUserData = view.cachedData as? CachedUserData {
@@ -1016,28 +1062,37 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                 }
                 
                 if let phoneNumber = user.phone, !phoneNumber.isEmpty {
-                    infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: L10n.peerInfoPhone, number: formatPhoneNumber(phoneNumber)), canCopy: true, viewType: .singleItem))
+                    infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: strings().peerInfoPhone, number: formatPhoneNumber(phoneNumber)), canCopy: true, viewType: .singleItem))
                 } else if view.peerIsContact {
-                    infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: L10n.peerInfoPhone, number: L10n.newContactPhoneHidden), canCopy: false, viewType: .singleItem))
+                    infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: strings().peerInfoPhone, number: strings().newContactPhoneHidden), canCopy: false, viewType: .singleItem))
                 }
                 if let username = user.username, !username.isEmpty {
                     infoBlock.append(.userName(sectionId: sectionId, value: username, viewType: .singleItem))
                 }
                 
-                
                 if !user.isBot {
                     if !view.peerIsContact {
                         infoBlock.append(.addContact(sectionId: sectionId, viewType: .singleItem))
-                        if let cachedData = view.cachedData as? CachedUserData {
-                            infoBlock.append(.block(sectionId: sectionId, peer: peer, blocked: cachedData.isBlocked, isBot: peer.isBot, viewType: .singleItem))
-                        }
                     }
                 }
                 if (peer is TelegramSecretChat) {
                     infoBlock.append(.encryptionKey(sectionId: sectionId, viewType: .singleItem))
                 }
+                if !user.isBot {
+                    if !view.peerIsContact {
+                        if let cachedData = view.cachedData as? CachedUserData {
+                            infoBlock.append(.block(sectionId: sectionId, peer: peer, blocked: cachedData.isBlocked, isBot: peer.isBot, viewType: .singleItem))
+                        }
+                    }
+                } else if let botInfo = user.botInfo, botInfo.flags.contains(.worksWithGroups) {
+                    infoBlock.append(.botAddToGroup(sectionId: sectionId, viewType: .singleItem))
+                }
+               
                 
                 applyBlock(infoBlock)
+                if let botInfo = user.botInfo, botInfo.flags.contains(.worksWithGroups) {
+                    entries.append(UserInfoEntry.botAddToGroupInfo(sectionId: sectionId, viewType: .textBottomItem))
+                }
             }
             
             if let _ = view.cachedData as? CachedUserData, arguments.context.account.peerId != arguments.peerId {

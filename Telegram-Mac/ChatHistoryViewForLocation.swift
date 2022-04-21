@@ -10,7 +10,7 @@ import Cocoa
 
 import Postbox
 import TelegramCore
-
+import InAppSettings
 import SwiftSignalKit
 import TGUIKit
 
@@ -115,7 +115,7 @@ public struct ChatHistoryCombinedInitialData {
     let autodownloadSettings: AutomaticMediaDownloadSettings
 }
 
-enum ChatHistoryViewUpdateType {
+enum ChatHistoryViewUpdateType : Equatable {
     case Initial(fadeIn: Bool)
     case Generic(type: ViewUpdateType)
 }
@@ -404,15 +404,15 @@ private func extractAdditionalData(view: MessageHistoryView, chatLocation: ChatL
                 cachedDataMessages = [messageId : messages]
             case let .preferencesEntry(key, value):
                 if key == PreferencesKeys.limitsConfiguration {
-                    limitsConfiguration = value as? LimitsConfiguration ?? LimitsConfiguration.defaultValue
+                    limitsConfiguration = value?.get(LimitsConfiguration.self) ?? .defaultValue
                 }
                 if key == ApplicationSpecificPreferencesKeys.autoplayMedia {
-                    autoplayMedia = value as? AutoplayMediaPreferences ?? AutoplayMediaPreferences.defaultSettings
+                    autoplayMedia = value?.get(AutoplayMediaPreferences.self) ?? .defaultSettings
                     
                 }
                 
                 if key == ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings {
-                    autodownloadSettings = value as? AutomaticMediaDownloadSettings ?? AutomaticMediaDownloadSettings.defaultSettings
+                    autodownloadSettings = value?.get(AutomaticMediaDownloadSettings.self) ?? .defaultSettings
                 }
             case let .totalUnreadState(unreadState):
                 if let combinedReadStates = view.fixedReadStates {

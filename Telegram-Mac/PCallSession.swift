@@ -9,12 +9,13 @@
 import Cocoa
 import SwiftSignalKit
 import TelegramCore
-
+import InAppSettings
 import Postbox
 import TGUIKit
-import TgVoipWebrtc
 import CoreGraphics
+
 import TelegramVoip
+import TgVoipWebrtc
 
 enum CallTone {
     case undefined
@@ -36,40 +37,40 @@ extension CallState.State {
         let statusValue: CallControllerStatusValue
         switch self {
         case .waiting, .connecting:
-            statusValue = .text(L10n.callStatusConnecting, nil)
+            statusValue = .text(strings().callStatusConnecting, nil)
         case let .requesting(ringing):
             if ringing {
-                statusValue = .text(L10n.callStatusRinging, nil)
+                statusValue = .text(strings().callStatusRinging, nil)
             } else {
-                statusValue = .text(L10n.callStatusRequesting, nil)
+                statusValue = .text(strings().callStatusRequesting, nil)
             }
         case .terminating:
-            statusValue = .text(L10n.callStatusEnded, nil)
+            statusValue = .text(strings().callStatusEnded, nil)
         case let .terminated(_, reason, _):
             if let reason = reason {
                 switch reason {
                 case let .ended(type):
                     switch type {
                     case .busy:
-                        statusValue = .text(L10n.callStatusBusy, nil)
+                        statusValue = .text(strings().callStatusBusy, nil)
                     case .hungUp, .missed:
-                        statusValue = .text(L10n.callStatusEnded, nil)
+                        statusValue = .text(strings().callStatusEnded, nil)
                     }
                 case .error:
-                    statusValue = .text(L10n.callStatusFailed, nil)
+                    statusValue = .text(strings().callStatusFailed, nil)
                 }
             } else {
-                statusValue = .text(L10n.callStatusEnded, nil)
+                statusValue = .text(strings().callStatusEnded, nil)
             }
         case .ringing:
             if let accountPeer = accountPeer {
-                statusValue = .text(L10n.callStatusCallingAccount(accountPeer.addressName ?? accountPeer.compactDisplayTitle), nil)
+                statusValue = .text(strings().callStatusCallingAccount(accountPeer.addressName ?? accountPeer.compactDisplayTitle), nil)
             } else {
-                statusValue = .text(L10n.callStatusCalling, nil)
+                statusValue = .text(strings().callStatusCalling, nil)
             }
         case .active(let timestamp, let reception, _), .reconnecting(let timestamp, let reception, _):
             if case .reconnecting = self {
-                statusValue = .text(L10n.callStatusConnecting, reception)
+                statusValue = .text(strings().callStatusConnecting, reception)
             } else {
                 statusValue = .timer(timestamp, reception)
             }
@@ -241,7 +242,6 @@ private func getAuxiliaryServers(appConfiguration: AppConfiguration) -> [CallAux
 class PCallSession {
     let peerId:PeerId
     let account: Account
-    let sharedContext: SharedAccountContext
     let internalId:CallSessionInternalId
     
     private(set) var peer: Peer?
@@ -283,7 +283,13 @@ class PCallSession {
     }
     
     private let canBeRemovedPromise = Promise<Bool>(false)
-    private var didSetCanBeRemoved = false
+    private var didSetCanBeRemoved = false {
+        didSet {
+            if didSetCanBeRemoved {
+                accountContext.sharedContext.dropCrossCall()
+            }
+        }
+    }
     public var canBeRemoved: Signal<Bool, NoError> {
         return self.canBeRemovedPromise.get()
     }
@@ -339,20 +345,21 @@ class PCallSession {
     
     private var settingsDisposable: Disposable?
     private var devicesContext: DevicesContext
-    
-    init(account: Account, sharedContext: SharedAccountContext, isOutgoing: Bool, peerId:PeerId, id: CallSessionInternalId, initialState:CallSession?, startWithVideo: Bool, isVideoPossible: Bool) {
+    let accountContext: AccountContext
+    init(accountContext: AccountContext, account: Account, isOutgoing: Bool, peerId:PeerId, id: CallSessionInternalId, initialState:CallSession?, startWithVideo: Bool, isVideoPossible: Bool) {
         
-        Queue.mainQueue().async {
-            _ = globalAudio?.pause()
+        DispatchQueue.main.async {
+            _ = accountContext.audioPlayer?.pause()
         }
-                
         self.account = account
-        self.sharedContext = sharedContext
+        self.accountContext = accountContext
         self.peerId = peerId
         self.internalId = id
         self.callSessionManager = account.callSessionManager
         self.updatedNetworkType = account.networkType
         self.isOutgoing = isOutgoing
+        
+
 
         self.isScreenCapture = false
         self.isVideo = initialState?.type == .video
@@ -386,7 +393,7 @@ class PCallSession {
         self.isVideoAvailable = isVideoAvailable 
         
        
-        
+        let context = self.accountContext
         
         let semaphore = DispatchSemaphore(value: 0)
         var data: (PreferencesView, Peer?, VoiceCallSettings, ProxyServerSettings?, NetworkType)!
@@ -396,8 +403,8 @@ class PCallSession {
             account.postbox.transaction { transaction -> Peer? in
                 return transaction.getPeer(peerId)
             },
-            voiceCallSettings(sharedContext.accountManager),
-            proxySettings(accountManager: sharedContext.accountManager) |> take(1),
+            voiceCallSettings(context.sharedContext.accountManager),
+            proxySettings(accountManager: context.sharedContext.accountManager) |> take(1),
             account.networkType |> take(1)
             ).start(next: { preferences, peer, voiceSettings, proxy, networkType in
                 data = (preferences, peer, voiceSettings, proxy.effectiveActiveServer, networkType)
@@ -406,9 +413,9 @@ class PCallSession {
         semaphore.wait()
        
 
-        let configuration = data.0.values[PreferencesKeys.voipConfiguration] as? VoipConfiguration ?? VoipConfiguration.defaultValue
-        let appConfiguration = data.0.values[PreferencesKeys.appConfiguration] as? AppConfiguration ?? AppConfiguration.defaultValue
-        let derivedState =  data.0.values[ApplicationSpecificPreferencesKeys.voipDerivedState] as? VoipDerivedState ?? VoipDerivedState.default
+        let configuration = data.0.values[PreferencesKeys.voipConfiguration]?.get(VoipConfiguration.self) ?? VoipConfiguration.defaultValue
+        let appConfiguration = data.0.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
+        let derivedState =  data.0.values[ApplicationSpecificPreferencesKeys.voipDerivedState]?.get(VoipDerivedState.self) ?? VoipDerivedState.default
         
         self.serializedData = configuration.serializedData
         self.dataSaving = .never
@@ -416,7 +423,7 @@ class PCallSession {
         self.proxyServer = data.3
         self.peer = data.1
         self.currentNetworkType = data.4
-        self.devicesContext = sharedContext.devicesContext
+        self.devicesContext = accountContext.sharedContext.devicesContext
         self.enableStunMarking = false
         self.enableTCP = false
         self.preferredVideoCodec = nil
@@ -474,8 +481,9 @@ class PCallSession {
                 strongSelf.updateSessionState(sessionState: sessionState, callContextState: strongSelf.callContextState, reception: strongSelf.reception)
             }
         }))
-        
-
+        DispatchQueue.main.async {
+            accountContext.sharedContext.showCall(with: self)
+        }
     }
     
     
@@ -530,11 +538,12 @@ class PCallSession {
     }
     
     func acceptCallSession() {
+        let accountContext = self.accountContext
         requestMicroAccessDisposable.set((requestMicrophonePermission() |> deliverOnMainQueue).start(next: { [weak self] access in
             if access {
                 self?.acceptAfterAccess()
             } else {
-                confirm(for: mainWindow, information: L10n.requestAccesErrorHaveNotAccessCall, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { [weak self] result in
+                confirm(for: accountContext.window, information: strings().requestAccesErrorHaveNotAccessCall, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { [weak self] result in
                     switch result {
                     case .thrid:
                         openSystemSettings(.microphone)
@@ -957,7 +966,7 @@ class PCallSession {
             } else {
                 self.captureSelectWindow = presentDesktopCapturerWindow(mode: .screencast, select: { [weak self] source, value in
                     self?.enableScreenCapture(source.deviceIdKey())
-                }, devices: sharedContext.devicesContext)
+                }, devices: accountContext.sharedContext.devicesContext, microIsOff: self.isMuted)
             }
         } else {
             self.disableScreenCapture()
@@ -1114,7 +1123,7 @@ enum PCallResult {
     case samePeer(PCallSession)
 }
 
-func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:PeerId, ignoreSame:Bool = false, isVideo: Bool = false) -> Signal<PCallResult, NoError> {
+func phoneCall(context: AccountContext, peerId:PeerId, ignoreSame:Bool = false, isVideo: Bool = false) -> Signal<PCallResult, NoError> {
     
     let signal: Signal<(Bool, Bool?), NoError>
     if isVideo {
@@ -1124,8 +1133,8 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
     }
     
     
-    var isVideoPossible = account.postbox.transaction { transaction -> VideoCallsConfiguration in
-        let appConfiguration: AppConfiguration = transaction.getPreferencesEntry(key: PreferencesKeys.appConfiguration) as? AppConfiguration ?? AppConfiguration.defaultValue
+    var isVideoPossible = context.account.postbox.transaction { transaction -> VideoCallsConfiguration in
+        let appConfiguration: AppConfiguration = transaction.getPreferencesEntry(key: PreferencesKeys.appConfiguration)?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
         return VideoCallsConfiguration(appConfiguration: appConfiguration)
     }
     |> map { callsConfiguration -> Bool in
@@ -1141,14 +1150,14 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
         return isVideoPossible
     }
     
-    isVideoPossible = combineLatest(isVideoPossible, account.postbox.transaction {
+    isVideoPossible = combineLatest(isVideoPossible, context.account.postbox.transaction {
         ($0.getPeerCachedData(peerId: peerId) as? CachedUserData)?.videoCallsAvailable ?? true
     }) |> map {
         $0.0 && $0.1
     }
     
-    let accounts = sharedContext.activeAccounts |> take(1)
-
+    let accounts = context.sharedContext.activeAccounts |> take(1)
+    
     
     return combineLatest(queue: .mainQueue(), signal, isVideoPossible, accounts) |> mapToSignal { values -> Signal<PCallResult, NoError> in
         
@@ -1158,26 +1167,26 @@ func phoneCall(account: Account, sharedContext: SharedAccountContext, peerId:Pee
         
         for account in activeAccounts.accounts {
             if account.1.peerId == peerId {
-                alert(for: mainWindow, info: L10n.callSameDeviceError)
+                alert(for: context.window, info: strings().callSameDeviceError)
                 return .complete()
             }
         }
         if microAccess {
-            return makeNewCallConfirmation(account: account, sharedContext: sharedContext, newPeerId: peerId, newCallType: .call, ignoreSame: ignoreSame) |> mapToSignal { value -> Signal<Bool, NoError> in
+            return makeNewCallConfirmation(accountContext: context, newPeerId: peerId, newCallType: .call, ignoreSame: ignoreSame) |> mapToSignal { value -> Signal<Bool, NoError> in
                 if ignoreSame {
                     return .single(value)
                 } else {
-                    return sharedContext.endCurrentCall()
+                    return context.sharedContext.endCurrentCall()
                 }
             } |> mapToSignal { _ in
-                return account.callSessionManager.request(peerId: peerId, isVideo: isVideo, enableVideo: isVideoPossible)
+                return context.account.callSessionManager.request(peerId: peerId, isVideo: isVideo, enableVideo: isVideoPossible)
             }
             |> deliverOn(callQueue)
             |> map { id in
-                return .success(PCallSession(account: account, sharedContext: sharedContext, isOutgoing: true, peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo, isVideoPossible: isVideoPossible))
+                return .success(PCallSession(accountContext: context, account: context.account, isOutgoing: true, peerId: peerId, id: id, initialState: nil, startWithVideo: isVideo, isVideoPossible: isVideoPossible))
             }
         } else {
-            confirm(for: mainWindow, information: L10n.requestAccesErrorHaveNotAccessCall, okTitle: L10n.modalOK, cancelTitle: "", thridTitle: L10n.requestAccesErrorConirmSettings, successHandler: { result in
+            confirm(for: context.window, information: strings().requestAccesErrorHaveNotAccessCall, okTitle: strings().modalOK, cancelTitle: "", thridTitle: strings().requestAccesErrorConirmSettings, successHandler: { result in
                 switch result {
                 case .thrid:
                     openSystemSettings(.microphone)
@@ -1195,18 +1204,18 @@ enum CallConfirmationType {
     case voiceChat
 }
 
-func makeNewCallConfirmation(account: Account, sharedContext: SharedAccountContext, newPeerId: PeerId, newCallType: CallConfirmationType, ignoreSame: Bool = false) -> Signal<Bool, NoError> {
-    if sharedContext.hasActiveCall {
+func makeNewCallConfirmation(accountContext: AccountContext, newPeerId: PeerId, newCallType: CallConfirmationType, ignoreSame: Bool = false) -> Signal<Bool, NoError> {
+    if accountContext.sharedContext.hasActiveCall {
         let currentCallType: CallConfirmationType
         let currentPeerId: PeerId
         let currentAccount: Account
-        if let session = sharedContext.bindings.callSession() {
+        if let session = accountContext.sharedContext.getCrossAccountCallSession() {
             currentPeerId = session.peerId
             currentAccount = session.account
             currentCallType = .call
-        } else if let groupCall = sharedContext.bindings.groupCall()?.call {
-            currentPeerId = groupCall.peerId
-            currentAccount = groupCall.account
+        } else if let groupCall = accountContext.sharedContext.getCrossAccountGroupCall() {
+            currentPeerId = groupCall.call.peerId
+            currentAccount = groupCall.call.account
             currentCallType = .voiceChat
         } else {
             fatalError("wtf")
@@ -1217,7 +1226,7 @@ func makeNewCallConfirmation(account: Account, sharedContext: SharedAccountConte
         let from = currentAccount.postbox.transaction {
             return $0.getPeer(currentPeerId)
         }
-        let to = account.postbox.transaction {
+        let to = accountContext.account.postbox.transaction {
             return $0.getPeer(newPeerId)
         }
         return combineLatest(from, to) |> map { (from: $0, to: $1) }
@@ -1227,27 +1236,27 @@ func makeNewCallConfirmation(account: Account, sharedContext: SharedAccountConte
             let text: String
             switch currentCallType {
             case .call:
-                header = L10n.callConfirmDiscardCallHeader
+                header = strings().callConfirmDiscardCallHeader
             case .voiceChat:
-                header = L10n.callConfirmDiscardVoiceHeader
+                header = strings().callConfirmDiscardVoiceHeader
             }
             switch newCallType {
             case .call:
                 switch currentCallType {
                 case .call:
-                    text = L10n.callConfirmDiscardCallToCallText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
+                    text = strings().callConfirmDiscardCallToCallText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
                 case .voiceChat:
-                    text = L10n.callConfirmDiscardVoiceToCallText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
+                    text = strings().callConfirmDiscardVoiceToCallText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
                 }
             case .voiceChat:
                 switch currentCallType {
                 case .call:
-                    text = L10n.callConfirmDiscardCallToVoiceText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
+                    text = strings().callConfirmDiscardCallToVoiceText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
                 case .voiceChat:
-                    text = L10n.callConfirmDiscardVoiceToVoiceText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
+                    text = strings().callConfirmDiscardVoiceToVoiceText(values.from?.displayTitle ?? "", values.to?.displayTitle ?? "")
                 }
             }
-            return confirmSignal(for: mainWindow, header: header, information: text, okTitle: L10n.modalYes, cancelTitle: L10n.modalCancel) |> filter { $0 }
+            return confirmSignal(for: accountContext.window, header: header, information: text, okTitle: strings().modalYes, cancelTitle: strings().modalCancel) |> filter { $0 }
         }
     } else {
         return .single(true)

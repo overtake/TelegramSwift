@@ -15,8 +15,6 @@ import TGUIKit
 
 class ChatFileContentView: ChatMediaContentView {
     
-
-
     private var actionsLayout:TextViewLayout?
     
     private var progressView:RadialProgressView?
@@ -38,7 +36,7 @@ class ChatFileContentView: ChatMediaContentView {
     
     override func previewMediaIfPossible() -> Bool {
         guard let context = self.context, let window = self.kitWindow, let table = self.table, media?.isGraphicFile == true, fetchStatus == .Local else {return false}
-        _ = startModalPreviewHandle(table, window: window, context: context)
+        startModalPreviewHandle(table, window: window, context: context)
         return true
     }
     
@@ -58,7 +56,6 @@ class ChatFileContentView: ChatMediaContentView {
                 }
             }
         }
-        
     }
     
     override func mouseUp(with event: NSEvent) {
@@ -69,10 +66,10 @@ class ChatFileContentView: ChatMediaContentView {
         }
     }
     
-    override func fetch() {
+    override func fetch(userInitiated: Bool) {
         if let context = context, let media = media as? TelegramMediaFile {
             if let parent = parent {
-                fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start())
+                fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, messageReference: .init(parent), file: media, userInitiated: userInitiated).start())
             } else {
                 fetchDisposable.set(freeMediaFileInteractiveFetched(context: context, fileReference: FileMediaReference.standalone(media: media)).start())
             }
@@ -85,7 +82,7 @@ class ChatFileContentView: ChatMediaContentView {
                 showChatGallery(context: context, message: parent, table, parameters as? ChatMediaGalleryParameters, type: media.isVideoFile ? .alone : .history)
             } else {
                 if media.mimeType.contains("svg") || (media.fileName ?? "").hasSuffix(".svg") {
-                    confirm(for: context.window, information: L10n.chatFileQuickLookSvg, successHandler: { _ in
+                    confirm(for: context.window, information: strings().chatFileQuickLookSvg, successHandler: { _ in
                         QuickLookPreview.current.show(context: context, with: media, stableId: parent.chatStableId, self.table)
                     })
                 } else {
@@ -107,7 +104,7 @@ class ChatFileContentView: ChatMediaContentView {
     }
     
     override func draggingAbility(_ event:NSEvent) -> Bool {
-        return NSPointInRect(convert(event.locationInWindow, from: nil), progressView?.frame ?? NSZeroRect)
+        return NSPointInRect(convert(event.locationInWindow, from: nil), self.thumbView.frame)
     }
     
     deinit {
@@ -122,12 +119,12 @@ class ChatFileContentView: ChatMediaContentView {
                 switch status {
                 case .Fetching:
                     if parent != nil {
-                        _ = attr.append(string: progress == 0 ? L10n.messageStatusArchivePreparing : L10n.messageStatusArchiving(Int(progress * 100)), color: presentation.grayText, font: .normal(.text))
+                        _ = attr.append(string: progress == 0 ? strings().messageStatusArchivePreparing : strings().messageStatusArchiving(Int(progress * 100)), color: presentation.grayText, font: .normal(.text))
                         let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
                         layout.measure()
                         return layout
                     } else {
-                        _ = attr.append(string: L10n.messageStatusArchived, color: presentation.grayText, font: .normal(.text))
+                        _ = attr.append(string: strings().messageStatusArchived, color: presentation.grayText, font: .normal(.text))
                         let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
                         layout.measure()
                         return layout
@@ -137,13 +134,13 @@ class ChatFileContentView: ChatMediaContentView {
                     break
                 }
             case .none, .waiting:
-                _ = attr.append(string: L10n.messageStatusArchivePreparing, color: presentation.grayText, font: .normal(.text))
+                _ = attr.append(string: strings().messageStatusArchivePreparing, color: presentation.grayText, font: .normal(.text))
                 let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
                 layout.measure()
                 return layout
             case .done:
                 if parent == nil {
-                    _ = attr.append(string: L10n.messageStatusArchived, color: presentation.grayText, font: .normal(.text))
+                    _ = attr.append(string: strings().messageStatusArchived, color: presentation.grayText, font: .normal(.text))
                     let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
                     layout.measure()
                     return layout
@@ -153,9 +150,9 @@ class ChatFileContentView: ChatMediaContentView {
                     let errorText: String
                     switch error {
                     case .sizeLimit:
-                        errorText = L10n.messageStatusArchiveFailedSizeLimit
+                        errorText = strings().messageStatusArchiveFailedSizeLimit
                     default:
-                        errorText = L10n.messageStatusArchiveFailed
+                        errorText = strings().messageStatusArchiveFailed
                     }
                     _ = attr.append(string: errorText, color: theme.colors.redUI, font: .normal(.text))
                     let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
@@ -166,9 +163,9 @@ class ChatFileContentView: ChatMediaContentView {
            
         }
         switch status {
-        case let .Fetching(_, progress):
+        case let .Fetching(_, progress), let .Paused(progress):
             if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
-                let _ = attr.append(string: tr(L10n.messagesFileStateFetchingOut1(Int(progress * 100.0))), color: presentation.grayText, font: .normal(.text))
+                let _ = attr.append(string: strings().messagesFileStateFetchingOut1(Int(progress * 100.0)), color: presentation.grayText, font: .normal(.text))
             } else {
                 let current = String.prettySized(with: Int(Float(file.elapsedSize) * progress), removeToken: false)
                 let size = "\(current) / \(String.prettySized(with: file.elapsedSize))"
@@ -180,7 +177,7 @@ class ChatFileContentView: ChatMediaContentView {
             
         case .Local:
             if let _ = archiveStatus {
-                let size = L10n.messageStatusArchived
+                let size = strings().messageStatusArchived
                 let _ = attr.append(string: size, color: presentation.grayText, font: .normal(.text))
                 let layout = TextViewLayout(attr, constrainedWidth:frame.width - leftInset, maximumNumberOfLines:1)
                 layout.measure()
@@ -213,7 +210,7 @@ class ChatFileContentView: ChatMediaContentView {
             archiveSignal = archiver.archive(.resource(resource)) |> map {Optional($0)}
         }
         if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
-            updatedStatusSignal = combineLatest(chatMessageFileStatus(account: context.account, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id), archiveSignal)
+            updatedStatusSignal = combineLatest(chatMessageFileStatus(context: context, message: parent, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id), archiveSignal)
                 |> map { resourceStatus, pendingStatus, archiveStatus in
                     if let archiveStatus = archiveStatus {
                         switch archiveStatus {
@@ -230,7 +227,13 @@ class ChatFileContentView: ChatMediaContentView {
                     }
                 } |> deliverOnMainQueue
         } else {
-            updatedStatusSignal = combineLatest(chatMessageFileStatus(account: context.account, file: file, approximateSynchronousValue: approximateSynchronousValue), archiveSignal) |> map { resourceStatus, archiveStatus in
+            let signal: Signal<MediaResourceStatus, NoError>
+            if let parent = parent {
+                signal = chatMessageFileStatus(context: context, message: parent, file: file, approximateSynchronousValue: approximateSynchronousValue)
+            } else {
+                signal = context.account.postbox.mediaBox.resourceStatus(file.resource)
+            }
+            updatedStatusSignal = combineLatest(signal, archiveSignal) |> map { resourceStatus, archiveStatus in
                 if let archiveStatus = archiveStatus {
                     switch archiveStatus {
                     case let .progress(progress):
@@ -291,6 +294,10 @@ class ChatFileContentView: ChatMediaContentView {
                         if case .Fetching = status {} else {
                             statusWasUpdated = true
                         }
+                    case .Paused:
+                        if case .Paused = status {} else {
+                            statusWasUpdated = true
+                        }
                     case .Local:
                         if case .Local = status {} else {
                             statusWasUpdated = true
@@ -329,7 +336,7 @@ class ChatFileContentView: ChatMediaContentView {
                         switch status {
                         case .Remote:
                             self.thumbProgress?.state = .Remote
-                        case let .Fetching(_, progress):
+                        case let .Fetching(_, progress), let .Paused(progress):
                             let sentGrouped = parent?.groupingKey != nil && (parent!.flags.contains(.Sending) || parent!.flags.contains(.Unsent))
                             if progress == 1.0, sentGrouped {
                                 self.thumbProgress?.state = .Success
@@ -386,7 +393,7 @@ class ChatFileContentView: ChatMediaContentView {
                 progressView.fetchControls = self.fetchControls
                 
                 switch status {
-                case let .Fetching(_, progress):
+                case let .Fetching(_, progress), let .Paused(progress):
                     var progress = progress
                     if let archiveStatus = archiveStatus {
                         switch archiveStatus {

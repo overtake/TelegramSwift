@@ -13,183 +13,9 @@ import SwiftSignalKit
 
 private let pipFrameKey: String = "kPipFrameKey3"
 
-fileprivate class PIPVideoWindow: NSPanel {
-    fileprivate let playerView: VideoPlayerView
-    private let rect:NSRect
-    private let close:ImageButton = ImageButton()
-    private let gallery:ImageButton = ImageButton()
-    fileprivate var forcePaused: Bool = false
-    fileprivate let item: MGalleryItem
-    fileprivate weak var _delegate: InteractionContentViewProtocol?
-    fileprivate let _contentInteractions:ChatMediaLayoutParameters?
-    fileprivate let _type: GalleryAppearType
-    fileprivate let viewer: GalleryViewer
-    private var hideAnimated: Bool = true
-    init(_ player: VideoPlayerView, item: MGalleryItem, viewer: GalleryViewer, origin:NSPoint, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType) {
-        self.viewer = viewer
-        self._delegate = delegate
-        self._contentInteractions = contentInteractions
-        self._type = type
-        player.isPip = true
-        self.playerView = player
-        self.rect = NSMakeRect(origin.x, origin.y, player.frame.width, player.frame.height)
-        self.item = item
-        super.init(contentRect: rect, styleMask: [.closable, .resizable, .nonactivatingPanel], backing: .buffered, defer: true)
-        
-        
-        close.autohighlight = false
-        close.set(image: #imageLiteral(resourceName: "Icon_InlineResultCancel").precomposed(NSColor.white.withAlphaComponent(0.9)), for: .Normal)
-       
-        close.set(handler: { [weak self] _ in
-            self?.hide()
-        }, for: .Click)
-        
-        close.setFrameSize(40,40)
-        
-        close.layer?.cornerRadius = 20
-        close.style = ControlStyle(backgroundColor: .blackTransparent, highlightColor: .grayIcon)
-        close.layer?.opacity = 0.8
-        
-        
-        gallery.autohighlight = false
-        gallery.set(image: #imageLiteral(resourceName: "Icon_PipOff").precomposed(NSColor.white.withAlphaComponent(0.9)), for: .Normal)
-        
-        gallery.set(handler: { [weak self] _ in
-            self?.openGallery()
-        }, for: .Click)
-        
-        gallery.setFrameSize(40,40)
-        
-        gallery.layer?.cornerRadius = 20
-        gallery.style = ControlStyle(backgroundColor: .blackTransparent, highlightColor: .grayIcon)
-        gallery.layer?.opacity = 0.8
-        
-
-        self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary];
-        
-        self.contentView?.wantsLayer = true;
-        self.contentView?.layer?.cornerRadius = 4;
-        
-        self.contentView?.layer?.backgroundColor = NSColor.random.cgColor;
-        self.backgroundColor = .clear;
-        
-        player.autoresizingMask = [.width, .height];
-        
-        player.setFrameOrigin(0,0)
-        player.controlsStyle = .minimal
-        self.contentView?.addSubview(player)
-        
-        self.contentView?.addSubview(close)
-        self.contentView?.addSubview(gallery)
-
-
-       
-        self.level = .screenSaver
-        self.isMovableByWindowBackground = true
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(windowDidResized(_:)), name: NSWindow.didResizeNotification, object: self)
-
-        
-    }
-
-    
-    func hide() {
-        playerView.isPip = false
-        
-        if hideAnimated {
-            contentView?._change(opacity: 0, animated: true, duration: 0.1, timingFunction: .linear)
-            setFrame(NSMakeRect(frame.minX + (frame.width - 0) / 2, frame.minY + (frame.height - 0) / 2, 0, 0), display: true, animate: true)
-        }
-        orderOut(nil)
-        window = nil
-    }
-    
-    override func orderOut(_ sender: Any?) {
-        super.orderOut(sender)
-        window = nil
-        if playerView.controlsStyle != .floating {
-            playerView.player?.pause()
-        }
-    }
-    
-    func openGallery() {
-        close.change(opacity: 0, removeOnCompletion: false) { [weak close] completed in
-            close?.removeFromSuperview()
-        }
-        gallery.change(opacity: 0, removeOnCompletion: false) { [weak gallery] completed in
-            gallery?.removeFromSuperview()
-        }
-        playerView.controlsStyle = .floating
-        setFrame(rect, display: true, animate: true)
-        hideAnimated = false
-        hide()
-        showGalleryFromPip(item: item, gallery: self.viewer, delegate: _delegate, contentInteractions: _contentInteractions, type: _type)
-    }
-    
-    deinit {
-        if playerView.controlsStyle != .floating {
-            playerView.player?.pause()
-        }
-        NotificationCenter.default.removeObserver(self)
-    }
-    
-    override func animationResizeTime(_ newFrame: NSRect) -> TimeInterval {
-        return 0.2
-    }
-    
-    override func setFrame(_ frameRect: NSRect, display displayFlag: Bool, animate animateFlag: Bool) {
-        super.setFrame(frameRect, display: displayFlag, animate: animateFlag)
-    }
-
-
-    
-    override func mouseEntered(with event: NSEvent) {
-        super.mouseEntered(with: event)
-        close.change(opacity: 1, animated: true)
-        gallery.change(opacity: 1, animated: true)
-    }
-    
-    override func mouseExited(with event: NSEvent) {
-        super.mouseExited(with: event)
-        close.change(opacity: 0, animated: true)
-        gallery.change(opacity: 0, animated: true)
-    }
-    
-    @objc func windowDidResized(_ notification: Notification) {
-        let closePoint = NSMakePoint(10, frame.height - 50)
-        let openPoint = NSMakePoint(closePoint.x + close.frame.width + 10, frame.height - 50)
-        self.close.setFrameOrigin(closePoint)
-        self.gallery.setFrameOrigin(openPoint)
-        
-    }
-    
-    override var isResizable: Bool {
-        return true
-    }
-    
-    override func makeKeyAndOrderFront(_ sender: Any?) {
-        super.makeKeyAndOrderFront(sender)
-        
-        
-        Queue.mainQueue().justDispatch {
-            if let screen = NSScreen.main {
-                let savedRect: NSRect = NSMakeRect(0, 0, screen.frame.width * 0.3, screen.frame.width * 0.3)
-                
-                let convert_s = self.playerView.frame.size.fitted(NSMakeSize(savedRect.width, savedRect.height))
-                self.aspectRatio = convert_s
-                self.minSize = convert_s.aspectFilled(NSMakeSize(100, 100))
-                let closePoint = NSMakePoint(10, convert_s.height - 50)
-                let openPoint = NSMakePoint(closePoint.x + self.close.frame.width + 10, convert_s.height - 50)
-                
-                self.close.change(pos: closePoint, animated: false)
-                self.gallery.change(pos: openPoint, animated: false)
-                self.setFrame(NSMakeRect(screen.frame.maxX - convert_s.width - 30, screen.frame.maxY - convert_s.height - 50, convert_s.width, convert_s.height), display: true, animate: true)
-                
-            }
-        }
-    }
-    
-
+ enum PictureInPictureControlMode {
+    case normal
+    case pip
 }
 
 protocol PictureInPictureControl {
@@ -199,6 +25,8 @@ protocol PictureInPictureControl {
     func didExit()
     var view: NSView { get }
     var isPictureInPicture: Bool { get }
+    
+    func setMode(_ mode: PictureInPictureControlMode, animated: Bool)
 }
 
 
@@ -257,20 +85,19 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         self._contentInteractions = contentInteractions
         self._type = type
         self.control = control
-        
-        let minSize = control.view.frame.size.aspectFilled(NSMakeSize(300, 300))
-      //  let difference = NSMakeSize(item.notFittedSize.width - item.sizeValue.width, item.notFittedSize.height - item.sizeValue.height)
-        let size = item.notFittedSize.aspectFilled(NSMakeSize(300, 300)).aspectFilled(minSize)
+        let minSize = control.view.frame.size.aspectFilled(NSMakeSize(250, 250))
+        let size = item.notFittedSize.aspectFilled(NSMakeSize(250, 250)).aspectFilled(minSize)
         let newRect = NSMakeRect(origin.x, origin.y, size.width, size.height)
-        self.rect = newRect //NSMakeRect(origin.x, origin.y, control.view.frame.width, control.view.frame.height)
+        self.rect = newRect
         self.restoreRect = NSMakeRect(origin.x, origin.y, control.view.frame.width, control.view.frame.height)
         self.item = item
-        _window = Window(contentRect: control.view.bounds, styleMask: [.resizable], backing: .buffered, defer: true)
+        _window = Window(contentRect: newRect, styleMask: [.resizable], backing: .buffered, defer: true)
         super.init(contentRect: newRect, styleMask: [.resizable, .nonactivatingPanel], backing: .buffered, defer: true)
 
         //self.isOpaque = false
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary];
 
+        
         
         let view = PictureInpictureView(frame: bounds, window: _window)
         self.contentView = view
@@ -291,11 +118,12 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         
         
         _window.set(mouseHandler: { event -> KeyHandlerResult in
-            
+            NSCursor.arrow.set()
             return .invoked
         }, with: self, for: .mouseMoved, priority: .low)
         
         _window.set(mouseHandler: { event -> KeyHandlerResult in
+            NSCursor.arrow.set()
             return .invoked
         }, with: self, for: .mouseEntered, priority: .low)
         
@@ -349,11 +177,16 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
                 }
             }))
         }
+        
+        self.control.setMode(.pip, animated: true)
     }
     
     
 
     func hide() {
+        
+
+        
         if hideAnimated {
             contentView?._change(opacity: 0, animated: true, duration: 0.1, timingFunction: .linear)
             setFrame(NSMakeRect(frame.minX + (frame.width - 0) / 2, frame.minY + (frame.height - 0) / 2, 0, 0), display: true, animate: true)
@@ -389,6 +222,7 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         if control.isPictureInPicture {
             control.pause()
         }
+        self.control.setMode(.normal, animated: true)
         NotificationCenter.default.removeObserver(self)
         lookAtMessageDisposable.dispose()
     }
@@ -461,15 +295,14 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         super.makeKeyAndOrderFront(sender)
         if let screen = NSScreen.main {
             let savedRect: NSRect = NSMakeRect(0, 0, screen.frame.width * 0.3, screen.frame.width * 0.3)
-            let convert_s = self.rect.size.aspectFilled(NSMakeSize(min(savedRect.width, 250), savedRect.height))
+            let convert_s = self.rect.size.aspectFilled(NSMakeSize(min(savedRect.width, 250), min(savedRect.height, 250)))
             self.aspectRatio = self.rect.size.fitted(NSMakeSize(savedRect.width, savedRect.height))
             self.minSize = self.rect.size.aspectFitted(NSMakeSize(savedRect.width, savedRect.height)).aspectFilled(NSMakeSize(250, 250))
             
             let frame = NSScreen.main?.frame ?? NSMakeRect(0, 0, 1920, 1080)
             
-            self.maxSize = self.rect.size.fitted(NSMakeSize(savedRect.width, savedRect.height)).aspectFilled(NSMakeSize(frame.width / 3, frame.height / 3))
+            self.maxSize = self.rect.size.aspectFitted(frame.size)
 
-            
             self.setFrame(NSMakeRect(screen.frame.maxX - convert_s.width - 30, screen.frame.maxY - convert_s.height - 50, convert_s.width, convert_s.height), display: true, animate: true)
            
         }
@@ -487,12 +320,6 @@ var hasPictureInPicture: Bool {
     return window != nil
 }
 
-func showLegacyPipVideo(_ playerView:VideoPlayerView, viewer: GalleryViewer, item: MGalleryItem, origin: NSPoint, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType) {
-    closePipVideo()
-    window = PIPVideoWindow(playerView, item: item, viewer: viewer, origin: origin, delegate: delegate, contentInteractions: contentInteractions, type: type)
-    window?.makeKeyAndOrderFront(nil)
-}
-
 func showPipVideo(control: PictureInPictureControl, viewer: GalleryViewer, item: MGalleryItem, origin: NSPoint, delegate:InteractionContentViewProtocol? = nil, contentInteractions:ChatMediaLayoutParameters? = nil, type: GalleryAppearType) {
     closePipVideo()
     window = ModernPictureInPictureVideoWindow(control, item: item, viewer: viewer, origin: origin, delegate: delegate, contentInteractions: contentInteractions, type: type)
@@ -501,28 +328,20 @@ func showPipVideo(control: PictureInPictureControl, viewer: GalleryViewer, item:
 
 
 func exitPictureInPicture() {
-    if let window = window as? PIPVideoWindow {
-        window.openGallery()
-    } else if let window = window as? ModernPictureInPictureVideoWindow {
+    if let window = window as? ModernPictureInPictureVideoWindow {
         window.openGallery()
     }
 }
 
 func pausepip() {
-    if let window = window as? PIPVideoWindow {
-        window.playerView.player?.pause()
-        window.forcePaused = true
-    } else if let window = window as? ModernPictureInPictureVideoWindow {
+    if let window = window as? ModernPictureInPictureVideoWindow {
         window.control.pause()
         window.forcePaused = true
     }
-
 }
 
 func playPipIfNeeded() {
-    if let window = window as? PIPVideoWindow, window.forcePaused {
-        window.playerView.player?.play()
-    } else if let window = window as? ModernPictureInPictureVideoWindow, window.forcePaused {
+    if let window = window as? ModernPictureInPictureVideoWindow, window.forcePaused {
         window.control.play()
     }
 }
@@ -530,10 +349,7 @@ func playPipIfNeeded() {
 
 
 func closePipVideo() {
-    if let window = window as? PIPVideoWindow {
-        window.hide()
-        window.playerView.player?.pause()
-    } else if let window = window as? ModernPictureInPictureVideoWindow {
+    if let window = window as? ModernPictureInPictureVideoWindow {
         window.hide()
         window.control.pause()
     }

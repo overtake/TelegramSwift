@@ -135,7 +135,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     
     private var singleWrapper:APSingleWrapper? {
         if let media = media as? TelegramMediaFile {
-            return APSingleWrapper(resource: media.resource, mimeType: media.mimeType, name: L10n.audioControllerVideoMessage, performer: parent?.author?.displayTitle, duration: media.duration, id: media.fileId)
+            return APSingleWrapper(resource: media.resource, mimeType: media.mimeType, name: strings().audioControllerVideoMessage, performer: parent?.author?.displayTitle, duration: media.duration, id: media.fileId)
         }
         return nil
     }
@@ -143,13 +143,13 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     override func open() {
         if let parent = parent, let context = context {
             if let parameters = parameters as? ChatMediaVideoMessageLayoutParameters {
-                if let controller = globalAudio, controller.playOrPause(parent.id) {
+                if let controller = context.audioPlayer, controller.playOrPause(parent.id) {
                 } else {
                     let controller:APController
                     if parameters.isWebpage, let wrapper = singleWrapper {
                         controller = APSingleResourceController(context: context, wrapper: wrapper, streamable: false)
                     } else {
-                        controller = APChatVoiceController(context: context, chatLocationInput: parameters.chatLocationInput(), mode: parameters.chatMode, index: MessageIndex(parent), volume: FastSettings.volumeRate)
+                        controller = APChatVoiceController(context: context, chatLocationInput: parameters.chatLocationInput(parent), mode: parameters.chatMode, index: MessageIndex(parent), volume: FastSettings.volumeRate)
                     }
                     
                     parameters.showPlayer(controller)
@@ -164,7 +164,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
        
     }
     func songDidChangedState(song: APSongItem, for controller: APController, animated: Bool) {
-        if let parent = parent, let controller = globalAudio, let song = controller.currentSong, let parameters = parameters as? ChatMediaVideoMessageLayoutParameters {
+        if let parent = parent, let controller = context?.audioPlayer, let song = controller.currentSong, let parameters = parameters as? ChatMediaVideoMessageLayoutParameters {
             var singleEqual: Bool = false
             if let single = singleWrapper {
                 singleEqual = song.entry.isEqual(to: single)
@@ -233,9 +233,9 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     
     
     
-    override func fetch() {
+    override func fetch(userInitiated: Bool) {
         if let context = context, let media = media as? TelegramMediaFile, let parent = parent {
-            fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, messageReference: .init(parent), file: media, userInitiated: false).start())
         }
     }
     
@@ -266,7 +266,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
     }
     
     @objc func updatePlayerIfNeeded() {
-        let timebase:CMTimebase? = globalAudio?.currentSong?.stableId == parent?.chatStableId ? globalAudio?.timebase : nil
+        let timebase:CMTimebase? = context?.audioPlayer?.currentSong?.stableId == parent?.chatStableId ? context?.audioPlayer?.timebase : nil
         player.set(data: acceptVisibility ? data : nil, timebase: timebase)
         
     }
@@ -310,12 +310,12 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
             
             if mediaUpdated {
                 
-                globalAudio?.add(listener: self)
+                context.audioPlayer?.add(listener: self)
                 
                 player.layer?.cornerRadius = size.height / 2
                 data = nil
                 var updatedStatusSignal: Signal<MediaResourceStatus, NoError>?
-                let arguments = TransformImageArguments(corners: ImageCorners(radius:size.width/2), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+                let arguments = TransformImageArguments(corners: ImageCorners(radius:0), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
                 
                 player.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: backingScaleFactor), clearInstantly: mediaUpdated)
 
@@ -329,7 +329,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                 player.set(arguments: arguments)
                 
                 if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
-                    updatedStatusSignal = combineLatest(chatMessageFileStatus(account: context.account, file: media), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
+                    updatedStatusSignal = combineLatest(chatMessageFileStatus(context: context, message: parent, file: media), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                         |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
                             if let pendingStatus = pendingStatus.0 {
                                 return .Fetching(isActive: true, progress: pendingStatus.progress)
@@ -338,7 +338,11 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                             }
                         } |> deliverOnMainQueue
                 } else {
-                    updatedStatusSignal = chatMessageFileStatus(account: context.account, file: media, approximateSynchronousValue: approximateSynchronousValue)
+                    if let parent = parent {
+                        updatedStatusSignal = chatMessageFileStatus(context: context, message: parent, file: media, approximateSynchronousValue: approximateSynchronousValue)
+                    } else {
+                        updatedStatusSignal = context.account.postbox.mediaBox.resourceStatus(media.resource)
+                    }
                 }
                 
                 if let updatedStatusSignal = updatedStatusSignal {
@@ -381,7 +385,7 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                             }
                             
                             switch status {
-                            case let .Fetching(_, progress):
+                            case let .Fetching(_, progress), let .Paused(progress):
                                 strongSelf.progressView?.state = .Fetching(progress: progress, force: false)
                             case .Local:
                                 strongSelf.progressView?.state = .Play

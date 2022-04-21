@@ -45,7 +45,7 @@ class PeerInfoArguments {
     
     func copy(_ string: String) {
         copyToClipboard(string)
-        pullNavigation()?.controller.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
+        pullNavigation()?.controller.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
     }
 
     func updateEditable(_ editable:Bool, peerView:PeerView, controller: PeerInfoController) -> Bool {
@@ -68,7 +68,7 @@ class PeerInfoArguments {
         
         toggleNotificationsDisposable.set(context.engine.peers.togglePeerMuted(peerId: peerId).start())
         
-        pullNavigation()?.controller.show(toaster: ControllerToaster.init(text: currentlyMuted ? L10n.toastUnmuted : L10n.toastMuted))
+        pullNavigation()?.controller.show(toaster: ControllerToaster.init(text: currentlyMuted ? strings().toastUnmuted : strings().toastMuted))
     }
     
     func delete() {
@@ -379,8 +379,14 @@ class PeerInfoController: EditableViewController<TableView> {
             let (disposable, control) = context.peerChannelMemberCategoriesContextsManager.recent(peerId: peerId, updated: { state in
                 channelMembersPromise.set(.single(state.list))
             })
-            loadMoreControl = control
             actionsDisposable.add(disposable)
+
+            let (contactsDisposable, _) = context.peerChannelMemberCategoriesContextsManager.contacts(peerId: peerId, updated: { _ in
+                
+            })
+            actionsDisposable.add(contactsDisposable)
+            
+            loadMoreControl = control
         } else {
             channelMembersPromise.set(.single([]))
         }
@@ -408,10 +414,26 @@ class PeerInfoController: EditableViewController<TableView> {
                 inviteLinksCount = .single(0)
             }
             
-            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId, updateData: true), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady, inviteLinksCount)
-                |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData, _, inviteLinksCount -> Signal<(PeerView, TableUpdateTransition), NoError> in
+            let joinRequestsCount: Signal<Int32, NoError>
+            if let arguments = arguments as? GroupInfoArguments {
+                joinRequestsCount = arguments.requestManager.state |> map {
+                    Int32($0.waitingCount)
+                }
+            } else if let arguments = arguments as? ChannelInfoArguments {
+                joinRequestsCount = arguments.requestManager.state |> map {
+                    Int32($0.waitingCount)
+                }
+            } else {
+                joinRequestsCount = .single(0)
+            }
+            
+            let availableReactions: Signal<AvailableReactions?, NoError> = context.reactions.stateValue
+            
+            
+            return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId, updateData: true), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady, inviteLinksCount, joinRequestsCount, availableReactions)
+                |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData, _, inviteLinksCount, joinRequestsCount, availableReactions -> Signal<(PeerView, TableUpdateTransition), NoError> in
                     
-                    let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
+                    let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
                     let previous = previousEntries.swap(entries)
                     return prepareEntries(from: previous, to: entries, account: context.account, initialSize: initialSize.modify({$0}), peerId: peerId, arguments:arguments, animated: previous != nil) |> runOn(onMainQueue.swap(false) ? .mainQueue() : prepareQueue) |> map { (view, $0) }
                     

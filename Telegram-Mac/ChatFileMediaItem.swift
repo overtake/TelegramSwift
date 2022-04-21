@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-
+import InAppSettings
 import Postbox
 import TGUIKit
 
@@ -19,35 +19,36 @@ class ChatFileLayoutParameters : ChatMediaGalleryParameters {
     let fileName:String
     let finderLayout: TextViewLayout
     let downloadLayout: TextViewLayout
-    fileprivate let uploadingLayout: TextViewLayout
-    fileprivate let downloadingLayout: TextViewLayout
-    init(fileName:String, hasThumb: Bool, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool, isIncoming: Bool, autoplayMedia: AutoplayMediaPreferences, isChatRelated: Bool = false) {
+    let uploadingLayout: TextViewLayout
+    let downloadingLayout: TextViewLayout
+    init(fileName:String, hasThumb: Bool, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool, isIncoming: Bool, autoplayMedia: AutoplayMediaPreferences, isChatRelated: Bool = false, isCopyProtected: Bool) {
         self.fileName = fileName
         self.hasThumb = hasThumb
         
         let file = media as! TelegramMediaFile
         
         
-        self.uploadingLayout = TextViewLayout(.initialize(string: L10n.messagesFileStateFetchingOut1(100), font: .normal(.text)), alwaysStaticItems: true)
-        self.downloadingLayout = TextViewLayout(.initialize(string: L10n.messagesFileStateFetchingIn1(100), font: .normal(.text)), alwaysStaticItems: true)
+        self.uploadingLayout = TextViewLayout(.initialize(string: strings().messagesFileStateFetchingOut1(100), font: .normal(.text)), alwaysStaticItems: true)
+        self.downloadingLayout = TextViewLayout(.initialize(string: strings().messagesFileStateFetchingIn1(100), font: .normal(.text)), alwaysStaticItems: true)
         
         
         var attr:NSMutableAttributedString = NSMutableAttributedString()
         let _ = attr.append(string: .prettySized(with: file.elapsedSize), color: presentation.grayText, font: .normal(.text))
-        if !(file.resource is LocalFileReferenceMediaResource) || isChatRelated {
-            let _ = attr.append(string: " - ", color: presentation.grayText, font: .normal(.text))
-            
-            let range = attr.append(string: tr(L10n.messagesFileStateLocal), color: theme.bubbled && !isIncoming ? presentation.grayText : presentation.link, font: .medium(FontSize.text))
-            attr.addAttribute(NSAttributedString.Key.link, value: "chat://file/finder", range: range)
+        if !(file.resource is LocalFileReferenceMediaResource) || isChatRelated  {
+            if !isCopyProtected {
+                let _ = attr.append(string: " - ", color: presentation.grayText, font: .normal(.text))
+                
+                let range = attr.append(string: strings().messagesFileStateLocal, color: theme.bubbled && !isIncoming ? presentation.grayText : presentation.link, font: .medium(FontSize.text))
+                attr.addAttribute(NSAttributedString.Key.link, value: "chat://file/finder", range: range)
+            }
         }
         finderLayout = TextViewLayout(attr, maximumNumberOfLines: 1, alwaysStaticItems: true)
-
         
         attr = NSMutableAttributedString()
         let _ = attr.append(string: .prettySized(with: file.elapsedSize), color: presentation.grayText, font: .normal(.text))
         if !(file.resource is LocalFileReferenceMediaResource) || isChatRelated {
             let _ = attr.append(string: " - ", color: presentation.grayText, font: .normal(.text))
-            let range = attr.append(string: tr(L10n.messagesFileStateRemote), color:  theme.bubbled && !isIncoming ? presentation.grayText : presentation.link, font: .medium(.text))
+            let range = attr.append(string: strings().messagesFileStateRemote, color:  theme.bubbled && !isIncoming ? presentation.grayText : presentation.link, font: .medium(.text))
             attr.addAttribute(NSAttributedString.Key.link, value: "chat://file/download", range: range)
         }
         downloadLayout = TextViewLayout(attr, maximumNumberOfLines: 1, alwaysStaticItems: true)
@@ -76,7 +77,7 @@ class ChatFileMediaItem: ChatMediaItem {
     
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
-        self.parameters = ChatMediaLayoutParameters.layout(for: (self.media as! TelegramMediaFile), isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(object.message!), isIncoming: object.message!.isIncoming(context.account, object.renderType == .bubble), isFile: true, autoplayMedia: object.autoplayMedia, isChatRelated: true)
+        self.parameters = ChatMediaLayoutParameters.layout(for: (self.media as! TelegramMediaFile), isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(object.message!), isIncoming: object.message!.isIncoming(context.account, object.renderType == .bubble), isFile: true, autoplayMedia: object.autoplayMedia, isChatRelated: true, isCopyProtected: object.message!.isCopyProtected())
         
         (self.parameters as? ChatFileLayoutParameters)?.showMedia = { [weak self] message in
             guard let `self` = self else {return}
@@ -101,55 +102,30 @@ class ChatFileMediaItem: ChatMediaItem {
         var width = width
         
         let parameters = self.parameters as! ChatFileLayoutParameters
-        let file = media as! TelegramMediaFile
         let optionalWidth = parameters.makeLabelsForWidth(width)
-        
-        let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
-        
-        if !captionLayouts.isEmpty {
-            var tw: CGFloat = 0
-            for captionLayout in captionLayouts {
-                captionLayout.layout.measure(width: width)
-                tw = max(max(optionalWidth, captionLayout.layout.layoutSize.width), tw)
-            }
-            width = tw
-        } else  {
-            width = optionalWidth
-        }
+                
+        width = min(width, optionalWidth)
         
         return NSMakeSize(width, parameters.hasThumb ? 70 : 40)
     }
     
-    override var additionalLineForDateInBubbleState: CGFloat? {
-        let file = media as! TelegramMediaFile
-        let parameters = self.parameters as! ChatFileLayoutParameters
 
-        let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
-
-        let accesoryWidth = max(max(parameters.finderLayout.layoutSize.width, parameters.downloadLayout.layoutSize.width), progressMaxWidth) + (file.previewRepresentations.isEmpty ? 50 : 80)
-        
-        if file.previewRepresentations.isEmpty, accesoryWidth > realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
-            return super.additionalLineForDateInBubbleState
+    override var lastLineContentWidth: ChatRowItem.LastLineData? {
+        if let lastLineContentWidth = super.lastLineContentWidth {
+            return lastLineContentWidth
         }
-        
-        
-        return file.previewRepresentations.isEmpty || !captionLayouts.isEmpty ? super.additionalLineForDateInBubbleState : nil
+        let file = media as! TelegramMediaFile
+        if file.previewRepresentations.isEmpty {
+            let parameters = self.parameters as! ChatFileLayoutParameters
+
+            let mwidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width, parameters.finderLayout.layoutSize.width)
+
+            let width = mwidth + 50
+            return ChatRowItem.LastLineData(width: width, single: false)
+        }
+        return nil
     }
     
-    override var isFixedRightPosition: Bool {
-        let file = media as! TelegramMediaFile
-        
-        let parameters = self.parameters as! ChatFileLayoutParameters
-        
-        let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
-        let accesoryWidth = max(max(parameters.finderLayout.layoutSize.width, parameters.downloadLayout.layoutSize.width), progressMaxWidth) + (file.previewRepresentations.isEmpty ? 50 : 80)
-        
-        if file.previewRepresentations.isEmpty, accesoryWidth < realContentSize.width - (rightSize.width + insetBetweenContentAndDate) {
-            return true
-        }
-        
-        return file.previewRepresentations.isEmpty || !captionLayouts.isEmpty ? super.isFixedRightPosition : true
-    }
     
     override func contentNode() -> ChatMediaContentView.Type {
         return ChatFileContentView.self

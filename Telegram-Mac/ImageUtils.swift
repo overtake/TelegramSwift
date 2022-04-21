@@ -9,10 +9,10 @@
 import Cocoa
 import Postbox
 import TelegramCore
-
+import FastBlur
 import SwiftSignalKit
 import TGUIKit
-
+import FastBlur
 
 let graphicsThreadPool = ThreadPool(threadCount: 5, threadPriority: 1)
 
@@ -45,7 +45,7 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                                            subscriber.putNext((decodeTinyThumbnail(data: data), false, true))
                                        }
                                     
-                                    let resourceData = account.postbox.mediaBox.resourceData(representation.resource, attemptSynchronously: synchronousLoad)
+                                       let resourceData = account.postbox.mediaBox.resourceData(representation.resource, attemptSynchronously: synchronousLoad)
                                     
                                        let resourceDataDisposable = resourceData.start(next: { data in
                                            if data.complete {
@@ -56,8 +56,8 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                                            subscriber.putCompletion()
                                        })
                                        
-                                        let fetchedDataDisposable: Disposable
-                                        if let message = message {
+                                       let fetchedDataDisposable: Disposable
+                                       if let message = message, message.author?.id == peer.id {
                                             fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.messageAuthorAvatar(message: MessageReference(message), resource: representation.resource), statsCategory: .image).start()
                                         } else if let reference = PeerReference(peer) {
                                            fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.avatar(peer: reference, resource: representation.resource), statsCategory: .image).start()

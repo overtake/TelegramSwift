@@ -9,9 +9,10 @@
 import Foundation
 import TGUIKit
 import SwiftSignalKit
-
+import ColorPalette
 import Postbox
 import TelegramCore
+import AppKit
 
 private let fakeIcon = generateFakeIconReversed(foregroundColor: GroupCallTheme.customTheme.redColor, backgroundColor: GroupCallTheme.customTheme.backgroundColor)
 private let scamIcon = generateScamIconReversed(foregroundColor: GroupCallTheme.customTheme.redColor, backgroundColor: GroupCallTheme.customTheme.backgroundColor)
@@ -83,23 +84,24 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
                     if !muteState.canUnmute && data.isRaisedHand {
                         self.buttonImage = (GroupCallTheme.small_raised_hand, GroupCallTheme.small_raised_hand_active)
                     } else if muteState.canUnmute && !muteState.mutedByYou {
-                        buttonImage = (GroupCallTheme.small_muted, GroupCallTheme.small_muted_active)
+                        self.buttonImage = (GroupCallTheme.small_muted, GroupCallTheme.small_muted_active)
                     } else {
-                        buttonImage = (GroupCallTheme.small_muted_locked, GroupCallTheme.small_muted_locked_active)
+                        self.buttonImage = (GroupCallTheme.small_muted_locked, GroupCallTheme.small_muted_locked_active)
                     }
                 } else if data.state == nil {
-                    buttonImage = (GroupCallTheme.small_muted, GroupCallTheme.small_muted_active)
+                    self.buttonImage = (GroupCallTheme.small_muted, GroupCallTheme.small_muted_active)
                 } else {
-                    buttonImage = (GroupCallTheme.small_unmuted, GroupCallTheme.small_unmuted_active)
+                    self.buttonImage = (GroupCallTheme.small_unmuted, GroupCallTheme.small_unmuted_active)
                 }
             }
         } else {
             if isInvited {
-                buttonImage = (GroupCallTheme.invitedIcon, nil)
+                self.buttonImage = (GroupCallTheme.invitedIcon, nil)
             } else {
-                buttonImage = (GroupCallTheme.inviteIcon, nil)
+                self.buttonImage = (GroupCallTheme.inviteIcon, nil)
             }
         }
+
 
     }
     
@@ -109,6 +111,14 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
     
     override var height: CGFloat {
         return isVertical ? 120 : 48
+    }
+    
+    override var menuPresentation: AppMenu.Presentation {
+        return .current(darkPalette)
+    }
+    
+    override var isLegacyMenu: Bool {
+        return false
     }
     
     override var inset: NSEdgeInsets {
@@ -238,7 +248,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
             
             if data.videoMode {
                 if let muteState = state.muteState {
-                    if muteState.mutedByYou {
+                    if muteState.mutedByYou || !muteState.canUnmute {
                         images.append(GroupCallTheme.video_status_muted_red)
                     } else {
                         images.append(GroupCallTheme.video_status_muted_gray)
@@ -707,12 +717,13 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
             if item.data.state != nil {
                 _ = item.menuItems(in: .zero).start(next: { [weak self] items in
                     if let event = NSApp.currentEvent, let button = self?.button {
-                        let menu = NSMenu()
+                        let menu = ContextMenu()
                         menu.appearance = darkPalette.appearance
                         for item in items {
                             menu.addItem(item)
                         }
                         NSMenu.popUpContextMenu(menu, with: event, for: button)
+                    //    AppMenu.show(menu: menu, event: event, for: button)
                     }
                 })
             } 
@@ -752,7 +763,8 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
         return self.photoView
     }
     
-    func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
+    override func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
         guard let item = item as? GroupCallParticipantRowItem else {
             return
         }
@@ -893,7 +905,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
             x += subview.frame.width + 2
         }
         
-        if statusView?.layout?.attributedString.string != item.statusLayout.attributedString.string {
+        if statusView?.textLayout?.attributedString.string != item.statusLayout.attributedString.string {
             if let statusView = statusView {
                 if animated {
                     statusView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak statusView] _ in
@@ -905,7 +917,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
                 }
             }
             
-            let animated = statusView?.layout != nil
+            let animated = statusView?.textLayout != nil
             
             let statusView = TextView()
             let hadOld = self.statusView != nil
@@ -1067,9 +1079,18 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
         }
     }
     
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        if let container = container as? HorizontalContainerView {
+            transition.updateFrame(view: container, frame: containerView.bounds)
+            container.updateLayout(size: size, transition: transition)
+        }
+    }
+    
     override func updateColors() {
         super.updateColors()
     }
+    
     
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
@@ -1109,7 +1130,7 @@ private final class GroupCallParticipantRowView : GeneralContainableRowView, Gro
         }
         
         self.container?.set(item: item, animated: animated && previous == nil)
-        
+        self.container?.needsLayout = true
         needsLayout = true
     }
     

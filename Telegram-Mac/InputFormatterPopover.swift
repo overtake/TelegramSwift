@@ -31,7 +31,7 @@ private class InputFormatterView : NSView {
         dismissLink.set(image: theme.icons.recentDismiss, for: .Normal)
         _ = dismissLink.sizeToFit()
         
-      //  linkField.placeholderAttributedString = NSAttributedString.initialize(string: L10n.inputFormatterSetLink, color: theme.colors.grayText, font: .normal(.text))
+      //  linkField.placeholderAttributedString = NSAttributedString.initialize(string: strings().inputFormatterSetLink, color: theme.colors.grayText, font: .normal(.text))
         linkField.font = .normal(.text)
         linkField.wantsLayer = true
         linkField.isEditable = true

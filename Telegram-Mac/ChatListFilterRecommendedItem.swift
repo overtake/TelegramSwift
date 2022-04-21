@@ -86,7 +86,7 @@ private final class ChatListFilterRecommendedView : GeneralContainableRowView {
         
         button.set(font: .medium(.text), for: .Normal)
         button.set(color: theme.colors.underSelectedColor, for: .Normal)
-        button.set(text: L10n.chatListFilterRecommendedAdd, for: .Normal)
+        button.set(text: strings().chatListFilterRecommendedAdd, for: .Normal)
         _ = button.sizeToFit(NSMakeSize(8, 8))
         button.layer?.cornerRadius = button.frame.height / 2
         

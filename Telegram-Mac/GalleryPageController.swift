@@ -12,12 +12,28 @@ import SwiftSignalKit
 import AVFoundation
 import AVKit
 import TelegramCore
-
+import TextRecognizing
 import Postbox
 
 fileprivate class GMagnifyView : MagnifyView  {
     private var progressView: RadialProgressView?
 
+    private var recognitionView: NSView?
+    var recognition: GalleryRecognition? {
+        didSet {
+            self.recognitionView?.removeFromSuperview()
+            if let recognition = recognition {
+                self.recognitionView = recognition.view
+                self.addSubview(recognition.view)
+            }
+        }
+    }
+    
+    override func layout() {
+        super.layout()
+        recognitionView?.frame = contentView.frame
+    }
+    
     fileprivate let statusDisposable = MetaDisposable()
     
     var minX:CGFloat {
@@ -47,7 +63,7 @@ fileprivate class GMagnifyView : MagnifyView  {
     private func updateProgress(_ status: MediaResourceStatus) {
         
         switch status {
-        case let .Fetching(_, progress):
+        case let .Fetching(_, progress), let .Paused(progress):
             if self.progressView == nil {
                 self.progressView = RadialProgressView()
                 self.addSubview(self.progressView!)
@@ -105,7 +121,6 @@ fileprivate class GMagnifyView : MagnifyView  {
         super.init(contentView, contentSize: contentSize)
         prev.alphaValue = 0
         next.alphaValue = 0
-        
     }
     
     override var contentSize: NSSize {
@@ -124,6 +139,8 @@ fileprivate class GMagnifyView : MagnifyView  {
             nextAction()
         } else if point.x < 80 && self.hasPrev() {
             prevAction()
+        } else if let recognition = recognition, recognition.hasSelectedText {
+            return
         } else {
             dismiss()
         }
@@ -139,6 +156,9 @@ fileprivate class GMagnifyView : MagnifyView  {
     
     override func add(magnify: CGFloat, for location: NSPoint, animated: Bool) {
         super.add(magnify: magnify, for: location, animated: animated)
+        if self.magnify != 1 {
+            recognition?.cancelSelection()
+        }
     }
     
     override func setFrameSize(_ newSize: NSSize) {
@@ -156,7 +176,6 @@ class GalleryPageView : NSView {
     init() {
         super.init(frame:NSZeroRect)
         self.wantsLayer = true
-        self.canDrawSubviewsIntoLayer = true
     }
     
     override func setFrameSize(_ newSize: NSSize) {
@@ -276,53 +295,77 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
             guard let `self` = self, !hasModals(self.window) else {return .rejected}
             
-            if let view = self.controller.selectedViewController?.view as? GMagnifyView {
-                if let view = view.contentView as? SVideoView, view.insideControls {
-                    dragged = nil
-                    return .invokeNext
-                }
-                
+            guard let view = self.controller.selectedViewController?.view as? GMagnifyView else {
+                return .rejected
+            }
+            
+            if let view = view.contentView as? SVideoView, view.insideControls {
+                dragged = nil
+                return .invokeNext
             }
             
             if let _dragged = dragged {
                 let difference = NSMakePoint(abs(_dragged.x - event.locationInWindow.x), abs(_dragged.y - event.locationInWindow.y))
                 if difference.x >= 10 || difference.y >= 10 {
                     dragged = nil
-                    return .invoked
+                    if let recognition = view.recognition, recognition.hasRecognition {
+                        return .invokeNext
+                    } else {
+                        return .invoked
+                    }
                 }
             }
             dragged = nil
             
-            let view = self.window.contentView?.hitTest(event.locationInWindow)
             let point = self.controller.view.convert(event.locationInWindow, from: nil)
-            
-            if NSPointInRect(point, self.captionScrollView.frame), self.captionScrollView.layer?.opacity != 0, let captionLayout = self.captionView.layout, captionLayout.link(at: self.captionView.convert(event.locationInWindow, from: nil)) != nil {
+            let hitTestView = self.window.contentView?.hitTest(event.locationInWindow)
+
+            if NSPointInRect(point, self.captionScrollView.frame) {
                 self.captionView.mouseUp(with: event)
                 return .invoked
             } else if self.captionView.mouseInside() {
                 return .invoked
             }
-            if let view = self.controller.selectedViewController?.view as? GMagnifyView, let window = view.window as? Window, self.controller.view._mouseInside() {
+            if let window = view.window as? Window, self.controller.view._mouseInside() {
                 guard event.locationInWindow.x > 80 && event.locationInWindow.x < window.frame.width - 80 else {
                     view.mouseUp(with: event)
                     return .invoked
                 }
                 
-                let hitTestView = self.window.contentView?.hitTest(event.locationInWindow)
-                if hitTestView is Control {
+                if let recognition = view.recognition {
+                    if recognition.hasSelectedText {
+                        recognition.cancelSelection()
+                        return .invoked
+                    }
+                }
+                
+                if hitTestView is Control && hitTestView != view.recognition?.view {
                     return .rejected
                 }
                 
                 if let view = view.contentView as? SVideoView, view.insideControls {
                     return .rejected
                 }
+                
+                
+                
                 if hasPictureInPicture {
                     return .rejected
                 }
                 
+                if let recognition = view.recognition {
+                    if recognition.hasSelectedText {
+                        var bp = 0
+                        bp += 1
+                    } else {
+                        var bp = 0
+                        bp += 1
+                    }
+                }
+                
                 _ = interactions.dismiss(event)
                 return .invoked
-            } else if view is GalleryModernControlsView {
+            } else if hitTestView is GalleryModernControlsView {
                 _ = interactions.dismiss(event)
                 return .invoked
             }
@@ -373,9 +416,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 
                 let point = window.mouseLocationOutsideOfEventStream
                 let hitTestView = window.contentView?.hitTest(point)
-                if view.contentView == hitTestView {
+                if view.contentView == hitTestView || hitTestView == view.recognition?.view {
                     if let event = NSApp.currentEvent, let menu = interactions.contextMenu() {
-                        NSMenu.popUpContextMenu(menu, with: event, for: view)
+                        AppMenu.show(menu: menu, event: event, for: view)
                     }
                 } else {
                     return .invokeNext
@@ -383,7 +426,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 
             }
             return .invoked
-        }, with: self, for: .rightMouseUp)
+        }, with: self, for: .rightMouseDown)
         
         controller.view = view
         controller.view.frame = frame
@@ -571,6 +614,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         }
     }
     
+    
+    
     func decreaseSpeed() {
         
     }
@@ -708,7 +753,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             
             view.addSubview(captionScrollView)
             captionScrollView.change(opacity: 1.0)
-            captionScrollView.setFrameSize(captionView.frame.size.width + 10, min(90, captionView.frame.height))
+            captionScrollView.setFrameSize(captionView.frame.size.width + 10, min(120, captionView.frame.height))
             captionScrollView.centerX(y: 100)
             captionScrollView.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.9).cgColor
             captionScrollView.layer?.cornerRadius = .cornerRadius
@@ -772,6 +817,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             let item = identifiers[identifier]!
             let view = item.singleView()
             view.wantsLayer = true
+            
             let magnify = GMagnifyView(view, contentSize:item.sizeValue, prev: _prev, next: _next, fillFrame: { [weak self] view in
                 guard let `self` = self else {return NSZeroRect}
                 
@@ -789,6 +835,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                     _ = self?.interactions.dismiss(event)
                 }
             })
+            
+            magnify.recognition = GalleryRecognition(item)
+            
             item.magnify.set(magnify.magnifyUpdaterValue |> deliverOnPrepareQueue)
             controller.view = magnify
             if hasInited {
@@ -851,6 +900,24 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             return item.hideControls()
         }
         return false
+    }
+    
+    func copySelectedText() -> Bool {
+        if let view = self.controller.selectedViewController?.view as? GMagnifyView {
+            if let recognition = view.recognition {
+                return recognition.copySelectedText()
+            }
+        }
+        return false
+    }
+    
+    var selectedText: String? {
+        if let view = self.controller.selectedViewController?.view as? GMagnifyView {
+            if let recognition = view.recognition {
+                return recognition.selectedText
+            }
+        }
+        return nil
     }
     
     func animateIn( from:@escaping(AnyHashable)->NSView?, completion:(()->Void)? = nil, addAccesoryOnCopiedView:(((AnyHashable?, NSView))->Void)? = nil, addVideoTimebase:(((AnyHashable, NSView))->Void)? = nil, showBackground:(()->Void)? = nil) ->Void {

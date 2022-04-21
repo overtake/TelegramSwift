@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 
 var APP_VERSION_STRING: String {
-    var vText = "\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] ?? "1") (\(Bundle.main.infoDictionary?["CFBundleVersion"] ?? "0"))"
+    var vText = "\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] ?? "1").\(Bundle.main.infoDictionary?["CFBundleVersion"] ?? "0")"
     
     
     #if STABLE
@@ -44,19 +44,15 @@ fileprivate class AboutModalView : Control {
         let attr = NSMutableAttributedString()
         
         _ = attr.append(string: appName, color: theme.colors.text, font: .medium(.header))
-        _ = attr.append(string: "\n\(vText)", color: theme.colors.grayText, font: .medium(.text))
+        _ = attr.append(string: "\n\(vText)", color: theme.colors.link, font: .medium(.text))
         
-        _ = attr.append(string: " (", color: theme.colors.grayText, font: .medium(.text))
-
-        let range = attr.append(string: L10n.x3vGGIWUTitle.lowercased(), color: theme.colors.accent, font: .medium(.text))
-        attr.addAttribute(.link, value: "copy", range: range)
-        _ = attr.append(string: ")", color: theme.colors.grayText, font: .medium(.text))
+        attr.addAttribute(.link, value: "copy", range: attr.range)
 
         _ = attr.append(string: "\n\n")
         
         
 
-        _ = attr.append(string: L10n.aboutDescription, color: theme.colors.text, font: .normal(.text))
+        _ = attr.append(string: strings().aboutDescription, color: theme.colors.text, font: .normal(.text))
         
         let descLayout = TextViewLayout(attr, alignment: .center)
         descLayout.measure(width:frameRect.width - 40)
@@ -116,12 +112,12 @@ class AboutModalController: ModalViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        genericView.descView.layout?.interactions.processURL = { [weak self] url in
+        genericView.descView.textLayout?.interactions.processURL = { [weak self] url in
             if let url = url as? inAppLink {
                 execute(inapp: url)
             } else if let url = url as? String, url == "copy" {
                 copyToClipboard(APP_VERSION_STRING)
-                self?.show(toaster: ControllerToaster(text: L10n.shareLinkCopied))
+                self?.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
                 return
             }
             self?.close()

@@ -192,12 +192,12 @@ final class WidgetRecentPeersController : TelegramGenericViewController<WidgetVi
             }
         }))
         
-        disposable.set((statePromise.get() |> deliverOnMainQueue).start(next: { [weak self] state in
+        disposable.set(combineLatest(queue: .mainQueue(), statePromise.get(), appearanceSignal).start(next: { [weak self] state, _ in
             var buttons: [WidgetData.Button] = []
             
 
             if !state.favorite.isEmpty {
-                buttons.append(.init(text: { L10n.widgetRecentPopular }, selected: {
+                buttons.append(.init(text: { strings().widgetRecentPopular }, selected: {
                     return state.section == .favorite
                 }, image: {
                     return state.section == .favorite ? theme.icons.widget_peers_favorite_active: theme.icons.widget_peers_favorite
@@ -211,7 +211,7 @@ final class WidgetRecentPeersController : TelegramGenericViewController<WidgetVi
             }
            
             if !state.recent.isEmpty {
-                buttons.append(.init(text: { L10n.widgetRecentRecent }, selected: {
+                buttons.append(.init(text: { strings().widgetRecentRecent }, selected: {
                     return state.section == .recent
                 }, image: {
                     return state.section == .recent ? theme.icons.widget_peers_recent_active: theme.icons.widget_peers_recent
@@ -225,7 +225,7 @@ final class WidgetRecentPeersController : TelegramGenericViewController<WidgetVi
             }
           
             if !state.recent.isEmpty && !state.favorite.isEmpty {
-                buttons.append(.init(text: { L10n.widgetRecentMixed }, selected: {
+                buttons.append(.init(text: { strings().widgetRecentMixed }, selected: {
                     return state.section == .both
                 }, image: {
                     return state.section == .both ? theme.icons.widget_peers_both_active: theme.icons.widget_peers_both
@@ -239,13 +239,13 @@ final class WidgetRecentPeersController : TelegramGenericViewController<WidgetVi
             }
             
             
-            let data: WidgetData = .init(title: { L10n.widgetRecentTitle }, desc: { L10n.widgetRecentDesc }, descClick: {
+            let data: WidgetData = .init(title: { strings().widgetRecentTitle }, desc: { strings().widgetRecentDesc }, descClick: {
                 showModal(with: QuickSwitcherModalController(context), for: context.window)
             }, buttons: buttons, contentHeight: 180)
             
             self?.genericView.update(data)
             self?.genericView.dataView?.update(state, context: context, animated: !first, open: { peerId in
-                context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)), style: .push)
+                context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)), style: .push)
             })
             first = false
         }))

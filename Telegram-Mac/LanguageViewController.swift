@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import Localization
 import SwiftSignalKit
 
 
@@ -86,9 +86,9 @@ enum LanguageTableEntry : TableItemListNodeEntry {
                 arguments.change(value)
             }, menuItems: {
                 if deletable {
-                    return [ContextMenuItem(L10n.messageContextDelete, handler: {
+                    return [ContextMenuItem(strings().messageContextDelete, handler: {
                         arguments.delete(value)
-                    })]
+                    }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)]
                 }
                 return []
             })
@@ -333,15 +333,27 @@ class LanguageViewController: TableViewController {
         }
 
         
-        let searchValue:Atomic<TableSearchViewState> = Atomic(value: .none)
-        let searchState: ValuePromise<TableSearchViewState> = ValuePromise(.none, ignoreRepeated: true)
+        let searchValue:Atomic<TableSearchViewState> = Atomic(value: .none({ searchState in
+            updateState { _ in
+                return searchState
+            }
+        }))
+        let searchState: ValuePromise<TableSearchViewState> = ValuePromise(.none({ searchState in
+            updateState { _ in
+                return searchState
+            }
+        }), ignoreRepeated: true)
         let updateSearchValue:((TableSearchViewState)->TableSearchViewState)->Void = { f in
             searchState.set(searchValue.modify(f))
         }
         
         let searchData = TableSearchVisibleData(cancelImage: theme.icons.chatSearchCancel, cancel: {
             updateSearchValue { _ in
-                return .none
+                return .none({ searchState in
+                    updateState { _ in
+                        return searchState
+                    }
+                })
             }
         }, updateState: { searchState in
             updateState { _ in
@@ -356,7 +368,11 @@ class LanguageViewController: TableViewController {
                 case .none:
                     return .visible(searchData)
                 case .visible:
-                    return .none
+                    return .none({ searchState in
+                        updateState { _ in
+                            return searchState
+                        }
+                    })
                 }
             }
         }
@@ -367,7 +383,7 @@ class LanguageViewController: TableViewController {
                 self?.applyDisposable.set(showModalProgress(signal: context.engine.localization.downloadAndApplyLocalization(accountManager: context.sharedContext.accountManager, languageCode: value.languageCode), for: context.window).start())
             }
         }, delete: { info in
-            confirm(for: context.window, information: L10n.languageRemovePack, successHandler: { _ in
+            confirm(for: context.window, information: strings().languageRemovePack, successHandler: { _ in
                 let _ = (context.account.postbox.transaction { transaction in
                     removeSavedLocalization(transaction: transaction, languageCode: info.languageCode)
                 }).start()
@@ -379,7 +395,7 @@ class LanguageViewController: TableViewController {
         let initialSize = atomicSize
 
         let signal = context.account.postbox.preferencesView(keys: [PreferencesKeys.localizationListState]) |> map { value -> LocalizationListState? in
-            return value.values[PreferencesKeys.localizationListState] as? LocalizationListState
+            return value.values[PreferencesKeys.localizationListState]?.get(LocalizationListState.self)
         } |> deliverOnPrepareQueue
         
         let first: Atomic<Bool> = Atomic(value: true)

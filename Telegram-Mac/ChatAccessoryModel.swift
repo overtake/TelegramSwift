@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 
-class ChatAccessoryView : Control {
+class ChatAccessoryView : Button {
     var imageView: TransformImageView?
 }
 

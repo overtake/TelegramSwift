@@ -19,7 +19,7 @@ class GeneralInteractedRowView: GeneralRowView {
     private(set) var descriptionView: TextView?
     private var nextView:ImageView = ImageView()
     
-    
+    private var badgeView: View?
     
     
     override func set(item:TableRowItem, animated:Bool = false) {
@@ -60,6 +60,19 @@ class GeneralInteractedRowView: GeneralRowView {
             } else {
                 switchView?.removeFromSuperview()
                 switchView = nil
+            }
+            
+            if let badgeNode = item.badgeNode {
+                if badgeView == nil {
+                    badgeView = View()
+                    containerView.addSubview(badgeView!)
+                }
+                badgeView?.setFrameSize(badgeNode.size)
+                badgeNode.view = badgeView
+                badgeNode.setNeedDisplay()
+            } else {
+                self.badgeView?.removeFromSuperview()
+                self.badgeView = nil
             }
             
             if case let .image(stateback) = item.type {
@@ -277,16 +290,14 @@ class GeneralInteractedRowView: GeneralRowView {
                     ctx.fillEllipse(in: NSMakeRect(containerView.frame.width - 14 - insets.right, floorToScreenPixels(backingScaleFactor, (containerView.frame.height - 14) / 2), 14, 14))
                 }
             }
-            
-            
         }
-        
     }
     
    
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        
         
         nextView.sizeToFit()
         containerView.addSubview(nextView)
@@ -329,17 +340,15 @@ class GeneralInteractedRowView: GeneralRowView {
                 switch item.type {
                 case let .contextSelector(value, items):
                     if let event = NSApp.currentEvent {
-                        let menu = NSMenu()
-                        if let customTheme = item.customTheme {
-                            menu.appearance = customTheme.appearance
-                        }
+                        let menu = ContextMenu()
+
                         let items = items.map{ pItem -> ContextMenuItem in
                             return ContextMenuItem(pItem.title, handler: pItem.handler, dynamicTitle: nil, state: value == pItem.title ? .on : nil)
                         }
                         for item in items {
                             menu.addItem(item)
                         }
-                        NSMenu.popUpContextMenu(menu, with: event, for: textView)
+                        AppMenu.show(menu: menu, event: event, for: textView)
                     } else {
                         showPopover(for: textView, with: SPopoverViewController(items: items), edge: .minX, inset: NSMakePoint(0,-30))
                     }
@@ -400,9 +409,10 @@ class GeneralInteractedRowView: GeneralRowView {
     override func layout() {
         super.layout()
         
+        
         if let item = item as? GeneralInteractedRowItem {
             let insets = item.inset
-            
+                        
             switch item.viewType {
             case .legacy:
                 self.containerView.frame = bounds
@@ -415,13 +425,18 @@ class GeneralInteractedRowView: GeneralRowView {
                 if let switchView = switchView {
                     switchView.centerY(x:frame.width - insets.right - switchView.frame.width - nextInset, addition: -1)
                 }
+                
+                if let badgeView = badgeView {
+                    badgeView.centerY(x:frame.width - insets.right - badgeView.frame.width - nextInset, addition: -1)
+                }
+                
                 if let textView = textView {
                     var width:CGFloat = 100
                     if let name = item.nameLayout {
                         width = frame.width - name.0.size.width - nextInset - insets.right - insets.left - 10
                     }
-                    textView.layout?.measure(width: width)
-                    textView.update(textView.layout)
+                    textView.textLayout?.measure(width: width)
+                    textView.update(textView.textLayout)
                     textView.centerY(x:frame.width - insets.right - textView.frame.width - nextInset, addition: -1)
                     if !nextView.isHidden {
                         textView.setFrameOrigin(textView.frame.minX,textView.frame.minY - 1)
@@ -447,8 +462,8 @@ class GeneralInteractedRowView: GeneralRowView {
                     if let name = item.nameLayout {
                         width = containerView.frame.width - name.0.size.width - innerInsets.right - insets.left - 10
                     }
-                    textView.layout?.measure(width: width)
-                    textView.update(textView.layout)
+                    textView.textLayout?.measure(width: width)
+                    textView.update(textView.textLayout)
                     textView.centerY(x: containerView.frame.width - innerInsets.right - textView.frame.width - nextInset)
                     if !nextView.isHidden {
                         textView.setFrameOrigin(textView.frame.minX, textView.frame.minY - 1)
@@ -457,6 +472,10 @@ class GeneralInteractedRowView: GeneralRowView {
                 nextView.centerY(x: containerView.frame.width - innerInsets.right - nextView.frame.width, addition: -1)
                 if let progressView = progressView {
                     progressView.centerY(x: containerView.frame.width - innerInsets.right - progressView.frame.width, addition: -1)
+                }
+                
+                if let badgeView = badgeView {
+                    badgeView.centerY(x: containerView.frame.width - innerInsets.right - badgeView.frame.width - nextInset, addition: -1)
                 }
             }
         }

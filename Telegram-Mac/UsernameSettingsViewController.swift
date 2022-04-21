@@ -69,7 +69,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UsernameEntry>], to
             case let .inputEntry(inputState):
                 return InputDataRowItem(initialSize, stableId: entry.stableId, mode: .plain, error: nil, viewType: inputState.viewType, currentText: inputState.state.username ?? "", placeholder: nil, inputPlaceholder: inputState.placeholder, filter: { $0 }, updated: { value in
                      availability.set(value)
-                }, limit: 30)
+                }, limit: 32)
             case let .stateEntry(_, text, color, viewType):
                 return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: NSAttributedString.initialize(string: text, color: color, font: .normal(.text)), viewType: viewType)
             case let .descEntry(_, text, viewType):
@@ -107,7 +107,7 @@ class UsernameSettingsViewController: TableViewController {
     }
     
     override func getRightBarViewOnce() -> BarView {
-        let button = TextButtonBarView(controller: self, text: L10n.usernameSettingsDone)
+        let button = TextButtonBarView(controller: self, text: strings().usernameSettingsDone)
         
         button.set(handler: { [weak self] _ in
             self?.saveUsername()
@@ -121,14 +121,16 @@ class UsernameSettingsViewController: TableViewController {
     func saveUsername() {
         if let item = genericView.item(stableId: AnyHashable(UsernameEntryId.inputEntry)) as? InputDataRowItem, let window = window {
             
+            let context = self.context
+            
             updateDisposable.set(showModalProgress(signal: context.engine.peers.updateAddressName(domain: .account, name: item.currentText.string), for: window).start(error: { error in
                 switch error {
                 case .generic:
-                    alert(for: mainWindow, info: L10n.unknownError)
+                    alert(for: context.window, info: strings().unknownError)
                 }
             }, completed: { [weak self] in
                 self?.navigationController?.back()
-                _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 0.5).start()
+                _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 0.5).start()
             }))
         }
     }
@@ -201,8 +203,8 @@ class UsernameSettingsViewController: TableViewController {
             |> deliverOnMainQueue
             |> mapToSignal { [weak self] (availability,address) -> Signal<Void, NoError> in
                 //        var mutableItems:[UsernameEntry] = [.whiteSpace(0, 16),
- //               .inputEntry(placeholder: tr(L10n.usernameSettingsInputPlaceholder), state:.none(username: nil)),
-//                .descEntry(tr(L10n.usernameSettingsChangeDescription))]
+ //               .inputEntry(placeholder: strings().usernameSettingsInputPlaceholder, state:.none(username: nil)),
+//                .descEntry(strings().usernameSettingsChangeDescription)]
 
                 var items:[UsernameEntry] = []
                 var sectionId: Int32 = 0
@@ -210,7 +212,7 @@ class UsernameSettingsViewController: TableViewController {
                 items.append(.section(sectionId))
                 sectionId += 1
                 
-                items.append(.inputEntry(sectionId: sectionId, placeholder: L10n.usernameSettingsInputPlaceholder, state: availability, viewType: .singleItem))
+                items.append(.inputEntry(sectionId: sectionId, placeholder: strings().usernameSettingsInputPlaceholder, state: availability, viewType: .singleItem))
                 
                 switch availability {
                 case .none:
@@ -222,7 +224,7 @@ class UsernameSettingsViewController: TableViewController {
                 case let .success(username:username):
                     if address != username {
                         if username?.length != 0 {
-                            items.append(.stateEntry(sectionId: sectionId, text: L10n.usernameSettingsAvailable(username ?? ""), color: theme.colors.accent, viewType: .textBottomItem))
+                            items.append(.stateEntry(sectionId: sectionId, text: strings().usernameSettingsAvailable(username ?? ""), color: theme.colors.accent, viewType: .textBottomItem))
                         }
                     }
                     self?.doneButton?.isEnabled = address != username
@@ -240,7 +242,7 @@ class UsernameSettingsViewController: TableViewController {
                     self?.doneButton?.isEnabled = enabled
                 }
                 
-                items.append(.descEntry(sectionId: sectionId, text: L10n.usernameSettingsChangeDescription, viewType: .textBottomItem))
+                items.append(.descEntry(sectionId: sectionId, text: strings().usernameSettingsChangeDescription, viewType: .textBottomItem))
 
                 
                 items.append(.section(sectionId))

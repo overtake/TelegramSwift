@@ -29,7 +29,7 @@ class ChatSwitchInlineController: ChatController {
     }
     
     override open func backSettings() -> (String,CGImage?) {
-        return (L10n.navigationCancel,nil)
+        return (strings().navigationCancel,nil)
     }
     
     override func applyTransition(_ transition:TableUpdateTransition, initialData:ChatHistoryCombinedInitialData, isLoading: Bool, processedView: ChatHistoryView) {

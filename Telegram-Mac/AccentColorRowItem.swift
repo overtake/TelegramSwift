@@ -8,7 +8,7 @@
 
 import TGUIKit
 import SwiftSignalKit
-
+import ColorPalette
 
 private func generateAccentColor(_ color: PaletteAccentColor, bubbled: Bool) -> CGImage {
     return generateImage(CGSize(width: 42.0, height: 42.0), scale: System.backingScale, rotatedContext: { size, context in
@@ -155,6 +155,28 @@ final class AccentColorRowView : TableRowView {
         containerView.addSubview(borderView)
         documentView.backgroundColor = .clear
         addSubview(containerView)
+        
+        containerView.contextMenu = { [weak self] in
+            guard let item = self?.item as? AccentColorRowItem, let documentView = self?.documentView else {
+                return nil
+            }
+            guard let event = NSApp.currentEvent else {
+                return nil
+            }
+            let documentPoint = documentView.convert(event.locationInWindow, from: nil)
+            
+            for (_, subview) in documentView.subviews.enumerated() {
+                if NSPointInRect(documentPoint, subview.frame), let accent = (subview as? Button)?.contextObject as? AppearanceAccentColor {
+                    let items = item.menuItems(accent)
+                    let menu = ContextMenu()
+                    for item in items {
+                        menu.addItem(item)
+                    }
+                    return menu
+                }
+            }
+            return nil
+        }
     }
 
     override var backdorColor: NSColor {
@@ -189,26 +211,6 @@ final class AccentColorRowView : TableRowView {
         scrollView.frame = NSMakeRect(0, innerInset.top, item.blockWidth, containerView.frame.height - innerInset.top - innerInset.bottom)
     }
     
-    override func menu(for event: NSEvent) -> NSMenu? {
-        guard let item = item as? AccentColorRowItem else {
-            return nil
-        }
-        
-        let documentPoint = documentView.convert(event.locationInWindow, from: nil)
-        
-        for (_, subview) in documentView.subviews.enumerated() {
-            if NSPointInRect(documentPoint, subview.frame), let accent = (subview as? Button)?.contextObject as? AppearanceAccentColor {
-                let items = item.menuItems(accent)
-                let menu = ContextMenu()
-                for item in items {
-                    menu.addItem(item)
-                }
-                return menu
-            }
-        }
-        
-        return nil
-    }
     
     private let selectedImageView = ImageView()
     
@@ -267,8 +269,8 @@ final class AccentColorRowView : TableRowView {
             
             var accent = colorList[i]
             
-            if let cloudTheme = accent.cloudTheme, let settings = cloudTheme.settings {
-                let signal = themeAppearanceThumbAndData(context: item.context, bubbled: false, source: .local(settings.palette, cloudTheme)) |> deliverOnMainQueue
+            if let cloudTheme = accent.cloudTheme, let settings = cloudTheme.effectiveSettings(for: item.theme.colors) {
+                let signal = themeAppearanceThumbAndData(context: item.context, bubbled: false, parent: settings.palette, source: .local(settings.palette, cloudTheme)) |> deliverOnMainQueue
                 disposableSet.add(signal.start(next: { result in
                     switch result.1 {
                     case let .cloud(_, cachedData):

@@ -22,11 +22,11 @@ class GeneralBlockTextRowItem: GeneralRowItem {
     fileprivate let textLayout: TextViewLayout
     fileprivate let header: GeneralBlockTextHeader?
     fileprivate let headerLayout: TextViewLayout?
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, text: String, font: NSFont, header: GeneralBlockTextHeader? = nil) {
-        self.textLayout = TextViewLayout(.initialize(string: text, color: theme.colors.text, font: font), alwaysStaticItems: false)
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, text: String, font: NSFont, color: NSColor = theme.colors.text, header: GeneralBlockTextHeader? = nil) {
+        self.textLayout = TextViewLayout(.initialize(string: text, color: color, font: font), alwaysStaticItems: false)
         self.header = header
         if let header = header {
-            self.headerLayout = TextViewLayout(.initialize(string: header.text, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 3)
+            self.headerLayout = TextViewLayout(.initialize(string: header.text, color: color, font: .medium(.title)), maximumNumberOfLines: 3)
         } else {
             self.headerLayout = nil
         }

@@ -185,7 +185,7 @@ class StatisticRowView: TableRowView {
         
         chartView.setup(controller: item.controller, title: "Test")
 
-        chartView.apply(theme: chartTheme, strings: ChartStrings(zoomOut: L10n.graphZoomOut, total: L10n.graphTotal), animated: false)
+        chartView.apply(theme: chartTheme, strings: ChartStrings(zoomOut: strings().graphZoomOut, total: strings().graphTotal), animated: false)
         
         if first {
             chartView.layer?.animateAlpha(from: 0, to: 1, duration: 0.25)

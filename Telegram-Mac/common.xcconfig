@@ -1,0 +1,16 @@
+//
+//  common.xcconfig
+//  Telegram
+//
+//  Created by Mikhail Filimonov on 29.11.2021.
+//  Copyright © 2021 Telegram. All rights reserved.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+SIMPLE_SLASH=/
+
+WEBRTC_MAC = 1
+TGVOIP_USE_CUSTOM_CRYPTO = 1
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited) WEBRTC_MAC=$(WEBRTC_MAC) TGVOIP_USE_CUSTOM_CRYPTO=$(TGVOIP_USE_CUSTOM_CRYPTO)

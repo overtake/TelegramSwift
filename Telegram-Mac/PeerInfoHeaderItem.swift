@@ -9,9 +9,10 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import TGModernGrowingTextView
 import Postbox
 import SwiftSignalKit
+
 class PeerInfoHeaderItem: GeneralRowItem {
 
     fileprivate var firstTextEdited:String?
@@ -205,8 +206,8 @@ class PeerInfoHeaderView: GeneralRowView, TGModernGrowingDelegate {
         callButton.set(handler: { [weak self] _ in
             if let item = self?.item as? PeerInfoHeaderItem, let peerId = item.peer?.id  {
                 let context = item.context
-                self?.callDisposable.set((phoneCall(account: context.account, sharedContext: context.sharedContext, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
-                    applyUIPCallResult(context.sharedContext, result)
+                self?.callDisposable.set((phoneCall(context: context, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
+                    applyUIPCallResult(context, result)
                 }))
             }
             }, for: .SingleClick)
@@ -236,7 +237,7 @@ class PeerInfoHeaderView: GeneralRowView, TGModernGrowingDelegate {
             }
 
             table.noteHeightOfRow(item.index, animated)
-            change(size: NSMakeSize(frame.width, item.height), animated: animated)
+            
         }
     }
     
@@ -420,8 +421,8 @@ class PeerInfoHeaderView: GeneralRowView, TGModernGrowingDelegate {
                 if let peer = peer as? TelegramUser {
                     firstNameTextView.setString(item.firstTextEdited ?? peer.firstName ?? "", animated: false)
                     lastNameTextView.setString(item.lastTextEdited ?? peer.lastName ?? "", animated: false)
-                    firstNameTextView.setPlaceholderAttributedString(.initialize(string: tr(L10n.peerInfoFirstNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
-                    lastNameTextView.setPlaceholderAttributedString(.initialize(string: tr(L10n.peerInfoLastNamePlaceholder), color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
+                    firstNameTextView.setPlaceholderAttributedString(.initialize(string: strings().peerInfoFirstNamePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
+                    lastNameTextView.setPlaceholderAttributedString(.initialize(string: strings().peerInfoLastNamePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
                     lastNameTextView.isHidden = false
                 } else {
                     let titleText = item.firstTextEdited ?? peer.displayTitle
@@ -429,9 +430,9 @@ class PeerInfoHeaderView: GeneralRowView, TGModernGrowingDelegate {
                         firstNameTextView.setString(titleText, animated: false)
                     }
                     if peer.isChannel {
-                        firstNameTextView.setPlaceholderAttributedString(.initialize(string: L10n.peerInfoChannelNamePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
+                        firstNameTextView.setPlaceholderAttributedString(.initialize(string: strings().peerInfoChannelNamePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
                     } else {
-                        firstNameTextView.setPlaceholderAttributedString(.initialize(string: L10n.peerInfoGroupNamePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
+                        firstNameTextView.setPlaceholderAttributedString(.initialize(string: strings().peerInfoGroupNamePlaceholder, color: theme.colors.grayText, font: .normal(.header), coreText: false), update: false)
                     }
 
                     lastNameTextView.isHidden = true

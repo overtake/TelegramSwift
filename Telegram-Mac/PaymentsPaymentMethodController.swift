@@ -274,7 +274,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
   
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.checkoutNewCardPaymentCard), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().checkoutNewCardPaymentCard), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
     let cardBrand = STPCardValidator.brand(forNumber: state.card.number)
@@ -352,10 +352,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.checkoutNewCardCardholderNameTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().checkoutNewCardCardholderNameTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
-        entries.append(.input(sectionId: sectionId, index: index, value: .string(state.holderName), error: nil, identifier: _id_card_holder_name, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.checkoutNewCardCardholderNamePlaceholder, filter: { $0.uppercased() }, limit: 255))
+        entries.append(.input(sectionId: sectionId, index: index, value: .string(state.holderName), error: nil, identifier: _id_card_holder_name, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().checkoutNewCardCardholderNamePlaceholder, filter: { $0.uppercased() }, limit: 255))
         index += 1
     }
     
@@ -364,7 +364,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.checkoutNewCardPostcodeTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().checkoutNewCardPostcodeTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
         
         if state.billingAddress.country != nil {
@@ -381,13 +381,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             }.sorted(by: { $0.localized < $1.localized})
 
             
-            entries.append(.selector(sectionId: sectionId, index: index, value: .string(state.billingAddress.country), error: nil, identifier: _id_card_country, placeholder: L10n.checkoutInfoShippingInfoCountryPlaceholder, viewType: state.billingAddress.zipCode != nil ? .firstItem : .singleItem, values: countries))
+            entries.append(.selector(sectionId: sectionId, index: index, value: .string(state.billingAddress.country), error: nil, identifier: _id_card_country, placeholder: strings().checkoutInfoShippingInfoCountryPlaceholder, viewType: state.billingAddress.zipCode != nil ? .firstItem : .singleItem, values: countries))
             index += 1
         }
         if state.billingAddress.zipCode != nil {
             let type = STPPostalCodeValidator.postalCodeType(forCountryCode: state.billingAddress.country)
             
-            entries.append(.input(sectionId: sectionId, index: index, value: .string(state.billingAddress.zipCode), error: state.billingError, identifier: _id_card_zip_code, mode: .plain, data: .init(viewType: state.billingAddress.country != nil ? .lastItem : .singleItem), placeholder: InputDataInputPlaceholder(L10n.checkoutNewCardPostcodePlaceholder), inputPlaceholder: L10n.checkoutNewCardPostcodePlaceholder, filter: { value in
+            entries.append(.input(sectionId: sectionId, index: index, value: .string(state.billingAddress.zipCode), error: state.billingError, identifier: _id_card_zip_code, mode: .plain, data: .init(viewType: state.billingAddress.country != nil ? .lastItem : .singleItem), placeholder: InputDataInputPlaceholder(strings().checkoutNewCardPostcodePlaceholder), inputPlaceholder: strings().checkoutNewCardPostcodePlaceholder, filter: { value in
                 switch type {
                 case .countryPostalCodeTypeAlphanumeric:
                     return value.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
@@ -409,9 +409,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_card_save_info, data: .init(name: L10n.checkoutInfoSaveInfo, color: theme.colors.text, type: .switchable(state.saveInfo), viewType: .singleItem, enabled: !arguments.passwordMissing, action: arguments.toggleSaveInfo)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_card_save_info, data: .init(name: strings().checkoutInfoSaveInfo, color: theme.colors.text, type: .switchable(state.saveInfo), viewType: .singleItem, enabled: !arguments.passwordMissing, action: arguments.toggleSaveInfo)))
     index += 1
-    let desc = arguments.passwordMissing ? L10n.checkout2FAText : L10n.checkoutNewCardSaveInfoHelp
+    let desc = arguments.passwordMissing ? strings().checkout2FAText : strings().checkoutNewCardSaveInfoHelp
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(desc), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
 
@@ -496,7 +496,7 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.checkoutNewCardTitle)
+    let controller = InputDataController(dataSignal: signal, title: strings().checkoutNewCardTitle)
     
     controller.onDeinit = {
         actionsDisposable.dispose()
@@ -535,7 +535,7 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
                 let state = STPCardValidator.validationState(forNumber: current.card.number, validatingCardBrand: true)
                 switch state {
                 case .invalid:
-                    cardError = .init(description: L10n.yourCardsNumberIsInvalid, target: .data)
+                    cardError = .init(description: strings().yourCardsNumberIsInvalid, target: .data)
                 default:
                     cardError = nil
                 }
@@ -545,12 +545,12 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
                 let yearState = STPCardValidator.validationState(forExpirationYear: String(current.card.date.suffix(2)), inMonth: current.card.date.prefix(2))
                 switch yearState {
                 case .invalid:
-                    cardError = .init(description: L10n.yourCardsExpirationYearIsInvalid, target: .data)
+                    cardError = .init(description: strings().yourCardsExpirationYearIsInvalid, target: .data)
                 default:
                     let monthState = STPCardValidator.validationState(forExpirationMonth: current.card.date.prefix(2))
                     switch monthState {
                     case .invalid:
-                        cardError = .init(description: L10n.yourCardsExpirationMonthIsInvalid, target: .data)
+                        cardError = .init(description: strings().yourCardsExpirationMonthIsInvalid, target: .data)
                     default:
                         cardError = nil
                     }
@@ -561,7 +561,7 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
                 let state = STPCardValidator.validationState(forCVC: current.card.cvc, cardBrand: brand)
                 switch state {
                 case .invalid:
-                    cardError = .init(description: L10n.yourCardsSecurityCodeIsInvalid, target: .data)
+                    cardError = .init(description: strings().yourCardsSecurityCodeIsInvalid, target: .data)
                 default:
                     cardError = nil
                 }
@@ -585,7 +585,7 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
         }
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.modalDone, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().modalDone, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, drawBorder: true, height: 50, singleButton: true)
     

@@ -69,7 +69,7 @@ func JoinVoiceChatAlertController(context: AccountContext, groupCall: GroupCallP
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.chatVoiceChatJoinLinkTitle)
+    let controller = InputDataController(dataSignal: signal, title: strings().chatVoiceChatJoinLinkTitle)
     
     controller.onDeinit = {
         actionsDisposable.dispose()
@@ -81,7 +81,7 @@ func JoinVoiceChatAlertController(context: AccountContext, groupCall: GroupCallP
         return .none
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.chatVoiceChatJoinLinkOK, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().chatVoiceChatJoinLinkOK, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, drawBorder: true, height: 50, singleButton: true)
     

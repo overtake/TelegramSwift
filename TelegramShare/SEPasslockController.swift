@@ -8,19 +8,8 @@
 
 import Cocoa
 import TGUIKit
-
-//
-//  PasscodeLockController.swift
-//  TelegramMac
-//
-//  Created by keepcoder on 10/01/2017.
-//  Copyright © 2017 Telegram. All rights reserved.
-//
-
-import Cocoa
-import TGUIKit
 import TelegramCore
-
+import Localization
 import Postbox
 import SwiftSignalKit
 
@@ -42,7 +31,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         self.backgroundColor = theme.colors.background
         nextButton.set(color: theme.colors.accent, for: .Normal)
         nextButton.set(font: .normal(.title), for: .Normal)
-        nextButton.set(text: tr(L10n.shareExtensionPasscodeNext), for: .Normal)
+        nextButton.set(text: L10n.shareExtensionPasscodeNext, for: .Normal)
         _ = nextButton.sizeToFit()
         
         cancel.set(image: theme.icons.chatInlineDismiss, for: .Normal)
@@ -62,7 +51,7 @@ private class PasscodeLockView : Control, NSTextFieldDelegate {
         input.delegate = self
         
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: tr(L10n.shareExtensionPasscodePlaceholder), color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
+        _ = attr.append(string: L10n.shareExtensionPasscodePlaceholder, color: theme.colors.grayText, font: NSFont.normal(FontSize.text))
         attr.setAlignment(.center, range: attr.range)
         input.placeholderAttributedString = attr
         input.backgroundColor = theme.colors.background

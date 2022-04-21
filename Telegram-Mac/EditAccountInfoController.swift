@@ -182,44 +182,44 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
     }))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.editAccountNameDesc), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().editAccountNameDesc), data: InputDataGeneralTextData(viewType: .textBottomItem)))
     index += 1
 
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.bioHeader), data: InputDataGeneralTextData(viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().bioHeader), data: InputDataGeneralTextData(viewType: .textTopItem)))
     index += 1
 
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.about), error: nil, identifier: _id_about, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.bioPlaceholder, filter: {$0}, limit: 70))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.about), error: nil, identifier: _id_about, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().bioPlaceholder, filter: {$0}, limit: 70))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.bioDescription), data: InputDataGeneralTextData(viewType: .textBottomItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().bioDescription), data: InputDataGeneralTextData(viewType: .textBottomItem)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_username, data: InputDataGeneralData(name: L10n.editAccountUsername, color: theme.colors.text, icon: nil, type: .nextContext(state.username != nil ? "@\(state.username!)" : ""), viewType: .firstItem, action: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_username, data: InputDataGeneralData(name: strings().editAccountUsername, color: theme.colors.text, icon: nil, type: .nextContext(state.username != nil ? "@\(state.username!)" : ""), viewType: .firstItem, action: nil)))
     index += 1
 
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_phone, data: InputDataGeneralData(name: L10n.editAccountChangeNumber, color: theme.colors.text, icon: nil, type: .nextContext(state.phone != nil ? formatPhoneNumber(state.phone!) : ""), viewType: .lastItem, action: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_phone, data: InputDataGeneralData(name: strings().editAccountChangeNumber, color: theme.colors.text, icon: nil, type: .nextContext(state.phone != nil ? formatPhoneNumber(state.phone!) : ""), viewType: .lastItem, action: nil)))
     index += 1
 
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
     if activeAccounts.count < 3 {
-        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_account, data: InputDataGeneralData(name: L10n.editAccountAddAccount, color: theme.colors.accent, icon: nil, type: .none, viewType: .firstItem, action: {
+        entries.append(InputDataEntry.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_account, data: InputDataGeneralData(name: strings().editAccountAddAccount, color: theme.colors.accent, icon: nil, type: .none, viewType: .firstItem, action: {
             arguments.addAccount()
         })))
         index += 1
     }
    
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_logout, data: InputDataGeneralData(name: L10n.editAccountLogout, color: theme.colors.redUI, icon: nil, type: .none, viewType: activeAccounts.count < 3 ? .lastItem : .singleItem, action: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_logout, data: InputDataGeneralData(name: strings().editAccountLogout, color: theme.colors.redUI, icon: nil, type: .none, viewType: activeAccounts.count < 3 ? .lastItem : .singleItem, action: nil)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -371,87 +371,97 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
     
     let arguments = EditInfoControllerArguments(context: context, uploadNewPhoto: { control in
         
-        var items:[SPopoverItem] = []
+        var items:[ContextMenuItem] = []
         
-        items.append(.init(L10n.editAvatarPhotoOrVideo, {
+        items.append(.init(strings().editAvatarPhotoOrVideo, handler: {
             filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
                 if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
                     updatePhoto(image)
                 } else if let path = paths?.first {
-                    selectVideoAvatar(context: context, path: path, localize: L10n.videoAvatarChooseDescProfile, signal: { signal in
+                    selectVideoAvatar(context: context, path: path, localize: strings().videoAvatarChooseDescProfile, signal: { signal in
                         updateVideo(signal)
                     })
                 }
             })
-        }))
+        }, itemImage: MenuAnimation.menu_shared_media.value))
         
-        items.append(.init(L10n.editAvatarStickerOrGif, { [weak control] in
-            
-            let controller = EntertainmentViewController(size: NSMakeSize(350, 350), context: context, mode: .selectAvatar)
-            controller._frameRect = NSMakeRect(0, 0, 350, 400)
-            
-            let interactions = ChatInteraction(chatLocation: .peer(context.peerId), context: context)
-            
-            let runConvertor:(MediaObjectToAvatar)->Void = { [weak control] convertor in
-                _ = showModalProgress(signal: convertor.start(), for: context.window).start(next: { [weak control] result in
-                    switch result {
-                    case let .image(image):
-                         updatePhoto(image)
-                    case let .video(path):
-                        selectVideoAvatar(context: context, path: path, localize: L10n.videoAvatarChooseDescProfile, quality: AVAssetExportPresetHighestQuality, signal: { signal in
-                            updateVideo(signal)
-                        })
-                    }
-                    control?.contextObject = nil
-                })
-                control?.contextObject = convertor
-            }
-            
-            interactions.sendAppFile = { file, _, _ in
-                let object: MediaObjectToAvatar.Object
-                if file.isAnimatedSticker {
-                    object = .animated(file)
-                } else if file.isSticker {
-                    object = .sticker(file)
-                } else {
-                    object = .gif(file)
-                }
-                let convertor = MediaObjectToAvatar(context: context, object: object)
-                runConvertor(convertor)
-            }
-            interactions.sendInlineResult = { [] collection, result in
-                switch result {
-                case let .internalReference(reference):
-                    if let file = reference.file {
-                        let convertor = MediaObjectToAvatar(context: context, object: .gif(file))
-                        runConvertor(convertor)
-                    }
-                case .externalReference:
-                    break
-                }
-            }
-            
-            control?.contextObject = interactions
-            controller.update(with: interactions)
-            if let control = control {
-                showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(0, -110), static: true)
-            }
-        }))
+//        items.append(.init(strings().editAvatarStickerOrGif, handler: { [weak control] in
+//
+//            let controller = EntertainmentViewController(size: NSMakeSize(350, 350), context: context, mode: .selectAvatar)
+//            controller._frameRect = NSMakeRect(0, 0, 350, 400)
+//
+//            let interactions = ChatInteraction(chatLocation: .peer(context.peerId), context: context)
+//
+//            let runConvertor:(MediaObjectToAvatar)->Void = { [weak control] convertor in
+//                _ = showModalProgress(signal: convertor.start(), for: context.window).start(next: { [weak control] result in
+//                    switch result {
+//                    case let .image(image):
+//                         updatePhoto(image)
+//                    case let .video(path):
+//                        selectVideoAvatar(context: context, path: path, localize: strings().videoAvatarChooseDescProfile, quality: AVAssetExportPresetHighestQuality, signal: { signal in
+//                            updateVideo(signal)
+//                        })
+//                    }
+//                    control?.contextObject = nil
+//                })
+//                control?.contextObject = convertor
+//            }
+//
+//            interactions.sendAppFile = { file, _, _, _ in
+//                let object: MediaObjectToAvatar.Object
+//                if file.isAnimatedSticker {
+//                    object = .animated(file)
+//                } else if file.isSticker {
+//                    object = .sticker(file)
+//                } else {
+//                    object = .gif(file)
+//                }
+//                let convertor = MediaObjectToAvatar(context: context, object: object)
+//                runConvertor(convertor)
+//            }
+//            interactions.sendInlineResult = { [] collection, result in
+//                switch result {
+//                case let .internalReference(reference):
+//                    if let file = reference.file {
+//                        let convertor = MediaObjectToAvatar(context: context, object: .gif(file))
+//                        runConvertor(convertor)
+//                    }
+//                case .externalReference:
+//                    break
+//                }
+//            }
+//
+//            control?.contextObject = interactions
+//            controller.update(with: interactions)
+//            if let control = control {
+//                showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(0, -110), static: true)
+//            }
+//        }, itemImage: MenuAnimation.menu_view_sticker_set.value))
         
-        showPopover(for: control, with: SPopoverViewController(items: items), edge: .maxY, inset: NSMakePoint(0, -60))
-       
+        if let event = NSApp.currentEvent {
+            let menu = ContextMenu()
+            for item in items {
+                menu.addItem(item)
+            }
+            let value = AppMenu(menu: menu)
+            value.show(event: event, view: control)
+        }       
     }, logout: {
         showModal(with: LogoutViewController(context: context, f: f), for: context.window)
     }, username: {
         f(UsernameSettingsViewController(context))
     }, changeNumber: {
-        f(PhoneNumberIntroController(context))
+        let navigation = MajorNavigationController(PhoneNumberIntroController.self, PhoneNumberIntroController(context), context.window)
+        navigation.alwaysAnimate = true
+        navigation._frameRect = NSMakeRect(0, 0, 350, 400)
+        navigation.readyOnce()
+        showModal(with: navigation, for: context.window)
     }, addAccount: {
         let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
         context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
     })
     
-    let controller = InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.sharedContext.activeAccountsWithInfo) |> map {editInfoEntries(state: $0.0, arguments: arguments, activeAccounts: $0.2.accounts, updateState: updateState)} |> map { InputDataSignalValue(entries: $0) }, title: L10n.editAccountTitle, validateData: { data -> InputDataValidation in
+    let controller = InputDataController(dataSignal: combineLatest(state.get() |> deliverOnPrepareQueue, appearanceSignal |> deliverOnPrepareQueue, context.sharedContext.activeAccountsWithInfo) |> map {editInfoEntries(state: $0.0, arguments: arguments, activeAccounts: $0.2.accounts, updateState: updateState)} |> map { InputDataSignalValue(entries: $0) }, title: strings().editAccountTitle, validateData: { data -> InputDataValidation in
         
         if let _ = data[_id_logout] {
             arguments.logout()
@@ -500,9 +510,9 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
             let current = stateValue.modify {$0}
             if let peerView = peerView {
                 let updates = valuesRequiringUpdate(state: current, view: peerView)
-                f((updates.0 != nil || updates.1 != nil) ? .enabled(L10n.navigationDone) : .disabled(L10n.navigationDone))
+                f((updates.0 != nil || updates.1 != nil) ? .enabled(strings().navigationDone) : .disabled(strings().navigationDone))
             } else {
-                f(.disabled(L10n.navigationDone))
+                f(.disabled(strings().navigationDone))
             }
         }
     }, removeAfterDisappear: false, identifier: "account")

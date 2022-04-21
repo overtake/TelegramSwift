@@ -39,22 +39,15 @@ final class GroupCallSpeakButton : Control {
     
     private var previousState: PresentationGroupCallState?
     private var previousIsMuted: Bool?
+    private var previousIsFullScreen: Bool?
     
-    func update(with state: PresentationGroupCallState, isMuted: Bool, animated: Bool) {
+    func update(with state: PresentationGroupCallState, isStream: Bool, isFullScreen: Bool, isMuted: Bool, animated: Bool) {
         if state.scheduleTimestamp == nil {
             switch state.networkState {
             case .connecting:
                 userInteractionEnabled = false
             case .connected:
-                if isMuted {
-                    if let _ = state.muteState {
-                        userInteractionEnabled = true
-                    } else {
-                        userInteractionEnabled = true
-                    }
-                } else {
-                    userInteractionEnabled = true
-                }
+                userInteractionEnabled = true
             }
         } else {
             userInteractionEnabled = true
@@ -65,85 +58,100 @@ final class GroupCallSpeakButton : Control {
         
         let scheduleState = state.scheduleState
         let previousScheduleState = previousState?.scheduleState
+        let previousIsFullscreen = self.previousIsFullScreen
 
-        
         let activeRaiseHand = state.muteState?.canUnmute == false
         let previousActiveRaiseHand = previousState?.muteState?.canUnmute == false
         let raiseHandUpdated = activeRaiseHand != previousActiveRaiseHand
         let scheduleUpdated = scheduleState != previousScheduleState
         
+        let fullScreenUpdated = isFullScreen != previousIsFullscreen
+
+            
         let previousIsMuted = self.previousIsMuted
         let isMutedUpdated = (previousState?.muteState != nil) != (state.muteState != nil) || previousIsMuted != isMuted
                 
         if previousState != nil {
-            if scheduleUpdated {
-                if scheduleState == nil, let previous = previousScheduleState {
-                    if state.canManageCall {
-                        playChangeState(.voice_chat_start_chat_to_mute)
-                    } else {
-                        if previous.subscribed {
-                            if activeRaiseHand {
-                                playChangeState(.voice_chat_cancel_reminder_to_raise_hand)
-                            } else {
-                                playChangeState(.voice_chat_cancel_reminder_to_mute)
-                            }
+            if isStream && scheduleState == nil {
+                if fullScreenUpdated {
+                    playChangeState(!isFullScreen ? .group_call_minmax : .group_call_maxmin)
+                } else {
+                    playChangeState(!isFullScreen ? .group_call_minmax : .group_call_maxmin)
+                }
+            } else {
+                if scheduleUpdated {
+                    if scheduleState == nil, let previous = previousScheduleState {
+                        if state.canManageCall {
+                            playChangeState(.voice_chat_start_chat_to_mute)
                         } else {
-                            if activeRaiseHand {
-                                playChangeState(.voice_chat_set_reminder_to_raise_hand)
+                            if previous.subscribed {
+                                if activeRaiseHand {
+                                    playChangeState(.voice_chat_cancel_reminder_to_raise_hand)
+                                } else {
+                                    playChangeState(.voice_chat_cancel_reminder_to_mute)
+                                }
                             } else {
-                                playChangeState(.voice_chat_set_reminder_to_mute)
+                                if activeRaiseHand {
+                                    playChangeState(.voice_chat_set_reminder_to_raise_hand)
+                                } else {
+                                    playChangeState(.voice_chat_set_reminder_to_mute)
+                                }
+                            }
+                        }
+                    } else {
+                        if scheduleState?.subscribed != previousScheduleState?.subscribed {
+                            if let subscribed = scheduleState?.subscribed {
+                                playChangeState(subscribed ? .voice_chat_cancel_reminder : .voice_chat_set_reminder)
                             }
                         }
                     }
-                } else {
-                    if scheduleState?.subscribed != previousScheduleState?.subscribed {
-                        if let subscribed = scheduleState?.subscribed {
-                            playChangeState(subscribed ? .voice_chat_cancel_reminder : .voice_chat_set_reminder)
-                        }
+                    //playChangeState(state.canManageCall ? .voice_chat_start_chat_to_mute : .voice_chat_start_chat_to_mute)
+                } else if raiseHandUpdated {
+                    if activeRaiseHand {
+                        playChangeState(previousState?.muteState != nil ? .voice_chat_hand_on_muted : .voice_chat_hand_on_unmuted)
+                    } else {
+                        playChangeState(.voice_chat_hand_off)
                     }
-                }
-                //playChangeState(state.canManageCall ? .voice_chat_start_chat_to_mute : .voice_chat_start_chat_to_mute)
-            } else if raiseHandUpdated {
-                if activeRaiseHand {
-                    playChangeState(previousState?.muteState != nil ? .voice_chat_hand_on_muted : .voice_chat_hand_on_unmuted)
-                } else {
-                    playChangeState(.voice_chat_hand_off)
-                }
-            } else if isMutedUpdated {
-                if isMuted {
-                    playChangeState(.voice_chat_mute)
-                } else {
-                    playChangeState(.voice_chat_unmute)
+                } else if isMutedUpdated {
+                    if isMuted {
+                        playChangeState(.voice_chat_mute)
+                    } else {
+                        playChangeState(.voice_chat_unmute)
+                    }
                 }
             }
         } else {
-            if let scheduleState = scheduleState {
-                if state.canManageCall {
-                    setupScheduled(.voice_chat_start_chat_to_mute)
-                } else {
-                    setupEndAnimation(scheduleState.subscribed ? .voice_chat_cancel_reminder : .voice_chat_set_reminder)
-                }
-            } else if activeRaiseHand {
-                setupEndAnimation(activeRaiseHand ? .voice_chat_hand_off : .voice_chat_hand_on_muted)
+            if isStream && scheduleState == nil {
+                setupEndAnimation(isFullScreen ? .group_call_maxmin : .group_call_minmax)
             } else {
-                setupEndAnimation(isMuted ? .voice_chat_mute : .voice_chat_unmute)
+                if let scheduleState = scheduleState {
+                    if state.canManageCall {
+                        setupScheduled(.voice_chat_start_chat_to_mute)
+                    } else {
+                        setupEndAnimation(scheduleState.subscribed ? .voice_chat_cancel_reminder : .voice_chat_set_reminder)
+                    }
+                } else if activeRaiseHand {
+                    setupEndAnimation(activeRaiseHand ? .voice_chat_hand_off : .voice_chat_hand_on_muted)
+                } else {
+                    setupEndAnimation(isMuted ? .voice_chat_mute : .voice_chat_unmute)
+                }
             }
         }
         
-        
+        self.previousIsFullScreen = isFullScreen
         self.previousState = state
         self.previousIsMuted = isMuted
     }
     
     private func setupScheduled(_ animation: LocalAnimatedSticker) {
         if let data = animation.data {
-            animationView.set(LottieAnimation(compressed: data, key: .init(key: .bundle(animation.rawValue), size: renderSize), cachePurpose: .none, playPolicy: .framesCount(1), maximumFps: 60, runOnQueue: .mainQueue()))
+            animationView.set(LottieAnimation(compressed: data, key: .init(key: .bundle(animation.rawValue), size: renderSize), cachePurpose: .none, playPolicy: .framesCount(1), maximumFps: 60, colors: [.init(keyPath: "", color: NSColor(0xffffff))], runOnQueue: .mainQueue()))
         }
     }
     
     private func setupEndAnimation(_ animation: LocalAnimatedSticker) {
         if let data = animation.data {
-            animationView.set(LottieAnimation(compressed: data, key: .init(key: .bundle(animation.rawValue), size: renderSize), cachePurpose: .none, playPolicy: .toEnd(from: .max), maximumFps: 60, runOnQueue: .mainQueue()))
+            animationView.set(LottieAnimation(compressed: data, key: .init(key: .bundle(animation.rawValue), size: renderSize), cachePurpose: .none, playPolicy: .toEnd(from: .max), maximumFps: 60, colors: [.init(keyPath: "", color: NSColor(0xffffff))], runOnQueue: .mainQueue()))
         }
     }
     private func playChangeState(_ animation: LocalAnimatedSticker) {
@@ -156,7 +164,7 @@ final class GroupCallSpeakButton : Control {
                 fromFrame = self.animationView.currentFrame ?? 1
             }
             
-            animationView.set(LottieAnimation(compressed: data, key: .init(key: .bundle(animation.rawValue), size: renderSize), cachePurpose: .none, playPolicy: .toEnd(from: fromFrame), maximumFps: 60, runOnQueue: .mainQueue()), animated: animated)
+            animationView.set(LottieAnimation(compressed: data, key: .init(key: .bundle(animation.rawValue), size: renderSize), cachePurpose: .none, playPolicy: .toEnd(from: fromFrame), maximumFps: 60, colors: [.init(keyPath: "", color: NSColor(0xffffff))], runOnQueue: .mainQueue()), animated: animated)
             
             
         }
@@ -198,7 +206,7 @@ final class GroupCallSpeakButton : Control {
         }
         
         if let data = raise_hand.data {
-            let animation = LottieAnimation(compressed: data, key: .init(key: .bundle("\(arc4random())"), size: renderSize), cachePurpose: .none, playPolicy: .toStart(from: startFrame), maximumFps: 60, runOnQueue: .mainQueue())
+            let animation = LottieAnimation(compressed: data, key: .init(key: .bundle("\(arc4random())"), size: renderSize), cachePurpose: .none, playPolicy: .toStart(from: startFrame), maximumFps: 60, colors: [.init(keyPath: "", color: NSColor(0xffffff))], runOnQueue: .mainQueue())
             
             animation.onFinish = { [weak self] in
                 self?.currentAnimation = nil

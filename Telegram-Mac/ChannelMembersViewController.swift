@@ -38,6 +38,8 @@ private enum ChannelMembersEntryStableId: Hashable {
     case membersDesc
     case section(Int)
     case loading
+    case contactsHeader
+    case otherHeader
     var hashValue: Int {
         switch self {
         case let .peer(peerId):
@@ -50,6 +52,10 @@ private enum ChannelMembersEntryStableId: Hashable {
             return 2
         case .loading:
             return 3
+        case .contactsHeader:
+            return 4
+        case .otherHeader:
+            return 5
         case let .section(sectionId):
             return -(sectionId)
         }
@@ -62,6 +68,8 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
     case addMembers(sectionId:Int, Bool, GeneralViewType)
     case inviteLink(sectionId:Int, GeneralViewType)
     case membersDesc(sectionId:Int, GeneralViewType)
+    case contactsHeader(sectionId:Int, GeneralViewType)
+    case otherHeader(sectionId:Int, GeneralViewType)
     case section(sectionId:Int)
     case loading(sectionId: Int)
     
@@ -75,6 +83,10 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
             return .inviteLink
         case .membersDesc:
             return .membersDesc
+        case .contactsHeader:
+            return .contactsHeader
+        case .otherHeader:
+            return .otherHeader
         case .loading:
             return .loading
         case let .section(sectionId):
@@ -93,8 +105,12 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
             return (sectionId * 1000) + 1
         case let .membersDesc(sectionId, _):
             return (sectionId * 1000) + 2
-        case let .loading(sectionId):
+        case let .contactsHeader(sectionId, _):
+            return (sectionId * 1000) + 3
+        case let .otherHeader(sectionId, _):
             return (sectionId * 1000) + 4
+        case let .loading(sectionId):
+            return (sectionId * 1000) + 5
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -126,15 +142,19 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
                 }
             })
         case let .addMembers(_, isChannel, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: isChannel ? L10n.channelMembersAddSubscribers : L10n.channelMembersAddMembers, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: isChannel ? strings().channelMembersAddSubscribers : strings().channelMembersAddMembers, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.addMembers()
             })
         case let .inviteLink(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.channelMembersInviteLink, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().channelMembersInviteLink, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
                 arguments.inviteLink()
             })
         case let .membersDesc(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: L10n.channelMembersMembersListDesc, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().channelMembersMembersListDesc, viewType: viewType)
+        case let .contactsHeader(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().channelMembersContacts, viewType: viewType)
+        case let .otherHeader(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().channelMembersOtherMembers, viewType: viewType)
         case .loading:
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: true)
         case .section:
@@ -181,13 +201,18 @@ private struct ChannelMembersControllerState: Equatable {
     }
 }
 
-private func channelMembersControllerEntries(view: PeerView, context: AccountContext, state: ChannelMembersControllerState, participants: [RenderedChannelParticipant]?) -> [ChannelMembersEntry] {
+private func channelMembersControllerEntries(view: PeerView, context: AccountContext, state: ChannelMembersControllerState, participants: [RenderedChannelParticipant]?, contacts: [RenderedChannelParticipant]?) -> [ChannelMembersEntry] {
     
     var entries: [ChannelMembersEntry] = []
     
     var sectionId:Int = 1
-
-    if let participants = participants {
+    
+   
+    if let participants = participants, let contacts = contacts {
+        
+        let participants = participants.filter { value in
+            return !contacts.contains(where: { $0.peer.id == value.peer.id })
+        }
         
         entries.append(.section(sectionId: sectionId))
         sectionId += 1
@@ -201,6 +226,41 @@ private func channelMembersControllerEntries(view: PeerView, context: AccountCon
                 sectionId += 1
             }
             
+            if !contacts.isEmpty {
+                
+                entries.append(.contactsHeader(sectionId: sectionId, .textTopItem))
+                
+                var index: Int32 = 0
+                for (i, participant) in contacts.sorted(by: <).enumerated() {
+                    
+                    let editable:Bool
+                    switch participant.participant {
+                    case let .member(_, _, adminInfo, _, _):
+                        if let adminInfo = adminInfo {
+                            editable = adminInfo.canBeEditedByAccountPeer
+                        } else {
+                            editable = participant.participant.peerId != context.account.peerId
+                        }
+                    default:
+                        editable = false
+                    }
+                    
+                    var deleting:ShortPeerDeleting? = nil
+                    if state.editing {
+                        deleting = ShortPeerDeleting(editable: editable)
+                    }
+                    entries.append(.peerItem(sectionId: sectionId, index, participant, deleting, state.removingPeerId != participant.peer.id, bestGeneralViewType(contacts, for: i)))
+                    index += 1
+                }
+                if !participants.isEmpty {
+                    entries.append(.section(sectionId: sectionId))
+                    sectionId += 1
+                }
+            }
+
+            if !contacts.isEmpty && participants.count > 0 {
+                entries.append(.otherHeader(sectionId: sectionId, .textTopItem))
+            }
            
             var index: Int32 = 0
             for (i, participant) in participants.sorted(by: <).enumerated() {
@@ -260,7 +320,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
     }
     
     override var defaultBarTitle: String {
-        return L10n.peerInfoSubscribers
+        return strings().peerInfoSubscribers
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -294,7 +354,8 @@ class ChannelMembersViewController: EditableViewController<TableView> {
         
         let actionsDisposable = DisposableSet()
         let peersPromise = Promise<[RenderedChannelParticipant]?>(nil)
-        
+        let contactsPromise = Promise<[RenderedChannelParticipant]?>(nil)
+
         let arguments = ChannelMembersControllerArguments(context: context, removePeer: { [weak self] memberId in
             
             updateState {
@@ -308,49 +369,49 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                 
             }))
         }, addMembers: {
-            let signal = selectModalPeers(window: context.window, context: context, title: L10n.channelMembersSelectTitle, settings: [.contacts, .remote, .excludeBots]) |> mapError { _ in return AddChannelMemberError.generic} |> mapToSignal { peers -> Signal<Void, AddChannelMemberError> in
-                return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: peerId, memberIds: peers), for: mainWindow)
+            let signal = selectModalPeers(window: context.window, context: context, title: strings().channelMembersSelectTitle, settings: [.contacts, .remote, .excludeBots]) |> castError(AddChannelMemberError.self) |> mapToSignal { peers -> Signal<[PeerId], AddChannelMemberError> in
+                return showModalProgress(signal: context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: peerId, memberIds: peers), for: context.window)
             } |> deliverOnMainQueue
             
             actionsDisposable.add(signal.start(error: { error in
                 let text: String
                 switch error {
                 case .notMutualContact:
-                    text = L10n.channelInfoAddUserLeftError
+                    text = strings().channelInfoAddUserLeftError
                 case .limitExceeded:
-                    text = L10n.channelErrorAddTooMuch
+                    text = strings().channelErrorAddTooMuch
                 case .botDoesntSupportGroups:
-                    text = L10n.channelBotDoesntSupportGroups
+                    text = strings().channelBotDoesntSupportGroups
                 case .tooMuchBots:
-                    text = L10n.channelTooMuchBots
+                    text = strings().channelTooMuchBots
                 case .tooMuchJoined:
-                    text = L10n.inviteChannelsTooMuch
+                    text = strings().inviteChannelsTooMuch
                 case .generic:
-                    text = L10n.unknownError
+                    text = strings().unknownError
                 case let .bot(memberId):
                     let _ = (context.account.postbox.transaction { transaction in
                         return transaction.getPeer(peerId)
                         }
                         |> deliverOnMainQueue).start(next: { peer in
                             guard let peer = peer as? TelegramChannel else {
-                                alert(for: context.window, info: L10n.unknownError)
+                                alert(for: context.window, info: strings().unknownError)
                                 return
                             }
                             if peer.hasPermission(.addAdmins) {
-                                confirm(for: context.window, information: L10n.channelAddBotErrorHaveRights, okTitle: L10n.channelAddBotAsAdmin, successHandler: { _ in
+                                confirm(for: context.window, information: strings().channelAddBotErrorHaveRights, okTitle: strings().channelAddBotAsAdmin, successHandler: { _ in
                                     showModal(with: ChannelAdminController(context, peerId: peerId, adminId: memberId, initialParticipant: nil, updated: { _ in }, upgradedToSupergroup: { _, f in f() }), for: context.window)
                                 })
                             } else {
-                                alert(for: context.window, info: L10n.channelAddBotErrorHaveRights)
+                                alert(for: context.window, info: strings().channelAddBotErrorHaveRights)
                             }
                         })
                     return
                 case .restricted:
-                    text = L10n.channelErrorAddBlocked
+                    text = strings().channelErrorAddBlocked
                 }
-                alert(for: mainWindow, info: text)
+                alert(for: context.window, info: text)
             }, completed: {
-                _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
+                _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
             }))
         }, inviteLink: { [weak self] in
             if let strongSelf = self {
@@ -363,11 +424,16 @@ class ChannelMembersViewController: EditableViewController<TableView> {
         let peerView = context.account.viewTracker.peerView(peerId)
         
 
+        let (contactsDisposable, _) = context.peerChannelMemberCategoriesContextsManager.contacts(peerId: peerId, updated: { state in
+            contactsPromise.set(.single(state.list))
+        })
+        actionsDisposable.add(contactsDisposable)
+                                                                    
         let (disposable, loadMoreControl) = context.peerChannelMemberCategoriesContextsManager.recent(peerId: peerId, updated: { state in
             peersPromise.set(.single(state.list))
         })
         actionsDisposable.add(disposable)
-
+        
         
         
         
@@ -375,10 +441,10 @@ class ChannelMembersViewController: EditableViewController<TableView> {
         let previousEntries:Atomic<[AppearanceWrapperEntry<ChannelMembersEntry>]> = Atomic(value: [])
         
         
-        let signal = combineLatest(statePromise.get(), peerView, peersPromise.get(), appearanceSignal)
+        let signal = combineLatest(statePromise.get(), peerView, peersPromise.get(), contactsPromise.get(), appearanceSignal)
             |> deliverOnMainQueue
-            |> map { state, view, peers, appearance -> TableUpdateTransition in
-                let entries = channelMembersControllerEntries(view: view, context: context, state: state, participants: peers).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+            |> map { state, view, peers, contacts, appearance -> TableUpdateTransition in
+                let entries = channelMembersControllerEntries(view: view, context: context, state: state, participants: peers, contacts: contacts).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments)
         } |> afterDisposed {
             actionsDisposable.dispose()
@@ -414,7 +480,7 @@ class ChannelMembersViewController: EditableViewController<TableView> {
     }
     
     private func searchChannelUsers() {
-        _ = (selectModalPeers(window: context.window, context: context, title: L10n.selectPeersTitleSearchMembers, behavior: SelectChannelMembersBehavior(peerId: peerId, peerChannelMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
+        _ = (selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSearchMembers, behavior: SelectChannelMembersBehavior(peerId: peerId, peerChannelMemberContextsManager: context.peerChannelMemberCategoriesContextsManager, limit: 1, settings: [])) |> deliverOnMainQueue |> map {$0.first}).start(next: { [weak self] peerId in
             if let peerId = peerId, let context = self?.context {
                 self?.navigationController?.push(PeerInfoController(context: context, peerId: peerId))
             }

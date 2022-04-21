@@ -31,8 +31,11 @@ enum SVideoStyle {
     case pictureInPicture
 }
 
+
+
 class SVideoController: GenericViewController<SVideoView>, PictureInPictureControl {
    
+    
     
     var style: SVideoStyle = .regular
     private var fullScreenWindow: Window?
@@ -52,6 +55,10 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     private var isPaused: Bool = true
     private var forceHiddenControls: Bool = false
     private var _videoFramePreview: MediaPlayerFramePreview?
+    private var mode: PictureInPictureControlMode = .normal
+    
+    private var updateControls: SwiftSignalKit.Timer?
+    
     private var videoFramePreview: MediaPlayerFramePreview {
         if let videoFramePreview = _videoFramePreview {
             return videoFramePreview
@@ -62,6 +69,11 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     }
     
     
+    func setMode(_ mode: PictureInPictureControlMode, animated: Bool) {
+        genericView.setMode(mode, animated: animated)
+        self.mode = mode
+    }
+    
     private var scrubbingFrame = Promise<MediaPlayerFramePreviewResult?>(nil)
     private var scrubbingFrames = false
     private var scrubbingFrameDisposable: Disposable?
@@ -70,7 +82,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     init(postbox: Postbox, reference: FileMediaReference, fetchAutomatically: Bool = false) {
         self.reference = reference
         self.postbox = postbox
-        mediaPlayer = MediaPlayer(postbox: postbox, reference: reference.resourceReference(reference.media.resource), streamable: reference.media.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: true, volume: FastSettings.volumeRate, fetchAutomatically: fetchAutomatically)
+        mediaPlayer = MediaPlayer(postbox: postbox, reference: reference.resourceReference(reference.media.resource), streamable: reference.media.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: true, baseRate: FastSettings.playingVideoRate, volume: FastSettings.volumeRate, fetchAutomatically: fetchAutomatically)
         super.init()
         bar = .init(height: 0)
     }
@@ -85,6 +97,11 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         if let startTime = startTime, startTime > 0 {
             mediaPlayer.seek(timestamp: startTime)
         }
+    }
+    
+    func setBaseRate(_ baseRate: Double) {        
+        mediaPlayer.setBaseRate(baseRate)
+        FastSettings.setPlayingVideoRate(baseRate)
     }
     
     func playOrPause() {
@@ -123,8 +140,9 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         NSCursor.unhide()
         hideOnIdleDisposable.set((Signal<NoValue, NoError>.complete() |> delay(1.0, queue: Queue.mainQueue())).start(completed: { [weak self] in
             guard let `self` = self else {return}
-            self.hideControls.set(true)
-            if !self.pictureInPicture, !self.isPaused {
+            let hide = !self.genericView.isInMenu
+            self.hideControls.set(hide)
+            if !self.pictureInPicture, !self.isPaused, hide {
                 NSCursor.hide()
             }
         }))
@@ -132,8 +150,11 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     
     private func updateControlVisibility(_ isMouseUpOrDown: Bool = false) {
         updateIdleTimer()
+        
         if let rootView = genericView.superview?.superview {
             var hide = !genericView._mouseInside() && !rootView.isHidden && (NSEvent.pressedMouseButtons & (1 << 0)) == 0
+            
+           
             if self.fullScreenWindow != nil && isMouseUpOrDown, !genericView.insideControls {
                 hide = true
                 if !self.isPaused {
@@ -193,7 +214,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         }, with: self, for: .mouseEntered, priority: .modal)
         
         window.set(mouseHandler: { [weak self] (event) -> KeyHandlerResult in
-            if let window = self?.genericView.window, self?.genericView.mediaPlayer.mouseInside() == true {
+            if self?.genericView.mediaPlayer.mouseInside() == true {
                 self?.updateControlVisibility(true)
             }
             return .rejected
@@ -210,6 +231,12 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             self.genericView.subviews.last?.mouseUp(with: event)
             return .rejected
         }, with: self, for: .leftMouseUp, priority: .modal)
+        
+        self.updateControls = SwiftSignalKit.Timer(timeout: 0.1, repeat: true, completion: { [weak self] in
+            self?.updateControlVisibility()
+        }, queue: .mainQueue())
+        
+        self.updateControls?.start()
         
     }
     
@@ -373,6 +400,8 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             self?.togglePictureInPicture()
         }, closePictureInPicture: {
             closePipVideo()
+        }, setBaseRate: { [weak self] rate in
+            self?.setBaseRate(rate)
         })
         
         if let duration = reference.media.duration, duration < 30 {
@@ -479,6 +508,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         bufferingDisposable.dispose()
         hideOnIdleDisposable.dispose()
         hideControlsDisposable.dispose()
+        updateControls?.invalidate()
         _ = IOPMAssertionRelease(assertionID)
         NSCursor.unhide()
     }

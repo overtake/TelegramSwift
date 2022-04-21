@@ -104,7 +104,7 @@ private final class GroupCallInviteRowView : GeneralContainableRowView {
         
         textView.change(opacity: item.isVertical ? 0 : 1, animated: animated)
         
-        let layout = TextViewLayout(.initialize(string: L10n.voiceChatInviteInviteMembers, color: GroupCallTheme.customTheme.textColor, font: .normal(.title)))
+        let layout = TextViewLayout(.initialize(string: strings().voiceChatInviteInviteMembers, color: GroupCallTheme.customTheme.textColor, font: .normal(.title)))
         layout.measure(width: .greatestFiniteMagnitude)
         textView.update(layout)
 

@@ -23,7 +23,7 @@ class WPMediaContentView: WPContentView {
                     let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
                     return (.file(reference, StickerPreviewModalView.self), contentNode)
                 }
-            } else if contentNode is ChatGIFContentView {
+            } else if contentNode is VideoStickerContentView {
                 if let file = contentNode.media as? TelegramMediaFile {
                     let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
                     return (.file(reference, GifPreviewModalView.self), contentNode)

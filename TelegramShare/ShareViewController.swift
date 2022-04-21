@@ -10,11 +10,12 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-
+import ApiCredentials
 import SwiftSignalKit
-
+import ThemeSettings
 import OpenSSLEncryption
-
+import BuildConfig
+import Localization
 class ShareViewController: NSViewController {
 
     override var nibName: NSNib.Name? {
@@ -33,9 +34,6 @@ class ShareViewController: NSViewController {
         super.viewDidLoad()
         
         
-        
-        declareEncodable(ThemePaletteSettings.self, f: { ThemePaletteSettings(decoder: $0) })
-        declareEncodable(InAppNotificationSettings.self, f: { InAppNotificationSettings(decoder: $0) })
 
         guard let containerUrl = ApiEnvironment.containerURL else {
             return
@@ -45,7 +43,7 @@ class ShareViewController: NSViewController {
         
         
         let rootPath = containerUrl.path
-        let accountManager = AccountManager<TelegramAccountManagerTypes>(basePath: containerUrl.path + "/accounts-metadata", isTemporary: false, isReadOnly: true)
+        let accountManager = AccountManager<TelegramAccountManagerTypes>(basePath: containerUrl.path + "/accounts-metadata", isTemporary: false, isReadOnly: true, useCaches: true, removeDatabaseOnError: true)
 
         let logger = Logger(rootPath: containerUrl.path, basePath: containerUrl.path + "/logs")
         logger.logToConsole = false
@@ -63,7 +61,7 @@ class ShareViewController: NSViewController {
         var localization: LocalizationSettings? = nil
         let localizationSemaphore = DispatchSemaphore(value: 0)
         _ = (accountManager.transaction { transaction in
-            localization = transaction.getSharedData(SharedDataKeys.localizationSettings) as? LocalizationSettings
+            localization = transaction.getSharedData(SharedDataKeys.localizationSettings)?.get(LocalizationSettings.self)
             localizationSemaphore.signal()
         }).start()
         localizationSemaphore.wait()
@@ -72,8 +70,8 @@ class ShareViewController: NSViewController {
             applyShareUILocalization(localization)
         }
         
-        updateTheme(with: themeSettings)
-                
+        telegramUpdateTheme(updateTheme(with: themeSettings), window: nil, animated: false)
+
         
         let appEncryption = AppEncryptionParameters(path: rootPath)
         
@@ -112,7 +110,7 @@ class ShareViewController: NSViewController {
         let rootPath = containerUrl.path
 
         
-        let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: 90, voipVersions: [], appData: .single(ApiEnvironment.appData), autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider())
+        let networkArguments = NetworkInitializationArguments(apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, languagesCategory: ApiEnvironment.language, appVersion: ApiEnvironment.version, voipMaxLayer: 90, voipVersions: [], appData: .single(ApiEnvironment.appData), autolockDeadine: .single(nil), encryptionProvider: OpenSSLEncryptionProvider(), resolvedDeviceName: ApiEnvironment.resolvedDeviceName)
         
         let sharedContext = SharedAccountContext(accountManager: accountManager, networkArguments: networkArguments, rootPath: rootPath, encryptionParameters: encryptionParameters, appEncryption: appEncryption, displayUpgradeProgress: { _ in })
         

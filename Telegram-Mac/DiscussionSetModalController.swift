@@ -55,11 +55,11 @@ private final class DiscussionSetView : View {
         let attributedString = NSMutableAttributedString()
         
         if channel.addressName == nil && group.addressName != nil {
-            _ = attributedString.append(string: L10n.discussionSetModalTextPrivateChannelPublicGroup(group.displayTitle, channel.displayTitle), color: theme.colors.text, font: .normal(.text))
+            _ = attributedString.append(string: strings().discussionSetModalTextPrivateChannelPublicGroup(group.displayTitle, channel.displayTitle), color: theme.colors.text, font: .normal(.text))
         } else if group.addressName == nil {
-            _ = attributedString.append(string: L10n.discussionSetModalTextChannelPrivateGroup(group.displayTitle, channel.displayTitle), color: theme.colors.text, font: .normal(.text))
+            _ = attributedString.append(string: strings().discussionSetModalTextChannelPrivateGroup(group.displayTitle, channel.displayTitle), color: theme.colors.text, font: .normal(.text))
         } else {
-            _ = attributedString.append(string: L10n.discussionSetModalTextPublicChannelPublicGroup(group.displayTitle, channel.displayTitle), color: theme.colors.text, font: .normal(.text))
+            _ = attributedString.append(string: strings().discussionSetModalTextPublicChannelPublicGroup(group.displayTitle, channel.displayTitle), color: theme.colors.text, font: .normal(.text))
         }
         attributedString.detectBoldColorInString(with: .medium(.text))
         
@@ -121,9 +121,9 @@ class DiscussionSetModalController: ModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: L10n.discussionSetModalOK, accept: { [weak self] in
+        return ModalInteractions(acceptTitle: strings().discussionSetModalOK, accept: { [weak self] in
             self?.close()
             self?.accept()
-        }, cancelTitle: L10n.modalCancel, drawBorder: false, height: 50)
+        }, cancelTitle: strings().modalCancel, drawBorder: false, height: 50)
     }
 }

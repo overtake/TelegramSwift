@@ -56,7 +56,7 @@ class PassportDocumentRowItem: GeneralRowItem, InputDataRowDataValue {
                 status = TextViewLayout(.initialize(string: formatter.string(from: Date()), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
             case let .uploading(progress):
                 uploadingProgress = progress
-                status = TextViewLayout(.initialize(string: L10n.secureIdFileUploadProgress("\(Int(progress * 100.0))"), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
+                status = TextViewLayout(.initialize(string: strings().secureIdFileUploadProgress("\(Int(progress * 100.0))"), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
             }
         }
         

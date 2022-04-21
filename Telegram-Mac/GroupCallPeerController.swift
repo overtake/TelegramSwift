@@ -91,21 +91,21 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         if let phone = user.phone {
             phoneNumber = formatPhoneNumber(phone)
         } else {
-            phoneNumber = L10n.newContactPhoneHidden
+            phoneNumber = strings().newContactPhoneHidden
         }
-        info.append(.init(title: L10n.peerInfoPhone, info: phoneNumber, viewType: .singleItem))
+        info.append(.init(title: strings().peerInfoPhone, info: phoneNumber, viewType: .singleItem))
     }
     if let addressName = state.peer.peer.addressName {
-        info.append(.init(title: L10n.peerInfoUsername, info: "@\(addressName)", viewType: .singleItem))
+        info.append(.init(title: strings().peerInfoUsername, info: "@\(addressName)", viewType: .singleItem))
     }
     if state.peer.peer.isScam {
-        info.append(.init(title: L10n.peerInfoScam, info: L10n.peerInfoScamWarning, viewType: .singleItem))
+        info.append(.init(title: strings().peerInfoScam, info: strings().peerInfoScamWarning, viewType: .singleItem))
     } else if state.peer.peer.isFake {
-        info.append(.init(title: L10n.peerInfoFake, info: L10n.peerInfoFakeWarning, viewType: .singleItem))
+        info.append(.init(title: strings().peerInfoFake, info: strings().peerInfoFakeWarning, viewType: .singleItem))
     } else if let cachedData = state.cachedData as? CachedUserData, let about = cachedData.about, !about.isEmpty {
-        info.append(.init(title: L10n.peerInfoAbout, info: about, viewType: .singleItem))
+        info.append(.init(title: strings().peerInfoAbout, info: about, viewType: .singleItem))
     } else if let cachedData = state.cachedData as? CachedChannelData, let about = cachedData.about, !about.isEmpty {
-        info.append(.init(title: L10n.peerInfoAbout, info: about, viewType: .singleItem))
+        info.append(.init(title: strings().peerInfoAbout, info: about, viewType: .singleItem))
     }
     
     let viewType: GeneralViewType = info.isEmpty ? .singleItem : .firstItem
@@ -145,11 +145,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var actions:[ActionTuple] = []
     
     if let peer = state.peer.peer as? TelegramUser {
-        actions.append(.init(title: L10n.voiceChatInfoSendMessage, action: {
+        actions.append(.init(title: strings().voiceChatInfoSendMessage, action: {
             arguments.openChat(peer.id)
         }, viewType: .singleItem))
         
-        actions.append(.init(title: L10n.voiceChatInfoOpenProfile, action: {
+        actions.append(.init(title: strings().voiceChatInfoOpenProfile, action: {
             arguments.openInfo(peer.id)
         }, viewType: .singleItem))
     } else if let peer = state.peer.peer as? TelegramChannel {
@@ -158,7 +158,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         case .kicked:
             break
         default:
-            actions.append(.init(title: L10n.voiceChatInfoOpenChannel, action: {
+            actions.append(.init(title: strings().voiceChatInfoOpenChannel, action: {
                 arguments.openChat(peer.id)
             }, viewType: .singleItem))
         }
@@ -166,11 +166,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         switch peer.participationStatus {
         case .left:
-            actions.append(.init(title: L10n.voiceChatInfoJoinChannel, action: {
+            actions.append(.init(title: strings().voiceChatInfoJoinChannel, action: {
                 arguments.joinChannel(peer.id)
             }, viewType: .singleItem))
         case .member:
-            actions.append(.init(title: L10n.voiceChatInfoLeaveChannel, action: {
+            actions.append(.init(title: strings().voiceChatInfoLeaveChannel, action: {
                 arguments.leaveChannel(peer.id)
             }, viewType: .singleItem))
         case .kicked:
@@ -238,11 +238,11 @@ func GroupCallPeerController(context: AccountContext, peer: Peer) -> InputDataMo
                 let text: String
                 switch error {
                 case .generic:
-                    text = L10n.unknownError
+                    text = strings().unknownError
                 case .tooMuchJoined:
-                    text = L10n.joinChannelsTooMuch
+                    text = strings().joinChannelsTooMuch
                 case .tooMuchUsers:
-                    text = L10n.groupUsersTooMuchError
+                    text = strings().groupUsersTooMuchError
                 }
                 if let window = window {
                     alert(for: window, info: text, appearance: GroupCallTheme.customTheme.appearance)
@@ -260,7 +260,7 @@ func GroupCallPeerController(context: AccountContext, peer: Peer) -> InputDataMo
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.peerInfoInfo)
+    let controller = InputDataController(dataSignal: signal, title: strings().peerInfoInfo)
     
     controller.getBackgroundColor = {
         GroupCallTheme.windowBackground

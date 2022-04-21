@@ -27,11 +27,11 @@ enum CallTooltipType : Int32 {
     func text(_ title: String) -> String {
         switch self {
         case .cameraOff:
-            return L10n.callToastCameraOff(title)
+            return strings().callToastCameraOff(title)
         case .microOff:
-            return L10n.callToastMicroOff(title)
+            return strings().callToastMicroOff(title)
         case .batteryLow:
-            return L10n.callToastLowBattery(title)
+            return strings().callToastLowBattery(title)
         }
     }
 }

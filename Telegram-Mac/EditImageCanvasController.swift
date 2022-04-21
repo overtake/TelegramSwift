@@ -88,8 +88,8 @@ func applyPaints(_ touches: [EditImageDrawTouch], for context: CGContext, imageS
             let path = CGMutablePath()
             context.setLineWidth(lineWidth * 0.7)
             if touch.lines.count > 1 {
-                let first = touch.lines.first!
-                let last = touch.lines.last!
+                let first = NSMakePoint(touch.lines.first!.x * multiplier.x, touch.lines.first!.y * multiplier.y)
+                let last = NSMakePoint(touch.lines.last!.x * multiplier.x, touch.lines.last!.y * multiplier.y)
                 let dif = last - first
                 if abs(dif.x) > lineWidth * 1.5 || abs(dif.y) > lineWidth * 1.5 {
                     path.addArrow(start: first, end: last, pointerLineLength: lineWidth * 2.5, arrowAngle: CGFloat(Double.pi / 4))

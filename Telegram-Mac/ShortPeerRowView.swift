@@ -24,6 +24,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     private var switchView:SwitchView?
     private var contextLabel:TextViewLabel?
     private var choiceControl:ImageView?
+    private var photoOuter: View?
      #if !SHARE
     private var activities: ChatActivitiesModel?
     #endif
@@ -214,14 +215,17 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         let customTheme = item.customTheme
         
         self.containerView.background = backdorColor
-        self.separator.backgroundColor = customTheme?.borderColor ?? theme.colors.border
+        self.separator.backgroundColor = isRowSelected ? .clear : (customTheme?.borderColor ?? theme.colors.border)
         self.contextLabel?.background = backdorColor
         containerView.set(background: backdorColor, for: .Normal)
         containerView.set(background: highlighted, for: .Highlight)
 
-       
+        photoOuter?.layer?.borderColor = (isRowSelected ? .clear : (item.customTheme?.accentColor ?? theme.colors.accent)).cgColor
+        
+        
         self.background = item.viewType.rowBackground
         needsDisplay = true
+        container.needsDisplay = true
     }
     
     override func updateMouse() {
@@ -334,6 +338,11 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 
                 container.needsDisplay = true
                 
+            }
+            
+            if let photoOuter = photoOuter {
+                photoOuter.frame = self.image.frame.insetBy(dx: -3, dy: -3)
+                photoOuter.layer?.cornerRadius = photoOuter.frame.height / 2
             }
             
         }
@@ -510,6 +519,25 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             self.badgeNode = nil
         }
         
+        if item.drawPhotoOuter {
+            let current: View
+            if let photoOuter = self.photoOuter {
+                current = photoOuter
+            } else {
+                current = View()
+                current.layer?.borderWidth = 1
+                current.layer?.borderColor = (item.customTheme?.accentColor ?? theme.colors.accent).cgColor
+                self.photoOuter = current
+                addSubview(current)
+            }
+        } else {
+            if let view = self.photoOuter {
+                self.photoOuter = nil
+                performSubviewRemoval(view, animated: animated)
+            }
+        }
+        
+        
         
         #if !SHARE
         if let activity = item.inputActivity {
@@ -550,6 +578,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         case let .modern(position, _):
             separator.isHidden = !position.border || !item.drawCustomSeparator
         }
+    
         
         image.setFrameSize(item.photoSize)
         if let photo = item.photo {
@@ -609,6 +638,8 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         contextLabel?.backgroundColor = backdorColor
         needsLayout = true
         self.container.setNeedsDisplayLayer()
+        
+        viewDidMoveToSuperview()
     }
     
     func invokeAction(_ item: ShortPeerRowItem, clickCount: Int) {
