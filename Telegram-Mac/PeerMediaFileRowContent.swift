@@ -28,28 +28,28 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
     
     private(set) var docIcon:CGImage?
     private(set) var docTitle:NSAttributedString?
-    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, viewType: GeneralViewType = .legacy) {
+    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, gallery: GalleryAppearType = .history, viewType: GeneralViewType = .legacy) {
         
         
         let message = object.message!
-        let file = message.media.first as! TelegramMediaFile
+        let file = message.file!
         self.file = file
         
-        nameLayout = TextViewLayout(NSAttributedString.initialize(string: file.fileName ?? "Unknown", color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
+        nameLayout = TextViewLayout(.initialize(string: file.fileName ?? "Unknown", color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
         
         let dateFormatter = makeNewDateFormatter()
         dateFormatter.dateFormat = "MMM d, yyyy, h a"
         
         let dateString = dateFormatter.string(from: Date(timeIntervalSince1970: Double(TimeInterval(message.timestamp) - interface.context.timeDifference)))
         
-        actionLayout = TextViewLayout(NSAttributedString.initialize(string: "\(dataSizeString(file.size ?? 0, formatting: DataSizeStringFormatting.current)) • \(dateString)",color: theme.colors.grayText, font: NSFont.normal(12.5)), maximumNumberOfLines: 1, truncationType: .end)
+        actionLayout = TextViewLayout(NSAttributedString.initialize(string: "\(dataSizeString(file.size ?? 0, formatting: DataSizeStringFormatting.current)) • \(dateString)",color: theme.colors.grayText, font: NSFont.normal(12.5)), maximumNumberOfLines: 1, truncationType: .end, alwaysStaticItems: true)
         
         let localAction = NSMutableAttributedString()
-        let range = localAction.append(string: tr(L10n.contextShowInFinder), color: theme.colors.link, font: .normal(.text))
+        let range = localAction.append(string: strings().contextShowInFinder, color: theme.colors.link, font: .normal(.text))
         localAction.add(link: inAppLink.callback("finder", { _ in
             showInFinder(file, account: interface.context.account)
         }), for: range)
-        actionLayoutLocal = TextViewLayout(localAction, maximumNumberOfLines: 1, truncationType: .end)
+        actionLayoutLocal = TextViewLayout(localAction, maximumNumberOfLines: 1, truncationType: .end, alwaysStaticItems: true)
         actionLayoutLocal.interactions = globalLinkExecutor
         
         let iconImageRepresentation:TelegramMediaImageRepresentation? = smallestImageRepresentation(file.previewRepresentations)
@@ -72,31 +72,9 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
             docTitle = NSAttributedString.initialize(string: fileExtension, color: theme.colors.text, font: .medium(.text))
 
         }
-        super.init(initialSize,interface,object, viewType: viewType)
+        super.init(initialSize, interface, object, gallery: gallery, viewType: viewType)
     }
     
-    override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
-        let signal = super.menuItems(in: location)
-        let context = self.interface.context
-        if let file = self.file {
-            return signal |> mapToSignal { items -> Signal<[ContextMenuItem], NoError> in
-                var items = items
-                return context.account.postbox.mediaBox.resourceData(file.resource) |> deliverOnMainQueue |> map {data in
-                    if data.complete {
-                        items.append(ContextMenuItem(L10n.contextCopyMedia, handler: {
-                            saveAs(file, account: context.account)
-                        }))
-                        items.append(ContextMenuItem(L10n.contextShowInFinder, handler: {
-                            showInFinder(file, account: context.account)
-                        }))
-                    }
-                    return items
-                }
-                
-            }
-        }
-        return signal
-    }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         let success = super.makeSize(width, oldWidth: oldWidth)
@@ -153,28 +131,32 @@ class PeerMediaFileRowView : PeerMediaRowView {
     
     func cancelFetching() {
         if let item = item as? PeerMediaFileRowItem, let file = item.file {
-            messageMediaFileCancelInteractiveFetch(context: item.interface.context, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference(item.message), media: file))
+            if item.gallery != .recentDownloaded {
+                messageMediaFileCancelInteractiveFetch(context: item.context, messageId: item.message.id, file: file)
+            } else {
+                toggleInteractiveFetchPaused(context: item.context, file: file, isPaused: true)
+            }
         }
     }
     
     func open() -> Void {
         if let item = item as? PeerMediaFileRowItem, let file = item.file {
             if file.isGraphicFile {
-                showChatGallery(context: item.interface.context, message: item.message, item.table, nil)
+                showChatGallery(context: item.interface.context, message: item.message, item.table, nil, type: item.gallery)
             } else {
                QuickLookPreview.current.show(context: item.interface.context, with: file, stableId:item.message.chatStableId, item.table)
             }
         }
     }
     
-    func fetch() -> Void {
+    func fetch(userInitiated: Bool) -> Void {
         if let item = item as? PeerMediaFileRowItem, let file = item.file {
-            fetchDisposable.set(messageMediaFileInteractiveFetched(context: item.interface.context, messageId: item.message.id, fileReference: FileMediaReference.message(message: MessageReference(item.message), media: file)).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(context: item.context, messageId: item.message.id, messageReference: .init(item.message), file: file, userInitiated: userInitiated).start())
         }
     }
     
     func executeInteraction(_ isControl:Bool) -> Void {
-        if let fetchStatus = self.fetchStatus, let item = item as? PeerMediaRowItem {
+        if let fetchStatus = self.fetchStatus, let item = item as? PeerMediaFileRowItem, let file = item.file {
             switch fetchStatus {
             case .Fetching:
                 if isControl {
@@ -187,13 +169,20 @@ class PeerMediaFileRowView : PeerMediaRowView {
                 }
             case .Remote:
                 if isControl {
-                    fetch()
+                    fetch(userInitiated: true)
                 } else {
                     open()
+                }
+            case .Paused:
+                if item.gallery == .recentDownloaded {
+                    toggleInteractiveFetchPaused(context: item.context, file: file, isPaused: false)
+                } else {
+                    cancel()
                 }
             case .Local:
                 open()
                 break
+                
             }
         }
     }
@@ -207,7 +196,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
                 switch status {
                 case .Remote:
                     executeInteraction(true)
-                case .Fetching:
+                case .Fetching, .Paused:
                     executeInteraction(true)
                 default:
                     break
@@ -264,7 +253,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
         actionView.backgroundColor = theme.colors.background
         if let item = item as? PeerMediaFileRowItem {
             nameView.update(item.nameLayout, origin: NSMakePoint(item.contentInset.left, item.contentInset.top + 2))
-            if actionView.layout == nil {
+            if actionView.textLayout == nil {
                 actionView.update(item.actionLayout, origin: NSMakePoint(item.contentInset.left, item.contentSize.height - item.actionLayout.layoutSize.height - item.contentInset.bottom - 2))
             }
 
@@ -275,7 +264,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
                 updateIconImageSignal = .complete()
             }
             
-            imageView.setSignal( updateIconImageSignal)
+            imageView.setSignal(updateIconImageSignal, clearInstantly: previous?.message.id != item.message.id)
             if let arguments = item.iconArguments {
                 imageView.set(arguments: arguments)
             } else {
@@ -288,7 +277,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
             
             let context = item.interface.context
             if let file = item.file {
-                updatedStatusSignal = chatMessageFileStatus(account: context.account, file: file, approximateSynchronousValue: false)
+                updatedStatusSignal = chatMessageFileStatus(context: context, message: item.message, file: file, approximateSynchronousValue: false)
                 updatedFetchControls = FetchControls(fetch: { [weak self] in
                     self?.executeInteraction(true)
                 })
@@ -360,7 +349,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
                         case .Local:
                             deinitDownloadControls()
                             strongSelf.actionView.update(item.actionLayoutLocal)
-                        case .Remote:
+                        case .Remote, .Paused:
                             deinitProgressControl()
                             initStatusControlIfNeeded()
                             strongSelf.downloadStatusControl?.image = theme.icons.peerMediaDownloadFileStart

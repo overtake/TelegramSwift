@@ -9,9 +9,8 @@
 import Foundation
 import TGUIKit
 import TelegramCore
-
+import ThemeSettings
 import SwiftSignalKit
-
 
 
 private final class ThemePreview : Control {
@@ -32,7 +31,7 @@ private final class ThemePreview : Control {
         
         func set(_ source: ThemeSource, bubbled: Bool, context: AccountContext) {
                         
-            let signal = themeAppearanceThumbAndData(context: context, bubbled: bubbled, source: source, thumbSource: .widget) |> deliverOnMainQueue
+            let signal = themeAppearanceThumbAndData(context: context, bubbled: bubbled, parent: theme.colors, source: source, thumbSource: .widget) |> deliverOnMainQueue
             
             self.imageView.setSignal(signal: cachedThemeThumb(source: source, bubbled: bubbled, thumbSource: .widget), clearInstantly: false)
 
@@ -163,11 +162,11 @@ final class WidgetAppearanceView : View {
             } else {
                 source = .local(theme.colors, nil)
             }
-            minimalist.update(L10n.emptyChatAppearanceMin, source: source, bubbled: false, context: context, isSelected: !theme.bubbled)
-            colorful.update(L10n.emptyChatAppearanceColorful, source: source, bubbled: true, context: context, isSelected: theme.bubbled)
+            minimalist.update(strings().emptyChatAppearanceMin, source: source, bubbled: false, context: context, isSelected: !theme.bubbled)
+            colorful.update(strings().emptyChatAppearanceColorful, source: source, bubbled: true, context: context, isSelected: theme.bubbled)
         }
         
-        let titleLayout = TextViewLayout.init(.initialize(string: L10n.emptyChatAppearanceChatMode, color: theme.colors.text, font: .medium(.text)))
+        let titleLayout = TextViewLayout.init(.initialize(string: strings().emptyChatAppearanceChatMode, color: theme.colors.text, font: .medium(.text)))
         titleLayout.measure(width: frame.width - 20)
         modeTitle.update(titleLayout)
 
@@ -269,8 +268,8 @@ final class WidgetAppearanceController : TelegramGenericViewController<WidgetVie
                         }
                         return settings.saveDefaultWallpaper().withUpdatedDefaultIsDark(cached.palette.isDark).withSavedAssociatedTheme()
                     })
-                    _ = downloadAndApplyCloudTheme(context: context, theme: cloud, install: true).start()
-                } else if cloud.file != nil || cloud.settings != nil {
+                    _ = downloadAndApplyCloudTheme(context: context, theme: cloud, palette: cached.palette, install: true).start()
+                } else if cloud.file != nil {
                     _ = showModalProgress(signal: downloadAndApplyCloudTheme(context: context, theme: cloud, install: true), for: context.window).start()
                     update = .single(Void())
                 } else {
@@ -315,7 +314,7 @@ final class WidgetAppearanceController : TelegramGenericViewController<WidgetVie
             
             var buttons:[WidgetData.Button] = []
             
-            buttons.append(.init(text: { L10n.emptyChatAppearanceSystem }, selected: {
+            buttons.append(.init(text: { strings().emptyChatAppearanceSystem }, selected: {
                 return isSystemBased
             }, image: {
                 return night.systemBased ? theme.icons.empty_chat_system_active : theme.icons.empty_chat_system
@@ -329,7 +328,7 @@ final class WidgetAppearanceController : TelegramGenericViewController<WidgetVie
             let lightSelected = !theme.colors.isDark && !isSystemBased
 
             
-            buttons.append(.init(text: { L10n.emptyChatAppearanceDark }, selected: {
+            buttons.append(.init(text: { strings().emptyChatAppearanceDark }, selected: {
                 return darkSelected
             }, image: {
                 return darkSelected ? theme.icons.empty_chat_dark_active : theme.icons.empty_chat_dark
@@ -339,7 +338,7 @@ final class WidgetAppearanceController : TelegramGenericViewController<WidgetVie
                 }
             }))
             
-            buttons.append(.init(text: { L10n.emptyChatAppearanceLight }, selected: {
+            buttons.append(.init(text: { strings().emptyChatAppearanceLight }, selected: {
                 return lightSelected
             }, image: {
                 return lightSelected ? theme.icons.empty_chat_light_active : theme.icons.empty_chat_light
@@ -349,31 +348,31 @@ final class WidgetAppearanceController : TelegramGenericViewController<WidgetVie
                 }
             }))
             
-            self?.genericView.update(.init(title: { L10n.emptyChatAppearance }, desc: { L10n.emptyChatAppearanceDesc }, descClick: {
-                context.sharedContext.bindings.rootNavigation().push(AppAppearanceViewController(context: context))
+            self?.genericView.update(.init(title: { strings().emptyChatAppearance }, desc: { strings().emptyChatAppearanceDesc }, descClick: {
+                context.bindings.rootNavigation().push(AppAppearanceViewController(context: context))
             }, buttons: buttons))
             
             self?.readyOnce()
         }))
         
         let loadSources: Signal<[InstallThemeSource], NoError> = themeSettings |> mapToSignal { settings in
-            let daySource: ThemeSource
-            let darkSource: ThemeSource
-            if let cloud = settings.defaultDay.cloud?.cloud {
-                daySource = .cloud(cloud)
-            } else {
-                daySource = .local(settings.defaultDay.local.palette, nil)
-            }
+            let daySource: InstallThemeSource
+            let darkSource: InstallThemeSource
                         
-            if let cloud = settings.defaultDark.cloud?.cloud {
-                darkSource = .cloud(cloud)
-            } else {
-                darkSource = .local(settings.defaultDark.local.palette, nil)
-            }
+            let daySettings = settings.withUpdatedToDefault(dark: false)
+            let darkSettings = settings.withUpdatedToDefault(dark: true)
             
-            return combineLatest(themeInstallSource(context: context, source: daySource), themeInstallSource(context: context, source: darkSource)) |> map {
-                return [$0, $1]
+            if let cloud = daySettings.defaultDay.cloud?.cloud {
+                daySource = .cloud(cloud, .init(palette: daySettings.defaultDay.local.palette, wallpaper: daySettings.wallpaper.paletteWallpaper.wallpaper, cloudWallpaper: daySettings.wallpaper.associated?.cloud))
+            } else {
+                daySource = .local(daySettings.defaultDay.local.palette)
             }
+            if let cloud = darkSettings.defaultDark.cloud?.cloud {
+                darkSource = .cloud(cloud, .init(palette: darkSettings.defaultDark.local.palette, wallpaper: darkSettings.wallpaper.paletteWallpaper.wallpaper, cloudWallpaper: darkSettings.wallpaper.associated?.cloud))
+            } else {
+                darkSource = .local(darkSettings.defaultDark.local.palette)
+            }
+            return .single([daySource, darkSource])
         } |> deliverOnMainQueue
         
         loadSourcesDisposable.set(loadSources.start(next: { sources in

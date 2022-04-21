@@ -31,7 +31,7 @@ final class RevealAllChatsView : Control {
         textView.isSelectable = false
         addSubview(textView)
         
-        let layout = TextViewLayout(.initialize(string: L10n.chatListCloseFilter, color: .white, font: .medium(.title)))
+        let layout = TextViewLayout(.initialize(string: strings().chatListCloseFilter, color: .white, font: .medium(.title)))
         layout.measure(width: max(280, frame.width))
         textView.update(layout)
         
@@ -91,6 +91,9 @@ final class FilterTabsView : View {
 
 class PeerListContainerView : View {
     private let backgroundView = BackgroundView(frame: NSZeroRect)
+    
+    private var downloads: DownloadsControl?
+    
     var tableView = TableView(frame:NSZeroRect, drawBorder: true) {
         didSet {
             oldValue.removeFromSuperview()
@@ -106,6 +109,10 @@ class PeerListContainerView : View {
     private var searchState: SearchFieldState = .None
     
     var openSharedMediaWithToken:((PeerId?, MessageTags?)->Void)? = nil
+    
+    fileprivate var showDownloads:(()->Void)? = nil
+    fileprivate var hideDownloads:(()->Void)? = nil
+    
 
     var mode: PeerListMode = .plain {
         didSet {
@@ -177,14 +184,14 @@ class PeerListContainerView : View {
         var currentPeerTag: Peer?
         
 
-        let tags:[(MessageTags?, String, CGImage)] = [(nil, L10n.searchFilterClearFilter, theme.icons.search_filter),
-                                            (.photo, L10n.searchFilterPhotos, theme.icons.search_filter_media),
-                                            (.video, L10n.searchFilterVideos, theme.icons.search_filter_media),
-                                            (.webPage, L10n.searchFilterLinks, theme.icons.search_filter_links),
-                                            (.music, L10n.searchFilterMusic, theme.icons.search_filter_music),
-                                            (.voiceOrInstantVideo, L10n.searchFilterVoice, theme.icons.search_filter_music),
-                                            (.gif, L10n.searchFilterGIFs, theme.icons.search_filter_media),
-                                            (.file, L10n.searchFilterFiles, theme.icons.search_filter_files)]
+        let tags:[(MessageTags?, String, CGImage)] = [(nil, strings().searchFilterClearFilter, theme.icons.search_filter),
+                                            (.photo, strings().searchFilterPhotos, theme.icons.search_filter_media),
+                                            (.video, strings().searchFilterVideos, theme.icons.search_filter_media),
+                                            (.webPage, strings().searchFilterLinks, theme.icons.search_filter_links),
+                                            (.music, strings().searchFilterMusic, theme.icons.search_filter_music),
+                                            (.voiceOrInstantVideo, strings().searchFilterVoice, theme.icons.search_filter_music),
+                                            (.gif, strings().searchFilterGIFs, theme.icons.search_filter_media),
+                                            (.file, strings().searchFilterFiles, theme.icons.search_filter_files)]
         
         let collectTags: ()-> ([String], CGImage) = {
             var values: [String] = []
@@ -208,28 +215,65 @@ class PeerListContainerView : View {
         
         switch state {
         case .Focus:
-            searchView.customSearchControl = CustomSearchController(clickHandler: { control, updateTitle in
+            searchView.customSearchControl = CustomSearchController(clickHandler: { [weak self] control, updateTitle in
                 
                 
-                var items: [SPopoverItem] = []
+                var items: [ContextMenuItem] = []
 
+                
+                items.append(ContextMenuItem.init(strings().chatListDownloadsTag, handler: { [weak self] in
+                    updateSearchTags(SearchTags(messageTags: nil, peerTag: nil))
+                    self?.showDownloads?()
+                }, itemImage: MenuAnimation.menu_save_as.value))
                 
                 for tag in tags {
                     var append: Bool = false
                     if currentTag != tag.0 {
                         append = true
                     }
+                    
                     if append {
-                        items.append(SPopoverItem(tag.1, {
-                            currentTag = tag.0
-                            updateSearchTags(SearchTags(messageTags: currentTag, peerTag: currentPeerTag?.id))
-                            let collected = collectTags()
-                            updateTitle(collected.0, collected.1)
-                        }))
+                        if let messagetag = tag.0 {
+                            let itemImage: MenuAnimation?
+                            switch messagetag {
+                            case .photo:
+                                itemImage = .menu_shared_media
+                            case .video:
+                                itemImage = .menu_video
+                            case .webPage:
+                                itemImage = .menu_copy_link
+                            case .voiceOrInstantVideo:
+                                itemImage = .menu_voice
+                            case .gif:
+                                itemImage = .menu_add_gif
+                            case .file:
+                                itemImage = .menu_file
+                            default:
+                                itemImage = nil
+                            }
+                            if let itemImage = itemImage {
+                                items.append(ContextMenuItem(tag.1, handler: { [weak self] in
+                                    currentTag = tag.0
+                                    updateSearchTags(SearchTags(messageTags: currentTag, peerTag: currentPeerTag?.id))
+                                    let collected = collectTags()
+                                    updateTitle(collected.0, collected.1)
+                                    self?.hideDownloads?()
+                                }, itemImage: itemImage.value))
+                            }
+                        }
+                        
                     }
                 }
                 
-                showPopover(for: control, with: SPopoverViewController(items: items, visibility: 10), edge: .maxY, inset: NSMakePoint(0, -25))
+                let menu = ContextMenu()
+                for item in items {
+                    menu.addItem(item)
+                }
+                
+                let value = AppMenu(menu: menu)
+                if let event = NSApp.currentEvent {
+                    value.show(event: event, view: control)
+                }
             }, deleteTag: { [weak self] index in
                 var count: Int = 0
                 if currentTag != nil {
@@ -247,6 +291,7 @@ class PeerListContainerView : View {
                 let collected = collectTags()
                 updateSearchTags(SearchTags(messageTags: currentTag, peerTag: currentPeerTag?.id))
                 self?.searchView.updateTags(collected.0, collected.1)
+                self?.hideDownloads?()
             }, icon: theme.icons.search_filter)
             
             updatePeerTag( { [weak self] updatedPeerTag in
@@ -278,11 +323,11 @@ class PeerListContainerView : View {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         let theme = (theme as! TelegramPresentationTheme)
         self.backgroundColor = theme.colors.background
-        compose.background = .clear
         compose.set(background: .clear, for: .Normal)
         compose.set(background: .clear, for: .Hover)
         compose.set(background: theme.colors.accent, for: .Highlight)
         compose.set(image: theme.icons.composeNewChat, for: .Normal)
+        compose.set(image: theme.icons.composeNewChat, for: .Hover)
         compose.set(image: theme.icons.composeNewChatActive, for: .Highlight)
         compose.layer?.cornerRadius = .cornerRadius
         compose.setFrameSize(NSMakeSize(40, 30))
@@ -342,7 +387,36 @@ class PeerListContainerView : View {
         
         backgroundView.frame = bounds
         
+        if let downloads = downloads {
+            downloads.frame = NSMakeRect(0, frame.height - downloads.frame.height, frame.width - .borderSize, downloads.frame.height)
+        }
+        
         self.needsDisplay = true
+    }
+    
+    func updateDownloads(_ state: DownloadsSummary.State, context: AccountContext, arguments: DownloadsControlArguments, animated: Bool) {
+        if !state.isEmpty {
+            let current: DownloadsControl
+            if let view = self.downloads {
+                current = view
+            } else {
+                current = DownloadsControl(frame: NSMakeRect(0, frame.height - 30, frame.width - .borderSize, 30))
+                self.downloads = current
+                addSubview(current, positioned: .above, relativeTo: self.tableView)
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    current.layer?.animatePosition(from: NSMakePoint(current.frame.minX, current.frame.maxY), to: current.frame.origin)
+                }
+            }
+            current.update(state, context: context, arguments: arguments, animated: animated)
+            current.removeAllHandlers()
+            current.set(handler: { _ in
+                arguments.open()
+            }, for: .Click)
+        } else if let view = self.downloads {
+            self.downloads = nil
+            performSubviewPosRemoval(view, pos: NSMakePoint(0, frame.maxY), animated: true)
+        }
     }
     
 }
@@ -393,6 +467,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     private let actionsDisposable = DisposableSet()
     private let followGlobal:Bool
     private let searchOptions: AppSearchOptions
+    
+    private var downloadsController: ViewController?
+    
     let mode:PeerListMode
     private(set) var searchController:SearchController? {
         didSet {
@@ -434,11 +511,53 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         super.viewDidResized(size)
     }
     
+    func showDownloads(animated: Bool) {
+        
+        self.genericView.searchView.change(state: .Focus,  true)
+
+        let controller: ViewController
+        if let current = self.downloadsController {
+            controller = current
+        } else {
+            controller = DownloadsController(context: context, searchValue: self.genericView.searchView.searchValue |> map { $0.request })
+            self.downloadsController = controller
+            
+            controller.frame = genericView.tableView.frame
+            addSubview(controller.view)
+            
+            if animated {
+                controller.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                controller.view.layer?.animateScaleSpring(from: 1.1, to: 1, duration: 0.2)
+            }
+        }
+        self.genericView.searchView.updateTags([strings().chatListDownloadsTag], theme.icons.search_filter_downloads)
+
+    }
+    
+    private func hideDownloads(animated: Bool) {
+        if let downloadsController = downloadsController {
+            downloadsController.viewWillDisappear(animated)
+            self.downloadsController = nil
+            downloadsController.viewDidDisappear(animated)
+            
+            let view = downloadsController.view
+            downloadsController.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
+                view?.removeFromSuperview()
+            })
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         let context = self.context
 
+        
+        genericView.showDownloads = { [weak self] in
+            self?.showDownloads(animated: true)
+        }
+        genericView.hideDownloads = { [weak self] in
+            self?.hideDownloads(animated: true)
+        }
         
         layoutDisposable.set(context.sharedContext.layoutHandler.get().start(next: { [weak self] state in
             if let strongSelf = self, case .minimisize = state {
@@ -475,11 +594,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
         
         if self.navigationController?.modalAction is FWDNavigationAction {
-            self.setCenterTitle(L10n.chatForwardActionHeader)
+            self.setCenterTitle(strings().chatForwardActionHeader)
         }
         
         if self.navigationController?.modalAction is ShareInlineResultNavigationAction {
-            self.setCenterTitle(L10n.chatShareInlineResultActionHeader)
+            self.setCenterTitle(strings().chatShareInlineResultActionHeader)
         }
         
         genericView.tableView.delegate = self
@@ -498,11 +617,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }))
         
         let pushController:(ViewController)->Void = { [weak self] c in
-            self?.context.sharedContext.bindings.rootNavigation().push(c)
+            self?.context.bindings.rootNavigation().push(c)
         }
-        
+                
         let openProxySettings:()->Void = { [weak self] in
-            if let controller = self?.context.sharedContext.bindings.rootNavigation().controller as? InputDataController {
+            if let controller = self?.context.bindings.rootNavigation().controller as? InputDataController {
                 if controller.identifier == "proxy" {
                     return
                 }
@@ -514,7 +633,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 }
                 message = message.trimmed
 
-                showModal(with: ShareModalController(ShareLinkObject(context, link: message)), for: mainWindow)
+                showModal(with: ShareModalController(ShareLinkObject(context, link: message)), for: context.window)
             }, pushController: { controller in
                  pushController(controller)
             })
@@ -527,26 +646,24 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
         }, for: .Click)
         
-        genericView.compose.set(handler: { [weak self] control in
-            if let strongSelf = self, !control.isSelected {
-                
-                let items = [SPopoverItem(tr(L10n.composePopoverNewGroup), { [weak strongSelf] in
-                    guard let strongSelf = strongSelf else {return}
-                    strongSelf.context.composeCreateGroup()
-                }, theme.icons.composeNewGroup),SPopoverItem(tr(L10n.composePopoverNewSecretChat), { [weak strongSelf] in
-                    guard let strongSelf = strongSelf else {return}
-                    strongSelf.context.composeCreateSecretChat()
-                }, theme.icons.composeNewSecretChat),SPopoverItem(tr(L10n.composePopoverNewChannel), { [weak strongSelf] in
-                    guard let strongSelf = strongSelf else {return}
-                    strongSelf.context.composeCreateChannel()
-                }, theme.icons.composeNewChannel)];
-                if let popover = control.popover {
-                    popover.hide()
-                } else {
-                    showPopover(for: control, with: SPopoverViewController(items: items), edge: .maxY, inset: NSMakePoint(-138,  -(strongSelf.genericView.compose.frame.maxY + 10)))
-                }
+        
+        genericView.compose.contextMenu = { [weak self] in
+            let items = [ContextMenuItem(strings().composePopoverNewGroup, handler: { [weak self] in
+                self?.context.composeCreateGroup()
+            }, itemImage: MenuAnimation.menu_create_group.value),
+            ContextMenuItem(strings().composePopoverNewSecretChat, handler: { [weak self] in
+                self?.context.composeCreateSecretChat()
+            }, itemImage: MenuAnimation.menu_lock.value),
+            ContextMenuItem(strings().composePopoverNewChannel, handler: { [weak self] in
+                self?.context.composeCreateChannel()
+            }, itemImage: MenuAnimation.menu_channel.value)];
+            
+            let menu = ContextMenu()
+            for item in items {
+                menu.addItem(item)
             }
-        }, for: .Click)
+            return menu
+        }
         
         
         genericView.searchView.searchInteractions = SearchInteractions({ [weak self] state, animated in
@@ -581,7 +698,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     private func checkSearchMedia() {
         let destroy:()->Void = { [weak self] in
             if let previous = self?.mediaSearchController {
-                self?.context.sharedContext.bindings.rootNavigation().removeImmediately(previous)
+                self?.context.bindings.rootNavigation().removeImmediately(previous)
             }
         }
         guard context.sharedContext.layout == .dual else {
@@ -599,7 +716,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
         let destroy:()->Void = { [weak self] in
             if let previous = self?.mediaSearchController {
-                self?.context.sharedContext.bindings.rootNavigation().removeImmediately(previous)
+                self?.context.bindings.rootNavigation().removeImmediately(previous)
             }
         }
         
@@ -621,7 +738,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 self?.updateSearchMessageTags?(nil)
             }
             
-            let navigation = context.sharedContext.bindings.rootNavigation()
+            let navigation = context.bindings.rootNavigation()
             
             let signal = searchController.externalSearchMessages
                 |> filter { $0 != nil && $0?.tags == messageTags }
@@ -713,6 +830,18 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     private func hideSearchController(animated: Bool) {
+        
+        if let downloadsController = downloadsController {
+            downloadsController.viewWillDisappear(animated)
+            self.downloadsController = nil
+            downloadsController.viewDidDisappear(animated)
+            
+            let view = downloadsController.view
+            downloadsController.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
+                view?.removeFromSuperview()
+            })
+        }
+        
         if let searchController = self.searchController {
             searchController.viewWillDisappear(animated)
             searchController.view.layer?.opacity = animated ? 1.0 : 0.0
@@ -731,7 +860,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
 
         }
         if let controller = mediaSearchController {
-            context.sharedContext.bindings.rootNavigation().removeImmediately(controller, upNext: false)
+            context.bindings.rootNavigation().removeImmediately(controller, upNext: false)
         }
     }
     
@@ -785,9 +914,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         return .rejected
     }
     
-    func open(with entryId: UIChatListEntryId, messageId:MessageId? = nil, initialAction: ChatInitialAction? = nil, close:Bool = true, addition: Bool = false) ->Void {
+    func open(with entryId: UIChatListEntryId, messageId:MessageId? = nil, initialAction: ChatInitialAction? = nil, close:Bool = true, addition: Bool = false, forceAnimated: Bool = false) ->Void {
         
-        let navigation = context.sharedContext.bindings.rootNavigation()
+        let navigation = context.bindings.rootNavigation()
         
         var addition = addition
         var close = close
@@ -805,7 +934,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             
             if let modalAction = navigation.modalAction as? FWDNavigationAction, peerId == context.peerId {
                 _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, context: context, peerId: context.peerId).start()
-                _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
+                _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
                 modalAction.afterInvoke()
                 navigation.removeModalAction()
             } else {
@@ -814,7 +943,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     current.chatInteraction.focusMessageId(nil, messageId, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
                 } else {
                     let chat:ChatController = addition ? ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: messageId) : ChatController(context: self.context, chatLocation: .peer(peerId), messageId: messageId, initialAction: initialAction)
-                    navigation.push(chat, context.sharedContext.layout == .single)
+                    navigation.push(chat, context.sharedContext.layout == .single || forceAnimated)
                 }
             }
         case let .groupId(groupId):

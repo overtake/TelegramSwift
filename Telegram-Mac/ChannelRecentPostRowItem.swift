@@ -63,8 +63,8 @@ class ChannelRecentPostRowItem: GeneralRowItem {
         let views = Int(max(message.channelViewsCount ?? 0, interactions?.views ?? 0))
         let shares = Int(interactions?.forwards ?? 0)
         
-        let viewsString = L10n.channelStatsViewsCountCountable(views).replacingOccurrences(of: "\(views)", with: views.formattedWithSeparator)
-        let sharesString = L10n.channelStatsSharesCountCountable(shares).replacingOccurrences(of: "\(shares)", with: shares.formattedWithSeparator)
+        let viewsString = strings().channelStatsViewsCountCountable(views).replacingOccurrences(of: "\(views)", with: views.formattedWithSeparator)
+        let sharesString = strings().channelStatsSharesCountCountable(shares).replacingOccurrences(of: "\(shares)", with: shares.formattedWithSeparator)
 
         viewsCountLayout = TextViewLayout(NSAttributedString.initialize(string: viewsString, color: theme.colors.text, font: .normal(.short)),maximumNumberOfLines: 1)
         sharesCountLayout = TextViewLayout(NSAttributedString.initialize(string: sharesString, color: theme.colors.grayText, font: .normal(.short)),maximumNumberOfLines: 1)

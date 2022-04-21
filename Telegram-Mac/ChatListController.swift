@@ -11,7 +11,8 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-
+import InAppSettings
+import FetchManager
 
 
 
@@ -315,14 +316,16 @@ class ChatListController : PeersListController {
     private let first = Atomic(value:true)
     private let animated = Atomic(value: false)
     private let removePeerIdGroupDisposable = MetaDisposable()
+    private let downloadsDisposable = MetaDisposable()
     private let disposable = MetaDisposable()
     private let scrollDisposable = MetaDisposable()
     private let reorderDisposable = MetaDisposable()
     private let globalPeerDisposable = MetaDisposable()
     private let archivationTooltipDisposable = MetaDisposable()
-    private let undoTooltipControl: UndoTooltipControl
     private let animateGroupNextTransition:Atomic<PeerGroupId?> = Atomic(value: nil)
     private var activityStatusesDisposable:Disposable?
+    
+    private let downloadsSummary: DownloadsSummary
     
     private let suggestAutoarchiveDisposable = MetaDisposable()
     
@@ -511,9 +514,9 @@ class ChatListController : PeersListController {
         }
         let openFilterSettings:(ChatListFilter?)->Void = { filter in
             if let filter = filter {
-                context.sharedContext.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter))
+                context.bindings.rootNavigation().push(ChatListFilterController(context: context, filter: filter))
             } else {
-                context.sharedContext.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
+                context.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
             }
         }
         
@@ -754,6 +757,17 @@ class ChatListController : PeersListController {
                 } )
             }))
         }
+        
+        let arguments: DownloadsControlArguments = DownloadsControlArguments(open: { [weak self] in
+            self?.showDownloads(animated: true)
+        }, navigate: { [weak self] messageId in
+            self?.open(with: .chatId(messageId.peerId, nil), messageId: messageId, initialAction: nil, close: false, forceAnimated: true)
+        })
+        
+        downloadsDisposable.set(self.downloadsSummary.state.start(next: { [weak self] state in
+            self?.genericView.updateDownloads(state, context: context, arguments: arguments, animated: true)
+        }))
+        
     }
     
     func collapseOrExpandArchive() {
@@ -796,7 +810,6 @@ class ChatListController : PeersListController {
     func addUndoAction(_ action:ChatUndoAction) {
         let context = self.context
         guard self.context.sharedContext.layout != .minimisize else { return }
-        self.undoTooltipControl.add(controller: self)
     }
     
     private func enqueueTransition(_ transition: TableUpdateTransition) {
@@ -970,7 +983,7 @@ class ChatListController : PeersListController {
                             $0.withUpdatedFilter(nil)
                         }
                     } else {
-                        self.context.sharedContext.bindings.mainController().showFastChatSettings()
+                        self.context.bindings.mainController().showFastChatSettings()
                     }
                 } else {
                     self.genericView.tableView.scroll(to: .up(true), ignoreLayerAnimation: true)
@@ -978,64 +991,6 @@ class ChatListController : PeersListController {
             }
         }
         scrollToTop()
-    
-        
-    }
-    
-    var filterMenuItems: Signal<[SPopoverItem], NoError> {
-        let context = self.context
-       
-        let isEnabled = context.account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration])
-            |> map { view -> Bool in
-                let configuration = ChatListFilteringConfiguration(appConfiguration: view.values[PreferencesKeys.appConfiguration] as? AppConfiguration ?? .defaultValue)
-                return configuration.isEnabled
-        }
-        
-        return combineLatest(chatListFilterPreferences(engine: context.engine), isEnabled)
-            |> take(1)
-            |> deliverOnMainQueue
-            |> map { [weak self] filters, isEnabled -> [SPopoverItem] in
-                var items:[SPopoverItem] = []
-                if isEnabled {
-                    items.append(SPopoverItem(filters.list.isEmpty ? L10n.chatListFilterSetupEmpty : L10n.chatListFilterSetup, {
-                        context.sharedContext.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
-                    }, filters.list.isEmpty ? theme.icons.chat_filter_add : theme.icons.chat_filter_edit))
-                    
-                    if self?.filterValue?.filter != nil {
-                        items.append(SPopoverItem(L10n.chatListFilterAll, {
-                            self?.updateFilter {
-                                $0.withUpdatedFilter(nil)
-                            }
-                        }))
-                    }
-                    
-                    if !filters.list.isEmpty {
-                        items.append(SPopoverItem(false))
-                    }
-                    for filter in filters.list {
-                        let badge = GlobalBadgeNode(context.account, sharedContext: context.sharedContext, view: View(), layoutChanged: {
-                            
-                        }, getColor: { isSelected in
-                            return isSelected ? .white : theme.colors.accent
-                        }, filter: filter)
-                        let additionView: SPopoverAdditionItemView = SPopoverAdditionItemView(context: badge, view: badge.view!, updateIsSelected: { [weak badge] isSelected in
-                            badge?.isSelected = isSelected
-                        })
-                        
-                        items.append(SPopoverItem(filter.title, { [weak self] in
-                            guard let `self` = self, filter.id != self.filterValue?.filter?.id else {
-                                return
-                            }
-                            self.updateFilter {
-                                $0.withUpdatedFilter(filter)
-                            }
-                            self.scrollup(force: true)
-                        }, filter.icon, additionView: additionView))
-                    }
-                }
-                return items
-        }
-        
     }
     
     
@@ -1047,10 +1002,10 @@ class ChatListController : PeersListController {
         
         switch context.sharedContext.layout {
         case .single:
-            context.sharedContext.bindings.rootNavigation().back()
+            context.bindings.rootNavigation().back()
             Queue.mainQueue().justDispatch(invoke)
         case .minimisize:
-            context.sharedContext.bindings.needFullsize()
+            context.bindings.needFullsize()
             Queue.mainQueue().justDispatch(invoke)
         default:
             invoke()
@@ -1091,7 +1046,7 @@ class ChatListController : PeersListController {
             
                 _ = dismissServerProvidedSuggestion(account: strongSelf.context.account, suggestion: .autoarchivePopular).start()
                 
-                confirm(for: context.window, header: L10n.alertHideNewChatsHeader, information: L10n.alertHideNewChatsText, okTitle: L10n.alertHideNewChatsOK, cancelTitle: L10n.alertHideNewChatsCancel, successHandler: { _ in
+                confirm(for: context.window, header: strings().alertHideNewChatsHeader, information: strings().alertHideNewChatsText, okTitle: strings().alertHideNewChatsOK, cancelTitle: strings().alertHideNewChatsCancel, successHandler: { _ in
                     execute(inapp: .settings(link: "tg://settings/privacy", context: context, section: .privacy))
                 })
                 
@@ -1244,7 +1199,7 @@ class ChatListController : PeersListController {
         
       
         
-        if context.sharedContext.bindings.rootNavigation().stackCount == 1 {
+        if context.bindings.rootNavigation().stackCount == 1 {
             setHighlightEvents()
         }
     }
@@ -1376,6 +1331,7 @@ class ChatListController : PeersListController {
         activityStatusesDisposable?.dispose()
         filterDisposable.dispose()
         suggestAutoarchiveDisposable.dispose()
+        downloadsDisposable.dispose()
     }
     
     
@@ -1393,7 +1349,7 @@ class ChatListController : PeersListController {
         case .plain:
             return super.defaultBarTitle
         case .folder:
-            return L10n.chatListArchivedChats
+            return strings().chatListArchivedChats
         case .filter:
             return _filterValue.with { $0.filter?.title ?? "Filter" }
         }
@@ -1415,7 +1371,6 @@ class ChatListController : PeersListController {
     
     
     init(_ context: AccountContext, modal:Bool = false, groupId: PeerGroupId? = nil, filterId: Int32? = nil) {
-        self.undoTooltipControl = UndoTooltipControl(context: context)
         
         let mode: PeerListMode
         if let filterId = filterId {
@@ -1426,6 +1381,8 @@ class ChatListController : PeersListController {
             mode = .plain
         }
         
+        self.downloadsSummary = DownloadsSummary(context.fetchManager as! FetchManagerImpl, context: context)
+        
         super.init(context, followGlobal: !modal, mode: mode)
         
         if groupId != nil {
@@ -1434,9 +1391,9 @@ class ChatListController : PeersListController {
     }
 
     override func selectionWillChange(row:Int, item:TableRowItem, byClick: Bool) -> Bool {
-        if let item = item as? ChatListRowItem, let peer = item.peer, let modalAction = context.sharedContext.bindings.rootNavigation().modalAction {
+        if let item = item as? ChatListRowItem, let peer = item.peer, let modalAction = context.bindings.rootNavigation().modalAction {
             if !modalAction.isInvokable(for: peer) {
-                modalAction.alertError(for: peer, with:mainWindow)
+                modalAction.alertError(for: peer, with: item.context.window)
                 return false
             }
             modalAction.afterInvoke()
@@ -1444,7 +1401,7 @@ class ChatListController : PeersListController {
             if let modalAction = modalAction as? FWDNavigationAction {
                 if item.peerId == context.peerId {
                     _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, context: context, peerId: context.peerId).start()
-                    _ = showModalSuccess(for: mainWindow, icon: theme.icons.successModalProgress, delay: 1.0).start()
+                    _ = showModalSuccess(for: item.context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
                     navigationController?.removeModalAction()
                     return false
                 }
@@ -1467,7 +1424,7 @@ class ChatListController : PeersListController {
     }
     
     override  func selectionDidChange(row:Int, item:TableRowItem, byClick:Bool, isNew:Bool) -> Void {
-        let navigation = context.sharedContext.bindings.rootNavigation()
+        let navigation = context.bindings.rootNavigation()
         if let item = item as? ChatListRowItem {
             if !isNew, let controller = navigation.controller as? ChatController {
                 switch controller.mode {
@@ -1476,7 +1433,7 @@ class ChatListController : PeersListController {
                         navigation.controller.invokeNavigation(action: modalAction)
                     }
                     controller.clearReplyStack()
-                    controller.scrollup(force: true)
+                    controller.scrollup(force: false)
                 case .scheduled, .pinned, .preview:
                     navigation.back()
                 }

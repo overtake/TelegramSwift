@@ -3,103 +3,119 @@ import Postbox
 import SwiftSignalKit
 import TelegramCore
 
-public final class ApplicationSpecificBoolNotice: NoticeEntry {
+
+public final class ApplicationSpecificBoolNotice: Codable {
     public init() {
     }
     
-    public init(decoder: PostboxDecoder) {
+    public init(from decoder: Decoder) throws {
     }
     
-    public func encode(_ encoder: PostboxEncoder) {
-    }
-    
-    public func isEqual(to: NoticeEntry) -> Bool {
-        if let _ = to as? ApplicationSpecificBoolNotice {
-            return true
-        } else {
-            return false
-        }
+    public func encode(to encoder: Encoder) throws {
     }
 }
 
-public final class ApplicationSpecificVariantNotice: NoticeEntry {
+public final class ApplicationSpecificVariantNotice: Codable {
     public let value: Bool
     
     public init(value: Bool) {
         self.value = value
     }
     
-    public init(decoder: PostboxDecoder) {
-        self.value = decoder.decodeInt32ForKey("v", orElse: 0) != 0
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+
+        self.value = try container.decode(Int32.self, forKey: "v") != 0
     }
     
-    public func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeInt32(self.value ? 1 : 0, forKey: "v")
-    }
-    
-    public func isEqual(to: NoticeEntry) -> Bool {
-        if let to = to as? ApplicationSpecificVariantNotice {
-            if self.value != to.value {
-                return false
-            }
-            return true
-        } else {
-            return false
-        }
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+
+        try container.encode((self.value ? 1 : 0) as Int32, forKey: "v")
     }
 }
 
-public final class ApplicationSpecificCounterNotice: NoticeEntry {
+public final class ApplicationSpecificCounterNotice: Codable {
     public let value: Int32
     
     public init(value: Int32) {
         self.value = value
     }
     
-    public init(decoder: PostboxDecoder) {
-        self.value = decoder.decodeInt32ForKey("v", orElse: 0)
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+
+        self.value = try container.decode(Int32.self, forKey: "v")
     }
     
-    public func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeInt32(self.value, forKey: "v")
-    }
-    
-    public func isEqual(to: NoticeEntry) -> Bool {
-        if let to = to as? ApplicationSpecificCounterNotice {
-            if self.value != to.value {
-                return false
-            }
-            return true
-        } else {
-            return false
-        }
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+
+        try container.encode(self.value, forKey: "v")
     }
 }
 
-public final class ApplicationSpecificTimestampNotice: NoticeEntry {
+public final class ApplicationSpecificTimestampNotice: Codable {
     public let value: Int32
     
     public init(value: Int32) {
         self.value = value
     }
     
-    public init(decoder: PostboxDecoder) {
-        self.value = decoder.decodeInt32ForKey("v", orElse: 0)
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+
+        self.value = try container.decode(Int32.self, forKey: "v")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+
+        try container.encode(self.value, forKey: "v")
+    }
+}
+
+public final class ApplicationSpecificTimestampAndCounterNotice: Codable {
+    public let counter: Int32
+    public let timestamp: Int32
+    
+    public init(counter: Int32, timestamp: Int32) {
+        self.counter = counter
+        self.timestamp = timestamp
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+
+        self.counter = try container.decode(Int32.self, forKey: "v")
+        self.timestamp = try container.decode(Int32.self, forKey: "t")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+
+        try container.encode(self.counter, forKey: "v")
+        try container.encode(self.timestamp, forKey: "t")
+    }
+}
+
+public final class ApplicationSpecificInt64ArrayNotice: Codable {
+    public let values: [Int64]
+    
+    public init(values: [Int64]) {
+        self.values = values
     }
     
-    public func encode(_ encoder: PostboxEncoder) {
-        encoder.encodeInt32(self.value, forKey: "v")
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: StringCodingKey.self)
+
+        self.values = try container.decode([Int64].self, forKey: "v")
     }
     
-    public func isEqual(to: NoticeEntry) -> Bool {
-        if let to = to as? ApplicationSpecificTimestampNotice {
-            if self.value != to.value {
-                return false
-            }
-            return true
-        } else {
-            return false
-        }
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: StringCodingKey.self)
+
+        try container.encode(self.values, forKey: "v")
     }
 }
 
@@ -139,7 +155,7 @@ private struct ApplicationSpecificNoticeKeys {
 public struct ApplicationSpecificNotice {
     public static func getBotPaymentLiability(accountManager: AccountManager<TelegramAccountManagerTypes>, peerId: PeerId) -> Signal<Bool, NoError> {
         return accountManager.transaction { transaction -> Bool in
-            if let _ = transaction.getNotice(ApplicationSpecificNoticeKeys.botPaymentLiabilityNotice(peerId: peerId)) as? ApplicationSpecificBoolNotice {
+            if let _ = transaction.getNotice(ApplicationSpecificNoticeKeys.botPaymentLiabilityNotice(peerId: peerId))?.get(ApplicationSpecificBoolNotice.self) {
                 return true
             } else {
                 return false
@@ -149,7 +165,9 @@ public struct ApplicationSpecificNotice {
     
     public static func setBotPaymentLiability(accountManager: AccountManager<TelegramAccountManagerTypes>, peerId: PeerId) -> Signal<Void, NoError> {
         return accountManager.transaction { transaction -> Void in
-            transaction.setNotice(ApplicationSpecificNoticeKeys.botPaymentLiabilityNotice(peerId: peerId), ApplicationSpecificBoolNotice())
+            if let entry = CodableEntry(ApplicationSpecificBoolNotice()) {
+                transaction.setNotice(ApplicationSpecificNoticeKeys.botPaymentLiabilityNotice(peerId: peerId), entry)
+            }
         }
     }
 }

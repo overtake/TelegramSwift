@@ -21,25 +21,25 @@ private func shortcutEntires() -> [InputDataEntry] {
     
     // chat
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.shortcutsControllerChat), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().shortcutsControllerChat), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("chat_open_info"), data: InputDataGeneralData(name: L10n.shortcutsControllerChatOpenInfo, color: theme.colors.text, icon: nil, type: .context("→"), viewType: .firstItem, enabled: true, description: nil)))
-    index += 1
-    
-    
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("reply_to_message"), data: InputDataGeneralData(name: L10n.shortcutsControllerChatSelectMessageToReply, color: theme.colors.text, icon: nil, type: .context("⌘↑ / ⌘↓"), viewType: .innerItem, enabled: true, description: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("chat_open_info"), data: InputDataGeneralData(name: strings().shortcutsControllerChatOpenInfo, color: theme.colors.text, icon: nil, type: .context("→"), viewType: .firstItem, enabled: true, description: nil)))
     index += 1
     
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("edit_message"), data: InputDataGeneralData(name: L10n.shortcutsControllerChatEditLastMessage, color: theme.colors.text, icon: nil, type: .context("↑"), viewType: .innerItem, enabled: true, description: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("reply_to_message"), data: InputDataGeneralData(name: strings().shortcutsControllerChatSelectMessageToReply, color: theme.colors.text, icon: nil, type: .context("⌘↑ / ⌘↓"), viewType: .innerItem, enabled: true, description: nil)))
+    index += 1
+    
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("edit_message"), data: InputDataGeneralData(name: strings().shortcutsControllerChatEditLastMessage, color: theme.colors.text, icon: nil, type: .context("↑"), viewType: .innerItem, enabled: true, description: nil)))
     index += 1
 
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("edit_media"), data: InputDataGeneralData(name: L10n.shortcutsControllerChatRecordVoiceMessage, color: theme.colors.text, icon: nil, type: .context("⌘R"), viewType: .innerItem, enabled: true, description: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("edit_media"), data: InputDataGeneralData(name: strings().shortcutsControllerChatRecordVoiceMessage, color: theme.colors.text, icon: nil, type: .context("⌘R"), viewType: .innerItem, enabled: true, description: nil)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("search_in_chat"), data: InputDataGeneralData(name: L10n.shortcutsControllerChatSearchMessages, color: theme.colors.text, icon: nil, type: .context("⌘F"), viewType: .lastItem, enabled: true, description: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("search_in_chat"), data: InputDataGeneralData(name: strings().shortcutsControllerChatSearchMessages, color: theme.colors.text, icon: nil, type: .context("⌘F"), viewType: .lastItem, enabled: true, description: nil)))
     index += 1
     
     // video chat
@@ -47,13 +47,13 @@ private func shortcutEntires() -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.shortcutsControllerVideoChat), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().shortcutsControllerVideoChat), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("toggle_camera"), data: InputDataGeneralData(name: L10n.shortcutsControllerVideoChatToggleCamera, color: theme.colors.text, icon: nil, type: .context("⌘E"), viewType: .firstItem, enabled: true, description: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("toggle_camera"), data: InputDataGeneralData(name: strings().shortcutsControllerVideoChatToggleCamera, color: theme.colors.text, icon: nil, type: .context("⌘E"), viewType: .firstItem, enabled: true, description: nil)))
     index += 1
 
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("toggle_screen"), data: InputDataGeneralData(name: L10n.shortcutsControllerVideoChatToggleScreencast, color: theme.colors.text, icon: nil, type: .context("⌘T"), viewType: .lastItem, enabled: true, description: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("toggle_screen"), data: InputDataGeneralData(name: strings().shortcutsControllerVideoChatToggleScreencast, color: theme.colors.text, icon: nil, type: .context("⌘T"), viewType: .lastItem, enabled: true, description: nil)))
     index += 1
 
     
@@ -62,13 +62,13 @@ private func shortcutEntires() -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.shortcutsControllerSearch), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().shortcutsControllerSearch), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("quick_search"), data: InputDataGeneralData(name: L10n.shortcutsControllerSearchQuickSearch, color: theme.colors.text, icon: nil, type: .context("⌘K"), viewType: .firstItem, enabled: true, description: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("quick_search"), data: InputDataGeneralData(name: strings().shortcutsControllerSearchQuickSearch, color: theme.colors.text, icon: nil, type: .context("⌘K"), viewType: .firstItem, enabled: true, description: nil)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("global_search"), data: InputDataGeneralData(name: L10n.shortcutsControllerSearchGlobalSearch, color: theme.colors.text, icon: nil, type: .context("⇧⌘F"), viewType: .lastItem, enabled: true, description: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("global_search"), data: InputDataGeneralData(name: strings().shortcutsControllerSearchGlobalSearch, color: theme.colors.text, icon: nil, type: .context("⇧⌘F"), viewType: .lastItem, enabled: true, description: nil)))
     index += 1
     
     
@@ -77,22 +77,22 @@ private func shortcutEntires() -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.shortcutsControllerMarkdown), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().shortcutsControllerMarkdown), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("markdown_bold"), data: InputDataGeneralData(name: L10n.shortcutsControllerMarkdownBold, color: theme.colors.text, icon: nil, type: .context("⌘B / **"), viewType: .firstItem, enabled: true, description: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("markdown_bold"), data: InputDataGeneralData(name: strings().shortcutsControllerMarkdownBold, color: theme.colors.text, icon: nil, type: .context("⌘B / **"), viewType: .firstItem, enabled: true, description: nil)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("markdown_italic"), data: InputDataGeneralData(name: L10n.shortcutsControllerMarkdownItalic, color: theme.colors.text, icon: nil, type: .context("⌘I / __"), viewType: .innerItem, enabled: true, description: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("markdown_italic"), data: InputDataGeneralData(name: strings().shortcutsControllerMarkdownItalic, color: theme.colors.text, icon: nil, type: .context("⌘I / __"), viewType: .innerItem, enabled: true, description: nil)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("markdown_monospace"), data: InputDataGeneralData(name: L10n.shortcutsControllerMarkdownMonospace, color: theme.colors.text, icon: nil, type: .context("⇧⌘K / `"), viewType: .innerItem, enabled: true, description: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("markdown_monospace"), data: InputDataGeneralData(name: strings().shortcutsControllerMarkdownMonospace, color: theme.colors.text, icon: nil, type: .context("⇧⌘K / `"), viewType: .innerItem, enabled: true, description: nil)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("markdown_url"), data: InputDataGeneralData(name: L10n.shortcutsControllerMarkdownHyperlink, color: theme.colors.text, icon: nil, type: .context("⌘U"), viewType: .innerItem, enabled: true, description: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("markdown_url"), data: InputDataGeneralData(name: strings().shortcutsControllerMarkdownHyperlink, color: theme.colors.text, icon: nil, type: .context("⌘U"), viewType: .innerItem, enabled: true, description: nil)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("markdown_strikethrough"), data: InputDataGeneralData(name: L10n.shortcutsControllerMarkdownStrikethrough, color: theme.colors.text, icon: nil, type: .context("~~"), viewType: .lastItem, enabled: true, description: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("markdown_strikethrough"), data: InputDataGeneralData(name: strings().shortcutsControllerMarkdownStrikethrough, color: theme.colors.text, icon: nil, type: .context("~~"), viewType: .lastItem, enabled: true, description: nil)))
     index += 1
     
     // OTHERS
@@ -100,10 +100,10 @@ private func shortcutEntires() -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.shortcutsControllerOthers), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().shortcutsControllerOthers), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("lock_passcode"), data: InputDataGeneralData(name: L10n.shortcutsControllerOthersLockByPasscode, color: theme.colors.text, icon: nil, type: .context("⌘L"), viewType: .singleItem, enabled: true, description: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("lock_passcode"), data: InputDataGeneralData(name: strings().shortcutsControllerOthersLockByPasscode, color: theme.colors.text, icon: nil, type: .context("⌘L"), viewType: .singleItem, enabled: true, description: nil)))
     index += 1
     
     
@@ -113,13 +113,13 @@ private func shortcutEntires() -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.shortcutsControllerMouse), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().shortcutsControllerMouse), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("fast_reply"), data: InputDataGeneralData(name: L10n.shortcutsControllerMouseFastReply, color: theme.colors.text, icon: nil, type: .context(L10n.shortcutsControllerMouseFastReplyValue), viewType: .firstItem, enabled: true, description: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("fast_reply"), data: InputDataGeneralData(name: strings().shortcutsControllerMouseFastReply, color: theme.colors.text, icon: nil, type: .context(strings().shortcutsControllerMouseFastReplyValue), viewType: .firstItem, enabled: true, description: nil)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("schedule"), data: InputDataGeneralData(name: L10n.shortcutsControllerMouseScheduleMessage, color: theme.colors.text, icon: nil, type: .context(L10n.shortcutsControllerMouseScheduleMessageValue), viewType: .lastItem, enabled: true, description: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("schedule"), data: InputDataGeneralData(name: strings().shortcutsControllerMouseScheduleMessage, color: theme.colors.text, icon: nil, type: .context(strings().shortcutsControllerMouseScheduleMessageValue), viewType: .lastItem, enabled: true, description: nil)))
     index += 1
     
 
@@ -128,21 +128,21 @@ private func shortcutEntires() -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.shortcutsControllerGestures), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().shortcutsControllerGestures), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("swipe_reply"), data: InputDataGeneralData(name: L10n.shortcutsControllerGesturesReply, color: theme.colors.text, icon: nil, type: .context(L10n.shortcutsControllerGesturesReplyValue), viewType: .firstItem, enabled: true, description: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("swipe_reply"), data: InputDataGeneralData(name: strings().shortcutsControllerGesturesReply, color: theme.colors.text, icon: nil, type: .context(strings().shortcutsControllerGesturesReplyValue), viewType: .firstItem, enabled: true, description: nil)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("swipe_actions"), data: InputDataGeneralData(name: L10n.shortcutsControllerGesturesChatAction, color: theme.colors.text, icon: nil, type: .context(L10n.shortcutsControllerGesturesChatActionValue), viewType: .innerItem, enabled: true, description: nil)))
-    index += 1
-    
-    
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("swipe_navigation"), data: InputDataGeneralData(name: L10n.shortcutsControllerGesturesNavigation, color: theme.colors.text, icon: nil, type: .context(L10n.shortcutsControllerGesturesNavigationsValue), viewType: .innerItem, enabled: true, description: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("swipe_actions"), data: InputDataGeneralData(name: strings().shortcutsControllerGesturesChatAction, color: theme.colors.text, icon: nil, type: .context(strings().shortcutsControllerGesturesChatActionValue), viewType: .innerItem, enabled: true, description: nil)))
     index += 1
     
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("swipe_stickers"), data: InputDataGeneralData(name: L10n.shortcutsControllerGesturesStickers, color: theme.colors.text, icon: nil, type: .context(L10n.shortcutsControllerGesturesStickersValue), viewType: .lastItem, enabled: true, description: nil)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("swipe_navigation"), data: InputDataGeneralData(name: strings().shortcutsControllerGesturesNavigation, color: theme.colors.text, icon: nil, type: .context(strings().shortcutsControllerGesturesNavigationsValue), viewType: .innerItem, enabled: true, description: nil)))
+    index += 1
+    
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("swipe_stickers"), data: InputDataGeneralData(name: strings().shortcutsControllerGesturesStickers, color: theme.colors.text, icon: nil, type: .context(strings().shortcutsControllerGesturesStickersValue), viewType: .lastItem, enabled: true, description: nil)))
     index += 1
     
     
@@ -155,7 +155,7 @@ private func shortcutEntires() -> [InputDataEntry] {
 
 func ShortcutListController(context: AccountContext) -> ViewController {
     
-    let controller = InputDataController(dataSignal: .single(InputDataSignalValue(entries: shortcutEntires())), title: L10n.shortcutsControllerTitle, validateData: { data in
+    let controller = InputDataController(dataSignal: .single(InputDataSignalValue(entries: shortcutEntires())), title: strings().shortcutsControllerTitle, validateData: { data in
         return .fail(.none)
     }, removeAfterDisappear: true, hasDone: false, identifier: "shortcuts")
     

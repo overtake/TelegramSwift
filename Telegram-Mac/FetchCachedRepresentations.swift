@@ -8,12 +8,14 @@
 
 import Cocoa
 import TelegramCore
-
+import ApiCredentials
 import Postbox
 import SwiftSignalKit
 import TGUIKit
 import RLottie
 import libwebp
+import GZIP
+import Svg
 
 private let cacheThreadPool = ThreadPool(threadCount: 1, threadPriority: 0.1)
 
@@ -270,6 +272,56 @@ private func fetchCachedVideoFirstFrameRepresentation(account: Account, resource
     } |> runOn(cacheThreadPool)
 }
 
+private func fetchCachedVideoAnimatedStickerRepresentation(account: Account, resource: MediaResource, representation: CachedAnimatedStickerRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
+   
+    let data: Signal<MediaResourceData, NoError>
+    if let resource = resource as? LocalBundleResource {
+        data = Signal { subscriber in
+            if let path = Bundle.main.path(forResource: resource.name, ofType: resource.ext), let data = try? Data(contentsOf: URL(fileURLWithPath: path), options: [.mappedRead]) {
+                subscriber.putNext(MediaResourceData(path: path, offset: 0, size: data.count, complete: true))
+                subscriber.putCompletion()
+            }
+            return EmptyDisposable
+        }
+    } else {
+        data = account.postbox.mediaBox.resourceData(resource, option: .complete(waitUntilFetchStatus: false))
+    }
+
+    return data |> deliverOn(lottieThreadPool) |> map { resourceData -> (CGImage?, Data?, MediaResourceData) in
+        if resourceData.complete {
+            if let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
+                let decoder = SoftwareVideoSource(path: resourceData.path, hintVP9: true)
+                return (decoder.preview(size: representation.size, backingScale: 2), data, resourceData)
+            }
+        }
+        return (nil, nil, resourceData)
+    } |> runOn(cacheThreadPool) |> mapToSignal { frame, data, resourceData in
+        if resourceData.complete {
+            let path = NSTemporaryDirectory() + "\(arc4random64())"
+            let url = URL(fileURLWithPath: path)
+            
+            let colorData = NSMutableData()
+            if let colorImage = frame, let colorDestination = CGImageDestinationCreateWithData(colorData as CFMutableData, kUTTypePNG, 1, nil){
+                CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
+                
+                let colorQuality: Float
+                colorQuality = 0.4
+                
+                let options = NSMutableDictionary()
+                options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+                CGImageDestinationAddImage(colorDestination, colorImage, options as CFDictionary)
+                if CGImageDestinationFinalize(colorDestination)  {
+                    try? colorData.write(to: url, options: .atomic)
+                    return .single(.temporaryPath(path))
+                }
+            } else {
+                return .complete()
+            }
+        }
+        return .never()
+    }
+}
+
 
 private func fetchCachedAnimatedStickerRepresentation(account: Account, resource: MediaResource, representation: CachedAnimatedStickerRepresentation) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
    
@@ -296,10 +348,14 @@ private func fetchCachedAnimatedStickerRepresentation(account: Account, resource
                     }
                     if let json = String(data: transformedWithFitzModifier(data: dataValue, fitzModifier: representation.fitzModifier), encoding: .utf8), json.length > 0 {
                         let rlottie = RLottieBridge(json: json, key: resourceData.path)
+                        if let rlottie = rlottie {
+                            let unmanaged = rlottie.renderFrame(min(Int32(representation.frame), rlottie.endFrame()), width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
+                            let colorImage = unmanaged.takeRetainedValue()
+                            return (colorImage, nil, resourceData)
+                        } else {
+                            return (nil, nil, resourceData)
+                        }
                         
-                        let unmanaged = rlottie?.renderFrame(0, width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
-                        let colorImage = unmanaged?.takeRetainedValue()
-                        return (colorImage, nil, resourceData)
                     }
                 } else {
                     return (nil, data, resourceData)
@@ -336,19 +392,27 @@ private func fetchCachedAnimatedStickerRepresentation(account: Account, resource
                 let url = URL(fileURLWithPath: path)
                 
                 let colorData = NSMutableData()
-                var image = convertFromWebP(data)?._cgImage ?? NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil)
                 
-                if image == nil, let data = TGGUnzipData(data, 8 * 1024 * 1024) {
-                    if let json = String(data: transformedWithFitzModifier(data: data, fitzModifier: representation.fitzModifier), encoding: .utf8), json.length > 0 {
-                        let rlottie = RLottieBridge(json: json, key: resourceData.path)
-                        let unmanaged = rlottie?.renderFrame(0, width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
-                        image = unmanaged?.takeRetainedValue()
+                var image: CGImage?
+                if representation.isVideo {
+                    let decoder = SoftwareVideoSource(path: resourceData.path, hintVP9: true)
+                    image = decoder.preview(size: representation.size, backingScale: 2)
+                } else {
+                    image = convertFromWebP(data)?._cgImage ?? NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil)
+                    
+                    if image == nil, let data = TGGUnzipData(data, 8 * 1024 * 1024) {
+                        if let json = String(data: transformedWithFitzModifier(data: data, fitzModifier: representation.fitzModifier), encoding: .utf8), json.length > 0 {
+                            let rlottie = RLottieBridge(json: json, key: resourceData.path)
+                            let unmanaged = rlottie?.renderFrame(0, width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
+                            image = unmanaged?.takeRetainedValue()
+                        }
+                    } else if image != nil {
+                        let webp = WebPImageDecoder(data: data, scale: 2.0)
+                        let fullSizeWebp = webp?.frame(at: 0, decodeForDisplay: true)?.image?._cgImage
+                        image = fullSizeWebp ?? image
                     }
-                } else if image != nil {
-                    let webp = WebPImageDecoder(data: data, scale: 2.0)
-                    let fullSizeWebp = webp?.frame(at: 0, decodeForDisplay: true)?.image?._cgImage
-                    image = fullSizeWebp ?? image
                 }
+               
                 
                 if let image = image, let colorDestination = CGImageDestinationCreateWithData(colorData as CFMutableData, kUTTypePNG, 1, nil) {
                     CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)

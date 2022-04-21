@@ -13,7 +13,7 @@ import Postbox
 
 class ChatLayoutUtils: NSObject {
 
-    static func contentSize(for media:Media, with width: CGFloat, hasText: Bool = false) -> NSSize {
+    static func contentSize(for media:Media, with width: CGFloat, hasText: Bool = false, webpIsFile: Bool = false) -> NSSize {
         
         var size:NSSize = NSMakeSize(width, 40.0)
         
@@ -40,11 +40,11 @@ class ChatLayoutUtils: NSObject {
                     if contentSize.width < 50 && contentSize.height < 50 {
                         contentSize = maxSize
                     }
-                } else if case .Audio = attr {
+                } else if case .Audio = attr, !file.isVideo {
                     return NSMakeSize(width, 40)
                 }
             }
-            if file.isAnimatedSticker {
+            if file.isWebm || file.isVideoSticker {
                 let dimensions = file.dimensions?.size
                 size = NSMakeSize(240, 240)
                 if file.isEmojiAnimatedSticker {
@@ -53,7 +53,16 @@ class ChatLayoutUtils: NSObject {
                 if let dimensions = dimensions {
                     size = dimensions.aspectFitted(size)
                 }
-            } else if file.isStaticSticker {
+            } else if file.isAnimatedSticker && !webpIsFile {
+                let dimensions = file.dimensions?.size
+                size = NSMakeSize(240, 240)
+                if file.isEmojiAnimatedSticker {
+                    size = NSMakeSize(112, 112)
+                }
+                if let dimensions = dimensions {
+                    size = dimensions.aspectFitted(size)
+                }
+            } else if file.isStaticSticker && !webpIsFile {
                 if contentSize == NSZeroSize {
                     return NSMakeSize(210, 210)
                 }
@@ -117,23 +126,19 @@ class ChatLayoutUtils: NSObject {
         return size
     }
     
-    static func contentNode(for media:Media, packs: Bool = false) -> ChatMediaContentView.Type {
+    static func contentNode(for media:Media, packs: Bool = false, webpIsFile: Bool = false) -> ChatMediaContentView.Type {
         
         if media is TelegramMediaImage {
             return ChatInteractiveContentView.self
         } else if let file = media as? TelegramMediaFile {
-            if file.mimeType == "image/webp" && !packs {
-                return MediaAnimatedStickerView.self
-            } else if file.isAnimatedSticker {
-                return MediaAnimatedStickerView.self
-            } else if file.isStaticSticker {
-                return ChatStickerContentView.self
+            if file.probablySticker {
+                return StickerMediaContentView.self
             } else if file.isInstantVideo {
                 return ChatVideoMessageContentView.self
             } else if file.isVideo && !file.isAnimated {
                 return ChatInteractiveContentView.self
             }  else if file.isAnimated && !file.mimeType.lowercased().hasSuffix("gif") {
-                return ChatGIFContentView.self
+                return ChatInteractiveContentView.self
             } else if file.isVoice {
                 return ChatVoiceContentView.self
             } else if file.isMusic {

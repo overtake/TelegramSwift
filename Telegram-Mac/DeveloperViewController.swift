@@ -10,9 +10,10 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
+import ApiCredentials
 import MtProtoKit
 import Postbox
+import ThemeSettings
 
 private final class DeveloperArguments {
     let importColors:()->Void
@@ -20,12 +21,14 @@ private final class DeveloperArguments {
     let toggleLogs:(Bool)->Void
     let navigateToLogs:()->Void
     let addAccount:()->Void
-    init(importColors:@escaping()->Void, exportColors:@escaping()->Void, toggleLogs:@escaping(Bool)->Void, navigateToLogs:@escaping()->Void, addAccount: @escaping() -> Void) {
+    let toggleMenu:(Bool)->Void
+    init(importColors:@escaping()->Void, exportColors:@escaping()->Void, toggleLogs:@escaping(Bool)->Void, navigateToLogs:@escaping()->Void, addAccount: @escaping() -> Void, toggleMenu:@escaping(Bool)->Void) {
         self.importColors = importColors
         self.exportColors = exportColors
         self.toggleLogs = toggleLogs
         self.navigateToLogs = navigateToLogs
         self.addAccount = addAccount
+        self.toggleMenu = toggleMenu
     }
 }
 
@@ -36,6 +39,8 @@ private enum DeveloperEntryId : Hashable {
     case openLogs
     case accounts
     case enableFilters
+    case toggleMenu
+    case crash
     case section(Int32)
     var hashValue: Int {
         switch self {
@@ -51,8 +56,12 @@ private enum DeveloperEntryId : Hashable {
             return 4
         case .enableFilters:
             return 5
+        case .toggleMenu:
+            return 5
+        case .crash:
+            return 6
         case .section(let section):
-            return 6 + Int(section)
+            return 7 + Int(section)
         }
     }
 }
@@ -65,6 +74,8 @@ private enum DeveloperEntry : TableItemListNodeEntry {
     case openLogs(sectionId: Int32)
     case accounts(sectionId: Int32)
     case enableFilters(sectionId: Int32, enabled: Bool)
+    case toggleMenu(sectionId: Int32, enabled: Bool)
+    case crash(sectionId: Int32)
     case section(Int32)
     
     var stableId:DeveloperEntryId {
@@ -81,6 +92,10 @@ private enum DeveloperEntry : TableItemListNodeEntry {
             return .accounts
         case .enableFilters:
             return .enableFilters
+        case .toggleMenu:
+            return .toggleMenu
+        case .crash:
+            return .crash
         case .section(let section):
             return .section(section)
         }
@@ -99,6 +114,10 @@ private enum DeveloperEntry : TableItemListNodeEntry {
         case .accounts(let sectionId):
             return (sectionId * 1000) + Int32(stableId.hashValue)
         case .enableFilters(let sectionId, _):
+            return (sectionId * 1000) + Int32(stableId.hashValue)
+        case let .toggleMenu(sectionId, _):
+            return (sectionId * 1000) + Int32(stableId.hashValue)
+        case let .crash(sectionId):
             return (sectionId * 1000) + Int32(stableId.hashValue)
         case .section(let sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -135,6 +154,15 @@ private enum DeveloperEntry : TableItemListNodeEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Enable Logs", type: .switchable(enabled), action: {
                 arguments.toggleLogs(!enabled)
             })
+        case let .toggleMenu(_, enabled):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Native Context Menu (Get Ready for glitches)", type: .switchable(enabled), action: {
+                arguments.toggleMenu(!enabled)
+            })
+        case .crash:
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Crash App", type: .none, action: {
+                var array:[Int] = []
+                array[1] = 0
+            })
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
         }
@@ -158,7 +186,9 @@ private func developerEntries(loginSettings: LoggingSettings) -> [DeveloperEntry
     entries.append(.toggleLogs(sectionId: sectionId, enabled: loginSettings.logToFile))
     
     entries.append(.openLogs(sectionId: sectionId))
-    
+    entries.append(.toggleMenu(sectionId: sectionId, enabled: System.legacyMenu))
+    entries.append(.crash(sectionId: sectionId))
+
     entries.append(.section(sectionId))
     sectionId += 1
     
@@ -194,7 +224,7 @@ class DeveloperViewController: TableViewController {
         let previousEntries:Atomic<[AppearanceWrapperEntry<DeveloperEntry>]> = Atomic(value: [])
         let initialSize = self.atomicSize
         let arguments = DeveloperArguments(importColors: {
-            filePanel(with: ["palette"], allowMultiple: false, for: mainWindow, completion: { list in
+            filePanel(with: ["palette"], allowMultiple: false, for: context.window, completion: { list in
                 if let path = list?.first {
                     if let theme = importPalette(path) {
                         let palettesDir = ApiEnvironment.containerURL!.appendingPathComponent("Palettes").path
@@ -205,7 +235,7 @@ class DeveloperViewController: TableViewController {
                             return settings.withUpdatedPalette(theme).withUpdatedCloudTheme(nil)
                         }).start()
                     } else {
-                        alert(for: mainWindow, info: "Parsing Error")
+                        alert(for: context.window, info: "Parsing Error")
                     }
                 }
             })
@@ -223,12 +253,16 @@ class DeveloperViewController: TableViewController {
         }, addAccount: {
             let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
             context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
+        }, toggleMenu: { value in
+            _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                return settings.withUpdatedLegacyMenu(value)
+            }).start()
         })
         
-        let signal = combineLatest(queue: prepareQueue, context.sharedContext.accountManager.sharedData(keys: [SharedDataKeys.loggingSettings]), appearanceSignal)
+        let signal = combineLatest(queue: prepareQueue, context.sharedContext.accountManager.sharedData(keys: [SharedDataKeys.loggingSettings]), appearanceSignal, themeSettingsView(accountManager: context.sharedContext.accountManager))
         
-        genericView.merge(with: signal |> map { preferences, appearance in
-            let entries = developerEntries(loginSettings: preferences.entries[SharedDataKeys.loggingSettings] as? LoggingSettings ?? LoggingSettings.defaultSettings).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+        genericView.merge(with: signal |> map { preferences, appearance, theme in
+            let entries = developerEntries(loginSettings: preferences.entries[SharedDataKeys.loggingSettings]?.get(LoggingSettings.self) ?? LoggingSettings.defaultSettings).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
         } |> deliverOnMainQueue)
         

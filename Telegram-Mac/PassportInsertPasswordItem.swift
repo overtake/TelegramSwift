@@ -41,7 +41,7 @@ class PassportInsertPasswordItem: GeneralRowItem {
         self.checkPasswordAction = checkPasswordAction
         self.forgotPassword = forgotPassword
         self.hasRecoveryEmail = hasRecoveryEmail
-        descLayout = TextViewLayout(.initialize(string: error != nil ? error! : (isSettings ? L10n.secureIdInsertPasswordSettingsDescription : L10n.secureIdInsertPasswordDescription), color: error != nil ? theme.colors.redUI : theme.colors.grayText, font: .normal(.text)), alignment: .center)
+        descLayout = TextViewLayout(.initialize(string: error != nil ? error! : (isSettings ? strings().secureIdInsertPasswordSettingsDescription : strings().secureIdInsertPasswordDescription), color: error != nil ? theme.colors.redUI : theme.colors.grayText, font: .normal(.text)), alignment: .center)
         super.init(initialSize)
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
@@ -120,7 +120,7 @@ final class PassportInsertPasswordRowView : GeneralRowView, NSTextFieldDelegate 
                 if item.hasRecoveryEmail {
                     item.forgotPassword()
                 } else {
-                    alert(for: mainWindow, info: L10n.secureIdForgotPasswordNoEmail)
+                    alert(for: mainWindow, info: strings().secureIdForgotPasswordNoEmail)
                 }
             }
         }, for: .Click)
@@ -180,14 +180,14 @@ final class PassportInsertPasswordRowView : GeneralRowView, NSTextFieldDelegate 
         inputContainer.backgroundColor = theme.colors.grayBackground
         
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: L10n.secureIdInsertPasswordPassword, color: theme.colors.grayText, font: .normal(.title))
+        _ = attr.append(string: strings().secureIdInsertPasswordPassword, color: theme.colors.grayText, font: .normal(.title))
         input.placeholderAttributedString = attr
         input.font = .normal(.title)
         input.sizeToFit()
         nextButton.set(font: .normal(.title), for: .Normal)
         nextButton.set(color: .white, for: .Normal)
         nextButton.set(background: theme.colors.accent, for: .Normal)
-        nextButton.set(text: L10n.secureIdInsertPasswordNext, for: .Normal)
+        nextButton.set(text: strings().secureIdInsertPasswordNext, for: .Normal)
         _ = nextButton.sizeToFit(NSMakeSize(40, 0), NSMakeSize(.greatestFiniteMagnitude, 40))
         nextButton.layer?.cornerRadius = 20
         

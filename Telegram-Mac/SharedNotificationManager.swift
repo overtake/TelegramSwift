@@ -10,14 +10,29 @@ import Cocoa
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-
+import BuildConfig
 import TGUIKit
+import ObjcUtils
+import InAppSettings
 
 func getNotificationMessageId(userInfo:[AnyHashable: Any], for prefix: String) -> MessageId? {
     if let msgId = userInfo["\(prefix).message.id"] as? Int32, let msgNamespace = userInfo["\(prefix).message.namespace"] as? Int32, let namespace = userInfo["\(prefix).peer.namespace"] as? Int32, let id = userInfo["\(prefix).peer.id"] as? Int64 {
         return MessageId(peerId: PeerId(namespace: PeerId.Namespace._internalFromInt32Value(namespace), id: PeerId.Id._internalFromInt64Value(id)), namespace: msgNamespace, id: msgId)
     }
     return nil
+}
+
+func getNotificationToneFile(account: Account, sound: PeerMessageSound) -> Signal<String?, NoError> {
+    let engine = TelegramEngine(account: account)
+    return engine.peers.notificationSoundList() |> take(1) |> mapToSignal { list in
+        return fileNameForNotificationSound(postbox: account.postbox, sound: sound, defaultSound: nil, list: list) |> map { resource in
+            if let resource = resource {
+                return resourcePath(account.postbox, resource)
+            } else {
+                return "default"
+            }
+        }
+    }
 }
 
 struct LockNotificationsData : Equatable {
@@ -90,14 +105,15 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
     private let disposableDict: DisposableDict<AccountRecordId> = DisposableDict()
     let accountManager: AccountManager<TelegramAccountManagerTypes>
     var resignTimestamp:Int32? = nil
-    let window: Window
     
     var activeAccounts: (primary: Account?, accounts: [(AccountRecordId, Account)]) = (primary: nil, accounts: [])
     let bindings: SharedNotificationBindings
     private let appEncryption: AppEncryptionParameters
-    init(activeAccounts: Signal<(primary: Account?, accounts: [(AccountRecordId, Account)]), NoError>, appEncryption: AppEncryptionParameters, accountManager: AccountManager<TelegramAccountManagerTypes>, window: Window, bindings: SharedNotificationBindings) {
+    
+    private var lockers:[PasscodeLockController] = []
+    
+    init(activeAccounts: Signal<(primary: Account?, accounts: [(AccountRecordId, Account)]), NoError>, appEncryption: AppEncryptionParameters, accountManager: AccountManager<TelegramAccountManagerTypes>, bindings: SharedNotificationBindings) {
         self.accountManager = accountManager
-        self.window = window
         self.bindings = bindings
         self.appEncryption = appEncryption
         
@@ -106,10 +122,12 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         
         UNUserNotifications.initialize(manager: self)
 
-     
+        UNUserNotifications.current?.authorize(completion: { value in
+            
+        })
         
-        NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSWindow.didBecomeKeyNotification, object: window)
-        NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSWindow.didResignKeyNotification, object: window)
+//        NotificationCenter.default.addObserver(self, selector: #selector(windowDidBecomeKey), name: NSWindow.didBecomeKeyNotification, object: window)
+//        NotificationCenter.default.addObserver(self, selector: #selector(windowDidResignKey), name: NSWindow.didResignKeyNotification, object: window)
         
         
         DistributedNotificationCenter.default().addObserver(self, selector: #selector(screenIsLocked), name: NSNotification.Name(rawValue: "com.apple.screenIsLocked"), object: nil)
@@ -118,24 +136,50 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         
         _ = (_passlock.get() |> mapToSignal { show in additionalSettings(accountManager: accountManager) |> map { (show, $0) }} |> deliverOnMainQueue |> mapToSignal { show, settings -> Signal<Bool, NoError> in
             if show {
-                let controller = PasscodeLockController(accountManager, useTouchId: settings.useTouchId, logoutImpl: {
-                    return self.logout()
-                }, updateCurrectController: bindings.updateCurrectController)
-                closeAllModals()
                 closeInstantView()
                 closeGalleryViewer(false)
-                showModal(with: controller, for: window, isOverlay: true)
-                return .single(show) |> then( controller.doneValue |> map {_ in return false} |> take(1) )
-            }
-            return .never()
-            } |> deliverOnMainQueue).start(next: { [weak self] lock in
-                for subview in window.contentView!.subviews {
-                    if let subview = subview as? SplitView {
-                        subview.isHidden = lock
-                        break
+                
+                var signals:[Signal<Bool, NoError>] = []
+                
+                appDelegate?.enumerateAccountContexts({ context in
+                    closeAllModals(window: context.window)
+                    _ = context.audioPlayer?.pause()
+                    let controller = PasscodeLockController(accountManager, useTouchId: settings.useTouchId, logoutImpl: {
+                        return self.logout()
+                    }, updateCurrectController: bindings.updateCurrectController)
+                    
+                    self.lockers.append(controller)
+                    showModal(with: controller, for: context.window, isOverlay: true)
+                    signals.append(controller.doneValue)
+                })
+                let signal: Signal<Bool, NoError> = combineLatest(signals)
+                |> map { values in
+                    if values.contains(true) {
+                        return false
+                    } else {
+                        return true
                     }
                 }
-                self?.updateLocked { previous -> LockNotificationsData in
+                return .single(show) |> then(signal)
+            }
+            return .never()
+        } |> deliverOnMainQueue).start(next: { lock in
+                
+                appDelegate?.enumerateAccountContexts({ context in
+                    for subview in context.window.contentView!.subviews {
+                        if let subview = subview as? SplitView {
+                            subview.isHidden = lock
+                            break
+                        }
+                    }
+                })
+                if !lock {
+                    while !self.lockers.isEmpty {
+                        self.lockers.removeLast().close()
+                    }
+                }
+                
+                self.updateLocked { previous -> LockNotificationsData in
                     return previous.withUpdatedPasscodeLock(lock)
                 }
             })
@@ -174,26 +218,18 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
             }
             |> deliverOnMainQueue
         
-        window.set(handler: { _ -> KeyHandlerResult in
-            
-            if !self._lockedValue.passcodeLock {
-                self._passlock.set(accountManager.transaction { transaction -> Bool in
-                    switch transaction.getAccessChallengeData() {
-                    case .none:
-                        return false
-                    default:
-                        return true
-                    }
-                })
-            }
-            
-            return .invoked
-        }, with: self, for: .L, priority: .modal, modifierFlags: [.command])
 
         _passlock.set(passlock)
         
     }
     
+    func updatePasslock(_ signal: Signal<Bool, NoError>) {
+        _passlock.set(signal)
+    }
+    
+    func find(_ id: AccountRecordId?) -> AccountContext? {
+        return appDelegate?.activeContext(for: id)
+    }
     
     func logout() -> Signal<Never, NoError> {
         let accountManager = self.accountManager
@@ -244,29 +280,78 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
     private(set) var snoofEnabled: Bool = true
     private(set) var requestUserAttention: Bool = false
     
+    enum Source {
+        case messages([Message], PeerGroupId)
+        case reaction(Message, Peer, String, Int32)
+        
+        var messages:[Message] {
+            switch self {
+            case let .messages(messages, _):
+                return messages
+            case let .reaction(message, _, _, _):
+                return [message]
+            }
+        }
+        var groupId: PeerGroupId? {
+            switch self {
+            case let .messages(_, groupId):
+                return groupId
+            case .reaction:
+                return nil
+            }
+        }
+        func key(for message: Message) -> String {
+            switch self {
+            case let .reaction(_, peer, value, timestamp):
+                return "reaction_\(message.id.toInt64())_\(peer.id.toInt64())_\(value)_\(timestamp)"
+            case .messages:
+                return "message_\(message.id.toInt64())"
+            }
+        }
+    }
+    
     func startNotifyListener(with account: Account, primary: Bool) {
         let screenLocked = self.screenLocked
-        var alreadyNotified:Set<MessageId> = Set()
+        var alreadyNotified:Set<String> = Set()
         
-        disposableDict.set((account.stateManager.notificationMessages |> mapToSignal { messages -> Signal<([([Message], PeerGroupId)], InAppNotificationSettings), NoError> in
-            return appNotificationSettings(accountManager: self.accountManager) |> take(1) |> mapToSignal { inAppSettings -> Signal<([([Message], PeerGroupId)], InAppNotificationSettings), NoError> in
+        
+        
+        
+        disposableDict.set((combineLatest(account.stateManager.notificationMessages, account.stateManager.reactionNotifications) |> mapToSignal { messages, reactions -> Signal<([Source], InAppNotificationSettings), NoError> in
+            return appNotificationSettings(accountManager: self.accountManager) |> take(1) |> mapToSignal { inAppSettings -> Signal<([Source], InAppNotificationSettings), NoError> in
                 self.snoofEnabled = inAppSettings.showNotificationsOutOfFocus
                 self.requestUserAttention = inAppSettings.requestUserAttention
                 if inAppSettings.enabled && inAppSettings.muteUntil < Int32(Date().timeIntervalSince1970) {
                     
-                    return .single((messages.filter({$0.2 || ($0.0.isEmpty || $0.0[0].wasScheduled)}).map {($0.0, $0.1)}, inAppSettings))
+                    
+                    
+                    let msgs:[Source] = messages.filter
+                    {
+                        $0.2 || ($0.0.isEmpty || $0.0[0].wasScheduled)
+                    }.map {
+                        return .messages($0.0, $0.1)
+                    }
+                    
+                    let rctns:[Source] = reactions.map {
+                        .reaction($2, $0, $1, $3)
+                    }
+
+                    return .single((msgs + rctns, inAppSettings))
                 } else {
                     return .complete()
                 }
                 
             }
         }
-        |> mapToSignal { messages, inAppSettings -> Signal<([([Message], PeerGroupId)],[MessageId:NSImage], InAppNotificationSettings), NoError> in
+        |> mapToSignal { sources, inAppSettings -> Signal<([Source],[MessageId:NSImage], InAppNotificationSettings), NoError> in
                 
                 var photos:[Signal<(MessageId, CGImage?),NoError>] = []
-                for message in messages.reduce([], { current, value in return current + value.0}) {
+            
+                let messages:[Message] = sources.reduce([], { current, value in return current + value.messages})
+                
+                for message in messages {
                     var peer = message.author
-                    if let mainPeer = messageMainPeer(message) {
+                    if let mainPeer = coreMessageMainPeer(message) {
                         if mainPeer is TelegramChannel || mainPeer is TelegramGroup || message.wasScheduled {
                             peer = mainPeer
                         }
@@ -286,27 +371,58 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             images[messageId] = NSImage(cgImage: image, size: NSMakeSize(50,50))
                         }
                     }
-                    return (messages, images, inAppSettings)
+                    return (sources, images, inAppSettings)
                 }
-            } |> mapToSignal { messages, images, inAppSettings -> Signal<([([Message], PeerGroupId)],[MessageId:NSImage], InAppNotificationSettings, Bool), NoError> in
+            } |> mapToSignal { sources, images, inAppSettings -> Signal<([Source], [MessageId:NSImage], InAppNotificationSettings, Bool), NoError> in
                 return screenLocked.get()
                     |> take(1)
-                    |> map { data in return (messages, images, inAppSettings, data.isLocked)}
+                    |> map { data in return (sources, images, inAppSettings, data.isLocked)}
             }
-            |> mapToSignal { values in
-                return account.postbox.loadedPeerWithId(account.peerId) |> map { peer in
-                    return (values.0, values.1, values.2, values.3, peer)
+            |> mapToSignal { values -> Signal<([Source], [MessageId:NSImage], InAppNotificationSettings, Bool, Peer, String?), NoError> in
+            
+            return account.postbox.loadedPeerWithId(account.peerId) |> mapToSignal { peer in
+                    if let message = values.0.first?.messages.first {
+                        return account.postbox.transaction { transaction -> Signal<([Source], [MessageId:NSImage], InAppNotificationSettings, Bool, Peer, String?), NoError> in
+                            let notifications = transaction.getPeerNotificationSettings(message.id.peerId) as? TelegramPeerNotificationSettings
+                            
+                            if notifications == nil || !notifications!.isMuted {
+                                if let messageSound = notifications?.messageSound {
+                                    switch messageSound {
+                                    case .none:
+                                        return .single((values.0, values.1, values.2, values.3, peer, nil))
+                                    case .default:
+                                        return getNotificationToneFile(account: account, sound: values.2.tone) |> map { soundPath in
+                                            return (values.0, values.1, values.2, values.3, peer, soundPath)
+                                        }
+                                    default:
+                                        return getNotificationToneFile(account: account, sound: messageSound) |> map { soundPath in
+                                            return (values.0, values.1, values.2, values.3, peer, soundPath)
+                                        }
+                                    }
+                                } else {
+                                    return getNotificationToneFile(account: account, sound: values.2.tone) |> map { soundPath in
+                                        return (values.0, values.1, values.2, values.3, peer, soundPath)
+                                    }
+                                }
+                            } else {
+                                return getNotificationToneFile(account: account, sound: values.2.tone) |> map { soundPath in
+                                    return (values.0, values.1, values.2, values.3, peer, soundPath)
+                                }
+                            }
+                        } |> switchToLatest
+                    }
+                    return .complete()
                 }
-            } |> deliverOnMainQueue).start(next: { messages, images, inAppSettings, screenIsLocked, accountPeer in
+            } |> deliverOnMainQueue).start(next: { sources, images, inAppSettings, screenIsLocked, accountPeer, soundPath in
                 
                 if !primary, !inAppSettings.notifyAllAccounts {
                     return
                 }
-                
-                for (messages, groupId) in messages {
-                    for message in messages {
+
+                for source in sources {
+                    for message in source.messages {
                         
-                        if alreadyNotified.contains(message.id) {
+                        if alreadyNotified.contains(source.key(for: message)) {
                             continue
                         }
 
@@ -338,20 +454,30 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 title = appName
                             }
                             
-                           
-                           
-                            
-                            var text = chatListText(account: account, for: message, applyUserName: true).string.nsstring
-                            var subText:String?
-                            if text.contains("\n") {
-                                let parts = text.components(separatedBy: "\n")
-                                text = parts[1] as NSString
-                                subText = parts[0]
+                            var text: String
+                            var subText:String? = nil
+                            switch source {
+                            case let .reaction(message, peer, value, _):
+                                let msg = pullText(from: message) as String
+                                title = message.peers[message.id.peerId]?.displayTitle ?? ""
+                                if message.id.peerId.namespace == Namespaces.Peer.CloudUser {
+                                    text = strings().notificationContactReacted(value.fixed, msg)
+                                } else {
+                                    text = strings().notificationGroupReacted(peer.displayTitle, value, msg)
+                                }
+                            case .messages:
+                                text = chatListText(account: account, for: message, applyUserName: true).string
+                                if text.contains("\n") {
+                                    let parts = text.components(separatedBy: "\n")
+                                    text = parts[1]
+                                    subText = parts[0]
+                                }
                             }
+                           
                             
                             if message.wasScheduled {
                                 if message.id.peerId == account.peerId {
-                                    title = L10n.notificationReminder
+                                    title = strings().notificationReminder
                                 } else {
                                     title = "📆 \(title)"
                                 }
@@ -363,7 +489,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             
                             
                             if !inAppSettings.displayPreviews || message.peers[message.id.peerId] is TelegramSecretChat || screenIsLocked {
-                                text = L10n.notificationLockedPreview.nsstring
+                                text = strings().notificationLockedPreview
                                 subText = nil
                             }
                             
@@ -376,7 +502,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 case .none:
                                     notification.soundName = nil
                                 default:
-                                    notification.soundName = fileNameForNotificationSound(inAppSettings.tone, defaultSound: nil)
+                                    notification.soundName = soundPath
                                 }
                             } else {
                                 switch inAppSettings.tone {
@@ -406,7 +532,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             notification.hasReplyButton = hasReplyButton
                             
                             notification.hasActionButton = !message.wasScheduled
-                            notification.otherButtonTitle = L10n.notificationMarkAsRead
+                            notification.otherButtonTitle = strings().notificationMarkAsRead
                             
                             var dict: [String : Any] = [:]
                             
@@ -431,21 +557,26 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             dict["reply.peer.id"] =  message.id.peerId.id._internalGetInt64Value()
                             dict["reply.peer.namespace"] =  message.id.peerId.namespace._internalGetInt32Value()
                             
-                            dict["groupId"] = groupId.rawValue
+                            if let groupId = source.groupId {
+                                dict["groupId"] = groupId.rawValue
+                            }
                             
                             dict["accountId"] = account.id.int64
                             dict["timestamp"] = Int32(Date().timeIntervalSince1970)
 
-                            alreadyNotified.insert(message.id)
+                            alreadyNotified.insert(source.key(for: message))
                             
                             notification.userInfo = dict
-//                            NSUserNotificationCenter.default.deliver(notification)
                             
                             if self.shouldPresent(dict) {
                                 _ = UNUserNotifications.authorizationStatus.start(next: { status in
                                     switch status {
                                     case .authorized:
                                         UNUserNotifications.current?.add(notification)
+                                    case .notDetermined:
+                                        UNUserNotifications.current?.authorize { manager in
+                                            manager.add(notification)
+                                        }
                                     default:
                                         break
                                     }
@@ -469,8 +600,10 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         }
         
         let wasScheduled = userInfo?["wasScheduled"] as? Bool ?? false
-        
-        let result = !snoofEnabled || !window.isKeyWindow || wasScheduled
+        guard let context = find(accountId) else {
+            return false
+        }
+        let result = !snoofEnabled || !context.window.isKeyWindow || wasScheduled
         
         return result
     }

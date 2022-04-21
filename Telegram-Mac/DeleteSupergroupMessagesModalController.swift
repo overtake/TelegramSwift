@@ -91,7 +91,7 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
                 
                 _ = strongSelf.genericView.addItem(item: GeneralRowItem(initialSize, height: 20, stableId: 0))
                 
-                _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 1, name: tr(L10n.supergroupDeleteRestrictionDeleteMessage), type: .selectable(strongSelf.options.contains(.deleteMessages)), action: { [weak strongSelf] in
+                _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 1, name: strings().supergroupDeleteRestrictionDeleteMessage, type: .selectable(strongSelf.options.contains(.deleteMessages)), action: { [weak strongSelf] in
                     if let strongSelf = strongSelf {
                         if !strongSelf.options.isEmpty {
                             strongSelf.options.remove(.deleteMessages)
@@ -101,7 +101,7 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
                 }))
                 
                 if peer.hasPermission(.banMembers) {
-                    _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 2, name: tr(L10n.supergroupDeleteRestrictionBanUser), type: .selectable(strongSelf.options.contains(.banUser)), action: { [weak strongSelf] in
+                    _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 2, name: strings().supergroupDeleteRestrictionBanUser, type: .selectable(strongSelf.options.contains(.banUser)), action: { [weak strongSelf] in
                         if let strongSelf = strongSelf {
                             if strongSelf.options.contains(.banUser) {
                                 strongSelf.options.remove(.banUser)
@@ -116,7 +116,7 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
                     }))
                 }
                
-                _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 3, name: tr(L10n.supergroupDeleteRestrictionReportSpam), type: .selectable(strongSelf.options.contains(.reportSpam)), action: { [weak strongSelf] in
+                _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 3, name: strings().supergroupDeleteRestrictionReportSpam, type: .selectable(strongSelf.options.contains(.reportSpam)), action: { [weak strongSelf] in
                     if let strongSelf = strongSelf {
                         if strongSelf.options.contains(.reportSpam) {
                             strongSelf.options.remove(.reportSpam)
@@ -131,7 +131,7 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
                     }
                 }))
                 
-                _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 4, name: tr(L10n.supergroupDeleteRestrictionDeleteAllMessages), type: .selectable(strongSelf.options.contains(.deleteAllMessages)), action: { [weak strongSelf] in
+                _ = strongSelf.genericView.addItem(item: GeneralInteractedRowItem(initialSize, stableId: 4, name: strings().supergroupDeleteRestrictionDeleteAllMessages, type: .selectable(strongSelf.options.contains(.deleteAllMessages)), action: { [weak strongSelf] in
                     if let strongSelf = strongSelf {
                         if strongSelf.options.contains(.deleteAllMessages) {
                             strongSelf.options.remove(.deleteAllMessages)
@@ -177,9 +177,9 @@ class DeleteSupergroupMessagesModalController: TableModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: tr(L10n.modalOK), accept: { [weak self] in
+        return ModalInteractions(acceptTitle: strings().modalOK, accept: { [weak self] in
             self?.perform()
-        }, cancelTitle: tr(L10n.modalCancel), drawBorder: true, height: 40)
+        }, cancelTitle: strings().modalCancel, drawBorder: true, height: 40)
     }
     
     

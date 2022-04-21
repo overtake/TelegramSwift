@@ -113,7 +113,7 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
                     switch result {
                     case let .internalReference(values):
                         if let file = values.file {
-                            arguments?.sendAppFile(file, view, false)
+                            arguments?.sendAppFile(file, view, false, false)
                         }
                     default:
                         break
@@ -124,19 +124,22 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
                     return context.account.postbox.transaction { transaction -> [ContextMenuItem] in
                         var items: [ContextMenuItem] = []
                         if let mediaId = file.id {
-                            let gifItems = transaction.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).compactMap {$0.contents as? RecentMediaItem}
+                            let gifItems = transaction.getOrderedListItems(collectionId: Namespaces.OrderedItemList.CloudRecentGifs).compactMap { $0.contents.get(RecentMediaItem.self) }
                             if let _ = gifItems.firstIndex(where: {$0.media.id == mediaId}) {
-                                items.append(ContextMenuItem(L10n.messageContextRemoveGif, handler: {
+                                items.append(ContextMenuItem(strings().messageContextRemoveGif, handler: {
                                     let _ = removeSavedGif(postbox: context.account.postbox, mediaId: mediaId).start()
-                                }))
+                                }, itemImage: MenuAnimation.menu_remove_gif.value))
                             } else {
-                                items.append(ContextMenuItem(L10n.messageContextSaveGif, handler: {
+                                items.append(ContextMenuItem(strings().messageContextSaveGif, handler: {
                                     let _ = addSavedGif(postbox: context.account.postbox, fileReference: FileMediaReference.savedGif(media: file)).start()
-                                }))
+                                }, itemImage: MenuAnimation.menu_add_gif.value))
                             }
-                            items.append(ContextMenuItem(L10n.chatSendWithoutSound, handler: {
-                                arguments?.sendAppFile(file, view, true)
-                            }))
+                            items.append(ContextMenuItem(strings().chatSendWithoutSound, handler: {
+                                arguments?.sendAppFile(file, view, true, false)
+                            }, itemImage: MenuAnimation.menu_mute.value))
+                            items.append(ContextMenuItem(strings().chatSendScheduledMessage, handler: {
+                                arguments?.sendAppFile(file, view, false, true)
+                            }, itemImage: MenuAnimation.menu_schedule_message.value))
                         }
                         return items
                     }
@@ -170,7 +173,7 @@ private func prepareTabTransition(left:[GifTabEntry], right:[GifTabEntry], initi
 private func recentEntries(for view:OrderedItemListView?, initialSize:NSSize) -> [InputContextEntry] {
     if let view = view {
         
-        let result: [ChatContextResult] = view.items.compactMap({($0.contents as? RecentMediaItem)?.media as? TelegramMediaFile}).map { file in
+        let result: [ChatContextResult] = view.items.compactMap({ $0.contents.get(RecentMediaItem.self)?.media }).map { file in
             let reference = ChatContextResult.InternalReference(queryId: 0, id: "gif-panel", type: "gif", title: nil, description: nil, image: nil, file: file, message: .auto(caption: "", entities: nil, replyMarkup: nil))
             return .internalReference(reference)
         }
@@ -228,7 +231,7 @@ private func gifEntries(for collection: ChatContextResultCollection?, results: [
 
 final class RecentGifsArguments {
     var sendInlineResult:(ChatContextResultCollection,ChatContextResult, NSView) -> Void = { _,_,_  in}
-    var sendAppFile:(TelegramMediaFile, NSView, Bool) -> Void = { _,_,_ in}
+    var sendAppFile:(TelegramMediaFile, NSView, Bool, Bool) -> Void = { _,_,_, _ in}
     var searchBySuggestion:(String)->Void = { _ in }
 }
 
@@ -455,7 +458,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
     }
     
     override var canBecomeResponder: Bool {
-        if let view = context.sharedContext.bindings.rootNavigation().view as? SplitView {
+        if let view = context.bindings.rootNavigation().view as? SplitView {
             return view.state == .single
         }
         return false
@@ -485,11 +488,11 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         _ = atomicSize.swap(_frameRect.size)
         let arguments = RecentGifsArguments()
         
-        arguments.sendAppFile = { [weak self] file, view, silent in
+        arguments.sendAppFile = { [weak self] file, view, silent, schedule in
             if let slowMode = self?.chatInteraction?.presentation.slowMode, slowMode.hasLocked {
                 showSlowModeTimeoutTooltip(slowMode, for: view)
             } else {
-                self?.interactions?.sendGIF(file, silent)
+                self?.interactions?.sendGIF(file, silent, schedule)
                 self?.makeSearchCommand?(.close)
                 self?.interactions?.close()
             }

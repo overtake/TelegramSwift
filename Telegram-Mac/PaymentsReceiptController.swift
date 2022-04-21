@@ -75,7 +75,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         
         if let tipAmount = receipt.tipAmount {
-            prices.append(.init(label: L10n.paymentsReceiptTip, amount: tipAmount))
+            prices.append(.init(label: strings().paymentsReceiptTip, amount: tipAmount))
         }
         
         for (i, price) in prices.enumerated() {
@@ -104,9 +104,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         if !prices.isEmpty {
             let viewType = GeneralViewType.lastItem.withUpdatedInsets(last)
 
-            let tuple = Tuple(label: L10n.checkoutTotalAmount, price: formatCurrencyAmount(prices.reduce(0, { $0 + $1.amount}), currency: receipt.invoice.currency), viewType: viewType)
+            let tuple = Tuple(label: strings().checkoutTotalAmount, price: formatCurrencyAmount(prices.reduce(0, { $0 + $1.amount}), currency: receipt.invoice.currency), viewType: viewType)
             
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_checkout_price(L10n.checkoutTotalAmount, index: .max), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_checkout_price(strings().checkoutTotalAmount, index: .max), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
                 return PaymentsCheckoutPriceItem(initialSize, stableId: stableId, title: tuple.label, price: tuple.price, font: .medium(.text), color: theme.colors.text, viewType: tuple.viewType)
             }))
             index += 1
@@ -117,7 +117,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         }
         
         var fields = receipt.invoice.requestedFields.intersection([.shippingAddress, .email, .name, .phone])
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_payment_method, data: .init(name: L10n.checkoutPaymentMethod, color: theme.colors.text, type: .context(receipt.credentialsTitle), viewType: fields.isEmpty ? .singleItem : .firstItem, enabled: false)))
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_payment_method, data: .init(name: strings().checkoutPaymentMethod, color: theme.colors.text, type: .context(receipt.credentialsTitle), viewType: fields.isEmpty ? .singleItem : .firstItem, enabled: false)))
         index += 1
         
         
@@ -142,33 +142,33 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     }
                 }
             }
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_shipping_info, data: .init(name: L10n.checkoutShippingAddress, color: theme.colors.text, type: .context(addressString), viewType: fields.isEmpty && receipt.shippingOption == nil ? .lastItem : .innerItem, enabled: false)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_shipping_info, data: .init(name: strings().checkoutShippingAddress, color: theme.colors.text, type: .context(addressString), viewType: fields.isEmpty && receipt.shippingOption == nil ? .lastItem : .innerItem, enabled: false)))
             index += 1
         }
         
         if let _ = receipt.shippingOption {
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_flex_shipping, data: .init(name: L10n.checkoutShippingMethod, color: theme.colors.text, type: .context(receipt.shippingOption?.title ?? ""), viewType: fields.isEmpty ? .lastItem : .innerItem, enabled: false)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_flex_shipping, data: .init(name: strings().checkoutShippingMethod, color: theme.colors.text, type: .context(receipt.shippingOption?.title ?? ""), viewType: fields.isEmpty ? .lastItem : .innerItem, enabled: false)))
             index += 1
         }
         
         updated = fields.subtracting(.name)
         if updated != fields {
             fields = updated
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_name, data: .init(name: L10n.checkoutName, color: theme.colors.text, type: .context(receipt.info?.name ?? ""), viewType: fields.isEmpty ? .lastItem : .innerItem, enabled: false)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_name, data: .init(name: strings().checkoutName, color: theme.colors.text, type: .context(receipt.info?.name ?? ""), viewType: fields.isEmpty ? .lastItem : .innerItem, enabled: false)))
             index += 1
         }
         
         updated = fields.subtracting(.email)
         if updated != fields {
             fields = updated
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_email, data: .init(name: L10n.checkoutEmail, color: theme.colors.text, type: .context(receipt.info?.email ?? ""), viewType: fields.isEmpty ? .lastItem : .innerItem, enabled: false)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_email, data: .init(name: strings().checkoutEmail, color: theme.colors.text, type: .context(receipt.info?.email ?? ""), viewType: fields.isEmpty ? .lastItem : .innerItem, enabled: false)))
             index += 1
         }
         
         updated = fields.subtracting(.phone)
         if updated != fields {
             fields = updated
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_phone_number, data: .init(name: L10n.checkoutPhone, color: theme.colors.text, type: .nextContext(formatPhoneNumber(receipt.info?.phone ?? "")), viewType: fields.isEmpty ? .lastItem : .innerItem, enabled: false)))
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_phone_number, data: .init(name: strings().checkoutPhone, color: theme.colors.text, type: .nextContext(formatPhoneNumber(receipt.info?.phone ?? "")), viewType: fields.isEmpty ? .lastItem : .innerItem, enabled: false)))
             index += 1
         }
         
@@ -205,7 +205,7 @@ func PaymentsReceiptController(context: AccountContext, messageId: MessageId, me
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title:L10n.checkoutReceiptTitle)
+    let controller = InputDataController(dataSignal: signal, title:strings().checkoutReceiptTitle)
     
     controller.onDeinit = {
         actionsDisposable.dispose()
@@ -216,7 +216,7 @@ func PaymentsReceiptController(context: AccountContext, messageId: MessageId, me
         return .none
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.modalDone, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().modalDone, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, drawBorder: true, height: 50, singleButton: true)
     

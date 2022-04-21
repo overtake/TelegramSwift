@@ -18,13 +18,12 @@ class ReplyMarkupButtonLayout {
     
     private(set) var width:CGFloat = 0
     let text:TextViewLayout
-    let style:ControlStyle
     let button:ReplyMarkupButton
-    
-    init(button:ReplyMarkupButton, style:ControlStyle = ControlStyle(backgroundColor: theme.colors.grayForeground, highlightColor: theme.colors.text), isInput: Bool, paid: Bool) {
+    let presentation: TelegramPresentationTheme
+    init(button:ReplyMarkupButton, theme: TelegramPresentationTheme, isInput: Bool, paid: Bool) {
         self.button = button
-        self.style = style
-        self.text = TextViewLayout(NSAttributedString.initialize(string: paid ? L10n.messageReplyActionButtonShowReceipt : button.title.fixed, color: theme.controllerBackgroundMode.hasWallpaper && !isInput ? theme.chatServiceItemTextColor : theme.colors.text, font: .normal(.short)), maximumNumberOfLines: 1, truncationType: .middle, cutout: nil, alignment: .center)
+        self.presentation = theme
+        self.text = TextViewLayout(NSAttributedString.initialize(string: paid ? strings().messageReplyActionButtonShowReceipt : button.title.fixed, color: theme.controllerBackgroundMode.hasWallpaper && !isInput ? theme.chatServiceItemTextColor : theme.colors.text, font: .normal(.short)), maximumNumberOfLines: 1, truncationType: .middle, cutout: nil, alignment: .center, alwaysStaticItems: true)
     }
     
     func measure(_ width:CGFloat) {
@@ -53,14 +52,14 @@ class ReplyMarkupNode: Node {
     
     private let interactions:ReplyMarkupInteractions
     private let isInput: Bool
-    init(_ rows:[ReplyMarkupRow], _ flags:ReplyMarkupMessageFlags, _ interactions:ReplyMarkupInteractions, _ view:View? = nil, _ isInput: Bool = false, paid: Bool = false) {
+    init(_ rows:[ReplyMarkupRow], _ flags:ReplyMarkupMessageFlags, _ interactions:ReplyMarkupInteractions, _ theme: TelegramPresentationTheme, _ view:View? = nil, _ isInput: Bool = false, paid: Bool = false) {
         self.flags = flags
         self.isInput = isInput
         self.interactions = interactions
         var layoutRows:[[ReplyMarkupButtonLayout]] = Array(repeating: [], count: rows.count)
         for i in 0 ..< rows.count {
             for button in rows[i].buttons {
-                layoutRows[i].append(ReplyMarkupButtonLayout(button: button, isInput: isInput, paid: paid))
+                layoutRows[i].append(ReplyMarkupButtonLayout(button: button, theme: theme, isInput: isInput, paid: paid))
             }
         }
         self.markup = layoutRows
@@ -88,6 +87,10 @@ class ReplyMarkupNode: Node {
                     urlView = ImageView()
                     urlView?.image = theme.chat.chatActionUrl(theme: theme)
                     urlView?.sizeToFit()
+                case .openWebApp, .openWebView:
+                    urlView = ImageView()
+                    urlView?.image = theme.chat.chatActionWebUrl(theme: theme)
+                    urlView?.sizeToFit()
                 default:
                     break
                 }
@@ -99,20 +102,23 @@ class ReplyMarkupNode: Node {
                     }
                 }, for: .Click)
                 
-                btnView.set(handler: { control in
-                    control.change(opacity: 0.7, animated: true)
-                }, for: .Highlight)
-                btnView.set(handler: { control in
-                    control.change(opacity: 1.0, animated: true)
-                }, for: .Normal)
-                btnView.set(handler: { control in
-                    control.change(opacity: 1.0, animated: true)
-                }, for: .Hover)
+                btnView.scaleOnClick = true
+    
                 btnView.layer?.cornerRadius = .cornerRadius
                 btnView.isSelectable = false
                 btnView.disableBackgroundDrawing = true
 
-                btnView.backgroundColor = button.style.backgroundColor
+                if !self.isInput && button.presentation.shouldBlurService {
+                    btnView.blurBackground = button.presentation.blurServiceColor
+                    btnView.backgroundColor = .clear
+                } else {
+                    btnView.blurBackground = nil
+                    if button.presentation.hasWallpaper && !self.isInput {
+                        btnView.backgroundColor = button.presentation.chatServiceItemColor
+                    } else {
+                        btnView.backgroundColor = button.presentation.colors.grayForeground
+                    }
+                }
                 btnView.set(layout:button.text)
                 
                 if let urlView = urlView {
@@ -125,12 +131,12 @@ class ReplyMarkupNode: Node {
     }
     
     func proccess(_ control:Control, _ button:ReplyMarkupButton) {
-        interactions.proccess(button, { [weak control] loading in
+        interactions.proccess(button, { _ in
            // control?.backgroundColor = loading ? .black : theme.colors.grayBackground
         })
     }
     
-    func layout() {
+    func layout(transition: ContainedViewLayoutTransition = .immediate) {
         var y:CGFloat = 0
         
         var i:Int = 0
@@ -143,13 +149,24 @@ class ReplyMarkupNode: Node {
                     w = self.width - rect.minX
                 }
                 rect.size = NSMakeSize(w, ReplyMarkupNode.buttonHeight)
-                let button:View? = view?.subviews[i] as? View
-                button?.backgroundColor = theme.controllerBackgroundMode.hasWallpaper && !isInput ? theme.chatServiceItemColor : theme.colors.grayBackground
-                if let button = button {
-                    button.frame = rect
-                    button.setNeedsDisplayLayer()
-                    if !button.subviews.isEmpty, let urlView = button.subviews[0] as? ImageView {
-                        urlView.setFrameOrigin(rect.width - urlView.frame.width - 5, 5)
+                let btnView:TextView? = view?.subviews[i] as? TextView
+                
+                if !self.isInput && button.presentation.shouldBlurService {
+                    btnView?.blurBackground = button.presentation.blurServiceColor
+                    btnView?.backgroundColor = .clear
+                } else {
+                    btnView?.blurBackground = nil
+                    if button.presentation.hasWallpaper && !self.isInput {
+                        btnView?.backgroundColor = button.presentation.chatServiceItemColor
+                    } else {
+                        btnView?.backgroundColor = button.presentation.colors.grayForeground
+                    }
+                }
+                if let btnView = btnView {
+                    transition.updateFrame(view: btnView, frame: rect)
+                    btnView.setNeedsDisplayLayer()
+                    if !btnView.subviews.isEmpty, let urlView = btnView.subviews.first(where: { $0 is ImageView }) {
+                        transition.updateFrame(view: urlView, frame: NSMakeRect(rect.width - urlView.frame.width - 5, 5, urlView.frame.width, urlView.frame.height))
                     }
                 }
                 

@@ -50,7 +50,7 @@ private func inputPasswordEntries(state: InputPasswordState, desc:String) -> [In
     sectionId += 1
     
     
-    entries.append(.input(sectionId: sectionId, index: index, value: state.value, error: state.error, identifier: _id_input_pwd, mode: .secure, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: L10n.inputPasswordControllerPlaceholder, filter: { $0 }, limit: 255))
+    entries.append(.input(sectionId: sectionId, index: index, value: state.value, error: state.error, identifier: _id_input_pwd, mode: .secure, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().inputPasswordControllerPlaceholder, filter: { $0 }, limit: 255))
     index += 1
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(desc), data: InputDataGeneralTextData(detectBold: false, viewType: .textBottomItem)))
@@ -92,9 +92,9 @@ func InputPasswordController(context: AccountContext, title: String, desc: Strin
                     let text: String
                     switch error {
                     case .wrong:
-                        text = L10n.inputPasswordControllerErrorWrongPassword
+                        text = strings().inputPasswordControllerErrorWrongPassword
                     case .generic:
-                        text = L10n.unknownError
+                        text = strings().unknownError
                     }
                     updateState {
                         return $0.withUpdatedLoading(false).withUpdatedError(InputDataValueError(description: text, target: .data))
@@ -117,7 +117,7 @@ func InputPasswordController(context: AccountContext, title: String, desc: Strin
         checkPassword.dispose()
     }, hasDone: true)
     
-    let interactions = ModalInteractions(acceptTitle: L10n.navigationDone, accept: { [weak controller] in
+    let interactions = ModalInteractions(acceptTitle: strings().navigationDone, accept: { [weak controller] in
         
         controller?.validateInputValues()
         

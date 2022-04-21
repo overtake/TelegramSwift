@@ -167,13 +167,11 @@ final class PeerChannelMemberCategoriesContextsManager {
     
     private func getContext(peerId: PeerId, key: PeerChannelMemberContextKey, requestUpdate: Bool, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
         assert(Queue.mainQueue().isCurrent())
-        if let (disposable, control) = self.impl.syncWith({ impl in
+        
+        return self.impl.syncWith({ impl in
             return impl.getContext(peerId: peerId, key: key, requestUpdate: requestUpdate, updated: updated)
-        }) {
-            return (disposable, control)
-        } else {
-            return (EmptyDisposable, nil)
-        }
+        })
+
     }
     
     func transferOwnership(peerId: PeerId, memberId: PeerId, password: String) -> Signal<Void, ChannelOwnershipTransferError> {
@@ -306,6 +304,10 @@ final class PeerChannelMemberCategoriesContextsManager {
         return self.getContext(peerId: peerId, key: .restricted(searchQuery), requestUpdate: true, updated: updated)
     }
     
+    func contacts(peerId: PeerId, searchQuery: String? = nil, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
+        return self.getContext(peerId: peerId, key: .contacts(searchQuery), requestUpdate: true, updated: updated)
+    }
+    
     func banned(peerId: PeerId, searchQuery: String? = nil, updated: @escaping (ChannelMemberListState) -> Void) -> (Disposable, PeerChannelMemberCategoryControl?) {
         return self.getContext(peerId: peerId, key: .banned(searchQuery), requestUpdate: true, updated: updated)
     }
@@ -333,7 +335,7 @@ final class PeerChannelMemberCategoriesContextsManager {
         }
     }
     
-    func updateMemberAdminRights(peerId: PeerId, memberId: PeerId, adminRights: TelegramChatAdminRights?, rank: String?) -> Signal<Void, NoError> {
+    func updateMemberAdminRights(peerId: PeerId, memberId: PeerId, adminRights: TelegramChatAdminRights?, rank: String?) -> Signal<PeerId, NoError> {
         return engine.peers.updateChannelAdminRights(peerId: peerId, adminId: memberId, rights: adminRights, rank: rank)
             |> map(Optional.init)
             |> `catch` { _ -> Signal<(ChannelParticipant?, RenderedChannelParticipant)?, NoError> in
@@ -351,8 +353,8 @@ final class PeerChannelMemberCategoriesContextsManager {
                     }
                 }
             }
-            |> mapToSignal { _ -> Signal<Void, NoError> in
-                return .complete()
+            |> mapToSignal { _ -> Signal<PeerId, NoError> in
+                return .single(memberId)
         }
     }
     
@@ -379,7 +381,7 @@ final class PeerChannelMemberCategoriesContextsManager {
         }
     }
     
-    func addMembers(peerId: PeerId, memberIds: [PeerId]) -> Signal<Void, AddChannelMemberError> {
+    func addMembers(peerId: PeerId, memberIds: [PeerId]) -> Signal<[PeerId], AddChannelMemberError> {
         let signals: [Signal<(ChannelParticipant?, RenderedChannelParticipant)?, AddChannelMemberError>] = memberIds.map({ memberId in
             return engine.peers.addChannelMember(peerId: peerId, memberId: memberId)
                 |> map(Optional.init)
@@ -408,9 +410,9 @@ final class PeerChannelMemberCategoriesContextsManager {
                     }
                 }
             }
-            |> mapToSignal { _ -> Signal<Void, AddChannelMemberError> in
-                return .complete()
-        }
+            |> mapToSignal { values -> Signal<[PeerId], AddChannelMemberError> in
+                return .single(values.compactMap { $0?.1.peer.id })
+            }
     }
     
     func replyThread(account: Account, messageId: MessageId) -> Signal<MessageHistoryViewExternalInput, NoError> {

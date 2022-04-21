@@ -66,7 +66,7 @@ class ChatMessageAccessoryView: Control {
             imageView.centerY(x: frame.width - imageView.frame.width - 6)
         }
         
-        if let textLayout = textView.layout {
+        if let textLayout = textView.textLayout {
             var rect = focus(textLayout.layoutSize)
             rect.origin.x = 6
             if hasStremingControls  {
@@ -135,7 +135,7 @@ class ChatMessageAccessoryView: Control {
                 progress.isHidden = true
                 download.isHidden = true
                 progress.state = .None
-            case let .Fetching(_, progress):
+            case let .Fetching(_, progress), let .Paused(progress):
                 self.progress.state = !isCompact ? .Fetching(progress: progress, force: false) : .None
                 self.progress.isHidden = isCompact
                 download.isHidden = !isCompact

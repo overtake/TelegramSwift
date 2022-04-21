@@ -8,11 +8,11 @@
 
 import Cocoa
 import TelegramCore
-
+import ThemeSettings
 import Postbox
 import TGUIKit
 import SwiftSignalKit
-
+import InAppSettings
 
 final class ThemeGridControllerInteraction {
     let openWallpaper: (Wallpaper, TelegramWallpaper?) -> Void
@@ -111,8 +111,8 @@ class ChatWallpaperModalController: ModalViewController {
     
     override var modalInteractions: ModalInteractions? {
         let context = self.context
-        let interactions = ModalInteractions(acceptTitle: L10n.chatWPSelectFromFile, accept: {
-            filePanel(with: photoExts, allowMultiple: false, for: mainWindow, completion: { paths in
+        let interactions = ModalInteractions(acceptTitle: strings().chatWPSelectFromFile, accept: {
+            filePanel(with: photoExts, allowMultiple: false, for: context.window, completion: { paths in
                 if let path = paths?.first {
                     let size = fs(path)
                     if let size = size, size < 10 * 1024 * 1024, let image = NSImage(contentsOf: URL(fileURLWithPath: path))?.cgImage(forProposedRect: nil, context: nil, hints: nil), image.size.width > 500 && image.size.height > 500 {
@@ -139,7 +139,7 @@ class ChatWallpaperModalController: ModalViewController {
                         showModal(with: WallpaperPreviewController(context, wallpaper: .image(representations, settings: WallpaperSettings()), source: .none), for: context.window)
                         
                     } else {
-                        alert(for: context.window, header: appName, info: L10n.appearanceCustomBackgroundFileError)
+                        alert(for: context.window, header: appName, info: strings().appearanceCustomBackgroundFileError)
                     }
                 }
             })
@@ -154,7 +154,7 @@ class ChatWallpaperModalController: ModalViewController {
     public override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
         return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
             self?.close()
-        }), center: ModalHeaderData(title: L10n.chatWPBackgroundTitle), right: nil)
+        }), center: ModalHeaderData(title: strings().chatWPBackgroundTitle), right: nil)
     }
     
     override func measure(size: NSSize) {
@@ -195,11 +195,12 @@ class ChatWallpaperModalController: ModalViewController {
             case .image, .file, .color, .gradient:
                 showModal(with: WallpaperPreviewController(context, wallpaper: wallpaper, source: telegramWallpaper != nil ? .gallery(telegramWallpaper!) : .none), for: context.window)
             default:
-                _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
-                    return settings.updateWallpaper{ $0.withUpdatedWallpaper(wallpaper) }.saveDefaultWallpaper()
-                }).start()
-                delay(0.15, closure: {
-                    close()
+                close()
+                delay(0.2, closure: {
+                    _ = updateThemeInteractivetly(accountManager: context.sharedContext.accountManager, f: { settings in
+                        return settings.updateWallpaper{ $0.withUpdatedWallpaper(wallpaper) }.saveDefaultWallpaper()
+                    }).start()
+                    
                 })
             }
             

@@ -70,7 +70,7 @@ class MGalleryVideoItem: MGalleryItem {
         
         pausepip()
         
-        if let pauseMusic = globalAudio?.pause() {
+        if let pauseMusic = context.audioPlayer?.pause() {
             isPausedGlobalPlayer = pauseMusic
         }
         
@@ -95,7 +95,7 @@ class MGalleryVideoItem: MGalleryItem {
     override func disappear(for view: NSView?) {
         super.disappear(for: view)
         if isPausedGlobalPlayer {
-            _ = globalAudio?.play()
+            _ = context.audioPlayer?.play()
         }
         if controller.style != .pictureInPicture {
             controller.pause()
@@ -109,12 +109,16 @@ class MGalleryVideoItem: MGalleryItem {
         if media.isStreamable {
             return .single(.Local)
         } else {
-            return chatMessageFileStatus(account: context.account, file: media)
+            return realStatus
         }
     }
     
     override var realStatus:Signal<MediaResourceStatus, NoError> {
-        return chatMessageFileStatus(account: context.account, file: media)
+        if let message = entry.message {
+            return chatMessageFileStatus(context: context, message: message, file: media)
+        } else {
+            return context.account.postbox.mediaBox.resourceStatus(media.resource)
+        }
     }
     
     var media:TelegramMediaFile {
@@ -242,7 +246,7 @@ class MGalleryVideoItem: MGalleryItem {
     override func fetch() -> Void {
         if !media.isStreamable {
             if let parent = entry.message {
-                _ = messageMediaFileInteractiveFetched(context: context, messageId: parent.id, fileReference: FileMediaReference.message(message: MessageReference(parent), media: media)).start()
+                _ = messageMediaFileInteractiveFetched(context: context, messageId: parent.id, messageReference: .init(parent), file: media, userInitiated: true).start()
             } else {
                 _ = freeMediaFileInteractiveFetched(context: context, fileReference: FileMediaReference.standalone(media: media)).start()
             }

@@ -37,10 +37,12 @@ class ChatStickerContentView: ChatMediaContentView {
     
     override func previewMediaIfPossible() -> Bool {
         if let table = table, let context = context, let window = window as? Window {
-            _ = startModalPreviewHandle(table, window: window, context: context)
+            startModalPreviewHandle(table, window: window, context: context)
         }
         return true
     }
+    
+    
     
     required init(frame frameRect: NSRect) {
         super.init(frame:frameRect)
@@ -51,7 +53,6 @@ class ChatStickerContentView: ChatMediaContentView {
     override func executeInteraction(_ isControl: Bool) {
         if let window = window as? Window {
             if let context = context, let peerId = parent?.id.peerId, let media = media as? TelegramMediaFile, let reference = media.stickerReference {
-                
                 showModal(with:StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for:window)
             }
         }

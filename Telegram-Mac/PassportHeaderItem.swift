@@ -28,7 +28,7 @@ class PassportHeaderItem: TableRowItem {
         
         let attributed = NSMutableAttributedString()
         
-        _ = attributed.append(string: L10n.secureIdRequestHeader1(peer.displayTitle), color: theme.colors.grayText, font: .normal(.text))
+        _ = attributed.append(string: strings().secureIdRequestHeader1(peer.displayTitle), color: theme.colors.grayText, font: .normal(.text))
         attributed.detectBoldColorInString(with: .bold(.text))
         self.textLayout = TextViewLayout(attributed, alignment: .left)
         

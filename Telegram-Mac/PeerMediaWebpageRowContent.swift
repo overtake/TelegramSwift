@@ -23,8 +23,9 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
     private(set) var icon:TelegramMediaImage?
     private(set) var iconArguments:TransformImageArguments?
     private(set) var thumb:CGImage? = nil
-    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, viewType: GeneralViewType = .legacy) {
-        super.init(initialSize,interface,object, viewType: viewType)
+    //, gallery: GalleryAppearType = .history
+    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, gallery: GalleryAppearType = .history, viewType: GeneralViewType = .legacy) {
+        super.init(initialSize, interface, object, gallery: gallery, viewType: viewType)
 
         
         var linkLayouts:[TextViewLayout] = []
@@ -141,9 +142,9 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                     var items = items
                     if let layout = self.textLayout, layout.selectedRange.hasSelectText {
                         let text = layout.attributedString.attributedSubstring(from: layout.selectedRange.range)
-                        items.insert(ContextMenuItem(L10n.textCopy, handler: {
+                        items.insert(ContextMenuItem(strings().textCopy, handler: {
                             copyToClipboard(text.string)
-                        }), at: 0)
+                        }, itemImage: MenuAnimation.menu_copy.value), at: 0)
                         items.insert(ContextSeparatorItem(), at: 1)
                     }
                     return items
@@ -165,7 +166,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
                 copyToClipboard(linkLayout.attributedString.string)
                 return false
             }, localizeLinkCopy: { link in
-                return L10n.textContextCopyLink
+                return strings().textContextCopyLink
             })
         }
         

@@ -8,17 +8,18 @@
 
 import Cocoa
 import TelegramCore
-
+import InAppSettings
+import ColorPalette
 import TGUIKit
 import SwiftSignalKit
 import Postbox
+import ThemeSettings
 
 func drawBg(_ backgroundMode: TableBackgroundMode, palette: ColorPalette, bubbled: Bool, rect: NSRect, in ctx: CGContext) {
     switch backgroundMode {
     case let .background(image, intensity, colors, rotation):
         let imageSize = image.size.aspectFilled(rect.size)
         ctx.saveGState()
-//        ctx.translateBy(x: 1, y: -1)
 
         if let colors = colors, !colors.isEmpty {
             
@@ -63,11 +64,20 @@ func drawBg(_ backgroundMode: TableBackgroundMode, palette: ColorPalette, bubble
         }
         
         if let colors = colors, !colors.isEmpty {
-            if let image = image._cgImage, !palette.isDark {
-                ctx.setBlendMode(.softLight)
-                ctx.setAlpha(CGFloat(abs(intensity ?? 50)) / 100.0)
+            if let image = image._cgImage {
+                if !palette.isDark {
+                    ctx.setBlendMode(.softLight)
+                    ctx.setAlpha(CGFloat(abs(intensity ?? 50)) / 100.0)
+                }
                 ctx.draw(image, in: rect.focus(imageSize))
             }
+        } else if let image = image._cgImage {
+            ctx.saveGState()
+            ctx.translateBy(x: rect.width / 2.0, y: rect.height / 2.0)
+            ctx.scaleBy(x: 1, y: -1.0)
+            ctx.translateBy(x: -rect.width / 2.0, y: -rect.height / 2.0)
+            ctx.draw(image, in: rect.focus(imageSize))
+            ctx.restoreGState()
         }
         ctx.restoreGState()
     case let .color(color):
@@ -173,7 +183,7 @@ private func localThemeData(context: AccountContext, theme: TelegramTheme, palet
         
         var wallpaper: Signal<TelegramWallpaper?, GetWallpaperError> = .single(nil)
         var newSettings = WallpaperSettings()
-        if let wp = theme.settings?.wallpaper {
+        if let wp = theme.effectiveSettings(for: palette)?.wallpaper {
             wallpaper = .single(wp)
         } else {
             switch palette.wallpaper {
@@ -247,7 +257,7 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
             if bubbled {
                 switch wallpaper {
                 case .builtin:
-                    backgroundMode = TelegramPresentationTheme.defaultBackground
+                    backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
                 case let.color(color):
                     backgroundMode = .color(color: NSColor(argb: color).withAlphaComponent(1.0))
                 case let .gradient(_, colors, rotation):
@@ -256,14 +266,14 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                     if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, settings: settings))) {
                         backgroundMode = .background(image: image, intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
                     } else {
-                        backgroundMode = TelegramPresentationTheme.defaultBackground
+                        backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
                     }
                     
                 case let .file(_, file, settings, isPattern):
                     if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, settings: settings))) {
                         backgroundMode = .background(image: image, intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
                     } else {
-                        backgroundMode = TelegramPresentationTheme.defaultBackground
+                        backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
                     }
                 case .none:
                     backgroundMode = .color(color: palette.chatBackground)
@@ -271,7 +281,7 @@ private func generateThumb(palette: ColorPalette, bubbled: Bool, wallpaper: Wall
                     if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(representation.resource, settings: WallpaperSettings(blur: blurred)))) {
                         backgroundMode = .background(image: image, intensity: nil, colors: nil, rotation: nil)
                     } else {
-                        backgroundMode = TelegramPresentationTheme.defaultBackground
+                        backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
                     }
                 }
             } else {
@@ -366,7 +376,7 @@ private func generateWidgetThumb(palette: ColorPalette, bubbled: Bool, wallpaper
             if bubbled {
                 switch wallpaper {
                 case .builtin:
-                    backgroundMode = TelegramPresentationTheme.defaultBackground
+                    backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
                 case let.color(color):
                     backgroundMode = .color(color: NSColor(argb: color).withAlphaComponent(1.0))
                 case let .gradient(_, colors, rotation):
@@ -375,14 +385,14 @@ private func generateWidgetThumb(palette: ColorPalette, bubbled: Bool, wallpaper
                     if let resource = largestImageRepresentation(representation)?.resource, let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(resource, settings: settings))) {
                         backgroundMode = .background(image: image, intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
                     } else {
-                        backgroundMode = TelegramPresentationTheme.defaultBackground
+                        backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
                     }
                     
                 case let .file(_, file, settings, isPattern):
                     if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(file.resource, settings: settings))) {
                         backgroundMode = .background(image: image, intensity: settings.intensity, colors: settings.colors.map { NSColor(argb: $0) }, rotation: settings.rotation)
                     } else {
-                        backgroundMode = TelegramPresentationTheme.defaultBackground
+                        backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
                     }
                 case .none:
                     backgroundMode = .color(color: palette.chatBackground)
@@ -390,7 +400,7 @@ private func generateWidgetThumb(palette: ColorPalette, bubbled: Bool, wallpaper
                     if let image = NSImage(contentsOf: URL(fileURLWithPath: wallpaperPath(representation.resource, settings: WallpaperSettings(blur: blurred)))) {
                         backgroundMode = .background(image: image, intensity: nil, colors: nil, rotation: nil)
                     } else {
-                        backgroundMode = TelegramPresentationTheme.defaultBackground
+                        backgroundMode = TelegramPresentationTheme.defaultBackground(palette)
                     }
                 }
             } else {
@@ -539,7 +549,7 @@ func generateChatThemeThumb(palette: ColorPalette, bubbled: Bool, backgroundMode
             
             func applyPlain() {
                 ctx.setFillColor(palette.accent.cgColor)
-                ctx.fillEllipse(in: NSMakeRect(10, 7, 17, 17))
+                ctx.fillEllipse(in: NSMakeRect(5, 7, 17, 17))
                 
                 if true {
                     let name1 = generateImage(NSMakeSize(20, 4), rotatedContext: { size, ctx in
@@ -549,7 +559,7 @@ func generateChatThemeThumb(palette: ColorPalette, bubbled: Bool, backgroundMode
                         ctx.setFillColor(palette.accent.cgColor)
                         ctx.fill(rect)
                     })!
-                    ctx.draw(name1, in: NSMakeRect(10 + 17 + 3, 7 + 2, name1.backingSize.width, name1.backingSize.height))
+                    ctx.draw(name1, in: NSMakeRect(5 + 17 + 3, 7 + 2, name1.backingSize.width, name1.backingSize.height))
                     
                     let text1 = generateImage(NSMakeSize(40, 4), rotatedContext: { size, ctx in
                         let rect = NSMakeRect(0, 0, size.width, size.height)
@@ -558,12 +568,12 @@ func generateChatThemeThumb(palette: ColorPalette, bubbled: Bool, backgroundMode
                         ctx.setFillColor(palette.grayText.withAlphaComponent(0.5).cgColor)
                         ctx.fill(rect)
                     })!
-                    ctx.draw(text1, in: NSMakeRect(10 + 17 + 3, 7 + 2 + 4 + 4, text1.backingSize.width, text1.backingSize.height))
+                    ctx.draw(text1, in: NSMakeRect(5 + 17 + 3, 7 + 2 + 4 + 4, text1.backingSize.width, text1.backingSize.height))
                 }
                 
                 if true {
                     ctx.setFillColor(palette.accent.cgColor)
-                    ctx.fillEllipse(in: NSMakeRect(10, 7 + 17 + 7, 17, 17))
+                    ctx.fillEllipse(in: NSMakeRect(5, 7 + 17 + 7, 17, 17))
                     
                     let name1 = generateImage(NSMakeSize(20, 4), rotatedContext: { size, ctx in
                         let rect = NSMakeRect(0, 0, size.width, size.height)
@@ -572,7 +582,7 @@ func generateChatThemeThumb(palette: ColorPalette, bubbled: Bool, backgroundMode
                         ctx.setFillColor(palette.accent.cgColor)
                         ctx.fill(rect)
                     })!
-                    ctx.draw(name1, in: NSMakeRect(10 + 17 + 3, 7 + 17 + 7 + 2, name1.backingSize.width, name1.backingSize.height))
+                    ctx.draw(name1, in: NSMakeRect(5 + 17 + 3, 7 + 17 + 7 + 2, name1.backingSize.width, name1.backingSize.height))
                     
                     let text1 = generateImage(NSMakeSize(40, 4), rotatedContext: { size, ctx in
                         let rect = NSMakeRect(0, 0, size.width, size.height)
@@ -581,7 +591,7 @@ func generateChatThemeThumb(palette: ColorPalette, bubbled: Bool, backgroundMode
                         ctx.setFillColor(palette.grayText.withAlphaComponent(0.5).cgColor)
                         ctx.fill(rect)
                     })!
-                    ctx.draw(text1, in: NSMakeRect(10 + 17 + 3, 7 + 17 + 7 + 2 + 4 + 4, text1.backingSize.width, text1.backingSize.height))
+                    ctx.draw(text1, in: NSMakeRect(5 + 17 + 3, 7 + 17 + 7 + 2 + 4 + 4, text1.backingSize.width, text1.backingSize.height))
                 }
                 
                 
@@ -605,7 +615,7 @@ func generateChatThemeThumb(palette: ColorPalette, bubbled: Bool, backgroundMode
 
 
 
-func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, source: ThemeSource, thumbSource: AppearanceThumbSource = .general) -> Signal<(TransformImageResult, InstallThemeSource), NoError> {
+func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, parent: ColorPalette, source: ThemeSource, thumbSource: AppearanceThumbSource = .general) -> Signal<(TransformImageResult, InstallThemeSource), NoError> {
     
     var thumbGenerator = generateThumb
     switch thumbSource {
@@ -623,7 +633,8 @@ func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, source:
                     return (TransformImageResult(image, true), .cloud(cloud, InstallCloudThemeCachedData(palette: data.0, wallpaper: data.1, cloudWallpaper: data.2)))
                 }
             }
-        } else if let palette = cloud.settings?.palette {
+        } else if let palette = cloud.effectiveSettings(for: parent)?.palette {
+            
             
             let settings = themeSettingsView(accountManager: context.sharedContext.accountManager) |> take(1)
             
@@ -636,7 +647,7 @@ func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, source:
                 return (settings.wallpaper.wallpaper, settings.palette)
             } |> mapToSignal { wallpaper, palette in
                 return thumbGenerator(palette, bubbled, wallpaper) |> map { image in
-                    return (TransformImageResult(image, true), .cloud(cloud, InstallCloudThemeCachedData(palette: palette, wallpaper: wallpaper, cloudWallpaper: cloud.settings?.wallpaper)))
+                    return (TransformImageResult(image, true), .cloud(cloud, InstallCloudThemeCachedData(palette: palette, wallpaper: wallpaper, cloudWallpaper: cloud.effectiveSettings(for: palette)?.wallpaper)))
                 }
             }
         } else {
@@ -655,7 +666,7 @@ func themeAppearanceThumbAndData(context: AccountContext, bubbled: Bool, source:
         } |> mapToSignal { wallpaper, palette in
             if let cloud = cloud {
                 return thumbGenerator(palette, bubbled, wallpaper) |> map { image in
-                    return (TransformImageResult(image, true), .cloud(cloud, InstallCloudThemeCachedData(palette: palette, wallpaper: wallpaper, cloudWallpaper: cloud.settings?.wallpaper)))
+                    return (TransformImageResult(image, true), .cloud(cloud, InstallCloudThemeCachedData(palette: palette, wallpaper: wallpaper, cloudWallpaper: cloud.effectiveSettings(for: palette)?.wallpaper)))
                 }
             } else {
                 return thumbGenerator(palette, bubbled, wallpaper) |> map { image in
@@ -693,7 +704,7 @@ func themeInstallSource(context: AccountContext, source: ThemeSource) -> Signal<
             return (settings.wallpaper.wallpaper, settings.palette)
         } |> map { wallpaper, palette in
             if let cloud = cloud {
-                return .cloud(cloud, InstallCloudThemeCachedData(palette: palette, wallpaper: wallpaper, cloudWallpaper: cloud.settings?.wallpaper))
+                return .cloud(cloud, InstallCloudThemeCachedData(palette: palette, wallpaper: wallpaper, cloudWallpaper: cloud.effectiveSettings(for: palette)?.wallpaper))
             } else {
                 return .local(palette)
             }

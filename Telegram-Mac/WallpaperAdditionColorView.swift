@@ -8,6 +8,7 @@
 
 import Foundation
 import TGUIKit
+import TGModernGrowingTextView
 
 final class WallpaperAdditionColorView : View, TGModernGrowingDelegate {
     func textViewHeightChanged(_ height: CGFloat, animated: Bool) {

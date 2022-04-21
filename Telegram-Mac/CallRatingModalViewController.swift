@@ -65,7 +65,7 @@ private class CallRatingModalView: View {
         
         updateState(.stars)
         
-        let layout = TextViewLayout(.initialize(string: L10n.callRatingModalText, color: theme.colors.text, font: .medium(.text)), alignment: .center)
+        let layout = TextViewLayout(.initialize(string: strings().callRatingModalText, color: theme.colors.text, font: .medium(.text)), alignment: .center)
         layout.measure(width: frame.width - 60)
         
         textView.update(layout)
@@ -121,7 +121,7 @@ class CallRatingModalViewController: ModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: L10n.callRatingModalNotNow, drawBorder: true, height: 50, singleButton: true)
+        return ModalInteractions(acceptTitle: strings().callRatingModalNotNow, drawBorder: true, height: 50, singleButton: true)
     }
     
 

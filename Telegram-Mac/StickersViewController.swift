@@ -10,12 +10,13 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
+import InAppSettings
 import Postbox
+import FoundationUtils
 
 final class StickerPanelArguments {
     let context: AccountContext
-    let sendMedia:(Media, NSView, Bool)->Void
+    let sendMedia:(Media, NSView, Bool, Bool)->Void
     let showPack:(StickerPackReference)->Void
     let navigate:(ItemCollectionViewEntryIndex)->Void
     let addPack: (StickerPackReference)->Void
@@ -24,7 +25,7 @@ final class StickerPanelArguments {
     let closeInlineFeatured:(Int64)->Void
     let openFeatured:(FeaturedStickerPackItem)->Void
     let mode: EntertainmentViewController.Mode
-    init(context: AccountContext, sendMedia: @escaping(Media, NSView, Bool)->Void, showPack: @escaping(StickerPackReference)->Void, addPack: @escaping(StickerPackReference)->Void, navigate: @escaping(ItemCollectionViewEntryIndex)->Void, clearRecent:@escaping()->Void, removePack:@escaping(StickerPackCollectionId)->Void, closeInlineFeatured:@escaping(Int64)->Void, openFeatured:@escaping(FeaturedStickerPackItem)->Void, mode: EntertainmentViewController.Mode) {
+    init(context: AccountContext, sendMedia: @escaping(Media, NSView, Bool, Bool)->Void, showPack: @escaping(StickerPackReference)->Void, addPack: @escaping(StickerPackReference)->Void, navigate: @escaping(ItemCollectionViewEntryIndex)->Void, clearRecent:@escaping()->Void, removePack:@escaping(StickerPackCollectionId)->Void, closeInlineFeatured:@escaping(Int64)->Void, openFeatured:@escaping(FeaturedStickerPackItem)->Void, mode: EntertainmentViewController.Mode) {
         self.context = context
         self.sendMedia = sendMedia
         self.showPack = showPack
@@ -260,7 +261,7 @@ enum StickerPackInfo : Equatable {
         case let .pack(_, installed, _):
             return installed
         default:
-            return true
+            return false
         }
     }
     var featured: Bool {
@@ -359,7 +360,7 @@ private enum StickerPackEntry : TableItemListNodeEntry {
     func item(_ arguments: StickerPanelArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .pack(_, files, packInfo, collectionId):
-            return StickerPackPanelRowItem(initialSize, context: arguments.context, arguments: arguments, files: files, packInfo: packInfo, collectionId: collectionId)
+            return StickerPackPanelRowItem(initialSize, context: arguments.context, arguments: arguments, files: files, packInfo: packInfo, collectionId: collectionId, canSend: true)
         case let .trending(_, items, collectionId):
             return StickerPackTrendingItem(initialSize, context: arguments.context, featured: items, collectionId: collectionId, close: arguments.closeInlineFeatured, click: arguments.openFeatured)
         }
@@ -379,7 +380,7 @@ private func stickersEntries(view: ItemCollectionsView?, featured:[FeaturedStick
             if !view.orderedItemListsViews[1].items.isEmpty {
                 var files:[TelegramMediaFile] = []
                 for item in view.orderedItemListsViews[1].items {
-                    if let entry = item.contents as? SavedStickerItem {
+                    if let entry = item.contents.get(SavedStickerItem.self) {
                         if let id = entry.file.id, ids[id] == nil, entry.file.isStaticSticker || entry.file.isAnimatedSticker {
                             ids[id] = id
                             files.append(entry.file)
@@ -393,7 +394,7 @@ private func stickersEntries(view: ItemCollectionsView?, featured:[FeaturedStick
             
             if !featured.isEmpty, mode == .common {
                 if settings.trendingClosedOn != featured.first?.info.id.id {
-                    entries.append(.trending(index: .saved(1), featured: featured, collectionId: .inlineFeatured(hasUnred: featured.contains(where: { $0.unread }))))
+                  //  entries.append(.trending(index: .saved(1), featured: featured, collectionId: .inlineFeatured(hasUnred: featured.contains(where: { $0.unread }))))
                 }
             }
             
@@ -402,8 +403,9 @@ private func stickersEntries(view: ItemCollectionsView?, featured:[FeaturedStick
             if !view.orderedItemListsViews[0].items.isEmpty {
                 var files:[TelegramMediaFile] = []
                 for item in view.orderedItemListsViews[0].items {
-                    if let entry = item.contents as? RecentMediaItem {
-                        if let file = entry.media as? TelegramMediaFile, let id = file.id, ids[id] == nil, file.isStaticSticker || file.isAnimatedSticker {
+                    if let entry = item.contents.get(RecentMediaItem.self) {
+                        let file = entry.media
+                        if let id = file.id, ids[id] == nil, file.isStaticSticker || file.isAnimatedSticker {
                             ids[id] = id
                             files.append(file)
                         }
@@ -522,9 +524,7 @@ private func packEntries(view: ItemCollectionsView?, specificPack:Tuple2<PeerSpe
     
     if let view = view {
         if !featured.isEmpty, mode == .common {
-            if settings.trendingClosedOn == featured.first?.info.id.id {
-                entries.append(.featured(hasUnread: hasUnread))
-            }
+            entries.append(.featured(hasUnread: hasUnread))
         }
         
         if !view.orderedItemListsViews[1].items.isEmpty {
@@ -897,12 +897,12 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         
         let previousPacks:Atomic<[AppearanceWrapperEntry<PackEntry>]> = Atomic(value: [])
 
-        let arguments = StickerPanelArguments(context: context, sendMedia: { [weak self] media, view, silent in
+        let arguments = StickerPanelArguments(context: context, sendMedia: { [weak self] media, view, silent, schedule in
             guard let `self` = self else { return }
             if let chatInteraction = self.chatInteraction, let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
                 showSlowModeTimeoutTooltip(slowMode, for: view)
             } else if let file = media as? TelegramMediaFile {
-                self.interactions?.sendSticker(file, silent)
+                self.interactions?.sendSticker(file, silent, schedule)
             }
         }, showPack: { [weak self] reference in
             if let peerId = self?.chatInteraction?.peerId {
@@ -941,7 +941,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         }, navigate: { [weak self] index in
             self?.position.set(.navigate(index: .sticker(index)))
         }, clearRecent: {
-            confirm(for: context.window, header: L10n.stickersConfirmClearRecentHeader, information: L10n.stickersConfirmClearRecentText, okTitle: L10n.stickersConfirmClearRecentOK, successHandler: { _ in
+            confirm(for: context.window, header: strings().stickersConfirmClearRecentHeader, information: strings().stickersConfirmClearRecentText, okTitle: strings().stickersConfirmClearRecentOK, successHandler: { _ in
                 _ = context.account.postbox.transaction({ transaction in
                     clearRecentlyUsedStickers(transaction: transaction)
                 }).start()

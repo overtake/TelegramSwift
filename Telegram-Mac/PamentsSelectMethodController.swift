@@ -53,7 +53,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("add_new"), data: .init(name: L10n.checkoutPaymentMethodNew, color: theme.colors.accent, type: .context(""), viewType: .singleItem, action: {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("add_new"), data: .init(name: strings().checkoutPaymentMethodNew, color: theme.colors.accent, type: .context(""), viewType: .singleItem, action: {
         arguments.addNew()
     })))
     index += 1
@@ -92,13 +92,13 @@ func PamentsSelectMethodController(context: AccountContext, cards:[BotPaymentSav
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.checkoutPaymentMethodTitle)
+    let controller = InputDataController(dataSignal: signal, title: strings().checkoutPaymentMethodTitle)
     
     controller.onDeinit = {
         actionsDisposable.dispose()
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.modalCancel, accept: {
+    let modalInteractions = ModalInteractions(acceptTitle: strings().modalCancel, accept: {
         close?()
     }, drawBorder: true, height: 50, singleButton: true)
 

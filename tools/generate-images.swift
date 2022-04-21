@@ -574,6 +574,7 @@ func initialize() -> [String] {
     array.append("search_filter_files")
     array.append("search_filter_links")
     array.append("search_filter_music")
+    array.append("search_filter_downloads")
     array.append("search_filter_add_peer")
     array.append("search_filter_add_peer_active")
 
@@ -624,6 +625,9 @@ func initialize() -> [String] {
     array.append("profile_group_type")
     array.append("profile_group_destruct")
     array.append("profile_group_discussion")
+    
+    array.append("profile_requests")
+    array.append("profile_reactions")
 
     array.append("profile_removed")
     array.append("profile_links")
@@ -705,6 +709,31 @@ func initialize() -> [String] {
     array.append("widget_peers_favorite_active")
     array.append("widget_peers_recent_active")
     array.append("widget_peers_both_active")
+    
+    array.append("chat_reactions_add")
+    array.append("chat_reactions_add_bubble")
+    array.append("chat_reactions_add_active")
+
+    
+    array.append("reactions_badge")
+    array.append("reactions_badge_active")
+
+    array.append("reactions_badge_archive")
+    array.append("reactions_badge_archive_active")
+
+    
+    array.append("chat_reactions_badge")
+    array.append("chat_reactions_badge_active")
+    
+    
+    array.append("gallery_pip_close")
+    array.append("gallery_pip_muted")
+    array.append("gallery_pip_unmuted")
+    array.append("gallery_pip_out")
+    array.append("gallery_pip_pause")
+    array.append("gallery_pip_play")
+    
+    array.append("notification_sound_add")
 
     return array
 }
@@ -717,16 +746,17 @@ func generateClass() -> String {
     
     var lines:[String] = []
     lines.append("import SwiftSignalKit")
+    lines.append("import AppKit")
     lines.append("")
 
-    lines.append("final class TelegramIconsTheme {")
+    lines.append("public final class TelegramIconsTheme {")
     
     lines.append("  private var cached:Atomic<[String: CGImage]> = Atomic(value: [:])")
     lines.append("  private var cachedWithInset:Atomic<[String: (CGImage, NSEdgeInsets)]> = Atomic(value: [:])")
     lines.append("")
     for item in items {
         if item.hasSuffix("_withInset") {
-            lines.append("  var \(item): (CGImage, NSEdgeInsets) {")
+            lines.append("  public var \(item): (CGImage, NSEdgeInsets) {")
             lines.append("      if let image = cachedWithInset.with({ $0[\"\(item)\"] }) {")
             lines.append("          return image")
             lines.append("      } else {")
@@ -742,7 +772,7 @@ func generateClass() -> String {
             lines.append("      }")
             lines.append("  }")
         } else {
-            lines.append("  var \(item): CGImage {")
+            lines.append("  public var \(item): CGImage {")
             lines.append("      if let image = cached.with({ $0[\"\(item)\"] }) {")
             lines.append("          return image")
             lines.append("      } else {")
@@ -772,7 +802,7 @@ func generateClass() -> String {
     
     lines.append("")
     
-    lines.append("  init(")
+    lines.append("  public init(")
     for item in items {
         if item != items.last {
             if item.hasSuffix("_withInset") {
@@ -807,4 +837,4 @@ func generateClass() -> String {
 }
 
 print(FileManager.default.currentDirectoryPath)
-try! generateClass().write(toFile: FileManager.default.currentDirectoryPath + "/Telegram-Mac/TelegramIconsTheme.swift", atomically: true, encoding: .utf8)
+try! generateClass().write(toFile: FileManager.default.currentDirectoryPath + "/packages/TelegramIconsTheme/Sources/TelegramIconsTheme.swift", atomically: true, encoding: .utf8)

@@ -48,13 +48,13 @@ class ChatVoiceContentView: ChatAudioContentView {
     
     override func open() {
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters, let context = context, let parent = parent  {
-            if let controller = globalAudio, controller.playOrPause(parent.id) {
+            if let controller = context.audioPlayer, controller.playOrPause(parent.id) {
             } else {
                 let controller:APController
                 if parameters.isWebpage {
-                    controller = APSingleResourceController(context: context, wrapper: APSingleWrapper(resource: parameters.resource, name: L10n.audioControllerVoiceMessage, performer: parent.author?.displayTitle, duration: Int32(parameters.duration), id: parent.chatStableId), streamable: false, volume: FastSettings.volumeRate)
+                    controller = APSingleResourceController(context: context, wrapper: APSingleWrapper(resource: parameters.resource, name: strings().audioControllerVoiceMessage, performer: parent.author?.displayTitle, duration: Int32(parameters.duration), id: parent.chatStableId), streamable: false, volume: FastSettings.volumeRate)
                 } else {
-                    controller = APChatVoiceController(context: context, chatLocationInput: parameters.chatLocationInput(), mode: parameters.chatMode, index: MessageIndex(parent), volume: FastSettings.volumeRate)
+                    controller = APChatVoiceController(context: context, chatLocationInput: parameters.chatLocationInput(parent), mode: parameters.chatMode, index: MessageIndex(parent), volume: FastSettings.volumeRate)
                 }
                 parameters.showPlayer(controller)
                 controller.start()
@@ -80,7 +80,7 @@ class ChatVoiceContentView: ChatAudioContentView {
    
         
         if  let parameters = parameters as? ChatMediaVoiceLayoutParameters {
-            if let parent = parent, let controller = globalAudio, let song = controller.currentSong {
+            if let parent = parent, let controller = context?.audioPlayer, let song = controller.currentSong {
                 if song.entry.isEqual(to: parent) {
                     switch song.state {
                     case let .playing(current, _, progress):
@@ -127,7 +127,7 @@ class ChatVoiceContentView: ChatAudioContentView {
     override func mouseDragged(with event: NSEvent) {
         super.mouseDragged(with: event)
         
-        if acceptDragging, let parent = parent, let controller = globalAudio, let song = controller.currentSong {
+        if acceptDragging, let parent = parent, let controller = context?.audioPlayer, let song = controller.currentSong {
             if song.entry.isEqual(to: parent) {
                 let point = waveformView.convert(event.locationInWindow, from: nil)
                 let progress = Float(min(max(point.x, 0), waveformView.frame.width)/waveformView.frame.width)
@@ -155,7 +155,7 @@ class ChatVoiceContentView: ChatAudioContentView {
     override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
         if acceptDragging && playAfterDragging {
-            _ = globalAudio?.play()
+            _ = context?.audioPlayer?.play()
         }
         playAfterDragging = false
         acceptDragging = false
@@ -172,16 +172,18 @@ class ChatVoiceContentView: ChatAudioContentView {
       //  self.progressView.state = .None
  
         if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
-            updatedStatusSignal = combineLatest(chatMessageFileStatus(account: context.account, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
+            updatedStatusSignal = combineLatest(chatMessageFileStatus(context: context, message: parent, file: file), context.account.pendingMessageManager.pendingMessageStatus(parent.id))
                 |> map { resourceStatus, pendingStatus -> MediaResourceStatus in
                     if let pendingStatus = pendingStatus.0 {
                         return .Fetching(isActive: true, progress: pendingStatus.progress)
                     } else {
                         return resourceStatus
                     }
-                } |> deliverOnMainQueue
+                }
+        } else if let parent = parent {
+            updatedStatusSignal = chatMessageFileStatus(context: context, message: parent, file: file, approximateSynchronousValue: approximateSynchronousValue)
         } else {
-            updatedStatusSignal = chatMessageFileStatus(account: context.account, file: file, approximateSynchronousValue: approximateSynchronousValue) |> deliverOnMainQueue
+            updatedStatusSignal = context.account.postbox.mediaBox.resourceStatus(file.resource)
         }
         
         self.statusDisposable.set((updatedStatusSignal |> deliverOnMainQueue).start(next: { [weak self] status in
@@ -193,6 +195,9 @@ class ChatVoiceContentView: ChatAudioContentView {
                 case let .Fetching(_, progress):
                     state = .Fetching(progress: progress, force: false)
                     strongSelf.progressView.state = .Fetching(progress: progress, force: false)
+                case .Paused:
+                    state = .Remote
+                    strongSelf.progressView.state = .Remote
                 case .Remote:
                     state = .Remote
                     strongSelf.progressView.state = .Remote

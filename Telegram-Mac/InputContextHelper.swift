@@ -456,7 +456,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                     _ = chatInteraction.appendText(replacementText, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
                 }
             } else if let selectedItem = selectedItem as? ContextStickerRowItem, let index = selectedItem.selectedIndex {
-                chatInteraction.sendAppFile(selectedItem.result.results[index].file, false, chatInteraction.presentation.effectiveInput.inputText)
+                chatInteraction.sendAppFile(selectedItem.result.results[index].file, false, chatInteraction.presentation.effectiveInput.inputText, false)
                 chatInteraction.clearInput()
             } else if let selectedItem = selectedItem as? ContextSearchMessageItem {
                 chatInteraction.focusMessageId(nil, selectedItem.message.id, .CenterEmpty)
@@ -626,7 +626,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
     }
     
     func cleanup() {
-        mainWindow.removeAllHandlers(for: self)
+        context.window.removeAllHandlers(for: self)
     }
     
     deinit {
@@ -791,11 +791,7 @@ class InputContextHelper: NSObject {
                 break
             }
         }
-        if chatInteraction.presentation.state == .normal || chatInteraction.presentation.state == .editing {
-            entriesValue.set(entries(for: result, initialSize: initialSize.modify {$0}, chatInteraction: chatInteraction))
-        } else {
-            entriesValue.set(.single([]))
-        }
+        entriesValue.set(entries(for: result, initialSize: initialSize.modify {$0}, chatInteraction: chatInteraction))
         
         let makeSignal = combineLatest(queue: prepareQueue, entriesValue.get(), appearanceSignal) |> map { entries, appearance -> (TableUpdateTransition,Bool, Bool) in
                             

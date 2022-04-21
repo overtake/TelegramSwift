@@ -15,28 +15,30 @@ import SwiftSignalKit
 
 
 class StickerPackPanelRowItem: TableRowItem {
-    let files: [(TelegramMediaFile, ChatMediaContentView.Type, NSPoint)]
+    private(set) var files: [(TelegramMediaFile, ChatMediaContentView.Type, NSPoint)] = []
     let packNameLayout: TextViewLayout?
     let context: AccountContext
     let arguments: StickerPanelArguments
     let namePoint: NSPoint
     let packInfo: StickerPackInfo
     let collectionId: StickerPackCollectionId
+    let _files:[TelegramMediaFile]
     
-    private let _height: CGFloat
+    private var _height: CGFloat = 0
     override var stableId: AnyHashable {
         return collectionId
     }
     let packReference: StickerPackReference?
     
     private let preloadFeaturedDisposable = MetaDisposable()
-    
-    init(_ initialSize: NSSize, context: AccountContext, arguments: StickerPanelArguments, files:[TelegramMediaFile], packInfo: StickerPackInfo, collectionId: StickerPackCollectionId) {
+    let canSend: Bool
+    let playOnHover: Bool
+    init(_ initialSize: NSSize, context: AccountContext, arguments: StickerPanelArguments, files:[TelegramMediaFile], packInfo: StickerPackInfo, collectionId: StickerPackCollectionId, canSend: Bool, playOnHover: Bool = false) {
         self.context = context
         self.arguments = arguments
-        var filesAndPoints:[(TelegramMediaFile, ChatMediaContentView.Type, NSPoint)] = []
-        let size: NSSize = NSMakeSize(60, 60)
-        
+        self.canSend = canSend
+        self._files = files
+        self.playOnHover = playOnHover
         
         let title: String?
         var count: Int32 = 0
@@ -50,7 +52,7 @@ class StickerPackPanelRowItem: TableRowItem {
                 self.packReference = nil
             }
         case .recent:
-            title = L10n.stickersRecent
+            title = strings().stickersRecent
             self.packReference = nil
         case .saved:
             title = nil
@@ -72,7 +74,7 @@ class StickerPackPanelRowItem: TableRowItem {
             if packInfo.featured {
                 _ = attributed.append(string: title.uppercased(), color: theme.colors.text, font: .medium(14))
                 _ = attributed.append(string: "\n")
-                _ = attributed.append(string: L10n.stickersCountCountable(Int(count)), color: theme.colors.grayText, font: .normal(12))
+                _ = attributed.append(string: strings().stickersCountCountable(Int(count)), color: theme.colors.grayText, font: .normal(12))
             } else {
                 _ = attributed.append(string: title.uppercased(), color: theme.colors.grayText, font: .medium(.text))
             }
@@ -86,25 +88,10 @@ class StickerPackPanelRowItem: TableRowItem {
             self.packNameLayout = nil
         }
         
-
-
-        var point: NSPoint = NSMakePoint(5, title == nil ? 5 : !packInfo.featured ? 35 : 55)
-        for (i, file) in files.enumerated() {
-            filesAndPoints.append((file, ChatLayoutUtils.contentNode(for: file, packs: true), point))
-            point.x += size.width + 10
-            if (i + 1) % 5 == 0 {
-                point.y += size.height + 5
-                point.x = 5
-            }
-        }
-        
-        self.files = filesAndPoints
         self.packInfo = packInfo
         self.collectionId = collectionId
         
-        let rows = ceil((CGFloat(files.count) / 5.0))
-        _height = (title == nil ? 0 : !packInfo.featured ? 30 : 50) + 60.0 * rows + ((rows + 1) * 5)
-
+        
        
         
         if packInfo.featured, let id = collectionId.itemCollectionId {
@@ -113,6 +100,46 @@ class StickerPackPanelRowItem: TableRowItem {
         
         super.init(initialSize)
         
+        _ = makeSize(initialSize.width, oldWidth: 0)
+        
+    }
+    
+    override func makeSize(_ width: CGFloat = CGFloat.greatestFiniteMagnitude, oldWidth: CGFloat = 0) -> Bool {
+        _ = super.makeSize(width, oldWidth: oldWidth)
+        
+        var filesAndPoints:[(TelegramMediaFile, ChatMediaContentView.Type, NSPoint)] = []
+
+        
+        let size: NSSize = NSMakeSize(60, 60)
+
+        var point: NSPoint = NSMakePoint(5, packNameLayout == nil ? 5 : !packInfo.featured ? 35 : 55)
+        var rowCount: CGFloat = 1
+        var countFixed = false
+        for file in _files {
+            var filePoint = point
+            let fileSize = file.dimensions?.size.aspectFitted(size) ?? size
+            filePoint.y += (size.height - fileSize.height) / 2
+            filePoint.x += (size.width - fileSize.width) / 2
+            filesAndPoints.append((file, ChatLayoutUtils.contentNode(for: file, packs: true), filePoint))
+
+            point.x += size.width + 10
+            if point.x + size.width >= width {
+                point.y += size.height + 5
+                point.x = 5
+                countFixed = true
+            }
+            if !countFixed {
+                rowCount += 1
+            }
+        }
+        
+        self.files = filesAndPoints
+
+        let rows = ceil((CGFloat(_files.count) / rowCount))
+        _height = (packNameLayout == nil ? 0 : !packInfo.featured ? 30 : 50) + 60.0 * rows + ((rows + 1) * 5)
+
+        
+        return true
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
@@ -125,12 +152,27 @@ class StickerPackPanelRowItem: TableRowItem {
             let rect = NSMakeRect(file.2.x, file.2.y, 60, 60)
             let file = file.0
             if NSPointInRect(location, rect) {
+                
+                if NSApp.currentEvent?.modifierFlags.contains(.control) == true {
+                    if file.isAnimatedSticker, let data = try? Data(contentsOf: URL(fileURLWithPath: context.account.postbox.mediaBox.resourcePath(file.resource))) {
+                        items.append(ContextMenuItem("Copy thumbnail (Dev.)", handler: {
+                        _ = getAnimatedStickerThumb(data: data).start(next: { path in
+                                if let path = path {
+                                    let pb = NSPasteboard.general
+                                    pb.clearContents()
+                                    pb.writeObjects([NSURL(fileURLWithPath: path)])
+                                }
+                            })
+                        }, itemImage: MenuAnimation.menu_copy_media.value))
+                    }
+                }
+                
                 inner: switch packInfo {
                 case .saved, .recent:
                     if let reference = file.stickerReference {
-                        items.append(ContextMenuItem(L10n.contextViewStickerSet, handler: { [weak self] in
+                        items.append(ContextMenuItem(strings().contextViewStickerSet, handler: { [weak self] in
                             self?.arguments.showPack(reference)
-                        }))
+                        }, itemImage: MenuAnimation.menu_view_sticker_set.value))
                     }
                 default:
                     break inner
@@ -138,33 +180,51 @@ class StickerPackPanelRowItem: TableRowItem {
                 inner: switch packInfo {
                 case .saved:
                     if let mediaId = file.id {
-                        items.append(ContextMenuItem(L10n.contextRemoveFaveSticker, handler: {
+                        items.append(ContextMenuItem(strings().contextRemoveFaveSticker, handler: {
                             _ = removeSavedSticker(postbox: context.account.postbox, mediaId: mediaId).start()
-                        }))
+                        }, itemImage: MenuAnimation.menu_remove_from_favorites.value))
                     }
                 default:
                     if packInfo.installed {
-                        items.append(ContextMenuItem(L10n.chatContextAddFavoriteSticker, handler: {
+                        items.append(ContextMenuItem(strings().chatContextAddFavoriteSticker, handler: {
                             _ = addSavedSticker(postbox: context.account.postbox, network: context.account.network, file: file).start()
-                        }))
+                        }, itemImage: MenuAnimation.menu_add_to_favorites.value))
                     }
                 }
-                items.append(ContextMenuItem(L10n.chatSendWithoutSound, handler: { [weak self] in
-                    guard let `self` = self else {
-                        return
-                    }
-                    let contentView = (self.view as? StickerPackPanelRowView)?.subviews.compactMap { $0 as? ChatMediaContentView}.first(where: { view -> Bool in
-                        return view.media?.isEqual(to: file) ?? false
-                    })
-                    
-                    if let contentView = contentView {
-                        self.arguments.sendMedia(file, contentView, true)
-                    }
-                }))
                 
+                if canSend {
+                    items.append(ContextMenuItem(strings().chatSendWithoutSound, handler: { [weak self] in
+                        guard let `self` = self else {
+                            return
+                        }
+                        let contentView = (self.view as? StickerPackPanelRowView)?.subviews.compactMap { $0 as? ChatMediaContentView}.first(where: { view -> Bool in
+                            return view.media?.isEqual(to: file) ?? false
+                        })
+                        
+                        if let contentView = contentView {
+                            self.arguments.sendMedia(file, contentView, true, false)
+                        }
+                    }, itemImage: MenuAnimation.menu_mute.value))
+                    
+                    items.append(ContextMenuItem(strings().chatSendScheduledMessage, handler: { [weak self] in
+                        guard let `self` = self else {
+                            return
+                        }
+                        let contentView = (self.view as? StickerPackPanelRowView)?.subviews.compactMap { $0 as? ChatMediaContentView}.first(where: { view -> Bool in
+                            return view.media?.isEqual(to: file) ?? false
+                        })
+                        
+                        if let contentView = contentView {
+                            self.arguments.sendMedia(file, contentView, false, true)
+                        }
+                    }, itemImage: MenuAnimation.menu_schedule_message.value))
+                }
                 break
             }
         }
+        
+       
+        
         return .single(items)
     }
     
@@ -190,10 +250,12 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                 if NSPointInRect(point, subview.frame) {
                     if let file = contentView.media as? TelegramMediaFile {
                         let reference = file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)
-                        if file.isStaticSticker {
-                            return (.file(reference, StickerPreviewModalView.self), contentView)
-                        } else if file.isAnimatedSticker {
+                        if file.isVideoSticker && !file.isWebm {
+                            return (.file(reference, GifPreviewModalView.self), contentView)
+                        } else if file.isAnimatedSticker || file.isWebm {
                             return (.file(reference, AnimatedStickerPreviewModalView.self), contentView)
+                        } else if file.isStaticSticker {
+                            return (.file(reference, StickerPreviewModalView.self), contentView)
                         }
                     }
                 }
@@ -267,7 +329,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                                 if let reference = item.packReference, item.packInfo.featured {
                                     item.arguments.showPack(reference)
                                 } else {
-                                    item.arguments.sendMedia(media, contentView, false)
+                                    item.arguments.sendMedia(media, contentView, false, false)
                                 }
                             }
                             break
@@ -321,10 +383,10 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         guard let item = item as? StickerPackPanelRowItem else {
             return
         }
-        
+                
         let size: NSSize = NSMakeSize(60, 60)
         
-        let visibleRect = NSMakeRect(0, self.visibleRect.minY - 120, self.visibleRect.width, self.visibleRect.height + 240)
+        let visibleRect = self.visibleRect.insetBy(dx: 0, dy: -120)
         
         if self.visibleRect != NSZeroRect && superview != nil && window != nil {
             let visibleRange = (Int(ceil(visibleRect.minY / (size.height + 10))), Int(ceil(visibleRect.height / (size.height + 10))))
@@ -369,6 +431,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                     view = self.contentViews[i]!
                 }
                 if view.media?.id != file.id {
+                    let size = file.dimensions?.size.aspectFitted(size) ?? size
                     view.update(with: file, size: size, context: item.context, parent: nil, table: item.table)
                 }
                 view.userInteractionEnabled = false
@@ -456,7 +519,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                 self.addButton!.set(background: theme.colors.accentSelect.withAlphaComponent(0.8), for: .Highlight)
                 self.addButton!.set(font: .medium(.text), for: .Normal)
                 self.addButton!.set(color: theme.colors.underSelectedColor, for: .Normal)
-                self.addButton!.set(text: L10n.stickersSearchAdd, for: .Normal)
+                self.addButton!.set(text: strings().stickersSearchAdd, for: .Normal)
                 _ = self.addButton!.sizeToFit(NSMakeSize(14, 8), thatFit: true)
                 self.addButton!.layer?.cornerRadius = .cornerRadius
                 self.addButton!.setFrameOrigin(frame.width - self.addButton!.frame.width - 10, 13)
@@ -470,7 +533,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                 self.addButton!.set(background: theme.colors.grayForeground.withAlphaComponent(0.8), for: .Highlight)
                 self.addButton!.set(font: .medium(.text), for: .Normal)
                 self.addButton!.set(color: theme.colors.underSelectedColor, for: .Normal)
-                self.addButton!.set(text: L10n.stickersSearchAdded, for: .Normal)
+                self.addButton!.set(text: strings().stickersSearchAdded, for: .Normal)
                 _ = self.addButton!.sizeToFit(NSMakeSize(14, 8), thatFit: true)
                 self.addButton!.layer?.cornerRadius = .cornerRadius
                 self.addButton!.setFrameOrigin(frame.width - self.addButton!.frame.width - 10, 13)

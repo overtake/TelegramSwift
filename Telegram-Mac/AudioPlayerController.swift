@@ -34,13 +34,8 @@ class APSingleWrapper {
     }
 }
 
-let globalAudioPromise: Promise<APController?> = Promise(nil)
 
-fileprivate(set) var globalAudio:APController? {
-    didSet {
-        globalAudioPromise.set(.single(globalAudio))
-    }
-}
+
 
 enum APState : Equatable {
     case waiting
@@ -163,9 +158,9 @@ class APSongItem : APItem {
                     songName = ""
                 }
                 if file.isVoice {
-                    performerName = L10n.audioControllerVoiceMessage
+                    performerName = strings().audioControllerVoiceMessage
                 } else {
-                    performerName = L10n.audioControllerVideoMessage
+                    performerName = strings().audioControllerVideoMessage
                 }
             }  else {
                 var t:String?
@@ -181,12 +176,12 @@ class APSongItem : APItem {
                 if let t = t {
                     songName = t
                 } else {
-                    songName = p != nil ? L10n.audioUntitledSong : ""
+                    songName = p != nil ? strings().audioUntitledSong : ""
                 }
                 if let p = p {
                     performerName = p
                 } else {
-                    performerName = file.fileName ?? L10n.audioUnknownArtist
+                    performerName = file.fileName ?? strings().audioUnknownArtist
                 }
             }
 
@@ -322,7 +317,7 @@ class APSongItem : APItem {
                     }
                 case .Remote:
                     return .complete()
-                case let .Fetching(_, progress):
+                case let .Fetching(_, progress), let .Paused(progress):
                     return .single(APResource(complete: false, progress: progress, path: ""))
                 }
 
@@ -712,10 +707,10 @@ class APController : NSResponder {
     }
 
     func start() {
-        globalAudio?.stop()
-        globalAudio?.cleanup()
+        context.audioPlayer?.stop()
+        context.audioPlayer?.cleanup()
 
-        globalAudio = self
+        context.audioPlayer = self
     }
 
 
@@ -1084,7 +1079,7 @@ class APController : NSResponder {
 
     func cleanup() {
         listeners.removeAll()
-        globalAudio = nil
+        context.audioPlayer = nil
         mainWindow.applyResponderIfNeeded()
         stop()
     }

@@ -35,7 +35,7 @@ class WPLayout: Equatable {
     private(set) var contentRect:NSRect = NSZeroRect
     
     private(set) var textLayout:TextViewLayout?
-    
+    private let mayCopyText: Bool
     private(set) var siteName:(TextNodeLayout, TextNode)?
     private var _nameNode:TextNode?
     
@@ -43,7 +43,7 @@ class WPLayout: Equatable {
     
     
     var mediaCount: Int? {
-        if let instantPage = content.instantPage, isGalleryAssemble {
+        if let instantPage = content.instantPage, isGalleryAssemble, content.type == "telegram_album" {
             if let block = instantPage.blocks.filter({ value in
                 if case .slideshow = value {
                     return true
@@ -86,10 +86,11 @@ class WPLayout: Equatable {
         }
     }
     
-    init(with content:TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool) {
+    init(with content:TelegramMediaWebpageLoadedContent, context: AccountContext, chatInteraction:ChatInteraction, parent:Message, fontSize: CGFloat, presentation: WPLayoutPresentation, approximateSynchronousValue: Bool, mayCopyText: Bool) {
         self.content = content
         self.context = context
         self.presentation = presentation
+        self.mayCopyText = mayCopyText
         self.parent = parent
         self.fontSize = fontSize
         self._approximateSynchronousValue = approximateSynchronousValue
@@ -97,9 +98,9 @@ class WPLayout: Equatable {
             let siteName: String
             switch content.type {
             case "telegram_background":
-                siteName = L10n.chatWPBackgroundTitle
+                siteName = strings().chatWPBackgroundTitle
             case "telegram_voicechat":
-                siteName = L10n.chatWPVoiceChatTitle
+                siteName = strings().chatWPVoiceChatTitle
             default:
                 siteName = websiteName
             }
@@ -128,7 +129,7 @@ class WPLayout: Equatable {
             }
             
             attributedText.detectLinks(type: p, color: presentation.link, dotInMention: wname == "instagram")
-            textLayout = TextViewLayout(attributedText, maximumNumberOfLines:10, truncationType: .end, cutout: nil, selectText: presentation.selectText, strokeLinks: presentation.renderType == .bubble, alwaysStaticItems: true)
+            textLayout = TextViewLayout(attributedText, maximumNumberOfLines:10, truncationType: .end, cutout: nil, selectText: presentation.selectText, strokeLinks: presentation.renderType == .bubble, alwaysStaticItems: true, mayItems: mayCopyText)
             
             let interactions = globalLinkExecutor
             interactions.resolveLink = { link in

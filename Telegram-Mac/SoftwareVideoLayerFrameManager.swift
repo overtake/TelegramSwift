@@ -40,9 +40,14 @@ final class SoftwareVideoLayerFrameManager {
     
     private var layerRotationAngleAndAspect: (CGFloat, CGFloat)?
     
+    private let hintVP9: Bool
+    
+    var onRender:(()->Void)?
+    
     init(account: Account, fileReference: FileMediaReference, layerHolder: SampleBufferLayer) {
         var resource = fileReference.media.resource
         var secondaryResource: MediaResource?
+        self.hintVP9 = fileReference.media.isWebm
         for attribute in fileReference.media.attributes {
             if case .Video = attribute {
                 if let thumbnail = fileReference.media.videoThumbnails.first {
@@ -58,8 +63,6 @@ final class SoftwareVideoLayerFrameManager {
         self.secondaryResource = secondaryResource
         self.queue = ThreadPoolQueue(threadPool: workers)
         self.layerHolder = layerHolder
-        layerHolder.layer.videoGravity = .resizeAspectFill
-        layerHolder.layer.masksToBounds = true
     }
     
     deinit {
@@ -97,7 +100,7 @@ final class SoftwareVideoLayerFrameManager {
         
         self.dataDisposable.set((firstReady |> deliverOn(applyQueue)).start(next: { [weak self] path in
             if let strongSelf = self {
-                let _ = strongSelf.source.swap(SoftwareVideoSource(path: path))
+                let _ = strongSelf.source.swap(SoftwareVideoSource(path: path, hintVP9: strongSelf.hintVP9))
             }
         }))
     }
@@ -126,20 +129,10 @@ final class SoftwareVideoLayerFrameManager {
                     if self.layerHolder.layer.status == .failed {
                         self.layerHolder.layer.flush()
                     }
-                    //if frame.resetDecoder {
-//                        self.layerHolder.layer.flushAndRemoveImage()
-                   // }
-                    
-                    
-                    /*if self.layerRotationAngleAndAspect?.0 != self.rotationAngle || self.layerRotationAngleAndAspect?.1 != self.aspect {
-                     self.layerRotationAngleAndAspect = (self.rotationAngle, self.aspect)
-                     var transform = CGAffineTransform(rotationAngle: CGFloat(self.rotationAngle))
-                     if !self.rotationAngle.isZero {
-                     transform = transform.scaledBy(x: CGFloat(self.aspect), y: CGFloat(1.0 / self.aspect))
-                     }
-                     self.layerHolder.layer.setAffineTransform(transform)
-                     }*/
                     self.layerHolder.layer.enqueue(frame.sampleBuffer)
+                    DispatchQueue.main.async {
+                        self.onRender?()
+                    }
                 }
             }
             

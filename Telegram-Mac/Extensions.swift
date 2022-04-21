@@ -10,9 +10,17 @@ import Foundation
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
+import Localization
 import Postbox
 import LocalAuthentication
+import EmojiSuggestions
+import FastBlur
+import CalendarUtils
+import ObjcUtils
+import TGModernGrowingTextView
+import ThemeSettings
+import InAppSettings
+
 extension Message {
     
     var chatStableId:ChatHistoryEntryId {
@@ -148,11 +156,11 @@ public extension String {
     
     static func stringForShortCallDurationSeconds(for seconds: Int32) -> String {
         if seconds < 60 {
-            return tr(L10n.callShortSecondsCountable(Int(seconds)))
+            return Telegram.strings().callShortSecondsCountable(Int(seconds))
         }
         else {
             let number = Int(seconds) / 60
-            return tr(L10n.callShortMinutesCountable(number))
+            return Telegram.strings().callShortMinutesCountable(number)
         }
     }
     
@@ -1767,6 +1775,26 @@ extension Array {
     }
 }
 
+extension String {
+    func spoiler(_ range: NSRange) -> String {
+        let string = self.nsstring
+        
+        var rep: String = ""
+        
+        let chars = Array("⠁⠂⠄⠈⠐⠠⡀⢀⠃⠅⠆⠉⠊⠌⠑⠒⠔⠘⠡⠢⠤⠨⠰⡁⡂⡄⡈⡐⡠⢁⢂⢄⢈⢐⢠⣀⠇⠋⠍⠎⠓⠕⠖⠙⠚⠜⠣⠥⠦⠩⠪⠬⠱⠲⠴⠸⡃⡅⡆⡉⡊⡌⡑⡒⡔⡘⡡⡢⡤⡨⡰⢃⢅⢆⢉⢊⢌⢑⢒⢔⢘⢡⢢⢤⢨⢰⣁⣂⣄⣈⣐⣠⠏⠗⠛⠝⠞⠧⠫⠭⠮⠳⠵⠶⠹⠺⠼⡇⡋⡍⡎⡓⡕⡖⡙⡚⡜⡣⡥⡦⡩⡪⡬⡱⡲⡴⡸⢇⢋⢍⢎⢓⢕⢖⢙⢚⢜⢣⢥⢦⢩⢪⢬⢱⢲⢴⢸⣃⣅⣆⣉⣊⣌⣑⣒⣔⣘⣡⣢⣤⣨⣰⠟⠯⠷⠻⠽⠾⡏⡗⡛⡝⡞⡧⡫⡭⡮⡳⡵⡶⡹⡺⡼⢏⢗⢛⢝⢞⢧⢫⢭⢮⢳⢵⢶⢹⢺⢼⣇⣋⣍⣎⣓⣕⣖⣙⣚⣜⣣⣥⣦⣩⣪⣬⣱⣲⣴⣸⠿⡟⡯⡷⡻⡽⡾⢟⢯⢷⢻⢽⢾⣏⣗⣛⣝⣞⣧⣫⣭⣮⣳⣵⣶⣹⣺⣼⡿⢿⣟⣯⣷⣻⣽⣾⣿")
+        
+        for i in 0 ..< range.length {
+            let char = string.character(at: range.location + i)
+            rep += "\(chars[Int(char) % chars.count])"
+        }
+        if string.length <= range.upperBound {
+            return string.replacingCharacters(in: range, with: rep)
+        } else {
+            return self
+        }
+    }
+}
+
 func copyToClipboard(_ string:String) {
     NSPasteboard.general.clearContents()
     NSPasteboard.general.declareTypes([.string], owner: nil)
@@ -2146,10 +2174,11 @@ extension NSImage {
 
 extension Window {
     var titleView: NSView? {
-        if let windowView = contentView?.superview {
-            return ObjcUtils.findElements(byClass: "NSTitlebarContainerView", in: windowView).first
-        }
-        return nil
+        return self.standardWindowButton(.closeButton)?.superview
+//        if let windowView = contentView?.superview {
+//            return ObjcUtils.findElements(byClass: "NSTitlebarView", in: windowView).first
+//        }
+//        return nil
     }
 }
 
@@ -2237,7 +2266,7 @@ public extension NSAttributedString {
                 } else if font.fontDescriptor.symbolicTraits.contains(.italic) {
                     newFont = .italic(theme.fontSize)
                 } else if font.fontDescriptor.symbolicTraits.contains(NSFontDescriptor.SymbolicTraits.monoSpace) {
-                    newFont = .code(theme.fontSize)
+                    newFont = .menlo(theme.fontSize)
                 } else {
                     newFont = .normal(theme.fontSize)
                 }
@@ -2490,12 +2519,12 @@ func systemSizeGigabytes() -> UInt64? {
 
 func showOutOfMemoryWarning(_ window: Window, freeSpace: UInt64, context: AccountContext) {
     let alert: NSAlert = NSAlert()
-    alert.addButton(withTitle: L10n.systemMemoryWarningOK)
-    alert.addButton(withTitle: L10n.systemMemoryWarningDataAndStorage)
-   // alert.addButton(withTitle: L10n.systemMemoryWarningManageSystemStorage)
+    alert.addButton(withTitle: strings().systemMemoryWarningOK)
+    alert.addButton(withTitle: strings().systemMemoryWarningDataAndStorage)
+   // alert.addButton(withTitle: strings().systemMemoryWarningManageSystemStorage)
     
-    alert.messageText = L10n.systemMemoryWarningHeader
-    alert.informativeText = L10n.systemMemoryWarningText(freeSpace == 0 ? L10n.systemMemoryWarningLessThen1GB : L10n.systemMemoryWarningFreeSpace(Int(freeSpace)))
+    alert.messageText = strings().systemMemoryWarningHeader
+    alert.informativeText = strings().systemMemoryWarningText(freeSpace == 0 ? strings().systemMemoryWarningLessThen1GB : strings().systemMemoryWarningFreeSpace(Int(freeSpace)))
     alert.alertStyle = .critical
     
     alert.beginSheetModal(for: window, completionHandler: { response in
@@ -2503,7 +2532,7 @@ func showOutOfMemoryWarning(_ window: Window, freeSpace: UInt64, context: Accoun
         case 1000:
             break
         case 1001:
-            context.sharedContext.bindings.rootNavigation().push(StorageUsageController(context))
+            context.bindings.rootNavigation().push(StorageUsageController(context))
         case 1002:
             openSystemSettings(.storage)
         default:
@@ -2596,6 +2625,9 @@ extension Int32 {
     static var secondsInDay: Int32 {
         return 60 * 60 * 24
     }
+    static var secondsInHour: Int32 {
+        return 60 * 60
+    }
     static var secondsInWeek: Int32 {
         return secondsInDay * 7
     }
@@ -2636,13 +2668,13 @@ public extension DataSizeStringFormatting {
     
     static var current: DataSizeStringFormatting {
         return DataSizeStringFormatting.init(decimalSeparator: NumberFormatter().decimalSeparator, byte: { value in
-            return (L10n.fileSizeB(value), [])
+            return (strings().fileSizeB(value), [])
         }, kilobyte: { value in
-            return (L10n.fileSizeKB(value), [])
+            return (strings().fileSizeKB(value), [])
         }, megabyte: { value in
-            return (L10n.fileSizeMB(value), [])
+            return (strings().fileSizeMB(value), [])
         }, gigabyte: { value in
-            return (L10n.fileSizeGB(value), [])
+            return (strings().fileSizeGB(value), [])
         })
     }
 }

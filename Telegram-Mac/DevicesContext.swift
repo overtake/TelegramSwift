@@ -11,6 +11,7 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 import CoreMediaIO
+import InAppSettings
 
 struct IODevices {
     let camera: [AVCaptureDevice]
@@ -18,6 +19,14 @@ struct IODevices {
     let audioOutput: [AudioDeviceID]
     let loading: Bool
 }
+
+private extension AudioListener {
+    static var nominalSampler: AudioObjectPropertyListenerProc = { _, _, _, _ in
+        incrementSampleIndex()
+        return 0
+    }
+}
+
 
 extension AudioDeviceID {
     var uniqueID: String {
@@ -70,7 +79,12 @@ func sizeof <T> (_ value : [T]) -> Int
     return (MemoryLayout<T>.size * value.count)
 }
 
-
+private let sampleUpdater = ValuePromise(0, ignoreRepeated: false)
+private var index: Int = -1
+private func incrementSampleIndex() {
+    index += 1
+    sampleUpdater.set(index)
+}
 
 final class DevicesContext : NSObject {
     private var _signal: Promise<IODevices> = Promise()
@@ -114,6 +128,7 @@ final class DevicesContext : NSObject {
     
     
     private let disposable = MetaDisposable()
+    private let updateSampler = MetaDisposable()
     private let devicesQueue = Queue(name: "devicesQueue")
     
     private let _currentCameraId: Atomic<String?> = Atomic(value: nil)
@@ -145,19 +160,6 @@ final class DevicesContext : NSObject {
                                 UInt32(sizeof(allow)), &allow );
         
 
-        
-        /*
-         
-         CMIOObjectPropertyAddress prop = {
-                 kCMIOHardwarePropertyAllowScreenCaptureDevices,
-                 kCMIOObjectPropertyScopeGlobal,
-                 kCMIOObjectPropertyElementMaster
-             };
-             UInt32 allow = 1;
-             CMIOObjectSetPropertyData(kCMIOObjectSystemObject,
-                                     &prop, 0, NULL,
-                                     sizeof(allow), &allow );
-         */
     
         NotificationCenter.default.addObserver(forName: NSNotification.Name.AVCaptureDeviceWasConnected, object: nil, queue: nil, using: { [weak self] _ in
             self?.update()
@@ -166,6 +168,8 @@ final class DevicesContext : NSObject {
             self?.update()
         })
         AudioObjectAddPropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.outputDevice, AudioListener.output, nil)
+        
+
         
         AudioObjectAddPropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.inputDevice, AudioListener.input, nil)
 
@@ -178,26 +182,36 @@ final class DevicesContext : NSObject {
             self?.update()
         })
         
+        NotificationCenter.default.addObserver(forName: AudioNotification.mixStereo.notificationName, object: nil, queue: nil, using: { [weak self] _ in
+            self?.update()
+        })
+        
+        
+        
         let currentCameraId = self._currentCameraId
         let currentMicroId = self._currentMicroId
         let currentOutputId = self._currentOutputId
         
-        let updated = combineLatest(queue: devicesQueue, voiceCallSettings(accountManager), signal) |> map { settings, devices -> (camera: String?, input: String?, output: String?) in
+        var sampleIndex:Int = -1
+        
+        let updated = combineLatest(queue: devicesQueue, voiceCallSettings(accountManager), signal, sampleUpdater.get()) |> map { settings, devices, index -> (camera: String?, input: String?, output: String?) in
             let inputUpdated = DevicesContext.updateMicroId(settings, devices: devices)
             let cameraUpdated = DevicesContext.updateCameraId(settings, devices: devices)
             let outputUpdated = DevicesContext.updateOutputId(settings, devices: devices)
             
             var result:(camera: String?, input: String?, output: String?) = (camera: nil, input: nil, output: nil)
             
-            if currentMicroId.swap(inputUpdated) != inputUpdated {
+            if currentMicroId.swap(inputUpdated) != inputUpdated || sampleIndex != index {
                 result.input = inputUpdated
             }
             if currentCameraId.swap(cameraUpdated) != cameraUpdated {
                 result.camera = cameraUpdated
             }
-            if currentOutputId.swap(outputUpdated) != outputUpdated {
+            if currentOutputId.swap(outputUpdated) != outputUpdated || sampleIndex != index {
                 result.output = outputUpdated
             }
+            sampleIndex = index
+            
             return result
         } |> deliverOnMainQueue
         
@@ -212,6 +226,29 @@ final class DevicesContext : NSObject {
             }
 
            // self.updaterContext.status = (camera: nil, input: nil, output: nil)
+        }))
+        
+        let previous: Atomic<IODevices?> = Atomic(value: nil)
+        
+        let signal = self.signal |> afterDisposed {
+            let devices = previous.swap(nil)
+            if let list = devices?.audioOutput {
+                for device in list {
+                    AudioObjectRemovePropertyListener(device, &AudioAddress.nominalSampleRates, AudioListener.nominalSampler, nil)
+                }
+            }
+        }
+        
+        updateSampler.set(signal.start(next: { devices in
+            let previous = previous.swap(devices)
+            if let list = previous?.audioOutput {
+                for device in list {
+                    AudioObjectRemovePropertyListener(device, &AudioAddress.nominalSampleRates, AudioListener.nominalSampler, nil)
+                }
+            }
+            for device in devices.audioOutput {
+                AudioObjectAddPropertyListener(device, &AudioAddress.nominalSampleRates, AudioListener.nominalSampler, nil)
+            }
         }))
         
         update()
@@ -258,7 +295,7 @@ final class DevicesContext : NSObject {
         } else {
             activeDevice = devices.audioInput.first(where: { $0.isConnected && !$0.isSuspended })
         }
-        
+                
         return activeDevice?.uniqueID
     }
     
@@ -284,6 +321,7 @@ final class DevicesContext : NSObject {
         AudioObjectRemovePropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.outputDevice, AudioListener.output, nil)
         AudioObjectRemovePropertyListener(AudioObjectID(kAudioObjectSystemObject), &AudioAddress.inputDevice, AudioListener.input, nil)
         disposable.dispose()
+        updateSampler.dispose()
     }
 }
 

@@ -13,6 +13,71 @@ import TelegramCore
 import Postbox
 
 
+private final class NoStreamView : View {
+    private let progressView = InfiniteProgressView(color: GroupCallTheme.customTheme.textColor, lineWidth: 2)
+    private var textView: TextView?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        progressView.setFrameSize(NSMakeSize(30, 30))
+        addSubview(progressView)
+        progressView.color = GroupCallTheme.customTheme.textColor
+        self.progressView.progress = nil
+    }
+    
+    func update(initialTimestamp: TimeInterval, title: String?, transition: ContainedViewLayoutTransition) {
+        self.progressView.viewDidMoveToWindow()
+        
+        if Date().timeIntervalSince1970 - initialTimestamp > 10 {
+            let current: TextView
+            var isNew = false
+            if let view = self.textView {
+                current = view
+            } else {
+                current = TextView()
+                current.isSelectable = false
+                current.userInteractionEnabled = false
+                self.textView = current
+                addSubview(current)
+                if transition.isAnimated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+                isNew = true
+            }
+            let layout = TextViewLayout(.initialize(string: title == nil ? strings().voiceChatRTMPError : strings().voiceChatRTMPViewerError(title!), color: GroupCallTheme.customTheme.textColor, font: .normal(.text)), alignment: .center)
+            layout.measure(width: frame.width)
+            current.update(layout)
+            
+            if isNew {
+                current.center()
+            }
+            updateLayout(size: frame.size, transition: transition)
+        } else if let view = textView {
+            performSubviewRemoval(view, animated: transition.isAnimated)
+            self.textView = nil
+        } else {
+            delay(1, closure: { [weak self] in
+                self?.update(initialTimestamp: initialTimestamp, title: title, transition: .animated(duration: 0.2, curve: .easeOut))
+            })
+        }
+    }
+    
+    func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
+        if let textView = textView {
+            transition.updateFrame(view: textView, frame: textView.centerFrameX(y: frame.height / 2 + 4))
+            transition.updateFrame(view: progressView, frame: progressView.centerFrameX(y: frame.height / 2 - progressView.frame.height - 4))
+        } else {
+            transition.updateFrame(view: progressView, frame: focus(progressView.frame.size))
+        }
+    }
+    
+    override func layout() {
+        super.layout()
+        updateLayout(size: frame.size, transition: .immediate)
+    }
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
 
 final class GroupCallView : View {
     
@@ -35,6 +100,8 @@ final class GroupCallView : View {
     private var scrollView = ScrollView()
     
     private var speakingTooltipView: GroupCallSpeakingTooltipView?
+    
+    private var noStreamView: NoStreamView?
     
     var arguments: GroupCallUIArguments? {
         didSet {
@@ -387,6 +454,11 @@ final class GroupCallView : View {
             let hasTable = isFullScreen && state?.hideParticipants == false
             transition.updateFrame(view: current, frame: current.centerFrameX(y: 60, addition: hasTable ? (-peersTable.frame.width / 2) : 0))
         }
+        
+        if let view = noStreamView {
+            transition.updateFrame(view: view, frame: focus(view.frame.size))
+            view.updateLayout(size: view.frame.size, transition: transition)
+        }
     }
     
     
@@ -445,10 +517,17 @@ final class GroupCallView : View {
     override func layout() {
         super.layout()
         updateLayout(size: frame.size, transition: .immediate)
+        
+        self.peersTable.beginTableUpdates()
+        self.peersTable.layoutSubtreeIfNeeded()
+        self.peersTable.endTableUpdates()
     }
     
     var isFullScreen: Bool {
         if let state = state {
+            if state.isStream {
+                return true
+            }
             return state.isFullScreen
         }
         if frame.width >= GroupCallTheme.fullScreenThreshold {
@@ -553,7 +632,7 @@ final class GroupCallView : View {
         } , animated: animated)
         controlsContainer.update(state, voiceSettings: state.voiceSettings, audioLevel: state.myAudioLevel, animated: animated)
         
-        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: duration, curve: .easeInOut) : .immediate
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: duration, curve: .easeOut) : .immediate
         
         if let _ = state.state.scheduleTimestamp {
             let current: GroupCallScheduleView
@@ -679,6 +758,21 @@ final class GroupCallView : View {
                     }
                 }
             }
+        }
+        
+        if state.state.scheduleState == nil, state.isStream, state.videoActive(.main).isEmpty {
+            let current: NoStreamView
+            if let view = self.noStreamView {
+                current = view
+            } else {
+                current = NoStreamView(frame: focus(NSMakeSize(300, 300)))
+                self.noStreamView = current
+                addSubview(current)
+            }
+            current.update(initialTimestamp: state.initialTimestamp, title: !state.peer.groupAccess.isCreator ? state.peer.displayTitle : nil, transition: transition)
+        } else if let view = noStreamView {
+            performSubviewRemoval(view, animated: animated)
+            self.noStreamView = nil
         }
         
         content.state = state

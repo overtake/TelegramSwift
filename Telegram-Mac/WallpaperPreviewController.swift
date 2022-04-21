@@ -10,9 +10,10 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
+import ColorPalette
+import ThemeSettings
 import Postbox
-
+import InAppSettings
 import CoreGraphics
 
 enum WallpaperPreviewMode : Equatable {
@@ -180,9 +181,9 @@ private final class WallpaperPreviewView: View {
     private let tableView: TableView
     private let documentView: NSView
     
-    let blurCheckbox = WallpaperCheckboxView(frame: NSMakeRect(0, 0, 70, 28), title: L10n.wallpaperPreviewBlurred)
-    let patternCheckbox = WallpaperCheckboxView(frame: NSMakeRect(0, 0, 70, 28), title: L10n.chatWPPattern)
-    let colorCheckbox = WallpaperCheckboxView(frame: NSMakeRect(0, 0, 70, 28), title: L10n.chatWPColor)
+    let blurCheckbox = WallpaperCheckboxView(frame: NSMakeRect(0, 0, 70, 28), title: strings().wallpaperPreviewBlurred)
+    let patternCheckbox = WallpaperCheckboxView(frame: NSMakeRect(0, 0, 70, 28), title: strings().chatWPPattern)
+    let colorCheckbox = WallpaperCheckboxView(frame: NSMakeRect(0, 0, 70, 28), title: strings().chatWPColor)
     
     private let rotateColors: WallpaperPlayRotateView = WallpaperPlayRotateView(frame: NSMakeRect(0, 0, 40, 40))
     
@@ -424,8 +425,8 @@ private final class WallpaperPreviewView: View {
         }
         
         
-        let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
-        let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: L10n.appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+        let fromUser1 = TelegramUser(id: PeerId(1), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName1, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+        let fromUser2 = TelegramUser(id: PeerId(2), accessHash: nil, firstName: strings().appearanceSettingsChatPreviewUserName2, lastName: "", username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
         
 
         let firstText: String
@@ -433,18 +434,18 @@ private final class WallpaperPreviewView: View {
         switch wallpaper {
         case let .file(_, _, _, isPattern):
             if isPattern {
-                firstText = L10n.chatWPColorFirstMessage
-                secondText = L10n.chatWPColorSecondMessage
+                firstText = strings().chatWPColorFirstMessage
+                secondText = strings().chatWPColorSecondMessage
             } else {
-                firstText = L10n.chatWPFirstMessage
-                secondText = L10n.chatWPSecondMessage
+                firstText = strings().chatWPFirstMessage
+                secondText = strings().chatWPSecondMessage
             }
         case .image:
-            firstText = L10n.chatWPFirstMessage
-            secondText = L10n.chatWPSecondMessage
+            firstText = strings().chatWPFirstMessage
+            secondText = strings().chatWPSecondMessage
         default:
-            firstText = L10n.chatWPColorFirstMessage
-            secondText = L10n.chatWPColorSecondMessage
+            firstText = strings().chatWPColorFirstMessage
+            secondText = strings().chatWPColorSecondMessage
         }
 
         let firstMessage = Message(stableId: 0, stableVersion: 0, id: MessageId(peerId: fromUser1.id, namespace: 0, id: 0), globallyUniqueId: 0, groupingKey: 0, groupInfo: nil, threadId: nil, timestamp: 60 * 20 + 60*60*18, flags: [.Incoming], tags: [], globalTags: [], localTags: [], forwardInfo: nil, author: fromUser2, text: firstText, attributes: [], media: [], peers:SimpleDictionary([fromUser2.id : fromUser2, fromUser1.id : fromUser1]) , associatedMessages: SimpleDictionary(), associatedMessageIds: [])
@@ -659,14 +660,14 @@ private final class WallpaperPreviewView: View {
         }
     }
     
-    private func loadImage(_ signal:Signal<ImageDataTransformation, NoError>, palette: ColorPalette, boundingSize: NSSize) {
+    private func loadImage(_ signal:Signal<ImageDataTransformation, NoError>, palette: ColorPalette, boundingSize: NSSize, isPattern: Bool) {
         let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: boundingSize, boundingSize: boundingSize, intrinsicInsets: NSEdgeInsets())
         
         
         let intense = CGFloat(abs(wallpaper.settings.intensity ?? 0)) / 100.0
         let signal: Signal<CGImage?, NoError> = signal |> map { result in
             var image = result.execute(arguments, result.data)?.generateImage()
-            if palette.isDark, let img = image {
+            if palette.isDark, let img = image, isPattern {
                 image = generateImage(img.size, contextGenerator: { size, ctx in
                     ctx.clear(size.bounds)
                     ctx.setFillColor(NSColor.black.cgColor)
@@ -705,6 +706,7 @@ private final class WallpaperPreviewView: View {
             self.patternCheckbox.hasPattern = false
             rotateColors.isHidden = true
             self.colorCheckbox.colorsValue = [color].map { NSColor($0) }
+            self.ready?()
         case let .gradient(_, colors, _):
             self.image = nil
             blurCheckbox.isHidden = true
@@ -714,6 +716,7 @@ private final class WallpaperPreviewView: View {
             self.patternCheckbox.hasPattern = false
             self.colorCheckbox.colorsValue = colors.map { NSColor($0) }
             self.rotateColors.update(colors.count > 2 ? theme.icons.wallpaper_color_play : theme.icons.wallpaper_color_rotate)
+            self.ready?()
         case let .image(representations, settings):
             self.patternCheckbox.hasPattern = false
             blurCheckbox.isHidden = false
@@ -724,7 +727,7 @@ private final class WallpaperPreviewView: View {
             let boundingSize = dimensions.fitted(maximumSize)
             self.imageSize = dimensions
             
-            loadImage(chatWallpaper(account: context.account, representations: representations, mode: .screen, isPattern: false, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: settings.blur, synchronousLoad: synchronousLoad, drawPatternOnly: true), palette: theme.colors, boundingSize: boundingSize)
+            loadImage(chatWallpaper(account: context.account, representations: representations, mode: .screen, isPattern: false, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: settings.blur, synchronousLoad: synchronousLoad, drawPatternOnly: true), palette: theme.colors, boundingSize: boundingSize, isPattern: false)
 
             
             updatedStatusSignal = context.account.postbox.mediaBox.resourceStatus(largestImageRepresentation(representations)!.resource, approximateSynchronousValue: synchronousLoad) |> deliverOnMainQueue
@@ -758,7 +761,7 @@ private final class WallpaperPreviewView: View {
             let boundingSize = dimensions.aspectFilled(frame.size)
 
             
-            loadImage(chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred:  settings.blur, synchronousLoad: synchronousLoad, drawPatternOnly: true), palette: theme.colors, boundingSize: boundingSize)
+            loadImage(chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: isPattern, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred:  settings.blur, synchronousLoad: synchronousLoad, drawPatternOnly: true), palette: theme.colors, boundingSize: boundingSize, isPattern: isPattern)
 
                         
             self.imageSize = dimensions
@@ -775,7 +778,7 @@ private final class WallpaperPreviewView: View {
             disposable.set(updatedStatusSignal.start(next: { [weak self] status in
                 guard let `self` = self else { return }
                 switch status {
-                case let .Fetching(_, progress):
+                case let .Fetching(_, progress), let .Paused(progress):
                     if self.progressView == nil {
                         self.progressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white), twist: true, size: NSMakeSize(40, 40))
                         self.addSubview(self.progressView!)
@@ -1147,7 +1150,7 @@ class WallpaperPreviewController: ModalViewController {
         
         return (left: ModalHeaderData.init(image: theme.icons.modalClose, handler: { [weak self] in
             self?.close()
-        }), center: ModalHeaderData(title: L10n.wallpaperPreviewHeader), right: !hasShare ? nil : ModalHeaderData(image: theme.icons.modalShare, handler: { [weak self] in
+        }), center: ModalHeaderData(title: strings().wallpaperPreviewHeader), right: !hasShare ? nil : ModalHeaderData(image: theme.icons.modalShare, handler: { [weak self] in
             self?.share()
         }))
     }
@@ -1288,7 +1291,7 @@ class WallpaperPreviewController: ModalViewController {
     }
     
     override var modalInteractions: ModalInteractions? {
-        return ModalInteractions(acceptTitle: L10n.wallpaperPreviewApply, accept: { [weak self] in
+        return ModalInteractions(acceptTitle: strings().wallpaperPreviewApply, accept: { [weak self] in
             self?.applyAndClose()
         }, drawBorder: true, height: 50, singleButton: true)
     }
@@ -1301,7 +1304,7 @@ class WallpaperPreviewController: ModalViewController {
     }
     
     override func measure(size: NSSize) {
-        let chatSize = NSMakeSize(context.sharedContext.bindings.rootNavigation().frame.width, min(500, size.height - 150))
+        let chatSize = NSMakeSize(context.bindings.rootNavigation().frame.width, min(500, size.height - 150))
         let contentSize = WallpaperDimensions.aspectFitted(chatSize)
         
         self.modal?.resize(with: contentSize, animated: false)

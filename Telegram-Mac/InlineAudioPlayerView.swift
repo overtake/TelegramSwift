@@ -181,7 +181,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         }, for: .SingleClick)
         
         playingSpeed.set(handler: { [weak self] control in
-            FastSettings.setPlayingRate(FastSettings.playingRate == 1.7 ? 1.0 : 1.7)
+            FastSettings.setPlayingRate(FastSettings.playingRate != 1 ? 1.0 : 1.75)
             self?.controller?.baseRate = FastSettings.playingRate
         }, for: .Click)
         
@@ -261,10 +261,10 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
     
     private func gotoMessage() {
         if let message = message, let context = context, context.peerId == controller?.context.peerId {
-            if let controller = context.sharedContext.bindings.rootNavigation().controller as? ChatController, controller.chatInteraction.peerId == message.id.peerId {
+            if let controller = context.bindings.rootNavigation().controller as? ChatController, controller.chatInteraction.peerId == message.id.peerId {
                 controller.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: true, focus: .init(focus: false), inset: 0))
             } else {
-                context.sharedContext.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(message.id.peerId), messageId: message.id))
+                context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(message.id.peerId), messageId: message.id))
             }
         }
     }
@@ -292,7 +292,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         repeatControl.isHidden = !controller.canMakeRepeat
         if let tableView = contextObject.tableView {
             if self.instantVideoPip == nil {
-                self.instantVideoPip = InstantVideoPIP(controller, context: controller.context, window: mainWindow)
+                self.instantVideoPip = InstantVideoPIP(controller, context: controller.context, window: controller.context.window)
             }
             self.instantVideoPip?.updateTableView(tableView, context: controller.context, controller: controller)
             addGlobalAudioToVisible(tableView: tableView)
@@ -390,7 +390,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
                 
         let attr = attributedTitle(for: song)
         
-        if trackNameView.layout?.attributedString != attr.0 {
+        if trackNameView.textLayout?.attributedString != attr.0 {
             let artist = TextViewLayout(attr.0, maximumNumberOfLines:1, alignment: .left)
             self.trackNameView.update(artist)
         }
@@ -405,7 +405,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             } else {
                 current = self.artistNameView!
             }
-            if current.layout?.attributedString != attr {
+            if current.textLayout?.attributedString != attr {
                 let artist = TextViewLayout(attr, maximumNumberOfLines:1, alignment: .left)
                 current.update(artist)
             }

@@ -27,7 +27,7 @@ class ChatMusicContentView: ChatAudioContentView {
         didSet {
             if let fetchStatus = fetchStatus {
                 switch fetchStatus {
-                case let .Fetching(_, progress):
+                case let .Fetching(_, progress), let .Paused(progress):
                     let sentGrouped = parent?.groupingKey != nil && (parent!.flags.contains(.Sending) || parent!.flags.contains(.Unsent))
                     if progress == 1.0, sentGrouped {
                         progressView.state = .Success
@@ -109,7 +109,7 @@ class ChatMusicContentView: ChatAudioContentView {
     }
     
     override func checkState(animated: Bool) {
-        if let parent = parent, let controller = globalAudio, let song = controller.currentSong {
+        if let parent = parent, let controller = context?.audioPlayer, let song = controller.currentSong {
             if song.entry.isEqual(to: parent) {
                 if playAnimationView == nil {
                     playAnimationView = PeerMediaPlayerAnimationView()

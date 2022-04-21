@@ -4,9 +4,9 @@ import RLottie
 import TGUIKit
 import Metal
 import TelegramCore
-
+import GZIP
 import libwebp
-
+import Accelerate
 
 final class RenderAtomic<T> {
     private var lock: pthread_mutex_t
@@ -50,7 +50,7 @@ final class RenderAtomic<T> {
 }
 
 
-let lottieThreadPool: ThreadPool = ThreadPool(threadCount: 1, threadPriority: 0.1)
+let lottieThreadPool: ThreadPool = ThreadPool(threadCount: 5, threadPriority: 0.5)
 private let stateQueue = Queue()
 
 
@@ -100,6 +100,49 @@ final class RenderedWebpFrame : RenderedFrame, Equatable {
     }
 }
 
+final class RenderedWebmFrame : RenderedFrame, Equatable {
+    
+    let frame: Int32
+    let size: NSSize
+    let backingScale: Int
+    let key: LottieAnimationEntryKey
+    private let _data: UnsafeRawPointer
+    private let fps: Int
+    init(key: LottieAnimationEntryKey, frame: Int32, fps: Int, size: NSSize, data: UnsafeRawPointer, backingScale: Int) {
+        self.key = key
+        self.backingScale = backingScale
+        self.size = size
+        self.frame = frame
+        self._data = data
+        self.fps = fps
+    }
+    var image: CGImage? {
+        if let data = data {
+            return generateImagePixel(size, scale: CGFloat(backingScale), pixelGenerator: { (_, pixelData) in
+                memcpy(pixelData, data, bufferSize)
+            })
+        }
+        return nil
+    }
+    var duration: TimeInterval {
+        return 1.0 / Double(self.fps)
+    }
+    var bufferSize: Int {
+        return Int(size.width * CGFloat(backingScale) * size.height * CGFloat(backingScale) * 4)
+    }
+    var data: UnsafeRawPointer? {
+        return _data
+    }
+    static func == (lhs: RenderedWebmFrame, rhs: RenderedWebmFrame) -> Bool {
+        return lhs.key == rhs.key
+    }
+    
+    deinit {
+        _data.deallocate()
+    }
+}
+
+
 final class RenderedLottieFrame : RenderedFrame, Equatable {
     let frame: Int32
     let data: UnsafeRawPointer?
@@ -138,26 +181,8 @@ final class RenderedLottieFrame : RenderedFrame, Equatable {
     
     deinit {
         data?.deallocate()
-        
-//        _ = sharedFrames.modify { value in
-//            var value = value
-//            if var shared = value[key] {
-//                shared.removeValue(forKey: frame)
-//                if shared.isEmpty {
-//                    value.removeValue(forKey: key)
-//                } else {
-//                    value[key] = shared
-//                }
-//            }
-//            return value
-//        }
-       
     }
 }
-
-//private var sharedFrames:RenderAtomic<[LottieAnimationEntryKey : [Int32: WeakReference<RenderedFrame>]]> = RenderAtomic(value: [:])
-
-
 
 
 private final class RendererState  {
@@ -167,7 +192,7 @@ private final class RendererState  {
     private(set) var cachedFrames:[Int32 : RenderedFrame]
     private(set) var currentFrame: Int32
     private(set) var startFrame:Int32
-    private(set) var endFrame: Int32
+    private(set) var _endFrame: Int32
     private(set) var cancelled: Bool
     private(set) weak var container: RenderContainer?
     private(set) var renderIndex: Int32?
@@ -179,30 +204,28 @@ private final class RendererState  {
         self.cachedFrames = cachedFrames
         self.currentFrame = currentFrame
         self.startFrame = startFrame
-        self.endFrame = endFrame
+        self._endFrame = endFrame
     }
-    func withUpdatedFrames(_ frames: [RenderedFrame]) -> RendererState {
+    
+    var endFrame: Int32 {
+        return container?.endFrame ?? _endFrame
+    }
+    
+    func withUpdatedFrames(_ frames: [RenderedFrame]) {
         self.frames = frames
-        return self
     }
-    func withAddedFrame(_ frame: RenderedFrame) {
-        
+    func addFrame(_ frame: RenderedFrame) {
         let prev = frame.frame == 0 ? nil : self.frames.last ?? previousFrame
         self.container?.cacheFrame(prev, frame)
-//        _ = sharedFrames.modify { value in
-//            var value = value
-//            if value[self.animation.key] == nil {
-//                value[self.animation.key] = [:]
-//            }
-//            value[self.animation.key]?[frame.frame] = WeakReference(value: frame)
-//            return value
-//        }
         self.frames = self.frames + [frame]
     }
     
-    func withUpdatedCurrentFrame(_ currentFrame: Int32) -> RendererState {
+    func loopComplete() {
+        self.container?.markFinished()
+    }
+    
+    func updateCurrentFrame(_ currentFrame: Int32) {
         self.currentFrame = currentFrame
-        return self
     }
 
     func takeFirst() -> RenderedFrame {
@@ -525,44 +548,34 @@ private final class PlayerRenderer {
         let maximum = Int(initialState.endFrame - initialState.startFrame)
         framesTask = ThreadPoolTask { state in
             _ = isRendering.swap(true)
-            while !state.cancelled.with({$0}) && (currentState(stateValue)?.frames.count ?? Int.max) < min(maximum_renderer_frames, maximum) {
-                
-                let currentFrame = stateValue.with { $0?.currentFrame ?? 0 }
-                
-                let value = stateValue.with { $0 }
-                
-                let frame: RenderedFrame?
-                if let value = value {
-                    frame = value.renderFrame(at: currentFrame)
-                } else {
-                    frame = nil
-                }
-                                
-                _ = stateValue.modify { stateValue -> RendererState? in
-                    guard let state = stateValue else {
+            _ = stateValue.with { stateValue -> RendererState? in
+                while let stateValue = stateValue, stateValue.frames.count < min(maximum_renderer_frames, maximum) {
+                    let cancelled = state.cancelled.with({$0})
+                    if cancelled {
                         return stateValue
                     }
-                    var currentFrame = state.currentFrame
                     
+                    var currentFrame = stateValue.currentFrame
+                    let frame = stateValue.renderFrame(at: currentFrame)
                     if mainFps >= fps {
                         if currentFrame % Int32(round(Float(mainFps) / Float(fps))) != 0 {
                             currentFrame += 1
                         }
-                    } else {
-                        currentFrame += 1
                     }
-                    
-                    if currentFrame >= state.endFrame - 1 {
-                        currentFrame = state.startFrame - 1
-                    }
+
                     if let frame = frame {
-                        state.withAddedFrame(frame)
+                        stateValue.updateCurrentFrame(currentFrame + 1)
+                        stateValue.addFrame(frame)
+                    } else {
+                        if stateValue.startFrame != currentFrame {
+                            stateValue.updateCurrentFrame(stateValue.startFrame)
+                            stateValue.loopComplete()
+                        } else {
+                            break
+                        }
                     }
-                    return state.withUpdatedCurrentFrame(currentFrame + 1)
                 }
-                if frame == nil {
-                    break
-                }
+                return stateValue
             }
             _ = isRendering.swap(false)
             runOnQueue.async {
@@ -757,9 +770,10 @@ enum LottiePlayerTriggerFrame : Equatable {
     case custom(Int32)
 }
 
-private protocol RenderContainer : class {
+private protocol RenderContainer : AnyObject {
     func render(at frame: Int32, frames: [RenderedFrame], previousFrame: RenderedFrame?) -> RenderedFrame?
     func cacheFrame(_ previous: RenderedFrame?, _ current: RenderedFrame)
+    func markFinished()
     func setColor(_ color: NSColor, keyPath: String)
     
     var endFrame: Int32 { get }
@@ -790,6 +804,9 @@ private final class WebPRenderer : RenderContainer {
     func cacheFrame(_ previous: RenderedFrame?, _ current: RenderedFrame) {
         
     }
+    func markFinished() {
+        
+    }
     func setColor(_ color: NSColor, keyPath: String) {
         
     }
@@ -806,6 +823,96 @@ private final class WebPRenderer : RenderContainer {
         return 1
     }
 }
+
+private final class WebmRenderer : RenderContainer {
+    
+    private let animation: LottieAnimation
+    private let decoder: SoftwareVideoSource
+    
+    
+    private var index: Int32 = 1
+    
+    private let fileSupplyment: TRLotFileSupplyment?
+
+    init(animation: LottieAnimation, decoder: SoftwareVideoSource, fileSupplyment: TRLotFileSupplyment?) {
+        self.animation = animation
+        self.decoder = decoder
+        self.fileSupplyment = fileSupplyment
+    }
+
+    func render(at frameIndex: Int32, frames: [RenderedFrame], previousFrame: RenderedFrame?) -> RenderedFrame? {
+        
+        let s:(w: Int, h: Int) = (w: Int(animation.size.width) * animation.backingScale, h: Int(animation.size.height) * animation.backingScale)
+        let bufferSize = s.w * s.h * 4
+        
+        
+        if let fileSupplyment = fileSupplyment {
+            let previous = frameIndex == startFrame ? nil : frames.last ?? previousFrame
+            if let data = fileSupplyment.readFrame(previous: previous, frame: Int(frameIndex)) {
+                return RenderedWebmFrame(key: animation.key, frame: frameIndex, fps: self.fps, size: animation.size, data: data, backingScale: animation.backingScale)
+            }
+            if fileSupplyment.isFinished {
+                return nil
+            }
+        }
+
+        let frameAndLoop = decoder.readFrame(maxPts: nil)
+        if frameAndLoop.0 == nil {
+            return nil
+        }
+        
+        guard let frame = frameAndLoop.0 else {
+            return nil
+        }
+        
+        self.index += 1
+        
+        let destBytesPerRow = Int(animation.size.width) * animation.backingScale * 4
+
+        let memoryData = malloc(bufferSize)!
+        let bytes = memoryData.assumingMemoryBound(to: UInt8.self)
+        
+        let imageBuffer = CMSampleBufferGetImageBuffer(frame.sampleBuffer)
+        CVPixelBufferLockBaseAddress(imageBuffer!, CVPixelBufferLockFlags(rawValue: 0))
+        let bytesPerRow = CVPixelBufferGetBytesPerRow(imageBuffer!)
+        let width = CVPixelBufferGetWidth(imageBuffer!)
+        let height = CVPixelBufferGetHeight(imageBuffer!)
+        let srcData = CVPixelBufferGetBaseAddress(imageBuffer!)
+        
+        var sourceBuffer = vImage_Buffer(data: srcData, height: vImagePixelCount(height), width: vImagePixelCount(width), rowBytes: bytesPerRow)
+        var destBuffer = vImage_Buffer(data: bytes, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: destBytesPerRow)
+                   
+        let _ = vImageScale_ARGB8888(&sourceBuffer, &destBuffer, nil, vImage_Flags(kvImageDoNotTile))
+        
+        CVPixelBufferUnlockBaseAddress(imageBuffer!, CVPixelBufferLockFlags(rawValue: 0))
+        
+        return RenderedWebmFrame(key: animation.key, frame: frameIndex, fps: self.fps, size: animation.size, data: bytes, backingScale: animation.backingScale)
+    }
+    func cacheFrame(_ previous: RenderedFrame?, _ current: RenderedFrame) {
+        if let fileSupplyment = fileSupplyment {
+            fileSupplyment.addFrame(previous, current)
+        }
+    }
+    func markFinished() {
+        fileSupplyment?.markFinished()
+    }
+    func setColor(_ color: NSColor, keyPath: String) {
+        
+    }
+    var endFrame: Int32 {
+        return Int32(60)
+    }
+    var startFrame: Int32 {
+        return 0
+    }
+    var fps: Int {
+        return min(30, decoder.getFramerate())
+    }
+    var mainFps: Int {
+        return 1
+    }
+}
+
 
 private final class LottieRenderer : RenderContainer {
     
@@ -837,28 +944,25 @@ private final class LottieRenderer : RenderContainer {
     
     func cacheFrame(_ previous: RenderedFrame?, _ current: RenderedFrame) {
         if let fileSupplyment = fileSupplyment {
-            fileSupplyment.addFrame(previous, current, endFrame: Int(endFrame))
+            fileSupplyment.addFrame(previous, current)
         }
     }
-    
+    func markFinished() {
+        fileSupplyment?.markFinished()
+    }
     func render(at frame: Int32, frames: [RenderedFrame], previousFrame: RenderedFrame?) -> RenderedFrame? {
         let s:(w: Int, h: Int) = (w: Int(animation.size.width) * animation.backingScale, h: Int(animation.size.height) * animation.backingScale)
         
         var data: UnsafeRawPointer?
-        
-//        let sharedFrame = sharedFrames.with { value -> RenderedLottieFrame? in
-//            return value[animation.key]?[frame]?.value
-//        }
-//
-//        if let sharedFrame = sharedFrame {
-//            return sharedFrame
-//        }
-//
+
         if let fileSupplyment = fileSupplyment {
             let previous = frame == startFrame ? nil : frames.last ?? previousFrame
             if let frame = fileSupplyment.readFrame(previous: previous, frame: Int(frame)) {
                 data = frame
             }
+        }
+        if frame > endFrame - 1 {
+            return nil
         }
         if data == nil {
             let bufferSize = s.w * s.h * 4
@@ -883,6 +987,7 @@ private final class LottieRenderer : RenderContainer {
 enum LottieAnimationType {
     case lottie
     case webp
+    case webm
 }
 
 final class LottieAnimation : Equatable {
@@ -904,7 +1009,9 @@ final class LottieAnimation : Equatable {
     var supportsMetal: Bool {
         switch type {
         case .lottie:
-            return true
+            return self.metalSupport
+        case .webm:
+            return false
         default:
             return false
         }
@@ -917,6 +1024,7 @@ final class LottieAnimation : Equatable {
     let playPolicy: LottiePlayPolicy
     let colors:[LottieColor]
     let soundEffect: LottieSoundEffect?
+    let metalSupport: Bool
     let postbox: Postbox?
     let runOnQueue: Queue
     var onFinish:(()->Void)?
@@ -924,7 +1032,7 @@ final class LottieAnimation : Equatable {
     var triggerOn:(LottiePlayerTriggerFrame, ()->Void, ()->Void)? 
 
     
-    init(compressed: Data, key: LottieAnimationEntryKey, type: LottieAnimationType = .lottie, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], soundEffect: LottieSoundEffect? = nil, postbox: Postbox? = nil, runOnQueue: Queue = stateQueue) {
+    init(compressed: Data, key: LottieAnimationEntryKey, type: LottieAnimationType = .lottie, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], soundEffect: LottieSoundEffect? = nil, postbox: Postbox? = nil, runOnQueue: Queue = stateQueue, metalSupport: Bool = true) {
         self.compressed = compressed
         self.key = key.withUpdatedColors(colors)
         self.cache = cachePurpose
@@ -935,6 +1043,7 @@ final class LottieAnimation : Equatable {
         self.soundEffect = soundEffect
         self.runOnQueue = runOnQueue
         self.type = type
+        self.metalSupport = metalSupport
     }
     
     var size: NSSize {
@@ -949,13 +1058,16 @@ final class LottieAnimation : Equatable {
     }
     
     func withUpdatedBackingScale(_ scale: Int) -> LottieAnimation {
-        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedBackingScale(scale), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: self.colors, postbox: self.postbox)
+        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedBackingScale(scale), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: self.colors, postbox: self.postbox, runOnQueue: self.runOnQueue, metalSupport: self.metalSupport)
     }
     func withUpdatedColors(_ colors: [LottieColor]) -> LottieAnimation {
-        return LottieAnimation(compressed: self.compressed, key: self.key, cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox)
+        return LottieAnimation(compressed: self.compressed, key: self.key, cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue, metalSupport: self.metalSupport)
+    }
+    func withUpdatedPolicy(_ playPolicy: LottiePlayPolicy) -> LottieAnimation {
+        return LottieAnimation(compressed: self.compressed, key: self.key, cachePurpose: self.cache, playPolicy: playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue, metalSupport: self.metalSupport)
     }
     func withUpdatedSize(_ size: CGSize) -> LottieAnimation {
-        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedSize(size), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox)
+        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedSize(size), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue, metalSupport: self.metalSupport)
     }
     
     var cacheKey: String {
@@ -1005,7 +1117,7 @@ final class LottieAnimation : Equatable {
                         let fileSupplyment: TRLotFileSupplyment?
                         switch self.cache {
                         case .temporaryLZ4:
-                            fileSupplyment = TRLotFileSupplyment(self, bufferSize: bufferSize, frames: Int(bridge.endFrame()), queue: Queue())
+                            fileSupplyment = TRLotFileSupplyment(self, bufferSize: bufferSize, queue: Queue())
                         case .none:
                             fileSupplyment = nil
                         }
@@ -1025,6 +1137,19 @@ final class LottieAnimation : Equatable {
                 if let decoder = WebPImageDecoder(data: data, scale: CGFloat(backingScale)) {
                     return WebPRenderer(animation: self, decoder: decoder)
                 }
+            }
+        case .webm:
+            let path = String(data: self.compressed, encoding: .utf8)
+            if let path = path {
+                let decoder = SoftwareVideoSource(path: path, hintVP9: true)
+                let fileSupplyment: TRLotFileSupplyment?
+                switch self.cache {
+                case .temporaryLZ4:
+                    fileSupplyment = TRLotFileSupplyment(self, bufferSize: bufferSize, queue: Queue())
+                case .none:
+                    fileSupplyment = nil
+                }
+                return WebmRenderer(animation: self, decoder: decoder, fileSupplyment: fileSupplyment)
             }
         }
         return nil
@@ -1132,11 +1257,7 @@ final class MetalContext {
             return Loops()
         })
         self.displayId = CGMainDisplayID()
-        var refreshRate = CGDisplayCopyDisplayMode(displayId)?.refreshRate ?? 60
-        if refreshRate == 0 {
-            refreshRate = 60
-        }
-        self.refreshRate = Int(min(refreshRate, 60))
+        self.refreshRate = 60
         if let device = CGDirectDisplayCopyCurrentMetalDevice(displayId) {
             self.device = device
             self.commandQueue = device.makeCommandQueue()
@@ -1351,9 +1472,14 @@ private final class LottieFallbackView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? {
         return nil
     }
+    
+    deinit {
+        var bp = 0
+        bp += 1
+    }
 }
 
-class LottiePlayerView : NSView {
+class LottiePlayerView : View {
     private var context: PlayerContext?
     private var _ignoreCachedContext: Bool = false
     private let _currentState: Atomic<LottiePlayerState> = Atomic(value: .initializing)
@@ -1365,9 +1491,12 @@ class LottiePlayerView : NSView {
     var state: Signal<LottiePlayerState, NoError> {
         return stateValue.get()
     }
-    override init(frame frameRect: NSRect) {
+    required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        
+    }
+    
+    required override init() {
+        super.init()
     }
     
     var animation: LottieAnimation? {
@@ -1413,6 +1542,10 @@ class LottiePlayerView : NSView {
         } else {
             context?.playSoundEffect()
         }
+    }
+    
+    func playAgain() {
+        self.context?.playAgain()
     }
     
     var currentFrame: Int32? {

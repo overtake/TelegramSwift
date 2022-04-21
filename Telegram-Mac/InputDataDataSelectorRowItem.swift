@@ -81,8 +81,8 @@ final class InputDataDataSelectorRowView : GeneralContainableRowView {
         guard let item = item as? InputDataDataSelectorRowItem else {return}
         placeholderTextView.setFrameOrigin(item.viewType.innerInset.left, 14)
         
-        dataTextView.layout?.measure(width: frame.width - item.viewType.innerInset.left - item.viewType.innerInset.right - 104)
-        dataTextView.update(dataTextView.layout)
+        dataTextView.textLayout?.measure(width: frame.width - item.viewType.innerInset.left - item.viewType.innerInset.right - 104)
+        dataTextView.update(dataTextView.textLayout)
         dataTextView.setFrameOrigin(item.viewType.innerInset.left + 104, 14)
         
         overlay.frame = containerView.bounds

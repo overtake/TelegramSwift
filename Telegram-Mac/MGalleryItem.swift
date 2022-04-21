@@ -138,7 +138,7 @@ enum GalleryEntry : Comparable, Identifiable {
     }
     
     var canShare: Bool {
-        return message != nil && !message!.isScheduledMessage && !message!.containsSecretMedia
+        return message != nil && !message!.isScheduledMessage && !message!.containsSecretMedia && !message!.isCopyProtected()
     }
     
     var interfaceState:(PeerId, TimeInterval)? {
@@ -337,6 +337,11 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     let magnify:Promise<CGFloat> = Promise(1)
     let rotate: ValuePromise<ImageOrientation?> = ValuePromise(nil, ignoreRepeated: true)
     
+    private let appearSignal = ValuePromise(false, ignoreRepeated: true)
+    var appearValue:Signal<Bool, NoError> {
+        return appearSignal.get()
+    }
+    
     let disposable:MetaDisposable = MetaDisposable()
     let fetching:MetaDisposable = MetaDisposable()
     private let magnifyDisposable = MetaDisposable()
@@ -353,7 +358,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
             captionSeized = true
         }
         if let caption = caption {
-            pagerSize.height -= min(140, caption.layoutSize.height + 60)
+            pagerSize.height -= (caption.layoutSize.height + 120)
         }
         return pagerSize
     }
@@ -413,28 +418,65 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         self.entry = entry
         self.context = context
         self._pagerSize = pagerSize
-        if let caption = entry.message?.text, !caption.isEmpty, !(entry.message?.media.first is TelegramMediaWebpage) {
+        if let message = entry.message, !message.text.isEmpty, !(message.media.first is TelegramMediaWebpage) {
+            let caption = message.text
             let attr = NSMutableAttributedString()
             _ = attr.append(string: caption.trimmed.fullTrimmed, color: .white, font: .normal(.text))
-            
-            attr.detectLinks(type: [.Links, .Mentions], context: context, color: .linkColor, openInfo: { peerId, toChat, postId, action in
-                let navigation = context.sharedContext.bindings.rootNavigation()
-                let controller = navigation.controller
-                if toChat {
-                    if peerId == (controller as? ChatController)?.chatInteraction.peerId {
-                        if let postId = postId {
-                            (controller as? ChatController)?.chatInteraction.focusMessageId(nil, postId, TableScrollState.CenterEmpty)
+            let controller = context.bindings.rootNavigation().controller as? ChatController
+
+            if let peer = message.peers[message.id.peerId] {
+                var type: ParsingType = [.Links, .Mentions, .Hashtags]
+                if peer.isGroup || peer.isSupergroup, peer.canSendMessage() {
+                    if let _ = controller {
+                        type.insert(.Commands)
+                    }
+                }
+                attr.detectLinks(type: type, context: context, color: .linkColor, openInfo: { peerId, toChat, postId, action in
+                    let navigation = context.bindings.rootNavigation()
+                    let controller = navigation.controller
+                    if toChat {
+                        if peerId == (controller as? ChatController)?.chatInteraction.peerId {
+                            if let postId = postId {
+                                (controller as? ChatController)?.chatInteraction.focusMessageId(nil, postId, TableScrollState.CenterEmpty)
+                            }
+                        } else {
+                            navigation.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
                         }
                     } else {
-                        navigation.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
+                        navigation.push(PeerInfoController(context: context, peerId: peerId))
                     }
-                } else {
-                    navigation.push(PeerInfoController(context: context, peerId: peerId))
-                }
-                viewer?.close()
-            }, hashtag: { _ in }, command: {_ in }, applyProxy: { _ in })
+                    viewer?.close()
+                }, hashtag: { hashtag in
+                    context.bindings.globalSearch(hashtag)
+                    viewer?.close()
+                }, command: { commandText in
+                    _ = Sender.enqueue(input: ChatTextInputState(inputText: commandText), context: context, peerId: peer.id, replyId: nil, atDate: nil).start()
+                    viewer?.close()
+                }, applyProxy: { server in
+                    applyExternalProxy(server, accountManager: context.sharedContext.accountManager)
+                    viewer?.close()
+                })
+                
+            }
             
-            self.caption = TextViewLayout(attr, alignment: .left)
+           
+            
+            var spoilers:[TextViewLayout.Spoiler] = []
+            for attr in message.attributes {
+                if let attr = attr as? TextEntitiesMessageAttribute {
+                    for entity in attr.entities {
+                        switch entity.type {
+                        case .Spoiler:
+                            let color: NSColor = NSColor.white
+                            spoilers.append(.init(range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound), color: color, isRevealed: false))
+                        default:
+                            break
+                        }
+                    }
+                }
+            }
+            
+            self.caption = TextViewLayout(attr, alignment: .left, spoilers: spoilers)
             self.caption?.interactions = TextViewInteractions(processURL: { link in
                 if let link = link as? inAppLink {
                     execute(inapp: link, afterComplete: { value in
@@ -516,11 +558,11 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     }
     
     func appear(for view:NSView?) {
-        
+        appearSignal.set(true)
     }
     
     func disappear(for view:NSView?) {
-        
+        appearSignal.set(false)
     }
     
     deinit {

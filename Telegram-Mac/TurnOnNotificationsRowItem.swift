@@ -13,8 +13,8 @@ final class TurnOnNotificationsRowItem : GeneralRowItem {
     fileprivate let header: TextViewLayout
     fileprivate let text: TextViewLayout
     init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType) {
-        let hAttr: NSAttributedString = .initialize(string: L10n.notificationSettingsTurnOnTextTitle, color: theme.colors.text, font: .medium(.text))
-        let tAttr: NSAttributedString = .initialize(string: L10n.notificationSettingsTurnOnTextText, color: theme.colors.text, font: .normal(.text))
+        let hAttr: NSAttributedString = .initialize(string: strings().notificationSettingsTurnOnTextTitle, color: theme.colors.text, font: .medium(.text))
+        let tAttr: NSAttributedString = .initialize(string: strings().notificationSettingsTurnOnTextText, color: theme.colors.text, font: .normal(.text))
         header = .init(hAttr)
         text = .init(tAttr)
 

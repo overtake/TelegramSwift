@@ -25,7 +25,7 @@ class ReplyModel: ChatAccessoryModel {
     private let autodownload: Bool
     private let headerAsName: Bool
     private let customHeader: String?
-    init(replyMessageId:MessageId, context: AccountContext, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, customHeader: String? = nil, drawLine: Bool = true, makesizeCallback: (()->Void)? = nil) {
+    init(replyMessageId:MessageId, context: AccountContext, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, customHeader: String? = nil, drawLine: Bool = true, makesizeCallback: (()->Void)? = nil, dismissReply: (()->Void)? = nil) {
         self.isPinned = isPinned
         self.context = context
         self.makesizeCallback = makesizeCallback
@@ -35,32 +35,28 @@ class ReplyModel: ChatAccessoryModel {
         self.customHeader = customHeader
         super.init(presentation: presentation, drawLine: drawLine)
         
-        let messageViewSignal = context.account.postbox.messageView(replyMessageId) |> take(1) |> mapToSignal { view -> Signal<Message?, NoError> in
-            if let message = view.message {
-                return .single(message)
-            }
-            return context.engine.messages.getMessagesLoadIfNecessary([view.messageId]) |> map {$0.first}
-        }
+      
+        let messageViewSignal: Signal<Message?, NoError> = context.account.postbox.messageView(replyMessageId)
+        |> map {
+            $0.message
+        } |> deliverOnMainQueue
         
         if let replyMessage = replyMessage {
             make(with :replyMessage, display: false)
-            if isPinned {
-                nodeReady.set(.single(true) |> then(messageViewSignal |> deliverOn(Queue.mainQueue()) |> map { [weak self] message -> Bool in
-                    self?.make(with: message, isLoading: false, display: true)
-                    return message != nil
-                }))
-            } else {
-                nodeReady.set(.single(true))
-            }
-            
+            self.nodeReady.set(.single(true))
         } else {
-            
             make(with: nil, display: false)
-            nodeReady.set( messageViewSignal |> deliverOn(Queue.mainQueue()) |> map { [weak self] message -> Bool in
-                 self?.make(with: message, isLoading: false, display: true)
-                 return message != nil
+        }
+        if replyMessage == nil {
+            nodeReady.set(messageViewSignal |> map { [weak self] message -> Bool in
+                self?.make(with: message, isLoading: false, display: true)
+                if message == nil {
+                    dismissReply?()
+                }
+                return message != nil
              })
         }
+       
     }
     
     override var view: ChatAccessoryView? {
@@ -85,7 +81,7 @@ class ReplyModel: ChatAccessoryModel {
                             imageDimensions = representation.dimensions.size
                         }
                         break
-                    } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) {
+                    } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) && !file.isVideoSticker {
                         if let dimensions = file.dimensions {
                             imageDimensions = dimensions.size
                         } else if let representation = largestImageRepresentation(file.previewRepresentations), !file.isStaticSticker {
@@ -129,7 +125,7 @@ class ReplyModel: ChatAccessoryModel {
                             imageDimensions = representation.dimensions.size
                         }
                         break
-                    } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) {
+                    } else if let file = media as? TelegramMediaFile, (file.isVideo || file.isSticker) && !file.isVideoSticker {
                         updatedMedia = file
                         
                         if let dimensions = file.dimensions?.size {
@@ -174,7 +170,7 @@ class ReplyModel: ChatAccessoryModel {
                         if file.isVideo {
                             updateImageSignal = chatMessageVideoThumbnail(account: self.context.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: view.backingScaleFactor, synchronousLoad: false)
                         } else if file.isAnimatedSticker {
-                            updateImageSignal = chatMessageAnimatedSticker(postbox: self.context.account.postbox, file: FileMediaReference.message(message: MessageReference(message), media: file), small: true, scale: view.backingScaleFactor, size: imageDimensions.aspectFitted(boundingSize), fetched: true)
+                            updateImageSignal = chatMessageAnimatedSticker(postbox: self.context.account.postbox, file: FileMediaReference.message(message: MessageReference(message), media: file), small: true, scale: view.backingScaleFactor, size: imageDimensions.aspectFitted(boundingSize), fetched: true, isVideo: file.isVideoSticker)
                         } else if file.isSticker {
                             updateImageSignal = chatMessageSticker(postbox: self.context.account.postbox, file: FileMediaReference.message(message: MessageReference(message), media: file), small: true, scale: view.backingScaleFactor, fetched: true)
                         } else if let iconImageRepresentation = smallestImageRepresentation(file.previewRepresentations) {
@@ -229,7 +225,9 @@ class ReplyModel: ChatAccessoryModel {
         if let message = message {
             
             var title: String? = message.effectiveAuthor?.displayTitle
-        
+            if let info = message.forwardInfo {
+                title = info.authorTitle
+            }
             for attr in message.attributes {
                 if let _ = attr as? SourceReferenceMessageAttribute {
                     if let info = message.forwardInfo {
@@ -240,6 +238,7 @@ class ReplyModel: ChatAccessoryModel {
             }
             
             
+            
             var text = message.restrictedText(context.contentSettings) ?? pullText(from:message, mediaViewType: .text) as String
             if text.isEmpty {
                 text = serviceMessageText(message, account: context.account, isReplied: true)
@@ -247,31 +246,22 @@ class ReplyModel: ChatAccessoryModel {
             if let header = customHeader {
                 self.headerAttr = .initialize(string: header, color: presentation.title, font: .medium(.text))
             } else {
-                self.headerAttr = .initialize(string: !isPinned || headerAsName ? title : L10n.chatHeaderPinnedMessage, color: presentation.title, font: .medium(.text))
+                self.headerAttr = .initialize(string: !isPinned || headerAsName ? title : strings().chatHeaderPinnedMessage, color: presentation.title, font: .medium(.text))
             }
             self.messageAttr = .initialize(string: text, color: message.media.isEmpty || message.media.first is TelegramMediaWebpage ? presentation.enabledText : presentation.disabledText, font: .normal(.text))
         } else {
             self.headerAttr = nil
-            self.messageAttr = .initialize(string: isLoading ? tr(L10n.messagesReplyLoadingLoading) : tr(L10n.messagesDeletedMessage), color: presentation.disabledText, font: .normal(.text))
+            self.messageAttr = .initialize(string: isLoading ? strings().messagesReplyLoadingLoading : strings().messagesDeletedMessage, color: presentation.disabledText, font: .normal(.text))
             display = true
         }
         
         if !isLoading {
-            if let makesizeCallback = makesizeCallback {
-                messagesViewQueue.async {
-                    makesizeCallback()
-                }
-                return
-            } else {
-                measureSize(width, sizeToFit: sizeToFit)
-                display = true
-            }
+            measureSize(width, sizeToFit: sizeToFit)
+            display = true
         }
         if display {
-            Queue.mainQueue().async {
-                self.view?.setFrameSize(self.size)
-                self.setNeedDisplay()
-            }
+            self.view?.setFrameSize(self.size)
+            self.setNeedDisplay()
         }
     }
 

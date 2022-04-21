@@ -45,7 +45,7 @@ final class PassportAcceptRowView : TableRowView {
     
     override func updateColors() {
         super.updateColors()
-        button.set(text: L10n.secureIdRequestAccept, for: .Normal)
+        button.set(text: strings().secureIdRequestAccept, for: .Normal)
         button.set(color: .white, for: .Normal)
     }
     

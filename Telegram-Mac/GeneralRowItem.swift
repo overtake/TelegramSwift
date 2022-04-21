@@ -77,6 +77,7 @@ enum GeneralInteractedType : Equatable {
     case button(String)
     case search(Bool)
     case colorSelector(NSColor)
+    case badge(String, NSColor)
     #if !SHARE
     case contextSelector(String, [SPopoverItem])
     #endif
@@ -169,8 +170,8 @@ enum GeneralViewType : Equatable {
         switch self {
         case .legacy:
             return []
-        case let .modern(position, _):
-            return isPlainMode ? [] : position.corners
+        case let .modern(position, insets):
+            return isPlainMode || insets.isEmpty ? [] : position.corners
         }
     }
     var hasBorder: Bool {
@@ -335,13 +336,19 @@ class GeneralRowItem: TableRowItem {
     }
     let customTheme: Theme?
     
-    init(_ initialSize: NSSize, height:CGFloat = 40.0, stableId:AnyHashable = arc4random(),type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping()->Void = {}, drawCustomSeparator:Bool = true, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, backgroundColor: NSColor? = nil, error: InputDataValueError? = nil, customTheme: Theme? = nil) {
+    private let _ignoreAtInitialization: Bool
+    override var ignoreAtInitialization: Bool {
+        return _ignoreAtInitialization
+    }
+    
+    init(_ initialSize: NSSize, height:CGFloat = 40.0, stableId:AnyHashable = arc4random(),type:GeneralInteractedType = .none, viewType: GeneralViewType = .legacy, action:@escaping()->Void = {}, drawCustomSeparator:Bool = true, border:BorderType = [], inset:NSEdgeInsets = NSEdgeInsets(left: 30.0, right: 30.0), enabled: Bool = true, backgroundColor: NSColor? = nil, error: InputDataValueError? = nil, customTheme: Theme? = nil, ignoreAtInitialization: Bool = false) {
         self.type = type
         _height = height
         _stableId = stableId
         self.border = border
         self._inset = inset
         self.customTheme = customTheme
+        self._ignoreAtInitialization = ignoreAtInitialization
         if let backgroundColor = backgroundColor {
             self.backgroundColor = backgroundColor
         } else {

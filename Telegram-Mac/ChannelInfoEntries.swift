@@ -132,6 +132,18 @@ class ChannelInfoArguments : PeerInfoArguments {
         }
     }
     
+    private var _requestManager:PeerInvitationImportersContext?
+    var requestManager: PeerInvitationImportersContext {
+        if let _requestManager = _requestManager {
+            return _requestManager
+        } else {
+            let importersContext = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .requests(query: nil))
+            _requestManager = importersContext
+            _requestManager!.loadMore()
+            return _requestManager!
+        }
+    }
+    
     private let reportPeerDisposable = MetaDisposable()
     private let updatePeerNameDisposable = MetaDisposable()
     private let toggleSignaturesDisposable = MetaDisposable()
@@ -223,6 +235,16 @@ class ChannelInfoArguments : PeerInfoArguments {
         pushViewController(InviteLinksController(context: context, peerId: peerId, manager: linksManager))
     }
     
+    func openRequests() {
+        pushViewController(RequestJoinMemberListController(context: context, peerId: peerId, manager: requestManager, openInviteLinks: { [weak self] in
+            self?.openInviteLinks()
+        }))
+    }
+    func openReactions(allowedReactions: [String]?, availableReactions: AvailableReactions?) {
+        pushViewController(ReactionsSettingsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions, mode: .chat(isGroup: false)))
+    }
+
+    
     func setupDiscussion() {
         _ = (self.context.account.postbox.loadedPeerWithId(self.peerId) |> deliverOnMainQueue).start(next: { [weak self] peer in
             if let `self` = self {
@@ -246,7 +268,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         let context = self.context
         let peerId = self.peerId
         if let activeCall = current {
-            let join:(PeerId, Date?)->Void = { joinAs, _ in
+            let join:(PeerId, Date?, Bool)->Void = { joinAs, _, _ in
                 _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: activeCall, initialInfo: nil, joinHash: nil), for: context.window).start(next: { result in
                     switch result {
                     case let .samePeer(callContext):
@@ -254,12 +276,12 @@ class ChannelInfoArguments : PeerInfoArguments {
                     case let .success(callContext):
                         applyGroupCallResult(context.sharedContext, callContext)
                     default:
-                        alert(for: context.window, info: L10n.errorAnError)
+                        alert(for: context.window, info: strings().errorAnError)
                     }
                 })
             }
             if let callJoinPeerId = callJoinPeerId {
-                join(callJoinPeerId, nil)
+                join(callJoinPeerId, nil, false)
             } else {
                 selectGroupCallJoiner(context: context, peerId: peerId, completion: join)
             }
@@ -280,7 +302,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         let updatePhoto:(NSImage) -> Void = { image in
             _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
                 let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
-                showModal(with: controller, for: mainWindow, animationType: .scaleCenter)
+                showModal(with: controller, for: context.window, animationType: .scaleCenter)
                 _ = controller.result.start(next: { [weak self] url, _ in
                     self?.updatePhoto(url.path)
                 })
@@ -296,80 +318,85 @@ class ChannelInfoArguments : PeerInfoArguments {
             let updateVideo = self.updateVideo
             
             
-            var items:[SPopoverItem] = []
+            var items:[ContextMenuItem] = []
             
-            items.append(.init(L10n.editAvatarPhotoOrVideo, {
+            items.append(.init(strings().editAvatarPhotoOrVideo, handler: {
                 filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
                     if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
                         updatePhoto(image)
                     } else if let path = paths?.first {
-                        selectVideoAvatar(context: context, path: path, localize: L10n.videoAvatarChooseDescChannel, signal: { signal in
+                        selectVideoAvatar(context: context, path: path, localize: strings().videoAvatarChooseDescChannel, signal: { signal in
                             updateVideo(signal)
                         })
                     }
                 })
-            }))
+            }, itemImage: MenuAnimation.menu_shared_media.value))
             
-            items.append(.init(L10n.editAvatarStickerOrGif, { [weak control] in
-                let controller = EntertainmentViewController(size: NSMakeSize(350, 350), context: context, mode: .selectAvatar)
-                controller._frameRect = NSMakeRect(0, 0, 350, 400)
-                
-                let interactions = ChatInteraction(chatLocation: .peer(context.peerId), context: context)
-                
-                let runConvertor:(MediaObjectToAvatar)->Void = { [weak control] convertor in
-                    _ = showModalProgress(signal: convertor.start(), for: context.window).start(next: { [weak control] result in
-                        switch result {
-                        case let .image(image):
-                             updatePhoto(image)
-                        case let .video(path):
-                            selectVideoAvatar(context: context, path: path, localize: L10n.videoAvatarChooseDescChannel, quality: AVAssetExportPresetHighestQuality, signal: { signal in
-                                updateVideo(signal)
-                            })
-                        }
-                        control?.contextObject = nil
-                    })
-                    control?.contextObject = convertor
-                }
-                
-                interactions.sendAppFile = { file, _, _ in
-                    let object: MediaObjectToAvatar.Object
-                    if file.isAnimatedSticker {
-                        object = .animated(file)
-                    } else if file.isSticker {
-                        object = .sticker(file)
-                    } else {
-                        object = .gif(file)
-                    }
-                    let convertor = MediaObjectToAvatar(context: context, object: object)
-                    runConvertor(convertor)
-                }
-                interactions.sendInlineResult = { [] collection, result in
-                    switch result {
-                    case let .internalReference(reference):
-                        if let file = reference.file {
-                            let convertor = MediaObjectToAvatar(context: context, object: .gif(file))
-                            runConvertor(convertor)
-                        }
-                    case .externalReference:
-                        break
-                    }
-                }
-                
-                control?.contextObject = interactions
-                controller.update(with: interactions)
-                if let control = control {
-                    showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(0, -110), static: true)
-                }
-            }))
+//            items.append(.init(strings().editAvatarStickerOrGif, handler: { [weak control] in
+//                let controller = EntertainmentViewController(size: NSMakeSize(350, 350), context: context, mode: .selectAvatar)
+//                controller._frameRect = NSMakeRect(0, 0, 350, 400)
+//                
+//                let interactions = ChatInteraction(chatLocation: .peer(context.peerId), context: context)
+//                
+//                let runConvertor:(MediaObjectToAvatar)->Void = { [weak control] convertor in
+//                    _ = showModalProgress(signal: convertor.start(), for: context.window).start(next: { [weak control] result in
+//                        switch result {
+//                        case let .image(image):
+//                             updatePhoto(image)
+//                        case let .video(path):
+//                            selectVideoAvatar(context: context, path: path, localize: strings().videoAvatarChooseDescChannel, quality: AVAssetExportPresetHighestQuality, signal: { signal in
+//                                updateVideo(signal)
+//                            })
+//                        }
+//                        control?.contextObject = nil
+//                    })
+//                    control?.contextObject = convertor
+//                }
+//                
+//                interactions.sendAppFile = { file, _, _, _ in
+//                    let object: MediaObjectToAvatar.Object
+//                    if file.isAnimatedSticker {
+//                        object = .animated(file)
+//                    } else if file.isSticker {
+//                        object = .sticker(file)
+//                    } else {
+//                        object = .gif(file)
+//                    }
+//                    let convertor = MediaObjectToAvatar(context: context, object: object)
+//                    runConvertor(convertor)
+//                }
+//                interactions.sendInlineResult = { [] collection, result in
+//                    switch result {
+//                    case let .internalReference(reference):
+//                        if let file = reference.file {
+//                            let convertor = MediaObjectToAvatar(context: context, object: .gif(file))
+//                            runConvertor(convertor)
+//                        }
+//                    case .externalReference:
+//                        break
+//                    }
+//                }
+//                
+//                control?.contextObject = interactions
+//                controller.update(with: interactions)
+//                if let control = control {
+//                    showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(0, -110), static: true)
+//                }
+//            }, itemImage: MenuAnimation.menu_view_sticker_set.value))
             
-            if let control = control {
-                showPopover(for: control, with: SPopoverViewController(items: items), edge: .maxY, inset: NSMakePoint(0, -60))
+            if let control = control, let event = NSApp.currentEvent {
+                let menu = ContextMenu()
+                for item in items {
+                    menu.addItem(item)
+                }
+                let value = AppMenu(menu: menu)
+                value.show(event: event, view: control)
             } else {
                 filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
                     if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
                         updatePhoto(image)
                     } else if let path = paths?.first {
-                        selectVideoAvatar(context: context, path: path, localize: L10n.videoAvatarChooseDescChannel, signal: { signal in
+                        selectVideoAvatar(context: context, path: path, localize: strings().videoAvatarChooseDescChannel, signal: { signal in
                             updateVideo(signal)
                         })
                     }
@@ -549,7 +576,7 @@ class ChannelInfoArguments : PeerInfoArguments {
             } else {
                 showModal(with: ReportDetailsController(context: context, reason: value, updated: { value in
                     _ = showModalProgress(signal: context.engine.peers.reportPeer(peerId: peerId, reason: value.reason, message: value.comment), for: context.window).start(completed: {
-                        showModalText(for: context.window, text: L10n.peerInfoChannelReported)
+                        showModalText(for: context.window, text: strings().peerInfoChannelReported)
                     })
                 }), for: context.window)
             }
@@ -595,6 +622,8 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case members(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
     case link(sectionId: ChannelInfoSection, addressName:String, viewType: GeneralViewType)
     case inviteLinks(section: ChannelInfoSection, count: Int32, viewType: GeneralViewType)
+    case requests(section: ChannelInfoSection, count: Int32, viewType: GeneralViewType)
+    case reactions(section: ChannelInfoSection, text: String, allowedReactions: [String]?, availableReactions: AvailableReactions?, viewType: GeneralViewType)
     case discussion(sectionId: ChannelInfoSection, group: Peer?, participantsCount: Int32?, viewType: GeneralViewType)
     case discussionDesc(sectionId: ChannelInfoSection, viewType: GeneralViewType)
     case aboutInput(sectionId: ChannelInfoSection, description:String, viewType: GeneralViewType)
@@ -619,7 +648,9 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .members(sectionId, count, _): return .members(sectionId: sectionId, count: count, viewType: viewType)
         case let .link(sectionId, addressName, _): return .link(sectionId: sectionId, addressName: addressName, viewType: viewType)
         case let .inviteLinks(section, count, _): return .inviteLinks(section: section, count: count, viewType: viewType)
+        case let .requests(section, count, _): return .requests(section: section, count: count, viewType: viewType)
         case let .discussion(sectionId, group, participantsCount, _): return .discussion(sectionId: sectionId, group: group, participantsCount: participantsCount, viewType: viewType)
+        case let .reactions(section, text, allowedReactions, availableReactions, _): return .reactions(section: section, text: text, allowedReactions: allowedReactions, availableReactions: availableReactions, viewType: viewType)
         case let .discussionDesc(sectionId, _): return .discussionDesc(sectionId: sectionId, viewType: viewType)
         case let .aboutInput(sectionId, description, _): return .aboutInput(sectionId: sectionId, description: description, viewType: viewType)
         case let .aboutDesc(sectionId, _): return .aboutDesc(sectionId: sectionId, viewType: viewType)
@@ -743,6 +774,12 @@ enum ChannelInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
+        case let .requests(sectionId, count, viewType):
+            if case .requests(sectionId, count, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
         case let .discussion(sectionId, lhsGroup, participantsCount, viewType):
             if case .discussion(sectionId, let rhsGroup, participantsCount, viewType) = entry {
                 if let lhsGroup = lhsGroup, let rhsGroup = rhsGroup {
@@ -750,6 +787,12 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 } else if (lhsGroup != nil) != (rhsGroup != nil) {
                     return false
                 }
+                return true
+            } else {
+                return false
+            }
+        case let .reactions(sectionId, text, allowedReactions, availableReactions, viewType):
+            if case .reactions(sectionId, text, allowedReactions, availableReactions, viewType) = entry {
                 return true
             } else {
                 return false
@@ -830,24 +873,28 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return 11
         case .inviteLinks:
             return 12
-        case .discussion:
+        case .requests:
             return 13
-        case .discussionDesc:
+        case .reactions:
             return 14
-        case .aboutInput:
+        case .discussion:
             return 15
-        case .aboutDesc:
+        case .discussionDesc:
             return 16
-        case .signMessages:
+        case .aboutInput:
             return 17
-        case .signDesc:
+        case .aboutDesc:
             return 18
-        case .report:
+        case .signMessages:
             return 19
-        case .leave:
+        case .signDesc:
             return 20
-        case .media:
+        case .report:
             return 21
+        case .leave:
+            return 22
+        case .media:
+            return 23
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -875,7 +922,11 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return sectionId.rawValue
         case let .inviteLinks(sectionId, _, _):
             return sectionId.rawValue
+        case let .requests(sectionId, _, _):
+            return sectionId.rawValue
         case let .discussion(sectionId, _, _, _):
+            return sectionId.rawValue
+        case let .reactions(sectionId, _, _, _, _):
             return sectionId.rawValue
         case let .discussionDesc(sectionId, _):
             return sectionId.rawValue
@@ -920,7 +971,11 @@ enum ChannelInfoEntry: PeerInfoEntry {
             return (sectionId.rawValue * 1000) + stableIndex
         case let .inviteLinks(sectionId, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
+        case let .requests(sectionId, _, _):
+            return (sectionId.rawValue * 1000) + stableIndex
         case let .discussion(sectionId, _, _, _):
+            return (sectionId.rawValue * 1000) + stableIndex
+        case let .reactions(sectionId, _, _, _, _):
             return (sectionId.rawValue * 1000) + stableIndex
         case let .discussionDesc(sectionId, _):
             return (sectionId.rawValue * 1000) + stableIndex
@@ -956,33 +1011,35 @@ enum ChannelInfoEntry: PeerInfoEntry {
         case let .info(_, peerView, editable, updatingPhotoState, viewType):
             return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView:peerView, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: arguments.updateChannelPhoto)
         case let .scam(_, title, text, viewType):
-            return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: title, copyMenuText: L10n.textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
+            return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: title, copyMenuText: strings().textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
         case let .about(_, text, viewType):
-            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoInfo, copyMenuText: L10n.textCopyLabelAbout, text:text, context: arguments.context, viewType: viewType, detectLinks:true, openInfo: { peerId, toChat, postId, _ in
+            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoInfo, copyMenuText: strings().textCopyLabelAbout, text:text, context: arguments.context, viewType: viewType, detectLinks:true, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
                     arguments.peerChat(peerId, postId: postId)
                 } else {
                     arguments.peerInfo(peerId)
                 }
-            }, hashtag: arguments.context.sharedContext.bindings.globalSearch)
+            }, hashtag: arguments.context.bindings.globalSearch)
         case let .userName(_, value, viewType):
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: L10n.peerInfoSharelink, copyMenuText: L10n.textCopyLabelShareLink, text: value, context: arguments.context, viewType: viewType, isTextSelectable:false, callback: arguments.share, selectFullWord: true, _copyToClipboard: {
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoSharelink, copyMenuText: strings().textCopyLabelShareLink, text: value, context: arguments.context, viewType: viewType, isTextSelectable:false, callback: arguments.share, selectFullWord: true, _copyToClipboard: {
                 arguments.copy(value)
             })
         case let .report(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoReport, type: .none, viewType: viewType, action: { () in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReport, type: .none, viewType: viewType, action: { () in
                 arguments.report()
             })
         case let .members(_, count, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSubscribers, icon: theme.icons.peerInfoMembers, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.members)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoSubscribers, icon: theme.icons.peerInfoMembers, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.members)
         case let .admins(_, count, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoAdministrators, icon: theme.icons.peerInfoAdmins, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.admins)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoAdministrators, icon: theme.icons.peerInfoAdmins, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.admins)
         case let .blocked(_, count, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoRemovedUsers, icon: theme.icons.profile_removed, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.blocked)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoRemovedUsers, icon: theme.icons.profile_removed, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.blocked)
         case let .link(_, addressName: addressName, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoChannelType, icon: theme.icons.profile_channel_type, type: .context(addressName.isEmpty ? L10n.channelPrivate : L10n.channelPublic), viewType: viewType, action: arguments.visibilitySetup)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoChannelType, icon: theme.icons.profile_channel_type, type: .context(addressName.isEmpty ? strings().channelPrivate : strings().channelPublic), viewType: viewType, action: arguments.visibilitySetup)
         case let .inviteLinks(_, count, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoInviteLinks, icon: theme.icons.profile_links, type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, action: arguments.openInviteLinks)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoInviteLinks, icon: theme.icons.profile_links, type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, action: arguments.openInviteLinks)
+        case let .requests(_, count, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoMembersRequest, icon: theme.icons.profile_requests, type: .badge(count > 0 ? "\(count)" : "", theme.colors.redUI), viewType: viewType, action: arguments.openRequests)
         case let .discussion(_, group, _, viewType):
             let title: String
             if let group = group {
@@ -992,25 +1049,29 @@ enum ChannelInfoEntry: PeerInfoEntry {
                     title = group.displayTitle
                 }
             } else {
-                title = L10n.peerInfoDiscussionAdd
+                title = strings().peerInfoDiscussionAdd
             }
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoDiscussion, icon: theme.icons.profile_group_discussion, type: .nextContext(title), viewType: viewType, action: arguments.setupDiscussion)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoDiscussion, icon: theme.icons.profile_group_discussion, type: .nextContext(title), viewType: viewType, action: arguments.setupDiscussion)
         case let .discussionDesc(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: L10n.peerInfoDiscussionDesc, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: strings().peerInfoDiscussionDesc, viewType: viewType)
+        case let .reactions(_, text, allowedReactions, availableReactions, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReactions, icon: theme.icons.profile_reactions, type: .nextContext(text), viewType: viewType, action: {
+                arguments.openReactions(allowedReactions: allowedReactions, availableReactions: availableReactions)
+            })
         case let .setTitle(_, text, viewType):
-            return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: L10n.peerInfoChannelTitlePleceholder, filter: { $0 }, updated: arguments.updateEditingName, limit: 255)
+            return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoChannelTitlePleceholder, filter: { $0 }, updated: arguments.updateEditingName, limit: 255)
         case let .aboutInput(_, text, viewType):
-            return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: L10n.peerInfoAboutPlaceholder, filter: { $0 }, updated: arguments.updateEditingDescriptionText, limit: 255)
+            return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoAboutPlaceholder, filter: { $0 }, updated: arguments.updateEditingDescriptionText, limit: 255)
         case let .aboutDesc(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: L10n.channelDescriptionHolderDescrpiton, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: strings().channelDescriptionHolderDescrpiton, viewType: viewType)
         case let .signMessages(_, sign, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: L10n.peerInfoSignMessages, icon: theme.icons.profile_channel_sign, type: .switchable(sign), viewType: viewType, action: { [weak arguments] in
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoSignMessages, icon: theme.icons.profile_channel_sign, type: .switchable(sign), viewType: viewType, action: { [weak arguments] in
                 arguments?.toggleSignatures(!sign)
             })
         case let .signDesc(_, viewType):
-            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: L10n.peerInfoSignMessagesDesc, viewType: viewType)
+            return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: strings().peerInfoSignMessagesDesc, viewType: viewType)
         case let .leave(_, isCreator, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: isCreator ? L10n.peerInfoDeleteChannel : L10n.peerInfoLeaveChannel, nameStyle:redActionButton, type: .none, viewType: viewType, action: arguments.delete)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: isCreator ? strings().peerInfoDeleteChannel : strings().peerInfoLeaveChannel, nameStyle:redActionButton, type: .none, viewType: viewType, action: arguments.delete)
         case let .media(_, controller, isVisible, viewType):
             return PeerMediaBlockRowItem(initialSize, stableId: stableId.hashValue, controller: controller, isVisible: isVisible, viewType: viewType)
         case .section(_):
@@ -1031,7 +1092,7 @@ enum ChannelInfoSection : Int {
     case media = 9
 }
 
-func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32) -> [PeerInfoEntry] {
+func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsData: PeerMediaTabsData, inviteLinksCount: Int32, joinRequestsCount: Int32, availableReactions: AvailableReactions?) -> [PeerInfoEntry] {
     
     let arguments = arguments as! ChannelInfoArguments
     var state:ChannelInfoState {
@@ -1082,8 +1143,29 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                 }
                 if channel.canInviteUsers {
                     block.append(.inviteLinks(section: .type, count: inviteLinksCount, viewType: .singleItem))
+                    if joinRequestsCount > 0 {
+                        block.append(.requests(section: .type, count: joinRequestsCount, viewType: .singleItem))
+                    }
                 }
-                if channel.adminRights?.rights.contains(.canChangeInfo) == true {
+                if channel.groupAccess.canEditGroupInfo {
+                    let cachedData = view.cachedData as? CachedChannelData
+                    let allCount = cachedData?.allowedReactions?.count ?? availableReactions?.enabled.count ?? 0
+                    
+                    let text: String
+                    if let availableReactions = availableReactions {
+                        if allCount == availableReactions.enabled.count {
+                            text = strings().peerInfoReactionsAll
+                        } else if allCount == 0 {
+                            text = strings().peerInfoReactionsDisabled
+                        } else {
+                            text = strings().peerInfoReactionsPart("\(allCount)", "\(availableReactions.enabled.count)")
+                        }
+                    } else {
+                        text = strings().peerInfoReactionsAll
+                    }
+                    
+                    block.append(.reactions(section: .type, text: text, allowedReactions: cachedData?.allowedReactions, availableReactions: availableReactions, viewType: .singleItem))
+                    
                     block.append(.discussion(sectionId: .type, group: group, participantsCount: nil, viewType: .singleItem))
                 }
                 applyBlock(block)
@@ -1116,9 +1198,9 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
             
             var aboutBlock:[ChannelInfoEntry] = []
             if channel.isScam {
-                aboutBlock.append(.scam(sectionId: .desc, title: L10n.peerInfoScam, text: L10n.channelInfoScamWarning, viewType: .singleItem))
+                aboutBlock.append(.scam(sectionId: .desc, title: strings().peerInfoScam, text: strings().channelInfoScamWarning, viewType: .singleItem))
             } else if channel.isFake {
-                aboutBlock.append(.scam(sectionId: .desc, title: L10n.peerInfoFake, text: L10n.channelInfoFakeWarning, viewType: .singleItem))
+                aboutBlock.append(.scam(sectionId: .desc, title: strings().peerInfoFake, text: strings().channelInfoFakeWarning, viewType: .singleItem))
             }
             if let cachedData = view.cachedData as? CachedChannelData {
                 if let about = cachedData.about, !about.isEmpty, !channel.isScam && !channel.isFake {

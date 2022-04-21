@@ -125,8 +125,8 @@ private final class DesktopCaptureSourceMacView : Control {
     var previousState: ControlState?
 
     
-    override func stateDidUpdated(_ state: ControlState) {
-        super.stateDidUpdated(state)
+    override func stateDidUpdate(_ state: ControlState) {
+        super.stateDidUpdate(state)
         
         switch controlState {
         case .Normal:

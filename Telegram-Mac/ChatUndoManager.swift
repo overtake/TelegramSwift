@@ -167,39 +167,39 @@ struct ChatUndoStatuses {
             if !text.isEmpty {
                 text += ", "
             }
-            text += L10n.chatUndoManagerChatsArchivedCountable(archiveChatCount)
+            text += strings().chatUndoManagerChatsArchivedCountable(archiveChatCount)
         }
         
         if leftChatCount > 0 {
             if !text.isEmpty {
                 text += ", "
             }
-            text += L10n.chatUndoManagerChatLeftCountable(leftChatCount)
+            text += strings().chatUndoManagerChatLeftCountable(leftChatCount)
         }
         
         if leftChannelCount > 0 {
             if !text.isEmpty {
                 text += ", "
             }
-            text += L10n.chatUndoManagerChannelLeftCountable(leftChannelCount)
+            text += strings().chatUndoManagerChannelLeftCountable(leftChannelCount)
         }
         if deleteCount > 0 {
             if !text.isEmpty {
                 text += ", "
             }
-            text += L10n.chatUndoManagerChatsDeletedCountable(deleteCount)
+            text += strings().chatUndoManagerChatsDeletedCountable(deleteCount)
         }
         if deleteChannelCount > 0 {
             if !text.isEmpty {
                 text += ", "
             }
-            text += L10n.chatUndoManagerChannelDeletedCountable(deleteChannelCount)
+            text += strings().chatUndoManagerChannelDeletedCountable(deleteChannelCount)
         }
         if clearingCount > 0 {
             if !text.isEmpty {
                 text += ", "
             }
-            text += L10n.chatUndoManagerChatsHistoryClearedCountable(clearingCount)
+            text += strings().chatUndoManagerChatsHistoryClearedCountable(clearingCount)
         }
         return text
     }

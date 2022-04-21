@@ -46,10 +46,10 @@ private func forgotPasswordEntries(state: ForgotPasswordState, pattern: String, 
     sectionId += 1
     
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.code), error: state.error, identifier: _id_input_code, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: L10n.twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 6))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.code), error: state.error, identifier: _id_input_code, mode: .plain, data: InputDataRowData(), placeholder: nil, inputPlaceholder: strings().twoStepAuthRecoveryCode, filter: {String($0.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0)})}, limit: 6))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: GeneralRowTextType.markdown(L10n.twoStepAuthRecoveryCodeHelp + "\n\n" + L10n.twoStepAuthRecoveryEmailUnavailableNew(pattern), linkHandler: { _ in
+    entries.append(.desc(sectionId: sectionId, index: index, text: GeneralRowTextType.markdown(strings().twoStepAuthRecoveryCodeHelp + "\n\n" + strings().twoStepAuthRecoveryEmailUnavailableNew(pattern), linkHandler: { _ in
         unavailable()
     }), data: InputDataGeneralTextData(detectBold: false)))
     
@@ -85,13 +85,16 @@ func ForgotUnauthorizedPasswordController(accountManager: AccountManager<Telegra
                 }
                 
                 if code.length == 6 {
-                    disposable.set(showModalProgress(signal: engine.auth.performPasswordRecovery(code: code, updatedPassword: .none) |> deliverOnMainQueue, for: mainWindow).start(next: { _ in 
+                    disposable.set(showModalProgress(signal: engine.auth.performPasswordRecovery(code: code, updatedPassword: .none) |> deliverOnMainQueue, for: mainWindow).start(next: { data in
                         
-                        updateState { state in
-                            return state.withUpdatedChecking(false)
-                        }
+                        let auth = loginWithRecoveredAccountData(accountManager: accountManager, account: engine.account, recoveredAccountData: data, syncContacts: true) |> deliverOnMainQueue
                         
-                        close?()
+                        disposable.set(auth.start(completed: {
+                            updateState { state in
+                                return state.withUpdatedChecking(false)
+                            }
+                            close?()
+                        }))
                         
                     }, error: { error in
                         
@@ -102,13 +105,13 @@ func ForgotUnauthorizedPasswordController(accountManager: AccountManager<Telegra
                         let text: String
                         switch error {
                         case .invalidCode:
-                            text = L10n.twoStepAuthEmailCodeInvalid
+                            text = strings().twoStepAuthEmailCodeInvalid
                         case .expired:
-                            text = L10n.twoStepAuthEmailCodeExpired
+                            text = strings().twoStepAuthEmailCodeExpired
                         case .generic:
-                            text = L10n.unknownError
+                            text = strings().unknownError
                         case .limitExceeded:
-                            text = L10n.loginFloodWait
+                            text = strings().loginFloodWait
                         }
                         
                         updateState { current in
@@ -119,7 +122,7 @@ func ForgotUnauthorizedPasswordController(accountManager: AccountManager<Telegra
                     }))
                 } else {
                     updateState { current in
-                        return current.withUpdatedError(InputDataValueError(description: L10n.twoStepAuthEmailCodeInvalid, target: .data))
+                        return current.withUpdatedError(InputDataValueError(description: strings().twoStepAuthEmailCodeInvalid, target: .data))
                     }
                     
                     f(.fail(.fields([_id_input_code : .shake])))
@@ -132,11 +135,11 @@ func ForgotUnauthorizedPasswordController(accountManager: AccountManager<Telegra
     }
     let signal = statePromise.get() |> map { state in
         return InputDataSignalValue(entries: forgotPasswordEntries(state: state, pattern: emailPattern, unavailable: {
-             alert(for: mainWindow, info: L10n.twoStepAuthRecoveryFailed)
+             alert(for: mainWindow, info: strings().twoStepAuthRecoveryFailed)
         }))
     }
     
-    let controller = InputDataController(dataSignal: signal, title: L10n.twoStepAuthRecoveryTitle, validateData: { data in
+    let controller = InputDataController(dataSignal: signal, title: strings().twoStepAuthRecoveryTitle, validateData: { data in
         
         return checkCode(stateValue.with { $0.code })
     }, updateDatas: { data in
@@ -161,7 +164,7 @@ func ForgotUnauthorizedPasswordController(accountManager: AccountManager<Telegra
         theme.colors.background
     }
     
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.modalSend, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().modalSend, accept: { [weak controller] in
         _ = controller?.returnKeyAction()
     }, drawBorder: true, height: 50, singleButton: true)
     

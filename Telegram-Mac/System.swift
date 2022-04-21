@@ -13,6 +13,7 @@ import TelegramCore
 import TGUIKit
 import Postbox
 import CoreMediaIO
+import Localization
 
 private let _dQueue = Queue.init(name: "chatListQueue")
 private let _sQueue = Queue.init(name: "ChatQueue")
@@ -26,18 +27,7 @@ public let kMediaImageExt = "jpg";
 public let kMediaGifExt = "mov";
 public let kMediaVideoExt = "mp4";
 
-public weak var mw:Window?
 
-var mainWindow:Window {
-    if let window = NSApp.keyWindow as? Window {
-        return window
-    } else if let window = NSApp.mainWindow as? Window {
-        return window
-    } else if let mw = mw {
-        return mw
-    }
-    fatalError("window not found")
-}
 
 var systemAppearance: NSAppearance {
     if #available(OSX 10.14, *) {
@@ -185,4 +175,10 @@ func shouldBeMirrored(_ device: AVCaptureDevice) -> Bool {
         }
     }
     return true
+}
+
+
+
+func strings() -> L10n.Type {
+    return L10n.self
 }

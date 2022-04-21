@@ -63,15 +63,15 @@ class ForwardPanelModel: ChatAccessoryModel {
             }
         }
         
-        //hideNames ? L10n.chatInputForwardHidden :  names.joined(separator: ", ")
+        //hideNames ? strings().chatInputForwardHidden :  names.joined(separator: ", ")
         
-        let text = hideNames ? L10n.chatAccessoryHiddenCountable(forwardMessages.count) : L10n.chatAccessoryForwardCountable(forwardMessages.count)
+        let text = hideNames ? strings().chatAccessoryHiddenCountable(forwardMessages.count) : strings().chatAccessoryForwardCountable(forwardMessages.count)
         self.headerAttr = NSAttributedString.initialize(string: text, color: theme.colors.accent, font: .medium(.text))
         if forwardMessages.count == 1, !forwardMessages[0].text.isEmpty, forwardMessages[0].media.isEmpty {
             let text: String
             let messageText = chatListText(account: account, for: forwardMessages[0]).string
             if forwardMessages[0].effectiveAuthor?.id == account.peerId {
-                text = "\(L10n.chatAccessoryForwardYou): \(messageText)"
+                text = "\(strings().chatAccessoryForwardYou): \(messageText)"
             } else if let author = forwardMessages[0].effectiveAuthor {
                 text = "\(author.displayTitle): \(messageText)"
             } else {
@@ -81,7 +81,7 @@ class ForwardPanelModel: ChatAccessoryModel {
         } else {
             let authors = uniquePeers(from: forwardMessages.compactMap { $0.effectiveAuthor })
             let messageText = authors.map { $0.compactDisplayTitle }.joined(separator: ", ")
-            let text = "\(L10n.chatAccessoryForwardFrom): \(messageText)"
+            let text = "\(strings().chatAccessoryForwardFrom): \(messageText)"
 
             self.messageAttr = NSAttributedString.initialize(string: text, color: theme.colors.grayText, font: .normal(.text))
         }

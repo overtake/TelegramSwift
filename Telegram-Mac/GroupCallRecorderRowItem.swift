@@ -29,9 +29,9 @@ final class GroupCallRecorderRowItem : GeneralRowItem {
         
         let text: String
         if let _ = startedRecordedTime {
-            text = L10n.voiceChatStopRecording
+            text = strings().voiceChatStopRecording
         } else {
-            text = L10n.voiceChatStartRecording
+            text = strings().voiceChatStartRecording
         }
         self.titleLayout = TextViewLayout(.initialize(string: text, color: customTheme?.textColor ?? theme.colors.text, font: .normal(.text)))
         

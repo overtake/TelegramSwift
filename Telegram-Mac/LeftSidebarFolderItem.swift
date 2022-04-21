@@ -60,7 +60,7 @@ class LeftSidebarFolderItem: TableRowItem {
         self.callback = callback
         self.menuItems = menuItems
         var folderIcon = FolderIcon(folder).icon(for: selected ? .sidebarActive : .sidebar)
-        nameLayout = TextViewLayout(.initialize(string: folder != nil ? folder!.title : L10n.chatListFilterAllChats, color: !selected ? NSColor.white.withAlphaComponent(0.5) : .white, font: .medium(10)), alignment: .center)
+        nameLayout = TextViewLayout(.initialize(string: folder != nil ? folder!.title : strings().chatListFilterAllChats, color: !selected ? NSColor.white.withAlphaComponent(0.5) : .white, font: .medium(10)), alignment: .center)
         nameLayout.measure(width: initialSize.width - 10)
         
         

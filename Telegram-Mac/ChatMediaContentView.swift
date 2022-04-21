@@ -69,7 +69,9 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         fatalError("init(coder:) has not been implemented")
     }
     
-    
+    func playIfNeeded(_ playSound: Bool = false) {
+        
+    }
     
     func willRemove() -> Void {
         //self.cancel()
@@ -115,7 +117,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         
     }
     
-    func fetch() -> Void {
+    func fetch(userInitiated: Bool) -> Void {
         
     }
     
@@ -130,18 +132,16 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     func executeInteraction(_ isControl:Bool) -> Void {
         if let fetchStatus = self.fetchStatus, userInteractionEnabled {
             switch fetchStatus {
-            case .Fetching:
+            case .Fetching, .Paused:
                 if isControl {
                     if let parent = parent, parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
                         delete()
                     }
                     cancelFetching()
                 } else {
-                    //open()
                 }
             case .Remote:
-                fetch()
-            //open()
+                fetch(userInitiated: true)
             case .Local:
                 open()
                 break
@@ -169,15 +169,13 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         self.context = context
         self.parent = parent
         self.table = table
-        
-       
-        
+                
         self.media = media
         
         if let parameters = parameters {
             if let parent = parent {
                 if parameters.automaticDownloadFunc(parent) {
-                    fetch()
+                    fetch(userInitiated: false)
                     preloadStreamblePart()
                 } else {
                     if parameters.preload {
@@ -185,7 +183,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
                     }
                 }
             } else if parameters.automaticDownload {
-                fetch()
+                fetch(userInitiated: false)
                 preloadStreamblePart()
             } else if parameters.preload {
                 preloadStreamblePart()
@@ -259,7 +257,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
             inDragging = false
             dragpath = nil
             mouseDownPoint = convert(event.locationInWindow, from: nil)
-            acceptDragging = draggingAbility(event) && parent != nil && !parent!.containsSecretMedia
+            acceptDragging = draggingAbility(event) && parent != nil && !parent!.containsSecretMedia && !parent!.isCopyProtected()
             
             if let parent = parent, parent.id.peerId.namespace == Namespaces.Peer.SecretChat {
                 acceptDragging = false
@@ -289,7 +287,6 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
             pasteboard?.declareTypes([.kFilenames, .string], owner: self)
             pasteboard?.setPropertyList([dragpath], forType: .kFilenames)
             pasteboard?.setString(dragpath, forType: .string)
-            
         }
     }
     
@@ -348,6 +345,10 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         
     }
     
+    var canSpamClicks: Bool {
+        return false
+    }
+    
     override func mouseUp(with event: NSEvent) {
         if event.modifierFlags.contains(.control) {
             super.mouseUp(with: event)
@@ -355,7 +356,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         }
         
         
-        if !inDragging && draggingAbility(event) && userInteractionEnabled, event.clickCount <= 1 {
+        if !inDragging && draggingAbility(event) && userInteractionEnabled, event.clickCount <= 1 || canSpamClicks {
             executeInteraction(false)
         } else {
             super.superview?.mouseUp(with: event)

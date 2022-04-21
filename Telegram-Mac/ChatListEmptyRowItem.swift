@@ -102,9 +102,9 @@ private class ChatListEmptyRowView : TableRowView {
         
         let text: String
         if let _ = item.filter {
-            text = L10n.chatListFilterEmpty
+            text = strings().chatListFilterEmpty
         } else {
-            text = L10n.chatListEmptyText
+            text = strings().chatListEmptyText
         }
 
         
@@ -240,7 +240,7 @@ private class ChatListLoadingRowView : TableRowView {
         
         let text: String
         if let _ = item.filter {
-            text = L10n.chatListFilterLoading
+            text = strings().chatListFilterLoading
         } else {
             text = "Loading"
         }

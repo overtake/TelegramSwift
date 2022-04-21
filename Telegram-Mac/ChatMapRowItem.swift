@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-
+import InAppSettings
 
 final class ChatMediaMapLayoutParameters : ChatMediaLayoutParameters {
     let map:TelegramMediaMap
@@ -72,7 +72,7 @@ class ChatMapRowItem: ChatMediaItem {
         })
         
         if isLiveLocationView {
-            liveText = TextViewLayout(.initialize(string: L10n.chatLiveLocation, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .bold(.text)), maximumNumberOfLines: 1, truncationType: .end)
+            liveText = TextViewLayout(.initialize(string: strings().chatLiveLocation, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .bold(.text)), maximumNumberOfLines: 1, truncationType: .end)
             
             var editedDate:Int32 = object.message!.timestamp
             for attr in object.message!.attributes {
@@ -85,22 +85,21 @@ class ChatMapRowItem: ChatMediaItem {
             time -= context.timeDifference
             let timeUpdated = Int32(time) - editedDate
                 
-            updatedText = TextViewLayout(.initialize(string: timeUpdated < 60 ? L10n.chatLiveLocationUpdatedNow : L10n.chatLiveLocationUpdatedCountable(Int(timeUpdated / 60)), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text)), maximumNumberOfLines: 1)
+            updatedText = TextViewLayout(.initialize(string: timeUpdated < 60 ? strings().chatLiveLocationUpdatedNow : strings().chatLiveLocationUpdatedCountable(Int(timeUpdated / 60)), color: theme.chat.grayText(isIncoming, object.renderType == .bubble), font: .normal(.text)), maximumNumberOfLines: 1)
         }
     }
     
-    override var additionalLineForDateInBubbleState: CGFloat? {
+    override var isForceRightLine: Bool {
         if let parameters = parameters as? ChatMediaMapLayoutParameters {
             if parameters.isVenue {
-                return rightSize.width > (_contentSize.width - 70) ? rightSize.height : nil
+                if rightSize.width > (_contentSize.width - 70) {
+                    return true
+                }
             }
         }
-        return nil
+        return super.isForceRightLine
     }
     
-    override var isFixedRightPosition: Bool {
-        return true
-    }
     
     override var instantlyResize:Bool {
         if let parameters = parameters as? ChatMediaMapLayoutParameters {

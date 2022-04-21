@@ -42,7 +42,7 @@ class SelectManager : NSResponder {
         _ = ranges.modify { ranges in
             for selection in ranges {
                 if let value = selection.1.value {
-                    value.layout?.clearSelect()
+                    value.textLayout?.clearSelect()
                     value.canBeResponder = true
                     value.setNeedsDisplay()
                 }
@@ -87,6 +87,12 @@ class SelectManager : NSResponder {
     }
     
     @objc func copy(_ sender:Any) {
+        
+        if let window = self.chatInteraction?.context.window, let peer = self.chatInteraction?.peer, peer.isCopyProtected {
+            showProtectedCopyAlert(peer, for: window)
+            return
+        }
+        
         let selectedText = self.selectedText
         if !selectedText.string.isEmpty {
             if !globalLinkExecutor.copyAttributedString(selectedText) {
@@ -121,7 +127,7 @@ class SelectManager : NSResponder {
         _ = ranges.modify { ranges in
             var ranges = ranges
             if let last = ranges.last, let textView = last.1.value {
-                if last.2.range.max < last.2.text.length, let layout = textView.layout {
+                if last.2.range.max < last.2.text.length, let layout = textView.textLayout {
                     
                     var range = last.2.range
                     
@@ -158,7 +164,7 @@ class SelectManager : NSResponder {
         _ = ranges.modify { ranges in
             var ranges = ranges
             if let first = ranges.first, let textView = first.1.value {
-                if let layout = textView.layout {
+                if let layout = textView.textLayout {
                     
                     var range = first.2.range
                     
@@ -297,7 +303,8 @@ class ChatSelectText : NSObject {
                     }
                 }
                 
-                if row < 0 || (!NSPointInRect(point, table.frame) || hasModals(window) || (!table.item(at: row).canMultiselectTextIn(event.locationInWindow) && chatInteraction.presentation.state != .selecting)) || !isCurrentTableView(window.contentView?.hitTest(event.locationInWindow)) {       self?.beginInnerLocation = NSZeroPoint
+                if row < 0 || (!NSPointInRect(point, table.frame) || hasModals(window) || (!table.item(at: row).canMultiselectTextIn(event.locationInWindow) && chatInteraction.presentation.state != .selecting)) || !isCurrentTableView(window.contentView?.hitTest(event.locationInWindow)) {
+                    self?.beginInnerLocation = NSZeroPoint
                 } else {
                     self?.beginInnerLocation = documentPoint
                 }
@@ -313,6 +320,14 @@ class ChatSelectText : NSObject {
                 }
                 
                 self?.started = self?.beginInnerLocation != NSZeroPoint
+                if self?.started == true, row != -1 {
+                    if chatInteraction.presentation.state == .selecting, let deselect = self?.deselect {
+                        let item = table.item(at: row) as? ChatRowItem
+                        if let view = item?.view as? ChatRowView {
+                            view.toggleSelected(deselect, in: window.mouseLocationOutsideOfEventStream)
+                        }
+                    }
+                }
             }
             
             return .invokeNext
@@ -508,7 +523,7 @@ class ChatSelectText : NSObject {
                     for j in 0 ..< views.count {
                         let selectableView = views[j]
                         
-                        if let layout = selectableView.layout {
+                        if let layout = selectableView.textLayout {
                             let beginViewLocation = selectableView.convert(beginInnerLocation, from: table.documentView)
                             let endViewLocation = selectableView.convert(endInnerLocation, from: table.documentView)
                             

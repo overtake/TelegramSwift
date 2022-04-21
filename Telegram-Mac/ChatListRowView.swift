@@ -10,7 +10,6 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
 import Postbox
 
 
@@ -35,7 +34,7 @@ private class ChatListDraggingContainerView : View {
             if let tiff = sender.draggingPasteboard.data(forType: .tiff), let image = NSImage(data: tiff) {
                 _ = (putToTemp(image: image) |> deliverOnMainQueue).start(next: { [weak item] path in
                     guard let item = item, let chatLocation = item.chatLocation else {return}
-                    item.context.sharedContext.bindings.rootNavigation().push(ChatController(context: item.context, chatLocation: chatLocation, initialAction: .files(list: [path], behavior: .automatic)))
+                    item.context.bindings.rootNavigation().push(ChatController(context: item.context, chatLocation: chatLocation, initialAction: .files(list: [path], behavior: .automatic)))
                 })
             } else {
                 let list = sender.draggingPasteboard.propertyList(forType: .kFilenames) as? [String]
@@ -47,7 +46,7 @@ private class ChatListDraggingContainerView : View {
                         return false
                     }
                     if !list.isEmpty, let chatLocation = item.chatLocation {
-                        item.context.sharedContext.bindings.rootNavigation().push(ChatController(context: item.context, chatLocation: chatLocation, initialAction: .files(list: list, behavior: .automatic)))
+                        item.context.bindings.rootNavigation().push(ChatController(context: item.context, chatLocation: chatLocation, initialAction: .files(list: list, behavior: .automatic)))
                     }
                 }
             }
@@ -95,7 +94,7 @@ private final class ChatListExpandView: View {
         updateLocalizationAndTheme(theme: theme)
     }
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
-        let titleLayout = TextViewLayout(.initialize(string: L10n.chatListArchivedChats, color: theme.colors.grayText, font: .medium(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
+        let titleLayout = TextViewLayout(.initialize(string: strings().chatListArchivedChats, color: theme.colors.grayText, font: .medium(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
         titleLayout.measure(width: .greatestFiniteMagnitude)
         titleView.update(titleLayout)
         needsLayout = true
@@ -239,7 +238,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var badgeView:View?
     private var additionalBadgeView:View?
     private var mentionsView: ImageView?
-    
+    private var reactionsView: ImageView?
+
     
     private var activeImage: ImageView?
     private var groupActivityView: GroupCallActivity?
@@ -518,7 +518,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         }
  
     }
-    
 
 
     required init(frame frameRect: NSRect) {
@@ -743,167 +742,180 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         self.expandView?.animateOnce()
                     }
                 }
-                
-             //   let icon = theme.icons.archivedChats
                 photo.setState(account: item.context.account, state: .Empty)
-              //  photo.setSignal(generateEmptyPhoto(photo.frame.size, type: .icon(colors: (theme.colors.grayForeground, theme.colors.grayForeground), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(photo.frame.size.width - 17, photo.frame.size.height - 17)), cornerRadius: nil)) |> map {($0, false)})
             } else {
                 self.archivedPhoto?.removeFromSuperview()
                 self.archivedPhoto = nil
             }
-            
-//            if let badge = item.ctxBadge {
-//                var presented: Bool = false
-//                if self.badge == nil {
-//                    self.badge = AnimatedBadgeView()
-//                    containerView.addSubview(self.badge!)
-//                    presented = true
-//                }
-//
-//                let origin = NSMakePoint(self.containerView.frame.width - badge.size.width - item.margin, self.containerView.frame.height - badge.size.height - (item.margin + 1))
-//
-//                self.badge?.update(dynamicValue: badge.dynamicValue, backgroundColor: badge.backgroundColor, animated: animated, frame: CGRect(origin: origin, size: badge.size))
-//
-//                if presented && animated {
-//                    self.badge?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.3)
-//                }
-//            } else {
-//                if animated {
-//                    if let badge = self.badge {
-//                        self.badge = nil
-//                        badge.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, removeOnCompletion: false)
-//                        badge.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak badge] _ in
-//                            badge?.removeFromSuperview()
-//                        })
-//                    }
-//                } else {
-//                    self.badge?.removeFromSuperview()
-//                    self.badge = nil
-//                }
-//            }
         
-            var additionBadgeOffset: CGFloat = 0
-            
-            if let badgeNode = item.ctxAdditionalBadgeNode {
-                var presented: Bool = false
-                if additionalBadgeView == nil {
-                    additionalBadgeView = View()
-                    containerView.addSubview(additionalBadgeView!)
-                    presented = true
-                }
-                additionalBadgeView?.setFrameSize(badgeNode.size)
-                badgeNode.view = additionalBadgeView
-                badgeNode.setNeedDisplay()
-                
-                let point = NSMakePoint(self.containerView.frame.width - badgeNode.size.width - item.margin, self.containerView.frame.height - badgeNode.size.height - (item.margin + 1))
-                additionBadgeOffset += (badgeNode.size.width + item.margin)
+             var additionBadgeOffset: CGFloat = 0
+             
+             if let badgeNode = item.ctxAdditionalBadgeNode {
+                 var presented: Bool = false
+                 if additionalBadgeView == nil {
+                     additionalBadgeView = View()
+                     containerView.addSubview(additionalBadgeView!)
+                     presented = true
+                 }
+                 additionalBadgeView?.setFrameSize(badgeNode.size)
+                 badgeNode.view = additionalBadgeView
+                 badgeNode.setNeedDisplay()
+                 
+                 let point = NSMakePoint(self.containerView.frame.width - badgeNode.size.width - item.margin, self.containerView.frame.height - badgeNode.size.height - (item.margin + 1))
+                 additionBadgeOffset += (badgeNode.size.width + item.margin)
 
-                if presented {
-                    self.additionalBadgeView?.setFrameOrigin(point)
-                    if animated {
-                        self.additionalBadgeView?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.4)
-                        self.additionalBadgeView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                    }
-                } else {
-                    self.additionalBadgeView?.change(pos: point, animated: animated)
-                }
-            } else {
-                if animated {
-                    if let badge = self.additionalBadgeView {
-                        self.additionalBadgeView = nil
-                        badge.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, removeOnCompletion: false)
-                        badge.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak badge] _ in
-                            badge?.removeFromSuperview()
-                        })
-                    }
-                } else {
-                    self.additionalBadgeView?.removeFromSuperview()
-                    self.additionalBadgeView = nil
-                }
-            }
-            
-            if let badgeNode = item.ctxBadgeNode {
-                var presented: Bool = false
-                if badgeView == nil {
-                    badgeView = View()
-                    containerView.addSubview(badgeView!)
-                    presented = true
-                }
-                badgeView?.setFrameSize(badgeNode.size)
-                badgeNode.view = badgeView
-                badgeNode.setNeedDisplay()
-                
-                let point = NSMakePoint(self.containerView.frame.width - badgeNode.size.width - item.margin - additionBadgeOffset, self.containerView.frame.height - badgeNode.size.height - (item.margin + 1))
-                
-                if presented {
-                    self.badgeView?.setFrameOrigin(point)
-                    if animated {
-                        self.badgeView?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.4)
-                        self.badgeView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                    }
-                } else {
-                    self.badgeView?.change(pos: point, animated: false)
-                }
-                
-            } else {
-                if animated {
-                    if let badge = self.badgeView {
-                        self.badgeView = nil
-                        badge.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, removeOnCompletion: false)
-                        badge.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak badge] _ in
-                            badge?.removeFromSuperview()
-                        })
-                    }
-                } else {
-                    self.badgeView?.removeFromSuperview()
-                    self.badgeView = nil
-                }
-            }
-            
-            if let _ = item.mentionsCount {
-                
-                let highlighted = item.isSelected && item.context.sharedContext.layout != .single
-                let icon: CGImage
-                if item.associatedGroupId == .root {
-                    icon = highlighted ? theme.icons.chatListMentionActive : theme.icons.chatListMention
-                } else {
-                    icon = highlighted ? theme.icons.chatListMentionArchivedActive : theme.icons.chatListMentionArchived
-                }
-                
-                var presented: Bool = false
-                if self.mentionsView == nil {
-                    self.mentionsView = ImageView()
-                    self.containerView.addSubview(self.mentionsView!)
-                    presented = true
-                }
-                
-                self.mentionsView?.image = icon
-                self.mentionsView?.sizeToFit()
-                
-                let point = NSMakePoint(self.containerView.frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - icon.backingSize.width - item.margin, self.containerView.frame.height - icon.backingSize.height - (item.margin + 1))
-                
-                if presented {
-                    self.mentionsView?.setFrameOrigin(point)
-                    if animated {
-                        self.mentionsView?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.4)
-                        self.mentionsView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                    }
-                } else {
-                    self.mentionsView?.change(pos: point, animated: animated)
-                }
-            } else {
-                if let mentionsView = self.mentionsView {
-                    self.mentionsView = nil
-                    if animated {
-                        mentionsView.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, removeOnCompletion: false)
-                        mentionsView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak mentionsView] _ in
-                            mentionsView?.removeFromSuperview()
-                        })
-                    } else {
-                        mentionsView.removeFromSuperview()
-                    }
-                }
-            }
+                 if presented {
+                     self.additionalBadgeView?.setFrameOrigin(point)
+                     if animated {
+                         self.additionalBadgeView?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.4)
+                         self.additionalBadgeView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                     }
+                 } else {
+                     self.additionalBadgeView?.change(pos: point, animated: animated)
+                 }
+             } else {
+                 if animated {
+                     if let badge = self.additionalBadgeView {
+                         self.additionalBadgeView = nil
+                         badge.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, removeOnCompletion: false)
+                         badge.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak badge] _ in
+                             badge?.removeFromSuperview()
+                         })
+                     }
+                 } else {
+                     self.additionalBadgeView?.removeFromSuperview()
+                     self.additionalBadgeView = nil
+                 }
+             }
+             
+             if let badgeNode = item.ctxBadgeNode {
+                 var presented: Bool = false
+                 if badgeView == nil {
+                     badgeView = View()
+                     containerView.addSubview(badgeView!)
+                     presented = true
+                 }
+                 badgeView?.setFrameSize(badgeNode.size)
+                 badgeNode.view = badgeView
+                 badgeNode.setNeedDisplay()
+                 
+                 let point = NSMakePoint(self.containerView.frame.width - badgeNode.size.width - item.margin - additionBadgeOffset, self.containerView.frame.height - badgeNode.size.height - (item.margin + 1))
+                 
+                 if presented {
+                     self.badgeView?.setFrameOrigin(point)
+                     if animated {
+                         self.badgeView?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.4)
+                         self.badgeView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                     }
+                 } else {
+                     self.badgeView?.change(pos: point, animated: false)
+                 }
+                 
+             } else {
+                 if animated {
+                     if let badge = self.badgeView {
+                         self.badgeView = nil
+                         badge.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, removeOnCompletion: false)
+                         badge.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak badge] _ in
+                             badge?.removeFromSuperview()
+                         })
+                     }
+                 } else {
+                     self.badgeView?.removeFromSuperview()
+                     self.badgeView = nil
+                 }
+             }
+             
+             if let _ = item.mentionsCount {
+                 
+                 let highlighted = item.isSelected && item.context.sharedContext.layout != .single
+                 let icon: CGImage
+                 if item.associatedGroupId == .root {
+                     icon = highlighted ? theme.icons.chatListMentionActive : theme.icons.chatListMention
+                 } else {
+                     icon = highlighted ? theme.icons.chatListMentionArchivedActive : theme.icons.chatListMentionArchived
+                 }
+                 
+                 var presented: Bool = false
+                 if self.mentionsView == nil {
+                     self.mentionsView = ImageView()
+                     self.containerView.addSubview(self.mentionsView!)
+                     presented = true
+                 }
+                 
+                 self.mentionsView?.image = icon
+                 self.mentionsView?.sizeToFit()
+                 
+                 let point = NSMakePoint(self.containerView.frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - icon.backingSize.width - item.margin, self.containerView.frame.height - icon.backingSize.height - (item.margin + 1))
+                 
+                 if presented {
+                     self.mentionsView?.setFrameOrigin(point)
+                     if animated {
+                         self.mentionsView?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.4)
+                         self.mentionsView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                     }
+                 } else {
+                     self.mentionsView?.change(pos: point, animated: animated)
+                 }
+             } else {
+                 if let mentionsView = self.mentionsView {
+                     self.mentionsView = nil
+                     if animated {
+                         mentionsView.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, removeOnCompletion: false)
+                         mentionsView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak mentionsView] _ in
+                             mentionsView?.removeFromSuperview()
+                         })
+                     } else {
+                         mentionsView.removeFromSuperview()
+                     }
+                 }
+             }
+             
+             if let _ = item.reactionsCount {
+                 
+                 let highlighted = item.isSelected && item.context.sharedContext.layout != .single
+                 let icon: CGImage
+                 if item.associatedGroupId == .root && !item.isMuted {
+                     icon = highlighted ? theme.icons.reactions_badge_active : theme.icons.reactions_badge
+                 } else {
+                     icon = highlighted ? theme.icons.reactions_badge_archive_active : theme.icons.reactions_badge_archive
+                 }
+                 
+                 var presented: Bool = false
+                 if self.reactionsView == nil {
+                     self.reactionsView = ImageView()
+                     self.containerView.addSubview(self.reactionsView!)
+                     presented = true
+                 }
+                 
+                 self.reactionsView?.image = icon
+                 self.reactionsView?.sizeToFit()
+                 
+                 let point = NSMakePoint(self.containerView.frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - icon.backingSize.width - item.margin - (item.mentionsCount != nil ? icon.backingSize.width + item.margin : 0), self.containerView.frame.height - icon.backingSize.height - (item.margin + 1))
+                 
+                 if presented {
+                     self.reactionsView?.setFrameOrigin(point)
+                     if animated {
+                         self.reactionsView?.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.4)
+                         self.reactionsView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                     }
+                 } else {
+                     self.reactionsView?.change(pos: point, animated: animated)
+                 }
+             } else {
+                 if let reactionsView = self.reactionsView {
+                     self.reactionsView = nil
+                     if animated {
+                         reactionsView.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, removeOnCompletion: false)
+                         reactionsView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak reactionsView] _ in
+                             reactionsView?.removeFromSuperview()
+                         })
+                     } else {
+                         reactionsView.removeFromSuperview()
+                     }
+                 }
+             }
+
             
             if let peerId = item.peerId {
                 let activities = item.activities.map {
@@ -941,6 +953,10 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     let point = NSMakePoint(self.containerView.frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - mentionsView.frame.width - item.margin, self.containerView.frame.height - mentionsView.frame.height - (item.margin + 1))
                     mentionsView.setFrameOrigin(point)
                 }
+                if let reactionsView = self.reactionsView {
+                    let point = NSMakePoint(self.containerView.frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - reactionsView.frame.width - item.margin - (item.mentionsCount != nil ? reactionsView.frame.width + item.margin : 0), self.containerView.frame.height - reactionsView.frame.height - (item.margin + 1))
+                    reactionsView.setFrameOrigin(point)
+                }
                 
                 if let activeImage = self.activeImage {
                     activeImage.setFrameOrigin(self.photo.frame.maxX - activeImage.frame.width - 3, self.photo.frame.maxY - 12)
@@ -973,7 +989,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
 
             let unread: LAnimationButton = LAnimationButton(animation: !item.markAsUnread ? "anim_read" : "anim_unread", size: NSMakeSize(frame.height, frame.height), keysToColor: !item.markAsUnread ? nil : ["Oval.Oval.Stroke 1"], color: unreadBackground, offset: NSMakeSize(0, 0), autoplaySide: .right)
             let unreadTitle = TextViewLabel()
-            unreadTitle.attributedString = .initialize(string: !item.markAsUnread ? L10n.chatListSwipingRead : L10n.chatListSwipingUnread, color: unreadForeground, font: .medium(12))
+            unreadTitle.attributedString = .initialize(string: !item.markAsUnread ? strings().chatListSwipingRead : strings().chatListSwipingUnread, color: unreadForeground, font: .medium(12))
             unreadTitle.sizeToFit()
             unread.addSubview(unreadTitle)
             unread.set(background: unreadBackground, for: .Normal)
@@ -985,7 +1001,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             let mute: LAnimationButton = LAnimationButton(animation: item.isMuted ? "anim_unmute" : "anim_mute", size: NSMakeSize(frame.height, frame.height), keysToColor: item.isMuted ? nil : ["un Outlines.Group 1.Stroke 1"], color: theme.colors.revealAction_neutral2_background, offset: NSMakeSize(0, 0), autoplaySide: .right)
             let muteTitle = TextViewLabel()
-            muteTitle.attributedString = .initialize(string: item.isMuted ? L10n.chatListSwipingUnmute : L10n.chatListSwipingMute, color: theme.colors.revealAction_neutral2_foreground, font: .medium(12))
+            muteTitle.attributedString = .initialize(string: item.isMuted ? strings().chatListSwipingUnmute : strings().chatListSwipingMute, color: theme.colors.revealAction_neutral2_foreground, font: .medium(12))
             muteTitle.sizeToFit()
             mute.addSubview(muteTitle)
             mute.set(background: theme.colors.revealAction_neutral2_background, for: .Normal)
@@ -998,7 +1014,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             let pin: LAnimationButton = LAnimationButton(animation: !item.isPinned ? "anim_pin" : "anim_unpin", size: NSMakeSize(frame.height, frame.height), keysToColor: !item.isPinned ? nil : ["un Outlines.Group 1.Stroke 1"], color: theme.colors.revealAction_constructive_background, offset: NSMakeSize(0, 0), autoplaySide: .left)
             let pinTitle = TextViewLabel()
-            pinTitle.attributedString = .initialize(string: !item.isPinned ? L10n.chatListSwipingPin : L10n.chatListSwipingUnpin, color: theme.colors.revealAction_constructive_foreground, font: .medium(12))
+            pinTitle.attributedString = .initialize(string: !item.isPinned ? strings().chatListSwipingPin : strings().chatListSwipingUnpin, color: theme.colors.revealAction_constructive_foreground, font: .medium(12))
             pinTitle.sizeToFit()
             pin.addSubview(pinTitle)
             pin.set(background: theme.colors.revealAction_constructive_background, for: .Normal)
@@ -1026,7 +1042,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             let archive: LAnimationButton = LAnimationButton(animation: item.associatedGroupId != .root ? "anim_unarchive" : "anim_archive", size: item.associatedGroupId != .root ? NSMakeSize(45, 45) : NSMakeSize(frame.height, frame.height), keysToColor: ["box2.box2.Fill 1"], color: theme.colors.revealAction_inactive_background, offset: NSMakeSize(0, item.associatedGroupId != .root ? 9.0 : 0.0), autoplaySide: .left)
             let archiveTitle = TextViewLabel()
-            archiveTitle.attributedString = .initialize(string: item.associatedGroupId != .root ? L10n.chatListSwipingUnarchive : L10n.chatListSwipingArchive, color: theme.colors.revealAction_inactive_foreground, font: .medium(12))
+            archiveTitle.attributedString = .initialize(string: item.associatedGroupId != .root ? strings().chatListSwipingUnarchive : strings().chatListSwipingArchive, color: theme.colors.revealAction_inactive_foreground, font: .medium(12))
             archiveTitle.sizeToFit()
             archive.addSubview(archiveTitle)
             archive.set(background: theme.colors.revealAction_inactive_background, for: .Normal)
@@ -1041,7 +1057,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             let delete: LAnimationButton = LAnimationButton(animation: "anim_delete", size: NSMakeSize(frame.height, frame.height), keysToColor: nil, offset: NSMakeSize(0, 0), autoplaySide: .left)
             let deleteTitle = TextViewLabel()
-            deleteTitle.attributedString = .initialize(string: L10n.chatListSwipingDelete, color: theme.colors.revealAction_destructive_foreground, font: .medium(12))
+            deleteTitle.attributedString = .initialize(string: strings().chatListSwipingDelete, color: theme.colors.revealAction_destructive_foreground, font: .medium(12))
             deleteTitle.sizeToFit()
             delete.addSubview(deleteTitle)
             delete.set(background: theme.colors.revealAction_destructive_background, for: .Normal)
@@ -1112,7 +1128,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             let collapse: LAnimationButton = LAnimationButton(animation: "anim_hide", size: NSMakeSize(frame.height, frame.height), keysToColor: ["Path 2.Path 2.Fill 1"], color: theme.colors.revealAction_inactive_background, offset: NSMakeSize(0, 0), autoplaySide: .left)
             let collapseTitle = TextViewLabel()
-            collapseTitle.attributedString = .initialize(string: L10n.chatListRevealActionCollapse, color: theme.colors.revealAction_inactive_foreground, font: .medium(12))
+            collapseTitle.attributedString = .initialize(string: strings().chatListRevealActionCollapse, color: theme.colors.revealAction_inactive_foreground, font: .medium(12))
             collapseTitle.sizeToFit()
             collapse.addSubview(collapseTitle)
             collapse.set(background: theme.colors.revealAction_inactive_background, for: .Normal)
@@ -1144,11 +1160,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 switch archiveStatus {
                 case .hidden:
                     hideOrPin = LAnimationButton(animation: "anim_hide", size: NSMakeSize(frame.height, frame.height), keysToColor: ["Path 2.Path 2.Fill 1"], color: theme.colors.revealAction_accent_background, offset: NSMakeSize(0, 0), autoplaySide: .left, rotated: true)
-                    hideOrPinTitle.attributedString = .initialize(string: L10n.chatListRevealActionPin, color: theme.colors.revealAction_accent_foreground, font: .medium(12))
+                    hideOrPinTitle.attributedString = .initialize(string: strings().chatListRevealActionPin, color: theme.colors.revealAction_accent_foreground, font: .medium(12))
                     hideOrPin.set(background: theme.colors.revealAction_accent_background, for: .Normal)
                 default:
                     hideOrPin = LAnimationButton(animation: "anim_hide", size: NSMakeSize(frame.height, frame.height), keysToColor: ["Path 2.Path 2.Fill 1"], color: theme.colors.revealAction_inactive_background, offset: NSMakeSize(0, 0), autoplaySide: .left, rotated: false)
-                    hideOrPinTitle.attributedString = .initialize(string: L10n.chatListRevealActionHide, color: theme.colors.revealAction_inactive_foreground, font: .medium(12))
+                    hideOrPinTitle.attributedString = .initialize(string: strings().chatListRevealActionHide, color: theme.colors.revealAction_inactive_foreground, font: .medium(12))
                     hideOrPin.set(background: theme.colors.revealAction_inactive_background, for: .Normal)
                 }
                 

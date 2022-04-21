@@ -8,7 +8,7 @@
 
 import TGUIKit
 import TelegramCore
-
+import InAppSettings
 import Postbox
 import SwiftSignalKit
 
@@ -21,10 +21,36 @@ class ChatInvoiceItem: ChatRowItem {
         let message = object.message!
         
         let isIncoming: Bool = message.isIncoming(context.account, object.renderType == .bubble)
-
-        self.media = message.media[0] as! TelegramMediaInvoice
+        let media = message.media[0] as! TelegramMediaInvoice
+        self.media = media
         let attr = NSMutableAttributedString()
+        
+       
+        
         _ = attr.append(string: media.title, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
+        
+        _ = attr.append(string: "\n")
+
+        if media.receiptMessageId != nil {
+            var title = strings().checkoutReceiptTitle.uppercased()
+            if media.flags.contains(.isTest) {
+                title += " (Test)"
+            }
+            _ = attr.append(string: title, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
+        } else {
+            _ = attr.append(string: formatCurrencyAmount(media.totalAmount, currency: media.currency), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
+            
+            _ = attr.append(string: " ")
+
+            var title = strings().messageInvoiceLabel.uppercased()
+            if media.flags.contains(.isTest) {
+                title += " (Test)"
+            }
+            _ = attr.append(string: title, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
+        }
+
+
+        
         _ = attr.append(string: "\n")
         _ = attr.append(string: media.description, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(.text))
         attr.detectLinks(type: [.Links], color: theme.chat.linkColor(isIncoming, object.renderType == .bubble))
@@ -84,17 +110,11 @@ class ChatInvoiceItem: ChatRowItem {
         return size
     }
     
-    override var additionalLineForDateInBubbleState: CGFloat? {
-        if isForceRightLine {
-            return rightSize.height
-        }
+    override var isForceRightLine: Bool {
         if let line = textLayout.lines.last, line.frame.width > realContentSize.width - (rightSize.width + insetBetweenContentAndDate ) {
-            return rightSize.height
+            return true
         }
-        if postAuthor != nil {
-            return isStateOverlayLayout ? nil : rightSize.height
-        }
-        return super.additionalLineForDateInBubbleState
+        return super.isForceRightLine
     }
     
     

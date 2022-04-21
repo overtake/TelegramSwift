@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import InAppSettings
 import SwiftSignalKit
 import Postbox
 
@@ -28,11 +28,11 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
     case statusBar(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case showCallsTab(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case enableRFTCopy(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
-    case openChatAtLaunch(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case acceptSecretChats(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case forceTouchReply(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case forceTouchEdit(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case forceTouchForward(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
+    case forceTouchReact(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case forceTouchPreviewMedia(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case callSettings(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     var stableId: Int {
@@ -57,8 +57,6 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return 8
         case .enableRFTCopy:
             return 9
-        case .openChatAtLaunch:
-            return 10
         case .acceptSecretChats:
             return 11
         case .forceTouchReply:
@@ -69,12 +67,14 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return 14
         case .forceTouchPreviewMedia:
             return 15
-        case .enterBehavior:
+        case .forceTouchReact:
             return 16
-        case .cmdEnterBehavior:
+        case .enterBehavior:
             return 17
-        case .callSettings:
+        case .cmdEnterBehavior:
             return 18
+        case .callSettings:
+            return 19
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -87,8 +87,6 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case let .showCallsTab(sectionId, _, _):
             return (sectionId * 1000) + stableId
         case let .enableRFTCopy(sectionId, _, _):
-            return (sectionId * 1000) + stableId
-        case let .openChatAtLaunch(sectionId, _, _):
             return (sectionId * 1000) + stableId
         case let .acceptSecretChats(sectionId, _, _):
             return (sectionId * 1000) + stableId
@@ -116,6 +114,8 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
             return (sectionId * 1000) + stableId
         case let .forceTouchForward(sectionId, _, _):
             return (sectionId * 1000) + stableId
+        case let .forceTouchReact(sectionId, _, _):
+            return (sectionId * 1000) + stableId
         case let .forceTouchPreviewMedia(sectionId, _, _):
             return (sectionId * 1000) + stableId
         case let .callSettings(sectionId, _, _):
@@ -130,77 +130,77 @@ private enum GeneralSettingsEntry : Comparable, Identifiable {
         case .section:
             return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
         case let .header(sectionId: _, uniqueId: _, text: text):
-            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, drawCustomSeparator: true, inset: NSEdgeInsets(left: 30.0, right: 30.0), viewType: .textTopItem)
+            return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: .textTopItem)
         case let .showCallsTab(sectionId: _, enabled: enabled, viewType):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsShowCallsTab, type: .switchable(enabled), viewType: viewType, action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsShowCallsTab, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleCallsTab(!enabled)
             })
         case let .enableRFTCopy(sectionId: _, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsCopyRTF, type: .switchable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsCopyRTF, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleRTFEnabled(!enabled)
             })
-        case let .openChatAtLaunch(_, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsOpenLatestChatOnLaunch, type: .switchable(enabled), viewType: viewType, action: {
-                arguments.openChatAtLaunch(!enabled)
-            })
         case let .acceptSecretChats(_, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsAcceptSecretChats, type: .switchable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsAcceptSecretChats, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.acceptSecretChats(!enabled)
             })
         case let .sidebar(sectionId: _, enabled, viewType):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsEnableSidebar, type: .switchable(enabled), viewType: viewType, action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsEnableSidebar, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleSidebar(!enabled)
             })
         case let .inAppSounds(sectionId: _, enabled, viewType):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsInAppSounds, type: .switchable(enabled), viewType: viewType, action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsInAppSounds, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleInAppSounds(!enabled)
             })
         case let .shortcuts(_, viewType):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsShortcuts, type: .nextContext("⌘ + ?"), viewType: viewType, action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsShortcuts, type: .nextContext("⌘ + ?"), viewType: viewType, action: {
                 arguments.openShortcuts()
             })
         case let .emojiReplacements(sectionId: _, enabled, viewType):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsEmojiReplacements, type: .switchable(enabled), viewType: viewType, action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsEmojiReplacements, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleEmojiReplacements(!enabled)
             })
         case let .predictEmoji(sectionId: _, enabled, viewType):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsEmojiPrediction, type: .switchable(enabled), viewType: viewType, action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsEmojiPrediction, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleEmojiPrediction(!enabled)
             })
         case let .bigEmoji(sectionId: _, enabled, viewType):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsBigEmoji, type: .switchable(enabled), viewType: viewType, action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsBigEmoji, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleBigEmoji(!enabled)
             })
         case let .statusBar(sectionId: _, enabled, viewType):
-            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: L10n.generalSettingsStatusBarItem, type: .switchable(enabled), viewType: viewType, action: {
+            return  GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().generalSettingsStatusBarItem, type: .switchable(enabled), viewType: viewType, action: {
                 arguments.toggleStatusBar(!enabled)
             })
         case let .enterBehavior(sectionId: _, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, name: L10n.generalSettingsSendByEnter, type: .selectable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsSendByEnter, type: .selectable(enabled), viewType: viewType, action: {
                 arguments.toggleInput(.enter)
             })
         case let .cmdEnterBehavior(sectionId: _, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, name: L10n.generalSettingsSendByCmdEnter, type: .selectable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsSendByCmdEnter, type: .selectable(enabled), viewType: viewType, action: {
                 arguments.toggleInput(.cmdEnter)
             })
         case let .forceTouchEdit(sectionId: _, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, name: L10n.generalSettingsForceTouchEdit, type: .selectable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsForceTouchEdit, type: .selectable(enabled), viewType: viewType, action: {
                 arguments.toggleForceTouchAction(.edit)
             })
         case let .forceTouchReply(sectionId: _, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, name: L10n.generalSettingsForceTouchReply, type: .selectable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsForceTouchReply, type: .selectable(enabled), viewType: viewType, action: {
                arguments.toggleForceTouchAction(.reply)
             })
         case let .forceTouchForward(sectionId: _, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, name: L10n.generalSettingsForceTouchForward, type: .selectable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsForceTouchForward, type: .selectable(enabled), viewType: viewType, action: {
                 arguments.toggleForceTouchAction(.forward)
             })
+        case let .forceTouchReact(sectionId: _, enabled, viewType):
+            return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsForceTouchReact, type: .selectable(enabled), viewType: viewType, action: {
+                arguments.toggleForceTouchAction(.react)
+            })
         case let .forceTouchPreviewMedia(sectionId: _, enabled, viewType):
-            return GeneralInteractedRowItem(initialSize, name: L10n.generalSettingsForceTouchPreviewMedia, type: .selectable(enabled), viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsForceTouchPreviewMedia, type: .selectable(enabled), viewType: viewType, action: {
                 arguments.toggleForceTouchAction(.previewMedia)
             })
         case let .callSettings(_, _, viewType):
-            return GeneralInteractedRowItem(initialSize, name: L10n.generalSettingsCallSettingsText, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, name: strings().generalSettingsCallSettingsText, type: .next, viewType: viewType, action: {
                 arguments.callSettings()
             })
         }
@@ -225,12 +225,11 @@ private final class GeneralSettingsArguments {
     let toggleBigEmoji: (Bool) -> Void
     let toggleStatusBar: (Bool) -> Void
     let toggleRTFEnabled: (Bool) -> Void
-    let openChatAtLaunch:(Bool)->Void
     let acceptSecretChats:(Bool)->Void
     let toggleWorkMode:(Bool)->Void
     let openShortcuts: ()->Void
     let callSettings: ()->Void
-    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, openChatAtLaunch:@escaping(Bool)->Void, acceptSecretChats: @escaping(Bool)->Void, toggleWorkMode:@escaping(Bool)->Void, openShortcuts: @escaping()->Void, callSettings: @escaping() ->Void) {
+    init(context:AccountContext, toggleCallsTab:@escaping(Bool)-> Void, toggleInAppKeys: @escaping(Bool) -> Void, toggleInput: @escaping(SendingType)-> Void, toggleSidebar: @escaping (Bool) -> Void, toggleInAppSounds: @escaping (Bool) -> Void, toggleEmojiReplacements:@escaping(Bool) -> Void, toggleForceTouchAction: @escaping(ForceTouchAction)->Void, toggleInstantViewScrollBySpace: @escaping(Bool)->Void, toggleAutoplayGifs:@escaping(Bool) -> Void, toggleEmojiPrediction: @escaping(Bool) -> Void, toggleBigEmoji: @escaping(Bool) -> Void, toggleStatusBar: @escaping(Bool) -> Void, toggleRTFEnabled: @escaping(Bool)->Void, acceptSecretChats: @escaping(Bool)->Void, toggleWorkMode:@escaping(Bool)->Void, openShortcuts: @escaping()->Void, callSettings: @escaping() ->Void) {
         self.context = context
         self.toggleCallsTab = toggleCallsTab
         self.toggleInAppKeys = toggleInAppKeys
@@ -245,7 +244,6 @@ private final class GeneralSettingsArguments {
         self.toggleBigEmoji = toggleBigEmoji
         self.toggleStatusBar = toggleStatusBar
         self.toggleRTFEnabled = toggleRTFEnabled
-        self.openChatAtLaunch = openChatAtLaunch
         self.acceptSecretChats = acceptSecretChats
         self.toggleWorkMode = toggleWorkMode
         self.openShortcuts = openShortcuts
@@ -263,7 +261,7 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
-    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsEmojiAndStickers))
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsEmojiAndStickers))
     headerUnique -= 1
     
     entries.append(.sidebar(sectionId: sectionId, enabled: FastSettings.sidebarEnabled, viewType: .firstItem))
@@ -277,7 +275,7 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
-    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsInterfaceHeader))
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsInterfaceHeader))
     headerUnique -= 1
     entries.append(.showCallsTab(sectionId: sectionId, enabled: baseSettings.showCallsTab, viewType: .firstItem))
     entries.append(.statusBar(sectionId: sectionId, enabled: baseSettings.statusBar, viewType: .innerItem))
@@ -287,7 +285,7 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
-    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsShortcutsHeader))
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsShortcutsHeader))
     headerUnique -= 1
     entries.append(.shortcuts(sectionId: sectionId, viewType: .singleItem))
 
@@ -296,26 +294,26 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
-    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsAdvancedHeader))
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsAdvancedHeader))
     headerUnique -= 1
-    entries.append(.enableRFTCopy(sectionId: sectionId, enabled: FastSettings.enableRTF, viewType: .firstItem))
-   // entries.append(.openChatAtLaunch(sectionId: sectionId, enabled: launchSettings.openAtLaunch, viewType: .innerItem))
-    entries.append(.acceptSecretChats(sectionId: sectionId, enabled: secretChatSettings.acceptOnThisDevice, viewType: .lastItem))
+    entries.append(.enableRFTCopy(sectionId: sectionId, enabled: FastSettings.enableRTF, viewType: .singleItem))
+//    entries.append(.acceptSecretChats(sectionId: sectionId, enabled: secretChatSettings.acceptOnThisDevice, viewType: .lastItem))
     
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
-    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsForceTouchHeader))
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsForceTouchHeader))
     headerUnique -= 1
     
     entries.append(.forceTouchReply(sectionId: sectionId, enabled: FastSettings.forceTouchAction == .reply, viewType: .firstItem))
     entries.append(.forceTouchEdit(sectionId: sectionId, enabled: FastSettings.forceTouchAction == .edit, viewType: .innerItem))
-    entries.append(.forceTouchForward(sectionId: sectionId, enabled: FastSettings.forceTouchAction == .forward, viewType: .lastItem))
-    
+    entries.append(.forceTouchForward(sectionId: sectionId, enabled: FastSettings.forceTouchAction == .forward, viewType: .innerItem))
+    entries.append(.forceTouchReact(sectionId: sectionId, enabled: FastSettings.forceTouchAction == .react, viewType: .lastItem))
+
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
     
-    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsInputSettings))
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsInputSettings))
     headerUnique -= 1
     entries.append(.enterBehavior(sectionId: sectionId, enabled: FastSettings.sendingType == .enter, viewType: .firstItem))
     entries.append(.cmdEnterBehavior(sectionId: sectionId, enabled: FastSettings.sendingType == .cmdEnter, viewType: .lastItem))
@@ -324,7 +322,7 @@ private func generalSettingsEntries(arguments:GeneralSettingsArguments, baseSett
     sectionId += 1
 
     
-    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: L10n.generalSettingsCallSettingsHeader))
+    entries.append(.header(sectionId: sectionId, uniqueId: headerUnique, text: strings().generalSettingsCallSettingsHeader))
     headerUnique -= 1
     
     entries.append(.callSettings(sectionId: sectionId, enabled: true, viewType: .singleItem))
@@ -397,22 +395,18 @@ class GeneralSettingsViewController: TableViewController {
             }).start()
         }, toggleRTFEnabled: { enable in
             FastSettings.enableRTF = enable
-        }, openChatAtLaunch: { enable in
-            _ = updateLaunchSettings(context.account.postbox, {
-                $0.withUpdatedOpenAtLaunch(enable)
-            }).start()
         }, acceptSecretChats: { enable in
             _ = context.account.postbox.transaction({ transaction -> Void in
                 transaction.updatePreferencesEntry(key: PreferencesKeys.secretChatSettings, { _ in
-                   return SecretChatSettings(acceptOnThisDevice: enable)
+                   return PreferencesEntry(SecretChatSettings(acceptOnThisDevice: enable))
                 })
             }).start()
         }, toggleWorkMode: { value in
             
         }, openShortcuts: {
-            context.sharedContext.bindings.rootNavigation().push(ShortcutListController(context: context))
+            context.bindings.rootNavigation().push(ShortcutListController(context: context))
         }, callSettings: {
-            context.sharedContext.bindings.rootNavigation().push(CallSettingsController(sharedContext: context.sharedContext))
+            context.bindings.rootNavigation().push(CallSettingsController(sharedContext: context.sharedContext))
         })
         
         let initialSize = atomicSize
@@ -425,7 +419,7 @@ class GeneralSettingsViewController: TableViewController {
             
             let baseSettings: BaseApplicationSettings = settings
             
-            let secretChatSettings = preferencesView.values[PreferencesKeys.secretChatSettings] as? SecretChatSettings ?? SecretChatSettings.defaultSettings
+            let secretChatSettings = preferencesView.values[PreferencesKeys.secretChatSettings]?.get(SecretChatSettings.self) ?? SecretChatSettings.defaultSettings
             
             let entries = generalSettingsEntries(arguments: arguments, baseSettings: baseSettings, appearance: appearance, launchSettings: launchSettings, secretChatSettings: secretChatSettings).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             let previous = previos.swap(entries)
@@ -442,24 +436,6 @@ class GeneralSettingsViewController: TableViewController {
     
     private var loggerClickCount = 0
 
-    private func incrementLogClick() {
-        loggerClickCount += 1
-        let context = self.context
-        if loggerClickCount == 5 {
-            UserDefaults.standard.set(!UserDefaults.standard.bool(forKey: "enablelogs"), forKey: "enablelogs")
-            let logs = Logger.shared.collectLogs() |> deliverOnMainQueue |> mapToSignal { logs -> Signal<Void, NoError> in
-                return selectModalPeers(window: context.window, context: context, title: "Send Logs", limit: 1, confirmation: {_ in return confirmSignal(for: mainWindow, information: "Are you sure you want send logs?")}) |> filter {!$0.isEmpty} |> map {$0.first!} |> mapToSignal { peerId -> Signal<Void, NoError> in
-                    let messages = logs.map { (name, path) -> EnqueueMessage in
-                        let id = arc4random64()
-                        let file = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: id), partialReference: nil, resource: LocalFileReferenceMediaResource(localFilePath: path, randomId: id), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/text", size: nil, attributes: [.FileName(fileName: name)])
-                        return .message(text: "", attributes: [], mediaReference: AnyMediaReference.standalone(media: file), replyToMessageId: nil, localGroupingKey: nil, correlationId: nil)
-                    }
-                    return enqueueMessages(account: context.account, peerId: peerId, messages: messages) |> map {_ in}
-                }
-            }
-            _ = logs.start()
-        }
-    }
     
     func sendLogs() {
         
@@ -471,12 +447,7 @@ class GeneralSettingsViewController: TableViewController {
 
     
     override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        self.window?.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.incrementLogClick()
-            return .invoked
-        }, with: self, for: .L, modifierFlags: [.control])
+        super.viewDidAppear(animated)        
     }
     
 

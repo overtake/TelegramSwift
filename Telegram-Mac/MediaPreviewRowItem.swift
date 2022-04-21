@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-
+import InAppSettings
 import TGUIKit
 import SwiftSignalKit
 import Postbox
@@ -104,7 +104,7 @@ fileprivate class MediaPreviewRowView : TableRowView, ModalPreviewRowViewProtoco
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let contentNode = contentNode {
-            if contentNode is ChatGIFContentView {
+            if contentNode is VideoStickerContentView {
                 if let file = contentNode.media as? TelegramMediaFile {
                     let reference = contentNode.parent != nil ? FileMediaReference.message(message: MessageReference(contentNode.parent!), media: file) : FileMediaReference.standalone(media: file)
                     return (.file(reference, GifPreviewModalView.self), contentNode)

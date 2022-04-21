@@ -76,7 +76,7 @@ class EditMessageModel: ChatAccessoryModel {
     
     func make(with message:Message) -> Void {
         let attr = NSMutableAttributedString()
-        _ = attr.append(string: L10n.chatInputAccessoryEditMessage, color: theme.colors.accent, font: .medium(.text))
+        _ = attr.append(string: strings().chatInputAccessoryEditMessage, color: theme.colors.accent, font: .medium(.text))
 
         self.headerAttr = attr
         self.messageAttr = .initialize(string: pullText(from:message) as String, color: message.media.isEmpty ? theme.colors.text : theme.colors.grayText, font: .normal(.text))
@@ -147,16 +147,17 @@ class EditMessageModel: ChatAccessoryModel {
                 }
                 
                 if let updateImageSignal = updateImageSignal, let media = updatedMedia {
-                    view.imageView?.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: view.backingScaleFactor))
-                    view.imageView?.setSignal(updateImageSignal, animate: true, cacheImage: { [weak media] result in
-                        if let media = media {
-                            cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+                    view.imageView?.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: view.backingScaleFactor), clearInstantly: false)
+                    if view.imageView?.isFullyLoaded == false {
+                        view.imageView?.setSignal(updateImageSignal, animate: true, cacheImage: { [weak media] result in
+                            if let media = media {
+                                cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale)
+                            }
+                        })
+                        if let media = media as? TelegramMediaImage, !media.isLocalResource {
+                            self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media)).start())
                         }
-                    })
-                    if let media = media as? TelegramMediaImage, !media.isLocalResource {
-                        self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media)).start())
                     }
-                    
                     view.imageView?.set(arguments: arguments)
                     if hasRoundImage {
                         view.imageView!.layer?.cornerRadius = 15

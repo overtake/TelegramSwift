@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-
+import InAppSettings
 import SwiftSignalKit
 import Postbox
 
@@ -17,15 +17,21 @@ final class ChatAnimatedStickerMediaLayoutParameters : ChatMediaLayoutParameters
     let alwaysAccept: Bool?
     let cache: ASCachePurpose?
     let hidePlayer: Bool?
-    let colors: [LottieColor]
+    var colors: [LottieColor]
     let playOnHover: Bool?
-    init(playPolicy: LottiePlayPolicy?, alwaysAccept: Bool? = nil, cache: ASCachePurpose? = nil, hidePlayer: Bool = false, media: TelegramMediaFile, colors: [LottieColor] = [], playOnHover: Bool? = nil) {
+    let thumbAtFrame: Int
+    let shimmer: Bool
+    let noThumb: Bool
+    init(playPolicy: LottiePlayPolicy?, alwaysAccept: Bool? = nil, cache: ASCachePurpose? = nil, hidePlayer: Bool = false, media: TelegramMediaFile, colors: [LottieColor] = [], playOnHover: Bool? = nil, shimmer: Bool = true, thumbAtFrame: Int = 0, noThumb: Bool = false) {
         self.playPolicy = playPolicy
         self.alwaysAccept = alwaysAccept
         self.cache = cache
         self.hidePlayer = hidePlayer
         self.colors = colors
         self.playOnHover = playOnHover
+        self.shimmer = shimmer
+        self.thumbAtFrame = thumbAtFrame
+        self.noThumb = noThumb
         super.init(presentation: .empty, media: media, automaticDownload: true, autoplayMedia: AutoplayMediaPreferences.defaultSettings)
     }
 }

@@ -8,9 +8,13 @@
 
 import Cocoa
 import TelegramCore
-
+import Localization
 import SwiftSignalKit
 import Postbox
+import ObjcUtils
+import InAppSettings
+import TGUIKit
+import WebKit
 
 enum SendingType :String {
     case enter = "enter"
@@ -33,6 +37,7 @@ enum ForceTouchAction: Int32 {
     case reply
     case forward
     case previewMedia
+    case react
 }
 
 enum ContextTextTooltip : Int32 {
@@ -55,17 +60,17 @@ enum AppTooltip {
     fileprivate var localizedString: String {
         switch self {
         case .voiceRecording:
-            return L10n.appTooltipVoiceRecord
+            return strings().appTooltipVoiceRecord
         case .videoRecording:
-            return L10n.appTooltipVideoRecord
+            return strings().appTooltipVideoRecord
         case .mediaPreview_archive:
-            return L10n.previewSenderArchiveTooltip
+            return strings().previewSenderArchiveTooltip
         case .mediaPreview_collage:
-            return L10n.previewSenderCollageTooltip
+            return strings().previewSenderCollageTooltip
         case .mediaPreview_media:
-            return L10n.previewSenderMediaTooltip
+            return strings().previewSenderMediaTooltip
         case .mediaPreview_file:
-            return L10n.previewSenderFileTooltip
+            return strings().previewSenderFileTooltip
         }
     }
     
@@ -133,10 +138,12 @@ class FastSettings {
     private static let kNeedShowChannelIntro = "kNeedShowChannelIntro"
     
     private static let kNoticeAdChannel = "kNoticeAdChannel"
-    private static let kPlayingRate = "kPlayingRate"
+    private static let kPlayingRate = "kPlayingRate2"
+    private static let kPlayingVideoRate = "kPlayingVideoRate"
 
     private static let kSVCShareMicro = "kSVCShareMicro"
 
+    private static let kReactionsMode = "kReactionsMode"
 
     private static let kVolumeRate = "kVolumeRate"
     
@@ -146,6 +153,9 @@ class FastSettings {
     private static let kLeftColumnWidth = "kLeftColumnWidth"
 
     private static let kShowEmptyTips = "kShowEmptyTips"
+
+    
+    private static let kConfirmWebApp = "kConfirmWebApp"
 
     
     static var sendingType:SendingType {
@@ -182,12 +192,46 @@ class FastSettings {
         UserDefaults.standard.set(!isChannelMessagesMuted(peerId), forKey: "\(peerId)_m_muted")
     }
     
+    static func shouldConfirmWebApp(_ peerId: PeerId) -> Bool {
+        let value = UserDefaults.standard.value(forKey: "\(peerId)_\(kConfirmWebApp)")
+        return value as? Bool ?? true
+    }
+    
+    static func markWebAppAsConfirmed(_ peerId: PeerId) -> Void {
+        UserDefaults.standard.set(false, forKey: "\(peerId)_\(kConfirmWebApp)")
+    }
+    
+    @available(macOS 12.0, *)
+    static func botAccessTo(_ type: WKMediaCaptureType, peerId: PeerId) -> Bool {
+        let value = UserDefaults.standard.value(forKey: "wk2_bot_access_\(type.rawValue)_\(peerId.toInt64())") as? Bool
+        
+        if let value = value {
+            return value
+        } else {
+            return false
+        }
+    }
+    @available(macOS 12.0, *)
+    static func allowBotAccessTo(_ type: WKMediaCaptureType, peerId: PeerId) {
+        UserDefaults.standard.setValue(true, forKey: "wk2_bot_access_\(type.rawValue)_\(peerId.toInt64())")
+        UserDefaults.standard.synchronize()
+    }
+    
+        
     static var playingRate: Double {
-        return min(max(UserDefaults.standard.double(forKey: kPlayingRate), 1), 1.7)
+        return min(max(UserDefaults.standard.double(forKey: kPlayingRate), 1), 2.0)
     }
     
     static func setPlayingRate(_ rate: Double) {
         UserDefaults.standard.set(rate, forKey: kPlayingRate)
+    }
+    
+    static var playingVideoRate: Double {
+        return min(max(UserDefaults.standard.double(forKey: kPlayingVideoRate), 1), 2.0)
+    }
+    
+    static func setPlayingVideoRate(_ rate: Double) {
+        UserDefaults.standard.set(rate, forKey: kPlayingVideoRate)
     }
     
     static var volumeRate: Float {
@@ -281,7 +325,11 @@ class FastSettings {
     }
     
     static var forceTouchAction: ForceTouchAction {
-        return ForceTouchAction(rawValue: Int32(UserDefaults.standard.integer(forKey: kForceTouchAction))) ?? .edit
+        if UserDefaults.standard.value(forKey: kForceTouchAction) != nil {
+            return ForceTouchAction(rawValue: Int32(UserDefaults.standard.integer(forKey: kForceTouchAction))) ?? .react
+        } else {
+            return .react
+        }
     }
     
     static func toggleForceTouchAction(_ action: ForceTouchAction) {
@@ -331,6 +379,15 @@ class FastSettings {
     static func toggleInAppSouds(_ enable: Bool) {
         UserDefaults.standard.set(!enable, forKey: kInAppSoundsType)
         UserDefaults.standard.synchronize()
+    }
+    
+    static func toggleReactionMode(_ legacy: Bool) {
+        UserDefaults.standard.set(legacy, forKey: kReactionsMode)
+        UserDefaults.standard.synchronize()
+    }
+    
+    static var legacyReactions: Bool {
+        UserDefaults.standard.bool(forKey: kReactionsMode)
     }
     
     static var inAppSounds: Bool {
@@ -430,6 +487,32 @@ class FastSettings {
     }
     static var leftColumnWidth: CGFloat {
         return round(UserDefaults.standard.value(forKey: kLeftColumnWidth) as? CGFloat ?? 300)
+    }
+    
+    static func dismissPendingRequests(_ peerIds:[PeerId], for peerId: PeerId) {
+        
+        var peers = UserDefaults.standard.value(forKey: "pendingRequests2_\(peerId)") as? [Int64] ?? []
+        peers.append(contentsOf: peerIds.map { $0.toInt64() })
+        peers = peers.uniqueElements
+        
+        UserDefaults.standard.set(peers, forKey: "pendingRequests2_\(peerId)")
+        UserDefaults.standard.synchronize()
+    }
+    
+    static func dissmissRequestChat(_ peerId: PeerId) -> Void {
+        UserDefaults.standard.set(true, forKey: "dissmissRequestChat_\(peerId)")
+        UserDefaults.standard.synchronize()
+    }
+    static func dissmissedRequestChat(_ peerId: PeerId) -> Bool {
+        return UserDefaults.standard.bool(forKey: "dissmissRequestChat_\(peerId)")
+    }
+    
+    
+    static func canBeShownPendingRequests(_ peerIds:[PeerId], for peerId: PeerId) -> Bool {
+        let peers = UserDefaults.standard.value(forKey: "pendingRequests2_\(peerId)") as? [Int64] ?? []
+        
+        let intersection = Set(peerIds.map { $0.toInt64() }).intersection(peers)
+        return intersection.count != peerIds.count
     }
     
     /*
@@ -662,19 +745,7 @@ func showInFinder(_ file:TelegramMediaFile, account:Account)  {
                 }
                 
                 try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
-                
-//                let quarantineData = "doesn't matter".data(using: .utf8)!
-//                
-//                URL(fileURLWithPath: adopted).withUnsafeFileSystemRepresentation { fileSystemPath in
-//                    _ = quarantineData.withUnsafeBytes {
-//                        setxattr(fileSystemPath, "com.apple.quarantine", $0.baseAddress, quarantineData.count, 0, 0)
-//                    }
-//                }
-                
-                //setxattr(<#T##path: UnsafePointer<Int8>!##UnsafePointer<Int8>!#>, <#T##name: UnsafePointer<Int8>!##UnsafePointer<Int8>!#>, <#T##value: UnsafeRawPointer!##UnsafeRawPointer!#>, <#T##size: Int##Int#>, <#T##position: UInt32##UInt32#>, <#T##options: Int32##Int32#>)
-                
-            //    setxattr(ordinaryFileURL.path, SUAppleQuarantineIdentifier, quarantineData, quarantineDataLength, 0, XATTR_CREATE)
-                
+           
                 let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
                 
                 let fs = fileSize(boxPath)

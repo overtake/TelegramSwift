@@ -32,9 +32,9 @@ private final class UnavailableToStreamView : View {
     func update(isScreen: Bool) {
         let text: String
         if isScreen {
-            text = L10n.voiceChatScreenShareUnavailable
+            text = strings().voiceChatScreenShareUnavailable
         } else {
-            text = L10n.voiceChatVideoShareUnavailable
+            text = strings().voiceChatVideoShareUnavailable
         }
         let attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: GroupCallTheme.grayStatusColor), bold: MarkdownAttributeSet(font: .bold(.text), textColor: GroupCallTheme.grayStatusColor), link: MarkdownAttributeSet(font: .normal(.text), textColor: GroupCallTheme.accent), linkAttribute: { contents in
             return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents,  {_ in}))
@@ -78,7 +78,7 @@ private final class DesktopCapturerView : View {
     
     fileprivate class Micro : Control {
         
-        var isOn: Bool = true {
+        var isOn: Bool = false {
             didSet {
                 if isOn != oldValue {
                     toggle(animated: true)
@@ -160,18 +160,18 @@ private final class DesktopCapturerView : View {
         
         addSubview(micro)
         
-        let titleLayout = TextViewLayout.init(.initialize(string: L10n.voiceChatVideoVideoSource, color: GroupCallTheme.titleColor, font: .medium(.title)))
+        let titleLayout = TextViewLayout.init(.initialize(string: strings().voiceChatVideoVideoSource, color: GroupCallTheme.titleColor, font: .medium(.title)))
         titleLayout.measure(width: frameRect.width)
         titleView.update(titleLayout)
         
-        cancel.set(text: L10n.voiceChatVideoVideoSourceCancel, for: .Normal)
+        cancel.set(text: strings().voiceChatVideoVideoSourceCancel, for: .Normal)
         cancel.set(color: .white, for: .Normal)
         cancel.set(background: GroupCallTheme.speakDisabledColor, for: .Normal)
         cancel.set(background: GroupCallTheme.speakDisabledColor.withAlphaComponent(0.8), for: .Highlight)
         cancel.sizeToFit(.zero, NSMakeSize(100, 30), thatFit: true)
         cancel.layer?.cornerRadius = .cornerRadius
         
-        share.set(text: L10n.voiceChatVideoVideoSourceShare, for: .Normal)
+        share.set(text: strings().voiceChatVideoVideoSourceShare, for: .Normal)
         share.set(color: .white, for: .Normal)
         share.set(background: GroupCallTheme.accent, for: .Normal)
         share.set(background: GroupCallTheme.accent.withAlphaComponent(0.8), for: .Highlight)
@@ -299,10 +299,12 @@ final class DesktopCapturerWindow : Window {
     
     private let listController: DesktopCaptureListUI
     let mode: VideoSourceMacMode
+    fileprivate let microIsOff: Bool
     fileprivate let select: (VideoSourceMac, Bool)->Void
-    init(mode: VideoSourceMacMode, select: @escaping(VideoSourceMac, Bool)->Void, devices: DevicesContext) {
+    init(mode: VideoSourceMacMode, select: @escaping(VideoSourceMac, Bool)->Void, devices: DevicesContext, microIsOff: Bool) {
         self.mode = mode
         self.select = select
+        self.microIsOff = microIsOff
         let size = NSMakeSize(700, 600)
         listController = DesktopCaptureListUI(size: NSMakeSize(size.width, 90), devices: devices, mode: mode)
         
@@ -335,6 +337,7 @@ final class DesktopCapturerWindow : Window {
 
         var first: Bool = true
 
+        self.genericView.micro.isOn = !microIsOff
         
         listController.updateDesktopSelected = { [weak self] wrap, manager in
             self?.genericView.updatePreview(wrap.source as! DesktopCaptureSourceMac, isAvailable: wrap.isAvailableToStream, manager: manager, animated: !first)
@@ -420,7 +423,7 @@ extension VideoSourceMac {
     }
 }
 
-func presentDesktopCapturerWindow(mode: VideoSourceMacMode, select: @escaping(VideoSourceMac, Bool)->Void, devices: DevicesContext) -> DesktopCapturerWindow? {
+func presentDesktopCapturerWindow(mode: VideoSourceMacMode, select: @escaping(VideoSourceMac, Bool)->Void, devices: DevicesContext, microIsOff: Bool) -> DesktopCapturerWindow? {
     
     switch mode {
     case .video:
@@ -432,7 +435,7 @@ func presentDesktopCapturerWindow(mode: VideoSourceMacMode, select: @escaping(Vi
         break
     }
     
-    let window = DesktopCapturerWindow(mode: mode, select: select, devices: devices)
+    let window = DesktopCapturerWindow(mode: mode, select: select, devices: devices, microIsOff: microIsOff)
     window.initGuts()
     window.makeKeyAndOrderFront(nil)
     

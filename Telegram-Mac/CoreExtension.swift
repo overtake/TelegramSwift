@@ -9,13 +9,17 @@
 
 import Cocoa
 import TelegramCore
-
+import Localization
 import Postbox
 import SwiftSignalKit
 import TGUIKit
-
+import ApiCredentials
 import MtProtoKit
-
+import TGPassportMRZ
+import InAppSettings
+import ColorPalette
+import ThemeSettings
+import Accelerate
 
 extension RenderedChannelParticipant {
     func withUpdatedBannedRights(_ info: ChannelParticipantBannedInfo) -> RenderedChannelParticipant {
@@ -54,25 +58,25 @@ extension TelegramChatAdminRightsFlags {
         switch self {
             //EventLog.Service.Restriction.AddNewAdmins
         case TelegramChatAdminRightsFlags.canAddAdmins:
-            return tr(L10n.eventLogServicePromoteAddNewAdmins)
+            return strings().eventLogServicePromoteAddNewAdmins
         case TelegramChatAdminRightsFlags.canBanUsers:
-            return tr(L10n.eventLogServicePromoteBanUsers)
+            return strings().eventLogServicePromoteBanUsers
         case TelegramChatAdminRightsFlags.canChangeInfo:
-            return tr(L10n.eventLogServicePromoteChangeInfo)
+            return strings().eventLogServicePromoteChangeInfo
         case TelegramChatAdminRightsFlags.canInviteUsers:
-            return tr(L10n.eventLogServicePromoteAddUsers)
+            return strings().eventLogServicePromoteAddUsers
         case TelegramChatAdminRightsFlags.canDeleteMessages:
-            return tr(L10n.eventLogServicePromoteDeleteMessages)
+            return strings().eventLogServicePromoteDeleteMessages
         case TelegramChatAdminRightsFlags.canEditMessages:
-            return tr(L10n.eventLogServicePromoteEditMessages)
+            return strings().eventLogServicePromoteEditMessages
         case TelegramChatAdminRightsFlags.canPinMessages:
-            return tr(L10n.eventLogServicePromotePinMessages)
+            return strings().eventLogServicePromotePinMessages
         case TelegramChatAdminRightsFlags.canPostMessages:
-            return tr(L10n.eventLogServicePromotePostMessages)
+            return strings().eventLogServicePromotePostMessages
         case TelegramChatAdminRightsFlags.canBeAnonymous:
-            return tr(L10n.eventLogServicePromoteRemainAnonymous)
+            return strings().eventLogServicePromoteRemainAnonymous
         case TelegramChatAdminRightsFlags.canManageCalls:
-            return L10n.channelAdminLogCanManageCalls
+            return strings().channelAdminLogCanManageCalls
         default:
             return "Undefined Promotion"
         }
@@ -83,29 +87,29 @@ extension TelegramChatBannedRightsFlags {
     var localizedString:String {
         switch self {
         case TelegramChatBannedRightsFlags.banSendGifs:
-            return L10n.eventLogServiceDemoteSendGifs
+            return strings().eventLogServiceDemoteSendGifs
         case TelegramChatBannedRightsFlags.banPinMessages:
-            return L10n.eventLogServiceDemotePinMessages
+            return strings().eventLogServiceDemotePinMessages
         case TelegramChatBannedRightsFlags.banAddMembers:
-            return L10n.eventLogServiceDemoteAddMembers
+            return strings().eventLogServiceDemoteAddMembers
         case TelegramChatBannedRightsFlags.banSendPolls:
-            return L10n.eventLogServiceDemotePostPolls
+            return strings().eventLogServiceDemotePostPolls
         case TelegramChatBannedRightsFlags.banEmbedLinks:
-            return L10n.eventLogServiceDemoteEmbedLinks
+            return strings().eventLogServiceDemoteEmbedLinks
         case TelegramChatBannedRightsFlags.banReadMessages:
             return ""
         case TelegramChatBannedRightsFlags.banSendGames:
-            return L10n.eventLogServiceDemoteEmbedLinks
+            return strings().eventLogServiceDemoteEmbedLinks
         case TelegramChatBannedRightsFlags.banSendInline:
-            return L10n.eventLogServiceDemoteSendInline
+            return strings().eventLogServiceDemoteSendInline
         case TelegramChatBannedRightsFlags.banSendMedia:
-            return L10n.eventLogServiceDemoteSendMedia
+            return strings().eventLogServiceDemoteSendMedia
         case TelegramChatBannedRightsFlags.banSendMessages:
-            return L10n.eventLogServiceDemoteSendMessages
+            return strings().eventLogServiceDemoteSendMessages
         case TelegramChatBannedRightsFlags.banSendStickers:
-            return L10n.eventLogServiceDemoteSendStickers
+            return strings().eventLogServiceDemoteSendStickers
         case TelegramChatBannedRightsFlags.banChangeInfo:
-            return L10n.eventLogServiceDemoteChangeInfo
+            return strings().eventLogServiceDemoteChangeInfo
         default:
             return ""
         }
@@ -166,51 +170,51 @@ func permissionText(from peer: Peer, for flags: TelegramChatBannedRightsFlags) -
         switch flags {
         case .banSendMessages:
             if personal && untilDate != 0 && untilDate != Int32.max {
-                return L10n.channelPersmissionDeniedSendMessagesUntil(stringForFullDate(timestamp: untilDate))
+                return strings().channelPersmissionDeniedSendMessagesUntil(stringForFullDate(timestamp: untilDate))
             } else if personal {
-                return L10n.channelPersmissionDeniedSendMessagesForever
+                return strings().channelPersmissionDeniedSendMessagesForever
             } else {
-                return L10n.channelPersmissionDeniedSendMessagesDefaultRestrictedText
+                return strings().channelPersmissionDeniedSendMessagesDefaultRestrictedText
             }
         case .banSendStickers:
             if personal && untilDate != 0 && untilDate != Int32.max {
-                return L10n.channelPersmissionDeniedSendStickersUntil(stringForFullDate(timestamp: untilDate))
+                return strings().channelPersmissionDeniedSendStickersUntil(stringForFullDate(timestamp: untilDate))
             } else if personal {
-                return L10n.channelPersmissionDeniedSendStickersForever
+                return strings().channelPersmissionDeniedSendStickersForever
             } else {
-                return L10n.channelPersmissionDeniedSendStickersDefaultRestrictedText
+                return strings().channelPersmissionDeniedSendStickersDefaultRestrictedText
             }
         case .banSendGifs:
             if personal && untilDate != 0 && untilDate != Int32.max {
-                return L10n.channelPersmissionDeniedSendGifsUntil(stringForFullDate(timestamp: untilDate))
+                return strings().channelPersmissionDeniedSendGifsUntil(stringForFullDate(timestamp: untilDate))
             } else if personal {
-                return L10n.channelPersmissionDeniedSendGifsForever
+                return strings().channelPersmissionDeniedSendGifsForever
             } else {
-                return L10n.channelPersmissionDeniedSendGifsDefaultRestrictedText
+                return strings().channelPersmissionDeniedSendGifsDefaultRestrictedText
             }
         case .banSendMedia:
             if personal && untilDate != 0 && untilDate != Int32.max {
-                return L10n.channelPersmissionDeniedSendMediaUntil(stringForFullDate(timestamp: untilDate))
+                return strings().channelPersmissionDeniedSendMediaUntil(stringForFullDate(timestamp: untilDate))
             } else if personal {
-                return L10n.channelPersmissionDeniedSendMediaForever
+                return strings().channelPersmissionDeniedSendMediaForever
             } else {
-                return L10n.channelPersmissionDeniedSendMediaDefaultRestrictedText
+                return strings().channelPersmissionDeniedSendMediaDefaultRestrictedText
             }
         case .banSendPolls:
             if personal && untilDate != 0 && untilDate != Int32.max {
-                return L10n.channelPersmissionDeniedSendPollUntil(stringForFullDate(timestamp: untilDate))
+                return strings().channelPersmissionDeniedSendPollUntil(stringForFullDate(timestamp: untilDate))
             } else if personal {
-                return L10n.channelPersmissionDeniedSendPollForever
+                return strings().channelPersmissionDeniedSendPollForever
             } else {
-                return L10n.channelPersmissionDeniedSendPollDefaultRestrictedText
+                return strings().channelPersmissionDeniedSendPollDefaultRestrictedText
             }
         case .banSendInline:
             if personal && untilDate != 0 && untilDate != Int32.max {
-                return L10n.channelPersmissionDeniedSendInlineUntil(stringForFullDate(timestamp: untilDate))
+                return strings().channelPersmissionDeniedSendInlineUntil(stringForFullDate(timestamp: untilDate))
             } else if personal {
-                return L10n.channelPersmissionDeniedSendInlineForever
+                return strings().channelPersmissionDeniedSendInlineForever
             } else {
-                return L10n.channelPersmissionDeniedSendInlineDefaultRestrictedText
+                return strings().channelPersmissionDeniedSendInlineDefaultRestrictedText
             }
         default:
             return nil
@@ -321,7 +325,7 @@ extension Media {
         if self is TelegramMediaImage {
             return true
         } else if let file = self as? TelegramMediaFile {
-            return file.isVideo || (file.isAnimated && !file.mimeType.lowercased().hasSuffix("gif"))
+            return (file.isVideo && !file.isWebm) || (file.isAnimated && !file.mimeType.lowercased().hasSuffix("gif") && !file.isWebm)
         } else if let map = self as? TelegramMediaMap {
             return map.venue == nil
         } else if self is TelegramMediaDice {
@@ -516,6 +520,20 @@ public extension Message {
         return nil
     }
     
+    var file: TelegramMediaFile? {
+        if let file = self.media.first as? TelegramMediaFile {
+            return file
+        } else if let webpage = self.media.first as? TelegramMediaWebpage {
+            switch webpage.content {
+            case let .Loaded(content):
+                return content.file
+            default:
+                break
+            }
+        }
+        return nil
+    }
+    
     var textEntities: TextEntitiesMessageAttribute? {
         for attr in attributes {
             if let attr = attr as? TextEntitiesMessageAttribute {
@@ -540,6 +558,49 @@ public extension Message {
             }
         }
         return nil
+    }
+    
+    func effectiveReactions(_ accountPeerId: PeerId) -> ReactionsMessageAttribute? {
+        var reactions = self.reactionsAttribute
+        if reactions == nil {
+            for attr in self.attributes {
+                if let attr = attr as? PendingReactionsMessageAttribute, let value = attr.value {
+                    reactions = .init(canViewList: false, reactions: [.init(value: value, count: 1, isSelected: true)], recentPeers: [.init(value: value, isLarge: attr.isLarge, isUnseen: false, peerId: attr.accountPeerId ?? accountPeerId)])
+                }
+            }
+        } else if let remote = reactions {
+            for attr in self.attributes {
+                if let attr = attr as? PendingReactionsMessageAttribute {
+                    if let value = attr.value {
+                        var values = remote.reactions
+                        if let index = values.firstIndex(where: { $0.isSelected })  {
+                            if values[index].count == 1 {
+                                values.remove(at: index)
+                            } else {
+                                values[index] = MessageReaction(value: values[index].value, count: values[index].count - 1, isSelected: false)
+                            }
+                        }
+                        if let index = values.firstIndex(where: { $0.value == value }) {
+                            values[index] = MessageReaction(value: value, count: values[index].count + 1, isSelected: true)
+                        } else {
+                            values.append(.init(value: value, count: 1, isSelected: true))
+                        }
+                        reactions = .init(canViewList: remote.canViewList, reactions: values, recentPeers: remote.recentPeers + [.init(value: value, isLarge: attr.isLarge, isUnseen: false, peerId: attr.accountPeerId ?? accountPeerId)])
+                    } else {
+                        var values = remote.reactions
+                        if let index = values.firstIndex(where: { $0.isSelected })  {
+                            if values[index].count == 1 {
+                                values.remove(at: index)
+                            } else {
+                                values[index] = MessageReaction(value: values[index].value, count: values[index].count - 1, isSelected: false)
+                            }
+                        }
+                        reactions = .init(canViewList: remote.canViewList, reactions: values, recentPeers: remote.recentPeers.filter({ $0.peerId != accountPeerId }))
+                    }
+                }
+            }
+        }
+        return reactions
     }
     
     func isCrosspostFromChannel(account: Account) -> Bool {
@@ -596,7 +657,7 @@ public extension Message {
     }
     
     func isIncoming(_ account: Account, _ isBubbled: Bool) -> Bool {
-        if isBubbled, let peer = chatPeer(account.peerId), peer.isChannel {
+        if isBubbled, let peer = coreMessageMainPeer(self), peer.isChannel {
             return true
         }
         
@@ -627,11 +688,11 @@ public extension Message {
             }
         }
         
-        if let peer = messageMainPeer(self) as? TelegramChannel, case .broadcast(_) = peer.info {
+        if let peer = coreMessageMainPeer(self) as? TelegramChannel, case .broadcast(_) = peer.info {
             _peer = peer
         } else if let author = effectiveAuthor, _peer == nil {
             if author is TelegramSecretChat {
-                return messageMainPeer(self)
+                return coreMessageMainPeer(self)
             } else {
                 _peer = author
             }
@@ -681,7 +742,7 @@ public extension Message {
                 return peers[peerId]
             }
         }
-        if let peer = messageMainPeer(self), peer.isBot {
+        if let peer = coreMessageMainPeer(self), peer.isBot {
             return peer
         }
         return nil
@@ -776,6 +837,12 @@ extension ChatLocation : Hashable {
    
 }
 
+extension AvailableReactions {
+    var enabled: [AvailableReactions.Reaction] {
+        return self.reactions.filter { $0.isEnabled }
+    }
+}
+
 extension SuggestedLocalizationInfo {
     func localizedKey(_ key:String) -> String {
         for entry in extractedEntries {
@@ -810,6 +877,9 @@ fileprivate let edit_limit_time:Int32 = 48*60*60
 func canDeleteMessage(_ message:Message, account:Account, mode: ChatMode) -> Bool {
     
     if mode.threadId == message.id {
+        return false
+    }
+    if message.adAttribute != nil {
         return false
     }
     
@@ -852,12 +922,24 @@ func canForwardMessage(_ message:Message, chatInteraction: ChatInteraction) -> B
     if message.isScheduledMessage {
         return false
     }
+    if message.adAttribute != nil {
+        return false
+    }
     
     if message.media.first is TelegramMediaAction {
         return false
     }
     
-    
+    if let peer = message.peers[message.id.peerId] as? TelegramGroup {
+        if peer.flags.contains(.copyProtectionEnabled) {
+            return false
+        }
+    }
+    if let peer = message.peers[message.id.peerId] as? TelegramChannel {
+        if peer.flags.contains(.copyProtectionEnabled) {
+            return false
+        }
+    }
     
     if let peer = message.peers[message.id.peerId] as? TelegramUser {
         if peer.isUser, let timer = message.autoremoveAttribute {
@@ -937,7 +1019,7 @@ func mustDeleteForEveryoneMessage(_ message:Message) -> Bool {
 }
 
 func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode) -> Bool {
-    if let peer = messageMainPeer(message) {
+    if let peer = coreMessageMainPeer(message) {
         if message.isScheduledMessage {
             return false
         }
@@ -966,7 +1048,7 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode) -> Bool
     return false
 }
 
-func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context: AccountContext) -> Bool {
+func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context: AccountContext, ignorePoll: Bool = false) -> Bool {
     if message.forwardInfo != nil {
         return false
     }
@@ -1000,7 +1082,7 @@ func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context
         if media is TelegramMediaMap {
             return false
         }
-        if media is TelegramMediaPoll {
+        if media is TelegramMediaPoll, !ignorePoll {
             return false
         }
         if media is TelegramMediaDice {
@@ -1020,7 +1102,7 @@ func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context
     
     var timeInCondition = Int(message.timestamp) + Int(context.limitConfiguration.maxMessageEditingInterval) > context.account.network.getApproximateRemoteTimestamp()
     
-    if let peer = messageMainPeer(message) as? TelegramChannel {
+    if let peer = coreMessageMainPeer(message) as? TelegramChannel {
         if case .broadcast = peer.info {
             if message.isScheduledMessage {
                 return peer.hasPermission(.sendMessages) || peer.hasPermission(.editAllMessages)
@@ -1074,7 +1156,7 @@ func canReportMessage(_ message: Message, _ account: Account) -> Bool {
     if message.isScheduledMessage || message.flags.contains(.Failed) || message.flags.contains(.Sending) {
         return false
     }
-    if let peer = messageMainPeer(message), message.author?.id != account.peerId {
+    if let peer = coreMessageMainPeer(message), message.author?.id != account.peerId {
         return peer.isChannel || peer.isGroup || peer.isSupergroup || (message.chatPeer(account.peerId)?.isBot == true)
     } else {
         return false
@@ -1088,14 +1170,14 @@ func mustManageDeleteMessages(_ messages:[Message], for peer:Peer, account: Acco
         let peerId:PeerId? = messages[0].author?.id
         if account.peerId != peerId {
             for message in messages {
-                if peerId != message.author?.id {
+                if peerId != message.author?.id || !message.flags.contains(.Incoming) {
                     return false
                 }
             }
             return true
         }
     }
-   
+    
     return false
 }
 
@@ -1106,6 +1188,33 @@ extension Media {
         }
         return false
     }
+    
+    var isWebm: Bool {
+        if let media = self as? TelegramMediaFile {
+            return media.mimeType == "video/webm"
+        }
+        return false
+    }
+    
+    var probablySticker: Bool {
+        guard let file = self as? TelegramMediaFile else {
+            return false
+        }
+        if file.isAnimatedSticker {
+            return true
+        }
+        if file.isStaticSticker {
+            return true
+        }
+        if file.isVideoSticker {
+            return true
+        }
+        if file.mimeType == "image/webp" {
+            return true
+        }
+        return false
+    }
+    
     var isVideoFile:Bool {
         if let media = self as? TelegramMediaFile {
             return media.mimeType.hasPrefix("video/mp4") || media.mimeType.hasPrefix("video/mov") || media.mimeType.hasPrefix("video/avi")
@@ -1140,15 +1249,15 @@ extension AddressNameFormatError {
     var description:String {
         switch self {
         case .startsWithUnderscore:
-            return tr(L10n.errorUsernameUnderscopeStart)
+            return strings().errorUsernameUnderscopeStart
         case .endsWithUnderscore:
-            return tr(L10n.errorUsernameUnderscopeEnd)
+            return strings().errorUsernameUnderscopeEnd
         case .startsWithDigit:
-            return tr(L10n.errorUsernameNumberStart)
+            return strings().errorUsernameNumberStart
         case .invalidCharacters:
-            return tr(L10n.errorUsernameInvalid)
+            return strings().errorUsernameInvalid
         case .tooShort:
-            return tr(L10n.errorUsernameMinimumLength)
+            return strings().errorUsernameMinimumLength
         }
     }
 }
@@ -1158,11 +1267,11 @@ extension AddressNameAvailability {
     func description(for username: String) -> String {
         switch self {
         case .available:
-            return L10n.usernameSettingsAvailable(username)
+            return strings().usernameSettingsAvailable(username)
         case .invalid:
-            return L10n.errorUsernameInvalid
+            return strings().errorUsernameInvalid
         case .taken:
-            return L10n.errorUsernameAlreadyTaken
+            return strings().errorUsernameAlreadyTaken
         }
     }
 }
@@ -1269,6 +1378,13 @@ extension Peer {
         return nil
     }
     
+    var botInfo: BotUserInfo? {
+        if let peer = self as? TelegramUser {
+            return peer.botInfo
+        }
+        return nil
+    }
+    
     var isSupergroup:Bool {
         if let peer = self as? TelegramChannel {
             switch peer.info {
@@ -1371,31 +1487,31 @@ extension SentSecureValueType {
     var rawValue: String {
         switch self {
         case .email:
-            return L10n.secureIdRequestPermissionEmail
+            return strings().secureIdRequestPermissionEmail
         case .phone:
-            return L10n.secureIdRequestPermissionPhone
+            return strings().secureIdRequestPermissionPhone
         case .passport:
-            return L10n.secureIdRequestPermissionPassport
+            return strings().secureIdRequestPermissionPassport
         case .address:
-            return L10n.secureIdRequestPermissionResidentialAddress
+            return strings().secureIdRequestPermissionResidentialAddress
         case .personalDetails:
-            return L10n.secureIdRequestPermissionPersonalDetails
+            return strings().secureIdRequestPermissionPersonalDetails
         case .driversLicense:
-            return L10n.secureIdRequestPermissionDriversLicense
+            return strings().secureIdRequestPermissionDriversLicense
         case .utilityBill:
-            return L10n.secureIdRequestPermissionUtilityBill
+            return strings().secureIdRequestPermissionUtilityBill
         case .rentalAgreement:
-            return L10n.secureIdRequestPermissionTenancyAgreement
+            return strings().secureIdRequestPermissionTenancyAgreement
         case .idCard:
-            return L10n.secureIdRequestPermissionIDCard
+            return strings().secureIdRequestPermissionIDCard
         case .bankStatement:
-            return L10n.secureIdRequestPermissionBankStatement
+            return strings().secureIdRequestPermissionBankStatement
         case .internalPassport:
-            return L10n.secureIdRequestPermissionInternalPassport
+            return strings().secureIdRequestPermissionInternalPassport
         case .passportRegistration:
-            return L10n.secureIdRequestPermissionPassportRegistration
+            return strings().secureIdRequestPermissionPassportRegistration
         case .temporaryRegistration:
-            return L10n.secureIdRequestPermissionTemporaryRegistration
+            return strings().secureIdRequestPermissionTemporaryRegistration
         }
     }
 }
@@ -1901,31 +2017,31 @@ extension SecureIdRequestedFormFieldValue {
     var rawValue: String {
         switch self {
         case .email:
-            return L10n.secureIdRequestPermissionEmail
+            return strings().secureIdRequestPermissionEmail
         case .phone:
-            return L10n.secureIdRequestPermissionPhone
+            return strings().secureIdRequestPermissionPhone
         case .address:
-            return L10n.secureIdRequestPermissionResidentialAddress
+            return strings().secureIdRequestPermissionResidentialAddress
         case .utilityBill:
-            return L10n.secureIdRequestPermissionUtilityBill
+            return strings().secureIdRequestPermissionUtilityBill
         case .bankStatement:
-            return L10n.secureIdRequestPermissionBankStatement
+            return strings().secureIdRequestPermissionBankStatement
         case .rentalAgreement:
-            return L10n.secureIdRequestPermissionTenancyAgreement
+            return strings().secureIdRequestPermissionTenancyAgreement
         case .passport:
-            return L10n.secureIdRequestPermissionPassport
+            return strings().secureIdRequestPermissionPassport
         case .idCard:
-            return L10n.secureIdRequestPermissionIDCard
+            return strings().secureIdRequestPermissionIDCard
         case .driversLicense:
-            return L10n.secureIdRequestPermissionDriversLicense
+            return strings().secureIdRequestPermissionDriversLicense
         case .personalDetails:
-            return L10n.secureIdRequestPermissionPersonalDetails
+            return strings().secureIdRequestPermissionPersonalDetails
         case .internalPassport:
-            return L10n.secureIdRequestPermissionInternalPassport
+            return strings().secureIdRequestPermissionInternalPassport
         case .passportRegistration:
-            return L10n.secureIdRequestPermissionPassportRegistration
+            return strings().secureIdRequestPermissionPassportRegistration
         case .temporaryRegistration:
-            return L10n.secureIdRequestPermissionTemporaryRegistration
+            return strings().secureIdRequestPermissionTemporaryRegistration
         }
     }
     
@@ -2015,21 +2131,21 @@ extension SecureIdRequestedFormFieldValue {
     var uploadFrontTitleText: String {
         switch self {
         case .idCard:
-            return L10n.secureIdUploadFront
+            return strings().secureIdUploadFront
         case .driversLicense:
-            return L10n.secureIdUploadFront
+            return strings().secureIdUploadFront
         default:
-            return L10n.secureIdUploadMain
+            return strings().secureIdUploadMain
         }
     }
     var uploadBackTitleText: String {
         switch self {
         case .idCard:
-            return L10n.secureIdUploadReverse
+            return strings().secureIdUploadReverse
         case .driversLicense:
-            return L10n.secureIdUploadReverse
+            return strings().secureIdUploadReverse
         default:
-            return L10n.secureIdUploadMain
+            return strings().secureIdUploadMain
         }
     }
     
@@ -2067,31 +2183,31 @@ extension SecureIdRequestedFormFieldValue {
     var emptyDescription: String {
         switch self {
         case .email:
-            return L10n.secureIdRequestPermissionEmailEmpty
+            return strings().secureIdRequestPermissionEmailEmpty
         case .phone:
-            return L10n.secureIdRequestPermissionPhoneEmpty
+            return strings().secureIdRequestPermissionPhoneEmpty
         case .utilityBill:
-            return L10n.secureIdEmptyDescriptionUtilityBill
+            return strings().secureIdEmptyDescriptionUtilityBill
         case .bankStatement:
-            return L10n.secureIdEmptyDescriptionBankStatement
+            return strings().secureIdEmptyDescriptionBankStatement
         case .rentalAgreement:
-            return L10n.secureIdEmptyDescriptionTenancyAgreement
+            return strings().secureIdEmptyDescriptionTenancyAgreement
         case .passportRegistration:
-            return L10n.secureIdEmptyDescriptionPassportRegistration
+            return strings().secureIdEmptyDescriptionPassportRegistration
         case .temporaryRegistration:
-            return L10n.secureIdEmptyDescriptionTemporaryRegistration
+            return strings().secureIdEmptyDescriptionTemporaryRegistration
         case .passport:
-            return L10n.secureIdEmptyDescriptionPassport
+            return strings().secureIdEmptyDescriptionPassport
         case .driversLicense:
-            return L10n.secureIdEmptyDescriptionDriversLicense
+            return strings().secureIdEmptyDescriptionDriversLicense
         case .idCard:
-            return L10n.secureIdEmptyDescriptionIdentityCard
+            return strings().secureIdEmptyDescriptionIdentityCard
         case .internalPassport:
-            return L10n.secureIdEmptyDescriptionInternalPassport
+            return strings().secureIdEmptyDescriptionInternalPassport
         case .personalDetails:
-            return L10n.secureIdEmptyDescriptionPersonalDetails
+            return strings().secureIdEmptyDescriptionPersonalDetails
         case .address:
-            return L10n.secureIdEmptyDescriptionAddress
+            return strings().secureIdEmptyDescriptionAddress
         }
     }
     
@@ -2102,27 +2218,27 @@ extension SecureIdRequestedFormFieldValue {
         case .phone:
             return ""
         case .address:
-            return L10n.secureIdAddResidentialAddress
+            return strings().secureIdAddResidentialAddress
         case .utilityBill:
-            return L10n.secureIdAddUtilityBill
+            return strings().secureIdAddUtilityBill
         case .bankStatement:
-            return L10n.secureIdAddBankStatement
+            return strings().secureIdAddBankStatement
         case .rentalAgreement:
-            return L10n.secureIdAddTenancyAgreement
+            return strings().secureIdAddTenancyAgreement
         case .passport:
-            return L10n.secureIdAddPassport
+            return strings().secureIdAddPassport
         case .idCard:
-            return L10n.secureIdAddID
+            return strings().secureIdAddID
         case .driversLicense:
-            return L10n.secureIdAddDriverLicense
+            return strings().secureIdAddDriverLicense
         case .personalDetails:
-            return L10n.secureIdAddPersonalDetails
+            return strings().secureIdAddPersonalDetails
         case .internalPassport:
-            return L10n.secureIdAddInternalPassport
+            return strings().secureIdAddInternalPassport
         case .passportRegistration:
-            return L10n.secureIdAddPassportRegistration
+            return strings().secureIdAddPassportRegistration
         case .temporaryRegistration:
-            return L10n.secureIdAddTemporaryRegistration
+            return strings().secureIdAddTemporaryRegistration
         }
     }
     
@@ -2133,27 +2249,27 @@ extension SecureIdRequestedFormFieldValue {
         case .phone:
             return ""
         case .address:
-            return L10n.secureIdEditResidentialAddress
+            return strings().secureIdEditResidentialAddress
         case .utilityBill:
-            return L10n.secureIdEditUtilityBill
+            return strings().secureIdEditUtilityBill
         case .bankStatement:
-            return L10n.secureIdEditBankStatement
+            return strings().secureIdEditBankStatement
         case .rentalAgreement:
-            return L10n.secureIdEditTenancyAgreement
+            return strings().secureIdEditTenancyAgreement
         case .passport:
-            return L10n.secureIdEditPassport
+            return strings().secureIdEditPassport
         case .idCard:
-            return L10n.secureIdEditID
+            return strings().secureIdEditID
         case .driversLicense:
-            return L10n.secureIdEditDriverLicense
+            return strings().secureIdEditDriverLicense
         case .personalDetails:
-            return L10n.secureIdEditPersonalDetails
+            return strings().secureIdEditPersonalDetails
         case .internalPassport:
-            return L10n.secureIdEditInternalPassport
+            return strings().secureIdEditInternalPassport
         case .passportRegistration:
-            return L10n.secureIdEditPassportRegistration
+            return strings().secureIdEditPassportRegistration
         case .temporaryRegistration:
-            return L10n.secureIdEditTemporaryRegistration
+            return strings().secureIdEditTemporaryRegistration
         }
     }
 }
@@ -2308,26 +2424,26 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
             switch peer.info {
             case .broadcast:
                 if peer.flags.contains(.isCreator) && deleteGroup {
-                    text = L10n.confirmDeleteAdminedChannel
-                    okTitle = L10n.confirmDelete
+                    text = strings().confirmDeleteAdminedChannel
+                    okTitle = strings().confirmDelete
                 } else {
-                    text = L10n.peerInfoConfirmLeaveChannel
+                    text = strings().peerInfoConfirmLeaveChannel
                 }
             case .group:
                 if deleteGroup && peer.flags.contains(.isCreator) {
-                    text = L10n.peerInfoConfirmDeleteGroupConfirmation
-                    okTitle = L10n.confirmDelete
+                    text = strings().peerInfoConfirmDeleteGroupConfirmation
+                    okTitle = strings().confirmDelete
                 } else {
-                    text = L10n.confirmLeaveGroup
-                    okTitle = L10n.peerInfoConfirmLeave
+                    text = strings().confirmLeaveGroup
+                    okTitle = strings().peerInfoConfirmLeave
                 }
             }
         } else if let peer = peer as? TelegramGroup {
-            text = L10n.peerInfoConfirmDeleteChat(peer.title)
-            okTitle = L10n.confirmDelete
+            text = strings().peerInfoConfirmDeleteChat(peer.title)
+            okTitle = strings().confirmDelete
         } else {
-            text = L10n.peerInfoConfirmDeleteUserChat
-            okTitle = L10n.confirmDelete
+            text = strings().peerInfoConfirmDeleteUserChat
+            okTitle = strings().confirmDelete
         }
         
         
@@ -2365,18 +2481,18 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
         }
         
         if canRemoveGlobally {
-            thridTitle = L10n.chatMessageDeleteForMeAndPerson(peer.displayTitle)
+            thridTitle = strings().chatMessageDeleteForMeAndPerson(peer.displayTitle)
         } else if peer.isBot {
-            thridTitle = L10n.peerInfoStopBot
+            thridTitle = strings().peerInfoStopBot
         }
             
         if peer.groupAccess.isCreator, deleteGroup {
             canRemoveGlobally = true
-            thridTitle = L10n.deleteChatDeleteGroupForAll
+            thridTitle = strings().deleteChatDeleteGroupForAll
         }
 
         
-        return combineLatest(modernConfirmSignal(for: context.window, account: context.account, peerId: userId ?? peerId, information: text, okTitle: okTitle ?? L10n.alertOK, thridTitle: thridTitle, thridAutoOn: false), context.globalPeerHandler.get() |> take(1)) |> mapToSignal { result, location -> Signal<Bool, NoError> in
+        return combineLatest(modernConfirmSignal(for: context.window, account: context.account, peerId: userId ?? peerId, information: text, okTitle: okTitle ?? strings().alertOK, thridTitle: thridTitle, thridAutoOn: false), context.globalPeerHandler.get() |> take(1)) |> mapToSignal { result, location -> Signal<Bool, NoError> in
             
             context.chatUndoManager.removePeerChat(engine: context.engine, peerId: peerId, type: type, reportChatSpam: false, deleteGloballyIfPossible: deleteGroup || result == .thrid)
             if peer.isBot && result == .thrid {
@@ -2384,7 +2500,7 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
             }
 
             if location?.peerId == peerId {
-                context.sharedContext.bindings.rootNavigation().close()
+                context.bindings.rootNavigation().close()
             }
             
             return .single(true)
@@ -2394,26 +2510,26 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
 }
 
 func applyExternalProxy(_ server:ProxyServerSettings, accountManager: AccountManager<TelegramAccountManagerTypes>) {
-    var textInfo = L10n.proxyForceEnableTextIP(server.host) + "\n" + L10n.proxyForceEnableTextPort(Int(server.port))
+    var textInfo = strings().proxyForceEnableTextIP(server.host) + "\n" + strings().proxyForceEnableTextPort(Int(server.port))
     switch server.connection {
     case let .socks5(username, password):
         if let user = username {
-            textInfo += "\n" + L10n.proxyForceEnableTextUsername(user)
+            textInfo += "\n" + strings().proxyForceEnableTextUsername(user)
         }
         if let pass = password {
-            textInfo += "\n" + L10n.proxyForceEnableTextPassword(pass)
+            textInfo += "\n" + strings().proxyForceEnableTextPassword(pass)
         }
     case let .mtp(secret):
-        textInfo += "\n" + L10n.proxyForceEnableTextSecret(MTProxySecret.parseData(secret)?.serializeToString() ?? "")
+        textInfo += "\n" + strings().proxyForceEnableTextSecret(MTProxySecret.parseData(secret)?.serializeToString() ?? "")
     }
    
-    textInfo += "\n\n" + L10n.proxyForceEnableText
+    textInfo += "\n\n" + strings().proxyForceEnableText
    
     if case .mtp = server.connection {
-        textInfo += "\n\n" + L10n.proxyForceEnableMTPDesc
+        textInfo += "\n\n" + strings().proxyForceEnableMTPDesc
     }
     
-    modernConfirm(for: mainWindow, account: nil, peerId: nil, header: L10n.proxyForceEnableHeader1, information: textInfo, okTitle: L10n.proxyForceEnableOK, thridTitle: L10n.proxyForceEnableEnable, successHandler: { result in
+    modernConfirm(for: mainWindow, account: nil, peerId: nil, header: strings().proxyForceEnableHeader1, information: textInfo, okTitle: strings().proxyForceEnableOK, thridTitle: strings().proxyForceEnableEnable, successHandler: { result in
         _ = updateProxySettingsInteractively(accountManager: accountManager, { current -> ProxySettings in
             
             var current = current.withAddedServer(server)
@@ -2423,13 +2539,6 @@ func applyExternalProxy(_ server:ProxyServerSettings, accountManager: AccountMan
             return current
         }).start()
     })
-    
-//    _ = (confirmSignal(for: mainWindow, header: tr(L10n.proxyForceEnableHeader), information: textInfo, okTitle: L10n.proxyForceEnableConnect)
-//        |> filter {$0} |> map {_ in} |> mapToSignal {
-//            return updateProxySettingsInteractively(postbox: postbox, network: network, { current -> ProxySettings in
-//                return current.withAddedServer(server).withUpdatedActiveServer(server).withUpdatedEnabled(true)
-//            })
-//    }).start()
 }
 
 
@@ -2437,9 +2546,9 @@ extension SecureIdGender {
     var stringValue: String {
         switch self {
         case .female:
-            return L10n.secureIdGenderFemale
+            return strings().secureIdGenderFemale
         case .male:
-            return L10n.secureIdGenderMale
+            return strings().secureIdGenderMale
         }
     }
 }
@@ -2451,40 +2560,6 @@ extension SecureIdDate {
 }
 
 
-
-func clearCache(_ path: String, excludes: [(partial: String, complete: String)]) -> Signal<Void, NoError> {
-    return Signal { subscriber -> Disposable in
-        
-        let fileManager = FileManager.default
-        var enumerator = fileManager.enumerator(atPath: path + "/")
-        
-        while let file = enumerator?.nextObject() as? String {
-            if file != "cache" {
-                if excludes.filter ({ file.contains($0.partial.nsstring.lastPathComponent) || file.contains($0.complete.nsstring.lastPathComponent) }).isEmpty {
-                    unlink(path + "/" + file)
-                }
-            }
-        }
-        
-        var p = path.nsstring.substring(to: path.nsstring.range(of: path.nsstring.lastPathComponent).location)
-        p = p.nsstring.substring(to: p.nsstring.range(of: p.nsstring.lastPathComponent).location) + "cached/"
-        
-        enumerator = fileManager.enumerator(atPath: p)
-        
-        while let file = enumerator?.nextObject() as? String {
-            
-            
-            if excludes.filter ({ file.contains($0.partial) || file.contains($0.complete) }).isEmpty {
-                unlink(p + file)
-            }
-            //try? fileManager.removeItem(atPath: p + file)
-        }
-        
-        subscriber.putNext(Void())
-        subscriber.putCompletion()
-        return EmptyDisposable
-    } |> runOn(resourcesQueue)
-}
 
 func moveWallpaperToCache(postbox: Postbox, resource: TelegramMediaResource, reference: WallpaperReference?, settings: WallpaperSettings, isPattern: Bool) -> Signal<String, NoError> {
     let resourceData: Signal<MediaResourceData, NoError>
@@ -2525,7 +2600,7 @@ func moveWallpaperToCache(postbox: Postbox, path: String, resource: TelegramMedi
         let wallpapers = ApiEnvironment.containerURL!.appendingPathComponent("Wallpapers").path
         try? FileManager.default.createDirectory(at: URL(fileURLWithPath: wallpapers), withIntermediateDirectories: true, attributes: nil)
         
-        let out = wallpapers + "/" + resource.id.uniqueId + "\(settings.stringValue)" + ".png"
+        let out = wallpapers + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + ".png"
         
         if !FileManager.default.fileExists(atPath: out) {
             try? FileManager.default.removeItem(atPath: out)
@@ -2559,7 +2634,7 @@ extension WallpaperSettings {
 }
 
 func wallpaperPath(_ resource: TelegramMediaResource, settings: WallpaperSettings) -> String {
-    return ApiEnvironment.containerURL!.appendingPathComponent("Wallpapers").path + "/" + resource.id.uniqueId + "\(settings.stringValue)" + ".png"
+    return ApiEnvironment.containerURL!.appendingPathComponent("Wallpapers").path + "/" + resource.id.stringRepresentation + "\(settings.stringValue)" + ".png"
 }
 
 
@@ -2572,7 +2647,7 @@ func canCollagesFromUrl(_ urls:[URL]) -> Bool {
     if canCollage {
         for url in urls {
             let mime = MIMEType(url.path)
-            let attrs = Sender.fileAttributes(for: mime, path: url.path, isMedia: true)
+            let attrs = Sender.fileAttributes(for: mime, path: url.path, isMedia: true, inCollage: true)
             let isGif = attrs.contains(where: { attr -> Bool in
                 switch attr {
                 case .Animated:
@@ -2625,7 +2700,6 @@ func canCollagesFromUrl(_ urls:[URL]) -> Bool {
     if gifCount > 0 {
         return false
     }
-
     return canCollage
 }
 
@@ -2671,7 +2745,7 @@ extension AutomaticMediaDownloadSettings {
             }
         }
         
-        if let peer = messageMainPeer(message) {
+        if let peer = coreMessageMainPeer(message) {
             if let _ = message.media.first as? TelegramMediaImage {
                 return ability(categories.photo, peer)
             } else if let media = message.media.first as? TelegramMediaFile {
@@ -2710,7 +2784,7 @@ func fileExtenstion(_ file: TelegramMediaFile) -> String {
 
 func proxySettings(accountManager: AccountManager<TelegramAccountManagerTypes>) -> Signal<ProxySettings, NoError>  {
     return accountManager.sharedData(keys: [SharedDataKeys.proxySettings]) |> map { view in
-        return view.entries[SharedDataKeys.proxySettings] as? ProxySettings ?? ProxySettings.defaultSettings
+        return view.entries[SharedDataKeys.proxySettings]?.get(ProxySettings.self) ?? ProxySettings.defaultSettings
     }
 }
 
@@ -2733,7 +2807,7 @@ extension ProxySettings {
     
     func withUpdatedServer(_ current: ProxyServerSettings, with updated: ProxyServerSettings) -> ProxySettings {
         var servers = self.servers
-        if let index = servers.index(where: {$0 == current}) {
+        if let index = servers.firstIndex(where: {$0 == current}) {
             servers[index] = updated
         } else {
             servers.append(updated)
@@ -3200,13 +3274,13 @@ extension TelegramBaseTheme {
             return dayClassicPalette
         case .day:
             return whitePalette
-        case .night:
-            return darkPalette
-        case .tinted:
+        case .night, .tinted:
             return nightAccentPalette
         }
     }
 }
+
+
 extension TelegramThemeSettings {
     var palette: ColorPalette {
         return baseTheme.palette.withAccentColor(accent)
@@ -3324,28 +3398,141 @@ extension CachedPeerAutoremoveTimeout {
 
 
 
-func clearHistory(context: AccountContext, peer: Peer, mainPeer: Peer) {
-    if peer.canClearHistory && (context.peerId != peer.id && peer.canManageDestructTimer) && !peer.isSecretChat {
-        showModal(with: AutoremoveMessagesController(context: context, peer: peer), for: context.window)
-    } else if peer.canClearHistory {
-        var thridTitle: String? = nil
-        var canRemoveGlobally: Bool = false
-        if peer.id.namespace == Namespaces.Peer.CloudUser && peer.id != context.account.peerId && !peer.isBot {
-            if context.limitConfiguration.maxMessageRevokeIntervalInPrivateChats == LimitsConfiguration.timeIntervalForever {
-                canRemoveGlobally = true
-            }
+func clearHistory(context: AccountContext, peer: Peer, mainPeer: Peer, canDeleteForAll: Bool? = nil) {
+    var thridTitle: String? = nil
+    var canRemoveGlobally: Bool = canDeleteForAll ?? false
+    if peer.id.namespace == Namespaces.Peer.CloudUser && peer.id != context.account.peerId && !peer.isBot {
+        if context.limitConfiguration.maxMessageRevokeIntervalInPrivateChats == LimitsConfiguration.timeIntervalForever {
+            canRemoveGlobally = true
         }
-        if canRemoveGlobally {
-            thridTitle = L10n.chatMessageDeleteForMeAndPerson(peer.displayTitle)
-        }
-        
-        
-        let information = mainPeer is TelegramUser || mainPeer is TelegramSecretChat ? peer.id == context.peerId ? L10n.peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peer.id.namespace == Namespaces.Peer.SecretChat ? L10n.peerInfoConfirmClearHistoryUserBothSides : L10n.peerInfoConfirmClearHistoryUser : L10n.peerInfoConfirmClearHistoryGroup
-        
-        modernConfirm(for: context.window, account: context.account, peerId: mainPeer.id, information:information , okTitle: L10n.peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
-            context.chatUndoManager.clearHistoryInteractively(engine: context.engine, peerId: peer.id, type: result == .thrid ? .forEveryone : .forLocalPeer)
-        })
-    } else {
-        showModal(with: AutoremoveMessagesController(context: context, peer: peer), for: context.window)
     }
+    if canRemoveGlobally {
+        if let peer = peer as? TelegramUser {
+            thridTitle = strings().chatMessageDeleteForMeAndPerson(peer.displayTitle)
+        } else {
+            thridTitle = strings().chatMessageDeleteForAll
+        }
+    }
+    
+    
+    let information = mainPeer is TelegramUser || mainPeer is TelegramSecretChat ? peer.id == context.peerId ? strings().peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peer.id.namespace == Namespaces.Peer.SecretChat ? strings().peerInfoConfirmClearHistoryUserBothSides : strings().peerInfoConfirmClearHistoryUser : strings().peerInfoConfirmClearHistoryGroup
+    
+    modernConfirm(for: context.window, account: context.account, peerId: mainPeer.id, information:information , okTitle: strings().peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
+        context.chatUndoManager.clearHistoryInteractively(engine: context.engine, peerId: peer.id, type: result == .thrid ? .forEveryone : .forLocalPeer)
+    })
+}
+
+
+func coreMessageMainPeer(_ message: Message) -> Peer? {
+    return messageMainPeer(.init(message))?._asPeer()
+}
+
+func showProtectedCopyAlert(_ message: Message, for window: Window) {
+    if let peer = message.peers[message.id.peerId] {
+        let text: String
+        if peer.isGroup || peer.isSupergroup {
+            text = strings().copyRestrictedGroup
+        } else {
+            text = strings().copyRestrictedChannel
+        }
+        showModalText(for: window, text: text)
+    }
+}
+
+func showProtectedCopyAlert(_ peer: Peer, for window: Window) {
+    let text: String
+    if peer.isGroup || peer.isSupergroup {
+        text = strings().copyRestrictedGroup
+    } else {
+        text = strings().copyRestrictedChannel
+    }
+    showModalText(for: window, text: text)
+}
+
+extension Peer {
+    var isCopyProtected: Bool {
+        if let peer = self as? TelegramGroup {
+            return peer.flags.contains(.copyProtectionEnabled) && !peer.groupAccess.isCreator
+        } else if let peer = self as? TelegramChannel {
+            return peer.flags.contains(.copyProtectionEnabled) && !(peer.adminRights != nil || peer.groupAccess.isCreator)
+        } else {
+            return false
+        }
+    }
+}
+
+
+extension ChatListFilter {
+    var icon: CGImage {
+
+        if data.categories == .all && data.excludeMuted && !data.excludeRead {
+            return theme.icons.chat_filter_unmuted
+        } else if data.categories == .all && !data.excludeMuted && data.excludeRead {
+            return theme.icons.chat_filter_unread
+        } else if data.categories == .groups {
+            return theme.icons.chat_filter_groups
+        } else if data.categories == .channels {
+            return theme.icons.chat_filter_channels
+        } else if data.categories == .contacts {
+            return theme.icons.chat_filter_private_chats
+        } else if data.categories == .nonContacts {
+            return theme.icons.chat_filter_non_contacts
+        } else if data.categories == .bots {
+            return theme.icons.chat_filter_bots
+        }
+        return theme.icons.chat_filter_custom
+    }
+}
+
+
+extension SoftwareVideoSource {
+    func preview(size: NSSize, backingScale: Int) -> CGImage? {
+        let frameAndLoop = self.readFrame(maxPts: nil)
+        if frameAndLoop.0 == nil {
+            return nil
+        }
+        
+        guard let frame = frameAndLoop.0 else {
+            return nil
+        }
+        
+        let s:(w: Int, h: Int) = (w: Int(size.width) * backingScale, h: Int(size.height) * backingScale)
+        let bufferSize = s.w * s.h * 4
+
+        
+        let destBytesPerRow = Int(size.width) * backingScale * 4
+
+        let memoryData = malloc(bufferSize)!
+        let bytes = memoryData.assumingMemoryBound(to: UInt8.self)
+        
+        let imageBuffer = CMSampleBufferGetImageBuffer(frame.sampleBuffer)
+        CVPixelBufferLockBaseAddress(imageBuffer!, CVPixelBufferLockFlags(rawValue: 0))
+        let bytesPerRow = CVPixelBufferGetBytesPerRow(imageBuffer!)
+        let width = CVPixelBufferGetWidth(imageBuffer!)
+        let height = CVPixelBufferGetHeight(imageBuffer!)
+        let srcData = CVPixelBufferGetBaseAddress(imageBuffer!)
+        
+        var sourceBuffer = vImage_Buffer(data: srcData, height: vImagePixelCount(height), width: vImagePixelCount(width), rowBytes: bytesPerRow)
+        var destBuffer = vImage_Buffer(data: bytes, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: destBytesPerRow)
+                   
+        let _ = vImageScale_ARGB8888(&sourceBuffer, &destBuffer, nil, vImage_Flags(kvImageDoNotTile))
+        
+        CVPixelBufferUnlockBaseAddress(imageBuffer!, CVPixelBufferLockFlags(rawValue: 0))
+        
+        return generateImagePixel(size, scale: CGFloat(backingScale), pixelGenerator: { (_, pixelData) in
+            memcpy(pixelData, bytes, bufferSize)
+        })
+    }
+}
+
+
+func installAttachMenuBot(context: AccountContext, peer: Peer, completion: @escaping(Bool)->Void) {
+    confirm(for: context.window, information: strings().webAppAttachConfirm(peer.displayTitle), okTitle: strings().webAppAttachConfirmOK, successHandler: { _ in
+        _ = showModalProgress(signal: context.engine.messages.addBotToAttachMenu(botId: peer.id), for: context.window).start(next: { value in
+            if value {
+                showModalText(for: context.window, text: strings().webAppAttachSuccess(peer.displayTitle))
+                completion(value)
+            }
+        })
+    })
 }

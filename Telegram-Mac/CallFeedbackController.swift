@@ -76,23 +76,23 @@ private enum CallFeedbackReason: Int32, CaseIterable {
     var localizedString: String {
         switch self {
         case .echo:
-            return L10n.callFeedbackReasonEcho
+            return strings().callFeedbackReasonEcho
         case .noise:
-            return L10n.callFeedbackReasonNoise
+            return strings().callFeedbackReasonNoise
         case .interruption:
-            return L10n.callFeedbackReasonInterruption
+            return strings().callFeedbackReasonInterruption
         case .distortedSpeech:
-            return L10n.callFeedbackReasonDistortedSpeech
+            return strings().callFeedbackReasonDistortedSpeech
         case .silentLocal:
-            return L10n.callFeedbackReasonSilentLocal
+            return strings().callFeedbackReasonSilentLocal
         case .silentRemote:
-            return L10n.callFeedbackReasonSilentRemote
+            return strings().callFeedbackReasonSilentRemote
         case .dropped:
-            return L10n.callFeedbackReasonDropped
+            return strings().callFeedbackReasonDropped
         case .videoDistorted:
-            return L10n.callFeedbackVideoReasonDistorted
+            return strings().callFeedbackVideoReasonDistorted
         case .videoLowQuality:
-            return L10n.callFeedbackVideoReasonLowQuality
+            return strings().callFeedbackVideoReasonLowQuality
         }
     }
 }
@@ -136,7 +136,7 @@ private func callFeedbackControllerEntries(state: CallFeedbackState, isVideo: Bo
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.callFeedbackWhatWentWrong), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().callFeedbackWhatWentWrong), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
     let reasons = CallFeedbackReason.allCases.filter { value in
@@ -157,18 +157,18 @@ private func callFeedbackControllerEntries(state: CallFeedbackState, isVideo: Bo
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.comment), error: nil, identifier: _id_comment, mode: .plain, data: .init(viewType: .singleItem, canMakeTransformations: false), placeholder: nil, inputPlaceholder: L10n.callFeedbackAddComment, filter: { $0 }, limit: 255))
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.comment), error: nil, identifier: _id_comment, mode: .plain, data: .init(viewType: .singleItem, canMakeTransformations: false), placeholder: nil, inputPlaceholder: strings().callFeedbackAddComment, filter: { $0 }, limit: 255))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_logs, data: .init(name: L10n.callFeedbackIncludeLogs, color: theme.colors.text, type: .switchable(state.includeLogs), viewType: .singleItem, action: {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_logs, data: .init(name: strings().callFeedbackIncludeLogs, color: theme.colors.text, type: .switchable(state.includeLogs), viewType: .singleItem, action: {
         arguments.toggleIncludeLogs(!state.includeLogs)
     })))
     index += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(L10n.callFeedbackIncludeLogsInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().callFeedbackIncludeLogsInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
@@ -215,7 +215,7 @@ func CallFeedbackController(context: AccountContext, callId: CallId, starsCount:
     
     var close: (()->Void)? = nil
     
-    let modalInteractions = ModalInteractions(acceptTitle: L10n.modalSend, accept: { [weak controller] in
+    let modalInteractions = ModalInteractions(acceptTitle: strings().modalSend, accept: { [weak controller] in
         controller?.validateInputValues()
         close?()
     }, height: 50, singleButton: true)

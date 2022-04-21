@@ -9,6 +9,7 @@
 import Foundation
 import TGUIKit
 import SwiftSignalKit
+import ColorPalette
 
 private func generatePeerControl(_ icon: CGImage, background: NSColor) -> CGImage {
     return generateImage(NSMakeSize(28, 28), contextGenerator: { size, ctx in
@@ -24,19 +25,19 @@ private func generatePeerControl(_ icon: CGImage, background: NSColor) -> CGImag
 }
 
 struct GroupCallTheme {
-    static let membersColor = NSColor(hexString: "#333333")!
-    static let windowBackground = NSColor(hexString: "#212121")!
-    static let grayStatusColor = NSColor(srgbRed: 133 / 255, green: 133 / 255, blue: 133 / 255, alpha: 1)
-    static let blueStatusColor = NSColor(srgbRed: 38 / 255, green: 122 / 255, blue: 255 / 255, alpha: 1)
-    static let greenStatusColor = NSColor(hexString: "#34C759")!
-    static let memberSeparatorColor = NSColor(srgbRed: 58 / 255, green: 58 / 255, blue: 58 / 255, alpha: 1)
-    static let speakActiveColor = NSColor(hexString: "#34C759")!
-    static let speakInactiveColor = NSColor(srgbRed: 38 / 255, green: 122 / 255, blue: 255 / 255, alpha: 1)
-    static let speakLockedColor = NSColor(hexString: "#FF5257")!
-    static let speakDisabledColor = NSColor(hexString: "#333333")!
+    static let membersColor = nightAccentPalette.background //NSColor(hexString: "#333333")!
+    static let windowBackground = nightAccentPalette.listBackground //NSColor(hexString: "#212121")!
+    static let grayStatusColor = nightAccentPalette.grayText //NSColor(srgbRed: 133 / 255, green: 133 / 255, blue: 133 / 255, alpha: 1)
+    static let blueStatusColor = nightAccentPalette.accent //NSColor(srgbRed: 38 / 255, green: 122 / 255, blue: 255 / 255, alpha: 1)
+    static let greenStatusColor = nightAccentPalette.greenUI //NSColor(hexString: "#34C759")!
+    static let memberSeparatorColor = nightAccentPalette.border // NSColor(srgbRed: 58 / 255, green: 58 / 255, blue: 58 / 255, alpha: 1)
+    static let speakActiveColor = nightAccentPalette.greenUI //NSColor(hexString: "#34C759")!
+    static let speakInactiveColor = nightAccentPalette.accent // NSColor(srgbRed: 38 / 255, green: 122 / 255, blue: 255 / 255, alpha: 1)
+    static let speakLockedColor = nightAccentPalette.redUI //NSColor(hexString: "#FF5257")!
+    static let speakDisabledColor = nightAccentPalette.grayBackground //NSColor(hexString: "#333333")!
     static let titleColor = NSColor.white
-    static let declineColor = NSColor(hexString: "#FF3B30")!.withAlphaComponent(0.3)
-    static let settingsColor = NSColor(hexString: "#333333")!
+    static let declineColor = nightAccentPalette.redUI.withAlphaComponent(0.3) //NSColor(hexString: "#FF3B30")
+    static let settingsColor = nightAccentPalette.grayBackground //NSColor(hexString: "#333333")!
     
     
     static let purple = NSColor(rgb: 0x3252ef)
@@ -162,7 +163,7 @@ struct GroupCallTheme {
         return NSMakeSize(380, 600)
     }
     static var minFullScreenSize:NSSize {
-        return NSMakeSize(fullScreenThreshold, minSize.height)
+        return NSMakeSize(380, 380)
     }
     
     private static let switchAppearance = SwitchViewAppearance(backgroundColor: GroupCallTheme.membersColor, stateOnColor: GroupCallTheme.blueStatusColor, stateOffColor: GroupCallTheme.grayStatusColor, disabledColor: GroupCallTheme.grayStatusColor.withAlphaComponent(0.5), borderColor: GroupCallTheme.memberSeparatorColor)
@@ -193,8 +194,8 @@ final class GroupCallWindow : Window {
     
     var navigation: NavigationViewController?
     
-    init() {
-        let size = GroupCallTheme.minSize
+    init(isStream: Bool) {
+        let size = isStream ? GroupCallTheme.minFullScreenSize : GroupCallTheme.minSize
         var rect: NSRect = .init(origin: .init(x: 100, y: 100), size: size)
         if let screen = NSScreen.main {
             let x = floorToScreenPixels(System.backingScale, (screen.frame.width - size.width) / 2)
@@ -204,7 +205,7 @@ final class GroupCallWindow : Window {
 
         //
         super.init(contentRect: rect, styleMask: [.fullSizeContentView, .borderless, .miniaturizable, .closable, .titled, .resizable], backing: .buffered, defer: true)
-        self.minSize = GroupCallTheme.minSize
+        self.minSize = isStream ? GroupCallTheme.minFullScreenSize : GroupCallTheme.minSize
         self.name = "GroupCallWindow5"
         self.acceptFirstMouse = false
         self.titlebarAppearsTransparent = true
@@ -214,10 +215,18 @@ final class GroupCallWindow : Window {
         self.isMovableByWindowBackground = true
         self.level = .normal
         self.appearance = darkPalette.appearance
+        
+        
+       
 //        self.toolbar = NSToolbar(identifier: "window")
 //        self.toolbar?.showsBaselineSeparator = false
         
         initSaver()
+        
+        if self.frame.width < rect.width || self.frame.height < rect.height {
+            self.setFrame(rect, display: true)
+        }
+        
     }
     
     
@@ -260,7 +269,7 @@ final class GroupCallContext {
     init(call: PresentationGroupCall, peerMemberContextsManager: PeerChannelMemberCategoriesContextsManager) {
         self.call = call
         self.peerMemberContextsManager = peerMemberContextsManager
-        self.window = GroupCallWindow()
+        self.window = GroupCallWindow(isStream: call.isStream)
         self.controller = GroupCallUIController(.init(call: call, peerMemberContextsManager: peerMemberContextsManager), size: window.frame.size)
         self.navigation = MajorNavigationController(GroupCallUIController.self, controller, self.window)
         self.navigation._frameRect = NSMakeRect(0, 0, window.frame.width, window.frame.height)

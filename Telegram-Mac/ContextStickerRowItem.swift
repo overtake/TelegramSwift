@@ -53,7 +53,9 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                 if point.x > subview.frame.minX && point.x < subview.frame.maxX {
                     let file = item.result.results[i].file
                     let reference = file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)
-                    if file.isAnimatedSticker {
+                    if file.isVideoSticker && !file.isWebm {
+                        return (.file(reference, GifPreviewModalView.self), subview)
+                    } else if file.isAnimatedSticker || file.isWebm {
                         return (.file(reference, AnimatedStickerPreviewModalView.self), subview)
                     } else {
                         return (.file(reference, StickerPreviewModalView.self), subview)
@@ -65,26 +67,31 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
         return nil
     }
     
-    override func menu(for event: NSEvent) -> NSMenu? {
-        let menu = NSMenu()
+    override func showContextMenu(_ event: NSEvent) {
+        let menu = ContextMenu()
         if let item = item as? ContextStickerRowItem {
             
             let reference = fileAtPoint(convert(event.locationInWindow, from: nil))
             
             if let reference = reference?.0.fileReference?.media.stickerReference {
-                menu.addItem(ContextMenuItem(L10n.contextViewStickerSet, handler: {
-                    showModal(with: StickerPackPreviewModalController(item.context, peerId: item.chatInteraction.peerId, reference: reference), for: mainWindow)
-                }))
+                menu.addItem(ContextMenuItem(strings().contextViewStickerSet, handler: {
+                    showModal(with: StickerPackPreviewModalController(item.context, peerId: item.chatInteraction.peerId, reference: reference), for: item.context.window)
+                }, itemImage: MenuAnimation.menu_view_sticker_set.value))
             }
             if let file = reference?.0.fileReference?.media {
-                menu.addItem(ContextMenuItem(L10n.chatSendWithoutSound, handler: { [weak item] in
-                    item?.chatInteraction.sendAppFile(file, true, nil)
+                menu.addItem(ContextMenuItem(strings().chatSendWithoutSound, handler: { [weak item] in
+                    item?.chatInteraction.sendAppFile(file, true, nil, false)
                     item?.chatInteraction.clearInput()
-                }))
+                }, itemImage: MenuAnimation.menu_mute.value))
             }
-          
+            if let file = reference?.0.fileReference?.media {
+                menu.addItem(ContextMenuItem(strings().chatSendScheduledMessage, handler: { [weak item] in
+                    item?.chatInteraction.sendAppFile(file, false, nil, true)
+                    item?.chatInteraction.clearInput()
+                }, itemImage: MenuAnimation.menu_schedule_message.value))
+            }
         }
-        return menu
+        AppMenu.show(menu: menu, event: event, for: self)
     }
     
     override func set(item: TableRowItem, animated: Bool) {
@@ -92,12 +99,19 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
         
         if let item = item as? ContextStickerRowItem {
             
+
+            
             while subviews.count > item.result.entries.count {
                 subviews.last?.removeFromSuperview()
             }
             while subviews.count < item.result.entries.count {
-                addSubview(Control())
+                let control = Control()
+                addSubview(control)
+                let content = StickerMediaContentView(frame: .zero)
+                content.userInteractionEnabled = false
+                control.addSubview(content)
             }
+            
             
             
             for i in 0 ..< item.result.entries.count {
@@ -128,67 +142,22 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                         if let slowMode = item?.chatInteraction.presentation.slowMode, slowMode.hasLocked {
                             showSlowModeTimeoutTooltip(slowMode, for: control)
                         } else {
-                            item?.chatInteraction.sendAppFile(data.file, false, nil)
+                            item?.chatInteraction.sendAppFile(data.file, false, nil, false)
                             item?.chatInteraction.clearInput()
                         }
                     }, for: .Click)
                     
                     container.set(handler: { [weak self, weak item] (control) in
                         if let window = self?.window as? Window, let item = item, let table = item.table {
-                            _ = startModalPreviewHandle(table, window: window, context: item.context)
+                            startModalPreviewHandle(table, window: window, context: item.context)
                         }
                     }, for: .LongMouseDown)
                     
                    
-                    if data.file.isAnimatedSticker {
-                        let view: MediaAnimatedStickerView
-                        if container.subviews.isEmpty {
-                            view = MediaAnimatedStickerView(frame: .zero)
-                            container.addSubview(view)
-                        } else {
-                            let temp = container.subviews.first as? MediaAnimatedStickerView
-                            if temp == nil {
-                                view = MediaAnimatedStickerView(frame: .zero)
-                                container.subviews.removeFirst()
-                                container.addSubview(view, positioned: .below, relativeTo: container.subviews.first)
-                            } else {
-                                view = temp!
-                            }
-                        }
-                        let size = NSMakeSize(round(item.result.sizes[i].width - 8), round(item.result.sizes[i].height - 8))
-                        view.update(with: data.file, size: size, context: item.context, parent: nil, table: item.table, parameters: nil, animated: false, positionFlags: nil, approximateSynchronousValue: false)
-                        view.userInteractionEnabled = false
-                    } else {
-                        let file = data.file
-                        let imageSize = file.dimensions?.size.aspectFitted(NSMakeSize(item.result.sizes[i].width - 8, item.result.sizes[i].height - 8)) ?? item.result.sizes[i]
-                        let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
-                        
-                        let view: TransformImageView
-                        if container.subviews.isEmpty {
-                            view = TransformImageView()
-                            container.addSubview(view)
-                        } else {
-                            let temp = container.subviews.first as? TransformImageView
-                            if temp == nil {
-                                view = TransformImageView()
-                                container.subviews.removeFirst()
-                                container.addSubview(view, positioned: .below, relativeTo: container.subviews.first)
-                            } else {
-                                view = temp!
-                            }
-                        }
-                        
-                        view.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: false)
-                        view.setSignal( chatMessageSticker(postbox: item.context.account.postbox, file: stickerPackFileReference(data.file), small: false, scale: backingScaleFactor, fetched: true), cacheImage: { [weak file] result in
-                            if let file = file {
-                                cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
-                            }
-                        })
-                        
-                        view.set(arguments: arguments)
-                        
-                        view.setFrameSize(imageSize)
-                    }
+                    let view: StickerMediaContentView = container.subviews[0] as! StickerMediaContentView
+            
+                    let size = NSMakeSize(round(item.result.sizes[i].width - 8), round(item.result.sizes[i].height - 8))
+                    view.update(with: data.file, size: size, context: item.context, parent: nil, table: item.table, parameters: nil, animated: false, positionFlags: nil, approximateSynchronousValue: false)
                     
                     container.setFrameSize(NSMakeSize(item.result.sizes[i].width - 4, item.result.sizes[i].height - 4))
                 default:

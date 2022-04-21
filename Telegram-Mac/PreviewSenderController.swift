@@ -9,7 +9,7 @@
 import Cocoa
 import TGUIKit
 import TelegramCore
-
+import TGModernGrowingTextView
 import SwiftSignalKit
 import Postbox
 
@@ -124,13 +124,13 @@ fileprivate class PreviewSenderView : Control {
         if urlsCount > 1, let _ = slowMode  {
             self.fileButton.isEnabled = false
             self.photoButton.isEnabled = false
-            self.photoButton.appTooltip = L10n.slowModePreviewSenderFileTooltip
-            self.fileButton.appTooltip = L10n.slowModePreviewSenderFileTooltip
+            self.photoButton.appTooltip = strings().slowModePreviewSenderFileTooltip
+            self.fileButton.appTooltip = strings().slowModePreviewSenderFileTooltip
         } else {
             self.fileButton.isEnabled = true
             self.photoButton.isEnabled = true
-            self.photoButton.appTooltip = L10n.previewSenderMediaTooltip
-            self.fileButton.appTooltip = L10n.previewSenderFileTooltip
+            self.photoButton.appTooltip = strings().previewSenderMediaTooltip
+            self.fileButton.appTooltip = strings().previewSenderFileTooltip
         }
     }
     
@@ -148,10 +148,10 @@ fileprivate class PreviewSenderView : Control {
         _ = closeButton.sizeToFit()
         
         
-        photoButton.appTooltip = L10n.previewSenderMediaTooltip
-        fileButton.appTooltip = L10n.previewSenderFileTooltip
-        collageButton.appTooltip = L10n.previewSenderCollageTooltip
-        archiveButton.appTooltip = L10n.previewSenderArchiveTooltip
+        photoButton.appTooltip = strings().previewSenderMediaTooltip
+        fileButton.appTooltip = strings().previewSenderFileTooltip
+        collageButton.appTooltip = strings().previewSenderCollageTooltip
+        archiveButton.appTooltip = strings().previewSenderArchiveTooltip
 
         photoButton.set(image: ControlStyle(highlightColor: theme.colors.grayIcon).highlight(image: theme.icons.previewSenderPhoto), for: .Normal)
         _ = photoButton.sizeToFit()
@@ -240,47 +240,45 @@ fileprivate class PreviewSenderView : Control {
             self?.controller?.send(false)
         }, for: .SingleClick)
         
-        let handler:(Control)->Void = { [weak self] control in
+
+        
+        sendButton.contextMenu = { [weak self] in
             if let controller = self?.controller, let peer = controller.chatInteraction.peer {
-                
                 let chatInteraction = controller.chatInteraction
                 let context = chatInteraction.context
                 if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
-                    return
+                    return nil
                 }
-                
-                var items:[SPopoverItem] = []
+                var items:[ContextMenuItem] = []
                 
                 if peer.id != chatInteraction.context.account.peerId {
-                    items.append(SPopoverItem(L10n.chatSendWithoutSound, { [weak controller] in
+                    items.append(ContextMenuItem(strings().chatSendWithoutSound, handler: { [weak controller] in
                         controller?.send(true)
-                    }))
+                    }, itemImage: MenuAnimation.menu_mute.value))
                 }
                 switch chatInteraction.mode {
                 case .history:
                     if !peer.isSecretChat {
-                        items.append(SPopoverItem(peer.id == chatInteraction.context.peerId ? L10n.chatSendSetReminder : L10n.chatSendScheduledMessage, {
+                        items.append(ContextMenuItem(peer.id == chatInteraction.context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage, handler: {
                             showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak controller] date in
                                 controller?.send(false, atDate: date)
                             }), for: context.window)
-                        }))
+                        }, itemImage: MenuAnimation.menu_schedule_message.value))
                     }
-                case .scheduled:
-                    break
-                case .replyThread:
-                    break
-                case .pinned, .preview:
+                default:
                     break
                 }
                 if !items.isEmpty {
-                    showPopover(for: control, with: SPopoverViewController(items: items))
+                   let menu = ContextMenu()
+                    for item in items {
+                        menu.addItem(item)
+                    }
+                    return menu
                 }
             }
+            return nil
         }
         
-        sendButton.set(handler: handler, for: .RightDown)
-        sendButton.set(handler: handler, for: .LongMouseDown)
-
         textView.setFrameSize(NSMakeSize(280, 34))
 
         addSubview(tableView)
@@ -671,7 +669,7 @@ private final class PreviewMedia : Comparable, Identifiable {
         return PreviewMedia(container: container, index: index, media: media)
     }
     
-    func generateMedia(account: Account, isSecretRelated: Bool) -> Media {
+    func generateMedia(account: Account, isSecretRelated: Bool, isCollage: Bool) -> Media {
         
         if let media = self.media {
             return media
@@ -686,7 +684,7 @@ private final class PreviewMedia : Comparable, Identifiable {
             }
         }
         
-        _ = Sender.generateMedia(for: container, account: account, isSecretRelated: isSecretRelated).start(next: { media, path in
+        _ = Sender.generateMedia(for: container, account: account, isSecretRelated: isSecretRelated, isCollage: isCollage).start(next: { media, path in
             generated = media
             semaphore.signal()
         })
@@ -711,9 +709,9 @@ private func previewMedias(containers:[MediaSenderContainer], savedState: [Previ
 }
 
 
-private func prepareMedias(left: [PreviewMedia], right: [PreviewMedia], isSecretRelated: Bool, account: Account) -> UpdateTransition<Media> {
+private func prepareMedias(left: [PreviewMedia], right: [PreviewMedia], isSecretRelated: Bool, isCollage: Bool, account: Account) -> UpdateTransition<Media> {
     let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right, { item in
-        return item.generateMedia(account: account, isSecretRelated: isSecretRelated)
+        return item.generateMedia(account: account, isSecretRelated: isSecretRelated, isCollage: isCollage)
     })
     return UpdateTransition(deleted: removed, inserted: inserted, updated: updated)
 }
@@ -816,7 +814,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         if let types = pasteboard.types, types.contains(.kFilenames) {
             let list = pasteboard.propertyList(forType: .kFilenames) as? [String]
             if let list = list {
-                return [DragItem(title: L10n.previewDraggingAddItemsCountable(list.count), desc: "", handler: { [weak self] in
+                return [DragItem(title: strings().previewDraggingAddItemsCountable(list.count), desc: "", handler: { [weak self] in
                     self?.insertAdditionUrls?(list.map({URL(fileURLWithPath: $0)}))
                     
                 })]
@@ -840,7 +838,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         let currentText = self.genericView.textView.string()
         let basicText = self.temporaryInputState?.inputText ?? ""
         if (self.temporaryInputState == nil && !currentText.isEmpty) || (basicText != currentText) {
-            confirm(for: context.window, header: L10n.mediaSenderDiscardChangesHeader, information: L10n.mediaSenderDiscardChangesText, okTitle: L10n.mediaSenderDiscardChangesOK, successHandler: { [weak self] _ in
+            confirm(for: context.window, header: strings().mediaSenderDiscardChangesHeader, information: strings().mediaSenderDiscardChangesText, okTitle: strings().mediaSenderDiscardChangesOK, successHandler: { [weak self] _ in
                 self?.closeModal()
             })
         } else {
@@ -856,7 +854,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         
         let text = self.genericView.textView.string().trimmed
         if text.length > ChatPresentationInterfaceState.maxShortInput {
-            alert(for: chatInteraction.context.window, info: L10n.chatInputErrorMessageTooLongCountable(text.length - Int(ChatPresentationInterfaceState.maxShortInput)))
+            alert(for: chatInteraction.context.window, info: strings().chatInputErrorMessageTooLongCountable(text.length - Int(ChatPresentationInterfaceState.maxShortInput)))
             return
         }
         
@@ -884,15 +882,15 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     }
     
     private var inputPlaceholder: String {
-        var placeholder: String = L10n.previewSenderCommentPlaceholder
+        var placeholder: String = strings().previewSenderCommentPlaceholder
         if self.genericView.tableView.count == 1 {
             if let item = self.genericView.tableView.firstItem {
                 if let item = item as? MediaPreviewRowItem {
                     if item.media.canHaveCaption {
-                        placeholder = L10n.previewSenderCaptionPlaceholder
+                        placeholder = strings().previewSenderCaptionPlaceholder
                     }
                 } else if item is MediaGroupPreviewRowItem {
-                    placeholder = L10n.previewSenderCaptionPlaceholder
+                    placeholder = strings().previewSenderCaptionPlaceholder
                 }
             }
         }
@@ -996,7 +994,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             
             return (previewMedias(containers: containers, savedState: savedStateMedias.with { $0[state]}), urls, state)
         } |> map { previews, urls, state in
-            return (prepareMedias(left: previousMedias.swap(previews), right: previews, isSecretRelated: isSecretRelated, account: context.account), urls, state, previews)
+            return (prepareMedias(left: previousMedias.swap(previews), right: previews, isSecretRelated: isSecretRelated, isCollage: state.isCollage, account: context.account), urls, state, previews)
         }
 
         actionsDisposable.add(urlsTransition.start(next: { transition, urls, state, previews in
@@ -1094,7 +1092,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         
         var canCollage: Bool = canCollagesFromUrl(self.urls)
         let options = takeSenderOptions(for: self.urls)
-        let mediaState:PreviewSendingState.State = asMedia ? .media : .file
+        let mediaState:PreviewSendingState.State = asMedia && options == [.media] ? .media : .file
         switch mediaState {
         case .media:
             canCollage = canCollage && options == [.media]
@@ -1145,8 +1143,8 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
 
             if let slowMode = slowMode, slowMode.hasLocked {
                 self.genericView.textView.shake()
-            } else if self.inputPlaceholder != L10n.previewSenderCaptionPlaceholder && slowMode != nil && attributed.length > 0 {
-                tooltip(for: self.genericView.sendButton, text: L10n.slowModeMultipleError)
+            } else if self.inputPlaceholder != strings().previewSenderCaptionPlaceholder && slowMode != nil && attributed.length > 0 {
+                tooltip(for: self.genericView.sendButton, text: strings().slowModeMultipleError)
                 self.genericView.textView.setSelectedRange(NSMakeRange(0, attributed.length))
                 self.genericView.textView.shake()
             } else {
@@ -1308,7 +1306,22 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             self?.genericView.textView.boldWord()
             return .invoked
-            }, with: self, for: .B, priority: .modal, modifierFlags: [.command])
+        }, with: self, for: .B, priority: .modal, modifierFlags: [.command])
+        
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.genericView.textView.underlineWord()
+            return .invoked
+        }, with: self, for: .U, priority: .modal, modifierFlags: [.shift, .command])
+        
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.genericView.textView.spoilerWord()
+            return .invoked
+        }, with: self, for: .P, priority: .modal, modifierFlags: [.shift, .command])
+        
+        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            self?.genericView.textView.strikethroughWord()
+            return .invoked
+        }, with: self, for: .X, priority: .modal, modifierFlags: [.shift, .command])
         
         context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
@@ -1637,30 +1650,40 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         
         let result = InputPasteboardParser.canProccessPasteboard(pasteboard)
         
-        if let data = pasteboard.data(forType: .rtfd) ?? pasteboard.data(forType: .rtf) {
-            if let attributed = (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtfd], documentAttributes: nil)) ?? (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtf], documentAttributes: nil))  {
-                
-                let (attributed, attachments) = attributed.applyRtf()
-                let current = genericView.textView.attributedString().copy() as! NSAttributedString
-                let currentRange = genericView.textView.selectedRange()
-                let (attributedString, range) = current.appendAttributedString(attributed.attributedSubstring(from: NSMakeRange(0, min(Int(self.maxCharactersLimit(genericView.textView)), attributed.length))), selectedRange: currentRange)
-                let item = SimpleUndoItem(attributedString: current, be: attributedString, wasRange: currentRange, be: range)
-                genericView.textView.addSimpleItem(item)
-
-                if !attachments.isEmpty {
-                    pasteDisposable.set((prepareTextAttachments(attachments) |> deliverOnMainQueue).start(next: { [weak self] urls in
-                        if !urls.isEmpty {
-                            self?.insertAdditionUrls?(urls)
-                        }
-                    }))
-                }
-                return true
+    
+        let pasteRtf:()->Void = { [weak self] in
+            guard let `self` = self else {
+                return
             }
+            if let data = pasteboard.data(forType: .rtfd) ?? pasteboard.data(forType: .rtf) {
+                if let attributed = (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtfd], documentAttributes: nil)) ?? (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtf], documentAttributes: nil))  {
+                    
+                    let (attributed, attachments) = attributed.applyRtf()
+                    let current = self.genericView.textView.attributedString().copy() as! NSAttributedString
+                    let currentRange = self.genericView.textView.selectedRange()
+                    let (attributedString, range) = current.appendAttributedString(attributed.attributedSubstring(from: NSMakeRange(0, min(Int(self.maxCharactersLimit(self.genericView.textView)), attributed.length))), selectedRange: currentRange)
+                    let item = SimpleUndoItem(attributedString: current, be: attributedString, wasRange: currentRange, be: range)
+                    self.genericView.textView.addSimpleItem(item)
+
+                    if !attachments.isEmpty {
+                        self.pasteDisposable.set((prepareTextAttachments(attachments) |> deliverOnMainQueue).start(next: { [weak self] urls in
+                            if !urls.isEmpty {
+                                self?.insertAdditionUrls?(urls)
+                            }
+                        }))
+                    }
+                }
+            }
+            
         }
         
         if !result {
             self.pasteDisposable.set(InputPasteboardParser.getPasteboardUrls(pasteboard).start(next: { [weak self] urls in
                 self?.insertAdditionUrls?(urls)
+                
+                if urls.isEmpty {
+                    pasteRtf()
+                }
             }))
         }
         

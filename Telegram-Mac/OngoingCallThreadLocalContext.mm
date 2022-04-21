@@ -9,9 +9,7 @@
 #import "OngoingCallThreadLocalContext.h"
 #import "VoIPController.h"
 #import "VoIPServerConfig.h"
-#import "TGCallUtils.h"
 #import "TgVoip.h"
-#import "OngoingCallConnectionDescription.h"
 #define CVoIPController tgvoip::VoIPController
 
 #import <memory>

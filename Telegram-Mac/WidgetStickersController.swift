@@ -10,7 +10,7 @@ import Foundation
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
+import InAppSettings
 import Postbox
 
 private final class WidgetStickerView : Control {
@@ -33,7 +33,7 @@ private final class WidgetStickerView : Control {
                 let context = data.1
                 var file: TelegramMediaFile?
                 if let thumbnail = item.info.thumbnail {
-                    file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: item.info.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/x-tgsticker", size: nil, attributes: [.FileName(fileName: "sticker.tgs"), .Sticker(displayText: "", packReference: .id(id: item.info.id.id, accessHash: item.info.accessHash), maskData: nil)])
+                    file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: item.info.id.id), partialReference: nil, resource: thumbnail.resource, previewRepresentations: [thumbnail], videoThumbnails: [], immediateThumbnailData: nil, mimeType: item.info.flags.contains(.isVideo) ? "video/webm" : "application/x-tgsticker", size: nil, attributes: [.FileName(fileName: "sticker.tgs"), .Sticker(displayText: "", packReference: .id(id: item.info.id.id, accessHash: item.info.accessHash), maskData: nil)])
                 } else if let item = item.topItems.first {
                     file = item.file
                 }
@@ -187,7 +187,7 @@ final class WidgetStickersContainer : View {
 
         let theme = theme as! TelegramPresentationTheme
         
-        let titleLayout = TextViewLayout(.initialize(string: L10n.emptyChatStickersTrending, color: theme.colors.text, font: .medium(.text)))
+        let titleLayout = TextViewLayout(.initialize(string: strings().emptyChatStickersTrending, color: theme.colors.text, font: .medium(.text)))
         titleLayout.measure(width: frame.width - 20)
         title.update(titleLayout)
             
@@ -228,7 +228,7 @@ final class WidgetStickersController : TelegramGenericViewController<WidgetView<
 
         self.genericView.dataView = WidgetStickersContainer(frame: .zero)
         
-        self.genericView.dataView?.previewPack = { [weak self] item, f in
+        self.genericView.dataView?.previewPack = { item, f in
             showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .id(id: item.info.id.id, accessHash: item.info.accessHash), onAdd: f), for: context.window)
         }
         
@@ -252,7 +252,7 @@ final class WidgetStickersController : TelegramGenericViewController<WidgetView<
         let stickerSettings: Signal<StickerSettings, NoError> = preferencesView |> map { preferencesView in
             var stickerSettings = StickerSettings.defaultSettings
             if let view = preferencesView.views[preferencesKey] as? PreferencesView {
-                if let value = view.values[stickerSettingsKey] as? StickerSettings {
+                if let value = view.values[stickerSettingsKey]?.get(StickerSettings.self) {
                     stickerSettings = value
                 }
             }
@@ -276,7 +276,7 @@ final class WidgetStickersController : TelegramGenericViewController<WidgetView<
             let mySetsSelected = state.settings.emojiStickerSuggestionMode == .installed
             let allSetsSelected = state.settings.emojiStickerSuggestionMode == .all
 
-            buttons.append(.init(text: { L10n.emptyChatStickersNone }, selected: {
+            buttons.append(.init(text: { strings().emptyChatStickersNone }, selected: {
                 return noneSelected
             }, image: {
                 return noneSelected ? theme.icons.empty_chat_stickers_none_active: theme.icons.empty_chat_stickers_none
@@ -286,7 +286,7 @@ final class WidgetStickersController : TelegramGenericViewController<WidgetView<
                 }).start()
             }))
             
-            buttons.append(.init(text: { L10n.emptyChatStickersMySets }, selected: {
+            buttons.append(.init(text: { strings().emptyChatStickersMySets }, selected: {
                 return mySetsSelected
             }, image: {
                 return mySetsSelected ?  theme.icons.empty_chat_stickers_mysets_active : theme.icons.empty_chat_stickers_mysets
@@ -296,7 +296,7 @@ final class WidgetStickersController : TelegramGenericViewController<WidgetView<
                 }).start()
             }))
             
-            buttons.append(.init(text: { L10n.emptyChatStickersAllSets }, selected: {
+            buttons.append(.init(text: { strings().emptyChatStickersAllSets }, selected: {
                 return allSetsSelected
             }, image: {
                 return allSetsSelected ? theme.icons.empty_chat_stickers_allsets_active : theme.icons.empty_chat_stickers_allsets
@@ -306,8 +306,8 @@ final class WidgetStickersController : TelegramGenericViewController<WidgetView<
                 }).start()
             }))
             
-            let data: WidgetData = .init(title: { L10n.emptyChatStickers }, desc: { L10n.emptyChatStickersDesc }, descClick: {
-                context.sharedContext.bindings.rootNavigation().push(FeaturedStickerPacksController(context))
+            let data: WidgetData = .init(title: { strings().emptyChatStickers }, desc: { strings().emptyChatStickersDesc }, descClick: {
+                context.bindings.rootNavigation().push(FeaturedStickerPacksController(context))
             }, buttons: buttons)
             
             self?.genericView.update(data)

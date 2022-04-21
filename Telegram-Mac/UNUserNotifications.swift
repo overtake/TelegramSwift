@@ -14,6 +14,14 @@ import Postbox
 import TGUIKit
 
 
+func resourcePath(_ postbox: Postbox, _ resource: MediaResource) -> String {
+    if let resource = resource as? LocalFileReferenceMediaResource {
+        return resource.localFilePath
+    } else {
+        return postbox.mediaBox.resourcePath(resource)
+    }
+}
+
 
 class UNUserNotifications : NSObject {
     
@@ -108,11 +116,11 @@ class UNUserNotifications : NSObject {
                     self.bindings.navigateToChat(account, messageId.peerId)
                 }
                 
-                manager.window.makeKeyAndOrderFront(nil)
+                manager.find(accountId)?.window.makeKeyAndOrderFront(nil)
                 NSApp.activate(ignoringOtherApps: true)
             }
         } else {
-            manager.window.makeKeyAndOrderFront(nil)
+            manager.find(nil)?.window.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
         }
     }
@@ -129,14 +137,35 @@ class UNUserNotifications : NSObject {
     func clearNotifies(by msgIds: [MessageId]) {
        
     }
+    
+    func authorize(completion:@escaping(UNUserNotifications)->Void) {
+        
+    }
 
 }
 
 
 final class UNUserNotificationsOld : UNUserNotifications, NSUserNotificationCenterDelegate {
     func userNotificationCenter(_ center: NSUserNotificationCenter, didDeliver notification: NSUserNotification) {
-        if manager.requestUserAttention && !manager.window.isKeyWindow {
+        
+        let window: Window?
+        if let accountId = notification.userInfo?["accountId"] as? Int64 {
+            let accountId = AccountRecordId(rawValue: accountId)
+            window = manager.find(accountId)?.window
+        } else {
+            window = manager.find(nil)?.window
+        }
+        guard let window = window else {
+            return
+        }
+        if manager.requestUserAttention && !window.isKeyWindow {
             NSApp.requestUserAttention(.informationalRequest)
+        }
+        if let soundName = notification.soundName {
+            if soundName != "default" {
+                appDelegate?.playSound(soundName)
+                notification.soundName = nil
+            }
         }
     }
     
@@ -144,6 +173,8 @@ final class UNUserNotificationsOld : UNUserNotifications, NSUserNotificationCent
         super.init(manager: manager)
         NSUserNotificationCenter.default.delegate = self
     }
+    
+    
 
     @objc func userNotificationCenter(_ center: NSUserNotificationCenter, didDismissAlert notification: NSUserNotification) {
         if let userInfo = notification.userInfo, let timestamp = userInfo["timestamp"] as? Int32, let _ = userInfo["accountId"] as? Int64, let messageId = getNotificationMessageId(userInfo: userInfo, for: "reply") {
@@ -154,6 +185,9 @@ final class UNUserNotificationsOld : UNUserNotifications, NSUserNotificationCent
     
     func userNotificationCenter(_ center: NSUserNotificationCenter, didActivate notification: NSUserNotification) {
         center.removeDeliveredNotification(notification)
+    }
+    override func authorize(completion:@escaping(UNUserNotifications)->Void) {
+        completion(self)
     }
     
     override func clearNotifies(_ peerId:PeerId, maxId:MessageId) {
@@ -194,12 +228,6 @@ final class UNUserNotificationsOld : UNUserNotifications, NSUserNotificationCent
     }
     
     override func add(_ notification: NSUserNotification) -> Void {
-        if let soundName = notification.soundName {
-            if soundName != "default" {
-                appDelegate?.playSound(soundName)
-                notification.soundName = nil
-            }
-        }
         NSUserNotificationCenter.default.deliver(notification)
     }
 }
@@ -215,11 +243,11 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
     
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
 
-           //If you don't want to show notification when app is open, do something here else and make a return here.
-           //Even you you don't implement this delegate method, you will not see the notification on the specified controller. So, you have to implement this delegate and make sure the below line execute. i.e. completionHandler.
-
-           completionHandler([.alert, .sound])
-       }
+        completionHandler([.alert, .sound])
+        var bp = 0
+        bp += 1
+    }
+    
     
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
     
@@ -228,7 +256,7 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
             completionHandler()
         case UNNotificationDefaultActionIdentifier:
             activateNotification(userInfo: response.notification.request.content.userInfo)
-            if manager.requestUserAttention && !manager.window.isKeyWindow {
+            if manager.requestUserAttention {
                 NSApp.requestUserAttention(.informationalRequest)
             }
             completionHandler()
@@ -244,7 +272,7 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
     }
     
     override func registerCategories() {
-        let replyAction = UNTextInputNotificationAction(identifier: "reply", title: L10n.notificationReply, options: [], textInputButtonTitle: L10n.notificationTitleReply, textInputPlaceholder: L10n.notificationInputReply)
+        let replyAction = UNTextInputNotificationAction(identifier: "reply", title: strings().notificationReply, options: [], textInputButtonTitle: strings().notificationTitleReply, textInputPlaceholder: strings().notificationInputReply)
         
         
         let replyCategory = UNNotificationCategory(identifier: "reply", actions: [replyAction], intentIdentifiers: [], options: [])
@@ -259,6 +287,19 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
         content.title = notification.title ?? ""
         content.body = notification.informativeText ?? ""
         content.subtitle = notification.subtitle ?? ""
+        
+        if notification.hasReplyButton {
+            content.categoryIdentifier = UNNotification.replyCategory
+        }
+        
+        if let image = notification.contentImage {
+            if let attachment = UNNotificationAttachment.create(identifier: "image", image: image, options: nil) {
+                content.attachments = [attachment]
+            }
+        }
+        content.userInfo = notification.userInfo ?? [:]
+        let soundSettings = self.soundSettings
+        
         if let soundName = notification.soundName {
             if soundName == "default" {
                 content.sound = .default
@@ -272,22 +313,19 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
                     }
                 }
             }
-            
         }
-        if notification.hasActionButton {
-            content.categoryIdentifier = UNNotification.replyCategory
-        }
-        
-        if let image = notification.contentImage {
-            if let attachment = UNNotificationAttachment.create(identifier: "image", image: image, options: nil) {
-                content.attachments = [attachment]
-            }
-        }
-        content.userInfo = notification.userInfo ?? [:]
         
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: notification.identifier ?? "", content: content, trigger: nil), withCompletionHandler: { error in
-            var bp = 0
-            bp += 1
+                        
+           
+        })
+    }
+    
+    override func authorize(completion: @escaping (UNUserNotifications) -> Void) {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound], completionHandler: { [weak self] completed, error in
+            if completed, let strongSelf = self {
+                completion(strongSelf)
+            }
         })
     }
     
