@@ -13,6 +13,8 @@ import TelegramCore
 import SwiftSignalKit
 import ThemeSettings
 import ColorPalette
+import ObjcUtils
+import AppKit
 
 private final class Arguments {
     let context: AccountContext
@@ -23,7 +25,8 @@ private final class Arguments {
     let selectForeground:(TelegramMediaFile)->Void
     let set:()->Void
     let zoom:(CGFloat)->Void
-    init(context: AccountContext, dismiss:@escaping()->Void, select:@escaping(State.Item)->Void, selectOption:@escaping(State.Item.Option)->Void, selectColor:@escaping(AvatarColor)->Void, selectForeground:@escaping(TelegramMediaFile)->Void, set: @escaping()->Void, zoom:@escaping(CGFloat)->Void) {
+    let updateText:(String)->Void
+    init(context: AccountContext, dismiss:@escaping()->Void, select:@escaping(State.Item)->Void, selectOption:@escaping(State.Item.Option)->Void, selectColor:@escaping(AvatarColor)->Void, selectForeground:@escaping(TelegramMediaFile)->Void, set: @escaping()->Void, zoom:@escaping(CGFloat)->Void, updateText:@escaping(String)->Void) {
         self.context = context
         self.dismiss = dismiss
         self.select = select
@@ -32,6 +35,7 @@ private final class Arguments {
         self.selectForeground = selectForeground
         self.set = set
         self.zoom = zoom
+        self.updateText = updateText
     }
 }
 
@@ -79,6 +83,10 @@ private struct State : Equatable {
         
         var options:[Option]
         
+        var foreground: TelegramMediaFile?
+        var text: String?
+        
+        
         var selectedOption:Option {
             return self.options.first(where: { $0.selected })!
         }
@@ -103,7 +111,6 @@ private struct State : Equatable {
     var emojies:[StickerPackItem] = []
     var colors: [AvatarColor] = []
     
-    var foreground: TelegramMediaFile?
     
     var selected: Item {
         return self.items.first(where: { $0.selected })!
@@ -123,6 +130,8 @@ private final class AvatarLeftView: View {
 
         
         private var foregroundView: StickerMediaContentView? = nil
+        private var foregroundTextView: TextView? = nil
+
         private let textView = TextView()
         private var state: State?
         
@@ -168,7 +177,7 @@ private final class AvatarLeftView: View {
             let selectedBg = state.colors.first(where: { $0.selected })!
             
             self.applyBg(selectedBg, context: arguments.context, animated: animated)
-            self.applyFg(state.foreground, context: arguments.context, animated: animated)
+            self.applyFg(state.selected.foreground, text: state.selected.text, zoom: state.preview.zoom, context: arguments.context, animated: animated)
             
             slider.onUserChanged = { value in
                 arguments.zoom(CGFloat(value))
@@ -177,28 +186,104 @@ private final class AvatarLeftView: View {
         }
         
         private var previousFile: TelegramMediaFile?
+        private var previousText: String?
         
-        private func applyFg(_ file: TelegramMediaFile?, context: AccountContext, animated: Bool) {
-            if let file = file, self.previousFile != file {
-                
+        private func applyFg(_ file: TelegramMediaFile?, text: String?, zoom: CGFloat, context: AccountContext, animated: Bool) {
+            if let text = text {
                 if let view = foregroundView {
                     performSubviewRemoval(view, animated: animated, scale: true)
                     self.foregroundView = nil
                 }
-                let foregroundView = StickerMediaContentView(frame: NSMakeRect(0, 0, 120, 120))
                 
-                foregroundView.update(with: file, size: foregroundView.frame.size, context: context, parent: nil, table: nil)
+                if self.previousText != text {
+                    if let view = foregroundTextView {
+                        performSubviewRemoval(view, animated: animated, scale: true)
+                        self.foregroundTextView = nil
+                    }
+                    
+                    let foregroundTextView = TextView()
+                    foregroundTextView.userInteractionEnabled = false
+                    foregroundTextView.isSelectable = false
+                    
+                    let layout = TextViewLayout(.initialize(string: text, color: .white, font: .avatar(80)))
+                    layout.measure(width: .greatestFiniteMagnitude)
+                    foregroundTextView.update(layout)
+                    
+                    
+                    self.imageView.addSubview(foregroundTextView)
+                    foregroundTextView.center()
+                    foregroundTextView.frame.origin.y += 4
+
+                    self.foregroundTextView = foregroundTextView
+                    
+                    if animated {
+                        foregroundTextView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        foregroundTextView.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+                    }
+                }
                 
-                self.imageView.addSubview(foregroundView)
-                foregroundView.center()
+            } else {
                 
-                self.foregroundView = foregroundView
+                if let view = foregroundTextView {
+                    performSubviewRemoval(view, animated: animated, scale: true)
+                    self.foregroundTextView = nil
+                }
                 
-                if animated {
-                    foregroundView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                    foregroundView.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+                if let file = file, self.previousFile != file {
+                    
+                    if let view = foregroundView {
+                        performSubviewRemoval(view, animated: animated, scale: true)
+                        self.foregroundView = nil
+                    }
+                    let foregroundView = StickerMediaContentView(frame: NSMakeRect(0, 0, 120, 120))
+                    
+                    foregroundView.update(with: file, size: foregroundView.frame.size, context: context, parent: nil, table: nil)
+                    
+                    self.imageView.addSubview(foregroundView)
+                    foregroundView.center()
+                    
+                    self.foregroundView = foregroundView
+                    
+                    if animated {
+                        foregroundView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        foregroundView.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+                    }
+                } else if file == nil {
+                    if let view = foregroundView {
+                        performSubviewRemoval(view, animated: animated, scale: true)
+                        self.foregroundView = nil
+                    }
                 }
             }
+            
+            
+            if let foregroundView = foregroundView {
+                let zoom = mappingRange(zoom, 0, 1, 0.5, 1)
+
+                let valueScale = CGFloat(truncate(double: Double(zoom), places: 2))
+                            
+                let rect = foregroundView.bounds
+                var fr = CATransform3DIdentity
+                fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
+                fr = CATransform3DScale(fr, valueScale, valueScale, 1)
+                fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
+                foregroundView.layer?.transform = fr
+            }
+            if let foregroundView = foregroundTextView {
+                let zoom = mappingRange(zoom, 0, 1, 0.5, 1)
+
+                let valueScale = CGFloat(truncate(double: Double(zoom), places: 2))
+                            
+                let rect = foregroundView.bounds
+                var fr = CATransform3DIdentity
+                fr = CATransform3DTranslate(fr, rect.width / 2, rect.height / 2, 0)
+                fr = CATransform3DScale(fr, valueScale, valueScale, 1)
+                fr = CATransform3DTranslate(fr, -(rect.width / 2), -(rect.height / 2), 0)
+                foregroundView.layer?.transform = fr
+            }
+            
+            
+            self.previousText = text
             self.previousFile = file
         }
 
@@ -227,7 +312,7 @@ private final class AvatarLeftView: View {
                 } else {
                     current = ImageView(frame: imageView.bounds)
                     self.backgroundColorView = current
-                    self.imageView.addSubview(current, positioned: .below, relativeTo: foregroundView)
+                    self.imageView.addSubview(current, positioned: .below, relativeTo: foregroundView ?? foregroundTextView)
                 }
                 
                 current.animates = animated
@@ -264,7 +349,7 @@ private final class AvatarLeftView: View {
                 } else {
                     current = TransformImageView(frame: imageView.bounds)
                     self.backgroundPatternView = current
-                    self.imageView.addSubview(current, positioned: .below, relativeTo: foregroundView)
+                    self.imageView.addSubview(current, positioned: .below, relativeTo: foregroundView ?? foregroundTextView)
                 }
                 
                 let emptyColor: TransformImageEmptyColor
@@ -328,7 +413,12 @@ private final class AvatarLeftView: View {
             imageView.centerX(y: textView.frame.maxY + 10)
             backgroundColorView?.frame = imageView.bounds
             backgroundPatternView?.frame = imageView.bounds
-            foregroundView?.center()
+            foregroundView?.centerX()
+            if let foregroundTextView = foregroundTextView {
+                var center = foregroundTextView.centerFrame()
+                center.origin.y += 4
+                foregroundTextView.setFrameOrigin(center.origin)
+            }
             slider.setFrameSize(NSMakeSize(imageView.frame.width, 14))
             slider.centerX(y: imageView.frame.maxY + 20)
         }
@@ -615,6 +705,8 @@ private final class AvatarRightView: View {
             content.set(list: state.emojies, context: arguments.context, selectForeground: arguments.selectForeground, animated: animated)
         } else if let content = self.content.subviews.last as? Avatar_BgListView {
             content.set(colors: state.colors, context: arguments.context, select: arguments.selectColor, animated: animated)
+        } else if let content = self.content.subviews.last as? Avatar_MonogramView {
+            content.set(text: state.selected.text, updateText: arguments.updateText, animated: animated)
         }
             
     }
@@ -624,6 +716,8 @@ private final class AvatarRightView: View {
             return Avatar_BgListView.self
         } else if item.key == "e" {
             return Avatar_EmojiListView.self
+        } else if item.key == "m" {
+            return Avatar_MonogramView.self
         } else {
             return View.self
         }
@@ -637,6 +731,14 @@ private final class AvatarRightView: View {
         for subview in content.subviews {
             transition.updateFrame(view: subview, frame: content.bounds)
         }
+    }
+    
+    var firstResponder: NSResponder? {
+        if let view = self.content.subviews.last as? Avatar_MonogramView {
+            return view.firstResponder
+        }
+        return content.subviews.last
+        
     }
 }
 
@@ -676,6 +778,10 @@ private final class AvatarConstructorView : View {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    var firstResponder: NSResponder? {
+        return self.rightView.firstResponder
+    }
 }
 
 
@@ -689,10 +795,12 @@ final class AvatarConstructorController : ModalViewController {
     private let disposable = MetaDisposable()
     
     private var contextObject: AnyObject?
+    private let videoSignal:(MediaObjectToAvatar)->Void
     
-    init(_ context: AccountContext, target: Target) {
+    init(_ context: AccountContext, target: Target, videoSignal:@escaping(MediaObjectToAvatar)->Void) {
         self.context = context
         self.target = target
+        self.videoSignal = videoSignal
         super.init(frame: NSMakeRect(0, 0, 350, 450))
         bar = .init(height: 0)
     }
@@ -759,17 +867,17 @@ final class AvatarConstructorController : ModalViewController {
                     .init(key: "b", title: "Background", selected: false)
             ]))
             
-            current.items.append(.init(key: "m", index: 2, title: "Monogram", thumb: MenuAnimation.menu_create_group, selected: false, options: [
+            current.items.append(.init(key: "m", index: 2, title: "Monogram", thumb: MenuAnimation.menu_monogram, selected: false, options: [
                     .init(key: "t", title: "Text", selected: true),
                     .init(key: "b", title: "Background", selected: false)
             ]))
             
             var colors: [AvatarColor] = []
             colors.append(.init(selected: false, content: .gradient([dayClassicPalette.peerColors(0).top, dayClassicPalette.peerColors(0).bottom])))
-            colors.append(.init(selected: false, content: .gradient([dayClassicPalette.peerColors(1).top, dayClassicPalette.peerColors(1).bottom])))
+            colors.append(.init(selected: true, content: .gradient([dayClassicPalette.peerColors(1).top, dayClassicPalette.peerColors(1).bottom])))
             colors.append(.init(selected: false, content: .gradient([dayClassicPalette.peerColors(2).top, dayClassicPalette.peerColors(2).bottom])))
             colors.append(.init(selected: false, content: .gradient([dayClassicPalette.peerColors(3).top, dayClassicPalette.peerColors(3).bottom])))
-            colors.append(.init(selected: true, content: .gradient([dayClassicPalette.peerColors(4).top, dayClassicPalette.peerColors(4).bottom])))
+            colors.append(.init(selected: false, content: .gradient([dayClassicPalette.peerColors(4).top, dayClassicPalette.peerColors(4).bottom])))
             colors.append(.init(selected: false, content: .gradient([dayClassicPalette.peerColors(5).top, dayClassicPalette.peerColors(5).bottom])))
             colors.append(.init(selected: false, content: .gradient([dayClassicPalette.peerColors(6).top, dayClassicPalette.peerColors(6).bottom])))
 
@@ -791,30 +899,39 @@ final class AvatarConstructorController : ModalViewController {
             }
         } |> deliverOnMainQueue
         
-        let runConvertor:(MediaObjectToAvatar)->Void = { [weak self] convertor in
-            _ = showModalProgress(signal: convertor.start(), for: context.window).start(next: { [weak self] result in
-                switch result {
-                case let .image(image):
-                    var bp = 0
-                    bp += 1
-                case let .video(path):
-                    NSLog("path: \(path)")
-                    var bp = 0
-                    bp += 1
-                }
-                self?.contextObject = nil
-            })
-            self?.contextObject = convertor
+        let peerId: PeerId
+        switch self.target {
+        case .avatar:
+            peerId = context.peerId
+        case let .peer(pid):
+            peerId = pid
         }
         
-        actionsDisposable.add(combineLatest(wallpapers, emojies).start(next: { wallpapers, pack in
+        let _video:(MediaObjectToAvatar)->Void = { [weak self] convertor in
+            self?.videoSignal(convertor)
+            self?.close()
+        }
+        
+        let peer = context.account.postbox.loadedPeerWithId(peerId)
+        
+        actionsDisposable.add(combineLatest(wallpapers, emojies, peer).start(next: { wallpapers, pack, peer in
                         
             switch pack {
             case let .result(_, items, _):
                 updateState { current in
                     var current = current
                     current.emojies = items
-                    current.foreground = items.first(where: { $0.file.stickerText == "🤖" })?.file ?? items.first?.file
+                    var itms = current.items
+                    for i in 0 ..< itms.count {
+                        var item = itms[i]
+                        if item.key == "e" {
+                            item.foreground = items.first(where: { $0.file.stickerText == "🤖" })?.file ?? items.first?.file
+                        } else if item.key == "m" {
+                            item.text = peer.displayLetters.joined()
+                        }
+                        itms[i] = item
+                    }
+                    current.items = itms
                     current.colors += wallpapers.map { .init(selected: false, content: .wallpaper($0)) }
                     return current
                 }
@@ -871,13 +988,22 @@ final class AvatarConstructorController : ModalViewController {
         }, selectForeground: { file in
             updateState { current in
                 var current = current
-                current.foreground = file
+                var items = current.items
+                for i in 0 ..< items.count {
+                    var item = items[i]
+                    if item.selected {
+                        item.foreground = file
+                    }
+                    items[i] = item
+                }
+                current.items = items
                 return current
             }
         }, set: {
             let state = stateValue.with { $0 }
-            if let file = state.foreground {
+            if let file = state.selected.foreground {
                 let background:MediaObjectToAvatar.Object.Background
+                let source: MediaObjectToAvatar.Object.Foreground.Source
                 switch state.selectedColor.content {
                 case let .gradient(colors):
                     background = .colors(colors)
@@ -886,13 +1012,36 @@ final class AvatarConstructorController : ModalViewController {
                 case let .wallpaper(wallpaper):
                     background = .pattern(wallpaper)
                 }
-                let object = MediaObjectToAvatar(context: context, object: .init(foreground: .animated(file), background: background))
-                runConvertor(object)
+                if file.isAnimated && file.isVideo {
+                    source = .gif(file)
+                } else if file.isAnimatedSticker {
+                    source = .animated(file)
+                } else {
+                    source = .sticker(file)
+                }
+                
+                let zoom = mappingRange(state.preview.zoom, 0, 1, 0.5, 0.8)
+                let object = MediaObjectToAvatar(context: context, object: .init(foreground: .init(type: source, zoom: zoom), background: background))
+                _video(object)
             }
         }, zoom: { value in
             updateState { current in
                 var current = current
                 current.preview.zoom = value
+                return current
+            }
+        }, updateText: { text in
+            updateState { current in
+                var current = current
+                var items = current.items
+                for i in 0 ..< items.count {
+                    var item = items[i]
+                    if item.selected {
+                        item.text = text
+                    }
+                    items[i] = item
+                }
+                current.items = items
                 return current
             }
         })
@@ -906,5 +1055,12 @@ final class AvatarConstructorController : ModalViewController {
         }))
         
         readyOnce()
+    }
+    
+    override var canBecomeResponder: Bool {
+        return true
+    }
+    override func firstResponder() -> NSResponder? {
+        return genericView.firstResponder
     }
 }

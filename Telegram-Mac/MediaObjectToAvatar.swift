@@ -18,7 +18,7 @@ import Postbox
 import ColorPalette
 import ThemeSettings
 
-private func buffer(from image: CGImage, background: CGImage? = nil) -> CVPixelBuffer? {
+private func buffer(from image: CGImage, zoom: CGFloat = 1.0, background: CGImage? = nil) -> CVPixelBuffer? {
     let attrs = [kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue, kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue] as CFDictionary
     var pixelBuffer : CVPixelBuffer?
     let status = CVPixelBufferCreate(kCFAllocatorDefault, Int(image.size.width), Int(image.size.height), kCVPixelFormatType_32ARGB, attrs, &pixelBuffer)
@@ -39,25 +39,22 @@ private func buffer(from image: CGImage, background: CGImage? = nil) -> CVPixelB
         context?.draw(background, in: rect)
     }
     
-    context?.draw(image, in: rect)
+    context?.draw(image, in: rect.focus(NSMakeSize(rect.width * zoom, rect.height * zoom)))
 
-//    if bg {
-//        context?.setFillColor(.black)
-//        context?.fill(rect)
-//        context?.clip(to: rect, mask: image)
-//        context?.setFillColor(.white)
-//        context?.fill(rect)
-//    } else {
-//        context?.setFillColor(.white)
-//        context?.fill(rect)
-//        context?.draw(image, in: rect)
-//    }
-    
     CVPixelBufferUnlockBaseAddress(pixelBuffer!, CVPixelBufferLockFlags(rawValue: 0))
     return pixelBuffer
 }
 
-
+private func makeImage(from image: CGImage, zoom: CGFloat = 1.0, background: CGImage? = nil) -> CGImage {
+    let rect = CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
+    return generateImage(image.size, contextGenerator: { size, ctx in
+        ctx.clear(size.bounds)
+        if let background = background {
+            ctx.draw(background, in: rect)
+        }
+        ctx.draw(image, in: rect.focus(NSMakeSize(rect.width * zoom, rect.height * zoom)))
+    })!
+}
 
 
 private final class StickerToMp4Context {
@@ -120,11 +117,13 @@ private final class StickerToMp4Context {
     private let background: Signal<CGImage, NoError>
     private let fileReference: FileMediaReference
     private let context: AccountContext
-    init(context: AccountContext, background: Signal<CGImage, NoError>, fileReference: FileMediaReference) {
+    private let zoom: CGFloat
+    init(context: AccountContext, background: Signal<CGImage, NoError>, zoom: CGFloat, fileReference: FileMediaReference) {
         self.export = try? Export()
         self.context = context
         self.background = background
         self.fileReference = fileReference
+        self.zoom = zoom
     }
     
     deinit {
@@ -139,8 +138,6 @@ private final class StickerToMp4Context {
             |> map {
                 $0.path
             }
-        
-        
         
         dataDisposable.set(combineLatest(signal, background).start(next: { [weak self] path, background in
             if let data = try? Data(contentsOf: URL(fileURLWithPath: path)) {
@@ -160,18 +157,22 @@ private final class StickerToMp4Context {
             let url = URL(fileURLWithPath: thumbPath)
             
             let image = renderer.render(at: 0, frames: [], previousFrame: nil)?.image
-            
-            if let colorDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil), let image = image {
-                CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
-    
-                let colorQuality: Float = 0.6
-    
-                let options = NSMutableDictionary()
-                options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
-    
-                CGImageDestinationAddImage(colorDestination, image, options as CFDictionary)
-                CGImageDestinationFinalize(colorDestination)
+            if let image = image {
+                let pixelBuffer = makeImage(from: image, zoom: zoom, background: background)
+
+                if let colorDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
+                    CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
+        
+                    let colorQuality: Float = 0.6
+        
+                    let options = NSMutableDictionary()
+                    options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
+        
+                    CGImageDestinationAddImage(colorDestination, pixelBuffer, options as CFDictionary)
+                    CGImageDestinationFinalize(colorDestination)
+                }
             }
+            
     
             self.status = .initializing(thumbPath)
             export?.start()
@@ -185,7 +186,7 @@ private final class StickerToMp4Context {
             while true {
                 let image = renderer.render(at: frame, frames: [], previousFrame: nil)?.image
                 if let image = image {
-                    let pixelBuffer = buffer(from: image, background: background)!
+                    let pixelBuffer = buffer(from: image, zoom: zoom, background: background)!
         
                     let frameTime: CMTime  = CMTimeMake(value: 20, timescale: 600);
                     let lastTime: CMTime = CMTimeMake(value: Int64(index) * 20, timescale: 600);
@@ -226,170 +227,6 @@ private final class StickerToMp4Context {
 }
 
 
-private final class WebpToMp4Context {
-    private let statusPromise: ValuePromise<WebpToMp4.Status> = ValuePromise(ignoreRepeated: true)
-    
-    var statusValue: Signal<WebpToMp4.Status, NoError> {
-        return statusPromise.get()
-    }
-    
-    static let queue: Queue = Queue(name: "org.telegram.sticker-to-mp4")
-    
-    private var status: WebpToMp4.Status = .initializing("") {
-        didSet {
-            statusPromise.set(status)
-        }
-    }
-    
-    
-    final class Export {
-        private let writter: AVAssetWriter
-        private let writerInput: AVAssetWriterInput
-        private let path: String
-        private let adaptor: AVAssetWriterInputPixelBufferAdaptor
-
-        init(size: CGSize) throws {
-            self.path = NSTemporaryDirectory() + "tgs_\(arc4random()).mp4"
-            self.writter = try .init(url: URL.init(fileURLWithPath: path), fileType: .mov)
-            let settings:[String: Any] = [AVVideoWidthKey: NSNumber(value: Int(size.width)), AVVideoHeightKey: NSNumber(value: Int(size.height)), AVVideoCodecKey: AVVideoCodecH264];
-            self.writerInput = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
-            self.adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: writerInput, sourcePixelBufferAttributes: nil)
-            self.writter.add(self.writerInput)
-        }
-        
-        func start() {
-            writter.startWriting()
-            writter.startSession(atSourceTime: CMTime.zero)
-        }
-        
-        func append(_ pixelBuffer: CVPixelBuffer, time: CMTime) {
-            while !writerInput.isReadyForMoreMediaData {
-                
-            }
-            self.adaptor.append(pixelBuffer, withPresentationTime: time)
-
-        }
-        
-        func finish(_ complete:@escaping(String)->Void) {
-            writerInput.markAsFinished()
-            let path = self.path
-            writter.finishWriting {
-                complete(path)
-            }
-        }
-    }
-    
-    private var export: Export?
-    private var exportBg: Export?
-
-    private let dataDisposable = MetaDisposable()
-    private let fetchDisposable = MetaDisposable()
-    private let fileReference: FileMediaReference
-    private let context: AccountContext
-    init(context: AccountContext, fileReference: FileMediaReference) {
-        self.context = context
-        self.fileReference = fileReference
-    }
-    
-    deinit {
-        dataDisposable.dispose()
-        fetchDisposable.dispose()
-    }
-    
-    func start() {
-        let signal = context.account.postbox.mediaBox.resourceData(fileReference.media.resource)
-            |> deliverOn(WebpToMp4Context.queue)
-            |> filter { $0.complete }
-            |> map {
-                $0.path
-            }
-        
-        dataDisposable.set(signal.start(next: { [weak self] path in
-            if let data = try? Data(contentsOf: URL.init(fileURLWithPath: path)) {
-                var data = data
-                if let uncompressed = TGGUnzipData(data, 8 * 1024 * 1024) {
-                    data = uncompressed
-                }
-                if let decoder = WebPImageDecoder(data: data, scale: 1.0) {
-                    self?.process(decoder)
-                }
-            }
-        }))
-        fetchDisposable.set(freeMediaFileInteractiveFetched(context: context, fileReference: fileReference).start())
-    }
-    
-    private func process(_ decoder: WebPImageDecoder) -> Void {
-        
-        self.export = try? Export(size: CGSize(width: CGFloat(decoder.width), height: CGFloat(decoder.height)))
-        self.exportBg = try? Export(size: CGSize(width: CGFloat(decoder.width), height: CGFloat(decoder.height)))
-
-        let image = decoder.frame(at: 0, decodeForDisplay: true)?.image?._cgImage
-        
-        var randomId: Int64 = 0
-        arc4random_buf(&randomId, 8)
-        let thumbPath = NSTemporaryDirectory() + "\(randomId)"
-        let url = URL(fileURLWithPath: thumbPath)
-        
-        if let colorDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil), let image = image {
-            CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
-            
-            let colorQuality: Float = 0.6
-            
-            let options = NSMutableDictionary()
-            options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
-            
-            CGImageDestinationAddImage(colorDestination, image, options as CFDictionary)
-            CGImageDestinationFinalize(colorDestination)
-        }
-        
-        self.status = .initializing(thumbPath)
-        export?.start()
-        exportBg?.start()
-        
-        
-        let framesCount = decoder.frameCount
-        var frame: UInt = 0
-        var index: UInt = 0
-        while true {
-            guard let image = decoder.frame(at: frame, decodeForDisplay: true)?.image?._cgImage else {
-                continue
-            }
-            let pixelBuffer = buffer(from: image)!
-            let pixelBufferBg = buffer(from: image)!
-
-            let frameTime: CMTime  = CMTimeMake(value: 20, timescale: 600);
-            let lastTime: CMTime = CMTimeMake(value: Int64(index) * 20, timescale: 600);
-            var presentTime: CMTime = CMTimeAdd(lastTime, frameTime);
-            if frame == 0 {
-                presentTime = CMTimeMake(value: 0, timescale: 600);
-            }
-            
-            export?.append(pixelBuffer, time: presentTime)
-            exportBg?.append(pixelBufferBg, time: presentTime)
-            
-            frame += 1
-            index += 1
-            if frame >= framesCount {
-                break
-            }
-            self.status = .converting(min((Float(frame) / Float(framesCount)), 1))
-        }
-        
-        export?.finish({ [weak self] path in
-            self?.exportBg?.finish({ [weak self] bgPath in
-                self?.status = .done(path, bgPath)
-            })
-        })
-        
-        
-    }
-    
-    func cancel() {
-        
-    }
-        
-}
-
 
 private final class StickerToMp4 {
     
@@ -401,9 +238,9 @@ private final class StickerToMp4 {
     }
     
     private let context:QueueLocalObject<StickerToMp4Context>
-    init(context _context: AccountContext, background: Signal<CGImage, NoError>, fileReference: FileMediaReference) {
+    init(context _context: AccountContext, background: Signal<CGImage, NoError>, zoom: CGFloat, fileReference: FileMediaReference) {
         self.context = .init(queue: StickerToMp4Context.queue, generate: {
-            return StickerToMp4Context(context: _context, background: background, fileReference: fileReference)
+            return StickerToMp4Context(context: _context, background: background, zoom: zoom, fileReference: fileReference)
         })
     }
     
@@ -431,45 +268,6 @@ private final class StickerToMp4 {
     }
 }
 
-private final class WebpToMp4 {
-    
-    enum Status : Equatable {
-        case initializing(String)
-        case converting(Float)
-        case done(String, String)
-        case failed
-    }
-    
-    private let context:QueueLocalObject<WebpToMp4Context>
-    init(context _context: AccountContext, fileReference: FileMediaReference) {
-        self.context = .init(queue: WebpToMp4Context.queue, generate: {
-            return WebpToMp4Context(context: _context, fileReference: fileReference)
-        })
-    }
-    
-    
-    func start() {
-        self.context.with {
-            $0.start()
-        }
-    }
-    
-    func cancel() {
-        self.context.with {
-            $0.cancel()
-        }
-    }
-    
-    var status:Signal<Status, NoError> {
-        return self.context.signalWith { context, subscriber in
-            return context.statusValue.start(next: { next in
-                subscriber.putNext(next)
-            }, completed: {
-                subscriber.putCompletion()
-            })
-        }
-    }
-}
 
 private final class FetchVideoToFile {
     
@@ -558,28 +356,42 @@ private final class FetchStickerToImage {
 
 final class MediaObjectToAvatar {
     struct Object {
-        enum Foregroud {
-            case emoji(String)
-            case sticker(TelegramMediaFile)
-            case animated(TelegramMediaFile)
-            case gif(TelegramMediaFile)
-            case webp(TelegramMediaFile)
+        struct Foreground {
+            enum Source {
+                case emoji(String)
+                case sticker(TelegramMediaFile)
+                case animated(TelegramMediaFile)
+                case gif(TelegramMediaFile)
+            }
+            var type: Source
+            var zoom: CGFloat
         }
         enum Background {
             case colors([NSColor])
             case pattern(Wallpaper)
         }
-        let foreground: Foregroud
+        let foreground: Foreground
         let background: Background
     }
     
-    enum Result {
-        case image(NSImage)
-        case video(String)
+    struct Result {
+        enum Status {
+            case initializing(String)
+            case converting(Float)
+            case done(String, String)
+            case failed
+        }
+        enum Result {
+            case image(NSImage)
+            case video(String, String)
+        }
+        var status: Status?
+        var result: Result?
     }
     
+    
+    
     private var animated_c:StickerToMp4?
-    private var webp_c:WebpToMp4?
 
     private var fetch_v: FetchVideoToFile?
     private var fetch_i: FetchStickerToImage?
@@ -603,7 +415,6 @@ final class MediaObjectToAvatar {
         switch object.background {
         case let .colors(colors):
             background = Signal { subscriber in
-                
                 let image = generateImage(NSMakeSize(640, 640), contextGenerator: { size, ctx in
                     ctx.clear(size.bounds)
                     let imageRect = size.bounds
@@ -671,22 +482,22 @@ final class MediaObjectToAvatar {
         }
         
         let signal: Signal<Result, NoError>
-        switch object.foreground {
+        switch object.foreground.type {
         case let .animated(file):
-            let stickerToMp4: StickerToMp4 = .init(context: context, background: background, fileReference: .standalone(media: file))
+            let stickerToMp4: StickerToMp4 = .init(context: context, background: background, zoom: object.foreground.zoom, fileReference: .standalone(media: file))
             self.animated_c = stickerToMp4
             
-            signal = stickerToMp4.status |> map { value -> String? in
+            signal = stickerToMp4.status |> map { value -> Result in
                 switch value {
-                case let .done(path, _):
-                    return path
-                default:
-                    return nil
+                case let .initializing(path):
+                    return .init(status: .initializing(path), result: nil)
+                case .failed:
+                    return .init(status: nil, result: nil)
+                case let .done(path, thumb):
+                    return .init(status: .done(path, thumb), result: .video(path, thumb))
+                case let .converting(progress):
+                    return .init(status: .converting(progress), result: nil)
                 }
-            } |> filter {
-                $0 != nil
-            } |> map { value -> Result in 
-                return .video(value!)
             }
             stickerToMp4.start()
         case let .emoji(text):
@@ -702,7 +513,7 @@ final class MediaObjectToAvatar {
                     textNode.1.draw(size.bounds.focus(textNode.0.size), in: ctx, backingScaleFactor: 1.0, backgroundColor: .white)
                     
                 })!
-                subscriber.putNext(.image(NSImage(cgImage: emoji, size: emoji.size)))
+                subscriber.putNext(.init(status: nil, result: .image(NSImage(cgImage: emoji, size: emoji.size))))
                 subscriber.putCompletion()
                 
                 return EmptyDisposable
@@ -712,34 +523,17 @@ final class MediaObjectToAvatar {
             let fetch_v = FetchVideoToFile(context: context, file: file)
             self.fetch_v = fetch_v
             signal = fetch_v.status |> map {
-                .video($0)
+                .init(status: nil, result: .video($0, ""))
             }
             fetch_v.start()
         case let .sticker(file):
             let fetch_i = FetchStickerToImage(context: context, file: file)
             self.fetch_i = fetch_i
             signal = fetch_i.status |> map {
-                .image($0)
+                .init(status: nil, result: .image($0))
             }
             fetch_i.start()
-        case let .webp(file):
-            let webpToMp4: WebpToMp4 = .init(context: context, fileReference: .standalone(media: file))
-            self.webp_c = webpToMp4
-            
-            signal = webpToMp4.status |> map { value -> String? in
-                switch value {
-                case let .done(path, _):
-                    return path
-                default:
-                    return nil
-                }
-            } |> filter {
-                $0 != nil
-            } |> map { value -> Result in
-                return .video(value!)
-            }
-            webpToMp4.start()
         }
-        return signal |> take(1)
+        return signal
     }
 }

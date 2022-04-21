@@ -582,7 +582,7 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                     })
                 } else {
                     _ = showModalProgress(signal: permanentExportedInvitation(context: context, peerId: callPeerId), for: window).start(next: { [weak window] link in
-                        if let link = link, let window = window {
+                        if let link = link, let window = window, let link = link._invitation {
                             copyToClipboard(link.link)
                             showModalText(for: window, text: strings().shareLinkCopied)
                         }

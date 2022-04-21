@@ -46,17 +46,17 @@ class ExportedInvitationRowItem: GeneralRowItem {
     }
     
     fileprivate let context: AccountContext
-    fileprivate let exportedLink: ExportedInvitation?
+    fileprivate let exportedLink: _ExportedInvitation?
     fileprivate let linkTextLayout: TextViewLayout
     private let _menuItems: ()->Signal<[ContextMenuItem], NoError>
     fileprivate let shareLink:(String)->Void
     fileprivate let usageTextLayout: TextViewLayout
     fileprivate let lastPeers: [RenderedPeer]
     fileprivate let mode: Mode
-    fileprivate let open:(ExportedInvitation)->Void
+    fileprivate let open:(_ExportedInvitation)->Void
     fileprivate let copyLink:(String)->Void
     fileprivate let publicAddress: String?
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, exportedLink: ExportedInvitation?, publicAddress: String? = nil, lastPeers: [RenderedPeer], viewType: GeneralViewType, mode: Mode = .normal, menuItems: @escaping()->Signal<[ContextMenuItem], NoError>, share: @escaping(String)->Void, open: @escaping(ExportedInvitation)->Void = { _ in }, copyLink: @escaping(String)->Void = { _ in }) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, exportedLink: _ExportedInvitation?, publicAddress: String? = nil, lastPeers: [RenderedPeer], viewType: GeneralViewType, mode: Mode = .normal, menuItems: @escaping()->Signal<[ContextMenuItem], NoError>, share: @escaping(String)->Void, open: @escaping(_ExportedInvitation)->Void = { _ in }, copyLink: @escaping(String)->Void = { _ in }) {
         self.context = context
         self.exportedLink = exportedLink
         self._menuItems = menuItems

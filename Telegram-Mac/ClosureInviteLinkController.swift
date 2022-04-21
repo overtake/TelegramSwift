@@ -219,7 +219,7 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
 
 enum InviteLinkClosureMode {
     case new
-    case edit(ExportedInvitation)
+    case edit(_ExportedInvitation)
     
     var title: String {
         switch self {
