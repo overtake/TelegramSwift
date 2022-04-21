@@ -19,9 +19,9 @@ private final class ExportInvitationArguments {
     let copyLink: (String)->Void
     let shareLink: (String)->Void
     let openProfile:(PeerId)->Void
-    let revokeLink: (ExportedInvitation)->Void
-    let editLink:(ExportedInvitation)->Void
-    init(context: (joined: PeerInvitationImportersContext, requested: PeerInvitationImportersContext), accountContext: AccountContext, copyLink: @escaping(String)->Void, shareLink: @escaping(String)->Void, openProfile:@escaping(PeerId)->Void, revokeLink: @escaping(ExportedInvitation)->Void, editLink: @escaping(ExportedInvitation)->Void) {
+    let revokeLink: (_ExportedInvitation)->Void
+    let editLink:(_ExportedInvitation)->Void
+    init(context: (joined: PeerInvitationImportersContext, requested: PeerInvitationImportersContext), accountContext: AccountContext, copyLink: @escaping(String)->Void, shareLink: @escaping(String)->Void, openProfile:@escaping(PeerId)->Void, revokeLink: @escaping(_ExportedInvitation)->Void, editLink: @escaping(_ExportedInvitation)->Void) {
         self.context = context
         self.accountContext = accountContext
         self.copyLink = copyLink
@@ -44,7 +44,7 @@ private func _id_admin(_ peerId: PeerId) -> InputDataIdentifier {
 private func _id_peer(_ peerId: PeerId, joined: Bool) -> InputDataIdentifier {
     return InputDataIdentifier("_id_peer_\(peerId.toInt64())_\(joined)")
 }
-private func entries(_ state: State, admin: Peer?, invitation: ExportedInvitation, arguments: ExportInvitationArguments) -> [InputDataEntry] {
+private func entries(_ state: State, admin: Peer?, invitation: _ExportedInvitation, arguments: ExportInvitationArguments) -> [InputDataEntry] {
     
     let joinedState: PeerInvitationImportersState? = state.joinedState
     let requestedState: PeerInvitationImportersState? = state.requestedState
@@ -195,7 +195,7 @@ private func entries(_ state: State, admin: Peer?, invitation: ExportedInvitatio
     return entries
 }
 
-func ExportedInvitationController(invitation: ExportedInvitation, peerId: PeerId, accountContext: AccountContext, manager: InviteLinkPeerManager, context: (joined: PeerInvitationImportersContext, requested: PeerInvitationImportersContext)) -> InputDataModalController {
+func ExportedInvitationController(invitation: _ExportedInvitation, peerId: PeerId, accountContext: AccountContext, manager: InviteLinkPeerManager, context: (joined: PeerInvitationImportersContext, requested: PeerInvitationImportersContext)) -> InputDataModalController {
     
     let actionsDisposable = DisposableSet()
     

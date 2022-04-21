@@ -1563,18 +1563,30 @@ public final class L10n {
   public static func channelVisibilityConfirmMakePrivateGroup(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChannelVisibility.Confirm.MakePrivate.Group", p1)
   }
-  /// Participants can forward messages from this channel and save media files.
-  public static var channelVisibilityForwardingChannelInfo: String  { return L10n.tr("Localizable", "ChannelVisibility.Forwarding.ChannelInfo") }
+  /// Members will be able to copy, save and forward content from this channel.
+  public static var channelVisibilityForwardingChannelInfo1: String  { return L10n.tr("Localizable", "ChannelVisibility.Forwarding.ChannelInfo1") }
   /// Forwarding From This Channel
   public static var channelVisibilityForwardingChannelTitle: String  { return L10n.tr("Localizable", "ChannelVisibility.Forwarding.ChannelTitle") }
-  /// Restrict Forwarding
-  public static var channelVisibilityForwardingDisabled: String  { return L10n.tr("Localizable", "ChannelVisibility.Forwarding.Disabled") }
-  /// Allow Forwarding
-  public static var channelVisibilityForwardingEnabled: String  { return L10n.tr("Localizable", "ChannelVisibility.Forwarding.Enabled") }
-  /// Participants can forward messages from this group and save media files.
-  public static var channelVisibilityForwardingGroupInfo: String  { return L10n.tr("Localizable", "ChannelVisibility.Forwarding.GroupInfo") }
+  /// Members will be able to copy, save and forward content from this group.
+  public static var channelVisibilityForwardingGroupInfo1: String  { return L10n.tr("Localizable", "ChannelVisibility.Forwarding.GroupInfo1") }
   /// Forwarding From This Group
   public static var channelVisibilityForwardingGroupTitle: String  { return L10n.tr("Localizable", "ChannelVisibility.Forwarding.GroupTitle") }
+  /// Restrict Saving Content
+  public static var channelVisibilityForwardingRestrict: String  { return L10n.tr("Localizable", "ChannelVisibility.Forwarding.Restrict") }
+  /// Members won't be able to copy, save and forward content from this channel.
+  public static var channelVisibilityForwardingChannelInfo1Restrict: String  { return L10n.tr("Localizable", "ChannelVisibility.Forwarding.ChannelInfo1.Restrict") }
+  /// Members won't be able to copy, save and forward content from this group.
+  public static var channelVisibilityForwardingGroupInfo1Restrict: String  { return L10n.tr("Localizable", "ChannelVisibility.Forwarding.GroupInfo1.Restrict") }
+  /// Approve New Members
+  public static var channelVisibilityMessagesApprove: String  { return L10n.tr("Localizable", "ChannelVisibility.Messages.Approve") }
+  /// Everyone
+  public static var channelVisibilityMessagesEveryone: String  { return L10n.tr("Localizable", "ChannelVisibility.Messages.Everyone") }
+  /// Only Members
+  public static var channelVisibilityMessagesMembers: String  { return L10n.tr("Localizable", "ChannelVisibility.Messages.Members") }
+  /// WHO CAN SEND MESSAGES?
+  public static var channelVisibilityMessagesWho: String  { return L10n.tr("Localizable", "ChannelVisibility.Messages.Who") }
+  /// Turn this on if you want users to be able to send messages only after they are approved by an admin.
+  public static var channelVisibilityMessagesApproveInfo: String  { return L10n.tr("Localizable", "ChannelVisibility.Messages.Approve.Info") }
   /// Manage Links
   public static var channelVisibiltiyManageLinks: String  { return L10n.tr("Localizable", "ChannelVisibiltiy.ManageLinks") }
   /// PERMANENT LINK

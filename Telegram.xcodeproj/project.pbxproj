@@ -191,6 +191,8 @@
 		2775025327A924CE00B46456 /* ChatInlineReactionMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2775025227A924CE00B46456 /* ChatInlineReactionMenuItem.swift */; };
 		2775102125E7917F003D58D1 /* PaymentsCheckoutController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2775102025E7917F003D58D1 /* PaymentsCheckoutController.swift */; };
 		2775102525E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */; };
+		277619E3280EAA4B0090663C /* menu_monogram.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 277619E2280EAA4B0090663C /* menu_monogram.tgs */; };
+		277619E5280EAC420090663C /* Avatar_MonogramView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277619E4280EAC420090663C /* Avatar_MonogramView.swift */; };
 		277C208627A284FA0070B3BF /* GroupCallAvatarMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 277C208527A284FA0070B3BF /* GroupCallAvatarMenuItem.swift */; };
 		277C208927A2858D0070B3BF /* menu_speaker.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 277C208727A2858D0070B3BF /* menu_speaker.tgs */; };
 		277C208A27A2858D0070B3BF /* menu_speaker_muted.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 277C208827A2858D0070B3BF /* menu_speaker_muted.tgs */; };
@@ -1470,6 +1472,8 @@
 		2775025227A924CE00B46456 /* ChatInlineReactionMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInlineReactionMenuItem.swift; sourceTree = "<group>"; };
 		2775102025E7917F003D58D1 /* PaymentsCheckoutController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutController.swift; sourceTree = "<group>"; };
 		2775102425E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutPreviewRowItem.swift; sourceTree = "<group>"; };
+		277619E2280EAA4B0090663C /* menu_monogram.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_monogram.tgs; sourceTree = "<group>"; };
+		277619E4280EAC420090663C /* Avatar_MonogramView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Avatar_MonogramView.swift; sourceTree = "<group>"; };
 		277C208527A284FA0070B3BF /* GroupCallAvatarMenuItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallAvatarMenuItem.swift; sourceTree = "<group>"; };
 		277C208727A2858D0070B3BF /* menu_speaker.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_speaker.tgs; sourceTree = "<group>"; };
 		277C208827A2858D0070B3BF /* menu_speaker_muted.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_speaker_muted.tgs; sourceTree = "<group>"; };
@@ -2665,6 +2669,7 @@
 				271F78C52806FCBD0040EE8F /* AvatarConstructorController.swift */,
 				271F78C9280972800040EE8F /* Avatar_EmojiList.swift */,
 				271F78CB280985770040EE8F /* Avatar_BgListView.swift */,
+				277619E4280EAC420090663C /* Avatar_MonogramView.swift */,
 			);
 			name = avatar;
 			sourceTree = "<group>";
@@ -2884,6 +2889,7 @@
 				277C208827A2858D0070B3BF /* menu_speaker_muted.tgs */,
 				27161A9B27EC98280069BCEF /* menu_drugs.tgs */,
 				277C208727A2858D0070B3BF /* menu_speaker.tgs */,
+				277619E2280EAA4B0090663C /* menu_monogram.tgs */,
 				277C208B27A2C4C40070B3BF /* menu_sharescreen_slash.tgs */,
 				27CEA34E27B676B700472CB1 /* menu_translate.tgs */,
 				277C208C27A2C4C50070B3BF /* menu_sharescreen.tgs */,
@@ -5672,6 +5678,7 @@
 				27CB17582763738E00DD25E0 /* menu_share.tgs in Resources */,
 				27803BF227A3E944007B0FA9 /* menu_folder_sport.tgs in Resources */,
 				D07450F52340F28D00769D7F /* wallet_success_created.tgs in Resources */,
+				277619E3280EAA4B0090663C /* menu_monogram.tgs in Resources */,
 				275549102747C24F0098A3CD /* device_chrome.tgs in Resources */,
 				2773A54725FA324B00AB45E9 /* voice_chat_hand_off.tgs in Resources */,
 				277C208A27A2858D0070B3BF /* menu_speaker_muted.tgs in Resources */,
@@ -6358,6 +6365,7 @@
 				C276383E1E8A9A86009E7839 /* StickerSetTableRowItem.swift in Sources */,
 				A7393D442408F84300CE44CA /* DiceCache.swift in Sources */,
 				D0B6D72A22AA65D3008E36FE /* NewContactController.swift in Sources */,
+				277619E5280EAC420090663C /* Avatar_MonogramView.swift in Sources */,
 				D076F88F2297285F004F895A /* DiscussionSetModalController.swift in Sources */,
 				C224A72D1EB75A3100F43F3F /* ExMajorNavigationController.swift in Sources */,
 				A7831B2A24040B6B0056AEAC /* StatisticRowItem.swift in Sources */,

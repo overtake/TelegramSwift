@@ -243,6 +243,8 @@ func GroupCallPeerController(context: AccountContext, peer: Peer) -> InputDataMo
                     text = strings().joinChannelsTooMuch
                 case .tooMuchUsers:
                     text = strings().groupUsersTooMuchError
+                case .inviteRequestSent:
+                    text = strings().unknownError
                 }
                 if let window = window {
                     alert(for: window, info: text, appearance: GroupCallTheme.customTheme.appearance)

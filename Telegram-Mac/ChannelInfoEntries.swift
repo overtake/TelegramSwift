@@ -547,7 +547,7 @@ class ChannelInfoArguments : PeerInfoArguments {
                 var link: String = "https://t.me/\(peer.id.id)"
                 if let address = peer.addressName, !address.isEmpty {
                     link = "https://t.me/\(address)"
-                } else if let cachedData = peerView.cachedData as? CachedChannelData, let invitation = cachedData.exportedInvitation {
+                } else if let cachedData = peerView.cachedData as? CachedChannelData, let invitation = cachedData.exportedInvitation?._invitation {
                     link = invitation.link
                 }
                 showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: context.window)
@@ -1210,7 +1210,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
             
             if let username = channel.username, !username.isEmpty {
                 aboutBlock.append(.userName(sectionId: .desc, value: "https://t.me/\(username)", viewType: .singleItem))
-            } else if let cachedData = view.cachedData as? CachedChannelData, let invitation = cachedData.exportedInvitation {
+            } else if let cachedData = view.cachedData as? CachedChannelData, let invitation = cachedData.exportedInvitation?._invitation {
                 aboutBlock.append(.userName(sectionId: .desc, value: invitation.link, viewType: .singleItem))
             }
             

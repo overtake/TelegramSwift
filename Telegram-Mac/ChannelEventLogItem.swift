@@ -707,20 +707,28 @@ class ServiceEventLogItem: TableRowItem {
                 }
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let .deleteExportedInvitation(invite):
-                let text = strings().channelAdminLogDeletedInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
-                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+                if let invite = invite._invitation {
+                    let text = strings().channelAdminLogDeletedInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                    serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+                }
             case let .editExportedInvitation(_, invite):
-                let text = strings().channelAdminLogEditedInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
-                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+                if let invite = invite._invitation {
+                    let text = strings().channelAdminLogEditedInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                    serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+                }
             case let .revokeExportedInvitation(invite):
-                let text = strings().channelAdminLogRevokedInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
-                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+                if let invite = invite._invitation {
+                    let text = strings().channelAdminLogRevokedInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                    serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+                }
             case let .participantJoinedViaInvite(invite):
-                let text = strings().channelAdminLogJoinedViaInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
-                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+                if let invite = invite._invitation {
+                    let text = strings().channelAdminLogJoinedViaInviteLink(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""))
+                    serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+                }
             case let  .participantJoinByRequest(invite, peerId):
                 
-                if let secondary = entry.peers[peerId] {
+                if let secondary = entry.peers[peerId], let invite = invite._invitation {
                     let secondaryLink = (range: secondary.displayTitle, link: inAppLink.peerInfo(link: "", peerId: secondary.id, action:nil, openChat: true, postId: nil, callback: chatInteraction.openInfo))
                     let text = strings().channelAdminLogJoinedViaRequest(peer.displayTitle, invite.link.replacingOccurrences(of: "https://", with: ""), secondary.displayTitle)
                     serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: secondaryLink)

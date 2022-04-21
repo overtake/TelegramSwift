@@ -36,12 +36,12 @@ private let linkIcon: CGImage = NSImage(named: "Icon_ExportedInvitation_Link")!.
 
 
 class InviteLinkRowItem: GeneralRowItem {
-    private let _menuItems:(ExportedInvitation)->Signal<[ContextMenuItem], NoError>
+    private let _menuItems:(_ExportedInvitation)->Signal<[ContextMenuItem], NoError>
     
     private(set) fileprivate var frames:[NSRect] = []
-    let link:ExportedInvitation
-    fileprivate let _action:(ExportedInvitation)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, link:ExportedInvitation, action: @escaping(ExportedInvitation)->Void, menuItems:@escaping(ExportedInvitation)->Signal<[ContextMenuItem], NoError>) {
+    let link: _ExportedInvitation
+    fileprivate let _action:(_ExportedInvitation)->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, link: _ExportedInvitation, action: @escaping(_ExportedInvitation)->Void, menuItems:@escaping(_ExportedInvitation)->Signal<[ContextMenuItem], NoError>) {
         self._menuItems = menuItems
         self.link = link
         self._action = action
@@ -96,7 +96,7 @@ private final class ProgressView : View {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func update(link: ExportedInvitation) {
+    func update(link: _ExportedInvitation) {
         self.imageView.image = linkIcon
         self.imageView.sizeToFit()
 
@@ -231,7 +231,7 @@ private final class InviteLinkTokenView : Control {
         countView.setFrameOrigin(countPoint)
     }
     
-    func update(with link: ExportedInvitation, frame: NSRect, animated: Bool, showContextMenu:@escaping()->Void, action: @escaping()->Void) {
+    func update(with link: _ExportedInvitation, frame: NSRect, animated: Bool, showContextMenu:@escaping()->Void, action: @escaping()->Void) {
                 
         self.action = action
 
