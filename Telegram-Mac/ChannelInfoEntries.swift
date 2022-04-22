@@ -299,8 +299,11 @@ class ChannelInfoArguments : PeerInfoArguments {
         
         let context = self.context
         
-        let updatePhoto:(NSImage) -> Void = { image in
-            _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
+        let updatePhoto:(Signal<NSImage, NoError>) -> Void = { image in
+            let signal = image |> mapToSignal { image in
+                return putToTemp(image: image, compress: true)
+            } |> deliverOnMainQueue
+            _ = signal.start(next: { path in
                 let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
                 showModal(with: controller, for: context.window, animationType: .scaleCenter)
                 _ = controller.result.start(next: { [weak self] url, _ in
@@ -312,18 +315,60 @@ class ChannelInfoArguments : PeerInfoArguments {
             })
         }
         if let image = custom {
-            updatePhoto(image)
+            updatePhoto(.single(image))
         } else {
             let context = self.context
             let updateVideo = self.updateVideo
             
+            
+            let makeVideo:(MediaObjectToAvatar)->Void = { object in
+                
+                switch object.object.foreground.type {
+                case .emoji:
+                    updatePhoto(object.start() |> mapToSignal { value in
+                        if let result = value.result {
+                            switch result {
+                            case let .image(image):
+                                return .single(image)
+                            default:
+                                return .never()
+                            }
+                        } else {
+                            return .never()
+                        }
+                    })
+                default:
+                    let signal:Signal<VideoAvatarGeneratorState, NoError> = object.start() |> map { value in
+                        if let result = value.result {
+                            switch result {
+                            case let .video(path, thumb):
+                                return .complete(thumb: thumb, video: path, keyFrame: nil)
+                            default:
+                                return .error
+                            }
+                        } else if let status = value.status {
+                            switch status {
+                            case let .initializing(thumb):
+                                return .start(thumb: thumb)
+                            case let .converting(progress):
+                                return .progress(progress)
+                            default:
+                                return .error
+                            }
+                        } else {
+                            return .error
+                        }
+                    }
+                    updateVideo(signal)
+                }
+            }
             
             var items:[ContextMenuItem] = []
             
             items.append(.init(strings().editAvatarPhotoOrVideo, handler: {
                 filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
                     if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
-                        updatePhoto(image)
+                        updatePhoto(.single(image))
                     } else if let path = paths?.first {
                         selectVideoAvatar(context: context, path: path, localize: strings().videoAvatarChooseDescChannel, signal: { signal in
                             updateVideo(signal)
@@ -332,57 +377,10 @@ class ChannelInfoArguments : PeerInfoArguments {
                 })
             }, itemImage: MenuAnimation.menu_shared_media.value))
             
-//            items.append(.init(strings().editAvatarStickerOrGif, handler: { [weak control] in
-//                let controller = EntertainmentViewController(size: NSMakeSize(350, 350), context: context, mode: .selectAvatar)
-//                controller._frameRect = NSMakeRect(0, 0, 350, 400)
-//                
-//                let interactions = ChatInteraction(chatLocation: .peer(context.peerId), context: context)
-//                
-//                let runConvertor:(MediaObjectToAvatar)->Void = { [weak control] convertor in
-//                    _ = showModalProgress(signal: convertor.start(), for: context.window).start(next: { [weak control] result in
-//                        switch result {
-//                        case let .image(image):
-//                             updatePhoto(image)
-//                        case let .video(path):
-//                            selectVideoAvatar(context: context, path: path, localize: strings().videoAvatarChooseDescChannel, quality: AVAssetExportPresetHighestQuality, signal: { signal in
-//                                updateVideo(signal)
-//                            })
-//                        }
-//                        control?.contextObject = nil
-//                    })
-//                    control?.contextObject = convertor
-//                }
-//                
-//                interactions.sendAppFile = { file, _, _, _ in
-//                    let object: MediaObjectToAvatar.Object
-//                    if file.isAnimatedSticker {
-//                        object = .animated(file)
-//                    } else if file.isSticker {
-//                        object = .sticker(file)
-//                    } else {
-//                        object = .gif(file)
-//                    }
-//                    let convertor = MediaObjectToAvatar(context: context, object: object)
-//                    runConvertor(convertor)
-//                }
-//                interactions.sendInlineResult = { [] collection, result in
-//                    switch result {
-//                    case let .internalReference(reference):
-//                        if let file = reference.file {
-//                            let convertor = MediaObjectToAvatar(context: context, object: .gif(file))
-//                            runConvertor(convertor)
-//                        }
-//                    case .externalReference:
-//                        break
-//                    }
-//                }
-//                
-//                control?.contextObject = interactions
-//                controller.update(with: interactions)
-//                if let control = control {
-//                    showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(0, -110), static: true)
-//                }
-//            }, itemImage: MenuAnimation.menu_view_sticker_set.value))
+            items.append(.init(strings().editAvatarCustomize, handler: {
+                showModal(with: AvatarConstructorController(context, target: .avatar, videoSignal: makeVideo), for: context.window)
+            }, itemImage: MenuAnimation.menu_view_sticker_set.value))
+            
             
             if let control = control, let event = NSApp.currentEvent {
                 let menu = ContextMenu()
@@ -394,7 +392,7 @@ class ChannelInfoArguments : PeerInfoArguments {
             } else {
                 filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
                     if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
-                        updatePhoto(image)
+                        updatePhoto(.single(image))
                     } else if let path = paths?.first {
                         selectVideoAvatar(context: context, path: path, localize: strings().videoAvatarChooseDescChannel, signal: { signal in
                             updateVideo(signal)
@@ -423,7 +421,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         
         
         let updateSignal: Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> = signal
-            |> mapError { _ in return UploadPeerPhotoError.generic }
+        |> castError(UploadPeerPhotoError.self)
             |> mapToSignal { state in
                 switch state {
                 case .error:
@@ -504,7 +502,7 @@ class ChannelInfoArguments : PeerInfoArguments {
                 }
             }
             
-        } |> mapError {_ in return UploadPeerPhotoError.generic} |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
+        } |> castError(UploadPeerPhotoError.self) |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
             return context.engine.peers.updatePeerPhoto(peerId: peerId, photo: context.engine.peers.uploadedPeerPhoto(resource: resource), mapResourceToAvatarSizes: { resource, representations in
                 return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
             })

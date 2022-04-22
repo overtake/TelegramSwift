@@ -3758,7 +3758,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     case .tooMuchUsers:
                         text = strings().groupUsersTooMuchError
                     case .inviteRequestSent:
-                        fatalError()
+                        showModalText(for: context.window, text: strings().chatSendJoinRequestInfo, title: strings().chatSendJoinRequestTitle)
+                        return
                     }
                     alert(for: context.window, info: text)
                 })

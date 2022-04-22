@@ -258,6 +258,8 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
     
     let peerId = context.peerId
     
+    
+    
     let cancel = {
         photoDisposable.set(nil)
         updateState { state -> EditInfoState in
@@ -267,9 +269,11 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
 
     var close:(()->Void)? = nil
     
-    let updatePhoto:(NSImage)->Void = { image in
-       
-        _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
+    let updatePhoto:(Signal<NSImage, NoError>)->Void = { image in
+        let signal = image |> mapToSignal {
+            putToTemp(image: $0, compress: true)
+        } |> deliverOnMainQueue
+        _ = signal.start(next: { path in
             let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
             showModal(with: controller, for: context.window, animationType: .scaleCenter)
             
@@ -286,8 +290,6 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
                         return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
                     })
                 } |> deliverOnMainQueue
-            
-            
             
             photoDisposable.set(updateSignal.start(next: { status in
                 updateState { state -> EditInfoState in
@@ -316,13 +318,12 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
         })
     }
     
-    var mediaObject: MediaObjectToAvatar?
     
         
     let updateVideo:(Signal<VideoAvatarGeneratorState, NoError>) -> Void = { signal in
                         
         let updateSignal: Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> = signal
-        |> mapError { _ in return UploadPeerPhotoError.generic }
+        |> castError(UploadPeerPhotoError.self)
         |> mapToSignal { state in
             switch state {
             case .error:
@@ -375,34 +376,45 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
     
     let makeVideo:(MediaObjectToAvatar)->Void = { object in
         
-        mediaObject = object
         
-        let signal:Signal<VideoAvatarGeneratorState, NoError> = object.start() |> map { value in
-            if let result = value.result {
-                switch result {
-                case let .video(path, thumb):
-                    return .complete(thumb: thumb, video: path, keyFrame: nil)
-                default:
+        switch object.object.foreground.type {
+        case .emoji:
+            updatePhoto(object.start() |> mapToSignal { value in
+                if let result = value.result {
+                    switch result {
+                    case let .image(image):
+                        return .single(image)
+                    default:
+                        return .never()
+                    }
+                } else {
+                    return .never()
+                }
+            })
+        default:
+            let signal:Signal<VideoAvatarGeneratorState, NoError> = object.start() |> map { value in
+                if let result = value.result {
+                    switch result {
+                    case let .video(path, thumb):
+                        return .complete(thumb: thumb, video: path, keyFrame: nil)
+                    default:
+                        return .error
+                    }
+                } else if let status = value.status {
+                    switch status {
+                    case let .initializing(thumb):
+                        return .start(thumb: thumb)
+                    case let .converting(progress):
+                        return .progress(progress)
+                    default:
+                        return .error
+                    }
+                } else {
                     return .error
                 }
-            } else if let status = value.status {
-                switch status {
-                case let .initializing(thumb):
-                    return .start(thumb: thumb)
-                case let .converting(progress):
-                    return .progress(progress)
-                default:
-                    return .error
-                }
-            } else {
-                return .error
             }
-        } |> afterCompleted {
-            mediaObject = nil
-        } |> afterDisposed {
-            mediaObject = nil
+            updateVideo(signal)
         }
-        updateVideo(signal)
     }
     
     let arguments = EditInfoControllerArguments(context: context, uploadNewPhoto: { control in
@@ -412,7 +424,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
         items.append(.init(strings().editAvatarPhotoOrVideo, handler: {
             filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
                 if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
-                    updatePhoto(image)
+                    updatePhoto(.single(image))
                 } else if let path = paths?.first {
                     selectVideoAvatar(context: context, path: path, localize: strings().videoAvatarChooseDescProfile, signal: { signal in
                         updateVideo(signal)
@@ -421,7 +433,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
             })
         }, itemImage: MenuAnimation.menu_shared_media.value))
         
-        items.append(.init(strings().editAvatarStickerOrGif, handler: { [weak control] in
+        items.append(.init(strings().editAvatarCustomize, handler: {
             showModal(with: AvatarConstructorController(context, target: .avatar, videoSignal: makeVideo), for: context.window)
         }, itemImage: MenuAnimation.menu_view_sticker_set.value))
         
@@ -512,6 +524,10 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
     
     close = { [weak controller] in
         controller?.navigationController?.back()
+    }
+    
+    controller.onDeinit = {
+        cancel()
     }
     
     f(controller)

@@ -2863,6 +2863,10 @@ public final class L10n {
   public static var chatSendAsHeader: String  { return L10n.tr("Localizable", "Chat.SendAs.Header") }
   /// personal account
   public static var chatSendAsPersonalAccount: String  { return L10n.tr("Localizable", "Chat.SendAs.PersonalAccount") }
+  /// You will be able to send messages once the adminds approve your request.
+  public static var chatSendJoinRequestInfo: String  { return L10n.tr("Localizable", "Chat.SendJoinRequest.Info") }
+  /// Request to join sent
+  public static var chatSendJoinRequestTitle: String  { return L10n.tr("Localizable", "Chat.SendJoinRequest.Title") }
   /// Sorry, you can only send only 100 scheduled messages.
   public static var chatSendMessageErrorTooMuchScheduled: String  { return L10n.tr("Localizable", "Chat.SendMessageError.TooMuchScheduled") }
   /// You allowed this bot to message you when you logged in on %@
@@ -4311,6 +4315,8 @@ public final class L10n {
   public static var editAccountTitle: String  { return L10n.tr("Localizable", "EditAccount.Title") }
   /// Username
   public static var editAccountUsername: String  { return L10n.tr("Localizable", "EditAccount.Username") }
+  /// Customize...
+  public static var editAvatarCustomize: String  { return L10n.tr("Localizable", "EditAvatar.Customize") }
   /// Photo or Video
   public static var editAvatarPhotoOrVideo: String  { return L10n.tr("Localizable", "EditAvatar.PhotoOrVideo") }
   /// Sticker or GIF

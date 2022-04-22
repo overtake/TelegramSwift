@@ -262,8 +262,6 @@ private final class Avatar_BgColorListView : TableRowView {
             self.color = color
             var colors: [NSColor] = []
             switch color.content {
-            case let .solid(color):
-                colors = [color]
             case let .gradient(c):
                 colors = c
             default:
