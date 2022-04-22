@@ -139,9 +139,25 @@ private final class StickerToMp4Context {
                 $0.path
             }
         
+        let type: LottieAnimationType
+        if fileReference.media.isWebm {
+            type = .webm
+        } else if fileReference.media.mimeType == "image/webp" {
+            type = .webp
+        } else {
+            type = .lottie
+        }
+        
         dataDisposable.set(combineLatest(signal, background).start(next: { [weak self] path, background in
-            if let data = try? Data(contentsOf: URL(fileURLWithPath: path)) {
-                let animation = LottieAnimation(compressed: data, key: .init(key: .bundle(""), size: NSMakeSize(640, 640)))
+            let data: Data?
+            switch type {
+            case .webm:
+                data = path.data(using: .utf8)!
+            default:
+                data = try? Data(contentsOf: URL(fileURLWithPath: path))
+            }
+            if let data = data {
+                let animation = LottieAnimation(compressed: data, key: .init(key: .bundle(""), size: NSMakeSize(640, 640)), type: type)
                 self?.process(animation, background: background)
             }
         }))
@@ -358,7 +374,7 @@ final class MediaObjectToAvatar {
     struct Object {
         struct Foreground {
             enum Source {
-                case emoji(String)
+                case emoji(String, NSColor)
                 case sticker(TelegramMediaFile)
                 case animated(TelegramMediaFile)
                 case gif(TelegramMediaFile)
@@ -396,8 +412,11 @@ final class MediaObjectToAvatar {
     private var fetch_v: FetchVideoToFile?
     private var fetch_i: FetchStickerToImage?
 
-    private let object: Object
+    let object: Object
     private let context: AccountContext
+    
+    private var holder: MediaObjectToAvatar?
+    
     init(context: AccountContext, object: Object) {
         self.object = object
         self.context = context
@@ -409,6 +428,8 @@ final class MediaObjectToAvatar {
     }
     
     func start() -> Signal<Result, NoError> {
+        
+        holder = self
         
         let background: Signal<CGImage, NoError>
         
@@ -482,6 +503,7 @@ final class MediaObjectToAvatar {
         }
         
         let signal: Signal<Result, NoError>
+        let zoom = object.foreground.zoom
         switch object.foreground.type {
         case let .animated(file):
             let stickerToMp4: StickerToMp4 = .init(context: context, background: background, zoom: object.foreground.zoom, fileReference: .standalone(media: file))
@@ -500,24 +522,25 @@ final class MediaObjectToAvatar {
                 }
             }
             stickerToMp4.start()
-        case let .emoji(text):
-            signal = Signal { subscriber in
+        case let .emoji(text, color):
+            signal = background |> mapToSignal { value in
                 let emoji = generateImage(NSMakeSize(640, 640), scale: 1.0, rotatedContext: { size, ctx in
                     ctx.clear(size.bounds)
                     
                     ctx.setFillColor(.white)
                     ctx.fill(size.bounds)
                     
-                    let textNode = TextNode.layoutText(.initialize(string: text, color: .black, font: .normal(300)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
+                    let textNode = TextNode.layoutText(.initialize(string: text, color: color, font: .avatar(150 * zoom + 150)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
 
-                    textNode.1.draw(size.bounds.focus(textNode.0.size), in: ctx, backingScaleFactor: 1.0, backgroundColor: .white)
+                    ctx.draw(value, in: size.bounds)
+                    
+                    var rect = size.bounds.focus(textNode.0.size)
+                    rect.origin.y += 4
+                    textNode.1.draw(rect, in: ctx, backingScaleFactor: 1.0, backgroundColor: .white)
                     
                 })!
-                subscriber.putNext(.init(status: nil, result: .image(NSImage(cgImage: emoji, size: emoji.size))))
-                subscriber.putCompletion()
-                
-                return EmptyDisposable
-            } |> runOn(.concurrentDefaultQueue())
+                return .single(.init(status: nil, result: .image(NSImage(cgImage: emoji, size: emoji.size))))
+            }
             
         case let .gif(file):
             let fetch_v = FetchVideoToFile(context: context, file: file)
@@ -534,6 +557,12 @@ final class MediaObjectToAvatar {
             }
             fetch_i.start()
         }
-        return signal
+        return signal |> afterNext { [weak self] value in
+            if value.result != nil {
+                DispatchQueue.main.async {
+                    self?.holder = nil
+                }
+            }
+        }
     }
 }

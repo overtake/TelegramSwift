@@ -26,7 +26,8 @@ private final class Arguments {
     let set:()->Void
     let zoom:(CGFloat)->Void
     let updateText:(String)->Void
-    init(context: AccountContext, dismiss:@escaping()->Void, select:@escaping(State.Item)->Void, selectOption:@escaping(State.Item.Option)->Void, selectColor:@escaping(AvatarColor)->Void, selectForeground:@escaping(TelegramMediaFile)->Void, set: @escaping()->Void, zoom:@escaping(CGFloat)->Void, updateText:@escaping(String)->Void) {
+    let stickersView:()->NSView?
+    init(context: AccountContext, dismiss:@escaping()->Void, select:@escaping(State.Item)->Void, selectOption:@escaping(State.Item.Option)->Void, selectColor:@escaping(AvatarColor)->Void, selectForeground:@escaping(TelegramMediaFile)->Void, set: @escaping()->Void, zoom:@escaping(CGFloat)->Void, updateText:@escaping(String)->Void, stickersView: @escaping()->NSView?) {
         self.context = context
         self.dismiss = dismiss
         self.select = select
@@ -36,12 +37,12 @@ private final class Arguments {
         self.set = set
         self.zoom = zoom
         self.updateText = updateText
+        self.stickersView = stickersView
     }
 }
 
 struct AvatarColor : Equatable {
     enum Content : Equatable {
-        case solid(NSColor)
         case gradient([NSColor])
         case wallpaper(Wallpaper)
     }
@@ -235,7 +236,10 @@ private final class AvatarLeftView: View {
                         performSubviewRemoval(view, animated: animated, scale: true)
                         self.foregroundView = nil
                     }
-                    let foregroundView = StickerMediaContentView(frame: NSMakeRect(0, 0, 120, 120))
+                    
+                    let size = file.dimensions?.size.aspectFitted(NSMakeSize(120, 120)) ?? NSMakeSize(120, 120)
+                    
+                    let foregroundView = StickerMediaContentView(frame: size.bounds)
                     
                     foregroundView.update(with: file, size: foregroundView.frame.size, context: context, parent: nil, table: nil)
                     
@@ -291,8 +295,6 @@ private final class AvatarLeftView: View {
         private func applyBg(_ color: AvatarColor, context: AccountContext, animated: Bool) {
             var colors: [NSColor] = []
             switch color.content {
-            case let .solid(color):
-                colors = [color]
             case let .gradient(c):
                 colors = c
             default:
@@ -420,7 +422,7 @@ private final class AvatarLeftView: View {
                 foregroundTextView.setFrameOrigin(center.origin)
             }
             slider.setFrameSize(NSMakeSize(imageView.frame.width, 14))
-            slider.centerX(y: imageView.frame.maxY + 20)
+            slider.centerX(y: imageView.frame.maxY + 10)
         }
         
         required init?(coder: NSCoder) {
@@ -562,7 +564,7 @@ private final class AvatarLeftView: View {
     func updateLayout(_ size: NSSize, transition: ContainedViewLayoutTransition) {
         transition.updateFrame(view: itemsView, frame: NSMakeRect(0, 0, size.width, size.height / 2).insetBy(dx: 10, dy: 10))
         
-        transition.updateFrame(view: previewView, frame: NSMakeRect(0, size.height / 2, size.width, size.height / 2).insetBy(dx: 10, dy: 10))
+        transition.updateFrame(view: previewView, frame: NSMakeRect(0, size.height - 230, size.width, 230).insetBy(dx: 10, dy: 10))
         
         
         for (i, itemView) in itemsView.subviews.enumerated() {
@@ -636,7 +638,6 @@ private final class AvatarRightView: View {
     }
     
     private let headerView = HeaderView(frame: .zero)
-    private let bottomView = TitleButton(frame: .zero)
     private let content = View()
     
     private var state: State?
@@ -644,12 +645,8 @@ private final class AvatarRightView: View {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(headerView)
-        addSubview(bottomView)
         addSubview(content)
         content.backgroundColor = theme.colors.listBackground
-        bottomView.border = [.Top]
-        bottomView.backgroundColor = theme.colors.background
-        self.bottomView.autohighlight = false
     }
     
     required init?(coder: NSCoder) {
@@ -665,14 +662,7 @@ private final class AvatarRightView: View {
         
         self.updateContent(state, previous: self.state, arguments: arguments, animated: animated)
         
-        self.bottomView.set(text: strings().modalSet, for: .Normal)
-        self.bottomView.set(font: .medium(.text), for: .Normal)
-        self.bottomView.set(color: theme.colors.accent, for: .Normal)
-        
-        bottomView.removeAllHandlers()
-        bottomView.set(handler: { _ in
-            arguments.set()
-        }, for: .Click)
+
         
         self.state = state
         needsLayout = true
@@ -707,6 +697,8 @@ private final class AvatarRightView: View {
             content.set(colors: state.colors, context: arguments.context, select: arguments.selectColor, animated: animated)
         } else if let content = self.content.subviews.last as? Avatar_MonogramView {
             content.set(text: state.selected.text, updateText: arguments.updateText, animated: animated)
+        } else if let content = self.content.subviews.last as? Avatar_StickersList, let view = arguments.stickersView() {
+            content.set(view: view, context: arguments.context, animated: animated)
         }
             
     }
@@ -718,6 +710,8 @@ private final class AvatarRightView: View {
             return Avatar_EmojiListView.self
         } else if item.key == "m" {
             return Avatar_MonogramView.self
+        } else if item.key == "s" {
+            return Avatar_StickersList.self
         } else {
             return View.self
         }
@@ -725,8 +719,7 @@ private final class AvatarRightView: View {
     
     func updateLayout(_ size: NSSize, transition: ContainedViewLayoutTransition) {
         transition.updateFrame(view: headerView, frame: NSMakeRect(0, 0, size.width, 50))
-        transition.updateFrame(view: bottomView, frame: NSMakeRect(0, size.height - 50, size.width, 50))
-        transition.updateFrame(view: content, frame: NSMakeRect(0, headerView.frame.height, size.width, size.height - headerView.frame.height - bottomView.frame.height))
+        transition.updateFrame(view: content, frame: NSMakeRect(0, headerView.frame.height, size.width, size.height - headerView.frame.height))
         
         for subview in content.subviews {
             transition.updateFrame(view: subview, frame: content.bounds)
@@ -797,11 +790,20 @@ final class AvatarConstructorController : ModalViewController {
     private var contextObject: AnyObject?
     private let videoSignal:(MediaObjectToAvatar)->Void
     
+    private var setPressed:(()->Void)?
+    
+    private let stickersController: NStickersViewController
+    
     init(_ context: AccountContext, target: Target, videoSignal:@escaping(MediaObjectToAvatar)->Void) {
         self.context = context
         self.target = target
+        self.stickersController = .init(context)
         self.videoSignal = videoSignal
         super.init(frame: NSMakeRect(0, 0, 350, 450))
+        
+        stickersController.mode = .selectAvatar
+        
+        
         bar = .init(height: 0)
     }
     
@@ -857,12 +859,12 @@ final class AvatarConstructorController : ModalViewController {
         updateState { current in
             var current = current
             
-            current.items.append(.init(key: "e", index: 0, title: "Emoji", thumb: MenuAnimation.menu_smile, selected: true, options: [
+            current.items.append(.init(key: "e", index: 0, title: "Emoji", thumb: MenuAnimation.menu_smile, selected: false, options: [
                     .init(key: "e", title: "Emoji", selected: true),
                     .init(key: "b", title: "Background", selected: false)
             ]))
             
-            current.items.append(.init(key: "s", index: 1, title: "Sticker", thumb: MenuAnimation.menu_view_sticker_set, selected: false, options: [
+            current.items.append(.init(key: "s", index: 1, title: "Sticker", thumb: MenuAnimation.menu_view_sticker_set, selected: true, options: [
                     .init(key: "s", title: "Sticker", selected: true),
                     .init(key: "b", title: "Background", selected: false)
             ]))
@@ -888,6 +890,9 @@ final class AvatarConstructorController : ModalViewController {
         
         let emojies = context.engine.stickers.loadedStickerPack(reference: .animatedEmoji, forceActualized: false)
                 
+        let stickers = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: 1)
+
+        
         let wallpapers = telegramWallpapers(postbox: context.account.postbox, network: context.account.network) |> map { wallpapers -> [Wallpaper] in
             return wallpapers.compactMap { wallpaper in
                 switch wallpaper {
@@ -914,7 +919,7 @@ final class AvatarConstructorController : ModalViewController {
         
         let peer = context.account.postbox.loadedPeerWithId(peerId)
         
-        actionsDisposable.add(combineLatest(wallpapers, emojies, peer).start(next: { wallpapers, pack, peer in
+        actionsDisposable.add(combineLatest(wallpapers, emojies, peer, stickers).start(next: { wallpapers, pack, peer, stickers in
                         
             switch pack {
             case let .result(_, items, _):
@@ -928,6 +933,16 @@ final class AvatarConstructorController : ModalViewController {
                             item.foreground = items.first(where: { $0.file.stickerText == "🤖" })?.file ?? items.first?.file
                         } else if item.key == "m" {
                             item.text = peer.displayLetters.joined()
+                        } else if item.key == "s" {
+                            let saved = stickers.orderedItemListsViews[1].items.compactMap {
+                                $0.contents.get(SavedStickerItem.self)?.file
+                            }.first
+                            let recent = stickers.orderedItemListsViews[0].items.compactMap {
+                                $0.contents.get(RecentMediaItem.self)?.media
+                            }.first
+                            
+                            let sticker = stickers.entries.first?.item as? StickerPackItem
+                            item.foreground = saved ?? recent ?? sticker?.file
                         }
                         itms[i] = item
                     }
@@ -1001,29 +1016,31 @@ final class AvatarConstructorController : ModalViewController {
             }
         }, set: {
             let state = stateValue.with { $0 }
+            let background:MediaObjectToAvatar.Object.Background
+            let source: MediaObjectToAvatar.Object.Foreground.Source
+            switch state.selectedColor.content {
+            case let .gradient(colors):
+                background = .colors(colors)
+            case let .wallpaper(wallpaper):
+                background = .pattern(wallpaper)
+            }
             if let file = state.selected.foreground {
-                let background:MediaObjectToAvatar.Object.Background
-                let source: MediaObjectToAvatar.Object.Foreground.Source
-                switch state.selectedColor.content {
-                case let .gradient(colors):
-                    background = .colors(colors)
-                case let .solid(color):
-                    background = .colors([color])
-                case let .wallpaper(wallpaper):
-                    background = .pattern(wallpaper)
-                }
                 if file.isAnimated && file.isVideo {
                     source = .gif(file)
-                } else if file.isAnimatedSticker {
+                } else if file.isVideoSticker || file.isAnimatedSticker {
                     source = .animated(file)
                 } else {
                     source = .sticker(file)
                 }
-                
-                let zoom = mappingRange(state.preview.zoom, 0, 1, 0.5, 0.8)
-                let object = MediaObjectToAvatar(context: context, object: .init(foreground: .init(type: source, zoom: zoom), background: background))
-                _video(object)
+            } else if let text = state.selected.text {
+                source = .emoji(text, NSColor(0xffffff))
+            } else {
+                alert(for: context.window, info: strings().unknownError)
+                return
             }
+            let zoom = mappingRange(state.preview.zoom, 0, 1, 0.5, 0.8)
+            let object = MediaObjectToAvatar(context: context, object: .init(foreground: .init(type: source, zoom: zoom), background: background))
+            _video(object)
         }, zoom: { value in
             updateState { current in
                 var current = current
@@ -1044,6 +1061,8 @@ final class AvatarConstructorController : ModalViewController {
                 current.items = items
                 return current
             }
+        }, stickersView: { [weak self] in
+            return self?.stickersController.view
         })
         
         let signal = statePromise.get() |> deliverOnMainQueue
@@ -1052,9 +1071,27 @@ final class AvatarConstructorController : ModalViewController {
         
         disposable.set(signal.start(next: { [weak self] state in
             self?.genericView.updateState(state, arguments: arguments, animated: !first.swap(false))
+            self?.readyOnce()
         }))
         
-        readyOnce()
+        let interactions = EntertainmentInteractions(.stickers, peerId: context.peerId)
+
+        interactions.sendSticker = { file, _, _ in
+            arguments.selectForeground(file)
+        }
+        interactions.sendGIF = { file, _, _ in
+            arguments.selectForeground(file)
+        }
+
+        stickersController.update(with: interactions, chatInteraction: .init(chatLocation: .peer(context.peerId), context: context))
+        stickersController.loadViewIfNeeded()
+        setPressed = arguments.set
+    }
+    
+    override var modalInteractions: ModalInteractions? {
+        return .init(acceptTitle: strings().modalSet, accept: { [weak self] in
+            self?.setPressed?()
+        }, drawBorder: true, singleButton: true)
     }
     
     override var canBecomeResponder: Bool {

@@ -134,6 +134,7 @@
 		2755491D274B7FCB0098A3CD /* TextRecognizing in Frameworks */ = {isa = PBXBuildFile; productRef = 2755491C274B7FCB0098A3CD /* TextRecognizing */; };
 		275DDC3A267B8702009CF884 /* bot_menu_close.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275DDC38267B8701009CF884 /* bot_menu_close.tgs */; };
 		275DDC3B267B8702009CF884 /* bot_close_menu.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 275DDC39267B8702009CF884 /* bot_close_menu.tgs */; };
+		275F259A28127F5D00D5A5D7 /* Avatar_StickersList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 275F259928127F5D00D5A5D7 /* Avatar_StickersList.swift */; };
 		2760E55626970513001C59F8 /* WidgetStorageController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2760E55526970513001C59F8 /* WidgetStorageController.swift */; };
 		2760E55926970672001C59F8 /* WidgetButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2760E55826970672001C59F8 /* WidgetButton.swift */; };
 		2760E55B269706D7001C59F8 /* WidgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2760E55A269706D7001C59F8 /* WidgetView.swift */; };
@@ -1406,6 +1407,7 @@
 		2755491B274B7B3C0098A3CD /* TextRecognizing */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TextRecognizing; path = packages/TextRecognizing; sourceTree = "<group>"; };
 		275DDC38267B8701009CF884 /* bot_menu_close.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bot_menu_close.tgs; sourceTree = "<group>"; };
 		275DDC39267B8702009CF884 /* bot_close_menu.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = bot_close_menu.tgs; sourceTree = "<group>"; };
+		275F259928127F5D00D5A5D7 /* Avatar_StickersList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Avatar_StickersList.swift; sourceTree = "<group>"; };
 		275FD30D266A20FC008EBC99 /* GroupCallTileRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallTileRowItem.swift; sourceTree = "<group>"; };
 		2760E55526970513001C59F8 /* WidgetStorageController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStorageController.swift; sourceTree = "<group>"; };
 		2760E55826970672001C59F8 /* WidgetButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetButton.swift; sourceTree = "<group>"; };
@@ -2670,6 +2672,7 @@
 				271F78C9280972800040EE8F /* Avatar_EmojiList.swift */,
 				271F78CB280985770040EE8F /* Avatar_BgListView.swift */,
 				277619E4280EAC420090663C /* Avatar_MonogramView.swift */,
+				275F259928127F5D00D5A5D7 /* Avatar_StickersList.swift */,
 			);
 			name = avatar;
 			sourceTree = "<group>";
@@ -6001,6 +6004,7 @@
 				27A69759273D084E00B33415 /* GroupCallWindow.swift in Sources */,
 				27A6975A273D085000B33415 /* PresentationGroupCall.swift in Sources */,
 				9F27EFF920C6B8EE00682B76 /* PassportController.swift in Sources */,
+				275F259A28127F5D00D5A5D7 /* Avatar_StickersList.swift in Sources */,
 				C23BC37C1E9B8F6F00D79F92 /* AddContactTableItem.swift in Sources */,
 				C248BD221E705B62004B9106 /* PrivacyAndSecurityViewController.swift in Sources */,
 				C250B0211DB67DA6004E9FBE /* WPContentView.swift in Sources */,
