@@ -13,6 +13,8 @@
 		270202C3261B3D3100CFCE6D /* CurrencyUITextFieldDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270202C2261B3D3100CFCE6D /* CurrencyUITextFieldDelegate.swift */; };
 		270202C6261B3D7C00CFCE6D /* UITextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270202C5261B3D7C00CFCE6D /* UITextField.swift */; };
 		2703405028212EE700D0156C /* ReactionCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2703404F28212EE700D0156C /* ReactionCarouselView.swift */; };
+		270340602823D45300D0156C /* PremiumLimitController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2703405F2823D45300D0156C /* PremiumLimitController.swift */; };
+		270340622823FE5200D0156C /* PremiumLimitConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270340612823FE5200D0156C /* PremiumLimitConfig.swift */; };
 		270A262A269D8F1000B31B2B /* WidgetStickersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270A2629269D8F1000B31B2B /* WidgetStickersController.swift */; };
 		270E2B4B2609F95D00B0738C /* playlist_play_pause.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */; };
 		270E2B4E2609FDBB00B0738C /* playlist_pause_play.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */; };
@@ -1290,6 +1292,8 @@
 		270202C2261B3D3100CFCE6D /* CurrencyUITextFieldDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CurrencyUITextFieldDelegate.swift; sourceTree = "<group>"; };
 		270202C5261B3D7C00CFCE6D /* UITextField.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UITextField.swift; sourceTree = "<group>"; };
 		2703404F28212EE700D0156C /* ReactionCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionCarouselView.swift; sourceTree = "<group>"; };
+		2703405F2823D45300D0156C /* PremiumLimitController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumLimitController.swift; sourceTree = "<group>"; };
+		270340612823FE5200D0156C /* PremiumLimitConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumLimitConfig.swift; sourceTree = "<group>"; };
 		270A2629269D8F1000B31B2B /* WidgetStickersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStickersController.swift; sourceTree = "<group>"; };
 		270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playlist_play_pause.tgs; sourceTree = "<group>"; };
 		270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playlist_pause_play.tgs; sourceTree = "<group>"; };
@@ -2697,6 +2701,8 @@
 				27361ED3282122C700808241 /* StickerPremiumHolderView.swift */,
 				27361ED52821234200808241 /* PremiumReactionsModal.swift */,
 				2703404F28212EE700D0156C /* ReactionCarouselView.swift */,
+				2703405F2823D45300D0156C /* PremiumLimitController.swift */,
+				270340612823FE5200D0156C /* PremiumLimitConfig.swift */,
 			);
 			name = premium;
 			sourceTree = "<group>";
@@ -6286,6 +6292,7 @@
 				C28BAB271DF980DE0027CE3A /* AudioRecorder.swift in Sources */,
 				2775102525E79233003D58D1 /* PaymentsCheckoutPreviewRowItem.swift in Sources */,
 				C248BD291E706DDA004B9106 /* RecentSessionRowItem.swift in Sources */,
+				270340622823FE5200D0156C /* PremiumLimitConfig.swift in Sources */,
 				A778DC2A23C75F1100DD307B /* Confetti.swift in Sources */,
 				C2B9BE891EFC5E7000D6B96F /* Appearance.swift in Sources */,
 				C29F4C781F45FBFF00DBFC00 /* InstantPageSlideshowItem.swift in Sources */,
@@ -6532,6 +6539,7 @@
 				C275932E1DF6E1CE00A0807A /* AboutModalController.swift in Sources */,
 				9F1C279321D38A96003CD033 /* InstantPageScrollableItem.swift in Sources */,
 				279A1E2825E945A2007D48E7 /* PaymentsReceiptController.swift in Sources */,
+				270340602823D45300D0156C /* PremiumLimitController.swift in Sources */,
 				C2271F591D9D46CA00424F7B /* ShortPeerRowView.swift in Sources */,
 				D0530D4224E69459003273BC /* CallTooltipView.swift in Sources */,
 				C251FB4C1FEDCC750035E5D7 /* ChatPresentationUtils.swift in Sources */,

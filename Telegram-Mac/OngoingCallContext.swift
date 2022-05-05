@@ -18,11 +18,7 @@ import TelegramVoip
 
 
 private let debugUseLegacyVersionForReflectors: Bool = {
-    #if DEBUG
-    return true
-    #else
-    return false
-    #endif
+   return false
 }()
 
 
