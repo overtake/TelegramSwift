@@ -29,12 +29,29 @@ final class ContextAddReactionsListView : View  {
         private let stateDisposable = MetaDisposable()
         private var selectAnimationData: Data?
         private var currentKey: String?
+        
+        private let premium: ImageView?
+
+        
         required init(frame frameRect: NSRect, context: AccountContext, reaction: AvailableReactions.Reaction, add: @escaping(String)->Void) {
             self.reaction = reaction
             self.context = context
+            if reaction.isPremium, !context.isPremium {
+                self.premium = ImageView()
+                self.premium?.image = theme.icons.premium_reaction_lock
+                self.premium?.setFrameSize(imageView.frame.size)
+            } else {
+                self.premium = nil
+            }
             super.init(frame: frameRect)
             addSubview(imageView)
             addSubview(player)
+            if let premium = premium {
+                addSubview(premium)
+            }
+            self.imageView.isHidden = premium != nil
+            self.player.isHidden = premium != nil
+
             let signal = context.account.postbox.mediaBox.resourceData(reaction.selectAnimation.resource, attemptSynchronously: true)
             |> filter {
                 $0.complete
@@ -90,7 +107,7 @@ final class ContextAddReactionsListView : View  {
                 }, itemImage: MenuAnimation.menu_add_to_favorites.value))
                 return menu
             }
-            
+
         }
         
         private func apply(_ data: Data, key: String, policy: LottiePlayPolicy) {
@@ -113,6 +130,10 @@ final class ContextAddReactionsListView : View  {
         func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
             transition.updateFrame(view: player, frame: self.focus(player.frame.size))
             transition.updateFrame(view: imageView, frame: self.focus(imageView.frame.size))
+            
+            if let premium = premium {
+                transition.updateFrame(view: premium, frame: self.focus(premium.frame.size))
+            }
         }
         private var previous: ControlState = .Normal
         override func stateDidUpdate(_ state: ControlState) {
@@ -374,8 +395,18 @@ final class AddReactionManager : NSObject, Notifable {
             private let disposable = MetaDisposable()
             let reaction: AvailableReactions.Reaction
             private let stateDisposable = MetaDisposable()
+            
+            private let premium: ImageView?
+            
             required init(frame frameRect: NSRect, context: AccountContext, reaction: AvailableReactions.Reaction, add: @escaping(String)->Void) {
                 self.reaction = reaction
+                if reaction.isPremium, !context.isPremium {
+                    self.premium = ImageView()
+                    self.premium?.image = theme.icons.premium_reaction_lock
+                    self.premium?.setFrameSize(imageView.frame.size)
+                } else {
+                    self.premium = nil
+                }
                 super.init(frame: frameRect)
                 addSubview(imageView)
                 addSubview(player)
@@ -435,6 +466,11 @@ final class AddReactionManager : NSObject, Notifable {
                     }, itemImage: MenuAnimation.menu_add_to_favorites.value))
                     return menu
                 }
+                if let premium = premium {
+                    addSubview(premium)
+                }
+                self.imageView.isHidden = premium != nil
+                self.player.isHidden = premium != nil
             }
             
             private func apply(_ data: Data) {
@@ -457,6 +493,10 @@ final class AddReactionManager : NSObject, Notifable {
             func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
                 transition.updateFrame(view: player, frame: self.focus(player.frame.size))
                 transition.updateFrame(view: imageView, frame: self.focus(imageView.frame.size))
+                
+                if let premium = premium {
+                    transition.updateFrame(view: premium, frame: self.focus(premium.frame.size))
+                }
             }
             private var previous: ControlState = .Normal
             override func stateDidUpdate(_ state: ControlState) {
@@ -1072,7 +1112,11 @@ final class AddReactionManager : NSObject, Notifable {
                                         
                                         let current = ReactionView(frame: base, isBubbled: item.isBubbled, context: context, reactions: available, add: { [weak self] value in
                                             let isSelected = message.reactionsAttribute?.reactions.contains(where: { $0.value == value && $0.isSelected }) == true
+                                            
+                                            let reaction = available.first(where: { $0.value == value })
+                                            
                                             context.reactions.react(message.id, value: isSelected ? nil : value)
+                                            
                                             self?.clearAndLock()
                                         })
                                                                                 

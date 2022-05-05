@@ -16,14 +16,14 @@ public enum ContainedViewLayoutTransitionCurve {
     case legacy
 }
 
-private let listViewAnimationCurveSystem: (CGFloat) -> CGFloat = { t in
+public let listViewAnimationCurveSystem: (CGFloat) -> CGFloat = { t in
     return bezierPoint(0.23, 1.0, 0.32, 1.0, t)
 }
-let listViewAnimationCurveEaseInOut: (CGFloat) -> CGFloat = { t in
+public let listViewAnimationCurveEaseInOut: (CGFloat) -> CGFloat = { t in
     return bezierPoint(0.42, 0.0, 0.58, 1.0, t)
 }
 
-private let listViewAnimationCurveLinear: (CGFloat) -> CGFloat = { t in
+public let listViewAnimationCurveLinear: (CGFloat) -> CGFloat = { t in
     return t
 }
 

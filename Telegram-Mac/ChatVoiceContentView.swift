@@ -64,7 +64,7 @@ class ChatVoiceContentView: ChatAudioContentView {
     
     var wBackgroundColor:NSColor {
         if let parameters = parameters {
-            return parameters.presentation.waveformBackground
+            return parameters.presentation.grayText.withAlphaComponent(0.4)
         }
         return theme.colors.grayIcon.withAlphaComponent(0.7)
     } 

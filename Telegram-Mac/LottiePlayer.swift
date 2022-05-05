@@ -70,6 +70,7 @@ protocol RenderedFrame {
     var size: NSSize { get }
     var key: LottieAnimationEntryKey { get }
     var frame: Int32 { get }
+    var mirror: Bool { get }
 }
 
 final class RenderedWebpFrame : RenderedFrame, Equatable {
@@ -95,9 +96,13 @@ final class RenderedWebpFrame : RenderedFrame, Equatable {
     var data: UnsafeRawPointer? {
         return nil
     }
+    var mirror: Bool {
+        return key.mirror
+    }
     static func == (lhs: RenderedWebpFrame, rhs: RenderedWebpFrame) -> Bool {
         return lhs.key == rhs.key
     }
+    
 }
 
 final class RenderedWebmFrame : RenderedFrame, Equatable {
@@ -118,8 +123,20 @@ final class RenderedWebmFrame : RenderedFrame, Equatable {
     }
     var image: CGImage? {
         if let data = data {
+            let s:(w: Int, h: Int) = (w: Int(size.width) * backingScale, h: Int(size.height) * backingScale)
+            
+            let bytesPerRow = Int(s.w) * 4
+            let bytes = data.assumingMemoryBound(to: UInt8.self)
+
+            let mutableBytes = UnsafeMutableRawPointer(mutating: bytes)
+            var buffer = vImage_Buffer(data: mutableBytes, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: bytesPerRow)
+                       
+            if self.key.mirror {
+                vImageHorizontalReflect_ARGB8888(&buffer, &buffer, vImage_Flags(kvImageDoNotTile))
+            }
+            
             return generateImagePixel(size, scale: CGFloat(backingScale), pixelGenerator: { (_, pixelData) in
-                memcpy(pixelData, data, bufferSize)
+                memcpy(pixelData, mutableBytes, bufferSize)
             })
         }
         return nil
@@ -132,6 +149,9 @@ final class RenderedWebmFrame : RenderedFrame, Equatable {
     }
     var data: UnsafeRawPointer? {
         return _data
+    }
+    var mirror: Bool {
+        return key.mirror
     }
     static func == (lhs: RenderedWebmFrame, rhs: RenderedWebmFrame) -> Bool {
         return lhs.key == rhs.key
@@ -161,18 +181,31 @@ final class RenderedLottieFrame : RenderedFrame, Equatable {
     static func ==(lhs: RenderedLottieFrame, rhs: RenderedLottieFrame) -> Bool {
         return lhs.frame == rhs.frame
     }
-    
     var bufferSize: Int {
         return Int(size.width * CGFloat(backingScale) * size.height * CGFloat(backingScale) * 4)
     }
-    
+    var mirror: Bool {
+        return key.mirror
+    }
     var duration: TimeInterval {
         return 1.0 / Double(self.fps)
     }
     var image: CGImage? {
         if let data = data {
+            let s:(w: Int, h: Int) = (w: Int(size.width) * backingScale, h: Int(size.height) * backingScale)
+            
+            let bytesPerRow = Int(s.w) * 4
+            let bytes = data.assumingMemoryBound(to: UInt8.self)
+
+            let mutableBytes = UnsafeMutableRawPointer(mutating: bytes)
+            var buffer = vImage_Buffer(data: mutableBytes, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: bytesPerRow)
+                       
+            if self.key.mirror {
+                vImageHorizontalReflect_ARGB8888(&buffer, &buffer, vImage_Flags(kvImageDoNotTile))
+            }
+            
             return generateImagePixel(size, scale: CGFloat(backingScale), pixelGenerator: { (_, pixelData) in
-                memcpy(pixelData, data, bufferSize)
+                memcpy(pixelData, mutableBytes, bufferSize)
             })
         }
         return nil
@@ -471,7 +504,7 @@ private final class PlayerRenderer {
                                     DispatchQueue.main.async(execute: triggerOn.1)
                                 }
                             case .last:
-                                if endFrame - 1 == current.frame {
+                                if endFrame - 2 == current.frame {
                                     DispatchQueue.main.async(execute: triggerOn.1)
                                 }
                             case let .custom(index):
@@ -682,22 +715,24 @@ struct LottieAnimationEntryKey : Hashable {
     let key:LottieAnimationKey
     let fitzModifier: EmojiFitzModifier?
     let colors: [LottieColor]
-    init(key: LottieAnimationKey, size: CGSize, backingScale: Int = Int(System.backingScale), fitzModifier: EmojiFitzModifier? = nil, colors: [LottieColor] = []) {
+    let mirror: Bool
+    init(key: LottieAnimationKey, size: CGSize, backingScale: Int = Int(System.backingScale), fitzModifier: EmojiFitzModifier? = nil, colors: [LottieColor] = [], mirror: Bool = false) {
         self.key = key
         self.size = size
         self.backingScale = backingScale
         self.fitzModifier = fitzModifier
         self.colors = colors
+        self.mirror = mirror
     }
     
     func withUpdatedColors(_ colors: [LottieColor]) -> LottieAnimationEntryKey {
-        return LottieAnimationEntryKey(key: key, size: size, backingScale: backingScale, fitzModifier: fitzModifier, colors: colors)
+        return LottieAnimationEntryKey(key: key, size: size, backingScale: backingScale, fitzModifier: fitzModifier, colors: colors, mirror: mirror)
     }
     func withUpdatedBackingScale(_ backingScale: Int) -> LottieAnimationEntryKey {
-        return LottieAnimationEntryKey(key: key, size: size, backingScale: backingScale, fitzModifier: fitzModifier, colors: colors)
+        return LottieAnimationEntryKey(key: key, size: size, backingScale: backingScale, fitzModifier: fitzModifier, colors: colors, mirror: mirror)
     }
     func withUpdatedSize(_ size: CGSize) -> LottieAnimationEntryKey {
-        return LottieAnimationEntryKey(key: key, size: size, backingScale: backingScale, fitzModifier: fitzModifier, colors: colors)
+        return LottieAnimationEntryKey(key: key, size: size, backingScale: backingScale, fitzModifier: fitzModifier, colors: colors, mirror: mirror)
     }
     
     func hash(into hasher: inout Hasher) {
@@ -971,6 +1006,8 @@ private final class LottieRenderer : RenderContainer {
             bridge.renderFrame(with: frame, into: frameData, width: Int32(s.w), height: Int32(s.h))
             data = UnsafeRawPointer(frameData)
         }
+        
+        
         if let data = data {
             return RenderedLottieFrame(key: animation.key, fps: fps, frame: frame, size: animation.size, data: data, backingScale: self.animation.backingScale)
         }
@@ -1453,7 +1490,15 @@ private final class MetalRenderer: View {
         renderEncoder.setVertexBuffer(self.context.vertexBuffer, offset: 0, index: 0)
         renderEncoder.setFragmentTexture(self.texture, index: 0)
         renderEncoder.setFragmentSamplerState(self.context.sampler, index: 0)
+        
+        var mirror = frame.mirror
+        
+        renderEncoder.setFragmentBytes(&mirror, length: MemoryLayout<Bool>.size, index: 0)
+        
         renderEncoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6, instanceCount: 1)
+        
+        
+
         renderEncoder.endEncoding()
                 
         return drawable

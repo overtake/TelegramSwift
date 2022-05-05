@@ -573,7 +573,7 @@ class LayoutAccountController : TableViewController {
     }
     
     override func escapeKeyAction() -> KeyHandlerResult {
-        guard context.sharedContext.layout != .minimisize else {
+        guard context.layout != .minimisize else {
             return .invoked
         }
         let searchView = (self.centerBarView as? AccountSearchBarView)?.searchView
@@ -654,7 +654,7 @@ class LayoutAccountController : TableViewController {
         
         let arguments = AccountInfoArguments(context: context, presentController: { [weak self] controller, main in
             guard let navigation = self?.navigation as? MajorNavigationController else {return}
-            guard let singleLayout = self?.context.sharedContext.layout else {return}
+            guard let singleLayout = self?.context.layout else {return}
             if main {
                 navigation.removeExceptMajor()
             }

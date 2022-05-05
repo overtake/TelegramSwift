@@ -112,31 +112,26 @@ class ChatInputAttachView: ImageButton, Notifable {
                                 value = MenuAnimation.menu_folder_bot.value
                                 thumbFile = MenuAnimation.menu_folder_bot.file
                             }
-                            if let botInfo = attach.peer.botInfo {
-                                let canAddAttach: Bool
-                                if peer.isUser {
-                                    canAddAttach = true
-                                } else if botInfo.flags.contains(.worksWithGroups) {
-                                    canAddAttach = true
-                                } else {
-                                    canAddAttach = false
-                                }
-                                if canAddAttach {
-                                    items.append(ContextMenuItem(attach.shortName, handler: { [weak self] in
-                                        let invoke:()->Void = { [weak self] in
-                                            showModal(with: WebpageModalController(context: context, url: "", title: attach.peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: attach.peer, replyTo: replyTo, buttonText: "", payload: nil, fromMenu: false, complete: chatInteraction.afterSentTransition), chatInteraction: self?.chatInteraction, thumbFile: thumbFile), for: context.window)
-                                        }
-                                        if FastSettings.shouldConfirmWebApp(peer.id) {
-                                            confirm(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(attach.peer.displayTitle), successHandler: { _ in
-                                                invoke()
-                                                FastSettings.markWebAppAsConfirmed(peer.id)
-                                            })
-                                        } else {
-                                            invoke()
-                                        }
-                                        
-                                    }, itemImage: value))
-                                }
+                            let canAddAttach: Bool
+                            if peer.isUser {
+                                canAddAttach = attach.peerTypes.contains(.all) || attach.peerTypes.contains(.user)
+                            } else if peer.isBot {
+                                canAddAttach = attach.peerTypes.contains(.all) || attach.peerTypes.contains(.bot) || (attach.peerTypes.contains(.sameBot) && attach.peer.id == peer.id)
+                            } else if peer.isGroup || peer.isSupergroup {
+                                canAddAttach = attach.peerTypes.contains(.all) || attach.peerTypes.contains(.group)
+                            } else if peer.isChannel {
+                                canAddAttach = attach.peerTypes.contains(.all) || attach.peerTypes.contains(.channel)
+                            } else {
+                                canAddAttach = false
+                            }
+                            
+                            if canAddAttach {
+                                items.append(ContextMenuItem(attach.shortName, handler: { [weak self] in
+                                    let invoke:()->Void = { [weak self] in
+                                        showModal(with: WebpageModalController(context: context, url: "", title: attach.peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: attach.peer, replyTo: replyTo, buttonText: "", payload: nil, fromMenu: false, complete: chatInteraction.afterSentTransition), chatInteraction: self?.chatInteraction, thumbFile: thumbFile), for: context.window)
+                                    }
+                                    invoke()
+                                }, itemImage: value))
                             }
                         }
                     }

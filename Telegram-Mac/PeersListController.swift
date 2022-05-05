@@ -559,7 +559,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             self?.hideDownloads(animated: true)
         }
         
-        layoutDisposable.set(context.sharedContext.layoutHandler.get().start(next: { [weak self] state in
+        layoutDisposable.set(context.layoutHandler.get().start(next: { [weak self] state in
             if let strongSelf = self, case .minimisize = state {
                 if strongSelf.genericView.searchView.state == .Focus {
                     strongSelf.genericView.searchView.change(state: .None,  false)
@@ -701,7 +701,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 self?.context.bindings.rootNavigation().removeImmediately(previous)
             }
         }
-        guard context.sharedContext.layout == .dual else {
+        guard context.layout == .dual else {
             destroy()
             return
         }
@@ -720,7 +720,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
         }
         
-        guard context.sharedContext.layout == .dual else {
+        guard context.layout == .dual else {
             destroy()
             return
         }
@@ -770,7 +770,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     override func backSettings() -> (String, CGImage?) {
-        return context.sharedContext.layout == .minimisize ? ("", theme.icons.instantViewBack) : super.backSettings()
+        return context.layout == .minimisize ? ("", theme.icons.instantViewBack) : super.backSettings()
     }
     
     
@@ -890,7 +890,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
 
     
     public override func escapeKeyAction() -> KeyHandlerResult {
-        guard context.sharedContext.layout != .minimisize else {
+        guard context.layout != .minimisize else {
             return .invoked
         }
         if genericView.tableView.highlightedItem() != nil {
@@ -943,7 +943,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     current.chatInteraction.focusMessageId(nil, messageId, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
                 } else {
                     let chat:ChatController = addition ? ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: messageId) : ChatController(context: self.context, chatLocation: .peer(peerId), messageId: messageId, initialAction: initialAction)
-                    navigation.push(chat, context.sharedContext.layout == .single || forceAnimated)
+                    navigation.push(chat, context.layout == .single || forceAnimated)
                 }
             }
         case let .groupId(groupId):
@@ -996,7 +996,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
            // genericView.tableView.layoutItems()
         }
         
-        if context.sharedContext.layout == .single && animated {
+        if context.layout == .single && animated {
             context.globalPeerHandler.set(.single(nil))
         }
 

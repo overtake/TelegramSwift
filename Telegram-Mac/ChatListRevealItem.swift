@@ -184,8 +184,8 @@ final class ChatListRevealView : TableStickView {
             return icon
         }
         
-        animated = animated && splitViewState == context.sharedContext.layout
-        self.splitViewState = context.sharedContext.layout
+        animated = animated && splitViewState == context.layout
+        self.splitViewState = context.layout
         
         let segmentTheme = ScrollableSegmentTheme(background: presentation.colors.background, border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .normal(.title))
         var index: Int = 0

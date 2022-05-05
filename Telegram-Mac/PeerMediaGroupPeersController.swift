@@ -111,7 +111,7 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
                         arguments.peerInfo(peer!.id)
                     }, contextMenuItems: {
                         return .single(menuItems)
-                    }, inputActivity: inputActivity)
+                    }, inputActivity: inputActivity, highlightVerified: true)
                 }))
                 index += 1
             case let .showMore(_, _, viewType):

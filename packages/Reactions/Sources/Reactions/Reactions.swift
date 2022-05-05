@@ -16,6 +16,9 @@ public final class Reactions {
         return state.get() |> distinctUntilChanged |> deliverOnMainQueue
     }
     
+    public var needsPremium:()->Void = {}
+    public var isPremium: Bool = false
+    
     public var interactive: MessageId? {
         return _isInteractive.swap(nil)
     }
@@ -32,6 +35,14 @@ public final class Reactions {
     
     public func react(_ messageId: MessageId, value: String?) {
         _ = _isInteractive.swap(messageId)
+        
+        if let reaction = self.available?.reactions.first(where: { $0.value == value}) {
+            if reaction.isPremium && !isPremium {
+                needsPremium()
+                return
+            }
+        }
+        
         reactable.set(updateMessageReactionsInteractively(account: self.engine.account, messageId: messageId, reaction: value, isLarge: false).start(), forKey: messageId)
     }
     

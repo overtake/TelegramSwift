@@ -171,8 +171,8 @@ class ChatInputActionsView: View, Notifable {
                 enabled = sidebarEnabled
             }
             let window = chatInteraction.context.window
-            let sharedContext = chatInteraction.context.sharedContext
-            if !((window.frame.width >= 1030 && sharedContext.layout == .dual) || (window.frame.width >= 880 && sharedContext.layout == .minimisize)) || !enabled {
+            let context = chatInteraction.context
+            if !((window.frame.width >= 1030 && context.layout == .dual) || (window.frame.width >= 880 && context.layout == .minimisize)) || !enabled {
                 self.showEntertainment()
             }
         }, for: .Hover)
@@ -191,7 +191,7 @@ class ChatInputActionsView: View, Notifable {
                 let chatInteraction = strongSelf.chatInteraction
                 let window = chatInteraction.context.window
                 if let sidebarEnabled = chatInteraction.presentation.sidebarEnabled, sidebarEnabled {
-                    if window.frame.width >= 1100 && chatInteraction.context.sharedContext.layout == .dual || window.frame.width >= 880 && chatInteraction.context.sharedContext.layout == .minimisize {
+                    if window.frame.width >= 1100 && chatInteraction.context.layout == .dual || window.frame.width >= 880 && chatInteraction.context.layout == .minimisize {
                         
                         chatInteraction.toggleSidebar()
                     }
@@ -306,8 +306,12 @@ class ChatInputActionsView: View, Notifable {
                 var newInlineLoading: Bool = false
                 var oldInlineLoading: Bool = false
                 
-                if let query = value.inputQueryResult, case .contextRequestResult(_, let data) = query {
-                    newInlineLoading = data == nil && !value.effectiveInput.inputText.isEmpty
+                if let query = value.inputQueryResult, case let .contextRequestResult(peer, data) = query {
+                    if let address = peer.addressName, "@\(address)" != value.effectiveInput.inputText {
+                        newInlineLoading = data == nil
+                    } else {
+                        newInlineLoading = false
+                    }
                 }
                 
                 
@@ -319,8 +323,12 @@ class ChatInputActionsView: View, Notifable {
                 
 
                 
-                if let query = oldValue.inputQueryResult, case .contextRequestResult(_, let data) = query {
-                    oldInlineLoading = data == nil
+                if let query = oldValue.inputQueryResult, case let .contextRequestResult(peer, data) = query {
+                    if let address = peer.addressName, "@\(address)" != oldValue.effectiveInput.inputText {
+                        oldInlineLoading = data == nil
+                    } else {
+                        oldInlineLoading = false
+                    }
                 }
                 
                 let newSlowModeCounter: Bool = value.slowMode?.timeout != nil && value.interfaceState.editState == nil && !newInlineLoading && !newInlineRequest
@@ -363,9 +371,9 @@ class ChatInputActionsView: View, Notifable {
                     if anim {
                         newView.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.1)
                         newView.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.6)
-                        prevView.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, completion:{ complete in
+                        prevView.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, completion:{ [weak prevView] complete in
                             if complete {
-                                prevView.isHidden = true
+                                prevView?.isHidden = true
                             }
                         })
                     } else if prevView != newView {

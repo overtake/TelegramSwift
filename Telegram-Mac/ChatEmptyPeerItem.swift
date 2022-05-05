@@ -16,6 +16,7 @@ import SwiftSignalKit
 class ChatEmptyPeerItem: TableRowItem {
 
     private(set) var textViewLayout:TextViewLayout
+    private(set) var image: TelegramMediaImage?
     
     override var stableId: AnyHashable {
         return 0
@@ -138,6 +139,7 @@ class ChatEmptyPeerItem: TableRowItem {
                     attr.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: chatInteraction.context, color: theme.colors.link, openInfo:chatInteraction.openInfo, hashtag: chatInteraction.context.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy, dotInMention: false)
                     self.textViewLayout = TextViewLayout(attr, alignment: .left)
                     self.textViewLayout.interactions = globalLinkExecutor
+                    self.image = botInfo.photo
                     self.view?.layout()
                 }
             }))
@@ -158,10 +160,13 @@ class ChatEmptyPeerItem: TableRowItem {
 
 class ChatEmptyPeerView : TableRowView {
     let textView:TextView = TextView()
+    private var imageView: TransformImageView? = nil
+    private let visualEffect = VisualEffect(frame: .zero)
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(textView)
-        //containerView.addSubview(textView)
+        addSubview(visualEffect)
+        visualEffect.addSubview(textView)
+
         textView.isSelectable = false
         textView.userInteractionEnabled = true
         textView.disableBackgroundDrawing = true
@@ -173,12 +178,13 @@ class ChatEmptyPeerView : TableRowView {
         guard let theme = (item as? ChatEmptyPeerItem)?.presentation else {
             return
         }
+        
+        
         if theme.shouldBlurService {
-            textView.blurBackground = theme.blurServiceColor
-            textView.backgroundColor = backdorColor
+            visualEffect.bgColor = theme.blurServiceColor
         } else {
-            textView.backgroundColor = theme.chatServiceItemColor
-            textView.blurBackground = nil
+            visualEffect.background = theme.chatServiceItemColor
+            visualEffect.bgColor = backdorColor
         }
     }
     
@@ -201,7 +207,7 @@ class ChatEmptyPeerView : TableRowView {
     override func layout() {
         super.layout()
         if let item = item as? ChatEmptyPeerItem {
-            item.textViewLayout.measure(width: frame.width / 2)
+            item.textViewLayout.measure(width: min(frame.width - 80, 400))
             
             if item.textViewLayout.lineSpacing != nil {
                 for (i, line) in item.textViewLayout.lines.enumerated() {
@@ -215,14 +221,55 @@ class ChatEmptyPeerView : TableRowView {
             
             textView.update(item.textViewLayout)
             
+            if let image = item.image, let rep = image.representationForDisplayAtSize(PixelDimensions.init(1280, 1280)) {
+                let current: TransformImageView
+                if let view = self.imageView {
+                    current = view
+                } else {
+                    current = TransformImageView()
+                    visualEffect.addSubview(current)
+                    self.imageView = current
+                }
+                
+                let signal = chatMessagePhoto(account: item.chatInteraction.context.account, imageReference: .standalone(media: image), peer: item.chatInteraction.peer, scale: System.backingScale, autoFetchFullSize: true)
+                
+                current.setSignal(signal)
+                
+                var size = NSMakeSize(item.textViewLayout.layoutSize.width + 20, 300)
+                size = rep.dimensions.size.aspectFitted(size)
+                
+                let arguments = TransformImageArguments.init(corners: .init(topLeft: .Corner(8), topRight: .Corner(8), bottomLeft: .Corner(2), bottomRight: .Corner(2)), imageSize: size, boundingSize: size, intrinsicInsets: .init())
+                
+                
+                current.set(arguments: arguments)
+                current.setFrameSize(size)
+            } else if let view = self.imageView {
+                performSubviewRemoval(view, animated: false)
+                self.imageView = nil
+            }
+            
             let singleLine = item.textViewLayout.lines.count == 1
             
-            textView.setFrameSize( singleLine ? item.textViewLayout.layoutSize.width + 16 : item.textViewLayout.layoutSize.width + 30, singleLine ? 24 : item.textViewLayout.layoutSize.height + 20)
-            textView.center()
+            if let imageView = imageView {
+                visualEffect.setFrameSize(NSMakeSize(textView.frame.width + 20, imageView.frame.height + textView.frame.height + 20))
+            } else {
+                visualEffect.setFrameSize(NSMakeSize(textView.frame.width + 20, textView.frame.height + 20))
+            }
             
+            visualEffect.center()
             
+            if let imageView = imageView {
+                imageView.centerX(y: 0)
+                textView.centerX(y: imageView.frame.maxY + 10)
+            } else {
+                textView.center()
+            }
             
-            textView.layer?.cornerRadius = singleLine ? textView.frame.height / 2 : 8
+            if imageView == nil {
+                visualEffect.layer?.cornerRadius = singleLine ? textView.frame.height / 2 : 8
+            } else {
+                visualEffect.layer?.cornerRadius = 8
+            }
         }
     }
     

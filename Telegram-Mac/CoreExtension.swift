@@ -2958,6 +2958,19 @@ extension TelegramMediaFile {
         }
         return false
     }
+    var premiumEffect: TelegramMediaFile.VideoThumbnail? {
+        if let resource = self.videoThumbnails.first(where: { thumbnail in
+            if let resource = thumbnail.resource as? CloudDocumentSizeMediaResource, resource.sizeSpec == "f" {
+                return true
+            } else {
+                return false
+            }
+        }) {
+            return resource
+        }
+        return nil
+    }
+
 }
 
 extension MessageIndex {
@@ -3459,6 +3472,7 @@ extension Peer {
             return false
         }
     }
+    
 }
 
 

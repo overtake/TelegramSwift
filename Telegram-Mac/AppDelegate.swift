@@ -1337,7 +1337,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             })
             layout.measure(width: 160)
             
-            _ = showSaveModal(for: window, context: context, animation: LocalAnimatedSticker.success_saved, text: layout, delay: 5.0).start()
+            _ = showSaveModal(for: window, context: context, animation: LocalAnimatedSticker.success_saved, text: layout, delay: 3.0).start()
         }
     }
     

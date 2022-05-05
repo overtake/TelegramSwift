@@ -418,9 +418,9 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
                 } else if let initialParticipant = initialParticipant, case let .member(_, _, maybeAdminRights, _, _) = initialParticipant, let adminRights = maybeAdminRights {
                     currentRightsFlags = adminRights.rights.rights
                 } else if let adminRights = channel.adminRights {
-                    currentRightsFlags = adminRights.rights.subtracting([.canAddAdmins, .canBeAnonymous])
+                    currentRightsFlags = adminRights.rights.subtracting([.canAddAdmins])
                 } else {
-                    currentRightsFlags = accountUserRightsFlags.subtracting([.canAddAdmins, .canBeAnonymous])
+                    currentRightsFlags = accountUserRightsFlags.subtracting([.canAddAdmins])
                 }
                 
                 if accountUserRightsFlags.contains(.canAddAdmins) {
@@ -850,7 +850,7 @@ class ChannelAdminController: TableModalViewController {
         
         let signal = combineLatest(statePromise.get(), combinedPromise.get(), appearanceSignal)
             |> deliverOn(prepareQueue)
-            |> map { state, combinedView, appearance -> (transition: TableUpdateTransition, canEdit: Bool, canDismiss: Bool, channelView: PeerView) in
+        |> map { state, combinedView, appearance -> (transition: TableUpdateTransition, canEdit: Bool, canDismiss: Bool, channelView: PeerView, adminView: PeerView) in
                 let channelView = combinedView.views[.peer(peerId: peerId, components: .all)] as! PeerView
                 let adminView = combinedView.views[.peer(peerId: adminId, components: .all)] as! PeerView
                 var canEdit = canEditAdminRights(accountPeerId: context.account.peerId, channelView: channelView, initialParticipant: initialParticipant)
@@ -880,7 +880,7 @@ class ChannelAdminController: TableModalViewController {
                 let result = channelAdminControllerEntries(state: state, accountPeerId: context.account.peerId, channelView: channelView, adminView: adminView, initialParticipant: initialParticipant)
                 let entries = result.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
                 _ = stateValue.modify({$0.withUpdatedEditable(canEdit)})
-                return (transition: prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), canEdit: canEdit, canDismiss: canDismiss, channelView: channelView)
+                return (transition: prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments), canEdit: canEdit, canDismiss: canDismiss, channelView: channelView, adminView: adminView)
                 
         } |> afterDisposed {
             actionsDisposable.dispose()
@@ -899,7 +899,7 @@ class ChannelAdminController: TableModalViewController {
                 button.set(text: strings().navigationDone, for: .Normal)
             }
             
-            self?.okClick = {
+            self?.okClick = { [weak self] in
                 if let channel = values.channelView.peers[values.channelView.peerId] as? TelegramChannel {
                     if let initialParticipant = initialParticipant {
                         var updateFlags: TelegramChatAdminRightsFlags?
@@ -947,7 +947,8 @@ class ChannelAdminController: TableModalViewController {
                                 return current.withUpdatedUpdating(true)
                             }
                             updateRightsDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(rights: updateFlags), rank: stateValue.with { $0.rank }) |> deliverOnMainQueue).start(error: { error in
-                                
+                                var bp = 0
+                                bp += 1
                             }, completed: {
                                 updated(TelegramChatAdminRights(rights: updateFlags))
                                 dismissImpl()
@@ -986,12 +987,45 @@ class ChannelAdminController: TableModalViewController {
                             updateState { current in
                                 return current.withUpdatedUpdating(true)
                             }
-                            updateRightsDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(rights: updateFlags), rank: stateValue.with { $0.rank }) |> deliverOnMainQueue).start(error: { _ in
+                            updateRightsDisposable.set(context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: peerId, memberIds: [adminId]).start(next: { peerIds in
                                 
-                            }, completed: {
-                                updated(TelegramChatAdminRights(rights: updateFlags))
-                                dismissImpl()
+                                updateRightsDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(rights: updateFlags), rank: stateValue.with { $0.rank }) |> deliverOnMainQueue).start(error: { _ in
+                                    
+                                }, completed: {
+                                    updated(TelegramChatAdminRights(rights: updateFlags))
+                                    dismissImpl()
+                                }))
+                                
+                            }, error: { [weak self] error in
+                                var errorText: String?
+                                switch error {
+                                case .tooMuchJoined:
+                                    errorText = strings().inviteChannelsTooMuch
+                                case .restricted:
+                                    if let admin = values.adminView.peers[adminId] {
+                                        switch channel.info {
+                                            case .broadcast:
+                                            errorText = strings().privacyGroupsAndChannelsInviteToChannelError(admin.compactDisplayTitle, admin.compactDisplayTitle)
+                                            case .group:
+                                            errorText = strings().privacyGroupsAndChannelsInviteToGroupError(admin.compactDisplayTitle, admin.compactDisplayTitle)
+                                        }
+                                    }
+                                case .notMutualContact:
+                                    if case .broadcast = channel.info {
+                                        errorText = strings().channelInfoAddUserLeftError
+                                    } else {
+                                        errorText = strings().groupInfoAddUserLeftError
+                                    }
+                                default:
+                                    break
+                                }
+                                if let errorText = errorText {
+                                    alert(for: context.window, info: errorText)
+                                }
+                                self?.close()
                             }))
+                            
+                            
                         }
                     }
                 } else if let _ = values.channelView.peers[values.channelView.peerId] as? TelegramGroup {
@@ -1063,10 +1097,6 @@ class ChannelAdminController: TableModalViewController {
                                     })
                                     actionsDisposable.add(disposable)
                                     
-                                }
-                            }, error: { _ in
-                                updateState { current in
-                                    return current.withUpdatedUpdating(false)
                                 }
                             }))
                         } else {

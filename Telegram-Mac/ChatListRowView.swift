@@ -244,7 +244,17 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var activeImage: ImageView?
     private var groupActivityView: GroupCallActivity?
     private var activitiesModel:ChatActivitiesModel?
-    private var photo:AvatarControl = AvatarControl(font: .avatar(22))
+    private let photo: AvatarControl = AvatarControl(font: .avatar(22))
+    private var photoVideoView: MediaPlayerView?
+    private var photoVideoPlayer: MediaPlayer? {
+        didSet {
+            if oldValue != nil, photoVideoPlayer == nil {
+                var bp = 0
+                bp += 1
+            }
+        }
+    }
+
     private var hiddemMessage:Bool = false
     private let peerInputActivitiesDisposable:MetaDisposable = MetaDisposable()
     private var removeControl:ImageButton? = nil
@@ -310,7 +320,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 
                 
                 let activity:ActivitiesTheme
-                if item.isSelected && item.context.sharedContext.layout != .single {
+                if item.isSelected && item.context.layout != .single {
                     activity = theme.activity(key: 10, foregroundColor: theme.chatList.activitySelectedColor, backgroundColor: theme.chatList.selectedBackgroundColor)
                 } else if item.isSelected {
                     activity = theme.activity(key: 11, foregroundColor: theme.chatList.activityPinnedColor, backgroundColor: theme.chatList.singleLayoutSelectedBackgroundColor)
@@ -332,7 +342,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 }
               
                 
-                activitiesModel?.view?.isHidden = item.context.sharedContext.layout == .minimisize
+                activitiesModel?.view?.isHidden = item.context.layout == .minimisize
             } else {
                 activitiesModel?.clean()
                 activitiesModel?.view?.removeFromSuperview()
@@ -398,7 +408,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             if item.isHighlighted && !item.isSelected {
                 return theme.chatList.activeDraggingBackgroundColor
             }
-            if item.context.sharedContext.layout == .single, item.isSelected {
+            if item.context.layout == .single, item.isSelected {
                 return theme.chatList.singleLayoutSelectedBackgroundColor
             }
             if !item.isSelected && containerView.activeDragging {
@@ -426,7 +436,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     ctx.fill(NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height))
                 } else {
                     
-                    if item.context.sharedContext.layout == .minimisize {
+                    if item.context.layout == .minimisize {
                         return
                     }
                     
@@ -440,13 +450,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 }
             }
             
-            if item.context.sharedContext.layout == .minimisize {
+            if item.context.layout == .minimisize {
                 return
             }
             
             if layer == containerView.layer {
                 
-                let highlighted = item.isSelected && item.context.sharedContext.layout != .single
+                let highlighted = item.isSelected && item.context.layout != .single
                 
                 
                 if item.ctxBadgeNode == nil && item.mentionsCount == nil && (item.isPinned || item.isLastPinned) {
@@ -467,9 +477,14 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     var mutedInset:CGFloat = item.isSecret ? theme.icons.secretImage.backingSize.width + 2 : 0
                     
                     if item.isVerified {
-                        ctx.draw(highlighted ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition - 2, item.margin - 3, 24, 24))
-                        mutedInset += 15 + 3
+                        ctx.draw(highlighted ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin, 16, 16))
+                        mutedInset += 17
                     }
+                    if item.isPremium {
+                        ctx.draw(highlighted ? theme.icons.premium_account_rev_active : theme.icons.premium_account_rev, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin, 16, 16))
+                        mutedInset += 17
+                    }
+                    
                     
                     if item.isScam || item.isFake {
                         ctx.draw(highlighted ? item.badHighlightIcon : item.badIcon, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
@@ -574,6 +589,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         self.containerView.background = backdorColor
         expandView?.backgroundColor = theme.colors.grayBackground
     }
+    
+    private var videoRepresentation: TelegramMediaImage.VideoRepresentation?
 
     override func set(item:TableRowItem, animated:Bool = false) {
                 
@@ -596,12 +613,73 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         
                 
          if let item = item as? ChatListRowItem {
+             
+             if !item.photos.isEmpty {
+                 
+                 if let first = item.photos.first, let video = first.image.videoRepresentations.last {
+                    
+                     let equal = videoRepresentation?.resource.id == video.resource.id
+                     
+                     if !equal {
+                         
+                         self.photoVideoView?.removeFromSuperview()
+                         self.photoVideoView = nil
+                         
+                         self.photoVideoView = MediaPlayerView(backgroundThread: true)
+                         self.photoVideoView!.layer?.cornerRadius = self.photo.frame.height / 2
+                         
+                         
+                         containerView.addSubview(self.photoVideoView!, positioned: .above, relativeTo: self.photo)
+
+                         self.photoVideoView!.isEventLess = true
+                         
+                         self.photoVideoView!.frame = self.photo.frame
+
+                         
+                         let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: first.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
+                         
+                         
+                         let reference: MediaResourceReference
+                         
+                         if let peer = item.peer, let peerReference = PeerReference(peer) {
+                             reference = MediaResourceReference.avatar(peer: peerReference, resource: file.resource)
+                         } else {
+                             reference = MediaResourceReference.standalone(resource: file.resource)
+                         }
+                         
+                         let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, reference: reference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
+                         
+                         mediaPlayer.actionAtEnd = .loop(nil)
+                         
+                         self.photoVideoPlayer = mediaPlayer
+                         
+                         if let seekTo = video.startTimestamp {
+                             mediaPlayer.seek(timestamp: seekTo)
+                         }
+                         mediaPlayer.attachPlayerView(self.photoVideoView!)
+                         self.videoRepresentation = video
+                         updatePlayerIfNeeded()
+                     }
+                 } else {
+                     self.photoVideoPlayer = nil
+                     self.photoVideoView?.removeFromSuperview()
+                     self.photoVideoView = nil
+                     self.videoRepresentation = nil
+                 }
+             } else {
+                 self.photoVideoPlayer = nil
+                 self.photoVideoView?.removeFromSuperview()
+                 self.photoVideoView = nil
+                 self.videoRepresentation = nil
+             }
+             updateListeners()
+
             
             self.currentMediaPreviewSpecs = item.contentImageSpecs
             
             var validMediaIds: [MessageId] = []
             for (message, media, mediaSize) in item.contentImageSpecs {
-                guard item.context.sharedContext.layout != .minimisize else {
+                guard item.context.layout != .minimisize else {
                     continue
                 }
                 validMediaIds.append(message.id)
@@ -631,7 +709,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 containerView.change(pos: NSMakePoint(0, item.isCollapsed ? -70 : 0), animated: !revealActionInvoked && animated)
             }
 
-            if let isOnline = item.isOnline, item.context.sharedContext.layout != .minimisize {
+            if let isOnline = item.isOnline, item.context.layout != .minimisize {
                 if isOnline {
                     var animate: Bool = false
                     if activeImage == nil {
@@ -640,7 +718,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         animate = true
                     }
                     guard let activeImage = self.activeImage else { return }
-                    activeImage.image = item.isSelected && item.context.sharedContext.layout != .single ? theme.icons.hintPeerActiveSelected : theme.icons.hintPeerActive
+                    activeImage.image = item.isSelected && item.context.layout != .single ? theme.icons.hintPeerActiveSelected : theme.icons.hintPeerActive
                     activeImage.sizeToFit()
 
                     activeImage.setFrameOrigin(photo.frame.maxX - activeImage.frame.width - 3, photo.frame.maxY - 12)
@@ -667,7 +745,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 activeImage = nil
             }
             
-            if item.hasActiveGroupCall, item.context.sharedContext.layout != .minimisize {
+            if item.hasActiveGroupCall, item.context.layout != .minimisize {
                 var animate: Bool = false
 
                 if self.groupActivityView == nil {
@@ -680,7 +758,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 
                 groupActivityView.setFrameOrigin(photo.frame.maxX - groupActivityView.frame.width + 3, photo.frame.maxY - 18)
                 
-                let isActive = item.context.sharedContext.layout != .single && item.isSelected
+                let isActive = item.context.layout != .single && item.isSelected
                 
                 groupActivityView.update(context: item.context, tableView: item.table, foregroundColor: isActive ? theme.colors.underSelectedColor : theme.colors.accentSelect, backgroundColor: backdorColor, animColor: isActive ? theme.colors.accentSelect : theme.colors.underSelectedColor)
                 if animated && animate {
@@ -828,7 +906,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              
              if let _ = item.mentionsCount {
                  
-                 let highlighted = item.isSelected && item.context.sharedContext.layout != .single
+                 let highlighted = item.isSelected && item.context.layout != .single
                  let icon: CGImage
                  if item.associatedGroupId == .root {
                      icon = highlighted ? theme.icons.chatListMentionActive : theme.icons.chatListMention
@@ -873,7 +951,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              
              if let _ = item.reactionsCount {
                  
-                 let highlighted = item.isSelected && item.context.sharedContext.layout != .single
+                 let highlighted = item.isSelected && item.context.layout != .single
                  let icon: CGImage
                  if item.associatedGroupId == .root && !item.isMuted {
                      icon = highlighted ? theme.icons.reactions_badge_active : theme.icons.reactions_badge
@@ -1539,12 +1617,61 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     deinit {
         peerInputActivitiesDisposable.dispose()
+        self.removeNotificationListeners()
     }
+    
+    @objc func updatePlayerIfNeeded() {
+        let accept = window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect)
+        if let photoVideoPlayer = photoVideoPlayer {
+            if accept {
+                photoVideoPlayer.play()
+            } else {
+                photoVideoPlayer.pause()
+            }
+        }
+    }
+    
+    override func viewDidUpdatedDynamicContent() {
+        super.viewDidUpdatedDynamicContent()
+        updatePlayerIfNeeded()
+    }
+    
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        updateListeners()
+        updatePlayerIfNeeded()
+    }
+    
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        updateListeners()
+        updatePlayerIfNeeded()
+    }
+    
+    func updateListeners() {
+        if let window = window {
+            NotificationCenter.default.removeObserver(self)
+            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSWindow.didBecomeKeyNotification, object: window)
+            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSWindow.didResignKeyNotification, object: window)
+            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSView.boundsDidChangeNotification, object: item?.table?.clipView)
+        } else {
+            removeNotificationListeners()
+        }
+    }
+    
+    func removeNotificationListeners() {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    
     
     override func layout() {
         super.layout()
        
         guard let item = item as? ChatListRowItem else { return }
+        
+        photoVideoView?.frame = photo.frame
+
         
         expandView?.frame = NSMakeRect(0, item.isCollapsed ? 0 : item.height, frame.width - .borderSize, frame.height)
         

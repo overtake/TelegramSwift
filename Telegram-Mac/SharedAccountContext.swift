@@ -100,8 +100,6 @@ class SharedAccountContext {
     private var accountPhotos: [PeerId : CGImage] = [:]
     private var cleaningUpAccounts = false
     
-    private(set) var layout:SplitViewState = .none
-    let layoutHandler:ValuePromise<SplitViewState> = ValuePromise(ignoreRepeated:true)
     
     public var callStatusBarMenuItems:(()->[ContextMenuItem])? = nil {
         didSet {
@@ -203,7 +201,6 @@ class SharedAccountContext {
         }
     }
 
-    private let layoutDisposable = MetaDisposable()
     private let displayUpgradeProgress: (Float?) -> Void
     
 
@@ -225,9 +222,7 @@ class SharedAccountContext {
         #endif
         
         
-        layoutDisposable.set(layoutHandler.get().start(next: { state in
-            self.layout = state
-        }))
+
         
         var supplementary: Bool = false
         #if SHARE
@@ -700,7 +695,6 @@ class SharedAccountContext {
     
     #endif
     deinit {
-        layoutDisposable.dispose()
     }
     
 }

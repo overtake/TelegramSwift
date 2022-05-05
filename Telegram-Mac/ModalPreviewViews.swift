@@ -255,6 +255,9 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
         textView.backgroundColor = .clear
     }
     private var player: LottiePlayerView?
+    private var effectView: LottiePlayerView?
+    
+    private let dataDisposable = MetaDisposable()
     
     override func layout() {
         super.layout()
@@ -271,8 +274,7 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
     
     deinit {
         self.loadResourceDisposable.dispose()
-        var bp:Int = 0
-        bp += 1
+        self.dataDisposable.dispose()
     }
     
     func update(with reference: QuickPreviewMedia, context: AccountContext, animated: Bool) -> Void {
@@ -284,13 +286,27 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
             let dimensions = reference.media.dimensions?.size
             
             var size = NSMakeSize(frame.width - 80, frame.height - 80)
+            if reference.media.premiumEffect != nil {
+                size = NSMakeSize(150, 150)
+            }
             if let dimensions = dimensions {
                 size = dimensions.aspectFitted(size)
             }
 
             self.player = LottiePlayerView(frame: NSMakeRect(0, 0, size.width, size.height))
             addSubview(self.player!)
-            self.player?.center()
+            
+            guard let player = self.player else {
+                return
+            }
+
+            
+            if reference.media.premiumEffect != nil {
+                player.center()
+                player.setFrameOrigin(NSMakePoint(player.frame.minX, player.frame.minY))
+            } else {
+                player.center()
+            }
             
             let mediaId = reference.media.id
             
@@ -316,7 +332,7 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
                     return data
                 }
                 return nil
-            } |> deliverOnMainQueue).start(next: { [weak self] data in
+            } |> deliverOnMainQueue).start(next: { [weak player] data in
                 if let data = data {
                     
                     let type: LottieAnimationType
@@ -328,14 +344,14 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
                         type = .lottie
                     }
                     
-                    self?.player?.set(LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(mediaId), size: size), type: type, cachePurpose: .none))
+                    player?.set(LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(mediaId), size: size), type: type, cachePurpose: .none))
                 } else {
-                    self?.player?.set(nil)
+                    player?.set(nil)
                 }
             }))
 
             if animated {
-                player!.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                player.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
             
             let layout = TextViewLayout(.initialize(string: reference.media.stickerText?.fixed, color: nil, font: .normal(30.0)))
@@ -346,9 +362,37 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
                 textView.layer?.animateScaleSpring(from: 0.5, to: 1.0, duration: 0.2)
             }
             
-        } else {
-            var bp:Int = 0
-            bp += 1
+            if let effect = reference.media.premiumEffect {
+                var animationSize = NSMakeSize(size.width * 2, size.height * 2)
+                if let dimensions = reference.media.dimensions?.size {
+                    animationSize = dimensions.aspectFitted(animationSize)
+                }
+                let signal: Signal<LottieAnimation?, NoError> = context.account.postbox.mediaBox.resourceData(effect.resource) |> filter { $0.complete } |> take(1) |> map { data in
+                    if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
+                        return LottieAnimation(compressed: data, key: .init(key: .bundle("_premium_\(reference.media.fileId)"), size: animationSize, backingScale: Int(System.backingScale)), cachePurpose: .none, playPolicy: .loop)
+                    } else {
+                        return nil
+                    }
+                } |> deliverOnMainQueue
+                
+                let current: LottiePlayerView
+                if let view = effectView {
+                    current = view
+                } else {
+                    current = LottiePlayerView(frame: animationSize.bounds)
+                    self.effectView = current
+                }
+                
+                addSubview(current, positioned: .above, relativeTo: self.player)
+                current.centerY(x: player.frame.maxX - current.frame.width)
+                
+                dataDisposable.set(signal.start(next: { [weak current] animation in
+                    current?.set(animation)
+                }))
+            } else if let view = effectView {
+                performSubviewRemoval(view, animated: true)
+                self.effectView = nil
+            }
         }
     }
     

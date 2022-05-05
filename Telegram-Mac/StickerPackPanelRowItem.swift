@@ -17,6 +17,7 @@ import SwiftSignalKit
 class StickerPackPanelRowItem: TableRowItem {
     private(set) var files: [(TelegramMediaFile, ChatMediaContentView.Type, NSPoint)] = []
     let packNameLayout: TextViewLayout?
+    
     let context: AccountContext
     let arguments: StickerPanelArguments
     let namePoint: NSPoint
@@ -24,22 +25,43 @@ class StickerPackPanelRowItem: TableRowItem {
     let collectionId: StickerPackCollectionId
     let _files:[TelegramMediaFile]
     
+    
+    
     private var _height: CGFloat = 0
     override var stableId: AnyHashable {
         return collectionId
     }
     let packReference: StickerPackReference?
-    
+        
     private let preloadFeaturedDisposable = MetaDisposable()
     let canSend: Bool
     let playOnHover: Bool
-    init(_ initialSize: NSSize, context: AccountContext, arguments: StickerPanelArguments, files:[TelegramMediaFile], packInfo: StickerPackInfo, collectionId: StickerPackCollectionId, canSend: Bool, playOnHover: Bool = false) {
+    let isPreview: Bool
+    init(_ initialSize: NSSize, context: AccountContext, arguments: StickerPanelArguments, files:[TelegramMediaFile], packInfo: StickerPackInfo, collectionId: StickerPackCollectionId, canSend: Bool, playOnHover: Bool = false, isPreview: Bool = false) {
+        
+        let files = files.sorted(by: { lhs, rhs in
+            if lhs.isPremiumSticker && !rhs.isPremiumSticker {
+                if lhs.isPremiumSticker {
+                    return false
+                } else {
+                    return true
+                }
+            } else if !lhs.isPremiumSticker && rhs.isPremiumSticker {
+                if lhs.isPremiumSticker {
+                    return false
+                } else {
+                    return true
+                }
+            }
+            return false
+        })
+        
         self.context = context
         self.arguments = arguments
         self.canSend = canSend
         self._files = files
         self.playOnHover = playOnHover
-        
+        self.isPreview = isPreview
         let title: String?
         var count: Int32 = 0
         switch packInfo {
@@ -53,6 +75,9 @@ class StickerPackPanelRowItem: TableRowItem {
             }
         case .recent:
             title = strings().stickersRecent
+            self.packReference = nil
+        case .premium:
+            title = strings().stickersPremium
             self.packReference = nil
         case .saved:
             title = nil
@@ -97,6 +122,7 @@ class StickerPackPanelRowItem: TableRowItem {
         if packInfo.featured, let id = collectionId.itemCollectionId {
             preloadFeaturedDisposable.set(preloadedFeaturedStickerSet(network: context.account.network, postbox: context.account.postbox, id: id).start())
         }
+
         
         super.init(initialSize)
         
@@ -115,6 +141,7 @@ class StickerPackPanelRowItem: TableRowItem {
         var point: NSPoint = NSMakePoint(5, packNameLayout == nil ? 5 : !packInfo.featured ? 35 : 55)
         var rowCount: CGFloat = 1
         var countFixed = false
+                
         for file in _files {
             var filePoint = point
             let fileSize = file.dimensions?.size.aspectFitted(size) ?? size
@@ -135,12 +162,21 @@ class StickerPackPanelRowItem: TableRowItem {
         
         self.files = filesAndPoints
 
-        let rows = ceil((CGFloat(_files.count) / rowCount))
-        _height = (packNameLayout == nil ? 0 : !packInfo.featured ? 30 : 50) + 60.0 * rows + ((rows + 1) * 5)
+
+        if point.x == 5 {
+            _height = point.y
+        } else {
+            _height = point.y + size.height + 5
+        }
+        
 
         
         return true
     }
+    
+    //        let rows = ceil((CGFloat(_files.count) / rowCount))
+            //        _height = (packNameLayout == nil ? 0 : !packInfo.featured ? 30 : 50) + 60.0 * rows + ((rows + 1) * 5)
+
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var items:[ContextMenuItem] = []
@@ -152,6 +188,10 @@ class StickerPackPanelRowItem: TableRowItem {
             let rect = NSMakeRect(file.2.x, file.2.y, 60, 60)
             let file = file.0
             if NSPointInRect(location, rect) {
+                
+                if file.isPremiumSticker && !context.isPremium {
+                    return .single([])
+                }
                 
                 if NSApp.currentEvent?.modifierFlags.contains(.control) == true {
                     if file.isAnimatedSticker, let data = try? Data(contentsOf: URL(fileURLWithPath: context.account.postbox.mediaBox.resourcePath(file.resource))) {
@@ -444,6 +484,10 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                     view = self.contentViews[i]!
                 }
                 (view as? StickerMediaContentView)?.playOnHover = item.playOnHover
+                
+                let lock = file.isPremiumSticker && !item.context.isPremium
+                (view as? StickerMediaContentView)?.set(locked: lock, animated: false)
+                
                 if view.media?.id != file.id {
                     let size = file.dimensions?.size.aspectFitted(size) ?? size
                     view.update(with: file, size: size, context: item.context, parent: nil, table: item.table)
@@ -465,7 +509,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         }
         
         self.subviews = (self.clearRecentButton != nil ? [self.clearRecentButton!] : []) + (self.addButton != nil ? [self.addButton!] : []) + [self.packNameView] + self.contentViews.compactMap { $0 }
-                
+                        
         CATransaction.commit()
         
         
@@ -488,6 +532,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         }
         
         packNameView.update(item.packNameLayout)
+        
         
         if item.arguments.mode == .common {
             switch item.packInfo {

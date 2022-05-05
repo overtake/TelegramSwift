@@ -388,6 +388,8 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                     text = strings().inviteChannelsTooMuch
                 case .generic:
                     text = strings().unknownError
+                case .kicked:
+                    text = strings().channelAddUserKickedError
                 case let .bot(memberId):
                     let _ = (context.account.postbox.transaction { transaction in
                         return transaction.getPeer(peerId)

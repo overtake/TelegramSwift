@@ -63,6 +63,7 @@ struct SpecificPackData : Equatable {
 enum PackEntry: Comparable, Identifiable {
     case stickerPack(index:Int, stableId: StickerPackCollectionId, info: StickerPackCollectionInfo, topItem: StickerPackItem?)
     case recent
+    case premium
     case saved
     case featured(hasUnread: Bool)
     case specificPack(data: SpecificPackData)
@@ -73,6 +74,8 @@ enum PackEntry: Comparable, Identifiable {
             return data.stableId
         case .recent:
             return .recent
+        case .premium:
+            return .premium
         case .saved:
             return .saved
         case let .featured(hasUnread):
@@ -90,10 +93,12 @@ enum PackEntry: Comparable, Identifiable {
             return 0
         case .recent:
             return 2
-        case .specificPack:
+        case .premium:
             return 3
+        case .specificPack:
+            return 4
         case let .stickerPack(index, _, _, _):
-            return 4 + index
+            return 5 + index
         }
     }
     
@@ -116,6 +121,7 @@ private enum StickerPacksIndex : Hashable, Comparable {
     case sticker(ItemCollectionViewEntryIndex)
     case speficicPack(ItemCollectionId)
     case recent(Int)
+    case premium(Int)
     case saved(Int)
     case featured(Int, Bool)
     case emojiRelated(Int)
@@ -123,7 +129,7 @@ private enum StickerPacksIndex : Hashable, Comparable {
         switch self {
         case let .sticker(index):
             return index
-        case let .saved(index), let .recent(index), let .featured(index, _), let .emojiRelated(index):
+        case let .saved(index), let .recent(index), let .premium(index), let .featured(index, _), let .emojiRelated(index):
             return ItemCollectionViewEntryIndex.lowerBound(collectionIndex: Int32(index), collectionId: ItemCollectionId(namespace: 0, id: 0))
         case let .speficicPack(id):
             return ItemCollectionViewEntryIndex.lowerBound(collectionIndex: 2, collectionId: id)
@@ -136,6 +142,8 @@ private enum StickerPacksIndex : Hashable, Comparable {
             return .pack(index.collectionId)
         case .recent:
             return .recent
+        case .premium:
+            return .premium
         case .saved:
             return .saved
         case let .speficicPack(id):
@@ -161,10 +169,12 @@ private enum StickerPacksIndex : Hashable, Comparable {
             return 0
         case .recent:
             return 1
-        case .speficicPack:
+        case .premium:
             return 2
-        case .sticker:
+        case .speficicPack:
             return 3
+        case .sticker:
+            return 4
         }
     }
     
@@ -253,6 +263,7 @@ enum StickerPackInfo : Equatable {
     case pack(StickerPackCollectionInfo?, installed: Bool, featured: Bool)
     case speficicPack(StickerPackCollectionInfo?)
     case recent
+    case premium
     case saved
     case emojiRelated
     
@@ -277,6 +288,7 @@ enum StickerPackInfo : Equatable {
 enum StickerPackCollectionId : Hashable {
     case pack(ItemCollectionId)
     case recent
+    case premium
     case featured(hasUnred: Bool)
     case specificPack(ItemCollectionId)
     case saved
@@ -419,6 +431,21 @@ private func stickersEntries(view: ItemCollectionsView?, featured:[FeaturedStick
                 }
             }
             
+            if !view.orderedItemListsViews[2].items.isEmpty {
+                var files:[TelegramMediaFile] = []
+                for item in view.orderedItemListsViews[2].items {
+                    if let entry = item.contents.get(RecentMediaItem.self) {
+                        let file = entry.media
+                        if let id = file.id, ids[id] == nil, file.isStaticSticker || file.isAnimatedSticker {
+                            ids[id] = id
+                            files.append(file)
+                        }
+                    }
+                }
+                if !files.isEmpty {
+                    entries.append(.pack(index: .premium(2), files: files, packInfo: .premium, collectionId: .premium))
+                }
+            }
             
             if let specificPack = specificPack, let info = specificPack._0.packInfo {
                 var files:[TelegramMediaFile] = []
@@ -533,6 +560,9 @@ private func packEntries(view: ItemCollectionsView?, specificPack:Tuple2<PeerSpe
         if !view.orderedItemListsViews[0].items.isEmpty {
             entries.append(.recent)
         }
+        if !view.orderedItemListsViews[2].items.isEmpty {
+            entries.append(.premium)
+        }
         if let specificPack = specificPack, let info = specificPack._0.packInfo?.0 {
             entries.append(.specificPack(data: SpecificPackData(info: info, peer: specificPack._1)))
         }
@@ -586,6 +616,8 @@ fileprivate func preparePackTransition(from:[AppearanceWrapperEntry<PackEntry>]?
             return StickerPackRowItem(initialSize, packIndex: index, context: context, stableId: stableId, info: info, topItem: topItem)
         case .recent:
             return RecentPackRowItem(initialSize, entry.entry.stableId)
+        case .premium:
+            return RecentPackRowItem(initialSize, entry.entry.stableId)
         case .featured:
             return RecentPackRowItem(initialSize, entry.entry.stableId)
         case .saved:
@@ -610,6 +642,7 @@ class NStickersView : View {
     fileprivate let packsView:HorizontalTableView = HorizontalTableView(frame: NSZeroRect)
     private let separator:View = View()
     fileprivate let tabsContainer: View = View()
+    
 
     
     required init(frame frameRect: NSRect) {
@@ -717,7 +750,9 @@ class NStickersView : View {
         
         emptySearchContainer.frame = tableView.frame
         emptySearchView.center()
+        
     }
+    
     
     
     required init?(coder: NSCoder) {
@@ -831,6 +866,8 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     index = .saved(0)
                 case .recent:
                     index = .recent(1)
+                case .premium:
+                    index = .premium(1)
                 case let .specificPack(id):
                     index = .speficicPack(id)
                 case .emojiRelated:
@@ -899,6 +936,14 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
 
         let arguments = StickerPanelArguments(context: context, sendMedia: { [weak self] media, view, silent, schedule in
             guard let `self` = self else { return }
+            
+            if let file = media as? TelegramMediaFile {
+                if file.isPremiumSticker, !context.isPremium {
+                    self.interactions?.showStickerPremium(file, view)
+                    return
+                }
+            }
+            
             if let chatInteraction = self.chatInteraction, let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
                 showSlowModeTimeoutTooltip(slowMode, for: view)
             } else if let file = media as? TelegramMediaFile {
@@ -988,7 +1033,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 let settings = stickerSettings(postbox: context.account.postbox)
                 switch values.1 {
                 case .initial:
-                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: count)
+                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.PremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: count)
                     let featuredView = context.account.viewTracker.featuredStickerPacks()
                     
                     return combineLatest(packsView, featuredView, settings) |> mapToSignal { view, featured, settings in
@@ -1000,7 +1045,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     }
                 case let .scroll(aroundIndex):
                     var firstTime = true
-                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: aroundIndex.packIndex, count: count)
+                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.PremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: aroundIndex.packIndex, count: count)
                     let featuredView = context.account.viewTracker.featuredStickerPacks()
 
                     
@@ -1019,7 +1064,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     }
                 case let .navigate(index):
                     var firstTime = true
-                    return context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: index.packIndex, count: count)
+                    return context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.PremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: index.packIndex, count: count)
                         |> mapToSignal { view in
                             return specificPackData |> map { specificPack in
                                 let update: StickerPacksUpdate
@@ -1315,6 +1360,10 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         self.position.set(.initial)
         self.genericView.packsView.scroll(to: .up(true))
       //  self.genericView.tableView.scroll(to: .up(true))
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
     }
     
     override var supportSwipes: Bool {

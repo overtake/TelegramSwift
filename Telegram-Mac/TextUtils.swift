@@ -38,7 +38,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
         switch media {
         case _ as TelegramMediaImage:
             
-            if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let _ = message.autoremoveAttribute {
+            if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let timer = message.autoremoveAttribute, timer.timeout < 60 {
                 messageText = strings().chatListServiceDestructingPhoto
             } else {
                 if !message.text.isEmpty {
@@ -71,7 +71,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                 messageText = strings().chatListInstantVideo
             } else if fileMedia.isVideo {
                 
-                if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let _ = message.autoremoveAttribute {
+                if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let timer = message.autoremoveAttribute, timer.timeout < 60 {
                     messageText = strings().chatListServiceDestructingVideo
                 } else {
                     if fileMedia.isAnimated {
@@ -216,7 +216,6 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
         }
         
         var peer = coreMessageMainPeer(message)
-        
         
         
         var mediaViewType: MessageTextMediaViewType = .emoji

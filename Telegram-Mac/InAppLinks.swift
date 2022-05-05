@@ -506,8 +506,10 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                             case let .attachBot(botname, _):
                                 if peer.username == botname {
                                     let chat = context.bindings.rootNavigation().controller as? ChatController
-                                    chat?.chatInteraction.invokeInitialAction(action: action)
-                                    return
+                                    if chat?.chatInteraction.peerId == peer.id {
+                                        chat?.chatInteraction.invokeInitialAction(action: action)
+                                        return
+                                    }
                                 }
                             default:
                                 break
@@ -1049,6 +1051,9 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
     let url = url.lowercased.nsstring
     
 
+    if let url = URL(string: url as String), url.scheme == "file" {
+        return .nothing
+    }
     
     for domain in telegram_me {
         let range = url.range(of: domain)

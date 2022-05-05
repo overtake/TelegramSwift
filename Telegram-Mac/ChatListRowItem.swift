@@ -218,7 +218,7 @@ class ChatListRowItem: TableRowItem {
         if let archiveStatus = archiveStatus {
             switch archiveStatus {
             case .collapsed:
-                return context.sharedContext.layout != .minimisize
+                return context.layout != .minimisize
             default:
                 return false
             }
@@ -257,8 +257,13 @@ class ChatListRowItem: TableRowItem {
     }
     
     let isVerified: Bool
+    let isPremium: Bool
     let isScam: Bool
     let isFake: Bool
+
+    
+    private(set) var photos: [TelegramPeerPhoto] = []
+    private let peerPhotosDisposable = MetaDisposable()
 
     
     var isOutMessage:Bool {
@@ -371,6 +376,7 @@ class ChatListRowItem: TableRowItem {
         self.archiveStatus = archiveStatus
         self.groupLatestPeers = peers
         self.isVerified = false
+        self.isPremium = false
         self.isScam = false
         self.isFake = false
         self.filter = filter
@@ -539,12 +545,14 @@ class ChatListRowItem: TableRowItem {
         self.highlightText = highlightText
         if let peer = peer {
             self.isVerified = peer.isVerified
+            self.isPremium = peer.isPremium
             self.isScam = peer.isScam
             self.isFake = peer.isFake
         } else {
             self.isVerified = false
             self.isScam = false
             self.isFake = false
+            self.isPremium = false
         }
         
        
@@ -715,6 +723,18 @@ class ChatListRowItem: TableRowItem {
         }
         
         _ = makeSize(initialSize.width, oldWidth: 0)
+        
+        
+        if let peer = peer, peer.isPremium {
+            self.photos = syncPeerPhotos(peerId: peer.id)
+            let signal = peerPhotos(context: context, peerId: peer.id, force: true) |> deliverOnMainQueue
+            peerPhotosDisposable.set(signal.start(next: { [weak self] photos in
+                if self?.photos != photos {
+                    self?.photos = photos
+                    self?.redraw(animated: true, options: .effectFade)
+                }
+            }))
+        }
     }
     
     let margin:CGFloat = 9
@@ -1258,7 +1278,7 @@ class ChatListRowItem: TableRowItem {
                 }
             }
             
-            if groupId != .root, context.sharedContext.layout != .minimisize, let archiveStatus = archiveStatus {
+            if groupId != .root, context.layout != .minimisize, let archiveStatus = archiveStatus {
                 switch archiveStatus {
                 case .collapsed:
                     firstGroup.append(ContextMenuItem(strings().chatListRevealActionExpand , handler: {
@@ -1337,21 +1357,21 @@ class ChatListRowItem: TableRowItem {
     }
     
     var ctxDisplayLayout:(TextNodeLayout, TextNode)? {
-        if isSelected && context.sharedContext.layout != .single {
+        if isSelected && context.layout != .single {
             return displaySelectedLayout
         }
         return displayLayout
     }
     
     var ctxChatNameLayout:(TextNodeLayout, TextNode)? {
-        if isSelected && context.sharedContext.layout != .single {
+        if isSelected && context.layout != .single {
             return chatNameSelectedLayout
         }
         return chatNameLayout
     }
     
     var ctxMessageLayout:(TextNodeLayout, TextNode)? {
-        if isSelected && context.sharedContext.layout != .single {
+        if isSelected && context.layout != .single {
             if let typingSelectedLayout = typingSelectedLayout {
                 return typingSelectedLayout
             }
@@ -1363,28 +1383,28 @@ class ChatListRowItem: TableRowItem {
         return messageLayout
     }
     var ctxDateLayout:(TextNodeLayout, TextNode)? {
-        if isSelected && context.sharedContext.layout != .single {
+        if isSelected && context.layout != .single {
             return dateSelectedLayout
         }
         return dateLayout
     }
     
     var ctxBadgeNode:BadgeNode? {
-        if isSelected && context.sharedContext.layout != .single {
+        if isSelected && context.layout != .single {
             return badgeSelectedNode
         }
         return badgeNode
     }
     
 //    var ctxBadge: Badge? {
-//        if isSelected && context.sharedContext.layout != .single {
+//        if isSelected && context.layout != .single {
 //            return badgeSelected
 //        }
 //        return badge
 //    }
     
     var ctxAdditionalBadgeNode:BadgeNode? {
-        if isSelected && context.sharedContext.layout != .single {
+        if isSelected && context.layout != .single {
             return additionalBadgeSelectedNode
         }
         return additionalBadgeNode
@@ -1405,7 +1425,7 @@ class ChatListRowItem: TableRowItem {
     }
   
     override var height: CGFloat {
-        if let archiveStatus = archiveStatus, context.sharedContext.layout != .minimisize {
+        if let archiveStatus = archiveStatus, context.layout != .minimisize {
             switch archiveStatus {
             case .collapsed:
                 return 30

@@ -17,8 +17,9 @@ import GZIP
 import Postbox
 import ColorPalette
 import ThemeSettings
+import ObjcUtils
 
-private func buffer(from image: CGImage, zoom: CGFloat = 1.0, background: CGImage? = nil) -> CVPixelBuffer? {
+private func buffer(from image: CGImage, zoom: CGFloat = 1.0, offset: CGPoint = .zero, background: CGImage? = nil) -> CVPixelBuffer? {
     let attrs = [kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue, kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue] as CFDictionary
     var pixelBuffer : CVPixelBuffer?
     let status = CVPixelBufferCreate(kCFAllocatorDefault, Int(image.size.width), Int(image.size.height), kCVPixelFormatType_32ARGB, attrs, &pixelBuffer)
@@ -39,20 +40,40 @@ private func buffer(from image: CGImage, zoom: CGFloat = 1.0, background: CGImag
         context?.draw(background, in: rect)
     }
     
-    context?.draw(image, in: rect.focus(NSMakeSize(rect.width * zoom, rect.height * zoom)))
+    var frame = rect.focus(NSMakeSize(rect.width * zoom, rect.height * zoom))
+    
+    var offset = offset
+    offset.x = mappingRange(offset.x, -3, 3, -2 * zoom, 2 * zoom)
+    offset.y = mappingRange(offset.y, -3, 3, -2 * zoom, 2 * zoom)
+
+    
+    frame.origin.x += frame.origin.x * offset.x
+    frame.origin.y -= frame.origin.y * offset.y
+    
+    context?.draw(image, in: frame)
 
     CVPixelBufferUnlockBaseAddress(pixelBuffer!, CVPixelBufferLockFlags(rawValue: 0))
     return pixelBuffer
 }
 
-private func makeImage(from image: CGImage, zoom: CGFloat = 1.0, background: CGImage? = nil) -> CGImage {
+private func makeImage(from image: CGImage, zoom: CGFloat = 1.0, offset: CGPoint, background: CGImage? = nil) -> CGImage {
     let rect = CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
     return generateImage(image.size, contextGenerator: { size, ctx in
         ctx.clear(size.bounds)
         if let background = background {
             ctx.draw(background, in: rect)
         }
-        ctx.draw(image, in: rect.focus(NSMakeSize(rect.width * zoom, rect.height * zoom)))
+        
+        
+        var frame = rect.focus(NSMakeSize(rect.width * zoom, rect.height * zoom))
+        
+        var offset = offset
+        offset.x = mappingRange(offset.x, -3, 3, -2 * zoom, 2 * zoom)
+        offset.y = mappingRange(offset.y, -3, 3, -2 * zoom, 2 * zoom)
+        frame.origin.x += frame.origin.x * offset.x
+        frame.origin.y -= frame.origin.y * offset.y
+        
+        ctx.draw(image, in: frame)
     })!
 }
 
@@ -82,7 +103,14 @@ private final class StickerToMp4Context {
         init() throws {
             self.path = NSTemporaryDirectory() + "tgs_\(arc4random()).mp4"
             self.writter = try .init(url: URL.init(fileURLWithPath: path), fileType: .mov)
-            let settings:[String: Any] = [AVVideoWidthKey: NSNumber(value: 640), AVVideoHeightKey: NSNumber(value: 640), AVVideoCodecKey: AVVideoCodecH264];
+            var settings:[String: Any] = [AVVideoWidthKey: NSNumber(value: 640), AVVideoHeightKey: NSNumber(value: 640), AVVideoCodecKey: AVVideoCodecH264];
+            
+            let videoCompressionProps: Dictionary<String, Any> = [
+                AVVideoAverageBitRateKey : 1500000,
+                AVVideoMaxKeyFrameIntervalKey : 3,
+            ]
+            settings[AVVideoCompressionPropertiesKey] = videoCompressionProps
+            
             self.writerInput = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
             self.adaptor = AVAssetWriterInputPixelBufferAdaptor(assetWriterInput: writerInput, sourcePixelBufferAttributes: nil)
             self.writter.add(self.writerInput)
@@ -118,12 +146,14 @@ private final class StickerToMp4Context {
     private let fileReference: FileMediaReference
     private let context: AccountContext
     private let zoom: CGFloat
-    init(context: AccountContext, background: Signal<CGImage, NoError>, zoom: CGFloat, fileReference: FileMediaReference) {
+    private let offset: CGPoint
+    init(context: AccountContext, background: Signal<CGImage, NoError>, zoom: CGFloat, offset: CGPoint, fileReference: FileMediaReference) {
         self.export = try? Export()
         self.context = context
         self.background = background
         self.fileReference = fileReference
         self.zoom = zoom
+        self.offset = offset
     }
     
     deinit {
@@ -174,7 +204,7 @@ private final class StickerToMp4Context {
             
             let image = renderer.render(at: 0, frames: [], previousFrame: nil)?.image
             if let image = image {
-                let pixelBuffer = makeImage(from: image, zoom: zoom, background: background)
+                let pixelBuffer = makeImage(from: image, zoom: zoom, offset: offset, background: background)
 
                 if let colorDestination = CGImageDestinationCreateWithURL(url as CFURL, kUTTypeJPEG, 1, nil) {
                     CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
@@ -202,7 +232,7 @@ private final class StickerToMp4Context {
             while true {
                 let image = renderer.render(at: frame, frames: [], previousFrame: nil)?.image
                 if let image = image {
-                    let pixelBuffer = buffer(from: image, zoom: zoom, background: background)!
+                    let pixelBuffer = buffer(from: image, zoom: zoom, offset: offset, background: background)!
         
                     let frameTime: CMTime  = CMTimeMake(value: 20, timescale: 600);
                     let lastTime: CMTime = CMTimeMake(value: Int64(index) * 20, timescale: 600);
@@ -254,9 +284,9 @@ private final class StickerToMp4 {
     }
     
     private let context:QueueLocalObject<StickerToMp4Context>
-    init(context _context: AccountContext, background: Signal<CGImage, NoError>, zoom: CGFloat, fileReference: FileMediaReference) {
+    init(context _context: AccountContext, background: Signal<CGImage, NoError>, zoom: CGFloat, offset: CGPoint, fileReference: FileMediaReference) {
         self.context = .init(queue: StickerToMp4Context.queue, generate: {
-            return StickerToMp4Context(context: _context, background: background, zoom: zoom, fileReference: fileReference)
+            return StickerToMp4Context(context: _context, background: background, zoom: zoom, offset: offset, fileReference: fileReference)
         })
     }
     
@@ -381,10 +411,11 @@ final class MediaObjectToAvatar {
             }
             var type: Source
             var zoom: CGFloat
+            var offset: CGPoint
         }
         enum Background {
             case colors([NSColor])
-            case pattern(Wallpaper)
+            case pattern(Wallpaper, ColorPalette)
         }
         let foreground: Foreground
         let background: Background
@@ -464,7 +495,7 @@ final class MediaObjectToAvatar {
                     
                 })
             }
-        case let .pattern(wallpaper):
+        case let .pattern(wallpaper, palette):
             let emptyColor: TransformImageEmptyColor
             
             let colors = wallpaper.settings.colors.compactMap { NSColor($0) }
@@ -491,7 +522,7 @@ final class MediaObjectToAvatar {
                     representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(NSMakeSize(640, 640)), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil))
                 }
 
-                let updateImageSignal = chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: true, autoFetchFullSize: true, scale: 2, isBlurred: false, synchronousLoad: false, drawPatternOnly: false, palette: dayClassicPalette)
+                let updateImageSignal = chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: true, autoFetchFullSize: true, scale: 2, isBlurred: false, synchronousLoad: false, drawPatternOnly: false, palette: palette)
 
                 background = updateImageSignal |> map { value in
                     return value.execute(arguments, value.data)!.generateImage()!
@@ -506,7 +537,7 @@ final class MediaObjectToAvatar {
         let zoom = object.foreground.zoom
         switch object.foreground.type {
         case let .animated(file):
-            let stickerToMp4: StickerToMp4 = .init(context: context, background: background, zoom: object.foreground.zoom, fileReference: .standalone(media: file))
+            let stickerToMp4: StickerToMp4 = .init(context: context, background: background, zoom: object.foreground.zoom, offset: object.foreground.offset, fileReference: .standalone(media: file))
             self.animated_c = stickerToMp4
             
             signal = stickerToMp4.status |> map { value -> Result in

@@ -467,7 +467,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         avatarControl.setFrameSize(36,36)
         addSubview(avatarControl)
         
-        disposable.set(chatInteraction.context.sharedContext.layoutHandler.get().start(next: { [weak self] state in
+        disposable.set(chatInteraction.context.layoutHandler.get().start(next: { [weak self] state in
             if let strongSelf = self {
                 switch state {
                 case .single:
@@ -813,6 +813,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                     titleImage = (theme.icons.scam, .right(topInset: 0))
                 } else if peer.isFake {
                     titleImage = (theme.icons.fake, .right(topInset: 0))
+                } else if peer.isPremium {
+                    titleImage = (theme.icons.premium_account_rev, .right(topInset: 0))
                 } else if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings, notificationSettings.isMuted {
                     titleImage = (theme.icons.dialogMuteImage, .right(topInset: 3))
                 } else {

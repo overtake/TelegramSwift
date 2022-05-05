@@ -513,10 +513,16 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 }
                             }
 
-                            if message.muted {
-                                notification.soundName = nil
-                                title += " 🔕"
+                            switch source {
+                            case .messages:
+                                if message.muted {
+                                    notification.soundName = nil
+                                    title += " 🔕"
+                                }
+                            default:
+                                break
                             }
+                           
                             if screenIsLocked {
                                 notification.soundName = nil
                             }

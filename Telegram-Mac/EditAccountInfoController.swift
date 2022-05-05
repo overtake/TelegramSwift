@@ -285,7 +285,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
                             return PeerInfoUpdatingPhotoState(progress: 0, cancel: cancel)
                         }
                     }
-                } |> mapError {_ in return UploadPeerPhotoError.generic } |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
+                } |> castError(UploadPeerPhotoError.self) |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
                     return context.engine.accountData.updateAccountPhoto(resource: resource, videoResource: nil, videoStartTimestamp: nil, mapResourceToAvatarSizes: { resource, representations in
                         return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
                     })

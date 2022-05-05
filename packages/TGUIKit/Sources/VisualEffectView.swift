@@ -20,6 +20,10 @@ open class VisualEffect: NSVisualEffectView {
         setup()
     }
     
+    
+    open override var isFlipped: Bool {
+        return true
+    }
     public var bgColor: NSColor = NSColor.black.withAlphaComponent(0.2) {
         didSet {
             overlay.backgroundColor = bgColor.cgColor
