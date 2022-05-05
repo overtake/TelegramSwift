@@ -492,9 +492,10 @@ final class ChatInteraction : InterfaceObserver  {
                             } else {
                                 thumbFile = MenuAnimation.menu_folder_bot.file
                             }
-                            
                             showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, complete: self?.afterSentTransition), chatInteraction: self, thumbFile: thumbFile), for: context.window)
                             
+                        }, error: { _ in
+                            showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, complete: self?.afterSentTransition), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
                         })
                     }
                     if peer.isVerified {
