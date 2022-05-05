@@ -166,9 +166,13 @@ open class Popover: NSObject {
                     control.isSelected = true
                     
                     strongSelf.window?.set(escape: { [weak strongSelf] _ -> KeyHandlerResult in
-                        strongSelf?.hide()
+                        if let result = strongSelf?.controller?.escapeKeyAction() {
+                            if result == .rejected {
+                                strongSelf?.hide()
+                            }
+                        }
                         return .invoked
-                        }, with: strongSelf, priority: .modal)
+                    }, with: strongSelf, priority: .modal)
                     
                     strongSelf.window?.set(handler: { _ -> KeyHandlerResult in
                         return .invokeNext

@@ -653,6 +653,8 @@ final class GroupInfoArguments : PeerInfoArguments {
                                             text = strings().inviteChannelsTooMuch
                                         case .generic:
                                             text = strings().unknownError
+                                        case .kicked:
+                                            text = strings().channelAddUserKickedError
                                         case let .bot(memberId):
                                             let _ = (context.account.postbox.transaction { transaction in
                                                 return transaction.getPeer(peerId)
@@ -1662,7 +1664,7 @@ enum GroupInfoEntry: PeerInfoEntry {
                 arguments?.peerInfo(peer!.id)
             }, contextMenuItems: {
                 return .single(menuItems)
-            }, inputActivity: inputActivity)
+            }, inputActivity: inputActivity, highlightVerified: true)
         case let .showMore(_, _, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoShowMore, nameStyle: blueActionButton, type: .none, viewType: viewType, action: arguments.showMore, thumb: GeneralThumbAdditional(thumb: theme.icons.chatSearchUp, textInset: 52, thumbInset: 4))
         case let .leave(_, text, viewType):

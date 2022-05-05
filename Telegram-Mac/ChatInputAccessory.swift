@@ -131,7 +131,7 @@ class ChatInputAccessory: Node {
                 
                 let authors = state.interfaceState.forwardMessages.compactMap { $0.author?.id }.uniqueElements.count
 
-                let hideSendersName = (state.interfaceState.hideSendersName || state.interfaceState.hideCaptions)
+                let hideSendersName = state.interfaceState.hideSendersName
                 
                 items.append(ContextMenuItem(strings().chatAlertForwardActionShow1Countable(authors), handler: {
                     setHideAction(false)

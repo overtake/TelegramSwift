@@ -21,12 +21,14 @@ final class StickerPackArguments {
     let addpack:(StickerPackCollectionInfo, [ItemCollectionItem], Bool)->Void
     let share:(String)->Void
     let close:()->Void
-    init(context: AccountContext, send:@escaping(Media, NSView, Bool, Bool)->Void, addpack:@escaping(StickerPackCollectionInfo, [ItemCollectionItem], Bool)->Void, share:@escaping(String)->Void, close:@escaping()->Void) {
+    let previewPremium: (TelegramMediaFile, NSView)->Void
+    init(context: AccountContext, send:@escaping(Media, NSView, Bool, Bool)->Void, addpack:@escaping(StickerPackCollectionInfo, [ItemCollectionItem], Bool)->Void, share:@escaping(String)->Void, close:@escaping()->Void, previewPremium: @escaping(TelegramMediaFile, NSView)->Void) {
         self.context = context
         self.send = send
         self.addpack = addpack
         self.share = share
         self.close = close
+        self.previewPremium = previewPremium
     }
 }
 
@@ -59,6 +61,7 @@ private struct FeaturedEntry : TableItemListNodeEntry {
     }
 }
 
+
 private class StickersModalView : View {
     private let tableView:TableView = TableView(frame: NSZeroRect)
     private let add:TitleButton = TitleButton()
@@ -74,6 +77,8 @@ private class StickersModalView : View {
     private var isFeaturedActive: Bool?
     
     var activateFeatured:(()->Void)? = nil
+        
+    private var premiumView: StickerPremiumHolderView? = nil
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -133,7 +138,39 @@ private class StickersModalView : View {
         _ = shareView.sizeToFit()
         _ = close.sizeToFit()
         
-
+        dismiss.scaleOnClick = true
+        close.scaleOnClick = true
+        
+    }
+    
+    func previewPremium(_ file: TelegramMediaFile, context: AccountContext, view: NSView, animated: Bool) {
+        let current: StickerPremiumHolderView
+        if let view = premiumView {
+            current = view
+        } else {
+            current = StickerPremiumHolderView(frame: bounds)
+            self.premiumView = current
+            addSubview(current)
+            
+            if animated {
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+        }
+        current.set(file: file, context: context)
+        current.close = { [weak self] in
+            self?.closePremium()
+        }
+    }
+    
+    var isPremium: Bool {
+        return self.premiumView != nil
+    }
+    
+    func closePremium() {
+        if let view = premiumView {
+            performSubviewRemoval(view, animated: true)
+            self.premiumView = nil
+        }
     }
     
     private var featuredEntries:[FeaturedEntry] = []
@@ -206,7 +243,11 @@ private class StickersModalView : View {
             
             let stickerArguments = StickerPanelArguments(context: arguments.context, sendMedia: {  media, view, silent, schedule in
                 if let media = media as? TelegramMediaFile {
-                    arguments.send(media, view, silent, schedule)
+                    if media.isPremiumSticker && !context.isPremium {
+                        arguments.previewPremium(media, view)
+                    } else {
+                        arguments.send(media, view, silent, schedule)
+                    }
                 }
             }, showPack: { _ in
                 
@@ -233,7 +274,7 @@ private class StickersModalView : View {
                 
                 self.featuredEntries = []
                 
-                let item = StickerPackPanelRowItem(frame.size, context: arguments.context, arguments: stickerArguments, files: files, packInfo: .emojiRelated, collectionId: .pack(info.id), canSend: arguments.context.bindings.rootNavigation().controller is ChatController)
+                let item = StickerPackPanelRowItem(frame.size, context: arguments.context, arguments: stickerArguments, files: files, packInfo: .emojiRelated, collectionId: .pack(info.id), canSend: arguments.context.bindings.rootNavigation().controller is ChatController, isPreview: true)
                 _ = item.makeSize(frame.width)
                 
                 tableView.beginTableUpdates()
@@ -366,6 +407,7 @@ private class StickersModalView : View {
         
         shadowView.setFrameOrigin(0, frame.height - shadowView.frame.height)
         showMore.centerX(y: frame.height - showMore.frame.height - 15)
+        premiumView?.frame = bounds
     }
 }
 
@@ -421,6 +463,8 @@ class StickerPackPreviewModalController: ModalViewController {
             showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: context.window)
         }, close: { [weak self] in
             self?.close()
+        }, previewPremium: { [weak self] file, view in
+            self?.genericView.previewPremium(file, context: context, view: view, animated: true)
         })
     }
     
@@ -481,6 +525,15 @@ class StickerPackPreviewModalController: ModalViewController {
 
     }
     
+    
+    override func escapeKeyAction() -> KeyHandlerResult {
+        if self.genericView.isPremium {
+            self.genericView.closePremium()
+            return .invoked
+        } else {
+            return super.escapeKeyAction()
+        }
+    }
     
     deinit {
         disposable.dispose()

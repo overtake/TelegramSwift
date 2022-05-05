@@ -8390,6 +8390,84 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var premium_lock: CGImage {
+      if let image = cached.with({ $0["premium_lock"] }) {
+          return image
+      } else {
+          let image = _premium_lock()
+          _ = cached.modify { current in 
+              var current = current
+              current["premium_lock"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var premium_account: CGImage {
+      if let image = cached.with({ $0["premium_account"] }) {
+          return image
+      } else {
+          let image = _premium_account()
+          _ = cached.modify { current in 
+              var current = current
+              current["premium_account"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var premium_account_active: CGImage {
+      if let image = cached.with({ $0["premium_account_active"] }) {
+          return image
+      } else {
+          let image = _premium_account_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["premium_account_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var premium_account_rev: CGImage {
+      if let image = cached.with({ $0["premium_account_rev"] }) {
+          return image
+      } else {
+          let image = _premium_account_rev()
+          _ = cached.modify { current in 
+              var current = current
+              current["premium_account_rev"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var premium_account_rev_active: CGImage {
+      if let image = cached.with({ $0["premium_account_rev_active"] }) {
+          return image
+      } else {
+          let image = _premium_account_rev_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["premium_account_rev_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var premium_reaction_lock: CGImage {
+      if let image = cached.with({ $0["premium_reaction_lock"] }) {
+          return image
+      } else {
+          let image = _premium_reaction_lock()
+          _ = cached.modify { current in 
+              var current = current
+              current["premium_reaction_lock"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -9036,6 +9114,12 @@ public final class TelegramIconsTheme {
   private let _gallery_pip_pause: ()->CGImage
   private let _gallery_pip_play: ()->CGImage
   private let _notification_sound_add: ()->CGImage
+  private let _premium_lock: ()->CGImage
+  private let _premium_account: ()->CGImage
+  private let _premium_account_active: ()->CGImage
+  private let _premium_account_rev: ()->CGImage
+  private let _premium_account_rev_active: ()->CGImage
+  private let _premium_reaction_lock: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -9682,7 +9766,13 @@ public final class TelegramIconsTheme {
       gallery_pip_out: @escaping()->CGImage,
       gallery_pip_pause: @escaping()->CGImage,
       gallery_pip_play: @escaping()->CGImage,
-      notification_sound_add: @escaping()->CGImage
+      notification_sound_add: @escaping()->CGImage,
+      premium_lock: @escaping()->CGImage,
+      premium_account: @escaping()->CGImage,
+      premium_account_active: @escaping()->CGImage,
+      premium_account_rev: @escaping()->CGImage,
+      premium_account_rev_active: @escaping()->CGImage,
+      premium_reaction_lock: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -10329,5 +10419,11 @@ public final class TelegramIconsTheme {
       self._gallery_pip_pause = gallery_pip_pause
       self._gallery_pip_play = gallery_pip_play
       self._notification_sound_add = notification_sound_add
+      self._premium_lock = premium_lock
+      self._premium_account = premium_account
+      self._premium_account_active = premium_account_active
+      self._premium_account_rev = premium_account_rev
+      self._premium_account_rev_active = premium_account_rev_active
+      self._premium_reaction_lock = premium_reaction_lock
   }
 }

@@ -734,6 +734,16 @@ func initialize() -> [String] {
     array.append("gallery_pip_play")
     
     array.append("notification_sound_add")
+    
+    array.append("premium_lock")
+    
+    array.append("premium_account")
+    array.append("premium_account_active")
+
+    array.append("premium_account_rev")
+    array.append("premium_account_rev_active")
+    
+    array.append("premium_reaction_lock")
 
     return array
 }

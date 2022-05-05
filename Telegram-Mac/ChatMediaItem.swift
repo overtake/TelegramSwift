@@ -31,6 +31,10 @@ class ChatMediaLayoutParameters : Equatable {
     
     var runEmojiScreenEffect:(String)->Void = { _ in }
     
+    var runPremiumScreenEffect:(MessageId)->Void = { _ in }
+    
+    var mirror: Bool = false
+    
     private var _timeCodeInitializer: Double? = nil
 
     var timeCodeInitializer:Double? {

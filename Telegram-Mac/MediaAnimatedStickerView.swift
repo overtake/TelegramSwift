@@ -18,6 +18,7 @@ import SwiftSignalKit
 class MediaAnimatedStickerView: ChatMediaContentView {
 
     private let loadResourceDisposable = MetaDisposable()
+    private let fetchPremiumDisposable = MetaDisposable()
     private let stateDisposable = MetaDisposable()
     private let fetchDisposable = MetaDisposable()
     private let playThrottleDisposable = MetaDisposable()
@@ -61,6 +62,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         loadResourceDisposable.set(nil)
         playThrottleDisposable.set(nil)
         fetchDisposable.set(nil)
+        fetchPremiumDisposable.set(nil)
     }
     
     deinit {
@@ -68,6 +70,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         stateDisposable.dispose()
         playThrottleDisposable.dispose()
         fetchDisposable.dispose()
+        fetchPremiumDisposable.dispose()
     }
     
     func removeNotificationListeners() {
@@ -234,24 +237,41 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         super.update(with: media, size: size, context: context, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags, approximateSynchronousValue: approximateSynchronousValue)
         
         
+        let mirror = parameters?.mirror ?? false
+
         let parameters = parameters as? ChatAnimatedStickerMediaLayoutParameters
+        
+        
         
         let reference: FileMediaReference
         let mediaResource: MediaResourceReference
+        var premiumResource: MediaResourceReference? = nil
         if let message = parent {
             reference = FileMediaReference.message(message: MessageReference(message), media: file)
             mediaResource = reference.resourceReference(file.resource)
+            if let effect = file.premiumEffect {
+                premiumResource = reference.resourceReference(effect.resource)
+            }
         } else if let stickerReference = file.stickerReference {
             if file.resource is CloudStickerPackThumbnailMediaResource {
                 reference = FileMediaReference.stickerPack(stickerPack: stickerReference, media: file)
                 mediaResource = MediaResourceReference.stickerPackThumbnail(stickerPack: stickerReference, resource: file.resource)
+                if let effect = file.premiumEffect {
+                    premiumResource = MediaResourceReference.stickerPackThumbnail(stickerPack: stickerReference, resource: effect.resource)
+                }
             } else {
                 reference = FileMediaReference.stickerPack(stickerPack: stickerReference, media: file)
                 mediaResource = reference.resourceReference(file.resource)
+                if let effect = file.premiumEffect {
+                    premiumResource = reference.resourceReference(effect.resource)
+                }
             }
         } else {
             reference = FileMediaReference.standalone(media: file)
             mediaResource = reference.resourceReference(file.resource)
+            if let effect = file.premiumEffect {
+                premiumResource = reference.resourceReference(effect.resource)
+            }
         }
         
         let data: Signal<MediaResourceData, NoError>
@@ -303,7 +323,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 } else {
                     type = .lottie
                 }
-                self.sticker = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: size, fitzModifier: fitzModifier), type: type, cachePurpose: cache, playPolicy: playPolicy, maximumFps: maximumFps, colors: parameters?.colors ?? [], soundEffect: soundEffect, postbox: self.context?.account.postbox)
+                self.sticker = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: size, fitzModifier: fitzModifier, mirror: mirror), type: type, cachePurpose: cache, playPolicy: playPolicy, maximumFps: maximumFps, colors: parameters?.colors ?? [], soundEffect: soundEffect, postbox: self.context?.account.postbox)
                 
                 self.fetchStatus = .Local
             } else {
@@ -378,6 +398,11 @@ class MediaAnimatedStickerView: ChatMediaContentView {
        
         
         fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: mediaResource).start())
+        
+        if let premiumResource = premiumResource {
+            fetchPremiumDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: premiumResource).start())
+        }
+        
         if updated {
             stateDisposable.set((self.playerView.state |> deliverOnMainQueue).start(next: { [weak self] state in
                 guard let `self` = self else { return }

@@ -2660,7 +2660,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.reflectScrolledClipView(clipView)
         let tableFrame = tableView.frame
         self.tableView.frame = tableFrame
-        self.tableView.noteNumberOfRowsChanged()
         
         self.updatedItems?(self.list)
         

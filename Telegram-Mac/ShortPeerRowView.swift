@@ -160,11 +160,13 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                         title.1.draw(NSMakeRect(item.textInset, tY, title.0.size.width, title.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                         
                         if item.peer.isVerified && item.highlightVerified {
-                            ctx.draw(isRowSelected ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(item.textInset + title.0.size.width - 1, tY - 3, 24, 24))
+                            ctx.draw(isRowSelected ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(item.textInset + title.0.size.width - 1, tY, 16, 16))
                         } else if item.peer.isScam && item.highlightVerified {
                             ctx.draw(isRowSelected ? theme.icons.scamActive : theme.icons.scam, in: NSMakeRect(item.textInset + title.0.size.width + 5, tY + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
                         } else if item.peer.isFake && item.highlightVerified {
                             ctx.draw(isRowSelected ? theme.icons.fakeActive : theme.icons.fake, in: NSMakeRect(item.textInset + title.0.size.width + 5, tY + 1, theme.icons.fake.backingSize.width, theme.icons.fake.backingSize.height))
+                        } else if item.peer.isVerified && item.highlightVerified {
+                            ctx.draw(isRowSelected ? theme.icons.premium_account_rev_active : theme.icons.premium_account_rev, in: NSMakeRect(item.textInset + title.0.size.width + 5, tY + 1, theme.icons.premium_account_rev.backingSize.width, theme.icons.premium_account_rev.backingSize.height))
                         }
                     }
                 case .modern:
@@ -192,11 +194,15 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                         title.1.draw(NSMakeRect(item.textInset, tY, title.0.size.width, title.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                         
                         if item.peer.isVerified && item.highlightVerified {
-                            ctx.draw(isRowSelected ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(item.textInset + title.0.size.width - 1, tY - 3, 24, 24))
-                        }
-                        if item.peer.isScam && item.highlightVerified {
+                            ctx.draw(isRowSelected ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(item.textInset + title.0.size.width - 1, tY, 16, 16))
+                        } else if item.peer.isScam && item.highlightVerified {
                             ctx.draw(isRowSelected ? theme.icons.scamActive : theme.icons.scam, in: NSMakeRect(item.textInset + title.0.size.width + 5, tY + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
-                        }
+                        } else if item.peer.isFake && item.highlightVerified {
+                            ctx.draw(isRowSelected ? theme.icons.fakeActive : theme.icons.fake, in: NSMakeRect(item.textInset + title.0.size.width + 5, tY + 1, theme.icons.fake.backingSize.width, theme.icons.fake.backingSize.height))
+                        } else if item.peer.isPremium && item.highlightVerified {
+                            ctx.draw(isRowSelected ? theme.icons.premium_account_rev_active : theme.icons.premium_account_rev, in: NSMakeRect(item.textInset + title.0.size.width + 5, tY - 1, theme.icons.premium_account_rev.backingSize.width, theme.icons.premium_account_rev.backingSize.height))
+                         }
+                        
                     }
                 }
             }

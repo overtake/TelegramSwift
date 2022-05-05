@@ -19,11 +19,28 @@ class AccountInfoItem: GeneralRowItem {
     
     fileprivate let textLayout: TextViewLayout
     fileprivate let activeTextlayout: TextViewLayout
+    
+    fileprivate let titleLayout: TextViewLayout
+    fileprivate let titleActiveLayout: TextViewLayout
+
     fileprivate let context: AccountContext
     fileprivate let peer: TelegramUser
     private(set) var photos: [TelegramPeerPhoto] = []
 
     private let peerPhotosDisposable = MetaDisposable()
+    
+    var addition: CGImage? {
+        if peer.isScam {
+            return isSelected ? theme.icons.scamActive : theme.icons.scam
+        } else if peer.isFake {
+            return isSelected ? theme.icons.fakeActive : theme.icons.fake
+        } else if peer.isPremium {
+            return isSelected ? theme.icons.premium_account_active : theme.icons.premium_account
+        } else if peer.isVerified {
+            return isSelected ? theme.icons.verifiedImageSelected : theme.icons.verifiedImage
+        }
+        return nil
+    }
     
     init(_ initialSize:NSSize, stableId:AnyHashable, viewType: GeneralViewType, inset: NSEdgeInsets = NSEdgeInsets(left: 30, right: 30), context: AccountContext, peer: TelegramUser, action: @escaping()->Void) {
         self.context = context
@@ -31,13 +48,21 @@ class AccountInfoItem: GeneralRowItem {
         
         let attr = NSMutableAttributedString()
         
-        _ = attr.append(string: peer.displayTitle, color: theme.colors.text, font: .medium(.title))
+        
+        let titleAttr: NSMutableAttributedString = NSMutableAttributedString()
+        _ = titleAttr.append(string: peer.displayTitle, color: theme.colors.text, font: .medium(.title))
+        self.titleLayout = .init(titleAttr, maximumNumberOfLines: 1)
+        let activeTitle = titleAttr.mutableCopy() as! NSMutableAttributedString
+        activeTitle.addAttribute(.foregroundColor, value: theme.colors.underSelectedColor, range: titleAttr.range)
+        self.titleActiveLayout = .init(activeTitle, maximumNumberOfLines: 1)
+
         if let phone = peer.phone {
-            _ = attr.append(string: "\n")
             _ = attr.append(string: formatPhoneNumber(phone), color: theme.colors.grayText, font: .normal(.text))
         }
         if let username = peer.username, !username.isEmpty {
-            _ = attr.append(string: "\n")
+            if !attr.string.isEmpty {
+                _ = attr.append(string: "\n")
+            }
             _ = attr.append(string: "@\(username)", color: theme.colors.grayText, font: .normal(.text))
         }
         
@@ -64,6 +89,8 @@ class AccountInfoItem: GeneralRowItem {
         let success = super.makeSize(width, oldWidth: oldWidth)
         textLayout.measure(width: width - 100)
         activeTextlayout.measure(width: width - 100)
+        self.titleLayout.measure(width: width - 100)
+        self.titleActiveLayout.measure(width: width - 100)
         return success
     }
     
@@ -77,12 +104,16 @@ private class AccountInfoView : GeneralContainableRowView {
     
     
     private let avatarView:AvatarControl
+    private let titleView = TextView()
     private let textView: TextView = TextView()
     private let actionView: ImageView = ImageView()
     
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer?
 
+    private let container = View()
+    
+    private var additionImage: ImageView?
     
     required init(frame frameRect: NSRect) {
         avatarView = AvatarControl(font: .avatar(22.0))
@@ -94,10 +125,16 @@ private class AccountInfoView : GeneralContainableRowView {
         textView.userInteractionEnabled = false
         textView.isSelectable = false
         
+        titleView.userInteractionEnabled = false
+        titleView.isSelectable = false
+        
         addSubview(avatarView)
         addSubview(actionView)
-        addSubview(textView)
         
+        container.addSubview(textView)
+        container.addSubview(titleView)
+        
+        addSubview(container)
         avatarView.set(handler: { [weak self] _ in
             if let item = self?.item as? AccountInfoItem, let _ = item.peer.largeProfileImage {
                 showPhotosGallery(context: item.context, peerId: item.peer.id, firstStableId: item.stableId, item.table, nil)
@@ -177,6 +214,28 @@ private class AccountInfoView : GeneralContainableRowView {
         
         if let item = item as? AccountInfoItem {
             
+            if let addition = item.addition {
+                let current: ImageView
+                if let view = self.additionImage {
+                    current = view
+                } else {
+                    current = ImageView()
+                    container.addSubview(current)
+                    self.additionImage = current
+                    
+                    if animated {
+                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                }
+                current.image = addition
+                current.sizeToFit()
+            } else if let view = self.additionImage {
+                performSubviewRemoval(view, animated: animated)
+                self.additionImage = nil
+            }
+            
+            titleView.update(isSelect ? item.titleActiveLayout : item.titleLayout)
+            
             actionView.image = item.isSelected ? nil : theme.icons.generalNext
             actionView.sizeToFit()
             avatarView.setPeer(account: item.context.account, peer: item.peer)
@@ -243,7 +302,19 @@ private class AccountInfoView : GeneralContainableRowView {
     override func layout() {
         super.layout()
         avatarView.centerY(x:16)
-        textView.centerY(x: avatarView.frame.maxX + 25)
+        
+        
+        container.setFrameSize(NSMakeSize(max(titleView.frame.width, textView.frame.width), titleView.frame.height + textView.frame.height + 2))
+        
+        titleView.setFrameOrigin(0, 0)
+        textView.setFrameOrigin(0, titleView.frame.maxY + 2)
+        
+        container.centerY(x: avatarView.frame.maxX + 25)
+        
+        if let additionImage = additionImage {
+            additionImage.setFrameOrigin(titleView.frame.maxX + 5, 0)
+        }
+        
         actionView.centerY(x: containerView.frame.width - actionView.frame.width - 10)
         photoVideoView?.frame = avatarView.frame
     }

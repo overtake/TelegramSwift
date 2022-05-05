@@ -304,9 +304,9 @@ final class NetworkStatusManager {
                 case .online:
                     switch previous {
                     case .connecting, .waitingForNetwork:
-                        return .single(.connected) |> then(.single(nil) |> delay(1.5, queue: .mainQueue()))
+                        return .single(nil)
                     case .updating:
-                        return .single(.updated) |> then(.single(nil) |> delay(1.5, queue: .mainQueue()))
+                        return .single(nil)
                     default:
                         return .single(nil)
                     }

@@ -469,55 +469,50 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(0, true)
+            self?.switchAccount(1, true)
             return .invoked
         }, with: self, for: .One, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(1, true)
+            self?.switchAccount(2, true)
             return .invoked
         }, with: self, for: .Two, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(2, true)
+            self?.switchAccount(3, true)
             return .invoked
         }, with: self, for: .Three, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(3, true)
+            self?.switchAccount(4, true)
             return .invoked
         }, with: self, for: .Four, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(4, true)
+            self?.switchAccount(5, true)
             return .invoked
         }, with: self, for: .Five, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(5, true)
+            self?.switchAccount(6, true)
             return .invoked
         }, with: self, for: .Six, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(6, true)
+            self?.switchAccount(7, true)
             return .invoked
         }, with: self, for: .Seven, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(7, true)
+            self?.switchAccount(8, true)
             return .invoked
         }, with: self, for: .Eight, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(8, true)
+            self?.switchAccount(9, true)
             return .invoked
         }, with: self, for: .Nine, priority: .low, modifierFlags: [.control])
-        
-        window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(9, true)
-            return .invoked
-        }, with: self, for: .Minus, priority: .low, modifierFlags: [.control])
-        
+                
         
 //        #if DEBUG
 //        window.set(handler: { [weak self] _ -> KeyHandlerResult in
@@ -585,7 +580,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         })
         foldersSemaphore.wait()
         
-        self.updateLeftSidebar(with: folders, layout: context.sharedContext.layout, animated: false)
+        self.updateLeftSidebar(with: folders, layout: context.layout, animated: false)
         
         
         self.view.splitView.layout()
@@ -611,7 +606,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 _ready.set(leftController.chatList.ready.get())
                 self.leftController.tabController.select(index: self.leftController.chatIndex)
 
-                if (necessary || context.sharedContext.layout != .single) {
+                if (necessary || context.layout != .single) {
                     if let _ = peer {
                         let controller = PeerInfoController(context: context, peerId: peerId)
                         controller.navigationController = self.rightController
@@ -643,7 +638,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 _ready.set(leftController.chatList.ready.get())
                 self.leftController.tabController.select(index: self.leftController.chatIndex)
                 
-                if (necessary || context.sharedContext.layout != .single) {
+                if (necessary || context.layout != .single) {
                     if let peer = peer {
                         let controller = ChatController(context: context, chatLocation: .peer(peer.id))
                         controller.navigationController = self.rightController
@@ -706,7 +701,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             rightController.callHeader?.show(true, contextObject: groupCallContext)
         }
         
-        self.updateFoldersDisposable.set(combineLatest(queue: .mainQueue(), chatListFilterPreferences(engine: context.engine), context.sharedContext.layoutHandler.get()).start(next: { [weak self] value, layout in
+        self.updateFoldersDisposable.set(combineLatest(queue: .mainQueue(), chatListFilterPreferences(engine: context.engine), context.layoutHandler.get()).start(next: { [weak self] value, layout in
             self?.updateLeftSidebar(with: value, layout: layout, animated: true)
         }))
         
@@ -775,7 +770,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         if leftSidebarController != nil {
             width += leftSidebarWidth
         }
-        if context.sharedContext.layout == .minimisize {
+        if context.layout == .minimisize {
             width += 70
         }
         window.minSize = NSMakeSize(width, 550)
@@ -792,7 +787,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             switch launchAction {
             case let .navigate(controller):
                 leftController.tabController.select(index: leftController.chatIndex)
-                context.bindings.rootNavigation().push(controller, context.sharedContext.layout == .single)
+                context.bindings.rootNavigation().push(controller, context.layout == .single)
             case .preferences:
                 leftController.tabController.select(index: leftController.settingsIndex)
             }
@@ -807,6 +802,16 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     
     private func openChat(_ index: Int, _ force: Bool = false) {
         leftController.openChat(index, force: force)
+    }
+    
+    private func switchAccount(_ index: Int, _ force: Bool = false) {
+        
+        let accounts = context.sharedContext.activeAccounts |> take(1) |> deliverOnMainQueue
+        let context = self.context
+        _ = accounts.start(next: { accounts in
+            let account = accounts.accounts[min(index - 1, accounts.accounts.count - 1)]
+            context.sharedContext.switchToAccount(id: account.0, action: nil)
+        })
     }
     
     func splitResizeCursor(at point: NSPoint) -> NSCursor? {
@@ -871,7 +876,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             break;
         }
         
-        context.sharedContext.layoutHandler.set(state)
+        context.layoutHandler.set(state)
         updateMinMaxWindowSize(animated: false)
         self.view.splitView.layout()
 

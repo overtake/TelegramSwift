@@ -13,15 +13,58 @@ import TelegramCore
 import SwiftSignalKit
 import Postbox
 
-
 class StickerMediaContentView: ChatMediaContentView {
-    private var content: ChatMediaContentView?
+    
+    private var lockedView: ImageView?
+    
+    private var content: ChatMediaContentView? {
+        didSet {
+            if isLocked {
+                content?.layer?.opacity = 0.7
+            } else {
+                content?.layer?.opacity = 1.0
+            }
+        }
+    }
+    
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
     deinit {
        
+    }
+    
+    
+    private var isLocked: Bool = false
+    func set(locked: Bool, animated: Bool) {
+        self.isLocked = locked
+        if isLocked {
+            content?.layer?.opacity = 0.7
+        } else {
+            content?.layer?.opacity = 1.0
+        }
+        if isLocked {
+            let current: ImageView
+            if let view = self.lockedView {
+                current = view
+            } else {
+                current = ImageView(frame: theme.icons.premium_lock.backingBounds)
+                self.lockedView = current
+                addSubview(current, positioned: .above, relativeTo: content)
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            current.image = theme.icons.premium_lock
+            current.sizeToFit()
+        } else if let view = lockedView {
+            performSubviewRemoval(view, animated: animated)
+            self.lockedView = nil
+        }
+        
+        needsLayout = true
     }
     
     func play() {
@@ -70,6 +113,15 @@ class StickerMediaContentView: ChatMediaContentView {
     
     override func executeInteraction(_ isControl: Bool) {
         if let window = window as? Window {
+            
+            if NSApp.currentEvent?.modifierFlags.contains(.command) == true {
+                if let media = media as? TelegramMediaFile, media.isPremiumSticker, let parent = parent {
+                    self.playIfNeeded(true)
+                    parameters?.runPremiumScreenEffect(parent.id)
+                }
+                return
+            }
+            
             if let context = context, let peerId = parent?.id.peerId, let media = media as? TelegramMediaFile, !media.isEmojiAnimatedSticker, let reference = media.stickerReference {
                 showModal(with:StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for:window)
             } else if let media = media as? TelegramMediaFile, let sticker = media.stickerText, !sticker.isEmpty {
@@ -106,7 +158,7 @@ class StickerMediaContentView: ChatMediaContentView {
             }
             let content = contentClass.init(frame:size.bounds)
             self.content = content
-            self.addSubview(content)
+            self.addSubview(content, positioned: .below, relativeTo: lockedView)
         }
         
         guard let content = self.content else {
@@ -124,6 +176,9 @@ class StickerMediaContentView: ChatMediaContentView {
     
     override func layout() {
         super.layout()
+        if let view = lockedView {
+            view.centerX(y: frame.height - view.frame.height)
+        }
         
     }
     

@@ -1736,8 +1736,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
         
 
-        let layout:Atomic<SplitViewState> = Atomic(value:context.sharedContext.layout)
-        layoutDisposable.set(context.sharedContext.layoutHandler.get().start(next: {[weak self] (state) in
+        let layout:Atomic<SplitViewState> = Atomic(value:context.layout)
+        layoutDisposable.set(context.layoutHandler.get().start(next: {[weak self] (state) in
             let previous = layout.swap(state)
             if previous != state, let navigation = self?.navigationController {
                 self?.requestUpdateBackBar()
@@ -3212,6 +3212,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             })
         }
         
+        chatInteraction.runPremiumScreenEffect = { [weak self] messageId, mirror, isIncoming in
+            guard let strongSelf = self else {
+                return
+            }
+            if strongSelf.isOnScreen {
+                strongSelf.emojiEffects.addPremiumEffect(mirror: mirror, isIncoming: isIncoming, messageId: messageId, viewFrame: context.window.bounds, for: context.window.contentView!)
+            }
+        }
         chatInteraction.runEmojiScreenEffect = { [weak self] emoji, messageId, mirror, isIncoming in
             guard let strongSelf = self else {
                 return
@@ -5182,7 +5190,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     private var firstLoad: Bool = true
     private var checkMessageExists: Bool = true
-    
+    private var checkPremiumStickers: Bool = true
     override func updateBackgroundColor(_ backgroundMode: TableBackgroundMode) {
         super.updateBackgroundColor(backgroundMode)
         genericView.updateBackground(backgroundMode, navigationView: self.navigationController?.view)
@@ -5325,6 +5333,27 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             default:
                 break
             }
+        }
+        
+        if !isLoading, checkPremiumStickers {
+            var items:[ChatRowItem] = []
+            self.genericView.tableView.enumerateVisibleItems(with: { item in
+                if let item = item as? ChatRowItem, let view = item.view {
+                    if view.visibleRect == view.bounds {
+                        if let file = item.message?.media.first as? TelegramMediaFile, file.isPremiumSticker {
+                            items.append(item)
+                        }
+                    }
+                }
+                return true
+            })
+            for item in items {
+                if let message = item.message {
+                    let mirror = item.renderType == .list || message.isIncoming(item.context.account, item.renderType == .bubble)
+                    chatInteraction.runPremiumScreenEffect(message.id, mirror, false)
+                }
+            }
+            checkPremiumStickers = false
         }
     }
     
@@ -6330,7 +6359,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
        
-        var takeTableItem:((MessageId)->TableRowItem?)? = nil
+        var takeTableItem:((MessageId)->ChatRowItem?)? = nil
         
         self.emojiEffects = EmojiScreenEffect(context: chatInteraction.context, takeTableItem: { msgId in
             return takeTableItem?(msgId)
@@ -6404,7 +6433,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if self?.isLoaded() == false {
                 return nil
             }
-            var found: TableRowItem? = nil
+            var found: ChatRowItem? = nil
             self?.genericView.tableView.enumerateVisibleItems(with: { item in
                 if let item = item as? ChatRowItem, item.message?.id == msgId {
                     found = item
@@ -6898,7 +6927,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     }
 
     override open func backSettings() -> (String,CGImage?) {
-        if context.sharedContext.layout == .single {
+        if context.layout == .single {
             return super.backSettings()
         }
         return (strings().navigationClose,nil)

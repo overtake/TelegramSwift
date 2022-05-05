@@ -520,7 +520,7 @@ class ChatListController : PeersListController {
             }
         }
         
-        let previousLayout: Atomic<SplitViewState> = Atomic(value: context.sharedContext.layout)
+        let previousLayout: Atomic<SplitViewState> = Atomic(value: context.layout)
 
         let list:Signal<TableUpdateTransition,NoError> = combineLatest(queue: prepareQueue, chatHistoryView, appearanceSignal, statePromise.get(), hiddenItemsState.get(), appNotificationSettings(accountManager: context.sharedContext.accountManager), chatListFilterItems(engine: context.engine, accountManager: context.sharedContext.accountManager)) |> mapToQueue { value, appearance, state, hiddenItems, inAppSettings, filtersCounter -> Signal<TableUpdateTransition, NoError> in
                     
@@ -631,7 +631,7 @@ class ChatListController : PeersListController {
                 firstSwitch = false
             }
             
-            let layoutUpdated = previousLayout.swap(context.sharedContext.layout) != context.sharedContext.layout
+            let layoutUpdated = previousLayout.swap(context.layout) != context.layout
                         
             if layoutUpdated {
                 scroll = .up(false)
@@ -741,7 +741,7 @@ class ChatListController : PeersListController {
                 }
             }))
         default:
-            filterDisposable.set(combineLatest(filterView, context.sharedContext.layoutHandler.get()).start(next: { [weak self] filters, layout in
+            filterDisposable.set(combineLatest(filterView, context.layoutHandler.get()).start(next: { [weak self] filters, layout in
                 self?.updateFilter( { current in
                     var current = current
                     if let filter = current.filter {
@@ -809,7 +809,7 @@ class ChatListController : PeersListController {
     
     func addUndoAction(_ action:ChatUndoAction) {
         let context = self.context
-        guard self.context.sharedContext.layout != .minimisize else { return }
+        guard self.context.layout != .minimisize else { return }
     }
     
     private func enqueueTransition(_ transition: TableUpdateTransition) {
@@ -1000,7 +1000,7 @@ class ChatListController : PeersListController {
             self?.genericView.searchView.setString(query)
         }
         
-        switch context.sharedContext.layout {
+        switch context.layout {
         case .single:
             context.bindings.rootNavigation().back()
             Queue.mainQueue().justDispatch(invoke)
@@ -1117,7 +1117,7 @@ class ChatListController : PeersListController {
             }
             
             
-            guard let state = swipeState, self.context.sharedContext.layout != .minimisize else {return .failed}
+            guard let state = swipeState, self.context.layout != .minimisize else {return .failed}
             
             switch state {
             case .start:

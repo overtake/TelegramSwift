@@ -390,6 +390,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     let context: AccountContext
     let peer:Peer?
     let isVerified: Bool
+    let isPremium: Bool
     let isScam: Bool
     let isFake: Bool
     let isMuted: Bool
@@ -427,6 +428,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         self.editing = editing
         self.arguments = arguments
         self.isVerified = peer?.isVerified ?? false
+        self.isPremium = peer?.isPremium ?? false
         self.isScam = peer?.isScam ?? false
         self.isFake = peer?.isFake ?? false
         self.isMuted = peerView.notificationSettings?.isRemovedFromTotalUnreadCount(default: false) ?? false
@@ -536,6 +538,8 @@ class PeerInfoHeadItem: GeneralRowItem {
             image = theme.icons.peerInfoVerifyProfile
         } else if isFake {
             image = theme.icons.chatFake
+        } else if isPremium {
+            image = theme.icons.premium_account
         } else if isMuted {
             image = theme.icons.dialogMuteImage
         } else {
@@ -969,7 +973,15 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                     let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: first.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
                     
                     
-                    let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, reference: MediaResourceReference.standalone(resource: file.resource), streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
+                    let reference: MediaResourceReference
+                    
+                    if let peer = item.peer, let peerReference = PeerReference(peer) {
+                        reference = MediaResourceReference.avatar(peer: peerReference, resource: file.resource)
+                    } else {
+                        reference = MediaResourceReference.standalone(resource: file.resource)
+                    }
+                    
+                    let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, reference: reference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
                     
                     mediaPlayer.actionAtEnd = .loop(nil)
                     
@@ -989,11 +1001,13 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                 self.photoVideoPlayer = nil
                 self.photoVideoView?.removeFromSuperview()
                 self.photoVideoView = nil
+                self.videoRepresentation = nil
             }
         } else {
             self.photoVideoPlayer = nil
             self.photoVideoView?.removeFromSuperview()
             self.photoVideoView = nil
+            self.videoRepresentation = nil
         }
         nameView.change(size: item.nameSize, animated: animated)
         nameView.update(item, animated: animated)

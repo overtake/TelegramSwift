@@ -566,6 +566,14 @@ private final class ReactionPeerMenuItem : AppMenuRowItem {
         self.context = context
         self.reaction = reaction
         super.init(.zero, item: item, interaction: interaction, presentation: presentation)
+        if item.image == nil {
+            let image = generateImage(NSMakeSize(imageSize, imageSize), rotatedContext: { size, ctx in
+                ctx.clear(size.bounds)
+                ctx.setFillColor(presentation.borderColor.cgColor)
+                ctx.fillEllipse(in: size.bounds)
+            })!
+            item.image = NSImage(cgImage: image, size: NSMakeSize(imageSize, imageSize))
+        }
     }
     
     override var effectiveSize: NSSize {

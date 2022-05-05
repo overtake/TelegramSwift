@@ -27,7 +27,8 @@ private final class Arguments {
     let zoom:(CGFloat)->Void
     let updateText:(String)->Void
     let stickersView:()->NSView?
-    init(context: AccountContext, dismiss:@escaping()->Void, select:@escaping(State.Item)->Void, selectOption:@escaping(State.Item.Option)->Void, selectColor:@escaping(AvatarColor)->Void, selectForeground:@escaping(TelegramMediaFile)->Void, set: @escaping()->Void, zoom:@escaping(CGFloat)->Void, updateText:@escaping(String)->Void, stickersView: @escaping()->NSView?) {
+    let updateOffset:(NSPoint)->Void
+    init(context: AccountContext, dismiss:@escaping()->Void, select:@escaping(State.Item)->Void, selectOption:@escaping(State.Item.Option)->Void, selectColor:@escaping(AvatarColor)->Void, selectForeground:@escaping(TelegramMediaFile)->Void, set: @escaping()->Void, zoom:@escaping(CGFloat)->Void, updateText:@escaping(String)->Void, stickersView: @escaping()->NSView?, updateOffset:@escaping(NSPoint)->Void) {
         self.context = context
         self.dismiss = dismiss
         self.select = select
@@ -38,13 +39,28 @@ private final class Arguments {
         self.zoom = zoom
         self.updateText = updateText
         self.stickersView = stickersView
+        self.updateOffset = updateOffset
     }
 }
 
 struct AvatarColor : Equatable {
     enum Content : Equatable {
         case gradient([NSColor])
-        case wallpaper(Wallpaper)
+        case wallpaper(Wallpaper, ColorPalette)
+        
+        static func == (lhs: Content, rhs: Content) -> Bool {
+            switch lhs {
+            case let .gradient(colors):
+                if case .gradient(colors) = rhs {
+                    return true
+                }
+            case let .wallpaper(wallpaper, lhsPalette):
+                if case .wallpaper(wallpaper, let rhsPalette) = rhs {
+                    return lhsPalette.isDark == rhsPalette.isDark
+                }
+            }
+            return false
+        }
     }
     var selected: Bool
     var content: Content
@@ -59,8 +75,16 @@ struct AvatarColor : Equatable {
     }
     var wallpaper: Wallpaper? {
         switch content {
-        case let .wallpaper(wallpaper):
+        case let .wallpaper(wallpaper, _):
             return wallpaper
+        default:
+            return nil
+        }
+    }
+    var colors: ColorPalette? {
+        switch content {
+        case let .wallpaper(_, palette):
+            return palette
         default:
             return nil
         }
@@ -103,6 +127,7 @@ private struct State : Equatable {
     }
     struct Preview : Equatable {
         var zoom: CGFloat = 1.0
+        var offset: NSPoint = .zero
         var animated: Bool?
     }
     var items: [Item]
@@ -125,17 +150,59 @@ private struct State : Equatable {
 private final class AvatarLeftView: View {
     
     private final class PreviewView: View {
-        private let imageView: View = View(frame: NSMakeRect(0, 0, 150, 150))
+        
+        final class CursorView : View {
+            override func cursorUpdate(with event: NSEvent) {
+                super.cursorUpdate(with: event)
+                NSCursor.pointingHand.set()
+            }
+            
+            var move:(CGPoint, Bool)->Void = { _, _ in }
+            var drop:()->Void = { }
+            
+
+            private var isFirst: Bool = true
+            private var startPoint: CGPoint?
+            
+            override func mouseDown(with event: NSEvent) {
+                startPoint = self.convert(event.locationInWindow, from: nil)
+                isFirst = true
+                super.mouseDown(with: event)
+            }
+            override func mouseUp(with event: NSEvent) {
+                startPoint = nil
+                
+                if event.clickCount == 2 {
+                    self.drop()
+                }
+                super.mouseUp(with: event)
+            }
+            override func mouseDragged(with event: NSEvent) {
+                let currentPoint = self.convert(event.locationInWindow, from: nil)
+                
+                guard let startPoint = startPoint else {
+                    return
+                }
+                let gap = NSMakePoint(currentPoint.x - startPoint.x, currentPoint.y - startPoint.y)
+
+                self.move(gap, isFirst)
+                isFirst = false
+                super.mouseDragged(with: event)
+            }
+            
+        }
+        
+        private let imageView: CursorView = CursorView(frame: NSMakeRect(0, 0, 150, 150))
         private var backgroundColorView: ImageView?
         private var backgroundPatternView: TransformImageView?
 
-        
+       
         private var foregroundView: StickerMediaContentView? = nil
         private var foregroundTextView: TextView? = nil
 
         private let textView = TextView()
         private var state: State?
-        
+        private var arguments: Arguments?
         private let slider: LinearProgressControl = LinearProgressControl(progressHeight: 4)
 
 
@@ -168,17 +235,55 @@ private final class AvatarLeftView: View {
             textView.userInteractionEnabled = false
             textView.isSelectable = false
             imageView.backgroundColor = theme.colors.listBackground
+            
+            
+            imageView.move = { [weak self] point, isFirst in
+                self?.move(point, isFirst)
+            }
+            imageView.drop = { [weak self] in
+                self?.arguments?.updateOffset(.zero)
+            }
         }
+        
+        private var startOffset: CGPoint?
+        
+        private func move(_ point: NSPoint, _ isFirst: Bool) {
+            guard let state = state, let arguments = self.arguments else {
+                return
+            }
+            
+            let startOffset = isFirst ? state.preview.offset : self.startOffset
+            
+            if isFirst {
+                self.startOffset = state.preview.offset
+            }
+            
+            guard let foregroundView = foregroundView, let startOffset = startOffset else {
+                return
+            }
+            let rect = foregroundView.centerFrame()
+            
+            let maxX = rect.minX
+            let maxY = rect.minY
+            
+            let mx = 2 + (1 - state.preview.zoom)
+            let mn = -2 - (1 - state.preview.zoom)
+
+            let offset = NSMakePoint(startOffset.x + point.x / maxX, startOffset.y + point.y / maxY)
+            
+            arguments.updateOffset(offset)
+        }
+        
         
         func updateState(_ state: State, arguments: Arguments, animated: Bool) {
             self.state = state
-            
+            self.arguments = arguments
             self.slider.set(progress: state.preview.zoom)
             
             let selectedBg = state.colors.first(where: { $0.selected })!
             
             self.applyBg(selectedBg, context: arguments.context, animated: animated)
-            self.applyFg(state.selected.foreground, text: state.selected.text, zoom: state.preview.zoom, context: arguments.context, animated: animated)
+            self.applyFg(state.selected.foreground, text: state.selected.text, zoom: state.preview.zoom, offset: state.preview.offset, context: arguments.context, animated: animated)
             
             slider.onUserChanged = { value in
                 arguments.zoom(CGFloat(value))
@@ -189,7 +294,7 @@ private final class AvatarLeftView: View {
         private var previousFile: TelegramMediaFile?
         private var previousText: String?
         
-        private func applyFg(_ file: TelegramMediaFile?, text: String?, zoom: CGFloat, context: AccountContext, animated: Bool) {
+        private func applyFg(_ file: TelegramMediaFile?, text: String?, zoom: CGFloat, offset: CGPoint, context: AccountContext, animated: Bool) {
             if let text = text {
                 if let view = foregroundView {
                     performSubviewRemoval(view, animated: animated, scale: true)
@@ -244,9 +349,14 @@ private final class AvatarLeftView: View {
                     foregroundView.update(with: file, size: foregroundView.frame.size, context: context, parent: nil, table: nil)
                     
                     self.imageView.addSubview(foregroundView)
-                    foregroundView.center()
+                    
+                    var frame = foregroundView.centerFrame()
+                    frame.origin.x += offset.x * frame.origin.x
+                    frame.origin.y += offset.y * frame.origin.y
+                    foregroundView.frame = frame
                     
                     self.foregroundView = foregroundView
+
                     
                     if animated {
                         foregroundView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
@@ -262,6 +372,12 @@ private final class AvatarLeftView: View {
             
             
             if let foregroundView = foregroundView {
+                
+                var frame = foregroundView.centerFrame()
+                frame.origin.x += offset.x * frame.origin.x
+                frame.origin.y += offset.y * frame.origin.y
+                foregroundView.frame = frame
+                
                 let zoom = mappingRange(zoom, 0, 1, 0.5, 1)
 
                 let valueScale = CGFloat(truncate(double: Double(zoom), places: 2))
@@ -382,7 +498,7 @@ private final class AvatarLeftView: View {
                         representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(current.frame.size), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil))
                     }
                     
-                    let updateImageSignal = chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: true, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false, drawPatternOnly: false, palette: dayClassicPalette)
+                    let updateImageSignal = chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: true, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false, drawPatternOnly: false, palette: color.colors!)
                     
                     current.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: false)
                      
@@ -415,7 +531,13 @@ private final class AvatarLeftView: View {
             imageView.centerX(y: textView.frame.maxY + 10)
             backgroundColorView?.frame = imageView.bounds
             backgroundPatternView?.frame = imageView.bounds
-            foregroundView?.centerX()
+            
+            if let foregroundView = foregroundView, let state = state {
+                var rect = foregroundView.centerFrame()
+                rect.origin.x += state.preview.offset.x * rect.origin.x
+                rect.origin.y += state.preview.offset.y * rect.origin.y
+                foregroundView.frame = rect
+            }
             if let foregroundTextView = foregroundTextView {
                 var center = foregroundTextView.centerFrame()
                 center.origin.y += 4
@@ -742,12 +864,57 @@ private final class AvatarConstructorView : View {
     
     private var state: State?
     
+    private var premiumView: StickerPremiumHolderView?
+    
+    let setView = TitleButton()
+    private let containerView: View = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(leftView)
-        addSubview(rightView)
+        containerView.addSubview(leftView)
+        containerView.addSubview(rightView)
+        addSubview(containerView)
+        addSubview(setView)
         updateLayout(frameRect.size, transition: .immediate)
+        
+        setView.style = ControlStyle(font:.medium(.text), foregroundColor: theme.colors.accent, backgroundColor: theme.colors.background)
+        setView.set(text: strings().modalSet, for: .Normal)
+        setView.disableActions()
+        _ = setView.sizeToFit(NSZeroSize, NSMakeSize(0, 50), thatFit: true)
+        setView.set(background: theme.colors.background, for: .Normal)
+        setView.set(background: theme.colors.grayForeground.withAlphaComponent(0.25), for: .Highlight)
+        setView.border = [.Top]
     }
+    
+    func previewPremium(_ file: TelegramMediaFile, context: AccountContext, view: NSView, animated: Bool) {
+        let current: StickerPremiumHolderView
+        if let view = premiumView {
+            current = view
+        } else {
+            current = StickerPremiumHolderView(frame: bounds)
+            self.premiumView = current
+            addSubview(current)
+            
+            if animated {
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+        }
+        current.set(file: file, context: context)
+        current.close = { [weak self] in
+            self?.closePremium()
+        }
+    }
+    
+    var isPremium: Bool {
+        return self.premiumView != nil
+    }
+    
+    func closePremium() {
+        if let view = premiumView {
+            performSubviewRemoval(view, animated: true)
+            self.premiumView = nil
+        }
+    }
+    
     
     override func layout() {
         super.layout()
@@ -755,11 +922,22 @@ private final class AvatarConstructorView : View {
     }
     
     func updateLayout(_ size: NSSize, transition: ContainedViewLayoutTransition) {
-        transition.updateFrame(view: leftView, frame: NSMakeRect(0, 0, 180, frame.height))
+        
+        
+        transition.updateFrame(view: setView, frame: NSMakeRect(0, frame.height - 50, size.width, 50))
+        
+        transition.updateFrame(view: containerView, frame: NSMakeRect(0, 0, size.width, frame.height - setView.frame.height))
+
+        
+        transition.updateFrame(view: leftView, frame: NSMakeRect(0, 0, 180, containerView.frame.height))
         leftView.updateLayout(leftView.frame.size, transition: transition)
         
-        transition.updateFrame(view: rightView, frame: NSMakeRect(leftView.frame.maxX, 0, size.width - leftView.frame.width, frame.height))
+        transition.updateFrame(view: rightView, frame: NSMakeRect(leftView.frame.maxX, 0, size.width - leftView.frame.width, containerView.frame.height))
         rightView.updateLayout(rightView.frame.size, transition: transition)
+        
+        if let premiumView = premiumView {
+            transition.updateFrame(view: premiumView, frame: bounds)
+        }
     }
     
     func updateState(_ state: State, arguments: Arguments, animated: Bool) {
@@ -947,7 +1125,8 @@ final class AvatarConstructorController : ModalViewController {
                         itms[i] = item
                     }
                     current.items = itms
-                    current.colors += wallpapers.map { .init(selected: false, content: .wallpaper($0)) }
+                    current.colors += wallpapers.filter { !$0.settings.colors.isEmpty }.map { .init(selected: false, content: .wallpaper($0, dayClassicPalette)) }
+                    current.colors += wallpapers.filter { !$0.settings.colors.isEmpty }.map { .init(selected: false, content: .wallpaper($0, nightAccentPalette)) }
                     return current
                 }
             default:
@@ -1011,6 +1190,8 @@ final class AvatarConstructorController : ModalViewController {
                     }
                     items[i] = item
                 }
+                current.preview.zoom = 1.0
+                current.preview.offset = .zero
                 current.items = items
                 return current
             }
@@ -1021,8 +1202,8 @@ final class AvatarConstructorController : ModalViewController {
             switch state.selectedColor.content {
             case let .gradient(colors):
                 background = .colors(colors)
-            case let .wallpaper(wallpaper):
-                background = .pattern(wallpaper)
+            case let .wallpaper(wallpaper, pattern):
+                background = .pattern(wallpaper, pattern)
             }
             if let file = state.selected.foreground {
                 if file.isAnimated && file.isVideo {
@@ -1039,12 +1220,16 @@ final class AvatarConstructorController : ModalViewController {
                 return
             }
             let zoom = mappingRange(state.preview.zoom, 0, 1, 0.5, 0.8)
-            let object = MediaObjectToAvatar(context: context, object: .init(foreground: .init(type: source, zoom: zoom), background: background))
+            let object = MediaObjectToAvatar(context: context, object: .init(foreground: .init(type: source, zoom: zoom, offset: state.preview.offset), background: background))
             _video(object)
         }, zoom: { value in
             updateState { current in
                 var current = current
                 current.preview.zoom = value
+                let mx = 2 + (1 - current.preview.zoom)
+                let mn = -2 - (1 - current.preview.zoom)
+                let offset = NSMakePoint(min(mx, max(mn, current.preview.offset.x)), min(mx, max(current.preview.offset.y, mn)))
+                current.preview.offset = offset
                 return current
             }
         }, updateText: { text in
@@ -1063,6 +1248,15 @@ final class AvatarConstructorController : ModalViewController {
             }
         }, stickersView: { [weak self] in
             return self?.stickersController.view
+        }, updateOffset: { offset in
+            updateState { current in
+                var current = current
+                let mx = 2 + (1 - current.preview.zoom)
+                let mn = -2 - (1 - current.preview.zoom)
+                let offset = NSMakePoint(min(mx, max(mn, offset.x)), min(mx, max(offset.y, mn)))
+                current.preview.offset = offset
+                return current
+            }
         })
         
         let signal = statePromise.get() |> deliverOnMainQueue
@@ -1082,16 +1276,26 @@ final class AvatarConstructorController : ModalViewController {
         interactions.sendGIF = { file, _, _ in
             arguments.selectForeground(file)
         }
+        
+        interactions.showStickerPremium = { [weak self] file, view in
+            self?.genericView.previewPremium(file, context: context, view: view, animated: true)
+        }
 
         stickersController.update(with: interactions, chatInteraction: .init(chatLocation: .peer(context.peerId), context: context))
         stickersController.loadViewIfNeeded()
         setPressed = arguments.set
+        
+        genericView.setView.set(handler: { _ in
+            arguments.set()
+        }, for: .Click)
     }
     
-    override var modalInteractions: ModalInteractions? {
-        return .init(acceptTitle: strings().modalSet, accept: { [weak self] in
-            self?.setPressed?()
-        }, drawBorder: true, singleButton: true)
+    override func escapeKeyAction() -> KeyHandlerResult {
+        if genericView.isPremium {
+            genericView.closePremium()
+            return .invoked
+        }
+        return super.escapeKeyAction()
     }
     
     override var canBecomeResponder: Bool {

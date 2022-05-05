@@ -489,6 +489,8 @@ public final class EntertainmentInteractions {
 
     var toggleSearch:()->Void = { }
     
+    var showStickerPremium:(TelegramMediaFile, NSView)->Void = { _, _ in }
+    
     let peerId:PeerId
     
     init(_ defaultState: EntertainmentState, peerId:PeerId) {
@@ -505,7 +507,8 @@ final class EntertainmentView : View {
     fileprivate let stickers: ImageButton = ImageButton()
     fileprivate let gifs: ImageButton = ImageButton()
     
-    
+    private var premiumView: StickerPremiumHolderView?
+
     
     private let sectionTabs: View = View()
     init(sectionView: NSView, frame: NSRect) {
@@ -558,6 +561,37 @@ final class EntertainmentView : View {
         needsLayout = true
     }
     
+    func previewPremium(_ file: TelegramMediaFile, context: AccountContext, view: NSView, animated: Bool) {
+        let current: StickerPremiumHolderView
+        if let view = premiumView {
+            current = view
+        } else {
+            current = StickerPremiumHolderView(frame: bounds)
+            self.premiumView = current
+            addSubview(current)
+            
+            if animated {
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+        }
+        current.set(file: file, context: context)
+        current.close = { [weak self] in
+            self?.closePremium()
+        }
+    }
+    
+    var isPremium: Bool {
+        return self.premiumView != nil
+    }
+    
+    func closePremium() {
+        if let view = premiumView {
+            performSubviewRemoval(view, animated: true)
+            self.premiumView = nil
+        }
+    }
+    
+    
     
     override func layout() {
         super.layout()
@@ -573,6 +607,7 @@ final class EntertainmentView : View {
         for (i, button) in buttons.enumerated() {
             button.centerY(x: (button.frame.width + 20) * CGFloat(i))
         }
+        self.premiumView?.frame = bounds
     }
     
     required init?(coder: NSCoder) {
@@ -626,6 +661,8 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
     func update(with chatInteraction:ChatInteraction) -> Void {
         self.chatInteraction = chatInteraction
         
+        let context = self.context
+        
         let state: EntertainmentState
         if mode == .selectAvatar {
             state = .stickers
@@ -653,8 +690,12 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             } else {
                 _ = self?.chatInteraction?.appendText(emoji)
             }
-
         }
+        
+        interactions.showStickerPremium = { [weak self] file, view in
+            self?.genericView.previewPremium(file, context: context, view: view, animated: true)
+        }
+        
         interactions.toggleSearch = { [weak self] in
             guard let `self` = self else {
                 return
@@ -736,6 +777,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
     }
 
     
+    
     private func toggleSearch() {
         if let searchView = self.effectiveSearchView {
             if searchView.state == .Focus {
@@ -766,6 +808,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         section.viewDidDisappear(animated)
+        genericView.closePremium()
     }
     
     override func initializer() -> EntertainmentView {
@@ -779,6 +822,14 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             return nil
         }
         return effectiveSearchView//genericView.searchView?.input
+    }
+    
+    override func escapeKeyAction() -> KeyHandlerResult {
+        if genericView.isPremium {
+            genericView.closePremium()
+            return .invoked
+        }
+        return super.escapeKeyAction()
     }
     
     override func viewDidLoad() {

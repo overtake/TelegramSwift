@@ -42,6 +42,8 @@ func addBotAsMember(context: AccountContext, peer: Peer, to: Peer, completion:@e
                 text = strings().channelAddBotErrorHaveRights
             case .restricted:
                 text = strings().channelErrorAddBlocked
+            case .kicked:
+                text = strings().channelAddUserKickedError
             }
             error(text)
         }, completed: {
@@ -426,6 +428,8 @@ func ChannelBotAdminController(context: AccountContext, peer: Peer, admin: Peer,
                             text = strings().channelAddBotErrorHaveRights
                         case .restricted:
                             text = strings().channelErrorAddBlocked
+                        case .kicked:
+                            text = strings().channelAddUserKickedError
                         }
                         alert(for: context.window, info: text)
                     } else if let error = error.2 {

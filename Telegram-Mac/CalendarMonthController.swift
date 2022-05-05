@@ -315,7 +315,7 @@ class CalendarMonthController: GenericViewController<CalendarMonthView> {
         let yearString:String = formatter.string(from: month.month)
         
         let barView = TitledBarView(controller: self, .initialize(string: monthString, color: theme.colors.text, font:.medium(.text)), .initialize(string:yearString, color: theme.colors.grayText, font:.normal(.small)))
-        
+        barView.removeAllHandlers()
         barView.contextMenu = { [weak self] in
             guard let `self` = self else {
                 return nil

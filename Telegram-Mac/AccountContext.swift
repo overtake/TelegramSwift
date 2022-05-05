@@ -128,6 +128,15 @@ final class AccountContext {
     }
     
     
+    private(set) var isPremium: Bool = false {
+        didSet {
+            #if !SHARE
+            self.reactions.isPremium = isPremium
+            #endif
+        }
+    }
+    private let premiumDisposable = MetaDisposable()
+    
     let globalPeerHandler:Promise<ChatLocation?> = Promise()
     
     func updateGlobalPeer() {
@@ -188,6 +197,10 @@ final class AccountContext {
         return _autoplayMedia.with { $0 }
     }
     
+    private(set) var layout:SplitViewState = .none
+    let layoutHandler:ValuePromise<SplitViewState> = ValuePromise(ignoreRepeated:true)
+    private let layoutDisposable = MetaDisposable()
+
 
     var isInGlobalSearch: Bool = false
     
@@ -506,8 +519,27 @@ final class AccountContext {
             CallSessionManagerImplementationVersion(version: version, supportsVideo: supportsVideo)
         })
         
+        reactions.needsPremium = { [weak self] in
+            if let strongSelf = self {
+                showModal(with: PremiumReactionsModal(context: strongSelf), for: strongSelf.window)
+            }
+        }
         
         #endif
+        
+        let isPremium: Signal<Bool, NoError> = account.postbox.peerView(id: account.peerId) |> map { view in
+            return (view.peers[view.peerId] as? TelegramUser)?.flags.contains(.isPremium) ?? false
+        } |> deliverOnMainQueue
+        
+        self.premiumDisposable.set(isPremium.start(next: { [weak self] value in
+            self?.isPremium = value
+        }))
+        
+        
+        
+        layoutDisposable.set(layoutHandler.get().start(next: { state in
+            self.layout = state
+        }))
     }
     
     @objc private func updateKeyWindow() {
@@ -587,6 +619,8 @@ final class AccountContext {
         cloudThemeObserver.dispose()
         preloadGifsDisposable.dispose()
         freeSpaceDisposable.dispose()
+        premiumDisposable.dispose()
+        layoutDisposable.dispose()
         NotificationCenter.default.removeObserver(self)
         #if !SHARE
       //  self.walletPasscodeTimeoutContext.clear()

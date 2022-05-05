@@ -497,6 +497,10 @@ public final class L10n {
   public static var autoremoveMessagesTitleDeleteOnly: String  { return L10n.tr("Localizable", "AutoremoveMessages.Title.DeleteOnly") }
   /// Preview
   public static var avatarPreview: String  { return L10n.tr("Localizable", "Avatar.Preview") }
+  /// GRADIENT WITH PATTERN
+  public static var avatarBackgroundPatters: String  { return L10n.tr("Localizable", "Avatar.Background.Patters") }
+  /// PLAIN GRADIENT
+  public static var avatarBackgroundPlainGradient: String  { return L10n.tr("Localizable", "Avatar.Background.PlainGradient") }
   /// Preferences…
   public static var bofnm1cWTitle: String  { return L10n.tr("Localizable", "BOF-NM-1cW.title") }
   /// Any details such as age, occupation or city.\nExample: 23 y.o. designer from San Francisco
@@ -843,12 +847,16 @@ public final class L10n {
   public static var changePhoneNumberIntroAlert: String  { return L10n.tr("Localizable", "ChangePhoneNumber.Intro.Alert") }
   /// You can change your Telegram number here. Your account and all your cloud data — messages, media, contacts, etc. will be moved to the new number.\n\n**Important**: all your Telegram contacts will get your **new number** added to their address book, provided they had your old number and you haven't blocked them in Telegram.
   public static var changePhoneNumberIntroDescription: String  { return L10n.tr("Localizable", "ChangePhoneNumber.Intro.Description") }
+  /// Sorry, you can't add this user as an admin because they are in the Removed Users list and you can't unban them.
+  public static var channelAddAdminKickedError: String  { return L10n.tr("Localizable", "Channel.AddAdminKickedError") }
   /// Make Admin
   public static var channelAddBotAsAdmin: String  { return L10n.tr("Localizable", "Channel.AddBotAsAdmin") }
   /// Bots can only be added as administrators.
   public static var channelAddBotErrorHaveRights: String  { return L10n.tr("Localizable", "Channel.AddBotErrorHaveRights") }
   /// Sorry, bots can only be added to channels as administrators.
   public static var channelAddBotErrorNoRights: String  { return L10n.tr("Localizable", "Channel.AddBotErrorNoRights") }
+  /// Sorry, you can't add this user because they are on the list of Removed Users and you can't unban them.
+  public static var channelAddUserKickedError: String  { return L10n.tr("Localizable", "Channel.AddUserKickedError") }
   /// Forever
   public static var channelBanForever: String  { return L10n.tr("Localizable", "Channel.BanForever") }
   /// Sorry, this bot is telling us it doesn't want to be added to groups. You can't add this bot unless its developers change their mind.
@@ -7671,8 +7679,16 @@ public final class L10n {
   public static func previewSenderSendVideoZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PreviewSender.SendVideo_zero", p1)
   }
+  /// Sorry, you cannot add %@ to channels because of %@'s privacy settings.
+  public static func privacyGroupsAndChannelsInviteToChannelError(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Privacy.GroupsAndChannels.InviteToChannelError", p1, p2)
+  }
   /// Sorry, you can't create a group with these users due to their privacy settings.
   public static var privacyGroupsAndChannelsInviteToChannelMultipleError: String  { return L10n.tr("Localizable", "Privacy.GroupsAndChannels.InviteToChannelMultipleError") }
+  /// Sorry, you cannot add %@ to groups because of %@'s privacy settings.
+  public static func privacyGroupsAndChannelsInviteToGroupError(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Privacy.GroupsAndChannels.InviteToGroupError", p1, p2)
+  }
   /// Automatically archive and mute new chats, groups and channels from non-contacts.
   public static var privacyAndSecurityAutoArchiveDesc: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.AutoArchiveDesc") }
   /// NEW CHATS FROM UNKNOWN USERS
@@ -8035,6 +8051,10 @@ public final class L10n {
   public static var reactionSettingsQuickInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Quick.Info") }
   /// Quick Reaction
   public static var reactionSettingsQuickTitle: String  { return L10n.tr("Localizable", "Reaction.Settings.Quick.Title") }
+  /// Unlock addtional reactions by subscribing to Telegram Premium
+  public static var reactionsPreviewPremium: String  { return L10n.tr("Localizable", "Reactions.Preview.Premium") }
+  /// Unlock Premium Reactions
+  public static var reactionsPreviewUnlock: String  { return L10n.tr("Localizable", "Reactions.Preview.Unlock") }
   /// Delete
   public static var recentCallsDelete: String  { return L10n.tr("Localizable", "RecentCalls.Delete") }
   /// Are you sure you want to delete call?
@@ -9411,6 +9431,8 @@ public final class L10n {
   public static var stickersFavorite: String  { return L10n.tr("Localizable", "Stickers.Favorite") }
   /// GROUP STICKERS
   public static var stickersGroupStickers: String  { return L10n.tr("Localizable", "Stickers.GroupStickers") }
+  /// Premium
+  public static var stickersPremium: String  { return L10n.tr("Localizable", "Stickers.Premium") }
   /// Recent
   public static var stickersRecent: String  { return L10n.tr("Localizable", "Stickers.Recent") }
   /// Add
@@ -9435,6 +9457,10 @@ public final class L10n {
   public static var stickersConfirmClearRecentText: String  { return L10n.tr("Localizable", "Stickers.Confirm.ClearRecentText") }
   /// Archive
   public static var stickersContextArchive: String  { return L10n.tr("Localizable", "Stickers.Context.Archive") }
+  /// Unlock Premium Stickers
+  public static var stickersPremiumUnlock: String  { return L10n.tr("Localizable", "Stickers.Premium.Unlock") }
+  /// Unlock this sticker and more by subscribing to Telegram Premium.
+  public static var stickersPreviewPremium: String  { return L10n.tr("Localizable", "Stickers.Preview.Premium") }
   /// %d
   public static func stickersSetCount1Countable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Stickers.Set.Count1_countable", p1)

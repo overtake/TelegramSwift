@@ -321,4 +321,13 @@ extension Peer {
         }
     }
     
+    
+    var isPremium: Bool {
+        if let peer = self as? TelegramUser {
+            return peer.flags.contains(.isPremium)
+        } else {
+            return false
+        }
+    }
+    
 }

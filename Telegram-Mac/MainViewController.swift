@@ -286,7 +286,7 @@ class MainViewController: TelegramViewController {
         super.viewDidResized(size)
         tabController.view.frame = bounds
         #if !APP_STORE
-        updateController.updateLayout(context.sharedContext.layout, parentSize: size, isChatList: true)
+        updateController.updateLayout(context.layout, parentSize: size, isChatList: true)
         #endif
     }
     
@@ -339,7 +339,7 @@ class MainViewController: TelegramViewController {
         
         self.ready.set(combineLatest(queue: prepareQueue, self.chatList.ready.get(), self.settings.ready.get()) |> map { $0 && $1 })
         
-        layoutDisposable.set(context.sharedContext.layoutHandler.get().start(next: { [weak self] state in
+        layoutDisposable.set(context.layoutHandler.get().start(next: { [weak self] state in
             guard let `self` = self else {
                 return
             }
@@ -569,7 +569,7 @@ class MainViewController: TelegramViewController {
             quickController?.popover?.hide()
         } else {
             if previousIndex == tabController.count - 1 || isSettings {
-                if isSettings && context.sharedContext.layout != .single {
+                if isSettings && context.layout != .single {
                     navigation.push(GeneralSettingsViewController(context), false)
                 } else {
                     navigation.enumerateControllers( { controller, index in
@@ -591,11 +591,11 @@ class MainViewController: TelegramViewController {
     }
     
     override func focusSearch(animated: Bool, text: String? = nil) {
-        if context.sharedContext.layout == .minimisize {
+        if context.layout == .minimisize {
             return
         }
-        let animated = animated && (context.sharedContext.layout != .single || context.bindings.rootNavigation().stackCount == 1)
-        if context.sharedContext.layout == .single {
+        let animated = animated && (context.layout != .single || context.bindings.rootNavigation().stackCount == 1)
+        if context.layout == .single {
             context.bindings.rootNavigation().close()
         }
         if let current = tabController.current {
@@ -666,8 +666,8 @@ class MainViewController: TelegramViewController {
     
     func showPreferences() {
         context.bindings.switchSplitLayout(.dual)
-        if self.context.sharedContext.layout != .minimisize {
-            if self.context.sharedContext.layout == .single {
+        if self.context.layout != .minimisize {
+            if self.context.layout == .single {
                 self.navigationController?.close()
             }
             self.tabController.select(index:settingsIndex)
@@ -679,7 +679,7 @@ class MainViewController: TelegramViewController {
     }
     
     override var responderPriority: HandlerPriority {
-        return context.sharedContext.layout == .single ? .medium : .low
+        return context.layout == .single ? .medium : .low
     }
     
     func isCanMinimisize() -> Bool{

@@ -275,10 +275,15 @@ vertex VertexOut basic_vertex(
 fragment float4 basic_fragment(
     VertexOut interpolated [[stage_in]],
     texture2d<float> tex2D [[ texture(0) ]],
-    sampler sampler2D [[ sampler(0) ]]) {
+    sampler sampler2D [[ sampler(0) ]],
+    constant bool &mirror [[buffer(0)]]) {
     
     float2 p = interpolated.texCoord;
-
-    float4 color = tex2D.sample(sampler2D, p);
+    float4 color;
+    if (mirror) {
+        color = tex2D.sample(sampler2D, float2(1 - p.x, p.y));
+    } else {
+        color = tex2D.sample(sampler2D, p);
+    }
     return float4(color.r, color.g, color.b, color.a);
 }
