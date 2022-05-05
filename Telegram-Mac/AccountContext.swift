@@ -595,6 +595,9 @@ final class AccountContext {
             return nil
         }
     }
+    var premiumLimits: PremiumLimitConfig {
+        return PremiumLimitConfig(appConfiguration: appConfiguration)
+    }
     #endif
     
     func setTemporaryPwd(_ password: String) -> Void {
@@ -608,6 +611,7 @@ final class AccountContext {
     deinit {
        cleanup()
     }
+  
     
     
     func cleanup() {

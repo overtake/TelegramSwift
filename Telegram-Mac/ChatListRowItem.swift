@@ -974,16 +974,17 @@ class ChatListRowItem: TableRowItem {
             _ = (context.engine.peers.toggleItemPinned(location: location, itemId: chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
                 switch result {
                 case .limitExceeded:
-                    confirm(for: context.window, information: strings().chatListContextPinErrorNew2, okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().chatListContextPinErrorNewSetupFolders, successHandler: { result in
-                        
-                        switch result {
-                        case .thrid:
-                            context.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
-                        default:
-                            break
-                        }
-                        
-                    })
+                    showModal(with: PremiumLimitController(context: context, type: .pin), for: context.window)
+//                    confirm(for: context.window, information: strings().chatListContextPinErrorNew2, okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().chatListContextPinErrorNewSetupFolders, successHandler: { result in
+//
+//                        switch result {
+//                        case .thrid:
+//                            context.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
+//                        default:
+//                            break
+//                        }
+//
+//                    })
                 default:
                     break
                 }

@@ -7489,6 +7489,14 @@ public final class L10n {
   public static var preHistorySettingsDescriptionVisible: String  { return L10n.tr("Localizable", "PreHistorySettings.Description.Visible") }
   /// New members won't see more than 100 previous messages.
   public static var preHistorySettingsDescriptionGroupHidden: String  { return L10n.tr("Localizable", "PreHistorySettings.Description.Group.Hidden") }
+  /// Increase Limit
+  public static var premiumLimitIncrease: String  { return L10n.tr("Localizable", "Premium.Limit.Increase") }
+  /// Limit Reached
+  public static var premiumLimitReached: String  { return L10n.tr("Localizable", "Premium.Limit.Reached") }
+  /// Sorry, you can't pin more than %1$@ chats to the top. Unpin some of the currently pinned ones or subscribe to Telegram Premium to double the limit to %2$@ chats.
+  public static func premiumLimitPinInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.Pin.Info", p1, p2)
+  }
   /// bot
   public static var presenceBot: String  { return L10n.tr("Localizable", "Presence.bot") }
   /// support
