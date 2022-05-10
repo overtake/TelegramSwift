@@ -18,9 +18,9 @@ final class PaymentsCheckoutPreviewRowItem : GeneralRowItem {
     fileprivate let textLayout: TextViewLayout
     fileprivate let image: TelegramMediaWebFile?
     fileprivate let context: AccountContext
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, message: Message, botPeer: Peer?, viewType: GeneralViewType) {
-        self.invoice = message.media.first as! TelegramMediaInvoice
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, invoice: TelegramMediaInvoice, botPeer: Peer?, viewType: GeneralViewType) {
         self.context = context
+        self.invoice = invoice
         self.image = invoice.photo
         
         let attr = NSMutableAttributedString()

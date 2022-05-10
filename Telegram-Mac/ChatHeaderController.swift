@@ -658,10 +658,12 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
             if animated {
                 current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
-            
             self.inlineButton = current
-            addSubview(current)
         }
+        
+        addSubview(current)
+
+        
         current.set(text: button.title, for: .Normal)
         current.set(font: .medium(.text), for: .Normal)
         current.set(color: theme.colors.underSelectedColor, for: .Normal)

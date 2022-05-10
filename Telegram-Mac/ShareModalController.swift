@@ -195,7 +195,7 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
             
             basicSearchView.isHidden = hasCaptionView
             tokenizedView.isHidden = !hasCaptionView
-            dismiss.isHidden = !hasCaptionView
+            dismiss.isHidden = hasCaptionView
             
             if oldValue != hasCaptionView, hasCaptionView {
                 textContainerView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
@@ -228,10 +228,12 @@ fileprivate class ShareModalView : Control, TokenizedProtocol {
     
     
     func tokenizedViewDidChangedHeight(_ view: TokenizedView, height: CGFloat, animated: Bool) {
-        searchView._change(pos: NSMakePoint(50, 10), animated: animated)
-        tableView.change(size: NSMakeSize(frame.width, frame.height - height - 20 - (textContainerView.isHidden ? 0 : textContainerView.frame.height)), animated: animated)
-        tableView.change(pos: NSMakePoint(0, height + 20), animated: animated)
-        topSeparator.change(pos: NSMakePoint(0, searchView.frame.maxY + 10), animated: animated)
+        if !tokenizedView.isHidden {
+            searchView._change(pos: NSMakePoint(50, 10), animated: animated)
+            tableView.change(size: NSMakeSize(frame.width, frame.height - height - 20 - (textContainerView.isHidden ? 0 : textContainerView.frame.height)), animated: animated)
+            tableView.change(pos: NSMakePoint(0, height + 20), animated: animated)
+            topSeparator.change(pos: NSMakePoint(0, searchView.frame.maxY + 10), animated: animated)
+        }
     }
     
     func textViewUpdateHeight(_ height: CGFloat, _ animated: Bool) {
@@ -893,7 +895,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
             
             genericView.hasCaptionView = value.multipleSelection && !share.blockCaptionView
             genericView.hasSendView = value.multipleSelection && !share.blockCaptionView
-            if value.multipleSelection {
+            if value.multipleSelection && !share.blockCaptionView {
                 search.set(combineLatest(genericView.tokenizedView.textUpdater, genericView.tokenizedView.stateValue.get()) |> map { SearchState(state: $1, request: $0)})
             } else {
                 search.set(genericView.basicSearchView.searchValue)

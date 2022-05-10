@@ -192,7 +192,7 @@ class InputPasteboardParser: NSObject {
             
             files = files.filter { path -> Bool in
                 if let size = fileSize(path.path) {
-                    return size <= 2000 * 1024 * 1024
+                    return fileSizeLimitExceed(context: chatInteraction.context, fileSize: size)
                 }
                 
                 return false
@@ -201,7 +201,7 @@ class InputPasteboardParser: NSObject {
             let afterSizeCheck = files.count
             
             if afterSizeCheck == 0 && previous != afterSizeCheck {
-                alert(for: mainWindow, info: strings().appMaxFileSize1)
+                showFileLimit(context: chatInteraction.context)
                 return false
             }
             if let peer = chatInteraction.presentation.peer, let permissionText = permissionText(from: peer, for: .banSendMedia) {

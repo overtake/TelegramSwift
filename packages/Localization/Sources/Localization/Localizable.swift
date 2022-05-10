@@ -243,8 +243,10 @@ public final class L10n {
   }
   /// An error occurred while sending the previous message. Would you like to try resending it?
   public static var alertSendErrorText: String  { return L10n.tr("Localizable", "Alert.SendError.Text") }
-  /// Maximum file size is 2.0 GB
-  public static var appMaxFileSize1: String  { return L10n.tr("Localizable", "App.MaxFileSize1") }
+  /// Maximum file size is %@
+  public static func appMaxFileSizeNew(_ p1: String) -> String {
+    return L10n.tr("Localizable", "App.MaxFileSizeNew", p1)
+  }
   /// Hold to record video. Click to switch to audio
   public static var appTooltipVideoRecord: String  { return L10n.tr("Localizable", "App.Tooltip.VideoRecord") }
   /// Hold to record audio. Click to switch to video
@@ -2081,8 +2083,24 @@ public final class L10n {
   public static var chatContextClearScheduledConfirmInfo: String  { return L10n.tr("Localizable", "Chat.Context.ClearScheduled.Confirm.Info") }
   /// Clear All
   public static var chatContextClearScheduledConfirmOK: String  { return L10n.tr("Localizable", "Chat.Context.ClearScheduled.Confirm.OK") }
+  /// An older GIF was replaced with this one. You can [increase the limit](premium) to %@ GIFs.
+  public static func chatContextFavoriteGifsLimitInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Context.FavoriteGifs.Limit.Info", p1)
+  }
+  /// The Limit of Saved GIFs Reached
+  public static var chatContextFavoriteGifsLimitTitle: String  { return L10n.tr("Localizable", "Chat.Context.FavoriteGifs.Limit.Title") }
+  /// An older sticker was replaced with this one. You can [increase the limit](premium) to %@ stickers.
+  public static func chatContextFavoriteStickersLimitInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Context.FavoriteStickers.Limit.Info", p1)
+  }
+  /// The Limit of Favorite Stickers Reached
+  public static var chatContextFavoriteStickersLimitTitle: String  { return L10n.tr("Localizable", "Chat.Context.FavoriteStickers.Limit.Title") }
   /// More...
   public static var chatContextForwardMore: String  { return L10n.tr("Localizable", "Chat.Context.Forward.More") }
+  /// GIF Saved
+  public static var chatContextGifAdded: String  { return L10n.tr("Localizable", "Chat.Context.Gif.Added") }
+  /// GIF Removed
+  public static var chatContextGifRemoved: String  { return L10n.tr("Localizable", "Chat.Context.Gif.Removed") }
   /// Set As Quick
   public static var chatContextReactionQuick: String  { return L10n.tr("Localizable", "Chat.Context.Reaction.Quick") }
   /// Save for Notifications
@@ -2097,6 +2115,10 @@ public final class L10n {
   public static var chatContextScheduledReschedule: String  { return L10n.tr("Localizable", "Chat.Context.Scheduled.Reschedule") }
   /// Send Now
   public static var chatContextScheduledSendNow: String  { return L10n.tr("Localizable", "Chat.Context.Scheduled.SendNow") }
+  /// Sticker Added to Favorites
+  public static var chatContextStickerAddedToFavorites: String  { return L10n.tr("Localizable", "Chat.Context.Sticker.AddedToFavorites") }
+  /// Sticker Removed from Favorites
+  public static var chatContextStickerRemovedFromFavorites: String  { return L10n.tr("Localizable", "Chat.Context.Sticker.RemovedFromFavorites") }
   /// Auto-Delete in %@
   public static func chatContextMenuAutoDelete(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.ContextMenu.AutoDelete", p1)
@@ -3599,6 +3621,10 @@ public final class L10n {
   public static var chatListFilterExcludeLimitReached: String  { return L10n.tr("Localizable", "ChatList.Filter.Exclude.LimitReached") }
   /// Remove
   public static var chatListFilterExcludeRemoveChat: String  { return L10n.tr("Localizable", "ChatList.Filter.Exclude.RemoveChat") }
+  /// Sorry, you can only add up to %d chats.
+  public static func chatListFilterExcludeLimitReachedNew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.Exclude.LimitReached.New", p1)
+  }
   /// Add Chats
   public static var chatListFilterIncludeAddChat: String  { return L10n.tr("Localizable", "ChatList.Filter.Include.AddChat") }
   /// Choose chats and types of chats that will appear in this folder
@@ -3609,6 +3635,10 @@ public final class L10n {
   public static var chatListFilterIncludeLimitReached: String  { return L10n.tr("Localizable", "ChatList.Filter.Include.LimitReached") }
   /// Remove
   public static var chatListFilterIncludeRemoveChat: String  { return L10n.tr("Localizable", "ChatList.Filter.Include.RemoveChat") }
+  /// Sorry, you can only add up to %d chats.
+  public static func chatListFilterIncludeLimitReachedNew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Filter.Include.LimitReached.New", p1)
+  }
   /// Add a Custom Folder
   public static var chatListFilterListAddNew: String  { return L10n.tr("Localizable", "ChatList.Filter.List.AddNew") }
   /// Drag and drop folders to change order. Right click to remove.
@@ -4783,6 +4813,8 @@ public final class L10n {
   public static var forwardModalActionTitleZero: String  { return L10n.tr("Localizable", "ForwardModalAction.Title_zero") }
   /// Delete
   public static var galleryContextDeletePhoto: String  { return L10n.tr("Localizable", "Gallery.ContextDeletePhoto") }
+  /// Remove GIF
+  public static var galleryRemoveGif: String  { return L10n.tr("Localizable", "Gallery.RemoveGif") }
   /// Save GIF
   public static var gallerySaveGif: String  { return L10n.tr("Localizable", "Gallery.SaveGif") }
   /// Copy to Clipboard
@@ -6593,6 +6625,8 @@ public final class L10n {
   }
   /// Warning
   public static var paymentsWarninTitle: String  { return L10n.tr("Localizable", "Payments.WarninTitle") }
+  /// Invoice doesn't exist
+  public static var paymentsInvoiceNotExists: String  { return L10n.tr("Localizable", "Payments.Invoice.NotExists") }
   /// Tip
   public static var paymentsReceiptTip: String  { return L10n.tr("Localizable", "Payments.Receipt.Tip") }
   /// Deleted Account
@@ -7489,13 +7523,59 @@ public final class L10n {
   public static var preHistorySettingsDescriptionVisible: String  { return L10n.tr("Localizable", "PreHistorySettings.Description.Visible") }
   /// New members won't see more than 100 previous messages.
   public static var preHistorySettingsDescriptionGroupHidden: String  { return L10n.tr("Localizable", "PreHistorySettings.Description.Group.Hidden") }
+  /// Double the Limit
+  public static var premiumGetPremiumDouble: String  { return L10n.tr("Localizable", "Premium.GetPremium.Double") }
+  /// Free
+  public static var premiumLimitFree: String  { return L10n.tr("Localizable", "Premium.Limit.Free") }
   /// Increase Limit
   public static var premiumLimitIncrease: String  { return L10n.tr("Localizable", "Premium.Limit.Increase") }
+  /// Premium
+  public static var premiumLimitPremium: String  { return L10n.tr("Localizable", "Premium.Limit.Premium") }
   /// Limit Reached
   public static var premiumLimitReached: String  { return L10n.tr("Localizable", "Premium.Limit.Reached") }
-  /// Sorry, you can't pin more than %1$@ chats to the top. Unpin some of the currently pinned ones or subscribe to Telegram Premium to double the limit to %2$@ chats.
+  /// The limit of caption is **%1$@** symbols. You can double this limit to **%2$@** symbols by subscribing to **Telegram Premium**.
+  public static func premiumLimitCaptionInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.Caption.Info", p1, p2)
+  }
+  /// You are a member of **%1$@** groups and channels. Please leave some before joining a new one or upgrade to **Telegram Premium** to double the limit to **%2$@** groups and channels.
+  public static func premiumLimitChannelsInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.Channels.Info", p1, p2)
+  }
+  /// Sorry, you can't add more than **%1$@** chats to a folder. You can increase this limit to **%2$@** by upgrading to **Telegram Premium**.
+  public static func premiumLimitChatInFoldersInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.ChatInFolders.Info", p1, p2)
+  }
+  /// Sorry, you can't add more than **%1$@** stickers to favourites. Replace an older saved sticker or subscribe to **Telegram Premium** to double the limit to **%2$@** favourites stickers.
+  public static func premiumLimitFaveStickersInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.FaveStickers.Info", p1, p2)
+  }
+  /// The document can't be sent, because it is larger than **%1$@**. You can double this limit to **%2$@** per document by subscribing to **Telegram Premium**.
+  public static func premiumLimitFileSizeInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.FileSize.Info", p1, p2)
+  }
+  /// You have reached the limit of **%1$@** folders. You can double the limit to %2$@ folders by subscribing to **Telegram Premium**.
+  public static func premiumLimitFoldersInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.Folders.Info", p1, p2)
+  }
+  /// Sorry, you can't pin more than **%1$@** chats to the top. Unpin some of the currently pinned ones or subscribe to **Telegram Premium** to double the limit to **%2$@** chats.
   public static func premiumLimitPinInfo(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Premium.Limit.Pin.Info", p1, p2)
+  }
+  /// Sorry, you can't pin more than **%1$@** chats in archive to the top. Unpin some of the currently pinned ones or subscribe to **Telegram Premium** to double the limit to **%2$@** chats.
+  public static func premiumLimitPinInArchiveInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.PinInArchive.Info", p1, p2)
+  }
+  /// Sorry, you can't pin more than **%1$@** chats to the top. Unpin some of the currently pinned ones or subscribe to **Telegram Premium** to double the limit to **%2$@** chats.
+  public static func premiumLimitPinInFoldersInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.PinInFolders.Info", p1, p2)
+  }
+  /// You have reserved too many public links. Try revoking the link from an older group or channel, or upgrade to **Telegram Premium** to double the limit to **%1$@** public links.
+  public static func premiumLimitPublicLinkInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.PublicLink.Info", p1)
+  }
+  /// Sorry, you can't save more than **%1$@** GIFs. Replace an older GIF or subscribe to **Telegram Premium** to double the limit to **%2$@** GIFs.
+  public static func premiumLimitSavedGifsInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.SavedGifs.Info", p1, p2)
   }
   /// bot
   public static var presenceBot: String  { return L10n.tr("Localizable", "Presence.bot") }

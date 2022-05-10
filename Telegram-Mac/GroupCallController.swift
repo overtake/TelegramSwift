@@ -1553,18 +1553,24 @@ final class GroupCallUIController : ViewController {
                     var videoQuality: PresentationGroupCallRequestedVideo.Quality = selectBest ? .full : tiles[i].bestQuality
                     var screencastQuality: PresentationGroupCallRequestedVideo.Quality = selectBest ? .full : tiles[i].bestQuality
 
-                    let dominant = dominant.permanent ?? dominant.focused?.id
+                    var dominant = dominant.permanent ?? dominant.focused?.id
+                    
+                    let hasDominant = members?.participants.contains(where: { participant in
+                        return participant.videoEndpointId == dominant || participant.presentationEndpointId == dominant
+                    }) == true
+                    
+                    if !hasDominant {
+                        dominant = nil
+                    }
+                    
                     if let dominant = dominant {
                         videoQuality = .thumbnail
                         screencastQuality = .thumbnail
-                        if dominant == member.videoEndpointId {
+                        if dominant == member.videoEndpointId || dominant == member.presentationEndpointId {
                             videoQuality = .full
-                        } else {
-                            videoQuality = .thumbnail
-                        }
-                        if dominant == member.presentationEndpointId {
                             screencastQuality = .full
                         } else {
+                            videoQuality = .thumbnail
                             screencastQuality = .thumbnail
                         }
                     }

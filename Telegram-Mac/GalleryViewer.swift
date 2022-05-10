@@ -788,8 +788,7 @@ class GalleryViewer: NSResponder {
     }
     
 
-    
-    func showControlsPopover(_ control:Control) {
+    private func showControlsPopoverReady(_ control: Control, savedGifs: [RecentMediaItem]) {
         
         var items:[ContextMenuItem] = []
         
@@ -812,9 +811,34 @@ class GalleryViewer: NSResponder {
             let file = item.media
             if file.isAnimated && file.isVideo {
                 let reference = item.entry.fileReference(file)
-                items.append(ContextMenuItem(strings().gallerySaveGif, handler: {
-                    let _ = addSavedGif(postbox: context.account.postbox, fileReference: reference).start()
-                }, itemImage: MenuAnimation.menu_add_gif.value))
+                if savedGifs.contains(where: { $0.media.fileId == file.fileId }) {
+                    items.append(ContextMenuItem(strings().galleryRemoveGif, handler: { [weak control] in
+                        _ = removeSavedGif(postbox: context.account.postbox, mediaId: file.fileId).start()
+                        if let window = control?.kitWindow {
+                            showModalText(for: window, text: strings().chatContextGifRemoved)
+                        }
+                    }, itemImage: MenuAnimation.menu_remove_gif.value))
+                } else {
+                    items.append(ContextMenuItem(strings().gallerySaveGif, handler: { [weak control, weak self] in
+                        
+                        guard let window = control?.kitWindow else {
+                            return
+                        }
+                        
+                        let limit = context.isPremium ? context.premiumLimits.saved_gifs_limit_premium : context.premiumLimits.saved_gifs_limit_default
+                        if limit >= savedGifs.count, !context.isPremium {
+                            showModalText(for: window, text: strings().chatContextFavoriteGifsLimitInfo("\(context.premiumLimits.saved_gifs_limit_premium)"), title: strings().chatContextFavoriteGifsLimitTitle, callback: { value in
+                                showPremiumLimit(context: context, type: .savedGifs)
+                                self?.close()
+                            })
+                            return
+                        }
+                        let _ = addSavedGif(postbox: context.account.postbox, fileReference: reference).start()
+                        if let window = control?.kitWindow {
+                            showModalText(for: window, text: strings().chatContextGifAdded)
+                        }
+                    }, itemImage: MenuAnimation.menu_add_gif.value))
+                }
             }
         }
         
@@ -915,6 +939,22 @@ class GalleryViewer: NSResponder {
         if let event = NSApp.currentEvent {
             AppMenu.show(menu: menu, event: event, for: control)
         }
+    }
+    
+    func showControlsPopover(_ control: Control) {
+        
+        let _savedGifsCount: Signal<[RecentMediaItem], NoError> = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentGifs], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: 100) |> take(1) |> map {
+            $0.orderedItemListsViews[0].items.compactMap {
+                $0.contents.get(RecentMediaItem.self)
+            }
+        } |> deliverOnMainQueue
+
+        _ = _savedGifsCount.start(next: { [weak control, weak self] savedGifs in
+            if let control = control {
+                self?.showControlsPopoverReady(control, savedGifs: savedGifs)
+            }
+        })
+        
     }
     
     private func deleteMessages(_ messages:[Message]) {

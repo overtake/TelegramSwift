@@ -180,7 +180,7 @@ final class VoiceChatActionButtonBackgroundView: View {
 //        isCurrentlyInHierarchy = window != nil
         if let window = window as? Window {
             occlusionDisposable.set(window.takeOcclusionState.start(next: { [weak self] value in
-                self?.isCurrentlyInHierarchy = value.contains(.visible)
+                self?.isCurrentlyInHierarchy = true
             }))
         } else {
             occlusionDisposable.set(nil)

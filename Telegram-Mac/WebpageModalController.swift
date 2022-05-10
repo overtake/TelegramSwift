@@ -366,6 +366,10 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         let configuration = WKWebViewConfiguration()
         let userController = WKUserContentController()
 
+        #if BETA || STABLE
+        configuration.preferences.setValue(true, forKey: "developerExtrasEnabled")
+        #endif
+        
         let userScript = WKUserScript(source: js, injectionTime: .atDocumentStart, forMainFrameOnly: false)
         userController.addUserScript(userScript)
 
@@ -703,6 +707,9 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
 
     
     private func handleScriptMessage(_ message: WKScriptMessage) {
+        
+        let context = self.context
+        
         guard let body = message.body as? [String: Any] else {
             return
         }
@@ -749,6 +756,32 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             break
         case "web_app_close":
             self.close()
+        case "web_app_open_tg_link":
+            if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
+                if let path_full = json["path_full"] as? String {
+                    let link = inApp(for: "https://t.me\(path_full)".nsstring, context: context, openInfo: chatInteraction?.openInfo, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
+                    execute(inapp: link)
+                }
+            }
+            self.close()
+        case "web_app_open_invoice":
+            if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
+                if let slug = json["slug"] as? String {
+                    
+                    let signal = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: .slug(slug)), for: context.window)
+                    
+                    _ = signal.start(next: { invoice in
+                        showModal(with: PaymentsCheckoutController(context: context, source: .slug(slug), invoice: invoice, completion: { [weak self] status in
+                            
+                            let data = "{\"slug\": \"\(slug)\", \"status\": \"\(status.rawValue)\"}"
+                            
+                            self?.sendEvent(name: "invoice_closed", data: data)
+                        }), for: context.window)
+                    }, error: { error in
+                        showModalText(for: context.window, text: strings().paymentsInvoiceNotExists)
+                    })
+                }
+            }
         default:
             break
         }

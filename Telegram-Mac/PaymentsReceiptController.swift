@@ -21,7 +21,7 @@ private final class Arguments {
 }
 
 private struct State : Equatable {
-    var message: Message
+    var invoice: TelegramMediaInvoice
     var botPeer: PeerEquatable?
     var receipt: BotPaymentReceipt?
 }
@@ -51,7 +51,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_preview, equatable: InputDataEquatable(state.botPeer), comparable: nil, item: { initialSize, stableId in
-        return PaymentsCheckoutPreviewRowItem(initialSize, stableId: stableId, context: arguments.context, message: state.message, botPeer: state.botPeer?.peer, viewType: .singleItem)
+        return PaymentsCheckoutPreviewRowItem(initialSize, stableId: stableId, context: arguments.context, invoice: state.invoice, botPeer: state.botPeer?.peer, viewType: .singleItem)
     }))
 
     entries.append(.sectionId(sectionId, type: .normal))
@@ -186,12 +186,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func PaymentsReceiptController(context: AccountContext, messageId: MessageId, message: Message) -> InputDataModalController {
+func PaymentsReceiptController(context: AccountContext, messageId: MessageId, invoice: TelegramMediaInvoice) -> InputDataModalController {
 
     var close:(()->Void)? = nil
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(message: message)
+    let initialState = State(invoice: invoice)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)

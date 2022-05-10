@@ -217,8 +217,8 @@ class ChatControllerView : View, ChatInputDelegate {
     private(set) var state:ChatControllerViewState = .visible
     private var searchInteractions:ChatSearchInteractions!
     private let scroller:ChatNavigationScroller
-    private var mentions:ChatNavigationScroller?
-    private var reactions:ChatNavigationScroller?
+    private(set) var mentions:ChatNavigationScroller?
+    private(set) var reactions:ChatNavigationScroller?
     private var progressView:ProgressIndicator?
     private let header:ChatHeaderController
     private var historyState:ChatHistoryState?
@@ -1364,6 +1364,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
     }
 
+    func scrollUpOrToUnread() {
+        if let mentions = self.genericView.mentions {
+            mentions.send(event: .Click)
+        } else if let reactions = self.genericView.reactions {
+            reactions.send(event: .Click)
+        } else {
+            self.scrollup()
+        }
+    }
+    
     override func scrollup(force: Bool = false) -> Void {
         chatInteraction.update({ $0.withUpdatedTempPinnedMaxId(nil) })
         if let reply = historyState.reply() {
@@ -2336,8 +2346,20 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let inputState = state.inputState.subInputState(from: NSMakeRange(0, state.inputState.inputText.length))
 
             let text = inputState.inputText.trimmed
-            if text.length > presentation.maxInputCharacters {
-                alert(for: context.window, info: strings().chatInputErrorMessageTooLongCountable(text.length - Int(presentation.maxInputCharacters)))
+            if text.length > chatInteraction.maxInputCharacters {
+                if context.isPremium {
+                    alert(for: context.window, info: strings().chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.maxInputCharacters)))
+                } else {
+                    confirm(for: context.window, information: strings().chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.maxInputCharacters)), okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().premiumGetPremiumDouble, successHandler: { result in
+                        switch result {
+                        case .thrid:
+                            showPremiumLimit(context: context, type: .caption)
+                        default:
+                            break
+                        }
+
+                    })
+                }
                 return
             }
 
@@ -3442,8 +3464,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             let previous = result.count
                             
                             let result = result.filter { path -> Bool in
-                                if let size = fs(path) {
-                                    return size <= 2000 * 1024 * 1024
+                                if let size = fileSize(path) {
+                                    return fileSizeLimitExceed(context: context, fileSize: size)
                                 }
                                 return false
                             }
@@ -3451,7 +3473,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             let afterSizeCheck = result.count
                             
                             if afterSizeCheck == 0 && previous != afterSizeCheck {
-                                alert(for: context.window, info: strings().appMaxFileSize1)
+                                showFileLimit(context: context)
                             } else {
                                 self.chatInteraction.showPreviewSender(result.map{URL(fileURLWithPath: $0)}, asMedia, nil)
                             }
@@ -3475,8 +3497,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             let previous = result.count
                             
                             let result = result.filter { path -> Bool in
-                                if let size = fs(path) {
-                                    return size <= 2000 * 1024 * 1024
+                                if let size = fileSize(path) {
+                                    return fileSizeLimitExceed(context: context, fileSize: size)
                                 }
                                 return false
                             }
@@ -3484,7 +3506,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             let afterSizeCheck = result.count
                             
                             if afterSizeCheck == 0 && previous != afterSizeCheck {
-                                alert(for: context.window, info: strings().appMaxFileSize1)
+                                showFileLimit(context: context)
                             } else {
                                 self?.chatInteraction.showPreviewSender(result.map{URL(fileURLWithPath: $0)}, true, nil)
                             }

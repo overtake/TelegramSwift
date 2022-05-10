@@ -47,7 +47,7 @@ class ChatAnimatedStickerItem: ChatMediaItem {
         parameters?.runPremiumScreenEffect = { [weak chatInteraction] messageId in
             chatInteraction?.runPremiumScreenEffect(messageId, mirror, false)
         }
-        parameters?.mirror = mirror
+//        parameters?.mirror = mirror
         
     }
 }

@@ -179,93 +179,111 @@ class StickerPackPanelRowItem: TableRowItem {
 
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
-        var items:[ContextMenuItem] = []
         let context = self.context
         if arguments.mode != .common {
             return .single([])
         }
-        for file in files {
-            let rect = NSMakeRect(file.2.x, file.2.y, 60, 60)
-            let file = file.0
-            if NSPointInRect(location, rect) {
-                
-                if file.isPremiumSticker && !context.isPremium {
-                    return .single([])
-                }
-                
-                if NSApp.currentEvent?.modifierFlags.contains(.control) == true {
-                    if file.isAnimatedSticker, let data = try? Data(contentsOf: URL(fileURLWithPath: context.account.postbox.mediaBox.resourcePath(file.resource))) {
-                        items.append(ContextMenuItem("Copy thumbnail (Dev.)", handler: {
-                        _ = getAnimatedStickerThumb(data: data).start(next: { path in
-                                if let path = path {
-                                    let pb = NSPasteboard.general
-                                    pb.clearContents()
-                                    pb.writeObjects([NSURL(fileURLWithPath: path)])
-                                }
-                            })
-                        }, itemImage: MenuAnimation.menu_copy_media.value))
-                    }
-                }
-                
-                inner: switch packInfo {
-                case .saved, .recent:
-                    if let reference = file.stickerReference {
-                        items.append(ContextMenuItem(strings().contextViewStickerSet, handler: { [weak self] in
-                            self?.arguments.showPack(reference)
-                        }, itemImage: MenuAnimation.menu_view_sticker_set.value))
-                    }
-                default:
-                    break inner
-                }
-                inner: switch packInfo {
-                case .saved:
-                    if let mediaId = file.id {
-                        items.append(ContextMenuItem(strings().contextRemoveFaveSticker, handler: {
-                            _ = removeSavedSticker(postbox: context.account.postbox, mediaId: mediaId).start()
-                        }, itemImage: MenuAnimation.menu_remove_from_favorites.value))
-                    }
-                default:
-                    if packInfo.installed {
-                        items.append(ContextMenuItem(strings().chatContextAddFavoriteSticker, handler: {
-                            _ = addSavedSticker(postbox: context.account.postbox, network: context.account.network, file: file).start()
-                        }, itemImage: MenuAnimation.menu_add_to_favorites.value))
-                    }
-                }
-                
-                if canSend {
-                    items.append(ContextMenuItem(strings().chatSendWithoutSound, handler: { [weak self] in
-                        guard let `self` = self else {
-                            return
-                        }
-                        let contentView = (self.view as? StickerPackPanelRowView)?.subviews.compactMap { $0 as? ChatMediaContentView}.first(where: { view -> Bool in
-                            return view.media?.isEqual(to: file) ?? false
-                        })
-                        
-                        if let contentView = contentView {
-                            self.arguments.sendMedia(file, contentView, true, false)
-                        }
-                    }, itemImage: MenuAnimation.menu_mute.value))
+        let files = self.files
+        let packInfo = self.packInfo
+        let canSend = self.canSend
+        
+        let _savedStickersCount: Signal<Int, NoError> = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: 100) |> take(1) |> map {
+            $0.orderedItemListsViews[0].items.count
+        } |> deliverOnMainQueue
+
+        return _savedStickersCount |> map { [weak self] savedStickersCount in
+            var items:[ContextMenuItem] = []
+
+            for file in files {
+                let rect = NSMakeRect(file.2.x, file.2.y, 60, 60)
+                let file = file.0
+                if NSPointInRect(location, rect) {
                     
-                    items.append(ContextMenuItem(strings().chatSendScheduledMessage, handler: { [weak self] in
-                        guard let `self` = self else {
-                            return
+                    if file.isPremiumSticker && !context.isPremium {
+                        return []
+                    }
+                    
+                    if NSApp.currentEvent?.modifierFlags.contains(.control) == true {
+                        if file.isAnimatedSticker, let data = try? Data(contentsOf: URL(fileURLWithPath: context.account.postbox.mediaBox.resourcePath(file.resource))) {
+                            items.append(ContextMenuItem("Copy thumbnail (Dev.)", handler: {
+                            _ = getAnimatedStickerThumb(data: data).start(next: { path in
+                                    if let path = path {
+                                        let pb = NSPasteboard.general
+                                        pb.clearContents()
+                                        pb.writeObjects([NSURL(fileURLWithPath: path)])
+                                    }
+                                })
+                            }, itemImage: MenuAnimation.menu_copy_media.value))
                         }
-                        let contentView = (self.view as? StickerPackPanelRowView)?.subviews.compactMap { $0 as? ChatMediaContentView}.first(where: { view -> Bool in
-                            return view.media?.isEqual(to: file) ?? false
-                        })
+                    }
+                    
+                    inner: switch packInfo {
+                    case .saved, .recent:
+                        if let reference = file.stickerReference {
+                            items.append(ContextMenuItem(strings().contextViewStickerSet, handler: { [weak self] in
+                                self?.arguments.showPack(reference)
+                            }, itemImage: MenuAnimation.menu_view_sticker_set.value))
+                        }
+                    default:
+                        break inner
+                    }
+                    inner: switch packInfo {
+                    case .saved:
+                        if let mediaId = file.id {
+                            items.append(ContextMenuItem(strings().contextRemoveFaveSticker, handler: {
+                                showModalText(for: context.window, text: strings().chatContextStickerRemovedFromFavorites)
+                                _ = removeSavedSticker(postbox: context.account.postbox, mediaId: mediaId).start()
+                            }, itemImage: MenuAnimation.menu_remove_from_favorites.value))
+                        }
+                    default:
+                        if packInfo.installed {
+                            items.append(ContextMenuItem(strings().chatContextAddFavoriteSticker, handler: {
+                                let limit = context.isPremium ? context.premiumLimits.stickers_faved_limit_premium : context.premiumLimits.stickers_faved_limit_default
+                                if limit >= savedStickersCount, !context.isPremium {
+                                    showModalText(for: context.window, text: strings().chatContextFavoriteStickersLimitInfo("\(context.premiumLimits.stickers_faved_limit_premium)"), title: strings().chatContextFavoriteStickersLimitTitle, callback: { value in
+                                        showPremiumLimit(context: context, type: .faveStickers)
+                                    })
+                                } else {
+                                    showModalText(for: context.window, text: strings().chatContextStickerAddedToFavorites)
+                                }
+                                _ = addSavedSticker(postbox: context.account.postbox, network: context.account.network, file: file).start()
+                            }, itemImage: MenuAnimation.menu_add_to_favorites.value))
+                        }
+                    }
+                    
+                    if canSend {
+                        items.append(ContextMenuItem(strings().chatSendWithoutSound, handler: { [weak self] in
+                            guard let `self` = self else {
+                                return
+                            }
+                            let contentView = (self.view as? StickerPackPanelRowView)?.subviews.compactMap { $0 as? ChatMediaContentView}.first(where: { view -> Bool in
+                                return view.media?.isEqual(to: file) ?? false
+                            })
+                            
+                            if let contentView = contentView {
+                                self.arguments.sendMedia(file, contentView, true, false)
+                            }
+                        }, itemImage: MenuAnimation.menu_mute.value))
                         
-                        if let contentView = contentView {
-                            self.arguments.sendMedia(file, contentView, false, true)
-                        }
-                    }, itemImage: MenuAnimation.menu_schedule_message.value))
+                        items.append(ContextMenuItem(strings().chatSendScheduledMessage, handler: { [weak self] in
+                            guard let `self` = self else {
+                                return
+                            }
+                            let contentView = (self.view as? StickerPackPanelRowView)?.subviews.compactMap { $0 as? ChatMediaContentView}.first(where: { view -> Bool in
+                                return view.media?.isEqual(to: file) ?? false
+                            })
+                            
+                            if let contentView = contentView {
+                                self.arguments.sendMedia(file, contentView, false, true)
+                            }
+                        }, itemImage: MenuAnimation.menu_schedule_message.value))
+                    }
+                    break
                 }
-                break
             }
+            return items
         }
         
-       
-        
-        return .single(items)
     }
     
     deinit {

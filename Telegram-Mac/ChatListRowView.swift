@@ -649,7 +649,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                          
                          let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, reference: reference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
                          
-                         mediaPlayer.actionAtEnd = .loop(nil)
+                         mediaPlayer.actionAtEnd = .action({
+                             
+                         })
                          
                          self.photoVideoPlayer = mediaPlayer
                          

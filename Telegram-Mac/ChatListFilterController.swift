@@ -60,7 +60,6 @@ func chatListFilterType(_ filter: ChatListFilter) -> ChatListFilterType {
 
 
 
-private let maximumPeers: Int = 100
 
 private extension ChatListFilter {
     var additionIncludeItems: [ShareAdditionItem] {
@@ -152,10 +151,14 @@ class SelectCallbackObject : ShareObject {
     
     
     override func perform(to peerIds:[PeerId], comment: ChatTextInputState? = nil) -> Signal<Never, String> {
-        return callback(peerIds) |> mapError { _ in return String() }
+        return callback(peerIds) |> castError(String.self)
     }
     override func limitReached() {
-        alert(for: context.window, info: limitReachedText)
+        if !context.isPremium {
+            showModal(with: PremiumLimitController(context: context, type: .chatInFolders), for: context.window)
+        } else {
+            alert(for: context.window, info: limitReachedText)
+        }
     }
     override var searchPlaceholderKey: String {
         return "ChatList.Add.Placeholder"
@@ -252,6 +255,9 @@ private func _id_exclude(_ peerId: PeerId) -> InputDataIdentifier {
 }
 private func chatListFilterEntries(state: ChatListFiltersListState, includePeers: [Peer], excludePeers: [Peer], arguments: ChatListPresetArguments) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
+    
+    
+    let maximumPeers = arguments.context.isPremium ? arguments.context.premiumLimits.dialog_filters_chats_limit_premium : arguments.context.premiumLimits.dialog_filters_chats_limit_default
     
     var includePeers:[Peer] = includePeers
     
@@ -482,6 +488,9 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
         statePromise.set(stateValue.modify (f))
     }
     
+    let maximumPeers = context.isPremium ? context.premiumLimits.dialog_filters_chats_limit_premium : context.premiumLimits.dialog_filters_chats_limit_default
+    
+    
     let updateDisposable = MetaDisposable()
     
     let save:(Bool)->Void = { replace in
@@ -520,7 +529,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
         
         let additionTopItems = items.isEmpty ? nil : ShareAdditionItems(items: items, topSeparator: strings().chatListAddTopSeparator, bottomSeparator: strings().chatListAddBottomSeparator)
         
-        showModal(with: ShareModalController(SelectCallbackObject(context, defaultSelectedIds: Set(stateValue.with { $0.filter.data.includePeers.peers + $0.filter.selectedIncludeItems.map { $0.peer.id } }), additionTopItems: additionTopItems, limit: maximumPeers, limitReachedText: strings().chatListFilterIncludeLimitReached, callback: { peerIds in
+        showModal(with: ShareModalController(SelectCallbackObject(context, defaultSelectedIds: Set(stateValue.with { $0.filter.data.includePeers.peers + $0.filter.selectedIncludeItems.map { $0.peer.id } }), additionTopItems: additionTopItems, limit: Int(maximumPeers), limitReachedText: strings().chatListFilterIncludeLimitReachedNew(Int(maximumPeers)), callback: { peerIds in
             updateState { state in
                 var state = state
                 
@@ -531,7 +540,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                 
                 state.withUpdatedFilter { filter in
                     var filter = filter
-                    filter.data.includePeers.setPeers(Array(peerIds.uniqueElements.prefix(maximumPeers)))
+                    filter.data.includePeers.setPeers(Array(peerIds.uniqueElements.prefix(Int(maximumPeers))))
                     var updatedCats: ChatListFilterPeerCategories = []
                     let cats = categories.map { ChatListFilterPeerCategories(rawValue: Int32($0.id._internalGetInt64Value())) }
                     for cat in cats {
@@ -550,7 +559,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
         let items = stateValue.with { $0.filter.additionExcludeItems }
         let additionTopItems = items.isEmpty ? nil : ShareAdditionItems(items: items, topSeparator: strings().chatListAddTopSeparator, bottomSeparator: strings().chatListAddBottomSeparator)
         
-        showModal(with: ShareModalController(SelectCallbackObject(context, defaultSelectedIds: Set(stateValue.with { $0.filter.data.excludePeers + $0.filter.selectedExcludeItems.map { $0.peer.id } }), additionTopItems: additionTopItems, limit: maximumPeers, limitReachedText: strings().chatListFilterExcludeLimitReached, callback: { peerIds in
+        showModal(with: ShareModalController(SelectCallbackObject(context, defaultSelectedIds: Set(stateValue.with { $0.filter.data.excludePeers + $0.filter.selectedExcludeItems.map { $0.peer.id } }), additionTopItems: additionTopItems, limit: Int(maximumPeers), limitReachedText: strings().chatListFilterExcludeLimitReachedNew(Int(maximumPeers)), callback: { peerIds in
             updateState { state in
                 var state = state
                 state.withUpdatedFilter { filter in
@@ -560,7 +569,7 @@ func ChatListFilterController(context: AccountContext, filter: ChatListFilter, i
                         $0.namespace._internalGetInt32Value() == ChatListFilterPeerCategories.Namespace
                     }
                     let peerIds = Set(peerIds).subtracting(categories)
-                    filter.data.excludePeers = Array(peerIds.uniqueElements.prefix(maximumPeers))
+                    filter.data.excludePeers = Array(peerIds.uniqueElements.prefix(Int(maximumPeers)))
                     for cat in categories {
                         if ChatListFilterPeerCategories(rawValue: Int32(cat.id._internalGetInt64Value())) == .excludeMuted {
                             filter.data.excludeMuted = true

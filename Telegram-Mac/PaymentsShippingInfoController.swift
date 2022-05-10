@@ -203,7 +203,7 @@ enum PaymentsShippingInfoFocus {
     case phone
 }
 
-func PaymentsShippingInfoController(context: AccountContext, invoice: BotPaymentInvoice, messageId: MessageId, formInfo: BotPaymentRequestedInfo, focus: PaymentsShippingInfoFocus?, formInfoUpdated: @escaping (BotPaymentRequestedInfo, BotPaymentValidatedFormInfo) -> Void) -> InputDataModalController {
+func PaymentsShippingInfoController(context: AccountContext, invoice: BotPaymentInvoice, source: BotPaymentInvoiceSource, formInfo: BotPaymentRequestedInfo, focus: PaymentsShippingInfoFocus?, formInfoUpdated: @escaping (BotPaymentRequestedInfo, BotPaymentValidatedFormInfo) -> Void) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
     var close:(()->Void)? = nil
@@ -264,7 +264,7 @@ func PaymentsShippingInfoController(context: AccountContext, invoice: BotPayment
         let formInfo = state.formInfo
         
         return .fail(.doSomething(next: { f in
-            _ = showModalProgress(signal: context.engine.payments.validateBotPaymentForm(saveInfo: state.saveInfo, messageId: messageId, formInfo: formInfo), for: context.window).start(next: { result in
+            _ = showModalProgress(signal: context.engine.payments.validateBotPaymentForm(saveInfo: state.saveInfo, source: source, formInfo: formInfo), for: context.window).start(next: { result in
                 
                 formInfoUpdated(formInfo, result)
                 close?()

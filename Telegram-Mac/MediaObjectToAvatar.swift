@@ -142,9 +142,9 @@ private final class StickerToMp4Context {
     
     private let dataDisposable = MetaDisposable()
     private let fetchDisposable = MetaDisposable()
-    private let background: Signal<CGImage, NoError>
     private let fileReference: FileMediaReference
     private let context: AccountContext
+    private let background: Signal<CGImage, NoError>
     private let zoom: CGFloat
     private let offset: CGPoint
     init(context: AccountContext, background: Signal<CGImage, NoError>, zoom: CGFloat, offset: CGPoint, fileReference: FileMediaReference) {
@@ -364,9 +364,18 @@ private final class FetchStickerToImage {
     
     private let disposable = MetaDisposable()
     private let dataDisposable = MetaDisposable()
-    init(context: AccountContext, file: TelegramMediaFile) {
+    
+    private let background: Signal<CGImage, NoError>
+    private let zoom: CGFloat
+    private let offset: CGPoint
+
+    
+    init(context: AccountContext, background: Signal<CGImage, NoError>, zoom: CGFloat, offset: CGPoint, file: TelegramMediaFile) {
         self.context = context
         self.file = file
+        self.background = background
+        self.zoom = zoom
+        self.offset = offset
     }
     
     deinit {
@@ -383,16 +392,14 @@ private final class FetchStickerToImage {
             return $0.path
         }
         
-        dataDisposable.set(signal.start(next: { [weak self] path in
+        let zoom = self.zoom
+        let offset = self.offset
+        
+        dataDisposable.set(combineLatest(background, signal).start(next: { [weak self] background, path in
             if let data = try? Data.init(contentsOf: URL(fileURLWithPath: path)) {
                 let webp = convertFromWebP(data)?._cgImage
                 if let webp = webp {
-                    let image = generateImage(NSMakeSize(640, 640), contextGenerator: { size, ctx in
-                        ctx.clear(size.bounds)
-                        ctx.setFillColor(.white)
-                        ctx.fill(size.bounds)
-                        ctx.draw(webp, in: size.bounds.focus(size))
-                    }, scale: 1.0)!
+                    let image = makeImage(from: webp, zoom: zoom, offset: offset, background: background)
                     self?.statusValue.set(NSImage(cgImage: image, size: image.size))
                 }
             }
@@ -581,7 +588,7 @@ final class MediaObjectToAvatar {
             }
             fetch_v.start()
         case let .sticker(file):
-            let fetch_i = FetchStickerToImage(context: context, file: file)
+            let fetch_i = FetchStickerToImage(context: context, background: background, zoom: object.foreground.zoom, offset: object.foreground.offset, file: file)
             self.fetch_i = fetch_i
             signal = fetch_i.status |> map {
                 .init(status: nil, result: .image($0))

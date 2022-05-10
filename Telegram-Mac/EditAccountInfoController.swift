@@ -378,7 +378,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
         
         
         switch object.object.foreground.type {
-        case .emoji:
+        case .emoji, .sticker:
             updatePhoto(object.start() |> mapToSignal { value in
                 if let result = value.result {
                     switch result {

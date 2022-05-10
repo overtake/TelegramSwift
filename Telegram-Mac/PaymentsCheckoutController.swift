@@ -136,9 +136,15 @@ enum PaymentViewMode {
     case invoice
 }
 
+extension TelegramMediaInvoice : Equatable {
+    public static func == (lhs: TelegramMediaInvoice, rhs: TelegramMediaInvoice) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
 private struct State : Equatable {
     let mode: PaymentViewMode
-    var message: Message
+    var invoice: TelegramMediaInvoice
     var form: BotPaymentForm?
     var botPeer: PeerEquatable?
     var validatedInfo: BotPaymentValidatedFormInfo?
@@ -198,7 +204,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
   
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_checkout_preview, equatable: InputDataEquatable(state.botPeer), comparable: nil, item: { initialSize, stableId in
-        return PaymentsCheckoutPreviewRowItem(initialSize, stableId: stableId, context: arguments.context, message: state.message, botPeer: state.botPeer?.peer, viewType: .singleItem)
+        return PaymentsCheckoutPreviewRowItem(initialSize, stableId: stableId, context: arguments.context, invoice: state.invoice, botPeer: state.botPeer?.peer, viewType: .singleItem)
     }))
     index += 1
     
@@ -372,13 +378,25 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func PaymentsCheckoutController(context: AccountContext, message: Message) -> InputDataModalController {
+enum PaymentCheckoutCompletionStatus : String {
+    case paid
+    case cancelled
+    case failed
+}
 
+func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoiceSource, invoice: TelegramMediaInvoice, completion:((PaymentCheckoutCompletionStatus)->Void)? = nil) -> InputDataModalController {
+
+    var completion = completion
+    
+    var invokeCompletion:(PaymentCheckoutCompletionStatus)->Void = { value in
+        completion?(value)
+        completion = nil
+    }
+    
     var close:(()->Void)? = nil
-    let messageId = message.id
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(mode: .invoice, message: message, savedInfo: BotPaymentRequestedInfo(name: nil, phone: nil, email: nil, shippingAddress: nil))
+    let initialState = State(mode: .invoice, invoice: invoice, savedInfo: BotPaymentRequestedInfo(name: nil, phone: nil, email: nil, shippingAddress: nil))
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -389,7 +407,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
     let arguments = Arguments(context: context, openForm: { focus in
         let state = stateValue.with({ $0 })
         if let form = state.form {
-            showModal(with: PaymentsShippingInfoController(context: context, invoice: form.invoice, messageId: messageId, formInfo: state.savedInfo, focus: focus, formInfoUpdated: { savedInfo, validatedInfo in
+            showModal(with: PaymentsShippingInfoController(context: context, invoice: form.invoice, source: source, formInfo: state.savedInfo, focus: focus, formInfoUpdated: { savedInfo, validatedInfo in
                 updateState { current in
                     var current = current
                     current.savedInfo = savedInfo
@@ -475,15 +493,15 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
             }
             
             let pay:()->Void = {
-                let paySignal = context.engine.payments.sendBotPaymentForm(messageId: messageId, formId: form.id, validatedInfoId: state.validatedInfo?.id, shippingOptionId: state.shippingOptionId?.id, tipAmount: state.form?.invoice.tip != nil ? (state.currentTip ?? 0) : nil, credentials: credentials)
+                let paySignal = context.engine.payments.sendBotPaymentForm(source: source, formId: form.id, validatedInfoId: state.validatedInfo?.id, shippingOptionId: state.shippingOptionId?.id, tipAmount: state.form?.invoice.tip != nil ? (state.currentTip ?? 0) : nil, credentials: credentials)
                 
                 _ = showModalProgress(signal: paySignal, for: context.window).start(next: { result in
                     
                     let success:(Bool)->Void = { value in
                         if value {
+                            invokeCompletion(.paid)
                             close?()
-                            let invoice = state.message.media.first as! TelegramMediaInvoice
-                            //currencyValue: currencyValue, itemTitle: invoice.title
+                            let invoice = state.invoice
                             let totalValue = currentTotalPrice(paymentForm: form, validatedFormInfo: state.validatedInfo, shippingOption: state.shippingOptionId)
                             
                             let total = formatCurrencyAmount(totalValue, currency: form.invoice.currency)
@@ -510,16 +528,16 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
                         text = strings().checkoutErrorPrecheckoutFailed
                     }
                     alert(for: context.window, info: text)
+                    invokeCompletion(.failed)
                     close?()
                 })
             }
             
-            let messageId = message.id
             let botPeer: Signal<Peer?, NoError> = context.account.postbox.transaction { transaction -> Peer? in
                 return transaction.getPeer(form.paymentBotId)
             }
 
-            let checkSignal = combineLatest(queue: .mainQueue(), ApplicationSpecificNotice.getBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: messageId.peerId), botPeer, context.account.postbox.loadedPeerWithId(form.providerId))
+            let checkSignal = combineLatest(queue: .mainQueue(), ApplicationSpecificNotice.getBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: form.paymentBotId), botPeer, context.account.postbox.loadedPeerWithId(form.providerId))
             
             let _ = checkSignal.start(next: { value, botPeer, providerPeer in
                 if let botPeer = botPeer {
@@ -528,7 +546,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
                     } else {
                         confirm(for: context.window, header: strings().paymentsWarninTitle, information: strings().paymentsWarningText(botPeer.compactDisplayTitle, providerPeer.compactDisplayTitle, botPeer.compactDisplayTitle, botPeer.compactDisplayTitle), successHandler: { _ in
                             pay()
-                            _ = ApplicationSpecificNotice.setBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: messageId.peerId).start()
+                            _ = ApplicationSpecificNotice.setBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: botPeer.id).start()
                         })
                     }
                 }
@@ -603,10 +621,10 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
             ]
 
     
-    let formAndMaybeValidatedInfo = context.engine.payments.fetchBotPaymentForm(messageId: messageId, themeParams: themeParams)
+    let formAndMaybeValidatedInfo = context.engine.payments.fetchBotPaymentForm(source: source, themeParams: themeParams)
            |> mapToSignal { paymentForm -> Signal<(BotPaymentForm, BotPaymentValidatedFormInfo?), BotPaymentFormRequestError> in
                if let current = paymentForm.savedInfo {
-                return context.engine.payments.validateBotPaymentForm(saveInfo: true, messageId: messageId, formInfo: current)
+                   return context.engine.payments.validateBotPaymentForm(saveInfo: true, source: source, formInfo: current)
                        |> mapError { _ -> BotPaymentFormRequestError in
                            return .generic
                        }
@@ -648,6 +666,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
             return current
         }
     }, error: { error in
+        invokeCompletion(.failed)
         close?()
         switch error {
         case .generic:
@@ -691,11 +710,15 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
         _ = controller?.returnKeyAction()
     }, drawBorder: true, height: 50, singleButton: true)
     
-    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
+    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, closeHandler: { f in
+        f()
+        invokeCompletion(.cancelled)
+    })
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
         modalController?.close()
     })
+    
     
     close = { [weak modalController] in
         modalController?.modal?.close()

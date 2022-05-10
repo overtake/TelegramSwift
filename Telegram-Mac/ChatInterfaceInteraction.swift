@@ -227,6 +227,27 @@ final class ChatInteraction : InterfaceObserver  {
     var peerIsAccountPeer: Bool {
         return self.presentation.currentSendAsPeerId == nil || self.presentation.currentSendAsPeerId == self.context.peerId
     }
+    
+    static let maxInput:Int32 = 50000
+    static let textLimit: Int32 = 4096
+    var maxInputCharacters:Int32 {
+        if presentation.state == .normal {
+            return ChatInteraction.maxInput
+        } else if let editState = presentation.interfaceState.editState {
+            if editState.message.media.count == 0 {
+                return ChatInteraction.textLimit
+            } else {
+                for media in editState.message.media {
+                    if !(media is TelegramMediaWebpage) {
+                        return Int32(context.isPremium ? context.premiumLimits.caption_length_limit_premium : context.premiumLimits.caption_length_limit_default)
+                    }
+                }
+                return ChatInteraction.textLimit
+            }
+        }
+        
+        return ChatInteraction.maxInput
+    }
 
     /*
      var hasSetDestructiveTimer: Bool {
@@ -664,11 +685,13 @@ final class ChatInteraction : InterfaceObserver  {
                             
                         }
                     case .payment:
-                        let receiptMessageId = (keyboardMessage.media.first as? TelegramMediaInvoice)?.receiptMessageId
-                        if let receiptMessageId = receiptMessageId {
-                            showModal(with: PaymentsReceiptController(context: strongSelf.context, messageId: receiptMessageId, message: keyboardMessage), for: strongSelf.context.window)
-                        } else {
-                            showModal(with: PaymentsCheckoutController(context: strongSelf.context, message: keyboardMessage), for: strongSelf.context.window)
+                        if let invoice = keyboardMessage.media.first as? TelegramMediaInvoice {
+                            let receiptMessageId = invoice.receiptMessageId
+                            if let receiptMessageId = receiptMessageId {
+                                showModal(with: PaymentsReceiptController(context: strongSelf.context, messageId: receiptMessageId, invoice: invoice), for: strongSelf.context.window)
+                            } else {
+                                showModal(with: PaymentsCheckoutController(context: strongSelf.context, source: .message(keyboardMessage.id), invoice: invoice), for: strongSelf.context.window)
+                            }
                         }
                     case let .urlAuth(url, buttonId):
                         let context = strongSelf.context
