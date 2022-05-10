@@ -20,12 +20,14 @@ private final class ChatListPresetArguments {
     let removePreset: (ChatListFilter)->Void
     let addFeatured: (ChatListFeaturedFilter)->Void
     let toggleSidebar: (Bool)->Void
-    init(context: AccountContext, openPreset: @escaping(ChatListFilter, Bool)->Void, removePreset: @escaping(ChatListFilter)->Void, addFeatured: @escaping(ChatListFeaturedFilter)->Void, toggleSidebar: @escaping(Bool)->Void) {
+    let limitExceeded:()->Void
+    init(context: AccountContext, openPreset: @escaping(ChatListFilter, Bool)->Void, removePreset: @escaping(ChatListFilter)->Void, addFeatured: @escaping(ChatListFeaturedFilter)->Void, toggleSidebar: @escaping(Bool)->Void, limitExceeded:@escaping()->Void) {
         self.context = context
         self.openPreset = openPreset
         self.removePreset = removePreset
         self.addFeatured = addFeatured
         self.toggleSidebar = toggleSidebar
+        self.limitExceeded = limitExceeded
     }
 }
 private func _id_preset(_ filter: ChatListFilter) -> InputDataIdentifier {
@@ -50,6 +52,8 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
     sectionId += 1
     
     
+    let limit = arguments.context.isPremium ? arguments.context.premiumLimits.dialog_filters_limit_premium : arguments.context.premiumLimits.dialog_filters_limit_default
+    
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: nil, comparable: nil, item: { initialSize, stableId in
         
         let attributedString = NSMutableAttributedString()
@@ -69,7 +73,7 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
         var viewType = bestGeneralViewType(filtersWithCounts.map { $0.0 }, for: filter)
         if filtersWithCounts.count == 1 {
             viewType = .firstItem
-        } else if filter == filtersWithCounts.last?.0, filtersWithCounts.count < 10 {
+        } else if filter == filtersWithCounts.last?.0, filtersWithCounts.count < arguments.context.premiumLimits.dialog_filters_limit_premium {
             viewType = .innerItem
         }
         
@@ -83,13 +87,20 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
         })))
         index += 1
     }
-    
-    if filtersWithCounts.count < 10 {
+    if filtersWithCounts.count < arguments.context.premiumLimits.dialog_filters_limit_premium {
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_new, data: InputDataGeneralData(name: strings().chatListFilterListAddNew, color: theme.colors.accent, type: .next, viewType: filtersWithCounts.isEmpty ? .singleItem : .lastItem, action: {
-            arguments.openPreset(ChatListFilter.new(excludeIds: filtersWithCounts.map { $0.0.id }), true)
+            
+            if filtersWithCounts.count < limit {
+                arguments.openPreset(ChatListFilter.new(excludeIds: filtersWithCounts.map { $0.0.id }), true)
+            } else {
+                arguments.limitExceeded()
+            }
+            
         })))
         index += 1
     }
+    
+    
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterListDesc), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
     index += 1
     
@@ -178,6 +189,8 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
         _ = updateChatListFolderSettings(context.account.postbox, {
             $0.withUpdatedSidebar(sidebar)
         }).start()
+    }, limitExceeded: {
+        showModal(with: PremiumLimitController(context: context, type: .folders), for: context.window)
     })
     
     

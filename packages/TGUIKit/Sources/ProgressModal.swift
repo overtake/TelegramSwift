@@ -9,6 +9,7 @@
 import Cocoa
 import SwiftSignalKit
 import AppKit
+import ColorPalette
 
 private final class ProgressModalView : NSVisualEffectView {
     private let progressView = ProgressIndicator(frame: NSMakeRect(0, 0, 32, 32))
@@ -278,7 +279,7 @@ private final class TextAndLabelModalView : View {
         //self.backgroundColor = NSColor.black.withAlphaComponent(0.9)
         self.textView.disableBackgroundDrawing = true
         self.textView.isSelectable = false
-        self.textView.userInteractionEnabled = false
+        self.textView.userInteractionEnabled = true
         addSubview(self.textView)
         layer?.cornerRadius = .cornerRadius
         
@@ -288,7 +289,7 @@ private final class TextAndLabelModalView : View {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func update(text: String, title: String?, maxSize: NSSize) -> NSSize {
+    func update(text: String, title: String?, callback: ((String)->Void)?, maxSize: NSSize) -> NSSize {
 
         if let title = title {
             self.titleView = TextView()
@@ -301,7 +302,17 @@ private final class TextAndLabelModalView : View {
             titleLayout.measure(width: min(400, maxSize.width - 80))
             self.titleView?.update(titleLayout)
         }
-        let textLayout = TextViewLayout(.initialize(string: text, color: .white, font: .normal(.text)))
+        
+        let attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: .white), bold: MarkdownAttributeSet(font: .bold(.text), textColor: .white), link: MarkdownAttributeSet(font: .normal(.title), textColor: nightAccentPalette.link), linkAttribute: { contents in
+            return (NSAttributedString.Key.link.rawValue, contents)
+        }))
+        let textLayout = TextViewLayout(attr)
+        textLayout.interactions = .init(processURL: { contents in
+            if let string = contents as? String {
+                callback?(string)
+            }
+        })
+        
         textLayout.measure(width: min(400, maxSize.width - 80))
         self.textView.update(textLayout)
 
@@ -374,7 +385,7 @@ class TextAndLabelModalController: ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let size = self.genericView.update(text: text, title: title, maxSize: windowSize)
+        let size = self.genericView.update(text: text, title: title, callback: self.callback, maxSize: windowSize)
         self.modal?.resize(with: size, animated: false)
 
         readyOnce()
@@ -416,10 +427,12 @@ class TextAndLabelModalController: ModalViewController {
     private let text: String
     private let title: String?
     private let windowSize: NSSize
-    init(text: String, title: String?, windowSize: NSSize) {
+    private let callback:((String)->Void)?
+    init(text: String, title: String?, callback:((String)->Void)?, windowSize: NSSize) {
         self.text = text
         self.windowSize = windowSize
         self.title = title
+        self.callback = callback
         super.init(frame:NSMakeRect(0, 0, 80, 80))
         self.bar = .init(height: 0)
     }
@@ -427,8 +440,8 @@ class TextAndLabelModalController: ModalViewController {
 
 }
 
-public func showModalText(for window: Window, text: String, title: String? = nil) {
-    let modal = TextAndLabelModalController(text: text, title: title, windowSize: window.frame.size)
+public func showModalText(for window: Window, text: String, title: String? = nil, callback:((String)->Void)? = nil) {
+    let modal = TextAndLabelModalController(text: text, title: title, callback: callback, windowSize: window.frame.size)
 
     showModal(with: modal, for: window, animationType: .scaleCenter)
 
@@ -450,3 +463,4 @@ public func showModalText(for window: Window, text: String, title: String? = nil
 
     _ = signal.start()
 }
+

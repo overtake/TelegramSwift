@@ -39,7 +39,8 @@ private final class ChannelVisibilityControllerArguments {
     let toggleForwarding:(Bool)->Void
     let toggleWrite:(CurrentChannelJoinToSend)->Void
     let toggleApproveNewMembers: (Bool)->Void
-    init(context: AccountContext, updateCurrentType: @escaping (CurrentChannelType) -> Void, updatePublicLinkText: @escaping (String?, String) -> Void, displayPrivateLinkMenu: @escaping (String) -> Void, revokePeerId: @escaping (PeerId) -> Void, copy: @escaping(String)->Void, revokeLink: @escaping()->Void, share: @escaping(String)->Void, manageLinks:@escaping()->Void, open:@escaping(_ExportedInvitation)->Void, toggleForwarding:@escaping(Bool)->Void, toggleWrite:@escaping(CurrentChannelJoinToSend)->Void, toggleApproveNewMembers: @escaping(Bool)->Void) {
+    let premiumCallback:()->Void
+    init(context: AccountContext, updateCurrentType: @escaping (CurrentChannelType) -> Void, updatePublicLinkText: @escaping (String?, String) -> Void, displayPrivateLinkMenu: @escaping (String) -> Void, revokePeerId: @escaping (PeerId) -> Void, copy: @escaping(String)->Void, revokeLink: @escaping()->Void, share: @escaping(String)->Void, manageLinks:@escaping()->Void, open:@escaping(_ExportedInvitation)->Void, toggleForwarding:@escaping(Bool)->Void, toggleWrite:@escaping(CurrentChannelJoinToSend)->Void, toggleApproveNewMembers: @escaping(Bool)->Void, premiumCallback:@escaping()->Void) {
         self.context = context
         self.updateCurrentType = updateCurrentType
         self.updatePublicLinkText = updatePublicLinkText
@@ -53,6 +54,7 @@ private final class ChannelVisibilityControllerArguments {
         self.toggleForwarding = toggleForwarding
         self.toggleWrite = toggleWrite
         self.toggleApproveNewMembers = toggleApproveNewMembers
+        self.premiumCallback = premiumCallback
     }
 }
 
@@ -87,6 +89,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
     case manageLinks(sectionId:Int32, GeneralViewType)
     case manageLinksDesc(sectionId:Int32, GeneralViewType)
 
+    case increaseLimit(sectionId: Int32, GeneralViewType)
     case existingLinksInfo(sectionId:Int32, String, GeneralViewType)
     case existingLinkPeerItem(sectionId:Int32, Int32, FoundPeer, ShortPeerDeleting?, Bool, GeneralViewType)
     
@@ -131,28 +134,30 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             return .index(9)
         case .publicLinkInfo:
             return .index(10)
-        case .existingLinksInfo:
+        case .increaseLimit:
             return .index(11)
-        case .manageLinks:
+        case .existingLinksInfo:
             return .index(12)
-        case .manageLinksDesc:
+        case .manageLinks:
             return .index(13)
-        case .writeHeader:
+        case .manageLinksDesc:
             return .index(14)
-        case .writeEveryone:
+        case .writeHeader:
             return .index(15)
-        case .writeOnlyMembers:
+        case .writeEveryone:
             return .index(16)
-        case .approveNewMembers:
+        case .writeOnlyMembers:
             return .index(17)
-        case .approveNewMembersInfo:
+        case .approveNewMembers:
             return .index(18)
-        case .forwardHeader:
+        case .approveNewMembersInfo:
             return .index(19)
-        case .allowForward:
+        case .forwardHeader:
             return .index(20)
-        case .forwardInfo:
+        case .allowForward:
             return .index(21)
+        case .forwardInfo:
+            return .index(22)
         case let .existingLinkPeerItem(_,_, peer, _, _, _):
             return .peer(peer.peer.id)
         case let .section(sectionId: sectionId):
@@ -183,6 +188,8 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
         case let .publicLinkStatus(sectionId: sectionId, _, _, _):
             return (sectionId * 1000) + stableId.index
         case let .publicLinkInfo(sectionId: sectionId, _, _):
+            return (sectionId * 1000) + stableId.index
+        case let .increaseLimit(sectionId, _):
             return (sectionId * 1000) + stableId.index
         case let .existingLinksInfo(sectionId: sectionId, _, _):
             return (sectionId * 1000) + stableId.index
@@ -304,6 +311,8 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
             }
             
             return GeneralTextRowItem(initialSize, stableId: stableId, text: NSAttributedString.initialize(string: text, color: color, font: .normal(.text)), viewType: viewType)
+        case let .increaseLimit(_, viewType):
+            return PremiumIncreaseLimitItem(initialSize, stableId: stableId, context: arguments.context, type: .publicLink, viewType: viewType, callback: arguments.premiumCallback)
         case let .existingLinksInfo(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .existingLinkPeerItem(_, _, peer, _, _, viewType):
@@ -415,7 +424,7 @@ private struct ChannelVisibilityControllerState: Equatable {
     }
 }
 
-private func channelVisibilityControllerEntries(view: PeerView, publicChannelsToRevoke: [Peer]?, state: ChannelVisibilityControllerState, onlyUsername: Bool, importers: PeerInvitationImportersState?, isNew: Bool) -> [ChannelVisibilityEntry] {
+private func channelVisibilityControllerEntries(view: PeerView, arguments: ChannelVisibilityControllerArguments, publicChannelsToRevoke: [Peer]?, state: ChannelVisibilityControllerState, onlyUsername: Bool, importers: PeerInvitationImportersState?, isNew: Bool) -> [ChannelVisibilityEntry] {
     var entries: [ChannelVisibilityEntry] = []
     
     var sectionId:Int32 = 0
@@ -473,7 +482,13 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
             }
             if displayAvailability {
                 if let publicChannelsToRevoke = publicChannelsToRevoke {
-                    entries.append(.publicLinkAvailability(sectionId: sectionId, false, .textTopItem))
+                    
+                    if !arguments.context.isPremium {
+                        entries.append(.increaseLimit(sectionId: sectionId, .singleItem))
+                    } else {
+                        entries.append(.publicLinkAvailability(sectionId: sectionId, false, .textTopItem))
+                    }
+                    
                     var index: Int32 = 0
                     
                     let sorted = publicChannelsToRevoke.sorted(by: { lhs, rhs in
@@ -576,10 +591,14 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
             if displayAvailability {
                 if let publicChannelsToRevoke = publicChannelsToRevoke {
                     
+                    if !arguments.context.isPremium {
+                        entries.append(.increaseLimit(sectionId: sectionId, .singleItem))
+                    } else {
+                        entries.append(.publicLinkAvailability(sectionId: sectionId, false, .singleItem))
+                    }
                     
-                    entries.append(.publicLinkAvailability(sectionId: sectionId, false, .singleItem))
                     var index: Int32 = 0
-                    for peer in publicChannelsToRevoke.sorted(by: { lhs, rhs in
+                    let sorted = publicChannelsToRevoke.sorted(by: { lhs, rhs in
                         var lhsDate: Int32 = 0
                         var rhsDate: Int32 = 0
                         if let lhs = lhs as? TelegramGroup {
@@ -589,8 +608,9 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
                             rhsDate = rhs.creationDate
                         }
                         return lhsDate > rhsDate
-                    }) {
-                        entries.append(.existingLinkPeerItem(sectionId: sectionId, index, FoundPeer(peer: peer, subscribers: nil), nil, state.revokingPeerId == nil, .singleItem))
+                    })
+                    for (i, peer) in sorted.enumerated() {
+                        entries.append(.existingLinkPeerItem(sectionId: sectionId, index, FoundPeer(peer: peer, subscribers: nil), nil, state.revokingPeerId == nil, bestGeneralViewType(sorted, for: i)))
                         index += 1
                     }
                 } else {
@@ -655,14 +675,12 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
                 entries.append(.approveNewMembers(sectionId: sectionId, approve, .singleItem))
                 entries.append(.approveNewMembersInfo(sectionId: sectionId, strings().channelVisibilityMessagesApproveInfo, .textBottomItem))
             }
+            
+            entries.append(.section(sectionId: sectionId))
+            sectionId += 1
         }
         
-       
-        
-        entries.append(.section(sectionId: sectionId))
-        sectionId += 1
-
-        
+               
         let allowed: Bool
         if let value = state.forwardingEnabled {
             allowed = value
@@ -677,7 +695,6 @@ private func channelVisibilityControllerEntries(view: PeerView, publicChannelsTo
         }
         
         
-        entries.append(.forwardHeader(sectionId: sectionId, peer.isChannel ? strings().channelVisibilityForwardingChannelTitle : strings().channelVisibilityForwardingGroupTitle, .textTopItem))
         entries.append(.allowForward(sectionId: sectionId, !allowed, .singleItem))
         
         let desc: String
@@ -956,6 +973,8 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
             updateState { current in
                 return current.withUpdatedApproveMembers(value)
             }
+        }, premiumCallback: {
+            
         })
         
         
@@ -1014,7 +1033,7 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                     }
                 }
                 
-                let entries = channelVisibilityControllerEntries(view: view, publicChannelsToRevoke: publicChannelsToRevoke, state: state, onlyUsername: onlyUsername, importers: importers, isNew: isNew).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+                let entries = channelVisibilityControllerEntries(view: view, arguments: arguments, publicChannelsToRevoke: publicChannelsToRevoke, state: state, onlyUsername: onlyUsername, importers: importers, isNew: isNew).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 
                 return (prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments), peer, doneEnabled, state)
             } |> deliverOnMainQueue

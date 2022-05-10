@@ -331,3 +331,17 @@ extension Peer {
     }
     
 }
+
+extension PeerId {
+    static func _optionalInternalFromInt64Value(_ id: Int64) -> PeerId.Id? {
+        let peerId = PeerId.Id._internalFromInt64Value(id)
+        if id < 0 {
+            if let _ = Int32(exactly: id) {
+                return peerId
+            } else {
+                return nil
+            }
+        }
+        return peerId
+    }
+}

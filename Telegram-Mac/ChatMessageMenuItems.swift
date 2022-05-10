@@ -29,6 +29,8 @@ final class ChatMenuItemsData {
     let peerId: PeerId
     let fileFinderPath: String?
     let isStickerSaved: Bool?
+    let savedStickersCount: Int
+    let savedGifsCount: Int
     let dialogs: [Peer]
     let recentUsedPeers: [Peer]
     let favoritePeers: [Peer]
@@ -41,7 +43,7 @@ final class ChatMenuItemsData {
     let textLayout: (TextViewLayout?, LinkType?)?
     let notifications: NotificationSoundList?
     let cachedData: CachedPeerData?
-    init(chatInteraction: ChatInteraction, message: Message, accountPeer: Peer, resourceData: MediaResourceData?, chatState: ChatState, chatMode: ChatMode, disableSelectAbility: Bool, isLogInteraction: Bool, canPinMessage: Bool, pinnedMessage: ChatPinnedMessage?, peer: Peer?, peerId: PeerId, fileFinderPath: String?, isStickerSaved: Bool?, dialogs: [Peer], recentUsedPeers: [Peer], favoritePeers: [Peer], recentMedia: [RecentMediaItem], updatingMessageMedia: [MessageId: ChatUpdatingMessageMedia], additionalData: MessageEntryAdditionalData, file: TelegramMediaFile?, image: TelegramMediaImage?, textLayout: (TextViewLayout?, LinkType?)?, availableReactions: AvailableReactions?, notifications: NotificationSoundList?, cachedData: CachedPeerData?) {
+    init(chatInteraction: ChatInteraction, message: Message, accountPeer: Peer, resourceData: MediaResourceData?, chatState: ChatState, chatMode: ChatMode, disableSelectAbility: Bool, isLogInteraction: Bool, canPinMessage: Bool, pinnedMessage: ChatPinnedMessage?, peer: Peer?, peerId: PeerId, fileFinderPath: String?, isStickerSaved: Bool?, dialogs: [Peer], recentUsedPeers: [Peer], favoritePeers: [Peer], recentMedia: [RecentMediaItem], updatingMessageMedia: [MessageId: ChatUpdatingMessageMedia], additionalData: MessageEntryAdditionalData, file: TelegramMediaFile?, image: TelegramMediaImage?, textLayout: (TextViewLayout?, LinkType?)?, availableReactions: AvailableReactions?, notifications: NotificationSoundList?, cachedData: CachedPeerData?, savedStickersCount: Int, savedGifsCount: Int) {
         self.chatInteraction = chatInteraction
         self.message = message
         self.accountPeer = accountPeer
@@ -68,6 +70,8 @@ final class ChatMenuItemsData {
         self.availableReactions = availableReactions
         self.notifications = notifications
         self.cachedData = cachedData
+        self.savedStickersCount = savedStickersCount
+        self.savedGifsCount = savedGifsCount
     }
 }
 func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkType?)?, entry: ChatHistoryEntry?, chatInteraction: ChatInteraction) -> Signal<ChatMenuItemsData, NoError> {
@@ -138,6 +142,15 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
     var _getIsStickerSaved: Signal<Bool?, NoError> = .single(nil)
     var _recentMedia: Signal<[RecentMediaItem], NoError> = .single([])
     
+    let _savedStickersCount: Signal<Int, NoError> = account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: 100) |> take(1) |> map {
+        $0.orderedItemListsViews[0].items.count
+    }
+    
+    let _savedGifsCount: Signal<Int, NoError> = account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentGifs], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: 100) |> take(1) |> map {
+        $0.orderedItemListsViews[0].items.count
+    }
+
+    
     let _updatingMessageMedia = account.pendingUpdateMessageManager.updatingMessageMedia
         
     if let media = file {
@@ -165,12 +178,12 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
     
     let cachedData = context.account.postbox.peerView(id: peerId) |> take(1) |> map { $0.cachedData }
     
-    let combined = combineLatest(queue: .mainQueue(), _dialogs, _recentUsedPeers, _favoritePeers, _accountPeer, _resourceData, _fileFinderPath, _getIsStickerSaved, _recentMedia, _updatingMessageMedia, context.reactions.stateValue, context.engine.peers.notificationSoundList(), cachedData)
+    let combined = combineLatest(queue: .mainQueue(), _dialogs, _recentUsedPeers, _favoritePeers, _accountPeer, _resourceData, _fileFinderPath, _getIsStickerSaved, _recentMedia, _updatingMessageMedia, context.reactions.stateValue, context.engine.peers.notificationSoundList(), cachedData, _savedStickersCount, _savedGifsCount)
     |> take(1)
     
     
-    return combined |> map { dialogs, recentUsedPeers, favoritePeers, accountPeer, resourceData, fileFinderPath, isStickerSaved, recentMedia, updatingMessageMedia, availableReactions, notifications, cachedData in
-        return .init(chatInteraction: chatInteraction, message: message, accountPeer: accountPeer, resourceData: resourceData, chatState: chatState, chatMode: chatMode, disableSelectAbility: disableSelectAbility, isLogInteraction: isLogInteraction, canPinMessage: canPinMessage, pinnedMessage: pinnedMessage, peer: peer, peerId: peerId, fileFinderPath: fileFinderPath, isStickerSaved: isStickerSaved, dialogs: dialogs, recentUsedPeers: recentUsedPeers, favoritePeers: favoritePeers, recentMedia: recentMedia, updatingMessageMedia: updatingMessageMedia, additionalData: additionalData, file: file, image: image, textLayout: textLayout, availableReactions: availableReactions, notifications: notifications, cachedData: cachedData)
+    return combined |> map { dialogs, recentUsedPeers, favoritePeers, accountPeer, resourceData, fileFinderPath, isStickerSaved, recentMedia, updatingMessageMedia, availableReactions, notifications, cachedData, savedStickersCount, savedGifsCount in
+        return .init(chatInteraction: chatInteraction, message: message, accountPeer: accountPeer, resourceData: resourceData, chatState: chatState, chatMode: chatMode, disableSelectAbility: disableSelectAbility, isLogInteraction: isLogInteraction, canPinMessage: canPinMessage, pinnedMessage: pinnedMessage, peer: peer, peerId: peerId, fileFinderPath: fileFinderPath, isStickerSaved: isStickerSaved, dialogs: dialogs, recentUsedPeers: recentUsedPeers, favoritePeers: favoritePeers, recentMedia: recentMedia, updatingMessageMedia: updatingMessageMedia, additionalData: additionalData, file: file, image: image, textLayout: textLayout, availableReactions: availableReactions, notifications: notifications, cachedData: cachedData, savedStickersCount: savedStickersCount, savedGifsCount: savedGifsCount)
     }
 }
 
@@ -583,10 +596,20 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 if file.isVideo && file.isAnimated {
                     if data.recentMedia.contains(where: {$0.media.id == file.fileId}) {
                         thirdBlock.append(ContextMenuItem(strings().messageContextRemoveGif, handler: {
+                            showModalText(for: context.window, text: strings().chatContextGifRemoved)
                             _ = removeSavedGif(postbox: account.postbox, mediaId: file.fileId).start()
                         }, itemImage: MenuAnimation.menu_remove_gif.value))
                     } else {
                         thirdBlock.append(ContextMenuItem(strings().messageContextSaveGif, handler: {
+                            
+                            let limit = context.isPremium ? context.premiumLimits.saved_gifs_limit_premium : context.premiumLimits.saved_gifs_limit_default
+                            if limit >= data.savedGifsCount, !context.isPremium {
+                                showModalText(for: context.window, text: strings().chatContextFavoriteGifsLimitInfo("\(context.premiumLimits.saved_gifs_limit_premium)"), title: strings().chatContextFavoriteGifsLimitTitle, callback: { value in
+                                    showPremiumLimit(context: context, type: .savedGifs)
+                                })
+                            } else {
+                                showModalText(for: context.window, text: strings().chatContextGifAdded)
+                            }
                             _ = addSavedGif(postbox: account.postbox, fileReference: FileMediaReference.message(message: MessageReference(data.message), media: file)).start()
                         }, itemImage: MenuAnimation.menu_add_gif.value))
                     }
@@ -595,8 +618,17 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     let image = saved ? MenuAnimation.menu_remove_from_favorites.value : MenuAnimation.menu_add_to_favorites.value
                     thirdBlock.append(ContextMenuItem(!saved ? strings().chatContextAddFavoriteSticker : strings().chatContextRemoveFavoriteSticker, handler: {
                         if !saved {
+                            let limit = context.isPremium ? context.premiumLimits.stickers_faved_limit_premium : context.premiumLimits.stickers_faved_limit_default
+                            if limit >= data.savedStickersCount, !context.isPremium {
+                                showModalText(for: context.window, text: strings().chatContextFavoriteStickersLimitInfo("\(context.premiumLimits.stickers_faved_limit_premium)"), title: strings().chatContextFavoriteStickersLimitTitle, callback: { value in
+                                    showPremiumLimit(context: context, type: .faveStickers)
+                                })
+                            } else {
+                                showModalText(for: context.window, text: strings().chatContextStickerAddedToFavorites)
+                            }
                             _ = addSavedSticker(postbox: account.postbox, network: account.network, file: file).start()
                         } else {
+                            showModalText(for: context.window, text: strings().chatContextStickerRemovedFromFavorites)
                             _ = removeSavedSticker(postbox: account.postbox, mediaId: file.fileId).start()
                         }
                     }, itemImage: image))

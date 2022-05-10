@@ -301,9 +301,8 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.detectBoldColorInString(with: .medium(theme.fontSize))
                         
                         attributedString.add(link:inAppLink.callback("", { _ in
-                            showModal(with: PaymentsReceiptController(context: context, messageId: message.id, message: paymentMessage), for: context.window)
+                            showModal(with: PaymentsReceiptController(context: context, messageId: message.id, invoice: media), for: context.window)
                         }), for: attributedString.range, color: grayTextColor)
-                        
                     } else {
                         _ = attributedString.append(string: strings().chatServicePaymentSent1("", "", ""), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     }

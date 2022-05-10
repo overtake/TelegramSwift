@@ -53,10 +53,10 @@ class ChatInvoiceItem: ChatRowItem {
         
         _ = attr.append(string: "\n")
         _ = attr.append(string: media.description, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(.text))
-        attr.detectLinks(type: [.Links], color: theme.chat.linkColor(isIncoming, object.renderType == .bubble))
+        attr.detectLinks(type: [.Links], context: chatInteraction.context, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble))
         
         textLayout = TextViewLayout(attr)
-        
+        textLayout.interactions = globalLinkExecutor
         super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
         
     }

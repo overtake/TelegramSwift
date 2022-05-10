@@ -622,8 +622,21 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         
         if FastSettings.checkSendingAbility(for: event) {
             let text = textView.string().trimmed
-            if text.length > chatInteraction.presentation.maxInputCharacters {
-                alert(for: chatInteraction.context.window, info: strings().chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.presentation.maxInputCharacters)))
+            let context = chatInteraction.context
+            if text.length > chatInteraction.maxInputCharacters {
+                if context.isPremium {
+                    alert(for: context.window, info: strings().chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.maxInputCharacters)))
+                } else {
+                    confirm(for: context.window, information: strings().chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.maxInputCharacters)), okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().premiumGetPremiumDouble, successHandler: { result in
+                        switch result {
+                        case .thrid:
+                            showPremiumLimit(context: context, type: .caption)
+                        default:
+                            break
+                        }
+
+                    })
+                }
                 return true
             }
             if !text.isEmpty || !chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty || chatInteraction.presentation.state == .editing {
@@ -786,7 +799,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     
     func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
-        return ChatPresentationInterfaceState.maxInput
+        return ChatInteraction.maxInput
     }
     
     @available(OSX 10.12.2, *)

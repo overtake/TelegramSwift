@@ -974,17 +974,15 @@ class ChatListRowItem: TableRowItem {
             _ = (context.engine.peers.toggleItemPinned(location: location, itemId: chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
                 switch result {
                 case .limitExceeded:
-                    showModal(with: PremiumLimitController(context: context, type: .pin), for: context.window)
-//                    confirm(for: context.window, information: strings().chatListContextPinErrorNew2, okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().chatListContextPinErrorNewSetupFolders, successHandler: { result in
-//
-//                        switch result {
-//                        case .thrid:
-//                            context.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
-//                        default:
-//                            break
-//                        }
-//
-//                    })
+                    if let _ = filter {
+                        showPremiumLimit(context: context, type: .pinInFolders)
+                    } else {
+                        if case .group = associatedGroupId {
+                            showPremiumLimit(context: context, type: .pinInArchive)
+                        } else {
+                            showPremiumLimit(context: context, type: .pin)
+                        }
+                    }
                 default:
                     break
                 }
@@ -1297,7 +1295,10 @@ class ChatListRowItem: TableRowItem {
                 for item in filters.list {
                     
                     let menuItem = ContextMenuItem(item.title, handler: {
-                        let isEnabled = item.data.includePeers.peers.contains(peerId) || item.data.includePeers.peers.count < 100
+                        
+                        let limit = context.isPremium ? context.premiumLimits.dialog_filters_chats_limit_premium : context.premiumLimits.dialog_filters_chats_limit_default
+                        
+                        let isEnabled = item.data.includePeers.peers.contains(peerId) || item.data.includePeers.peers.count < limit
                         if isEnabled {
                             _ = context.engine.peers.updateChatListFiltersInteractively({ list in
                                 var list = list
@@ -1318,7 +1319,11 @@ class ChatListRowItem: TableRowItem {
                                 return list
                             }).start()
                         } else {
-                            alert(for: context.window, info: strings().chatListFilterIncludeLimitReached)
+                            if context.isPremium {
+                                alert(for: context.window, info: strings().chatListFilterIncludeLimitReached)
+                            } else {
+                                showPremiumLimit(context: context, type: .chatInFolders)
+                            }
                         }
                        
                     }, state: item.data.includePeers.peers.contains(peerId) ? .on : nil, itemImage: FolderIcon(item).emoticon.drawable.value)

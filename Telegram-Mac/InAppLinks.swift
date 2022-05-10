@@ -28,8 +28,8 @@ private let tgme:String = "tg://"
 
 func resolveUsername(username: String, context: AccountContext) -> Signal<Peer?, NoError> {
     if username.hasPrefix("_private_"), let range = username.range(of: "_private_") {
-        if let channelId = Int64(username[range.upperBound...]) {
-            let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: PeerId.Id._internalFromInt64Value(channelId))
+        if let channelId = Int64(username[range.upperBound...]), let id = PeerId._optionalInternalFromInt64Value(channelId) {
+            let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: id)
             
             let peerSignal: Signal<Peer?, NoError> = context.account.postbox.transaction { transaction -> Peer? in
                 return transaction.getPeer(peerId)
@@ -262,8 +262,6 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
     case let .external(link, needConfirm):
         var url:String = link.trimmed
 
-
-
         var reversedUrl = String(url.reversed())
         while reversedUrl.components(separatedBy: "#").count > 2 {
             if let index = reversedUrl.range(of: "#") {
@@ -357,8 +355,8 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         
         var peerSignal: Signal<Peer, Error> = .fail(.doesntExists)
         if username.hasPrefix("_private_"), let range = username.range(of: "_private_") {
-            if let channelId = Int64(username[range.upperBound...]) {
-                let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: PeerId.Id._internalFromInt64Value(channelId))
+            if let channelId = Int64(username[range.upperBound...]), let id = PeerId._optionalInternalFromInt64Value(channelId) {
+                let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: id)
                 peerSignal = context.account.postbox.transaction { transaction -> Peer? in
                     return transaction.getPeer(peerId)
                 } |> mapToSignalPromotingError { peer in
@@ -442,8 +440,8 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
     case let .followResolvedName(_, username, postId, context, action, callback):
         
         if username.hasPrefix("_private_"), let range = username.range(of: "_private_") {
-            if let channelId = Int64(username[range.upperBound...]) {
-                let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: PeerId.Id._internalFromInt64Value(channelId))
+            if let channelId = Int64(username[range.upperBound...]), let id = PeerId._optionalInternalFromInt64Value(channelId) {
+                let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: id)
                 
                 let peerSignal: Signal<Peer?, NoError> = context.account.postbox.transaction { transaction -> Peer? in
                     return transaction.getPeer(peerId)
@@ -604,30 +602,6 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         addSimple()
                     }
                 }
-                
-//
-//                if !payload.isEmpty {
-//
-//
-//
-//                    let signal = showModalProgress(signal: context.engine.messages.requestStartBotInGroup(botPeerId: botPeerId._asPeer().id, groupPeerId: values.dest.id, payload: payload), for: context.window)
-//                        |> map {
-//                            ($0, values.dest.id)
-//                        }
-//                    _ = signal.start(next: { result, peerId in
-//                        switch result {
-//                        case let .channelParticipant(participant):
-//                            context.peerChannelMemberCategoriesContextsManager.externallyAdded(peerId: peerId, participant: participant)
-//                        case .none:
-//                            break
-//                        }
-//                        callback(peerId, true, nil, nil)
-//                    }, error: { error in
-//                        alert(for: context.window, info: strings().unknownError)
-//                    })
-//                } else {
-//
-//                }
             })
             
         })
@@ -723,7 +697,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             return
         }
         _ = showModalProgress(signal: (requestSecureIdForm(postbox: context.account.postbox, network: context.account.network, peerId: value.peerId, scope: value.scope, publicKey: value.publicKey) |> mapToSignal { form in
-            return context.account.postbox.loadedPeerWithId(context.peerId) |> mapError {_ in return .generic} |> map { peer in
+            return context.account.postbox.loadedPeerWithId(context.peerId) |> castError(RequestSecureIdFormError.self) |> map { peer in
                 return (form, peer)
             }
         } |> deliverOnMainQueue), for: context.window).start(next: { form, peer in
@@ -791,7 +765,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             }
         })
         afterComplete(true)
-    case let .tonTransfer(_, context, data: data):
+    case .tonTransfer:
         if #available(OSX 10.12, *) {
 
         }
@@ -824,6 +798,16 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             })
         })
        
+        afterComplete(true)
+    case let .invoice(_, context, slug):
+        let signal = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: .slug(slug)), for: context.window)
+        
+        _ = signal.start(next: { invoice in
+            showModal(with: PaymentsCheckoutController(context: context, source: .slug(slug), invoice: invoice), for: context.window)
+        }, error: { error in
+            showModalText(for: context.window, text: strings().paymentsInvoiceNotExists)
+        })
+        
         afterComplete(true)
     }
     
@@ -956,6 +940,7 @@ enum inAppLink {
     case instantView(link: String, webpage: TelegramMediaWebpage, anchor: String?)
     case settings(link: String, context: AccountContext, section: InAppSettingsSection)
     case joinGroupCall(link: String, context: AccountContext, peerId: PeerId, call: CachedChannelData.ActiveCall)
+    case invoice(link: String, context: AccountContext, slug: String)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -963,36 +948,36 @@ enum inAppLink {
                 return link.replacingOccurrences(of: "mailto:", with: "")
             }
             return link
-        case let .peerInfo(values):
-            return values.link
-        case let .comments(values):
-            return values.link
-        case let .followResolvedName(values):
-            return values.link
-        case let .inviteBotToGroup(values):
-            return values.link
+        case let .peerInfo(link, _, _, _, _, _):
+            return link
+        case let .comments(link, _, _, _, _):
+            return link
+        case let .followResolvedName(link, _, _, _, _, _):
+            return link
+        case let .inviteBotToGroup(link, _, _, _, _, _):
+            return link
         case let .botCommand(link, _), let .callback(link, _), let .code(link, _), let .hashtag(link, _):
             return link
-        case let .shareUrl(values):
-            return values.link
-        case let .joinchat(values):
-            return values.link
-        case let .stickerPack(values):
-            return values.link
-        case let .confirmPhone(values):
-            return values.link
-        case let .socks(values):
-            return values.link
-        case let .requestSecureId(values):
-            return values.link
-        case let .unsupportedScheme(values):
-            return values.link
-        case let .applyLocalization(values):
-            return values.link
-        case let .wallpaper(values):
-            return values.link
-        case let .theme(values):
-            return values.link
+        case let .shareUrl(link, _, _):
+            return link
+        case let .joinchat(link, _, _, _):
+            return link
+        case let .stickerPack(link, _, _, _):
+            return link
+        case let .confirmPhone(link, _, _, _):
+            return link
+        case let .socks(link, _, _):
+            return link
+        case let .requestSecureId(link, _, _):
+            return link
+        case let .unsupportedScheme(link, _, _):
+            return link
+        case let .applyLocalization(link, _, _):
+            return link
+        case let .wallpaper(link, _, _):
+            return link
+        case let .theme(link, _, _):
+            return link
         case let .tonTransfer(link, _, _):
             return link
         case let .instantView(link, _, _):
@@ -1000,6 +985,8 @@ enum inAppLink {
         case let .settings(link, _, _):
             return link
         case let .joinGroupCall(link, _, _, _):
+            return link
+        case let .invoice(link, _, _):
             return link
         case .nothing:
             return ""
@@ -1010,10 +997,10 @@ enum inAppLink {
 }
 
 let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
-let actions_me:[String] = ["joinchat/","addstickers/","confirmphone","socks", "proxy", "setlanguage", "bg", "addtheme/"]
+let actions_me:[String] = ["joinchat/","addstickers/","confirmphone","socks", "proxy", "setlanguage", "bg", "addtheme/","invoice/"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice"]
 
 let ton_scheme:String = "ton://"
 
@@ -1171,9 +1158,15 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         }
                         return .external(link: urlString, false)
                     case actions_me[7]:
-                        let userAndPost = string.components(separatedBy: "/")
-                        if userAndPost.count == 2, let context = context {
-                            return .theme(link: urlString, context: context, name: userAndPost[1])
+                        let data = string.components(separatedBy: "/")
+                        if data.count == 2, let context = context {
+                            return .theme(link: urlString, context: context, name: data[1])
+                        }
+                        return .external(link: urlString, false)
+                    case actions_me[8]:
+                        let data = string.components(separatedBy: "/")
+                        if data.count == 2, let context = context {
+                            return .invoice(link: urlString, context: context, slug: value)
                         }
                         return .external(link: urlString, false)
                     default:
@@ -1534,6 +1527,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         if let section = InAppSettingsSection(rawValue: section) {
                             return .settings(link: urlString, context: context, section: section)
                         }
+                    }
+                case known_scheme[13]:
+                    if let context = context, let value = vars["slug"] {
+                        return .invoice(link: urlString, context: context, slug: value)
                     }
                 default:
                     break

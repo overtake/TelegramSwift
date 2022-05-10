@@ -853,9 +853,25 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     func send(_ silent: Bool, atDate: Date? = nil) {
         
         let text = self.genericView.textView.string().trimmed
-        if text.length > ChatPresentationInterfaceState.maxShortInput {
-            alert(for: chatInteraction.context.window, info: strings().chatInputErrorMessageTooLongCountable(text.length - Int(ChatPresentationInterfaceState.maxShortInput)))
-            return
+        let context = self.context
+        if context.isPremium {
+            if text.length > context.premiumLimits.caption_length_limit_premium {
+                alert(for: chatInteraction.context.window, info: strings().chatInputErrorMessageTooLongCountable(text.length - Int(context.premiumLimits.caption_length_limit_premium)))
+                return
+            }
+        } else {
+            if text.length > context.premiumLimits.caption_length_limit_default {
+                confirm(for: context.window, information: strings().chatInputErrorMessageTooLongCountable(text.length - Int(context.premiumLimits.caption_length_limit_premium)), okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().premiumGetPremiumDouble, successHandler: { result in
+                    switch result {
+                    case .thrid:
+                        showPremiumLimit(context: context, type: .caption)
+                    default:
+                        break
+                    }
+
+                })
+                return
+            }
         }
         
         switch chatInteraction.mode {
@@ -1703,7 +1719,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     }
     
     func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
-        return ChatPresentationInterfaceState.maxInput
+        return ChatInteraction.maxInput
     }
     
     override func viewClass() -> AnyClass {

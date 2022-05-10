@@ -393,7 +393,7 @@ private func stickersEntries(view: ItemCollectionsView?, featured:[FeaturedStick
                 var files:[TelegramMediaFile] = []
                 for item in view.orderedItemListsViews[1].items {
                     if let entry = item.contents.get(SavedStickerItem.self) {
-                        if let id = entry.file.id, ids[id] == nil, entry.file.isStaticSticker || entry.file.isAnimatedSticker {
+                        if let id = entry.file.id, ids[id] == nil {
                             ids[id] = id
                             files.append(entry.file)
                         }
