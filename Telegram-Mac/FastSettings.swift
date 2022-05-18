@@ -607,7 +607,7 @@ func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox, saveAnyway: Bo
         if let id = file.id {
             if let path = paths.path(for: id), !saveAnyway {
                 let lastModified = Int32(FileManager.default.modificationDateForFileAtPath(path: path.downloadedPath)?.timeIntervalSince1970 ?? 0)
-                if fileSize(path.downloadedPath) == Int(path.size), lastModified == path.lastModified {
+                if fileSize(path.downloadedPath) == Int64(path.size), lastModified == path.lastModified {
                     return path.downloadedPath
                 }
                 
@@ -702,7 +702,7 @@ func fileFinderPath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<Str
                 
                 if let path = paths.path(for: id) {
                     let lastModified = Int32(FileManager.default.modificationDateForFileAtPath(path: path.downloadedPath)?.timeIntervalSince1970 ?? 0)
-                    if fileSize(path.downloadedPath) == Int(path.size), lastModified == path.lastModified {
+                    if fileSize(path.downloadedPath) == Int64(path.size), lastModified == path.lastModified {
                        return path.downloadedPath
                     }
                 }
@@ -728,7 +728,7 @@ func showInFinder(_ file:TelegramMediaFile, account:Account)  {
                 
                 if let path = paths.path(for: id) {
                     let lastModified = Int32(FileManager.default.modificationDateForFileAtPath(path: path.downloadedPath)?.timeIntervalSince1970 ?? 0)
-                    if fileSize(path.downloadedPath) == Int(path.size), lastModified == path.lastModified {
+                    if fileSize(path.downloadedPath) == Int64(path.size), lastModified == path.lastModified {
                         NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path.downloadedPath)])
                         return
                     }

@@ -18,6 +18,9 @@ import Svg
 import ColorPalette
 import ThemeSettings
 
+let premiumGradient = [NSColor(hexString: "#6B93FF"), NSColor(hexString: "#976FFF"), NSColor(hexString: "#E46ACE")]
+
+
 func generateFilledCircleImage(diameter: CGFloat, color: NSColor?, strokeColor: NSColor? = nil, strokeWidth: CGFloat? = nil, backgroundColor: NSColor? = nil) -> CGImage {
     return generateImage(CGSize(width: diameter, height: diameter), contextGenerator: { size, context in
         context.clear(CGRect(origin: CGPoint(), size: size))
@@ -866,6 +869,37 @@ private func generateSettingsActiveIcon(_ icon: CGImage, background: NSColor) ->
         ctx.draw(icon, in: CGRect(origin: CGPoint(), size: size))
     })!
 }
+
+private func generatePremiumIcon(_ icon: CGImage) -> CGImage {
+    return generateImage(NSMakeSize(24, 24), contextGenerator: { size, ctx in
+        ctx.clear(size.bounds)
+        ctx.round(size, 5)
+        
+        let colors = premiumGradient.compactMap { $0?.cgColor } as NSArray
+        
+        let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+        
+        var locations: [CGFloat] = []
+        for i in 0 ..< colors.count {
+            locations.append(delta * CGFloat(i))
+        }
+        let colorSpace = deviceColorSpace
+        let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
+        
+        ctx.drawLinearGradient(gradient, start: CGPoint(x: 0, y: size.height), end: CGPoint(x: size.width, y: size.height), options: CGGradientDrawingOptions())
+
+        let icon = generateImage(icon.backingSize, contextGenerator: { size, ctx in
+            ctx.clear(size.bounds)
+            ctx.clip(to: size.bounds, mask: icon)
+            ctx.setFillColor(.white)
+            ctx.fill(size.bounds)
+        })!
+        
+        ctx.draw(icon, in: size.bounds.focus(icon.backingSize))
+        
+    })!
+}
+
 
 private func generateStickersEmptySearch(color: NSColor) -> CGImage {
     return generateImage(NSMakeSize(100, 100), contextGenerator: { size, ctx in
@@ -2016,6 +2050,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsWallet: { generateSettingsIcon(NSImage(named: "Icon_SettingsWallet")!.precomposed(NSColor(0x59a7d8), flipVertical: true)) },
                                                settingsUpdate: { generateSettingsIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(flipVertical: true)) },
                                                settingsFilters: { generateSettingsIcon(NSImage(named: "Icon_SettingsFilters")!.precomposed(flipVertical: true)) },
+                                               settingsPremium: { generatePremiumIcon(NSImage(named: "Icon_Premium_Settings")!.precomposed(flipVertical: true)) },
                                                settingsAskQuestionActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsFaqActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsGeneralActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
@@ -2428,9 +2463,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 gallery_pip_play: { NSImage(named: "Icon_Pip_Play")!.precomposed(NSColor(0xffffff)) },
                                                 notification_sound_add: { NSImage(named: "Icon_Notification_Add")!.precomposed(palette.accent, flipVertical: true) },
                                                 premium_lock: { generateLockPremium(palette) },
-                                                premium_account: { generatePremium(false) },
+                                                premium_account: { generatePremium(false, color: palette.accent) },
                                                 premium_account_active: { generatePremium(false, color: palette.underSelectedColor) },
-                                                premium_account_rev: { generatePremium(true) },
+                                                premium_account_rev: { generatePremium(true, color: palette.accent) },
                                                 premium_account_rev_active: { generatePremium(true, color: palette.underSelectedColor) },
                                                 premium_reaction_lock: { generateLockPremiumReaction(palette) }
 

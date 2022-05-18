@@ -13,7 +13,7 @@ import Postbox
 import SwiftSignalKit
 import TGUIKit
 import AVKit
-
+import RangeSet
 
 
 
@@ -541,10 +541,10 @@ class APController : NSResponder {
     fileprivate var current:Int = -1
     fileprivate var played:[Int] = []
 
-    private let bufferingStatusValuePromise = Promise<(IndexSet, Int)?>()
+    private let bufferingStatusValuePromise = Promise<(RangeSet<Int64>, Int64)?>()
     
     
-    private(set) var bufferingStatus: Signal<(IndexSet, Int)?, NoError> {
+    private(set) var bufferingStatus: Signal<(RangeSet<Int64>, Int64)?, NoError> {
         set {
            self.bufferingStatusValuePromise.set(newValue)
         }
@@ -954,7 +954,7 @@ class APController : NSResponder {
         
         let size = item.resource.size ?? 0
         bufferingStatus = account.postbox.mediaBox.resourceRangesStatus(item.resource)
-            |> map { ranges -> (IndexSet, Int) in
+            |> map { ranges -> (RangeSet<Int64>, Int64) in
                 return (ranges, size)
         }
         

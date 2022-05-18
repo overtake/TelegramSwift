@@ -3125,6 +3125,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var settingsPremium: CGImage {
+      if let image = cached.with({ $0["settingsPremium"] }) {
+          return image
+      } else {
+          let image = _settingsPremium()
+          _ = cached.modify { current in 
+              var current = current
+              current["settingsPremium"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var settingsAskQuestionActive: CGImage {
       if let image = cached.with({ $0["settingsAskQuestionActive"] }) {
           return image
@@ -8709,6 +8722,7 @@ public final class TelegramIconsTheme {
   private let _settingsWallet: ()->CGImage
   private let _settingsUpdate: ()->CGImage
   private let _settingsFilters: ()->CGImage
+  private let _settingsPremium: ()->CGImage
   private let _settingsAskQuestionActive: ()->CGImage
   private let _settingsFaqActive: ()->CGImage
   private let _settingsGeneralActive: ()->CGImage
@@ -9362,6 +9376,7 @@ public final class TelegramIconsTheme {
       settingsWallet: @escaping()->CGImage,
       settingsUpdate: @escaping()->CGImage,
       settingsFilters: @escaping()->CGImage,
+      settingsPremium: @escaping()->CGImage,
       settingsAskQuestionActive: @escaping()->CGImage,
       settingsFaqActive: @escaping()->CGImage,
       settingsGeneralActive: @escaping()->CGImage,
@@ -10014,6 +10029,7 @@ public final class TelegramIconsTheme {
       self._settingsWallet = settingsWallet
       self._settingsUpdate = settingsUpdate
       self._settingsFilters = settingsFilters
+      self._settingsPremium = settingsPremium
       self._settingsAskQuestionActive = settingsAskQuestionActive
       self._settingsFaqActive = settingsFaqActive
       self._settingsGeneralActive = settingsGeneralActive

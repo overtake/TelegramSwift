@@ -206,7 +206,7 @@ public enum FetchVideoFirstFrameError {
 }
 
 
-private func videoFirstFrameData(account: Account, resource: MediaResource, chunkSize: Int) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
+private func videoFirstFrameData(account: Account, resource: MediaResource, chunkSize: Int64) -> Signal<CachedMediaResourceRepresentationResult, NoError> {
     if let size = resource.size {
         return account.postbox.mediaBox.resourceData(resource, size: size, in: 0 ..< min(size, chunkSize))
             |> mapToSignal { _ -> Signal<CachedMediaResourceRepresentationResult, NoError> in
@@ -278,7 +278,7 @@ private func fetchCachedVideoAnimatedStickerRepresentation(account: Account, res
     if let resource = resource as? LocalBundleResource {
         data = Signal { subscriber in
             if let path = Bundle.main.path(forResource: resource.name, ofType: resource.ext), let data = try? Data(contentsOf: URL(fileURLWithPath: path), options: [.mappedRead]) {
-                subscriber.putNext(MediaResourceData(path: path, offset: 0, size: data.count, complete: true))
+                subscriber.putNext(MediaResourceData(path: path, offset: 0, size: Int64(data.count), complete: true))
                 subscriber.putCompletion()
             }
             return EmptyDisposable
@@ -329,7 +329,7 @@ private func fetchCachedAnimatedStickerRepresentation(account: Account, resource
     if let resource = resource as? LocalBundleResource {
         data = Signal { subscriber in
             if let path = Bundle.main.path(forResource: resource.name, ofType: resource.ext), let data = try? Data(contentsOf: URL(fileURLWithPath: path), options: [.mappedRead]) {
-                subscriber.putNext(MediaResourceData(path: path, offset: 0, size: data.count, complete: true))
+                subscriber.putNext(MediaResourceData(path: path, offset: 0, size: Int64(data.count), complete: true))
                 subscriber.putCompletion()
             }
             return EmptyDisposable

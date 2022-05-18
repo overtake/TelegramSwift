@@ -115,6 +115,7 @@ class ChatVoiceContentView: ChatAudioContentView {
                     durationView.update(parameters.durationLayout)
                 }
             } else {
+                waveformView.set(foregroundColor: isIncomingConsumed ? wBackgroundColor : wForegroundColor, backgroundColor: wBackgroundColor)
                 waveformView.foregroundClipingView.change(size: NSMakeSize(parameters.waveformWidth, waveformView.frame.height), animated: false)
                 durationView.update(parameters.durationLayout)
             }
@@ -233,7 +234,6 @@ class ChatVoiceContentView: ChatAudioContentView {
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
             waveformView.waveform = parameters.waveform
             
-            waveformView.set(foregroundColor: isIncomingConsumed ? wBackgroundColor : wForegroundColor, backgroundColor: wBackgroundColor)
             checkState(animated: animated)
         }
         

@@ -2498,15 +2498,25 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
         
+        //CATransaction.commit()
+        if transition.grouping && !transition.isEmpty {
+            self.tableView.endUpdates()
+        }
+        
         for (index,item) in transition.updated {
+            let visibleItems = self.visibleItems()
             let animated:Bool
             if case .none = transition.state {
-                animated = visibleRange.indexIn(index) || !transition.animateVisibleOnly
+                animated = self.visibleRows().indexIn(index) || !transition.animateVisibleOnly
             } else {
                 animated = false
             }
             replace(item:item, at:index, animated: animated)
+            if !animated {
+                saveScrollState(visibleItems)
+            }
         }
+        
 
         
         for (i, item) in list.enumerated() {
@@ -2514,11 +2524,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
        
-        
-        //CATransaction.commit()
-        if transition.grouping && !transition.isEmpty {
-            self.tableView.endUpdates()
-        }
+
         self.clipView.justScroll(to: documentOffset)
 
         

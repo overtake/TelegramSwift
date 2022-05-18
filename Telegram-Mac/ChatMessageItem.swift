@@ -15,6 +15,66 @@ import SwiftSignalKit
 import InAppSettings
 
 
+final class InlineStickerItem: Hashable {
+    let file: TelegramMediaFile
+    
+    init(file: TelegramMediaFile) {
+        self.file = file
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(self.file.fileId)
+    }
+    
+    static func ==(lhs: InlineStickerItem, rhs: InlineStickerItem) -> Bool {
+        if lhs.file.fileId != rhs.file.fileId {
+            return false
+        }
+        return true
+    }
+    
+    static func apply(to attr: NSMutableAttributedString, emojies: [String: StickerPackItem], context: AccountContext) {
+        let copy = attr
+        var currentCount = 0
+        var startIndex = copy.string.startIndex
+        
+        if context.isPremium {
+            return
+        }
+        while true {
+            var hadUpdates = false
+            copy.string.enumerateSubstrings(in: startIndex ..< copy.string.endIndex, options: [.byComposedCharacterSequences]) { substring, substringRange, _, stop in
+                if let substring = substring {
+                    let emoji = substring.basicEmoji.0
+                    
+                    var emojiFile: TelegramMediaFile?
+                    emojiFile = emojies[emoji]?.file
+                    if emojiFile == nil {
+                        emojiFile = emojies[emoji.strippedEmoji]?.file
+                    }
+                    if let emojiFile = emojiFile {
+                        let currentDict = copy.attributes(at: NSRange(substringRange, in: copy.string).lowerBound, effectiveRange: nil)
+                        var updatedAttributes: [NSAttributedString.Key: Any] = currentDict
+                        updatedAttributes[NSAttributedString.Key.foregroundColor] = NSColor.clear.cgColor
+                        updatedAttributes[NSAttributedString.Key("Attribute__EmbeddedItem")] = InlineStickerItem(file: emojiFile)
+                        copy.addAttributes(updatedAttributes, range: NSRange(substringRange, in: copy.string))
+                        startIndex = substringRange.upperBound
+                        currentCount += 1
+                        hadUpdates = true
+                        stop = true
+                    }
+                }
+            }
+            if !hadUpdates {
+                break
+            }
+        }
+
+    }
+}
+
+
+
 class ChatMessageItem: ChatRowItem {
     public private(set) var messageText:NSAttributedString
     public private(set) var textLayout:TextViewLayout
@@ -279,17 +339,13 @@ class ChatMessageItem: ChatRowItem {
                     
                     formatting = index < messageAttr.length
                 }
-                
-//                if message.isScam {
-//                    _ = messageAttr.append(string: "\n\n")
-//                    _ = messageAttr.append(string: strings().chatScamWarning, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: .normal(theme.fontSize))
-//                }
             }
             
             
-            
-            
-            let copy = messageAttr.mutableCopy() as! NSMutableAttributedString
+             let copy = messageAttr.mutableCopy() as! NSMutableAttributedString
+             
+             
+             
             
             if let peer = message.peers[message.id.peerId] {
                 if peer is TelegramSecretChat {
@@ -317,6 +373,10 @@ class ChatMessageItem: ChatRowItem {
             }
             
             self.containsBigEmoji = containsBigEmoji
+             
+             if !containsBigEmoji {
+                 InlineStickerItem.apply(to: copy, emojies: entry.additionalData.animatedEmojiStickers, context: context)
+             }
             
             if message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
                 copy.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: context, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), openInfo: chatInteraction.openInfo, hashtag: { _ in }, command: { _ in }, applyProxy: chatInteraction.applyProxy)

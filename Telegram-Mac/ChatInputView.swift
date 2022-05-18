@@ -630,7 +630,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                     confirm(for: context.window, information: strings().chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.maxInputCharacters)), okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().premiumGetPremiumDouble, successHandler: { result in
                         switch result {
                         case .thrid:
-                            showPremiumLimit(context: context, type: .caption)
+                            showPremiumLimit(context: context, type: .caption(text.length))
                         default:
                             break
                         }

@@ -517,12 +517,18 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         #if DEBUG
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
             
-            showModal(with: PremiumLimitController.init(context: context, type: .pin), for: context.window)
-//            showModal(with: PremiumBoardingController(context: context), for: context.window)
+//            showModal(with: PremiumLimitController.init(context: context, type: .pin), for: context.window)
+            showModal(with: PremiumBoardingController(context: context), for: context.window)
 //            showInactiveChannels(context: context, source: .create)
 //            showModal(with: AvatarConstructorController(context, target: .avatar), for: context.window)
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
+        
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            
+            showModal(with: PremiumLimitController(context: context, type: .pin), for: context.window)
+            return .invoked
+        }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
         #endif
         
         

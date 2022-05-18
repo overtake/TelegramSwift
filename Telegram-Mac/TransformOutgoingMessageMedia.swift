@@ -52,7 +52,7 @@ public func transformOutgoingMessageMedia(postbox: Postbox, network: Network, re
                         var size = resource?.size
                         
                         if resource == nil {
-                            size = Int32(data.0.size)
+                            size = Int64(data.0.size)
                         }
                         
                         var thumbImage:CGImage? = nil
@@ -112,7 +112,7 @@ public func transformOutgoingMessageMedia(postbox: Postbox, network: Network, re
                                 if CGImageDestinationFinalize(colorDestination) {
                                     let thumbnailResource = LocalFileMediaResource(fileId: arc4random64(), isSecretRelated: false)
                                     postbox.mediaBox.storeResourceData(thumbnailResource.id, data: mutableData as Data)
-                                    subscriber.putNext(AnyMediaReference.standalone(media: file.withUpdatedSize(Int(size ?? 0)).withUpdatedPreviewRepresentations([TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: thumbnailResource, progressiveSizes: [], immediateThumbnailData: nil)])))
+                                    subscriber.putNext(AnyMediaReference.standalone(media: file.withUpdatedSize(Int64(size ?? 0)).withUpdatedPreviewRepresentations([TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: thumbnailResource, progressiveSizes: [], immediateThumbnailData: nil)])))
                                     
                                      return EmptyDisposable
                                 }
@@ -120,7 +120,7 @@ public func transformOutgoingMessageMedia(postbox: Postbox, network: Network, re
                         
                         }
                         
-                        subscriber.putNext(AnyMediaReference.standalone(media: file.withUpdatedSize(Int(size ?? 0))))
+                        subscriber.putNext(AnyMediaReference.standalone(media: file.withUpdatedSize(Int64(size ?? 0))))
                         subscriber.putCompletion()
                         
                         

@@ -28,6 +28,14 @@ class StickerMediaContentView: ChatMediaContentView {
     }
     
     
+    override var isHidden: Bool {
+        didSet {
+            if let content = content as? MediaAnimatedStickerView {
+                content.updatePlayerIfNeeded()
+            }
+        }
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

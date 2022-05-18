@@ -864,7 +864,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                 confirm(for: context.window, information: strings().chatInputErrorMessageTooLongCountable(text.length - Int(context.premiumLimits.caption_length_limit_premium)), okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().premiumGetPremiumDouble, successHandler: { result in
                     switch result {
                     case .thrid:
-                        showPremiumLimit(context: context, type: .caption)
+                        showPremiumLimit(context: context, type: .caption(text.length))
                     default:
                         break
                     }
@@ -1390,6 +1390,10 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         }, with: self, for: .mouseMoved, priority: .high)
         
         genericView.tableView.needUpdateVisibleAfterScroll = true
+    }
+    
+    func runDrawer() {
+        self.runEditor?(self.urls[0], false)
     }
     
     deinit {

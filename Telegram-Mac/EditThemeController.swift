@@ -298,7 +298,7 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
             if newTheme.colors != presentation.colors || state.current.file == nil {
                 let temp = NSTemporaryDirectory() + "\(arc4random()).palette"
                 try? newTheme.colors.withUpdatedName(state.name).toString.write(to: URL(fileURLWithPath: temp), atomically: true, encoding: .utf8)
-                mediaResource = LocalFileReferenceMediaResource(localFilePath: temp, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true, size: fs(temp))
+                mediaResource = LocalFileReferenceMediaResource(localFilePath: temp, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true, size: fileSize(temp))
             }
         
             if let _ = mediaResource {

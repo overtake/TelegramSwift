@@ -445,7 +445,7 @@ class ChatControllerView : View, ChatInputDelegate {
             }
         }
         let transition: ContainedViewLayoutTransition
-        if prev == nil {
+        if prev == nil || tableView.inLiveResize {
             transition = .immediate
         } else {
             transition = .animated(duration: 0.2, curve: .easeOut)
@@ -523,6 +523,7 @@ class ChatControllerView : View, ChatInputDelegate {
         if let progressView = progressView {
             transition.updateFrame(view: progressView, frame: progressView.centerFrame().offsetBy(dx: 0, dy: -inputView.frame.height/2))
         }
+        
         
         
         transition.updateFrame(view: scroller, frame: scrollerRect)
@@ -1341,6 +1342,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
    
     private var themeSelector: ChatThemeSelectorController? = nil
     
+    private let transribeState: Atomic<[MessageId: TranscribeAudioState]> = Atomic(value: [:])
+    private let transribeStateValue: ValuePromise<[MessageId: TranscribeAudioState]> = ValuePromise([:], ignoreRepeated: true)
+    private func updateTransribe(_ f:([MessageId: TranscribeAudioState])->[MessageId: TranscribeAudioState]) -> Void {
+        transribeStateValue.set(transribeState.modify(f))
+    }
+    private let transcribeDisposable = DisposableDict<MessageId>()
+    
     private let messageProcessingManager = ChatMessageThrottledProcessingManager()
     private let unsupportedMessageProcessingManager = ChatMessageThrottledProcessingManager()
     private let reactionsMessageProcessingManager = ChatMessageThrottledProcessingManager(submitInterval: 4.0)
@@ -1990,8 +1998,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                   updatingMedia,
                                                   adMessages,
                                                   effectiveTheme,
-                                                  reactions
-) |> mapToQueue { update, appearance, readIndexAndOther, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia, adMessages, chatTheme, reactions -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool, ChatHistoryView), NoError> in
+                                                  reactions,
+                                                  transribeStateValue.get()
+) |> mapToQueue { update, appearance, readIndexAndOther, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia, adMessages, chatTheme, reactions, transribeState -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool, ChatHistoryView), NoError> in
                         
             let maxReadIndex = readIndexAndOther.0
             let pollAnswersLoading = readIndexAndOther.1
@@ -2093,7 +2102,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         ads = adMessages
                     }
                     
-                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, addTopThreadInset: addTopThreadInset, updatingMedia: updatingMedia, adMessages: ads, chatTheme: chatTheme, reactions: reactions).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
+                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, addTopThreadInset: addTopThreadInset, updatingMedia: updatingMedia, adMessages: ads, chatTheme: chatTheme, reactions: reactions, transribeState: transribeState).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries, theme: chatTheme)
                 }
             } else {
@@ -2353,7 +2362,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     confirm(for: context.window, information: strings().chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.maxInputCharacters)), okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().premiumGetPremiumDouble, successHandler: { result in
                         switch result {
                         case .thrid:
-                            showPremiumLimit(context: context, type: .caption)
+                            showPremiumLimit(context: context, type: .caption(text.length))
                         default:
                             break
                         }
@@ -3462,10 +3471,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         if let result = result {
                             
                             let previous = result.count
-                            
+                            var exceedSize: Int64?
                             let result = result.filter { path -> Bool in
                                 if let size = fileSize(path) {
-                                    return fileSizeLimitExceed(context: context, fileSize: size)
+                                    let exceed = fileSizeLimitExceed(context: context, fileSize: size)
+                                    if exceed {
+                                        exceedSize = size
+                                    }
+                                    return exceed
                                 }
                                 return false
                             }
@@ -3473,7 +3486,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             let afterSizeCheck = result.count
                             
                             if afterSizeCheck == 0 && previous != afterSizeCheck {
-                                showFileLimit(context: context)
+                                showFileLimit(context: context, fileSize: exceedSize)
                             } else {
                                 self.chatInteraction.showPreviewSender(result.map{URL(fileURLWithPath: $0)}, asMedia, nil)
                             }
@@ -3496,9 +3509,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         if let result = result {
                             let previous = result.count
                             
+                            var exceedSize: Int64?
                             let result = result.filter { path -> Bool in
                                 if let size = fileSize(path) {
-                                    return fileSizeLimitExceed(context: context, fileSize: size)
+                                    let exceed = fileSizeLimitExceed(context: context, fileSize: size)
+                                    if exceed {
+                                        exceedSize = size
+                                    }
+                                    return exceed
                                 }
                                 return false
                             }
@@ -3506,7 +3524,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             let afterSizeCheck = result.count
                             
                             if afterSizeCheck == 0 && previous != afterSizeCheck {
-                                showFileLimit(context: context)
+                                showFileLimit(context: context, fileSize: exceedSize)
                             } else {
                                 self?.chatInteraction.showPreviewSender(result.map{URL(fileURLWithPath: $0)}, true, nil)
                             }
@@ -3840,6 +3858,40 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let strongSelf = self, let window = strongSelf.window {
                 _ = showModalProgress(signal: returnGroup(account: context.account, peerId: strongSelf.chatInteraction.peerId), for: window).start()
             }
+        }
+        
+        chatInteraction.transcribeAudio = { [weak self] messageId in
+            
+            guard let strongSelf = self else {
+                return
+            }
+                        
+            let value: [MessageId : TranscribeAudioState] = strongSelf.transribeState.with { $0 }
+           
+            if value[messageId] == nil {
+                
+                strongSelf.updateTransribe { value in
+                    var value = value
+                    value[messageId] = .loading
+                    return value
+                }
+                
+                let signal = context.engine.messages.transcribeAudio(messageId: messageId)
+                |> deliverOnMainQueue
+                
+                strongSelf.transcribeDisposable.set(signal.start(next: { [weak strongSelf] result in
+                    strongSelf?.updateTransribe { value in
+                        var value = value
+                        if let result = result {
+                            value[messageId] = .success(result)
+                        } else {
+                            value[messageId] = .failed
+                        }
+                        return value
+                    }
+                }), forKey: messageId)
+            }
+
         }
         
         chatInteraction.openScheduledMessages = { [weak self] in
@@ -5882,6 +5934,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         tempImportersContextDisposable.dispose()
         sendAsPeersDisposable.dispose()
         peekDisposable.dispose()
+        transcribeDisposable.dispose()
         startSecretChatDisposable.dispose()
         _ = previousView.swap(nil)
         

@@ -226,6 +226,9 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     }
                 })
             }))
+            items.append(ContextMenuItem.init(strings().chatContextHideAd, handler: {
+                showModal(with: PremiumBoardingController(context: context), for: context.window)
+            }))
             return items
         }
         
@@ -613,6 +616,11 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                             _ = addSavedGif(postbox: account.postbox, fileReference: FileMediaReference.message(message: MessageReference(data.message), media: file)).start()
                         }, itemImage: MenuAnimation.menu_add_gif.value))
                     }
+                }
+                if file.isVoice, context.isPremium {
+                    thirdBlock.append(ContextMenuItem("Transcribe Audio", handler: {
+                        data.chatInteraction.transcribeAudio(messageId)
+                    }, itemImage: MenuAnimation.menu_translate.value))
                 }
                 if file.isSticker, let saved = data.isStickerSaved {
                     let image = saved ? MenuAnimation.menu_remove_from_favorites.value : MenuAnimation.menu_add_to_favorites.value

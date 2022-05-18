@@ -296,6 +296,18 @@ class ChatListController : PeersListController {
     }
     
     func updateFilter(_ f:(FilterData)->FilterData) {
+        
+        let data = f(_filterValue.with { $0 })
+        
+        if !context.isPremium, let filter = data.filter {
+            if let index = data.tabs.firstIndex(of: filter) {
+                if index + 1 > context.premiumLimits.dialog_filters_limit_default {
+                    showPremiumLimit(context: context, type: .folders)
+                    return
+                }
+            }
+        }
+        
         var changedFolder = false
         filter.set(_filterValue.modify { previous in
             var current = f(previous)
@@ -507,6 +519,7 @@ class ChatListController : PeersListController {
         }
         
         let setupFilter:(ChatListFilter?)->Void = { [weak self] filter in
+            
             self?.updateFilter {
                 $0.withUpdatedFilter(filter)
             }

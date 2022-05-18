@@ -8,6 +8,12 @@
 
 import Cocoa
 
+enum TranscribeAudioState : Equatable {
+    case loading
+    case failed
+    case success(String?)
+}
+
 import TGUIKit
 import TelegramCore
 import InAppSettings
@@ -58,21 +64,31 @@ class ChatVoiceRowItem: ChatMediaItem {
         }
         return super.isForceRightLine
     }
+    
+    override var blockWidth: CGFloat {
+        if isBubbled {
+            return min(super.blockWidth, 200)
+        } else {
+            return super.blockWidth
+        }
+    }
 
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
             parameters.durationLayout.measure(width: width - 50)
             
-            let minVoiceWidth: CGFloat = 100
-            let maxVoiceWidth:CGFloat = width - 50
+            let minVoiceWidth: CGFloat = 120.0
+            let maxVoiceWidth:CGFloat = min(blockWidth, width - 50)
             let maxVoiceLength: CGFloat = 30.0
+            let minVoiceLength: CGFloat = 2.0
+
             
-            let b = log(maxVoiceWidth / minVoiceWidth) / (maxVoiceLength - 0.0)
-            let a = minVoiceWidth / exp(CGFloat(0.0))
+            let calcDuration = max(minVoiceLength, min(maxVoiceLength, CGFloat(parameters.duration)))
+            let minLayoutWidth = minVoiceWidth + (maxVoiceWidth - minVoiceWidth) * (calcDuration - minVoiceLength) / (maxVoiceLength - minVoiceLength)
+
+
             
-            let w = a * exp(b * CGFloat(parameters.duration))
-            
-            parameters.waveformWidth = floor(min(w, 200))
+            parameters.waveformWidth = maxVoiceWidth
             
             return NSMakeSize(parameters.waveformWidth + 50, 40)
         }

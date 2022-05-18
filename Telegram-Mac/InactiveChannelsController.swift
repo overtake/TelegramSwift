@@ -93,7 +93,7 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
     
     if !arguments.context.isPremium {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_premium"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-            return PremiumIncreaseLimitItem.init(initialSize, stableId: stableId, context: arguments.context, type: .channels, viewType: .singleItem, callback: arguments.premium)
+            return PremiumIncreaseLimitItem.init(initialSize, stableId: stableId, context: arguments.context, type: .channels, counts: nil, viewType: .singleItem, callback: arguments.premium)
         }))
         index += 1
         

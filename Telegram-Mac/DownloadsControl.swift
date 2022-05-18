@@ -133,7 +133,7 @@ final class DownloadsControl : Control {
             return attr
         case let .hasUnseen(msgs):
             let attr = NSMutableAttributedString()
-            let size: Int = msgs.reduce(0, { current, value in
+            let size: Int64 = msgs.reduce(0, { current, value in
                 if let file = value.media.first as? TelegramMediaFile {
                     return current + (file.size ?? 0)
                 } else {
@@ -346,7 +346,7 @@ final class DownloadsSummary {
                 var totalBytes = 0.0
                 var totalProgressInBytes = 0.0
                 for (entry, progress) in entries {
-                    var size = 1024 * 1024 * 1024
+                    var size = Int64(1024 * 1024 * 1024)
                     if let sizeValue = entry.resourceReference.resource.size {
                         size = sizeValue
                     }

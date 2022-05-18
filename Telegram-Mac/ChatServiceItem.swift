@@ -286,7 +286,7 @@ class ChatServiceItem: ChatRowItem {
                         _ = attributedString.append(string: " ")
                     }
                     _ = attributedString.append(string: strings().chatListServiceGameScored1Countable(Int(score), gameName), color: grayTextColor, font: NSFont.normal(theme.fontSize))
-                case let .paymentSent(currency, totalAmount):
+                case let .paymentSent(currency, totalAmount, invoiceSlug):
                     var paymentMessage:Message?
                     for attr in message.attributes {
                         if let attr = attr as? ReplyMessageAttribute {

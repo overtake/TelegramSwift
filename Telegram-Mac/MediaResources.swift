@@ -65,6 +65,10 @@ public final class VideoLibraryMediaResource: TelegramMediaResource {
         return 32 * 1024
     }
     
+    public var size: Int64? {
+        return nil
+    }
+    
     public init(localIdentifier: String, adjustments: VideoMediaResourceAdjustments?) {
         self.localIdentifier = localIdentifier
         self.adjustments = adjustments
@@ -110,6 +114,9 @@ public final class LocalFileGifMediaResource: TelegramMediaResource {
         return to.id == self.id
     }
     
+    public var size: Int64? {
+        return nil
+    }
     
     public let randomId: Int64
     public let path: String
@@ -161,6 +168,9 @@ public final class LocalFileVideoMediaResource: TelegramMediaResource {
         return 32 * 1024
     }
 
+    public var size: Int64? {
+        return nil
+    }
 
     public let randomId: Int64
     public let path: String
@@ -211,6 +221,10 @@ public final class LottieSoundMediaResource: TelegramMediaResource {
         self.data = data
     }
     
+    public var size: Int64? {
+        return nil
+    }
+    
     public required init(decoder: PostboxDecoder) {
         self.randomId = decoder.decodeInt64ForKey("i", orElse: 0)
         self.data = decoder.decodeDataForKey("d") ?? Data()
@@ -250,6 +264,10 @@ public final class LocalFileArchiveMediaResource: TelegramMediaResource {
     
     public var headerSize: Int32 {
         return 32 * 1024
+    }
+    
+    public var size: Int64? {
+        return nil
     }
     
     public init(randomId: Int64, path: String) {
@@ -303,6 +321,10 @@ public class ExternalMusicAlbumArtResource: TelegramMediaResource {
         self.isThumbnail = isThumbnail
     }
     
+    public var size: Int64? {
+        return nil
+    }
+    
     public required init(decoder: PostboxDecoder) {
         self.title = decoder.decodeStringForKey("t", orElse: "")
         self.performer = decoder.decodeStringForKey("p", orElse: "")
@@ -345,6 +367,10 @@ public class LocalBundleResource: TelegramMediaResource {
     public init(name: String, ext: String) {
         self.name = name
         self.ext = ext
+    }
+    
+    public var size: Int64? {
+        return nil
     }
     
     public required init(decoder: PostboxDecoder) {
