@@ -69,16 +69,28 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterListHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
     index += 1
     
+    if arguments.context.isPremium {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("_all_chats"), data: .init(name: "All Chats", color: theme.colors.text, icon: FolderIcon(emoticon: .allChats).icon(for: .preview), type: .none, viewType: .firstItem)))
+        index += 1
+    }
+    
     for (filter, count) in filtersWithCounts {
         var viewType = bestGeneralViewType(filtersWithCounts.map { $0.0 }, for: filter)
+        
+        if arguments.context.isPremium && filter == filtersWithCounts.first?.0 {
+            viewType = .innerItem
+        }
         if filtersWithCounts.count == 1 {
-            viewType = .firstItem
+            if arguments.context.isPremium {
+                viewType = .innerItem
+            } else {
+                viewType = .firstItem
+            }
         } else if filter == filtersWithCounts.last?.0, filtersWithCounts.count < arguments.context.premiumLimits.dialog_filters_limit_premium {
             viewType = .innerItem
         }
         
-        
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: filter.title, color: theme.colors.text, icon: FolderIcon(filter).icon(for: .preview), type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, justUpdate: arc4random64(), action: {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: filter.title, color: theme.colors.text, icon: FolderIcon(filter).icon(for: .preview), type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, action: {
             arguments.openPreset(filter, false)
         }, menuItems: {
             return [ContextMenuItem(strings().chatListFilterListRemove, handler: {

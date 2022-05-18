@@ -100,7 +100,7 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
     if let progressiveRepresentation = progressiveImageRepresentation(imageReference.media.representations), progressiveRepresentation.progressiveSizes.count > 1 {
         enum SizeSource {
             case miniThumbnail(data: Data)
-            case image(size: Int)
+            case image(size: Int64)
             case resource(TelegramMediaResource)
         }
         
@@ -108,8 +108,8 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
         if let miniThumbnail = imageReference.media.immediateThumbnailData.flatMap(decodeTinyThumbnail) {
             sources.append(.miniThumbnail(data: miniThumbnail))
         }
-        let thumbnailByteSize = Int(progressiveRepresentation.progressiveSizes[0])
-        var largestByteSize = Int(progressiveRepresentation.progressiveSizes[0])
+        let thumbnailByteSize = Int64(progressiveRepresentation.progressiveSizes[0])
+        var largestByteSize = Int64(progressiveRepresentation.progressiveSizes[0])
         for (maxDimension, byteSizes) in progressiveRangeMap {
             if Int(fullRepresentationSize.width) > 100 && maxDimension <= 100 {
                 continue
@@ -118,10 +118,10 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
                 if progressiveRepresentation.progressiveSizes.count - 1 < sizeIndex {
                     return nil
                 }
-                return .image(size: Int(progressiveRepresentation.progressiveSizes[sizeIndex]))
+                return .image(size: Int64(progressiveRepresentation.progressiveSizes[sizeIndex]))
             })
-            largestByteSize = Int(progressiveRepresentation.progressiveSizes[min(progressiveRepresentation.progressiveSizes.count - 1, byteSizes.last!)])
-            if maxDimension >= Int(fullRepresentationSize.width) {
+            largestByteSize = Int64(progressiveRepresentation.progressiveSizes[min(progressiveRepresentation.progressiveSizes.count - 1, byteSizes.last!)])
+            if maxDimension >= Int64(fullRepresentationSize.width) {
                 break
             }
         }
@@ -140,7 +140,7 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
                 case let .miniThumbnail(data):
                     return .single((source, data))
                 case let .image(size):
-                    return postbox.mediaBox.resourceData(progressiveRepresentation.resource, size: Int(progressiveRepresentation.progressiveSizes.last!), in: 0 ..< size, mode: .incremental, notifyAboutIncomplete: true, attemptSynchronously: synchronousLoad)
+                    return postbox.mediaBox.resourceData(progressiveRepresentation.resource, size: Int64(progressiveRepresentation.progressiveSizes.last!), in: 0 ..< size, mode: .incremental, notifyAboutIncomplete: true, attemptSynchronously: synchronousLoad)
                     |> map { (data, _) -> (SizeSource, Data?) in
                         return (source, data)
                     }
@@ -344,7 +344,7 @@ func svgIconImageFile(account: Account, fileReference: FileMediaReference?, scal
     } else {
         data = Signal { subscriber in
             if let url = Bundle.main.url(forResource: "durgerking", withExtension: "placeholder"), let data = try? Data(contentsOf: url, options: .mappedRead) {
-                subscriber.putNext(MediaResourceData(path: url.path, offset: 0, size: data.count, complete: true))
+                subscriber.putNext(MediaResourceData(path: url.path, offset: 0, size: Int64(data.count), complete: true))
                 subscriber.putCompletion()
             }
             return EmptyDisposable

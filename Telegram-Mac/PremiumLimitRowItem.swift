@@ -11,11 +11,13 @@ import TGUIKit
 
 final class PremiumIncreaseLimitItem : GeneralRowItem {
     let limitType: PremiumLimitController.LimitType
+    let counts: PremiumLimitController.Counts?
     let context: AccountContext
     var updatedHeight: CGFloat = 271
     let callback: ()->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, type: PremiumLimitController.LimitType, viewType: GeneralViewType, callback:@escaping()->Void) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, type: PremiumLimitController.LimitType, counts: PremiumLimitController.Counts?, viewType: GeneralViewType, callback:@escaping()->Void) {
         self.limitType = type
+        self.counts = counts
         self.context = context
         self.callback = callback
         super.init(initialSize, stableId: stableId, viewType: viewType)
@@ -57,7 +59,7 @@ private final class PremiumIncreaseLimitView: GeneralContainableRowView {
         
         view.premium = item.callback
         
-        let size = view.update(with: item.limitType, context: item.context, animated: animated, hasDismiss: false)
+        let size = view.update(with: item.limitType, counts: item.counts, context: item.context, animated: animated, hasDismiss: false)
 
         if item.updatedHeight != size.height {
             item.updatedHeight = size.height

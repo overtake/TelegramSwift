@@ -177,7 +177,11 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     
     public var flip:Bool = true
     
-    open var border:BorderType?
+    open var border:BorderType? {
+        didSet {
+            needsDisplay = true
+        }
+    }
     
 
     open override func layout() {

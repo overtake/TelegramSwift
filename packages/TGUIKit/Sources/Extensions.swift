@@ -136,17 +136,28 @@ public extension NSAttributedString {
 
 public extension String {
     
+    static func prettySized(with size:Int64, afterDot: Int8 = 1, removeToken: Bool = false, round: Bool = false) -> String {
+        return prettySized(with: Int(size), afterDot: afterDot, removeToken: removeToken, round: round)
+    }
     
-    static func prettySized(with size:Int, afterDot: Int8 = 1, removeToken: Bool = false) -> String {
+    static func prettySized(with size:Int, afterDot: Int8 = 1, removeToken: Bool = false, round: Bool = false) -> String {
         var converted:Double = Double(size)
         var factor:Int = 0
         
         let tokens:[String] = ["B", "KB", "MB", "GB", "TB"]
         
-        while converted >= 1024.0 {
-            converted /= 1024.0
-            factor += 1
+        if round {
+            while converted >= 1000 {
+                converted /= 1000
+                factor += 1
+            }
+        } else {
+            while converted >= 1024.0 {
+                converted /= 1024.0
+                factor += 1
+            }
         }
+        
         
         if factor == 0 {
             //converted = 0
@@ -1543,6 +1554,76 @@ public extension Int32 {
         return self > Int32(Date().timeIntervalSince1970)
     }
 }
+public extension Int64 {
+    
+    func prettyFormatter(_ n: Int64, iteration: Int, rounded: Bool = false) -> String {
+        let keys = ["K", "M", "B", "T"]
+        var d = Double((n / 100)) / 10.0
+        if rounded {
+            d = floor(d)
+        }
+        let isRound:Bool = (Int(d) * 10) % 10 == 0
+        if d < 1000 {
+            if d == 1 {
+                return "\(Int(d))\(keys[iteration])"
+            } else {
+                var result = "\((d > 99.9 || isRound || (!isRound && d > 9.99)) ? d * 10 / 10 : d)"
+                if result.hasSuffix(".0") {
+                    result = result.prefix(result.count - 2)
+                }
+                return result + "\(keys[iteration])"
+            }
+        }
+        else {
+            return self.prettyFormatter(Int64(d), iteration: iteration + 1, rounded: rounded)
+        }
+    }
+    
+    var prettyRounded: String {
+        if self < 1000 {
+            return "\(self)"
+        }
+        return self.prettyFormatter(self, iteration: 0, rounded: true).replacingOccurrences(of: ".", with: Locale.current.decimalSeparator ?? ".")
+    }
+    
+    var prettyNumber:String {
+        if self < 1000 {
+            return "\(self)"
+        }
+        
+        return self.prettyFormatter(self, iteration: 0).replacingOccurrences(of: ".", with: Locale.current.decimalSeparator ?? ".")
+    }
+    var separatedNumber: String {
+        if self < 1000 {
+            return "\(self)"
+        }
+        let string = "\(self)"
+        
+        let length: Int = string.length
+        var result:String = ""
+        var index:Int = 0
+        while index < length {
+            let modulo = length % 3
+            if index == 0 && modulo != 0 {
+                result = string.nsstring.substring(with: NSMakeRange(index, modulo))
+                index += modulo
+            } else {
+                let count:Int = 3
+                let value = string.nsstring.substring(with: NSMakeRange(index, count))
+                if index == 0 {
+                    result = value
+                } else {
+                    result += " " + value
+                }
+                index += count
+            }
+        }
+        return result
+    }
+}
+
+
+
 
 public extension Int {
     

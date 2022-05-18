@@ -388,7 +388,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
 
     var completion = completion
     
-    var invokeCompletion:(PaymentCheckoutCompletionStatus)->Void = { value in
+    let invokeCompletion:(PaymentCheckoutCompletionStatus)->Void = { value in
         completion?(value)
         completion = nil
     }
@@ -491,8 +491,9 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
             guard let form = state.form else {
                 return
             }
-            
+                        
             let pay:()->Void = {
+                
                 let paySignal = context.engine.payments.sendBotPaymentForm(source: source, formId: form.id, validatedInfoId: state.validatedInfo?.id, shippingOptionId: state.shippingOptionId?.id, tipAmount: state.form?.invoice.tip != nil ? (state.currentTip ?? 0) : nil, credentials: credentials)
                 
                 _ = showModalProgress(signal: paySignal, for: context.window).start(next: { result in

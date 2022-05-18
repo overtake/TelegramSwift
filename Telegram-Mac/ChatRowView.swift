@@ -55,6 +55,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     private var forwardAccessory: ChatBubbleAccessoryForward? = nil
     private var viaAccessory: ChatBubbleViaAccessory? = nil
     
+    private var inlineStickerItemViews: [InlineStickerItemView.Key: InlineStickerItemView] = [:]
+    
     let bubbleView = ChatMessageBubbleBackdrop()
     
     private var scamButton: ImageButton? = nil
@@ -913,8 +915,56 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 captionViews.move(at: index, to: i)
             }
             view?.view.update(layout.layout)
+            
+            if let view = view {
+                updateInlineStickers(context: item.context, view: view.view, textLayout: layout.layout)
+            }
         }
     }
+    
+    private func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
+        var nextIndexById: [MediaId: Int] = [:]
+        var validIds: [InlineStickerItemView.Key] = []
+        
+        for item in textLayout.embeddedItems {
+            if let stickerItem = item.value as? InlineStickerItem {
+                let index: Int
+                if let currentNext = nextIndexById[stickerItem.file.fileId] {
+                    index = currentNext
+                } else {
+                    index = 0
+                }
+                nextIndexById[stickerItem.file.fileId] = index + 1
+                let id = InlineStickerItemView.Key(id: stickerItem.file.fileId, index: index)
+                validIds.append(id)
+                
+                let rect = CGRect(origin: item.rect.offsetBy(dx: textLayout.insets.width, dy: textLayout.insets.height + 0.0).center, size: CGSize()).insetBy(dx: -12.0, dy: -12.0)
+                
+                let view: InlineStickerItemView
+                if let current = self.inlineStickerItemViews[id] {
+                    view = current
+                } else {
+                    view = InlineStickerItemView(context: context, file: stickerItem.file, size: item.rect.size)
+                    self.inlineStickerItemViews[id] = view
+                    textView.addEmbeddedView(view)
+                }
+                
+                view.frame = rect
+            }
+        }
+        
+        var removeKeys: [InlineStickerItemView.Key] = []
+        for (key, itemLayer) in self.inlineStickerItemViews {
+            if !validIds.contains(key) {
+                removeKeys.append(key)
+                itemLayer.removeFromSuperview()
+            }
+        }
+        for key in removeKeys {
+            self.inlineStickerItemViews.removeValue(forKey: key)
+        }
+    }
+
     
     func reactionsRect(_ item: ChatRowItem) -> CGRect {
         guard let reactionsLayout = item.reactionsLayout else {

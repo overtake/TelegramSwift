@@ -849,8 +849,8 @@ class GalleryViewer: NSResponder {
         }
         
         
-        if let _ = self.contentInteractions {
-            if let message = pager.selectedItem?.entry.message {
+        if let contentInteractions = self.contentInteractions {
+            if let message = pager.selectedItem?.entry.message, let pageItem = pager.selectedItem {
                 if self.type == .history {
                     items.append(ContextMenuItem(strings().galleryContextShowMessage, handler: { [weak self] in
                         self?.showMessage()
@@ -860,7 +860,38 @@ class GalleryViewer: NSResponder {
                     items.append(ContextMenuItem(strings().galleryContextShowGallery, handler: { [weak self] in
                         self?.showSharedMedia()
                     }, itemImage: MenuAnimation.menu_shared_media.value))
+                    
+                    let controller = context.bindings.rootNavigation().controller
+
+                    
+                    if let peer = message.peers[message.id.peerId], peer.canSendMessage(), let controller = controller as? ChatController {
+                        if let _ = message.media.first as? TelegramMediaImage {
+                            items.append(ContextMenuItem(strings().gallerySendHere, handler: { [weak self, weak controller] in
+                                
+                                self?.close(false)
+                                
+                                let signal = pageItem.path.get()
+                                |> take(1)
+                                |> deliverOnMainQueue
+                                _ = signal.start(next: { [weak controller] path in
+                                    if let controller = controller {
+                                        let preview = PreviewSenderController(urls: [.init(fileURLWithPath: path)], chatInteraction: controller.chatInteraction, asMedia: true, attributedString: nil)
+                                        
+                                        let ready = preview.ready.get() |> take(1)
+                                        
+                                        _ = ready.start(next: { [weak preview] value in
+                                            delay(0.01, closure: { [weak preview] in
+                                                preview?.runDrawer()
+                                            })
+                                        })
+                                        showModal(with: preview, for: context.window)
+                                    }
+                                })
+                            }, itemImage: MenuAnimation.menu_edit.value))
+                        }
+                    }
                 }
+                
                 
                 if canDeleteMessage(message, account: context.account, mode: .history) {
                     if !items.isEmpty {

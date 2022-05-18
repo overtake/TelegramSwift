@@ -12,6 +12,7 @@ import TelegramCore
 
 import SwiftSignalKit
 import Postbox
+import RangeSet
 import IOKit.pwr_mgt
 
 extension MediaPlayerStatus {
@@ -345,7 +346,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         let size = reference.media.resource.size ?? 0
         
         let bufferingStatus = postbox.mediaBox.resourceRangesStatus(reference.media.resource)
-            |> map { ranges -> (IndexSet, Int) in
+            |> map { ranges -> (RangeSet<Int64>, Int64) in
                 return (ranges, size)
         } |> deliverOnMainQueue
         

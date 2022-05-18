@@ -37,8 +37,21 @@ private enum CornerType {
 public extension NSAttributedString.Key {
     static let hexColorMark = NSAttributedString.Key("TextViewHexColorMarkAttribute")
     static let hexColorMarkDimensions = NSAttributedString.Key("TextViewHexColorMarkAttributeDimensions")
-
 }
+
+private final class TextViewEmbeddedItem {
+    let range: NSRange
+    let frame: CGRect
+    let item: AnyHashable
+    
+    init(range: NSRange, frame: CGRect, item: AnyHashable) {
+        self.range = range
+        self.frame = frame
+        self.item = item
+    }
+}
+
+
 
 private func drawFullCorner(context: CGContext, color: NSColor, at point: CGPoint, type: CornerType, radius: CGFloat) {
     context.setFillColor(color.cgColor)
@@ -234,7 +247,8 @@ public final class TextViewLine {
     let isRTL: Bool
     let isBlocked: Bool
     let strikethrough:[TextViewStrikethrough]
-    init(line: CTLine, frame: CGRect, range: NSRange, penFlush: CGFloat, isBlocked: Bool = false, isRTL: Bool = false, strikethrough: [TextViewStrikethrough] = []) {
+    fileprivate let embeddedItems:[TextViewEmbeddedItem]
+    fileprivate init(line: CTLine, frame: CGRect, range: NSRange, penFlush: CGFloat, isBlocked: Bool = false, isRTL: Bool = false, strikethrough: [TextViewStrikethrough] = [], embeddedItems:[TextViewEmbeddedItem] = []) {
         self.line = line
         self.frame = frame
         self.range = range
@@ -242,6 +256,7 @@ public final class TextViewLine {
         self.isBlocked = isBlocked
         self.strikethrough = strikethrough
         self.isRTL = isRTL
+        self.embeddedItems = embeddedItems
     }
     
 }
@@ -268,6 +283,32 @@ public struct TextViewCutout: Equatable {
 private let defaultFont:NSFont = .normal(.text)
 
 public final class TextViewLayout : Equatable {
+    
+    public final class EmbeddedItem: Equatable {
+            public let range: NSRange
+            public let rect: CGRect
+            public let value: AnyHashable
+            
+            public init(range: NSRange, rect: CGRect, value: AnyHashable) {
+                self.range = range
+                self.rect = rect
+                self.value = value
+            }
+            
+            public static func ==(lhs: EmbeddedItem, rhs: EmbeddedItem) -> Bool {
+                if lhs.range != rhs.range {
+                    return false
+                }
+                if lhs.rect != rhs.rect {
+                    return false
+                }
+                if lhs.value != rhs.value {
+                    return false
+                }
+                return true
+            }
+        }
+
     
     public class Spoiler {
         public let range: NSRange
@@ -311,6 +352,7 @@ public final class TextViewLayout : Equatable {
     fileprivate var isBigEmoji: Bool = false
     fileprivate let spoilers:[Spoiler]
     private let onSpoilerReveal: ()->Void
+    public private(set) var embeddedItems: [EmbeddedItem] = []
     public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil, alignment:NSTextAlignment = .left, lineSpacing:CGFloat? = nil, selectText: NSColor = presentation.colors.selectText, strokeLinks: Bool = false, alwaysStaticItems: Bool = false, disableTooltips: Bool = true, mayItems: Bool = true, spoilers:[Spoiler] = [], onSpoilerReveal: @escaping()->Void = {}) {
         self.spoilers = spoilers
         self.truncationType = truncationType
@@ -421,7 +463,31 @@ public final class TextViewLayout : Equatable {
         var isWasPreformatted: Bool = false
         while true {
             var strikethroughs: [TextViewStrikethrough] = []
+            var embeddedItems: [TextViewEmbeddedItem] = []
+
             
+            
+            func addEmbeddedItem(item: AnyHashable, line: CTLine, ascent: CGFloat, descent: CGFloat, startIndex: Int, endIndex: Int, rightInset: CGFloat = 0.0) {
+                var secondaryLeftOffset: CGFloat = 0.0
+                let rawLeftOffset = CTLineGetOffsetForStringIndex(line, startIndex, &secondaryLeftOffset)
+                var leftOffset = floor(rawLeftOffset)
+                if !rawLeftOffset.isEqual(to: secondaryLeftOffset) {
+                    leftOffset = floor(secondaryLeftOffset)
+                }
+                
+                var secondaryRightOffset: CGFloat = 0.0
+                let rawRightOffset = CTLineGetOffsetForStringIndex(line, endIndex, &secondaryRightOffset)
+                var rightOffset = ceil(rawRightOffset)
+                if !rawRightOffset.isEqual(to: secondaryRightOffset) {
+                    rightOffset = ceil(secondaryRightOffset)
+                }
+                
+                embeddedItems.append(TextViewEmbeddedItem(range: NSMakeRange(startIndex, endIndex - startIndex + 1), frame: CGRect(x: min(leftOffset, rightOffset), y: descent - (ascent + descent), width: abs(rightOffset - leftOffset) + rightInset, height: ascent + descent), item: item))
+            }
+            
+
+
+
             var lineConstrainedWidth = constrainedWidth
             var lineOriginY: CGFloat = 0
             
@@ -542,7 +608,14 @@ public final class TextViewLayout : Equatable {
                         let upperX = ceil(CTLineGetOffsetForStringIndex(coreTextLine, range.location + range.length, nil))
                         let x = lowerX < upperX ? lowerX : upperX
                         strikethroughs.append(TextViewStrikethrough(color: color, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
+                    } else if let embeddedItem = (attributes[NSAttributedString.Key(rawValue: "TelegramEmbeddedItem")] as? AnyHashable ?? attributes[NSAttributedString.Key(rawValue: "Attribute__EmbeddedItem")] as? AnyHashable) {
+                        var ascent: CGFloat = 0.0
+                        var descent: CGFloat = 0.0
+                        CTLineGetTypographicBounds(coreTextLine, &ascent, &descent, nil)
+                        
+                        addEmbeddedItem(item: embeddedItem, line: coreTextLine, ascent: ascent, descent: descent, startIndex: range.location, endIndex: range.location + range.length)
                     }
+
                 }
 
                 var isRTL = false
@@ -590,7 +663,14 @@ public final class TextViewLayout : Equatable {
                             let upperX = ceil(CTLineGetOffsetForStringIndex(coreTextLine, range.location + range.length, nil))
                             let x = lowerX < upperX ? lowerX : upperX
                             strikethroughs.append(TextViewStrikethrough(color: color, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
+                        } else if let embeddedItem = (attributes[NSAttributedString.Key(rawValue: "TelegramEmbeddedItem")] as? AnyHashable ?? attributes[NSAttributedString.Key(rawValue: "Attribute__EmbeddedItem")] as? AnyHashable) {
+                            var ascent: CGFloat = 0.0
+                            var descent: CGFloat = 0.0
+                            CTLineGetTypographicBounds(coreTextLine, &ascent, &descent, nil)
+                            
+                            addEmbeddedItem(item: embeddedItem, line: coreTextLine, ascent: ascent, descent: descent, startIndex: range.location, endIndex: range.location + range.length)
                         }
+
                     }
                     
                     var isRTL = false
@@ -602,8 +682,7 @@ public final class TextViewLayout : Equatable {
                         }
                     }
 
-
-                    lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush, isBlocked: isWasPreformatted, isRTL: isRTL, strikethrough: strikethroughs))
+                    lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush, isBlocked: isWasPreformatted, isRTL: isRTL, strikethrough: strikethroughs, embeddedItems: embeddedItems))
                     lastLineCharacterIndex += lineCharacterCount
                 } else {
                     if !lines.isEmpty {
@@ -641,7 +720,14 @@ public final class TextViewLayout : Equatable {
             self.blockImage = generateRectsImage(color: presentation.colors.grayBackground, rects: monospacedRects, inset: 0, outerRadius: .cornerRadius, innerRadius: .cornerRadius)
         }
         
-        
+        var embeddedItems: [EmbeddedItem] = []
+        for line in lines {
+            for embeddedItem in line.embeddedItems {
+                embeddedItems.append(EmbeddedItem(range: embeddedItem.range, rect: embeddedItem.frame.offsetBy(dx: line.frame.minX, dy: line.frame.minY), value: embeddedItem.item))
+            }
+        }
+
+        self.embeddedItems = embeddedItems
         
         //self.monospacedStrokeImage = generateRectsImage(color: presentation.colors.border, rects: monospacedRects, inset: 0, outerRadius: .cornerRadius, innerRadius: .cornerRadius)
 
@@ -1229,8 +1315,31 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
 
     }
     
+    private class InkContainer : View {
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            isEventLess = true
+        }
+        
+        required public init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
+    private class EmbeddedContainer : View {
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            isEventLess = true
+        }
+        
+        required public init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
     
     private var inkViews: [InvisibleInkDustView] = []
+    private let inkContainer = InkContainer(frame: .zero)
+    private let embeddedContainer = InkContainer(frame: .zero)
+
     private var clearExceptRevealed: Bool = false
     private var inAnimation: Bool = false {
         didSet {
@@ -1286,6 +1395,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     private func initialize() {
         layer?.disableActions()
         self.style = ControlStyle(backgroundColor: .clear)
+        addSubview(embeddedContainer)
+        addSubview(inkContainer)
     }
 
     public required init(frame frameRect: NSRect) {
@@ -1635,6 +1746,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 performSubviewRemoval(inkViews.removeLast(), animated: animated)
             }
         }
+        self.checkEmbeddedUnderSpoiler()
     }
     
     public func update(_ layout:TextViewLayout?, origin:NSPoint? = nil) -> Void {
@@ -1965,10 +2077,16 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         }
     }
     
+    public func addEmbeddedView(_ view: NSView) {
+        embeddedContainer.addSubview(view)
+    }
+    
     public override func layout() {
         super.layout()
         self.visualEffect?.frame = bounds
         self.textView?.frame = bounds
+        embeddedContainer.frame = bounds
+        inkContainer.frame = bounds
         self.updateInks(self.textLayout)
     }
     
@@ -2043,6 +2161,23 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                     pb.declareTypes([.string], owner: self)
                     pb.setString(layout.attributedString.string.nsstring.substring(with: layout.selectedRange.range), forType: .string)
                 }
+            }
+        }
+    }
+    
+    public func checkEmbeddedUnderSpoiler() {
+        if let layout = self.textLayout {
+            let rects = layout.spoilerRects()
+            for subview in embeddedContainer.subviews {
+                var isHidden = false
+                loop: for rect in rects {
+                    if NSIntersectsRect(subview.frame, rect) {
+                        isHidden = true
+                        break loop
+                    }
+                }
+                subview.isHidden = isHidden
+    //            if subview
             }
         }
     }

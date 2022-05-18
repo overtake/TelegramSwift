@@ -120,7 +120,8 @@ class ChatGroupedItem: ChatRowItem {
                 default:
                     break
                 }
-                
+                InlineStickerItem.apply(to: caption, emojies: entry.additionalData.animatedEmojiStickers, context: context)
+
                 let layout: ChatRowItem.RowCaption = .init(id: stableId, offset: .zero, layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
                     chatInteraction?.update({
                         $0.updatedInterfaceState({

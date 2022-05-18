@@ -115,6 +115,8 @@ public final class L10n {
   public static var accountSettingsNotifications: String  { return L10n.tr("Localizable", "AccountSettings.Notifications") }
   /// Telegram Passport
   public static var accountSettingsPassport: String  { return L10n.tr("Localizable", "AccountSettings.Passport") }
+  /// Telegram Premium
+  public static var accountSettingsPremium: String  { return L10n.tr("Localizable", "AccountSettings.Premium") }
   /// Privacy and Security
   public static var accountSettingsPrivacyAndSecurity: String  { return L10n.tr("Localizable", "AccountSettings.PrivacyAndSecurity") }
   /// Proxy
@@ -2005,6 +2007,8 @@ public final class L10n {
   public static var chatContextEnableNotifications: String  { return L10n.tr("Localizable", "Chat.Context.EnableNotifications") }
   /// Channels Info
   public static var chatContextFeedInfo: String  { return L10n.tr("Localizable", "Chat.Context.FeedInfo") }
+  /// Hide Ad
+  public static var chatContextHideAd: String  { return L10n.tr("Localizable", "Chat.Context.HideAd") }
   /// Info
   public static var chatContextInfo: String  { return L10n.tr("Localizable", "Chat.Context.Info") }
   /// %1$@/%2$@ Reacted
@@ -2457,6 +2461,8 @@ public final class L10n {
   }
   /// imported
   public static var chatMessageImportedShort: String  { return L10n.tr("Localizable", "Chat.Message.ImportedShort") }
+  /// recommended
+  public static var chatMessageRecommended: String  { return L10n.tr("Localizable", "Chat.Message.Recommended") }
   /// sponsored
   public static var chatMessageSponsored: String  { return L10n.tr("Localizable", "Chat.Message.Sponsored") }
   /// %d
@@ -4817,6 +4823,8 @@ public final class L10n {
   public static var galleryRemoveGif: String  { return L10n.tr("Localizable", "Gallery.RemoveGif") }
   /// Save GIF
   public static var gallerySaveGif: String  { return L10n.tr("Localizable", "Gallery.SaveGif") }
+  /// Edit & Send
+  public static var gallerySendHere: String  { return L10n.tr("Localizable", "Gallery.SendHere") }
   /// Copy to Clipboard
   public static var galleryContextCopyToClipboard: String  { return L10n.tr("Localizable", "Gallery.Context.CopyToClipboard") }
   /// Set As Main Photo
@@ -7225,6 +7233,8 @@ public final class L10n {
   public static var peerInfoPreHistoryHidden: String  { return L10n.tr("Localizable", "PeerInfo.PreHistory.Hidden") }
   /// Visible
   public static var peerInfoPreHistoryVisible: String  { return L10n.tr("Localizable", "PeerInfo.PreHistory.Visible") }
+  /// Premium Account. [Read More](premium)
+  public static var peerInfoPremiumTooltip: String  { return L10n.tr("Localizable", "PeerInfo.Premium.Tooltip") }
   /// All
   public static var peerInfoReactionsAll: String  { return L10n.tr("Localizable", "PeerInfo.Reactions.All") }
   /// Disabled
@@ -7237,6 +7247,8 @@ public final class L10n {
   public static var peerInfoReportSelectMessages: String  { return L10n.tr("Localizable", "PeerInfo.Report.SelectMessages") }
   /// Append names of the admins to the messages they post.
   public static var peerInfoSignMessagesDesc: String  { return L10n.tr("Localizable", "PeerInfo.SignMessages.Desc") }
+  /// Verified Account
+  public static var peerInfoVerifiedTooltip: String  { return L10n.tr("Localizable", "PeerInfo.Verified.Tooltip") }
   /// Audio
   public static var peerMediaAudio: String  { return L10n.tr("Localizable", "PeerMedia.Audio") }
   /// Groups
@@ -7523,6 +7535,62 @@ public final class L10n {
   public static var preHistorySettingsDescriptionVisible: String  { return L10n.tr("Localizable", "PreHistorySettings.Description.Visible") }
   /// New members won't see more than 100 previous messages.
   public static var preHistorySettingsDescriptionGroupHidden: String  { return L10n.tr("Localizable", "PreHistorySettings.Description.Group.Hidden") }
+  /// Go **beyond the limits**, get **exclusive features** and support us by subscribing to **Telegram Premium**.
+  public static var premiumBoardingInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Info") }
+  /// Telegram Premium
+  public static var premiumBoardingTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Title") }
+  /// While the free version of Telegram already gives its users more than any other messaging application, **Telegram Premium** pushes its capabilities even further.\n\n**Telegram Premium** is a paid option, because most Premium Features require additional expenses from Telegram to third parties such as data center providers and server manufacturers. Contributions from **Telegram Premium** users allow us to cover such costs and also help Telegram stay free for everyone.
+  public static var premiumBoardingAboutText: String  { return L10n.tr("Localizable", "Premium.Boarding.About.Text") }
+  /// About Telegram Premium
+  public static var premiumBoardingAboutTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.About.Title") }
+  /// By purchasing a Premium subscription, you agree to our [Terms of Service](terms) and [Privacy Policy](privacy).
+  public static var premiumBoardingAboutTos: String  { return L10n.tr("Localizable", "Premium.Boarding.About.Tos") }
+  /// Video avatars animated in chat lists and chats to allow for additional self-expression.
+  public static var premiumBoardingAvatarInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Avatar.Info") }
+  /// Animated Profile Pictures
+  public static var premiumBoardingAvatarTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Avatar.Title") }
+  /// A badge next to your name showing that you are helping support Telegram.
+  public static var premiumBoardingBadgeInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Badge.Info") }
+  /// Profile Badge
+  public static var premiumBoardingBadgeTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Badge.Title") }
+  /// Tools to set default folder, auto-archive and hide new chats.
+  public static var premiumBoardingChatsInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Chats.Info") }
+  /// Advanced Chat Management
+  public static var premiumBoardingChatsTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Chats.Title") }
+  /// Up to %1$@ channels, %2$@ folders, %3$@ pins, %4$@ public links and more.
+  public static func premiumBoardingDoubleInfo(_ p1: String, _ p2: String, _ p3: String, _ p4: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Double.Info", p1, p2, p3, p4)
+  }
+  /// Doubled Limits
+  public static var premiumBoardingDoubleTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Double.Title") }
+  /// No more limits on the speed with which media and documents are downloaded.
+  public static var premiumBoardingDownloadInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Download.Info") }
+  /// Faster Download Speed
+  public static var premiumBoardingDownloadTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Download.Title") }
+  /// Increased upload size from %1$@ to %2$@ per document, unlimited storage overall.
+  public static func premiumBoardingFileSizeInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.FileSize.Info", p1, p2)
+  }
+  /// %1$@ Upload Size
+  public static func premiumBoardingFileSizeTitle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.FileSize.Title", p1)
+  }
+  /// No more ads in public channels where Telegram sometimes shows ads.
+  public static var premiumBoardingNoAdsInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.NoAds.Info") }
+  /// No Ads
+  public static var premiumBoardingNoAdsTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.NoAds.Title") }
+  /// Additional animated reactions on messages, available only to the Premium subscribers.
+  public static var premiumBoardingReactionsInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Reactions.Info") }
+  /// Unique Reactions
+  public static var premiumBoardingReactionsTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Reactions.Title") }
+  /// Exclusive enlarged stickers featuring additional effects, updated monthly.
+  public static var premiumBoardingStickersInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Stickers.Info") }
+  /// Premium Stickers
+  public static var premiumBoardingStickersTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Stickers.Title") }
+  /// Ability to read the transcript of any incoming voice message.
+  public static var premiumBoardingVoiceInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Voice.Info") }
+  /// Voice-to-Text Conversion
+  public static var premiumBoardingVoiceTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Voice.Title") }
   /// Double the Limit
   public static var premiumGetPremiumDouble: String  { return L10n.tr("Localizable", "Premium.GetPremium.Double") }
   /// Free

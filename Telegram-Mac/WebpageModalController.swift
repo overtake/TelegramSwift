@@ -266,6 +266,15 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     enum RequestData {
         case simple(url: String, bot: Peer)
         case normal(url: String?, peerId: PeerId, bot: Peer, replyTo: MessageId?, buttonText: String, payload: String?, fromMenu: Bool, complete:(()->Void)?)
+        
+        var bot: Peer {
+            switch self {
+            case let .simple(_, bot):
+                return bot
+            case let .normal(_, _, bot, _, _, _, _, _):
+                return bot
+            }
+        }
     }
     
     
@@ -411,7 +420,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             switch requestData {
             case .simple(let url, let bot):
                 let signal = context.engine.messages.requestSimpleWebView(botId: bot.id, url: url, themeParams: generateWebAppThemeParams(theme)) |> deliverOnMainQueue
-                
+                                
                 requestWebDisposable.set(signal.start(next: { [weak self] url in
                     self?.genericView.load(url: url, preload: self?.preloadData, animated: true)
                     self?.url = url
@@ -423,86 +432,13 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     }
                 }))
             case .normal(let url, let peerId, let bot, let replyTo, let buttonText, let payload, let fromMenu, let complete):
-                
-//
-//                let placeholder: Signal<(FileMediaReference, Bool)?, NoError>
-//                if durgerKingBotIds.contains(bot.id.id._internalGetInt64Value()) {
-//                    placeholder = .single(nil)
-//                    |> delay(0.05, queue: Queue.mainQueue())
-//                } else {
-//                    placeholder = self.context.engine.messages.getAttachMenuBot(botId: bot.id, cached: true)
-//                    |> map(Optional.init)
-//                    |> `catch` { error -> Signal<AttachMenuBot?, NoError> in
-//                        return .complete()
-//                    }
-//                    |> mapToSignal { bot -> Signal<(FileMediaReference, Bool)?, NoError> in
-//                        if let bot = bot, let peerReference = PeerReference(bot.peer) {
-//                            var imageFile: TelegramMediaFile?
-//                            var isPlaceholder = false
-//                            if let file = bot.icons[.placeholder] {
-//                                imageFile = file
-//                                isPlaceholder = true
-//                            } else if let file = bot.icons[.iOSStatic] {
-//                                imageFile = file
-//                            } else if let file = bot.icons[.default] {
-//                                imageFile = file
-//                            }
-//                            if let imageFile = imageFile {
-//                                return .single((.attachBot(peer: peerReference, media: imageFile), isPlaceholder))
-//                            } else {
-//                                return .complete()
-//                            }
-//                        } else {
-//                            return .complete()
-//                        }
-//                    } |> deliverOnMainQueue
-//                }
-//
-//
-//
-//
-//                placeholderDisposable.set(placeholder.start(next: { [weak self] fileReferenceAndIsPlaceholder in
-//                    guard let strongSelf = self else {
-//                        return
-//                    }
-//                    let fileReference: FileMediaReference?
-//                    let isPlaceholder: Bool
-//                    if let (maybeFileReference, maybeIsPlaceholder) = fileReferenceAndIsPlaceholder {
-//                        fileReference = maybeFileReference
-//                        isPlaceholder = maybeIsPlaceholder
-//                    } else {
-//                        fileReference = nil
-//                        isPlaceholder = true
-//                    }
-//
-//                    if let fileReference = fileReference {
-//                        let _ = freeMediaFileInteractiveFetched(context: context, fileReference: fileReference).start()
-//                    }
-//                    strongSelf.iconDisposable = (svgIconImageFile(account: context.account, fileReference: fileReference, stickToTop: isPlaceholder)
-//                    |> deliverOnMainQueue).start(next: { [weak self] transform in
-//                        if let strongSelf = self {
-//                            let imageSize: CGSize
-//                            if isPlaceholder {
-//                                let minSize = min(strongSelf.frame.size.width, strongSelf.frame.size.height)
-//                                imageSize = CGSize(width: minSize, height: minSize * 2.0)
-//                            } else {
-//                                imageSize = CGSize(width: 75.0, height: 75.0)
-//                            }
-//                            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
-//                            let drawingContext = transform(arguments)
-//                            if let image = drawingContext?.generateImage() {
-//                                var bp = 0
-//                                bp += 1
-//                                strongSelf.placeholderIcon = (image, isPlaceholder)
-//
-//                            }
-//                        }
-//                    })
-//                }))
+  
 
+                
                 
                 let signal = context.engine.messages.requestWebView(peerId: peerId, botId: bot.id, url: url, payload: payload, themeParams: generateWebAppThemeParams(theme), fromMenu: fromMenu, replyToMessageId: replyTo) |> deliverOnMainQueue
                 requestWebDisposable.set(signal.start(next: { [weak self] result in
+                
                     
                     self?.data = .init(queryId: result.queryId, bot: bot, peerId: peerId, buttonText: buttonText, keepAliveSignal: result.keepAliveSignal)
                     self?.genericView.load(url: result.url, preload: self?.preloadData, animated: true)
@@ -552,13 +488,17 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
     
     func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (Bool) -> Void) {
-        confirm(for: context.window, information: message, successHandler: { _ in
+        confirm(for: context.window, header: requestData?.bot.displayTitle ?? appName, information: message, successHandler: { _ in
             completionHandler(true)
         }, cancelHandler: {
             completionHandler(false)
         })
     }
     
+    func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
+        alert(for: context.window, header: requestData?.bot.displayTitle ?? appName, info: message, completion: completionHandler)
+    }
+
     
     
     @available(macOS 12.0, *)
@@ -855,6 +795,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
 
     private func reloadPage() {
         self.genericView._holder.reload()
+        self.updateLocalizationAndTheme(theme: theme)
     }
     
     override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {

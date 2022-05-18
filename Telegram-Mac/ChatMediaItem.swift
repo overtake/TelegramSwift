@@ -360,10 +360,24 @@ class ChatMediaItem: ChatRowItem {
         self.parameters = parameters
         
         self.updateParameters()
+                
+        var transcribed: String?
         
-        if !message.text.isEmpty, canAddCaption {
-            
-            
+        if let transcribe = entry.additionalData.transribeState {
+            switch transcribe {
+            case .success(let optional):
+                transcribed = optional
+            default:
+                break
+            }
+        }
+        
+        if let transcribed = transcribed {
+            let caption: NSAttributedString = .initialize(string: transcribed, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(theme.fontSize))
+            captionLayouts = [.init(id: message.stableId, offset: CGPoint(x: 0, y: 0), layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected()))]
+        }
+        
+        if !message.text.isEmpty, canAddCaption, transcribed == nil {
             
             var caption:NSMutableAttributedString = NSMutableAttributedString()
             _ = caption.append(string: message.text, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(theme.fontSize))
@@ -426,6 +440,9 @@ class ChatMediaItem: ChatRowItem {
                 caption.detectLinks(type: types, context: context, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: context.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
             }
             if !(self is ChatVideoMessageItem) {
+                
+                InlineStickerItem.apply(to: caption, emojies: entry.additionalData.animatedEmojiStickers, context: context)
+                
                 captionLayouts = [.init(id: message.stableId, offset: CGPoint(x: 0, y: 0), layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
                     chatInteraction?.update({
                         $0.updatedInterfaceState({

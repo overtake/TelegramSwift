@@ -309,12 +309,12 @@ extension ChatContextResult {
 
 
 extension TelegramMediaFile {
-    var elapsedSize:Int {
+    var elapsedSize: Int64 {
         if let size = size {
             return size
         }
         if let resource = resource as? LocalFileReferenceMediaResource, let size = resource.size {
-            return Int(size)
+            return Int64(size)
         }
         return 0
     }
@@ -2723,7 +2723,7 @@ extension AutomaticMediaDownloadSettings {
         }
         
         func checkFile(_ media: TelegramMediaFile, _ peer: Peer, _ categories: AutomaticMediaDownloadCategories) -> Bool {
-            let size = Int32(media.size ?? 0)
+            let size = Int64(media.size ?? 0)
             
             let dangerExts = "action app bin command csh osx workflow terminal url caction mpkg pkg xhtm webarchive"
             
@@ -3136,7 +3136,7 @@ extension MessageForwardInfo {
 
 
 func bigEmojiMessage(_ sharedContext: SharedAccountContext, message: Message) -> Bool {
-    return sharedContext.baseSettings.bigEmoji && message.media.isEmpty && message.replyMarkup == nil && message.text.count <= 3 && message.text.containsOnlyEmoji
+    return sharedContext.baseSettings.bigEmoji && message.media.isEmpty && message.replyMarkup == nil && message.text.count == 1 && message.text.containsOnlyEmoji
 }
 
 

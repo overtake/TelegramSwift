@@ -10,6 +10,7 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import ColorPalette
+import RangeSet
 
 private final class SVideoPipControls : Control {
     
@@ -765,11 +766,11 @@ class SVideoView: NSView {
             
         }
     }
-    var bufferingStatus: (IndexSet, Int)? {
+    var bufferingStatus: (RangeSet<Int64>, Int64)? {
         didSet {
             if let ranges = bufferingStatus {
                 var bufRanges: [Range<CGFloat>] = []
-                for range in ranges.0.rangeView {
+                for range in ranges.0.ranges {
                     let low = CGFloat(range.lowerBound) / CGFloat(ranges.1)
                     let high = CGFloat(range.upperBound) / CGFloat(ranges.1)
                     let br: Range<CGFloat> = Range<CGFloat>(uncheckedBounds: (lower: low, upper: high))

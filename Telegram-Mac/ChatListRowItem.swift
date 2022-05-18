@@ -545,7 +545,7 @@ class ChatListRowItem: TableRowItem {
         self.highlightText = highlightText
         if let peer = peer {
             self.isVerified = peer.isVerified
-            self.isPremium = peer.isPremium
+            self.isPremium = peer.isPremium && peer.id != context.peerId
             self.isScam = peer.isScam
             self.isFake = peer.isFake
         } else {
@@ -725,7 +725,7 @@ class ChatListRowItem: TableRowItem {
         _ = makeSize(initialSize.width, oldWidth: 0)
         
         
-        if let peer = peer, peer.isPremium {
+        if let peer = peer, peer.isPremium, peer.id != context.peerId {
             self.photos = syncPeerPhotos(peerId: peer.id)
             let signal = peerPhotos(context: context, peerId: peer.id, force: true) |> deliverOnMainQueue
             peerPhotosDisposable.set(signal.start(next: { [weak self] photos in
@@ -974,8 +974,8 @@ class ChatListRowItem: TableRowItem {
             _ = (context.engine.peers.toggleItemPinned(location: location, itemId: chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
                 switch result {
                 case .limitExceeded:
-                    if let _ = filter {
-                        showPremiumLimit(context: context, type: .pinInFolders)
+                    if let filter = filter {
+                        showPremiumLimit(context: context, type: .pinInFolders(.group(filter.id)))
                     } else {
                         if case .group = associatedGroupId {
                             showPremiumLimit(context: context, type: .pinInArchive)

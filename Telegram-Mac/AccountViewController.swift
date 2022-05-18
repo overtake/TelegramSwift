@@ -49,12 +49,14 @@ fileprivate final class AccountInfoArguments {
     let openFaq:()->Void
     let ask:()->Void
     let openUpdateApp:() -> Void
-    init(context: AccountContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void) {
+    let openPremium:()->Void
+    init(context: AccountContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping()->Void) {
         self.context = context
         self.presentController = presentController
         self.openFaq = openFaq
         self.ask = ask
         self.openUpdateApp = openUpdateApp
+        self.openPremium = openPremium
     }
 }
 
@@ -149,6 +151,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     case passport(index: Int, viewType: GeneralViewType, peer: PeerEquatable)
     case update(index: Int, viewType: GeneralViewType, state: AnyUpdateStateEquatable)
     case filters(index: Int, viewType: GeneralViewType)
+    case premium(index: Int, viewType: GeneralViewType)
     case about(index: Int, viewType: GeneralViewType)
     case faq(index: Int, viewType: GeneralViewType)
     case ask(index: Int, viewType: GeneralViewType)
@@ -187,6 +190,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return .index(12)
         case .passport:
             return .index(13)
+        case .premium:
+            return .index(14)
         case .faq:
             return .index(15)
         case .ask:
@@ -229,6 +234,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .passport(index, _, _):
             return index
         case let .filters(index, _):
+            return index
+        case let .premium(index, _):
             return index
         case let .faq(index, _):
             return index
@@ -334,6 +341,10 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .passport(_, viewType, peer):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsPassport, icon: theme.icons.settingsPassport, activeIcon: theme.icons.settingsPassportActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(PassportController(arguments.context, peer.peer, request: nil, nil), true)
+            }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+        case let .premium(_, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsPremium, icon: theme.icons.settingsPremium, activeIcon: theme.icons.settingsPremium, type: .next, viewType: viewType, action: {
+                arguments.openPremium()
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .faq(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsFAQ, icon: theme.icons.settingsFaq, activeIcon: theme.icons.settingsFaqActive, type: .next, viewType: viewType, action: arguments.openFaq, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
@@ -472,6 +483,12 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
         entries.append(.whiteSpace(index: index, height: 20))
         index += 1
     }
+    
+    entries.append(.premium(index: index, viewType: .singleItem))
+    index += 1
+    
+    entries.append(.whiteSpace(index: index, height: 20))
+    index += 1
 
     entries.append(.faq(index: index, viewType: .singleItem))
     index += 1
@@ -668,6 +685,8 @@ class LayoutAccountController : TableViewController {
             #if !APP_STORE
             navigation.push(AppUpdateViewController(), false)
             #endif
+        }, openPremium: {
+            showModal(with: PremiumBoardingController(context: context), for: context.window)
         })
         
         self.arguments = arguments

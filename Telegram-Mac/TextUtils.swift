@@ -429,7 +429,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                 }
             }
             return text
-        case let .paymentSent(currency, totalAmount):
+        case let .paymentSent(currency, totalAmount, slug):
             return strings().chatListServicePaymentSent(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency))
         case .unknown:
             break

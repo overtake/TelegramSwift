@@ -11,7 +11,7 @@ import TGUIKit
 import Postbox
 import SwiftSignalKit
 import TelegramCore
-
+import ColorPalette
 
 
 fileprivate final class ActionButton : Control {
@@ -548,6 +548,19 @@ class PeerInfoHeadItem: GeneralRowItem {
         return image
     }
     
+    var stateText: String? {
+        if isScam {
+            return strings().peerInfoScamWarning
+        } else if isFake {
+            return strings().peerInfoFakeWarning
+        } else if isVerified {
+            return strings().peerInfoVerifiedTooltip
+        } else if isPremium {
+            return strings().peerInfoPremiumTooltip
+        }
+        return nil
+    }
+    
     fileprivate var iconSize: NSSize {        
         if let image = stateImage {
             return NSMakeSize(image.backingSize.width + 5, image.backingSize.height)
@@ -684,7 +697,7 @@ private final class PeerInfoPhotoEditableView : Control {
 
 private final class NameContainer : View {
     let nameView = TextView()
-    var stateImage: ImageView?
+    var stateImage: ImageButton?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(nameView)
@@ -692,14 +705,41 @@ private final class NameContainer : View {
     
     func update(_ item: PeerInfoHeadItem, animated: Bool) {
         self.nameView.update(item.nameLayout)
-        
+        let context = item.context
         if let image = item.stateImage  {
             if stateImage == nil {
-                stateImage = ImageView()
+                stateImage = ImageButton()
                 addSubview(stateImage!)
             }
-            stateImage?.image = image
-            _ = stateImage?.sizeToFit()
+            guard let stateImage = self.stateImage else {
+                return
+            }
+            stateImage.autohighlight = false
+            stateImage.set(image: image, for: .Normal)
+            stateImage.sizeToFit()
+            stateImage.removeAllHandlers()
+
+            if let stateText = item.stateText {
+                stateImage.scaleOnClick = true
+                stateImage.set(handler: { control in
+                    let attr = parseMarkdownIntoAttributedString(stateText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: .white), bold: MarkdownAttributeSet(font: .bold(.text), textColor: .white), link: MarkdownAttributeSet(font: .normal(.text), textColor: nightAccentPalette.link), linkAttribute: { contents in
+                        return (NSAttributedString.Key.link.rawValue, contents)
+                    }))
+                    
+                    let interactions = TextViewInteractions.init(processURL: { content in
+                        if let content = content as? String {
+                            if content == "premium" {
+                                showModal(with: PremiumBoardingController(context: context), for: context.window)
+                            }
+                        }
+                    })
+                    
+                    tooltip(for: control, text: "", attributedText: attr, interactions: interactions)
+                }, for: .Click)
+            } else {
+                stateImage.scaleOnClick = false
+            }
+            
         } else {
             if let stateImage = stateImage {
                 self.stateImage = nil
@@ -994,9 +1034,6 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                     self.videoRepresentation = video
                     updatePlayerIfNeeded()
                 }
-                
-                
-                
             } else {
                 self.photoVideoPlayer = nil
                 self.photoVideoView?.removeFromSuperview()

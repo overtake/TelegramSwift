@@ -278,7 +278,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         if let resource = file.resource as? LocalBundleResource {
             data = Signal { subscriber in
                 if let path = Bundle.main.path(forResource: resource.name, ofType: resource.ext), let data = try? Data(contentsOf: URL(fileURLWithPath: path), options: [.mappedRead]) {
-                    subscriber.putNext(MediaResourceData(path: path, offset: 0, size: data.count, complete: true))
+                    subscriber.putNext(MediaResourceData(path: path, offset: 0, size: Int64(data.count), complete: true))
                     subscriber.putCompletion()
                 }
                 return EmptyDisposable
@@ -310,8 +310,8 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                         soundEffect = LottieSoundEffect(file: file, postbox: context.account.postbox, triggerOn: 1)
                     }
                 }
-                let maximumFps: Int = size.width < 200 && !file.isEmojiAnimatedSticker ? size.width <= 30 ? 24 : 30 : 60
-                let cache: ASCachePurpose = parameters?.cache ?? (size.width < 200 && size.width > 30 ? .temporaryLZ4(.thumb) : self.parent != nil ? .temporaryLZ4(.chat) : .none)
+                let maximumFps: Int = size.width < 200 && !file.isEmojiAnimatedSticker ? size.width <= 30 ? 30 : 30 : 60
+                let cache: ASCachePurpose = parameters?.cache ?? (size.width < 200 ? .temporaryLZ4(.thumb) : self.parent != nil ? .temporaryLZ4(.chat) : .none)
                 let fitzModifier = file.animatedEmojiFitzModifier
                 
                 
@@ -332,7 +332,9 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             }
         }))
         
-        let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+        let aspectSize = file.dimensions?.size.aspectFitted(size) ?? size
+        
+        let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: aspectSize, boundingSize: size, intrinsicInsets: NSEdgeInsets())
         
                
         if parameters?.noThumb == false || parameters == nil {
