@@ -996,6 +996,18 @@ final class AddReactionManager : NSObject, Notifable {
         if let index = available.firstIndex(where: { $0.value == settings.quickReaction }) {
             available.move(at: index, to: 0)
         }
+        var needRemove: Bool = false
+        available.removeAll(where: { value in
+            if value.isPremium, !context.isPremium {
+                if needRemove {
+                    return true
+                }
+                needRemove = true
+                return false
+            } else {
+                return false
+            }
+        })
         
         inOrderToRemove = inOrderToRemove.filter({
             $0.value != nil

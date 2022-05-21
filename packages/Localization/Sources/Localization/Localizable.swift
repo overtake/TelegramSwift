@@ -7645,6 +7645,8 @@ public final class L10n {
   public static func premiumLimitSavedGifsInfo(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Premium.Limit.SavedGifs.Info", p1, p2)
   }
+  /// You already have Telegram Premium
+  public static var premiumOffsetAlreadyHave: String  { return L10n.tr("Localizable", "Premium.Offset.AlreadyHave") }
   /// bot
   public static var presenceBot: String  { return L10n.tr("Localizable", "Presence.bot") }
   /// support

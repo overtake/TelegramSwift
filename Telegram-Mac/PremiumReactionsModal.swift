@@ -20,7 +20,63 @@ private final class PremiumReactionsView : View {
     
     private let textView = TextView()
     
-    private let unlock = TitleButton()
+    fileprivate let unlock = AcceptView(frame: .zero)
+    
+    fileprivate final class AcceptView : Control {
+        private let gradient: PremiumGradientView = PremiumGradientView(frame: .zero)
+        private let shimmer = ShimmerEffectView()
+        private let textView = TextView()
+        private let imageView = ImageView()
+        private let container = View()
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(gradient)
+            addSubview(shimmer)
+            container.addSubview(textView)
+            container.addSubview(imageView)
+            addSubview(container)
+            scaleOnClick = true
+            
+            textView.userInteractionEnabled = false
+            textView.isSelectable = false
+        }
+        
+        override func layout() {
+            super.layout()
+            gradient.frame = bounds
+            shimmer.frame = bounds
+            container.center()
+            imageView.centerY(x: 0)
+            textView.centerY(x: imageView.frame.maxX + 10)
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func update() -> NSSize {
+            let layout = TextViewLayout(.initialize(string: strings().reactionsPreviewUnlock, color: NSColor.white, font: .medium(.text)))
+            layout.measure(width: .greatestFiniteMagnitude)
+            textView.update(layout)
+            
+            imageView.image = theme.icons.premium_account_active
+            imageView.sizeToFit()
+            
+            container.setFrameSize(NSMakeSize(layout.layoutSize.width + 10 + imageView.frame.width, max(layout.layoutSize.height, imageView.frame.height)))
+            
+            let size = NSMakeSize(container.frame.width + 100, 40)
+            
+            shimmer.updateAbsoluteRect(size.bounds, within: size)
+            shimmer.update(backgroundColor: .clear, foregroundColor: .clear, shimmeringColor: NSColor.white.withAlphaComponent(0.3), shapes: [.roundedRect(rect: size.bounds, cornerRadius: size.height / 2)], horizontal: true, size: size)
+
+            
+            needsLayout = true
+            
+            return size
+        }
+    }
+
+    
     
     private var carousel: ReactionCarouselView?
         
@@ -48,23 +104,9 @@ private final class PremiumReactionsView : View {
         layout.measure(width: frame.width - 40)
         textView.update(layout)
         
-        
-        unlock.disableActions()
-        unlock.setFrameSize(190, 30)
-        
-        unlock.set(color: theme.colors.underSelectedColor, for: .Normal)
-        unlock.set(font: .medium(.title), for: .Normal)
-        unlock.set(background: theme.colors.accent, for: .Normal)
-        unlock.set(background: theme.colors.accent, for: .Hover)
-        unlock.set(background: theme.colors.accent, for: .Highlight)
-        unlock.set(text: strings().reactionsPreviewUnlock, for: .Normal)
-        
-        unlock.set(image: theme.icons.premium_account_active, for: .Normal)
-        
-        unlock.scaleOnClick = true
-        unlock.autohighlight = false
-        unlock.sizeToFit(NSMakeSize(20, 0), NSMakeSize(0, 30), thatFit: true)
-        unlock.layer?.cornerRadius = 15
+        let size = unlock.update()
+        unlock.setFrameSize(size)
+        unlock.layer?.cornerRadius = unlock.frame.height / 2
     }
     
     deinit {
@@ -116,7 +158,14 @@ final class PremiumReactionsModal : ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        let context = self.context
+        
         genericView.set(context: context)
+        
+        genericView.unlock.set(handler: { _ in
+            showModal(with: PremiumBoardingController(context: context, source: .unique_reactions), for: context.window)
+        }, for: .Click)
+        
         readyOnce()
     }
     

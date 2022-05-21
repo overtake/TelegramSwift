@@ -365,7 +365,7 @@ class ChatMediaItem: ChatRowItem {
         
         if let transcribe = entry.additionalData.transribeState {
             switch transcribe {
-            case .success(let optional):
+            case .revealed(let optional):
                 transcribed = optional
             default:
                 break

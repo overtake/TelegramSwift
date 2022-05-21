@@ -15,6 +15,8 @@ import SwiftSignalKit
 
 
 class ChatVoiceContentView: ChatAudioContentView {
+    
+    private var transcribeControl: VoiceTranscriptionControl?
 
     var isIncomingConsumed:Bool {
         var isConsumed:Bool = false
@@ -231,13 +233,61 @@ class ChatVoiceContentView: ChatAudioContentView {
             }
         }))
         
+        var removeTransribeControl = true
+        
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
             waveformView.waveform = parameters.waveform
             
             checkState(animated: animated)
+            
+            if let state = parameters.transcribeState {
+                
+                
+                let controlState: VoiceTranscriptionControl.TranscriptionState?
+                switch state {
+                case .possible:
+                    controlState = .possible
+                case let .state(inner):
+                    switch inner {
+                    case .collapsed:
+                        controlState = .collapsed
+                    case .revealed:
+                        controlState = .expanded
+                    case .loading:
+                        controlState = .inProgress
+                    case .failed:
+                        controlState = nil
+                    }
+                }
+                
+                if let controlState = controlState {
+                    
+                    removeTransribeControl = false
+                    
+                    let control: VoiceTranscriptionControl
+                    if let view = self.transcribeControl {
+                        control = view
+                    } else {
+                        control = VoiceTranscriptionControl(frame: NSMakeRect(0, 0, 25, 25))
+                        addSubview(control)
+                        control.scaleOnClick = true
+                        self.transcribeControl = control
+                        
+                        control.set(handler: { [weak self] _ in
+                            if let parameters = self?.parameters as? ChatMediaVoiceLayoutParameters {
+                                parameters.transcribe()
+                            }
+                        }, for: .Click)
+                    }
+                    control.update(state: controlState, parameters: parameters, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+                }
+            }
         }
         
-        
+        if removeTransribeControl, let view = transcribeControl {
+            self.transcribeControl = nil
+            performSubviewRemoval(view, animated: animated)
+        }
         
         needsLayout = true
     }
@@ -268,6 +318,10 @@ class ChatVoiceContentView: ChatAudioContentView {
         }
         waveformView.setFrameOrigin(leftInset,center - waveformView.frame.height - 2)
         durationView.setFrameOrigin(leftInset,center + 2)
+        
+        if let control = transcribeControl {
+            control.setFrameOrigin(NSMakePoint(waveformView.frame.maxX + 10, 0))
+        }
     }
     
 }

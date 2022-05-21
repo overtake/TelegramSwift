@@ -145,7 +145,7 @@ class ChatListRowItem: TableRowItem {
         if groupId != .root {
             return .groupId(groupId)
         } else if let index = chatListIndex {
-            return .chatId(index.messageIndex.id.peerId, nil)
+            return .chatId(index.messageIndex.id.peerId, -1)
         } else {
             preconditionFailure()
         }
@@ -1293,42 +1293,43 @@ class ChatListRowItem: TableRowItem {
             var submenu: [ContextMenuItem] = []
             if let peerId = peerId, peerId.namespace != Namespaces.Peer.SecretChat {
                 for item in filters.list {
-                    
-                    let menuItem = ContextMenuItem(item.title, handler: {
-                        
-                        let limit = context.isPremium ? context.premiumLimits.dialog_filters_chats_limit_premium : context.premiumLimits.dialog_filters_chats_limit_default
-                        
-                        let isEnabled = item.data.includePeers.peers.contains(peerId) || item.data.includePeers.peers.count < limit
-                        if isEnabled {
-                            _ = context.engine.peers.updateChatListFiltersInteractively({ list in
-                                var list = list
-                                for (i, folder) in list.enumerated() {
-                                    var folder = folder
-                                    if folder.id == item.id {
-                                        if item.data.includePeers.peers.contains(peerId) {
-                                            var peers = folder.data.includePeers.peers
-                                            peers.removeAll(where: { $0 == peerId })
-                                            folder.data.includePeers.setPeers(peers)
-                                        } else {
-                                            folder.data.includePeers.setPeers(folder.data.includePeers.peers + [peerId])
+                    inner: switch item {
+                    case .allChats:
+                        break inner;
+                    case let .filter(_, _, _, data):
+                        let menuItem = ContextMenuItem(item.title, handler: {
+                            
+                            let limit = context.isPremium ? context.premiumLimits.dialog_filters_chats_limit_premium : context.premiumLimits.dialog_filters_chats_limit_default
+                            
+                            let isEnabled = data.includePeers.peers.contains(peerId) || data.includePeers.peers.count < limit
+                            if isEnabled {
+                                _ = context.engine.peers.updateChatListFiltersInteractively({ list in
+                                    var list = list
+                                    for (i, folder) in list.enumerated() {
+                                        if folder.id == item.id, var folderData = folder.data {
+                                            if data.includePeers.peers.contains(peerId) {
+                                                var peers = folderData.includePeers.peers
+                                                peers.removeAll(where: { $0 == peerId })
+                                                folderData.includePeers.setPeers(peers)
+                                            } else {
+                                                folderData.includePeers.setPeers(folderData.includePeers.peers + [peerId])
+                                            }
+                                            list[i] = list[i].withUpdatedData(folderData)
                                         }
-                                        list[i] = folder
-
                                     }
-                                }
-                                return list
-                            }).start()
-                        } else {
-                            if context.isPremium {
-                                alert(for: context.window, info: strings().chatListFilterIncludeLimitReached)
+                                    return list
+                                }).start()
                             } else {
-                                showPremiumLimit(context: context, type: .chatInFolders)
+                                if context.isPremium {
+                                    alert(for: context.window, info: strings().chatListFilterIncludeLimitReached)
+                                } else {
+                                    showPremiumLimit(context: context, type: .chatInFolders)
+                                }
                             }
-                        }
-                       
-                    }, state: item.data.includePeers.peers.contains(peerId) ? .on : nil, itemImage: FolderIcon(item).emoticon.drawable.value)
-                    
-                    submenu.append(menuItem)
+                           
+                        }, state: data.includePeers.peers.contains(peerId) ? .on : nil, itemImage: FolderIcon(item).emoticon.drawable.value)
+                        submenu.append(menuItem)
+                    }
                 }
             }
             

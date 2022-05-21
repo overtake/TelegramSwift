@@ -970,6 +970,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     open func scrollDidChangedBounds() {
+
         if let autohide = autohide, let item = autohide.item, autohide.hideUntilOverscroll, let _ = liveScrollStartPosition {
             let rect = self.rectOf(item: item)
             
@@ -2464,14 +2465,24 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         //CATransaction.begin()
         
         
-        for (i, item) in list.enumerated() {
+        for (_, item) in list.enumerated() {
             item._index = nil
         }
 
         var inserted:[(TableRowItem, NSTableView.AnimationOptions)] = []
         var removed:[TableRowItem] = []
         
-
+        let check = { [weak self] in
+            guard let contentView = self?.contentView, let tableView = self?.tableView else {
+                return
+            }
+            if !tableView.isFlipped {
+                let offset = tableView.frame.height - contentView.bounds.height - contentView.bounds.minY
+                if offset < 0 {
+                    
+                }
+            }
+        }
         
         for rdx in transition.deleted.reversed() {
             let effect:NSTableView.AnimationOptions
@@ -2484,6 +2495,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 removed.append(item(at: rdx))
             }
             self.remove(at: rdx, redraw: true, animation:effect)
+            
+            check()
         }
         
         //NSAnimationContext.current.duration = transition.animated ? 0.2 : 0.0
@@ -2495,6 +2508,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             if item.animatable {
                 inserted.append((item, effect))
             }
+            check()
         }
         
         
@@ -2515,6 +2529,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             if !animated {
                 saveScrollState(visibleItems)
             }
+            check()
         }
         
 
@@ -2525,7 +2540,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
        
 
-        self.clipView.justScroll(to: documentOffset)
+//        self.clipView.justScroll(to: documentOffset)
 
         
         for inserted in inserted {

@@ -506,8 +506,7 @@ class ChatControllerView : View, ChatInputDelegate {
             tableHeight -= themeSelector.frame.height
             tableHeight += inputView.frame.height
         }
-        
-        
+                
         transition.updateFrame(view: tableView, frame: NSMakeRect(0, header.state.toleranceHeight, frame.width, tableHeight))
         tableView.tile()
 
@@ -3868,8 +3867,20 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         
             let value: [MessageId : TranscribeAudioState] = strongSelf.transribeState.with { $0 }
            
-            if value[messageId] == nil {
-                
+            if let state = value[messageId] {
+                strongSelf.updateTransribe { value in
+                    var value = value
+                    switch state {
+                    case let .revealed(str):
+                        value[messageId] = .collapsed(str)
+                    case let .collapsed(str):
+                        value[messageId] = .revealed(str)
+                    default:
+                        break
+                    }
+                    return value
+                }
+            } else {
                 strongSelf.updateTransribe { value in
                     var value = value
                     value[messageId] = .loading
@@ -3878,18 +3889,27 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 let signal = context.engine.messages.transcribeAudio(messageId: messageId)
                 |> deliverOnMainQueue
-                
+
                 strongSelf.transcribeDisposable.set(signal.start(next: { [weak strongSelf] result in
                     strongSelf?.updateTransribe { value in
                         var value = value
-                        if let result = result {
-                            value[messageId] = .success(result)
-                        } else {
+                        switch result {
+                        case let .success(result):
+                            value[messageId] = .revealed(result.text)
+                        case .error:
                             value[messageId] = .failed
                         }
                         return value
                     }
                 }), forKey: messageId)
+                
+//                strongSelf.transcribeDisposable.set(delaySignal(3.0).start(completed: { [weak strongSelf] in
+//                    strongSelf?.updateTransribe { value in
+//                        var value = value
+//                        value[messageId] = .revealed("test transcribed message")
+//                        return value
+//                    }
+//                }), forKey: messageId)
             }
 
         }

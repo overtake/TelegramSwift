@@ -184,8 +184,7 @@ public class InputDataModalController : ModalViewController {
         
         controller.modalTransitionHandler = { [weak self] animated in
             if self?.dynamicSize == true {
-                self?.updateSize(animated && self?.first == false)
-                self?.first = false
+                self?.updateSize(animated)
             }
         }
     }
@@ -603,7 +602,6 @@ class InputDataController: GenericViewController<InputDataView> {
             }
             
             self.afterTransaction(self)
-
             self.modalTransitionHandler?(transition.animated)
             
             let wasReady: Bool = self.didSetReady

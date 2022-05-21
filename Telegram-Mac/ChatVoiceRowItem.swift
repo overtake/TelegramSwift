@@ -11,7 +11,8 @@ import Cocoa
 enum TranscribeAudioState : Equatable {
     case loading
     case failed
-    case success(String?)
+    case revealed(String)
+    case collapsed(String)
 }
 
 import TGUIKit
@@ -20,6 +21,12 @@ import InAppSettings
 import SwiftSignalKit
 import Postbox
 class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
+    
+    enum TranscribeState {
+        case possible
+        case state(TranscribeAudioState)
+    }
+    
     let showPlayer:(APController) -> Void
     let waveform:AudioWaveform?
     let durationLayout:TextViewLayout
@@ -27,7 +34,11 @@ class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
     let isWebpage:Bool
     let resource: TelegramMediaResource
     fileprivate(set) var waveformWidth:CGFloat = 120
+    fileprivate(set) var transcribeState: TranscribeState?
     let duration:Int
+    
+    var transcribe:()->Void = {}
+    
     init(showPlayer:@escaping(APController) -> Void, waveform:AudioWaveform?, duration:Int, isMarked:Bool, isWebpage: Bool, resource: TelegramMediaResource, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool) {
         self.showPlayer = showPlayer
         self.waveform = waveform
@@ -50,6 +61,23 @@ class ChatVoiceRowItem: ChatMediaItem {
         super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
         
         self.parameters = ChatMediaLayoutParameters.layout(for: media as! TelegramMediaFile, isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(object.message!), isIncoming: object.message!.isIncoming(context.account, object.renderType == .bubble), autoplayMedia: object.autoplayMedia)
+        
+        
+        let canTranscribe = context.isPremium
+
+        if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
+            if canTranscribe, let messageId = object.message?.id {
+                if let state = entry.additionalData.transribeState {
+                    parameters.transcribeState = .state(state)
+                } else {
+                    parameters.transcribeState = .possible
+                }
+                parameters.transcribe = { [weak self] in
+                    self?.chatInteraction.transcribeAudio(messageId)
+                }
+            }
+            
+        }
     }
     
     override func canMultiselectTextIn(_ location: NSPoint) -> Bool {
@@ -77,20 +105,15 @@ class ChatVoiceRowItem: ChatMediaItem {
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
             parameters.durationLayout.measure(width: width - 50)
             
-            let minVoiceWidth: CGFloat = 120.0
-            let maxVoiceWidth:CGFloat = min(blockWidth, width - 50)
-            let maxVoiceLength: CGFloat = 30.0
-            let minVoiceLength: CGFloat = 2.0
+            let canTranscribe = context.isPremium
 
             
-            let calcDuration = max(minVoiceLength, min(maxVoiceLength, CGFloat(parameters.duration)))
-            let minLayoutWidth = minVoiceWidth + (maxVoiceWidth - minVoiceWidth) * (calcDuration - minVoiceLength) / (maxVoiceLength - minVoiceLength)
+            let maxVoiceWidth:CGFloat = min(blockWidth, width - 50 - (canTranscribe ? 35 : 0))
 
-
-            
             parameters.waveformWidth = maxVoiceWidth
             
-            return NSMakeSize(parameters.waveformWidth + 50, 40)
+            
+            return NSMakeSize(parameters.waveformWidth + 50 + (canTranscribe ? 35 : 0), 40)
         }
         return NSZeroSize
     }

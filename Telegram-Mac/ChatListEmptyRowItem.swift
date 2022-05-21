@@ -20,9 +20,9 @@ class ChatListEmptyRowItem: TableRowItem {
         return _stableId
     }
     let context: AccountContext
-    let filter: ChatListFilter?
-    let openFilterSettings: (ChatListFilter?)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, filter: ChatListFilter?, context: AccountContext, openFilterSettings: @escaping(ChatListFilter?)->Void) {
+    let filter: ChatListFilter
+    let openFilterSettings: (ChatListFilter)->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, filter: ChatListFilter, context: AccountContext, openFilterSettings: @escaping(ChatListFilter)->Void) {
         self.context = context
         self.filter = filter
         self._stableId = stableId
@@ -75,10 +75,10 @@ private class ChatListEmptyRowView : TableRowView {
         
         let animatedSticker: LocalAnimatedSticker
         
-        if let _ = item.filter {
-            animatedSticker = .folder_empty
-        } else {
+        if case .allChats = item.filter {
             animatedSticker = .chiken_born
+        } else {
+            animatedSticker = .folder_empty
         }
         sticker.update(with: animatedSticker.file, size: NSMakeSize(112, 112), context: item.context, parent: nil, table: item.table, parameters: animatedSticker.parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
         
@@ -101,7 +101,7 @@ private class ChatListEmptyRowView : TableRowView {
         
         
         let text: String
-        if let _ = item.filter {
+        if case .filter = item.filter {
             text = strings().chatListFilterEmpty
         } else {
             text = strings().chatListEmptyText
@@ -110,8 +110,8 @@ private class ChatListEmptyRowView : TableRowView {
         
         let attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.title), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .medium(.title), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.title), textColor: theme.colors.link), linkAttribute: { [weak item] contents in
             return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { [weak item] value in
-                if value == "filter" {
-                    item?.openFilterSettings(item?.filter)
+                if value == "filter", let filter = item?.filter {
+                    item?.openFilterSettings(filter)
                 }
                
             }))

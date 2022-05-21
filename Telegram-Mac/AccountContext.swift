@@ -598,6 +598,12 @@ final class AccountContext {
     var premiumLimits: PremiumLimitConfig {
         return PremiumLimitConfig(appConfiguration: appConfiguration)
     }
+    var premiumOrder:PremiumPromoOrder {
+        return PremiumPromoOrder(appConfiguration: appConfiguration)
+    }
+    var premiumBuyConfig: PremiumBuyConfig {
+        return PremiumBuyConfig(appConfiguration: appConfiguration)
+    }
     #endif
     
     func setTemporaryPwd(_ password: String) -> Void {

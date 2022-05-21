@@ -34,7 +34,7 @@ private func inputURLFormatterEntries(state: InputURLFormatterState) -> [InputDa
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().inputFormatterTextHeader), data: InputDataGeneralTextData(color: theme.colors.text, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().inputFormatterTextHeader), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
     entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_text"), equatable: nil, comparable: nil, item: { initialSize, stableId in
@@ -47,7 +47,7 @@ private func inputURLFormatterEntries(state: InputURLFormatterState) -> [InputDa
     sectionId += 1
     
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().inputFormatterURLHeader), data: InputDataGeneralTextData(color: theme.colors.text, viewType: .textTopItem)))
+    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().inputFormatterURLHeader), data: InputDataGeneralTextData(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
     entries.append(.input(sectionId: sectionId, index: index, value: .string(state.url), error: nil, identifier: _id_input_url, mode: .plain, data: InputDataRowData( viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().inputFormatterURLHeader, filter: { $0 }, limit: 10000))

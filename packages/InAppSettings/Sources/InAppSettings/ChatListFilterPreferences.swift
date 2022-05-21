@@ -17,10 +17,20 @@ public extension ChatListFilter {
    
 
     var isFullfilled: Bool {
-        return self.data.categories == .all && data.includePeers.peers.isEmpty && data.excludePeers.isEmpty && !data.excludeMuted && !data.excludeRead && data.excludeArchived
+        switch self {
+        case .allChats:
+            return true
+        case let .filter(_, _, _, data):
+            return data.categories == .all && data.includePeers.peers.isEmpty && data.excludePeers.isEmpty && !data.excludeMuted && !data.excludeRead && data.excludeArchived
+        }
     }
     var isEmpty: Bool {
-        return self.data.categories.isEmpty && data.includePeers.peers.isEmpty && data.excludePeers.isEmpty && !data.excludeMuted && !data.excludeRead
+        switch self {
+        case .allChats:
+            return false
+        case let .filter(_, _, _, data):
+            return data.categories.isEmpty && data.includePeers.peers.isEmpty && data.excludePeers.isEmpty && !data.excludeMuted && !data.excludeRead
+        }
     }
    
     
@@ -32,7 +42,7 @@ public extension ChatListFilter {
                 id = tempId
             }
         }
-        return ChatListFilter(id: id, title: "", emoticon: nil, data: ChatListFilterData(categories: [], excludeMuted: false, excludeRead: false, excludeArchived: false, includePeers: ChatListFilterIncludePeers(), excludePeers: []))
+        return .filter(id: id, title: "", emoticon: nil, data: ChatListFilterData(categories: [], excludeMuted: false, excludeRead: false, excludeArchived: false, includePeers: ChatListFilterIncludePeers(), excludePeers: []))
     }
 }
 
@@ -139,10 +149,15 @@ public func chatListFilterItems(engine: TelegramEngine, accountManager: AccountM
             var additionalPeerIds = Set<PeerId>()
             var additionalGroupIds = Set<PeerGroupId>()
             for filter in filters {
-                additionalPeerIds.formUnion(filter.data.includePeers.peers)
-                additionalPeerIds.formUnion(filter.data.excludePeers)
-                if !filter.data.excludeArchived {
-                    additionalGroupIds.insert(Namespaces.PeerGroup.archive)
+                inside: switch filter {
+                case .allChats:
+                    break inside
+                case let .filter(_, _, _, data):
+                    additionalPeerIds.formUnion(data.includePeers.peers)
+                    additionalPeerIds.formUnion(data.excludePeers)
+                    if !data.excludeArchived {
+                        additionalGroupIds.insert(Namespaces.PeerGroup.archive)
+                    }
                 }
             }
             if !additionalPeerIds.isEmpty {
@@ -203,50 +218,32 @@ public func chatListFilterItems(engine: TelegramEngine, accountManager: AccountM
                     let totalBadge = 0
                     
                     for filter in filters {
-                        var tags: [PeerSummaryCounterTags] = []
-                        if filter.data.categories.contains(.contacts) {
-                            tags.append(.contact)
-                        }
-                        if filter.data.categories.contains(.nonContacts) {
-                            tags.append(.nonContact)
-                        }
-                        if filter.data.categories.contains(.groups) {
-                            tags.append(.group)
-                        }
-                        if filter.data.categories.contains(.bots) {
-                            tags.append(.bot)
-                        }
-                        if filter.data.categories.contains(.channels) {
-                            tags.append(.channel)
-                        }
-                        
-                        var count = 0
-                        var hasUnmutedUnread = false
-                        if let totalState = totalStates[.root] {
-                            for tag in tags {
-                                if filter.data.excludeMuted {
-                                    if let value = totalState.filteredCounters[tag] {
-                                        if value.chatCount != 0 {
-                                            count += Int(value.chatCount)
-                                            hasUnmutedUnread = true
-                                        }
-                                    }
-                                } else {
-                                    if let value = totalState.absoluteCounters[tag] {
-                                        count += Int(value.chatCount)
-                                    }
-                                    if let value = totalState.filteredCounters[tag] {
-                                        if value.chatCount != 0 {
-                                            hasUnmutedUnread = true
-                                        }
-                                    }
-                                }
+                        switch filter {
+                        case .allChats:
+                            result.append((filter, 0, false))
+                        case let .filter(id, title, emoticon, data):
+                            var tags: [PeerSummaryCounterTags] = []
+                            if data.categories.contains(.contacts) {
+                                tags.append(.contact)
                             }
-                        }
-                        if !filter.data.excludeArchived {
-                            if let totalState = totalStates[Namespaces.PeerGroup.archive] {
+                            if data.categories.contains(.nonContacts) {
+                                tags.append(.nonContact)
+                            }
+                            if data.categories.contains(.groups) {
+                                tags.append(.group)
+                            }
+                            if data.categories.contains(.bots) {
+                                tags.append(.bot)
+                            }
+                            if data.categories.contains(.channels) {
+                                tags.append(.channel)
+                            }
+                            
+                            var count = 0
+                            var hasUnmutedUnread = false
+                            if let totalState = totalStates[.root] {
                                 for tag in tags {
-                                    if filter.data.excludeMuted {
+                                    if data.excludeMuted {
                                         if let value = totalState.filteredCounters[tag] {
                                             if value.chatCount != 0 {
                                                 count += Int(value.chatCount)
@@ -265,29 +262,52 @@ public func chatListFilterItems(engine: TelegramEngine, accountManager: AccountM
                                     }
                                 }
                             }
-                        }
-                        for peerId in filter.data.includePeers.peers {
-                            if let (tag, peerCount, hasUnmuted) = peerTagAndCount[peerId] {
-                                if !tags.contains(tag) {
-                                    if peerCount != 0 {
-                                        count += 1
-                                        if hasUnmuted {
-                                            hasUnmutedUnread = true
+                            if !data.excludeArchived {
+                                if let totalState = totalStates[Namespaces.PeerGroup.archive] {
+                                    for tag in tags {
+                                        if data.excludeMuted {
+                                            if let value = totalState.filteredCounters[tag] {
+                                                if value.chatCount != 0 {
+                                                    count += Int(value.chatCount)
+                                                    hasUnmutedUnread = true
+                                                }
+                                            }
+                                        } else {
+                                            if let value = totalState.absoluteCounters[tag] {
+                                                count += Int(value.chatCount)
+                                            }
+                                            if let value = totalState.filteredCounters[tag] {
+                                                if value.chatCount != 0 {
+                                                    hasUnmutedUnread = true
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
-                        for peerId in filter.data.excludePeers {
-                            if let (tag, peerCount, _) = peerTagAndCount[peerId] {
-                                if tags.contains(tag) {
-                                    if peerCount != 0 {
-                                        count -= 1
+                            for peerId in data.includePeers.peers {
+                                if let (tag, peerCount, hasUnmuted) = peerTagAndCount[peerId] {
+                                    if !tags.contains(tag) {
+                                        if peerCount != 0 {
+                                            count += 1
+                                            if hasUnmuted {
+                                                hasUnmutedUnread = true
+                                            }
+                                        }
                                     }
                                 }
                             }
+                            for peerId in data.excludePeers {
+                                if let (tag, peerCount, _) = peerTagAndCount[peerId] {
+                                    if tags.contains(tag) {
+                                        if peerCount != 0 {
+                                            count -= 1
+                                        }
+                                    }
+                                }
+                            }
+                            result.append((filter, count, hasUnmutedUnread))
                         }
-                        result.append((filter, count, hasUnmutedUnread))
                     }
                     
                     return (totalBadge, result)

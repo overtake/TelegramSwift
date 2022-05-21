@@ -617,11 +617,6 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         }, itemImage: MenuAnimation.menu_add_gif.value))
                     }
                 }
-                if file.isVoice, context.isPremium {
-                    thirdBlock.append(ContextMenuItem("Transcribe Audio", handler: {
-                        data.chatInteraction.transcribeAudio(messageId)
-                    }, itemImage: MenuAnimation.menu_translate.value))
-                }
                 if file.isSticker, let saved = data.isStickerSaved {
                     let image = saved ? MenuAnimation.menu_remove_from_favorites.value : MenuAnimation.menu_add_to_favorites.value
                     thirdBlock.append(ContextMenuItem(!saved ? strings().chatContextAddFavoriteSticker : strings().chatContextRemoveFavoriteSticker, handler: {
