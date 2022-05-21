@@ -809,6 +809,14 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         })
         
         afterComplete(true)
+    case let .premiumOffer(_, ref, context):
+     
+        if context.isPremium {
+            showModalText(for: context.window, text: strings().premiumOffsetAlreadyHave)
+        } else {
+            showModal(with: PremiumBoardingController(context: context, source: .deeplink(ref)), for: context.window)
+        }
+        afterComplete(true)
     }
     
 }
@@ -941,6 +949,7 @@ enum inAppLink {
     case settings(link: String, context: AccountContext, section: InAppSettingsSection)
     case joinGroupCall(link: String, context: AccountContext, peerId: PeerId, call: CachedChannelData.ActiveCall)
     case invoice(link: String, context: AccountContext, slug: String)
+    case premiumOffer(link: String, ref: String?, context: AccountContext)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -988,6 +997,8 @@ enum inAppLink {
             return link
         case let .invoice(link, _, _):
             return link
+        case let .premiumOffer(link, _, _):
+            return link
         case .nothing:
             return ""
         case .logout:
@@ -1000,7 +1011,7 @@ let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
 let actions_me:[String] = ["joinchat/","addstickers/","confirmphone","socks", "proxy", "setlanguage", "bg", "addtheme/","invoice/"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer"]
 
 let ton_scheme:String = "ton://"
 
@@ -1022,6 +1033,8 @@ private let keyURLStartGroup = "startgroup";
 private let keyURLSecret = "secret";
 private let keyURLproxy = "proxy";
 private let keyURLLivestream = "livestream";
+private let keyURLRef = "ref";
+private let keyURLSlug = "slug";
 
 private let keyURLHash = "hash";
 
@@ -1441,7 +1454,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         return .applyLocalization(link: urlString, context: context, value: value)
                     }
                 case known_scheme[9]:
-                    if let context = context, let value = vars["slug"] {
+                    if let context = context, let value = vars[keyURLSlug] {
                         
                         var blur: Bool = false
                         var intensity: Int32? = 80
@@ -1518,7 +1531,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         }
                     }
                 case known_scheme[11]:
-                    if let context = context, let value = vars["slug"] {
+                    if let context = context, let value = vars[keyURLSlug] {
                         return .theme(link: urlString, context: context, name: value)
                     }
                 case known_scheme[12]:
@@ -1529,8 +1542,12 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         }
                     }
                 case known_scheme[13]:
-                    if let context = context, let value = vars["slug"] {
+                    if let context = context, let value = vars[keyURLSlug] {
                         return .invoice(link: urlString, context: context, slug: value)
+                    }
+                case known_scheme[14]:
+                    if let context = context {
+                        return .premiumOffer(link: urlString, ref: vars[keyURLRef], context: context)
                     }
                 default:
                     break

@@ -581,6 +581,33 @@ final class PremiumLimitController : ModalViewController {
         case channels
         case uploadFile(Int?)
         case caption(Int)
+        
+        var eventSource: PremiumLogEventsSource {
+            switch self {
+            case .pin:
+                return .double_limits(.dialog_pinned)
+            case .pinInArchive:
+                return .double_limits(.dialogs_folder_pinned)
+            case .savedGifs:
+                return .double_limits(.saved_gifs)
+            case .folders:
+                return .double_limits(.dialog_filters)
+            case .chatInFolders:
+                return .double_limits(.dialog_filters_chats)
+            case .pinInFolders:
+                return .double_limits(.dialog_filters_pinned)
+            case .faveStickers:
+                return .double_limits(.stickers_faved)
+            case .publicLink:
+                return .double_limits(.channels_public)
+            case .channels:
+                return .double_limits(.channels)
+            case .uploadFile:
+                return .more_upload
+            case .caption:
+                return .double_limits(.caption_length)
+            }
+        }
     }
     
     struct Counts : Equatable {
@@ -621,14 +648,15 @@ final class PremiumLimitController : ModalViewController {
 
         
         self.modal?.resize(with:size, animated: false)
-        
-
-        
+                
         self.genericView.close = { [weak self] in
             self?.close()
         }
+        
+        let source = type.eventSource
+        
         self.genericView.premium = { [weak self] in
-            showModal(with: PremiumBoardingController(context: context), for: context.window)
+            showModal(with: PremiumBoardingController(context: context, source: source), for: context.window)
             self?.close()
         }
         

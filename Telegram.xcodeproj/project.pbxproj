@@ -455,6 +455,11 @@
 		27D696FA274F8462008A723E /* InAppSettings in Frameworks */ = {isa = PBXBuildFile; productRef = 27D696F9274F8462008A723E /* InAppSettings */; };
 		27D9130728323A74007CF40F /* RangeSet in Frameworks */ = {isa = PBXBuildFile; productRef = 27D9130628323A74007CF40F /* RangeSet */; };
 		27D9130E2833BE60007CF40F /* PremiumAboutRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D9130D2833BE60007CF40F /* PremiumAboutRowItem.swift */; };
+		27D9131028353E53007CF40F /* InAppPurchaseManager in Frameworks */ = {isa = PBXBuildFile; productRef = 27D9130F28353E53007CF40F /* InAppPurchaseManager */; };
+		27D9131128353E58007CF40F /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27D913092833A1C9007CF40F /* StoreKit.framework */; platformFilter = maccatalyst; };
+		27D91314283646CA007CF40F /* text_to_voice.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27D91312283646CA007CF40F /* text_to_voice.tgs */; };
+		27D91315283646CA007CF40F /* voice_to_text.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27D91313283646CA007CF40F /* voice_to_text.tgs */; };
+		27D9131728364F1F007CF40F /* VoiceTranscriptionControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D9131628364F1F007CF40F /* VoiceTranscriptionControl.swift */; };
 		27DBE4AF25B0424100FCEE2A /* InviteLinksController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DBE4AE25B0424100FCEE2A /* InviteLinksController.swift */; };
 		27DCF4BD267C9D680019EC49 /* AudioCommandCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DCF4BC267C9D680019EC49 /* AudioCommandCenter.swift */; };
 		27DF650726AADB9E000753AC /* StringFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27DF650626AADB9E000753AC /* StringFormat.swift */; };
@@ -1709,6 +1714,9 @@
 		27D913082833A1B0007CF40F /* InAppPurchaseManager */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = InAppPurchaseManager; path = packages/InAppPurchaseManager; sourceTree = "<group>"; };
 		27D913092833A1C9007CF40F /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		27D9130D2833BE60007CF40F /* PremiumAboutRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumAboutRowItem.swift; sourceTree = "<group>"; };
+		27D91312283646CA007CF40F /* text_to_voice.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = text_to_voice.tgs; sourceTree = "<group>"; };
+		27D91313283646CA007CF40F /* voice_to_text.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = voice_to_text.tgs; sourceTree = "<group>"; };
+		27D9131628364F1F007CF40F /* VoiceTranscriptionControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceTranscriptionControl.swift; sourceTree = "<group>"; };
 		27DBE4AE25B0424100FCEE2A /* InviteLinksController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteLinksController.swift; sourceTree = "<group>"; };
 		27DCF4BC267C9D680019EC49 /* AudioCommandCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCommandCenter.swift; sourceTree = "<group>"; };
 		27DF650626AADB9E000753AC /* StringFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringFormat.swift; sourceTree = "<group>"; };
@@ -2613,6 +2621,7 @@
 				276651DC273D574900671FB4 /* ApiCredentials in Frameworks */,
 				C259ED1E1DB956C1008E6712 /* QuartzCore.framework in Frameworks */,
 				C2FD33FB1E6C169C008D13D4 /* Security.framework in Frameworks */,
+				27D9131028353E53007CF40F /* InAppPurchaseManager in Frameworks */,
 				27B8E7C327425053001B8DF7 /* HackUtils in Frameworks */,
 				9F18908F2237E95400665EF5 /* VideoToolbox.framework in Frameworks */,
 				279E8ECE27425CBD000E1BD5 /* InAppVideoServices in Frameworks */,
@@ -2658,6 +2667,7 @@
 				2796FF0D274249B000DA653C /* RingBuffer in Frameworks */,
 				C250B0331DB788B3004E9FBE /* Foundation.framework in Frameworks */,
 				27D43DB42791779C006968A6 /* libmac_framework_objc_static.a in Frameworks */,
+				27D9131128353E58007CF40F /* StoreKit.framework in Frameworks */,
 				2796FEF827423F5300DA653C /* TGPassportMRZ in Frameworks */,
 				27D43DAC27917726006968A6 /* libwebpmux.a in Frameworks */,
 				278B89A62791939700ECF71C /* libwebp in Frameworks */,
@@ -4881,6 +4891,7 @@
 				C253E2251DE335C10022A29F /* ChatVoiceContentView.swift */,
 				C2DF47DF1DE846AB003AA6C0 /* ChatAudioContentView.swift */,
 				C2DF47E11DE846B8003AA6C0 /* ChatMusicContentView.swift */,
+				27D9131628364F1F007CF40F /* VoiceTranscriptionControl.swift */,
 			);
 			name = audio;
 			sourceTree = "<group>";
@@ -5137,6 +5148,8 @@
 			isa = PBXGroup;
 			children = (
 				27CE375C276095DA007E6F1B /* menu */,
+				27D91312283646CA007CF40F /* text_to_voice.tgs */,
+				27D91313283646CA007CF40F /* voice_to_text.tgs */,
 				2755490D2747C24B0098A3CD /* device_android.tgs */,
 				275549052747C2380098A3CD /* device_chrome.tgs */,
 				275549092747C2430098A3CD /* device_edge.tgs */,
@@ -5549,6 +5562,7 @@
 				27CEA34A27AD9CFA00472CB1 /* TelegramVoip */,
 				27C2B1A527C3CF13004BC87B /* FetchManager */,
 				27D9130628323A74007CF40F /* RangeSet */,
+				27D9130F28353E53007CF40F /* InAppPurchaseManager */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -5567,7 +5581,6 @@
 				TargetAttributes = {
 					C232EA901E1D07E700C4D38C = {
 						CreatedOnToolsVersion = 8.2;
-						DevelopmentTeam = N8RBWJ5X6J;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.Mac = {
@@ -5580,7 +5593,6 @@
 					};
 					D098C7141D7E175A007784E4 = {
 						CreatedOnToolsVersion = 8.0;
-						DevelopmentTeam = N8RBWJ5X6J;
 						LastSwiftMigration = 0800;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
@@ -5711,6 +5723,7 @@
 				27803BFD27A3E944007B0FA9 /* menu_folder_bot.tgs in Resources */,
 				D0830FC424127473006198E7 /* new_folder.tgs in Resources */,
 				2773A56225FA4E2300AB45E9 /* voice_chat_raise_hand_5.tgs in Resources */,
+				27D91315283646CA007CF40F /* voice_to_text.tgs in Resources */,
 				27803BEF27A3E944007B0FA9 /* menu_folder_like.tgs in Resources */,
 				27CB177427648DB000DD25E0 /* menu_calendar.tgs in Resources */,
 				A7029EFA240E3CDA00A89ABD /* folder.tgs in Resources */,
@@ -5807,6 +5820,7 @@
 				27336743276247820027441E /* menu_copyright.tgs in Resources */,
 				C27AAFE61DE9D2EE009B9629 /* PhoneCountries.txt in Resources */,
 				277C208927A2858D0070B3BF /* menu_speaker.tgs in Resources */,
+				27D91314283646CA007CF40F /* text_to_voice.tgs in Resources */,
 				2773A54425FA324B00AB45E9 /* voice_chat_unmute.tgs in Resources */,
 				C2DDA0501EC0C19A003531BB /* opening.m4a in Resources */,
 				2763A168261DF60A00C12762 /* voice_chat_cancel_reminder_to_raise_hand.tgs in Resources */,
@@ -6431,6 +6445,7 @@
 				C2203EA21DDE2AB8001E6AB6 /* ChatSelectText.swift in Sources */,
 				9F4EEF8021D3C76E002C3B33 /* InstantPageContentView.swift in Sources */,
 				9FFAE504205A916B000C028E /* VideoPlayerProxy.swift in Sources */,
+				27D9131728364F1F007CF40F /* VoiceTranscriptionControl.swift in Sources */,
 				C2CBCAC01D81528700142EC0 /* System.swift in Sources */,
 				A7E831F82551A85F0095A167 /* ColdStartPasslockController.swift in Sources */,
 				C221ED5E1EA6B36600471C65 /* ChatStorageManagmentModalController.swift in Sources */,
@@ -7006,7 +7021,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 209499;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = N8RBWJ5X6J;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = "";
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -7149,7 +7164,7 @@
 				CURRENT_PROJECT_VERSION = 220805;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = N8RBWJ5X6J;
+				DEVELOPMENT_TEAM = 6N38VWS5BX;
 				ENABLE_BITCODE = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -7522,6 +7537,10 @@
 		27D9130628323A74007CF40F /* RangeSet */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = RangeSet;
+		};
+		27D9130F28353E53007CF40F /* InAppPurchaseManager */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = InAppPurchaseManager;
 		};
 		27E5C3BC2739761300C52BA0 /* MurMurHash32 */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -9,7 +9,25 @@
 import Foundation
 import TelegramCore
 
+final class PremiumBuyConfig {
+    let botUsername: String?
+    let invoiceSlug: String?
+    init(appConfiguration: AppConfiguration) {
+        self.botUsername = appConfiguration.data?["premium_bot_username"] as? String
+        self.invoiceSlug = appConfiguration.data?["premium_invoice_slug"] as? String
+    }
+}
 
+final class PremiumPromoOrder {
+    private(set) var premiumValues:[PremiumValue] = []
+    init(appConfiguration: AppConfiguration) {
+        if let data = appConfiguration.data {
+            if let order = data["premium_promo_order"] as? [String] {
+                premiumValues = order.compactMap { PremiumValue(rawValue: $0) }
+            }
+        }
+    }
+}
 
 final class PremiumLimitConfig {
     let channels_limit_default: Int

@@ -1329,7 +1329,9 @@ class ChatRowItem: TableRowItem {
         if let value = _reactionsLayout {
             return value
         } else if let message = self.messages.first {
-            
+            if chatInteraction.isLogInteraction {
+                return nil
+            }
             let reactions = message.effectiveReactions(context.peerId)
             
             let chatInteraction = self.chatInteraction

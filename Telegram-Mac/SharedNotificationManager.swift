@@ -405,9 +405,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                     }
                                 }
                             } else {
-                                return getNotificationToneFile(account: account, sound: values.2.tone) |> map { soundPath in
-                                    return (values.0, values.1, values.2, values.3, peer, soundPath)
-                                }
+                                return .complete()
                             }
                         } |> switchToLatest
                     }

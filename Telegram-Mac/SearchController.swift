@@ -373,26 +373,30 @@ private func peerContextMenuItems(peer: Peer, pinnedItems:[PinnedItemId], argume
             var submenu: [ContextMenuItem] = []
             if peerId.namespace != Namespaces.Peer.SecretChat {
                 for item in filters.list {
-                    submenu.append(ContextMenuItem(item.title, handler: {
-                        _ = arguments.context.engine.peers.updateChatListFiltersInteractively({ list in
-                            var list = list
-                            for (i, folder) in list.enumerated() {
-                                var folder = folder
-                                if folder.id == item.id {
-                                    if item.data.includePeers.peers.contains(peerId) {
-                                        var peers = folder.data.includePeers.peers
-                                        peers.removeAll(where: { $0 == peerId })
-                                        folder.data.includePeers.setPeers(peers)
-                                    } else {
-                                        folder.data.includePeers.setPeers(folder.data.includePeers.peers + [peerId])
+                    loop: switch item {
+                    case .allChats:
+                        break loop
+                    case let .filter(_, _, _, data):
+                        submenu.append(ContextMenuItem(item.title, handler: {
+                            _ = arguments.context.engine.peers.updateChatListFiltersInteractively({ list in
+                                var list = list
+                                for (i, folder) in list.enumerated() {
+                                    if folder.id == item.id, var folderData = folder.data {
+                                        if data.includePeers.peers.contains(peerId) {
+                                            var peers = folderData.includePeers.peers
+                                            peers.removeAll(where: { $0 == peerId })
+                                            folderData.includePeers.setPeers(peers)
+                                        } else {
+                                            folderData.includePeers.setPeers(folderData.includePeers.peers + [peerId])
+                                        }
+                                        list[i] = list[i].withUpdatedData(folderData)
                                     }
-                                    list[i] = folder
-                                    
                                 }
-                            }
-                            return list
-                        }).start()
-                    }, state: item.data.includePeers.peers.contains(peerId) ? NSControl.StateValue.on : nil))
+                                return list
+                            }).start()
+                        }, state: data.includePeers.peers.contains(peerId) ? NSControl.StateValue.on : nil))
+                    }
+                    
                 }
             }
             

@@ -14,14 +14,14 @@ import SwiftSignalKit
 import InAppSettings
 
 class ChatListRevealItem: TableStickItem {
-    fileprivate let action:((ChatListFilter?)->Void)?
+    fileprivate let action:((ChatListFilter)->Void)?
     fileprivate let context: AccountContext?
     fileprivate let tabs: [ChatListFilter]
-    fileprivate let selected: ChatListFilter?
+    fileprivate let selected: ChatListFilter
     fileprivate let openSettings: (()->Void)?
     fileprivate let counters: ChatListFilterBadges
-    fileprivate let _menuItems: ((ChatListFilter?)->[ContextMenuItem])?
-    init(_ initialSize: NSSize, context: AccountContext, tabs: [ChatListFilter], selected: ChatListFilter?, counters: ChatListFilterBadges, action: ((ChatListFilter?)->Void)? = nil, openSettings: (()->Void)? = nil, menuItems: ((ChatListFilter?)->[ContextMenuItem])? = nil) {
+    fileprivate let _menuItems: ((ChatListFilter)->[ContextMenuItem])?
+    init(_ initialSize: NSSize, context: AccountContext, tabs: [ChatListFilter], selected: ChatListFilter, counters: ChatListFilterBadges, action: ((ChatListFilter)->Void)? = nil, openSettings: (()->Void)? = nil, menuItems: ((ChatListFilter)->[ContextMenuItem])? = nil) {
         self.action = action
         self.context = context
         self.tabs = tabs
@@ -36,7 +36,7 @@ class ChatListRevealItem: TableStickItem {
         self.action = nil
         self.context = nil
         self.tabs = []
-        self.selected = nil
+        self.selected = .allChats
         self.openSettings = nil
         self._menuItems = nil
         self.counters = ChatListFilterBadges(total: 0, filters: [])
@@ -47,7 +47,7 @@ class ChatListRevealItem: TableStickItem {
         return true
     }
     
-    func menuItems(for item: ChatListFilter?) -> [ContextMenuItem] {
+    func menuItems(for item: ChatListFilter) -> [ContextMenuItem] {
         return self._menuItems?(item) ?? []
     }
     
@@ -190,8 +190,7 @@ final class ChatListRevealView : TableStickView {
         let segmentTheme = ScrollableSegmentTheme(background: presentation.colors.background, border: presentation.colors.border, selector: presentation.colors.accent, inactiveText: presentation.colors.grayText, activeText: presentation.colors.accent, textFont: .normal(.title))
         var index: Int = 0
         let insets = NSEdgeInsets(left: 10, right: 10, bottom: 6)
-        var items:[ScrollableSegmentItem] = [.init(title: strings().chatListFilterAllChats, index: 0, uniqueId: -1, selected: item.selected == nil, insets: insets, icon: generateIcon(nil), theme: segmentTheme, equatable: UIEquatable(strings().chatListFilterAllChats))]
-        index += 1
+        var items:[ScrollableSegmentItem] = []
         for tab in item.tabs {
             let unreadCount = item.counters.count(for: tab)
             let icon: CGImage? = generateIcon(tab)
@@ -200,39 +199,42 @@ final class ChatListRevealView : TableStickView {
             items.append(ScrollableSegmentItem(title: title, index: index, uniqueId: tab.id, selected: item.selected == tab, insets: insets, icon: icon, theme: segmentTheme, equatable: UIEquatable(unreadCount)))
             index += 1
         }
-//        if let _ = item.openSettings {
-//            items.append(.init(title: "", index: index, uniqueId: -2, selected: false, insets: NSEdgeInsets(left: 5, right: 10, bottom: 6), icon: theme.icons.chat_filter_add, theme: segmentTheme, equatable: UIEquatable(0)))
-//            index += 1
-//        }
-//       
-        
         
         segmentView.updateItems(items, animated: animated)
-        
-        segmentView.resortRange = NSMakeRange(1, items.count - 1)
+        let range: NSRange
+        if context.isPremium {
+            range = NSMakeRange(0, items.count)
+        } else {
+            range = NSMakeRange(1, items.count - 1)
+        }
+        segmentView.resortRange = range
         segmentView.resortHandler = { from, to in
             _ = context.engine.peers.updateChatListFiltersInteractively({ state in
                 var state = state
-                state.move(at: from - 1, to: to - 1)
+                if context.isPremium {
+                    state.move(at: from, to: to)
+                } else {
+                    state.move(at: from - 1, to: to - 1)
+                }
                 return state
             }).start()
         }
         segmentView.didChangeSelectedItem = { [weak item] selected in
             if let item = item {
                 if selected.uniqueId == -1 {
-                    item.action?(nil)
+                    item.action?(.allChats)
                 } else if selected.uniqueId == -2 {
                     item.openSettings?()
                 } else {
-                    item.action?(item.tabs[selected.index - 1])
+                    item.action?(item.tabs[selected.index])
                 }
             }
         }
         segmentView.menuItems = { [weak item] selected in
             if let item = item, selected.uniqueId != -1 && selected.uniqueId != -2 {
-                return item.menuItems(for: item.tabs[selected.index - 1])
+                return item.menuItems(for: item.tabs[selected.index])
             } else if let item = item, selected.uniqueId == -1 {
-                return item.menuItems(for: nil)
+                return item.menuItems(for: .allChats)
             } else {
                 return []
             }

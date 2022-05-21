@@ -62,6 +62,13 @@ final class PaymentWebInteractionController: ModalViewController, WKNavigationDe
         }
     }
     
+    override var canBecomeResponder: Bool {
+        return true
+    }
+    
+    override func firstResponder() -> NSResponder? {
+        return self.view
+    }
 
     override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
         return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in

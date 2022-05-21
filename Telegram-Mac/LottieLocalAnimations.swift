@@ -102,6 +102,8 @@ enum LocalAnimatedSticker : String {
     
     case change_sim
     
+    case text_to_voice
+    case voice_to_text
     
     case menu_add_to_folder
     case menu_archive
@@ -230,6 +232,7 @@ enum LocalAnimatedSticker : String {
     case menu_note_slash
     case menu_smile
     case menu_monogram
+    
     
     
     var file: TelegramMediaFile {

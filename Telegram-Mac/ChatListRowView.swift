@@ -906,7 +906,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  }
              }
              
-             if let _ = item.mentionsCount {
+             if let _ = item.mentionsCount, item.context.layout != .minimisize {
                  
                  let highlighted = item.isSelected && item.context.layout != .single
                  let icon: CGImage
@@ -951,7 +951,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  }
              }
              
-             if let _ = item.reactionsCount {
+             if let _ = item.reactionsCount, item.context.layout != .minimisize {
                  
                  let highlighted = item.isSelected && item.context.layout != .single
                  let icon: CGImage
@@ -1674,6 +1674,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         
         photoVideoView?.frame = photo.frame
 
+        animatedView?.frame = bounds
         
         expandView?.frame = NSMakeRect(0, item.isCollapsed ? 0 : item.height, frame.width - .borderSize, frame.height)
         

@@ -216,18 +216,18 @@ final class ReactionCarouselView: View {
         addSubview(effectViews)
         effectViews.isEventLess = true
         
-        NotificationCenter.default.addObserver(forName: NSScrollView.didEndLiveScrollNotification, object: scrollView, queue: nil, using: { [weak self] notification in
-            self?.scrollDidEndLiveScrolling()
-        })
-        
-        NotificationCenter.default.addObserver(forName: NSScrollView.willStartLiveScrollNotification, object: scrollView, queue: nil, using: { [weak self] notification in
-            self?.scrollWillStartLiveScrolling()
-        })
-        
-        
-        NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: scrollView.clipView, queue: OperationQueue.main, using: { [weak self] notification  in
-            self?.scrollViewDidScroll()
-        })
+//        NotificationCenter.default.addObserver(forName: NSScrollView.didEndLiveScrollNotification, object: scrollView, queue: nil, using: { [weak self] notification in
+//            self?.scrollDidEndLiveScrolling()
+//        })
+//        
+//        NotificationCenter.default.addObserver(forName: NSScrollView.willStartLiveScrollNotification, object: scrollView, queue: nil, using: { [weak self] notification in
+//            self?.scrollWillStartLiveScrolling()
+//        })
+//        
+//        
+//        NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: scrollView.clipView, queue: OperationQueue.main, using: { [weak self] notification  in
+//            self?.scrollViewDidScroll()
+//        })
         self.setup()
     }
     
@@ -429,21 +429,6 @@ final class ReactionCarouselView: View {
         }
     }
     
-    func scrollViewWillEndDragging(withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
-        guard let (startContentOffset, _) = self.scrollStartPosition, abs(velocity.x) > 0.0 else {
-            return
-        }
-        
-        let delta = 1.0 / CGFloat(self.itemViews.count)
-        let scrollDelta = targetContentOffset.pointee.x - startContentOffset
-        let positionDelta = scrollDelta * -0.001
-        let positionCounts = round(positionDelta / delta)
-        let adjustedPositionDelta = delta * positionCounts
-        let adjustedScrollDelta = adjustedPositionDelta * -1000.0
-        
-        targetContentOffset.pointee = CGPoint(x: startContentOffset + adjustedScrollDelta, y: 0.0)
-    }
-    
     func scrollDidEndLiveScrolling() {
         self.resetScrollPosition()
         
@@ -501,6 +486,15 @@ final class ReactionCarouselView: View {
             
             let itemFrame = CGRect(origin: CGPoint(x: size.width * 0.5 + point.x * areaSize.width * 0.5 - itemSize.width * 0.5, y: size.height * 0.5 + point.y * areaSize.height * 0.5 - itemSize.height * 0.5), size: itemSize)
             itemView.frame = itemFrame
+            
+//            let value = 1.0 - distance * 0.45
+//
+//            var fr = CATransform3DIdentity
+//            fr = CATransform3DTranslate(fr, itemFrame.width / 2, itemFrame.height / 2, 0)
+//            fr = CATransform3DScale(fr, value, value, 1)
+//            fr = CATransform3DTranslate(fr, -(itemFrame.width / 2), -(itemFrame.height / 2), 0)
+//            itemView.layer?.transform = fr
+            
             transition.updateFrame(view: itemView, frame: itemFrame)
             for view in effectViews.subviews {
                 if let view = view as? EffectView {
@@ -519,4 +513,3 @@ final class ReactionCarouselView: View {
 
 //CGRect(origin: CGPoint(), size: itemFrame.size)
 //            itemNode.updateLayout(size: itemFrame.size, isExpanded: false, largeExpanded: false, isPreviewing: false, transition: transition)
-//            transition.updateTransformScale(node: itemNode, scale: 1.0 - distance * 0.45)

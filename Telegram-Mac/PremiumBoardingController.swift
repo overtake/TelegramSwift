@@ -9,6 +9,109 @@
 import Cocoa
 import TGUIKit
 import SwiftSignalKit
+import TelegramCore
+
+/*
+ type = 'premium.promo_screen_show', data  = {'premium_promo_order': ['double_limits',..., на случай рассинхрона с appConfig], 'source': 'settings' (а также предлагается использовать одно из значений в appConfig.premium_promo_order, когда например юзер упирается в лимиты, или тапнул по иконке в рекламе)}
+ type = 'premium.promo_screen_tap', data = {'item': 'no_ads'} (юзер нажал на соответствующий пункт в списке)
+ type = 'premium.promo_screen_accept' (нажали на главную кнопку в promo-экране)
+ type = 'premium.promo_screen_fail' (в сторных версиях, юзер попытался оплатить, но не получилось, если такое умеем собирать)
+ */
+
+enum PremiumLogEventsSource {
+    
+    enum Subsource : String {
+        case channels
+        case channels_public
+        case saved_gifs
+        case stickers_faved
+        case dialog_filters
+        case dialog_filters_chats
+        case dialog_filters_pinned
+        case dialog_pinned
+        case caption_length
+        case upload_max_fileparts
+        case dialogs_folder_pinned
+    }
+    
+    case deeplink(String?)
+    case settings
+    case double_limits(Subsource)
+    case more_upload
+    case unique_reactions
+    case premium_stickers
+    var value: String {
+        switch self {
+        case let .deeplink(ref):
+            if let ref = ref {
+                return "deeplink_" + ref
+            } else {
+                return "deeplink"
+            }
+        case .settings:
+            return "settings"
+        case let .double_limits(sub):
+            return "double_limits__\(sub)"
+        case .more_upload:
+            return "more_upload"
+        case .unique_reactions:
+            return "unique_reactions"
+        case .premium_stickers:
+            return "premium_stickers"
+        }
+    }
+    var subsource: String? {
+        switch self {
+        case let .double_limits(sub):
+            return sub.rawValue
+        default:
+            return nil
+        }
+    }
+    
+}
+
+enum PremiumLogEvents  {
+    case promo_screen_show(PremiumLogEventsSource)
+    case promo_screen_tap(PremiumValue)
+    case promo_screen_accept
+    case promo_screen_fail
+    
+    var value: String {
+        switch self {
+        case .promo_screen_show:
+            return "promo_screen_show"
+        case .promo_screen_tap:
+            return "promo_screen_tap"
+        case .promo_screen_accept:
+            return "promo_screen_accept"
+        case .promo_screen_fail:
+            return "promo_screen_fail"
+        }
+    }
+    
+    
+    func send(context: AccountContext) {
+
+        let type = "premium.\(self.value)"
+        switch self {
+        case let .promo_screen_show(source):
+            addAppLogEvent(postbox: context.account.postbox, time: Date().timeIntervalSince1970, type: type, peerId: context.peerId, data: [
+                "premium_promo_order": context.premiumOrder.premiumValues.map { $0.rawValue },
+                "source":source.value
+            ])
+        case let .promo_screen_tap(value):
+            addAppLogEvent(postbox: context.account.postbox, time: Date().timeIntervalSince1970, type: type, peerId: context.peerId, data: [
+                "item":value.rawValue
+            ])
+        case .promo_screen_fail, .promo_screen_accept:
+            addAppLogEvent(postbox: context.account.postbox, time: Date().timeIntervalSince1970, type: type, peerId: context.peerId, data: [:])
+        }
+
+    }
+}
+
+
 
 private final class Arguments {
     let context: AccountContext
@@ -21,39 +124,52 @@ private final class Arguments {
     }
 }
 
+/*
+ 'double_limits',
+       'more_upload',
+       'faster_download',
+       'voice_to_text',
+       'no_ads',
+       'unique_reactions',
+       'premium_stickers',
+       'advanced_chat_management',
+       'profile_badge',
+       'animated_userpics',
+ */
+
 enum PremiumValue : String {
     case limits
-    case fileSize
-    case downloadSpeed
-    case voice
-    case noAds
-    case uniqueReactions
-    case premiumStickers
-    case chats
-    case profileBadge
-    case animatedProfilePicture
+    case more_upload
+    case faster_download
+    case voice_to_text
+    case no_ads
+    case unique_reactions
+    case premium_stickers
+    case advanced_chat_management
+    case profile_badge
+    case animated_userpics
     
     var gradient: [NSColor] {
         switch self {
         case .limits:
             return [NSColor(rgb: 0xF17D2F)]
-        case .fileSize:
+        case .more_upload:
             return [NSColor(rgb: 0xE9574A)]
-        case .downloadSpeed:
+        case .faster_download:
             return [NSColor(rgb: 0xD84C7D)]
-        case .voice:
+        case .voice_to_text:
             return [NSColor(rgb: 0xc14998)]
-        case .noAds:
+        case .no_ads:
             return [NSColor(rgb: 0xC258B7)]
-        case .uniqueReactions:
+        case .unique_reactions:
             return [NSColor(rgb: 0xA868FC)]
-        case .premiumStickers:
+        case .premium_stickers:
             return [NSColor(rgb: 0x9279FF)]
-        case .chats:
+        case .advanced_chat_management:
             return [NSColor(rgb: 0x7561eb)]
-        case .profileBadge:
+        case .profile_badge:
             return [NSColor(rgb: 0x758EFF)]
-        case .animatedProfilePicture:
+        case .animated_userpics:
             return [NSColor(rgb: 0x59A4FF)]
         }
     }
@@ -101,23 +217,23 @@ enum PremiumValue : String {
         switch self {
         case .limits:
             return NSImage(named: "Icon_Premium_Boarding_X2")!.precomposed(theme.colors.accent)
-        case .fileSize:
+        case .more_upload:
             return NSImage(named: "Icon_Premium_Boarding_Files")!.precomposed(theme.colors.accent)
-        case .downloadSpeed:
+        case .faster_download:
             return NSImage(named: "Icon_Premium_Boarding_Speed")!.precomposed(theme.colors.accent)
-        case .voice:
+        case .voice_to_text:
             return NSImage(named: "Icon_Premium_Boarding_Voice")!.precomposed(theme.colors.accent)
-        case .noAds:
+        case .no_ads:
             return NSImage(named: "Icon_Premium_Boarding_Ads")!.precomposed(theme.colors.accent)
-        case .uniqueReactions:
+        case .unique_reactions:
             return NSImage(named: "Icon_Premium_Boarding_Reactions")!.precomposed(theme.colors.accent)
-        case .premiumStickers:
+        case .premium_stickers:
             return NSImage(named: "Icon_Premium_Boarding_Stickers")!.precomposed(theme.colors.accent)
-        case .chats:
+        case .advanced_chat_management:
             return NSImage(named: "Icon_Premium_Boarding_Chats")!.precomposed(theme.colors.accent)
-        case .profileBadge:
+        case .profile_badge:
             return NSImage(named: "Icon_Premium_Boarding_Badge")!.precomposed(theme.colors.accent)
-        case .animatedProfilePicture:
+        case .animated_userpics:
             return NSImage(named: "Icon_Premium_Boarding_Profile")!.precomposed(theme.colors.accent)
         }
     }
@@ -126,23 +242,23 @@ enum PremiumValue : String {
         switch self {
         case .limits:
             return strings().premiumBoardingDoubleTitle
-        case .fileSize:
+        case .more_upload:
             return strings().premiumBoardingFileSizeTitle(String.prettySized(with: limits.upload_max_fileparts_premium, afterDot: 0, round: true))
-        case .downloadSpeed:
+        case .faster_download:
             return strings().premiumBoardingDownloadTitle
-        case .voice:
+        case .voice_to_text:
             return strings().premiumBoardingVoiceTitle
-        case .noAds:
+        case .no_ads:
             return strings().premiumBoardingNoAdsTitle
-        case .uniqueReactions:
+        case .unique_reactions:
             return strings().premiumBoardingReactionsTitle
-        case .premiumStickers:
+        case .premium_stickers:
             return strings().premiumBoardingStickersTitle
-        case .chats:
+        case .advanced_chat_management:
             return strings().premiumBoardingChatsTitle
-        case .profileBadge:
+        case .profile_badge:
             return strings().premiumBoardingBadgeTitle
-        case .animatedProfilePicture:
+        case .animated_userpics:
             return strings().premiumBoardingAvatarTitle
         }
     }
@@ -150,30 +266,30 @@ enum PremiumValue : String {
         switch self {
         case .limits:
             return strings().premiumBoardingDoubleInfo("\(limits.channels_limit_premium)", "\(limits.dialog_filters_limit_premium)", "\(limits.dialog_pinned_limit_premium)", "\(limits.channels_public_limit_premium)")
-        case .fileSize:
+        case .more_upload:
             return strings().premiumBoardingFileSizeInfo(String.prettySized(with: limits.upload_max_fileparts_default, afterDot: 0, round: true), String.prettySized(with: limits.upload_max_fileparts_premium, afterDot: 0, round: true))
-        case .downloadSpeed:
+        case .faster_download:
             return strings().premiumBoardingDownloadInfo
-        case .voice:
+        case .voice_to_text:
             return strings().premiumBoardingVoiceInfo
-        case .noAds:
+        case .no_ads:
             return strings().premiumBoardingNoAdsInfo
-        case .uniqueReactions:
+        case .unique_reactions:
             return strings().premiumBoardingReactionsInfo
-        case .premiumStickers:
+        case .premium_stickers:
             return strings().premiumBoardingStickersInfo
-        case .chats:
+        case .advanced_chat_management:
             return strings().premiumBoardingChatsInfo
-        case .profileBadge:
+        case .profile_badge:
             return strings().premiumBoardingBadgeInfo
-        case .animatedProfilePicture:
+        case .animated_userpics:
             return strings().premiumBoardingAvatarInfo
         }
     }
 }
 
 private struct State : Equatable {
-    var values:[PremiumValue] = [.limits, .fileSize, .downloadSpeed, .voice, .noAds, .uniqueReactions, .premiumStickers, .chats, .profileBadge, .animatedProfilePicture]
+    var values:[PremiumValue] = [.limits, .more_upload, .faster_download, .voice_to_text, .no_ads, .unique_reactions, .premium_stickers, .advanced_chat_management, .profile_badge, .animated_userpics]
 }
 
 
@@ -397,8 +513,10 @@ private final class PremiumBoardingView : View {
 final class PremiumBoardingController : ModalViewController {
 
     private let context: AccountContext
-    init(context: AccountContext) {
+    private let source: PremiumLogEventsSource
+    init(context: AccountContext, source: PremiumLogEventsSource = .settings) {
         self.context = context
+        self.source = source
         super.init(frame: NSMakeRect(0, 0, 350, 300))
     }
     
@@ -428,8 +546,16 @@ final class PremiumBoardingController : ModalViewController {
         super.viewDidLoad()
         
         let actionsDisposable = DisposableSet()
+        let context = self.context
+        let source = self.source
+        
+        PremiumLogEvents.promo_screen_show(source).send(context: context)
+        
+        let close: ()->Void = { [weak self] in
+            self?.close()
+        }
 
-        let initialState = State()
+        let initialState = State(values: context.premiumOrder.premiumValues)
         
         let statePromise = ValuePromise(initialState, ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -451,7 +577,7 @@ final class PremiumBoardingController : ModalViewController {
         let initialSize = self.atomicSize
         
         
-        let inputArguments = InputDataArguments.init(select: { _, _ in }, dataUpdated: {
+        let inputArguments = InputDataArguments(select: { _, _ in }, dataUpdated: {
             
         })
         
@@ -468,13 +594,48 @@ final class PremiumBoardingController : ModalViewController {
             self?.updateSize(transition.animated)
             self?.readyOnce()
         }))
-
         
-        genericView.dismiss = { [weak self] in
-            self?.close()
-        }
-        genericView.accept = { [weak self] in
-            self?.close()
+        
+        genericView.dismiss = close
+        genericView.accept = {
+            #if APP_STORE
+            close()
+            return
+            #endif
+            if let slug = context.premiumBuyConfig.invoiceSlug {
+                
+                let signal = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: .slug(slug)), for: context.window)
+
+                _ = signal.start(next: { invoice in
+                    showModal(with: PaymentsCheckoutController(context: context, source: .slug(slug), invoice: invoice, completion: { status in
+                        switch status {
+                        case .paid:
+                            PlayConfetti(for: context.window)
+                            close()
+                        case .cancelled:
+                            break
+                        case .failed:
+                            break
+                        }
+                    }), for: context.window)
+                }, error: { error in
+                    showModalText(for: context.window, text: strings().paymentsInvoiceNotExists)
+                })
+            } else if let username = context.premiumBuyConfig.botUsername {
+                let inApp = inApp(for: "https://t.me/\(username)?start=\(source.value)".nsstring, context: context, openInfo: { peerId, _ , _, initialAction in
+                    var updated: ChatInitialAction? = initialAction
+                    switch initialAction {
+                    case let .start(parameter, _):
+                        updated = .start(parameter: parameter, behavior: .automatic)
+                    default:
+                        break
+                    }
+                    let controller = ChatController(context: context, chatLocation: .peer(peerId), initialAction: updated)
+                    context.bindings.rootNavigation().push(controller)
+                })
+                execute(inapp: inApp)
+                close()
+            }
         }
                 
         self.onDeinit = {

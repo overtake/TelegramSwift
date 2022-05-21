@@ -778,7 +778,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         if let location = location {
             switch location {
             case .peer:
-                self.genericView.tableView.changeSelection(stableId: UIChatListEntryId.chatId(location.peerId, nil))
+                self.genericView.tableView.changeSelection(stableId: UIChatListEntryId.chatId(location.peerId, -1))
             case .replyThread:
                 self.genericView.tableView.changeSelection(stableId: nil)
             }
@@ -793,7 +793,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 let rect = self.genericView.tableView.frame
                 let searchController = SearchController(context: self.context, open:{ [weak self] (peerId, messageId, close) in
                     if let peerId = peerId {
-                        self?.open(with: .chatId(peerId, nil), messageId: messageId, close:close)
+                        self?.open(with: .chatId(peerId, -1), messageId: messageId, close:close)
                     } else {
                         self?.genericView.searchView.cancel(true)
                     }
