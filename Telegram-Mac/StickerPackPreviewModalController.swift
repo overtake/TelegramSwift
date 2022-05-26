@@ -156,7 +156,10 @@ private class StickersModalView : View {
                 current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
         }
-        current.set(file: file, context: context)
+        current.set(file: file, context: context, callback: { [weak self] in
+            showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
+            self?.closePremium()
+        })
         current.close = { [weak self] in
             self?.closePremium()
         }

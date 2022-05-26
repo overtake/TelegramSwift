@@ -33,6 +33,129 @@ private class WeakScriptMessageHandler: NSObject, WKScriptMessageHandler {
 }
 
 
+private final class HeaderView : View {
+    
+    enum Left {
+        case back
+        case dismiss
+    }
+    
+    private let titleView: TextView = TextView()
+    private let subtitleView: TextView = TextView()
+    private var leftButton: Control?
+    private let rightButton: ImageButton = ImageButton()
+    private var leftCallback:(()->Void)?
+    private var rightCallback:(()->ContextMenu?)?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        
+        addSubview(titleView)
+        addSubview(subtitleView)
+        addSubview(rightButton)
+        
+        subtitleView.userInteractionEnabled = false
+        subtitleView.isSelectable = false
+        
+        
+        titleView.isSelectable = false
+        titleView.userInteractionEnabled = false
+        
+        self.rightButton.contextMenu = { [weak self] in
+            return self?.rightCallback?()
+        }
+        self.leftButton?.set(handler: { [weak self] _ in
+            self?.leftCallback?()
+        }, for: .Click)
+        
+        rightButton.autohighlight = false
+        rightButton.scaleOnClick = true
+    }
+    
+    private var prevLeft: Left?
+    
+    func update(title: String, subtitle: String, left: Left, animated: Bool, leftCallback: @escaping()->Void, contextMenu:@escaping()->ContextMenu?) {
+        
+        let prevLeft = self.prevLeft
+        self.prevLeft = left
+
+        self.leftCallback = leftCallback
+        self.rightCallback = contextMenu
+        
+        titleView.update(TextViewLayout(.initialize(string: title, color: theme.colors.text, font: .medium(.title)), maximumNumberOfLines: 1))
+        titleView.userInteractionEnabled = false
+        titleView.isSelectable = false
+        
+        backgroundColor = theme.colors.background
+        borderColor = theme.colors.border
+        border = [.Bottom]
+        
+        subtitleView.update(TextViewLayout(.initialize(string: subtitle, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1))
+        
+        rightButton.set(image: theme.icons.chatActions, for: .Normal)
+        rightButton.sizeToFit()
+        
+        if prevLeft != left || prevLeft == nil {
+            let previousBtn = self.leftButton
+            let button: Control
+        
+            switch left {
+            case .dismiss:
+                let btn = ImageButton()
+                btn.autohighlight = false
+                btn.set(image: theme.icons.modalClose, for: .Normal)
+                btn.sizeToFit()
+                button = btn
+            case .back:
+                let btn = TitleButton()
+                btn.autohighlight = false
+                btn.set(image: theme.icons.chatNavigationBack, for: .Normal)
+                btn.set(text: strings().navigationBack, for: .Normal)
+                btn.set(font: .normal(.title), for: .Normal)
+                btn.set(color: theme.colors.accent, for: .Normal)
+                btn.sizeToFit()
+                button = btn
+            }
+            button.scaleOnClick = true
+            button.set(handler: { [weak self] _ in
+                self?.leftCallback?()
+            }, for: .Click)
+            self.leftButton = button
+            addSubview(button)
+            if let previousBtn = previousBtn {
+                performSubviewRemoval(previousBtn, animated: animated && prevLeft != nil, scale: true)
+            }
+            if animated && prevLeft != nil {
+                button.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+        }
+        needsLayout = true
+    }
+    
+    override func layout() {
+        super.layout()
+        var additionalSize: CGFloat = 0
+        additionalSize += rightButton.frame.width * 2
+        rightButton.centerY(x: frame.width - rightButton.frame.width - 20)
+        
+        if let leftButton = leftButton {
+            additionalSize += leftButton.frame.width * 2
+            leftButton.centerY(x: 20)
+        }
+        
+        titleView.resize(frame.width - 40 - additionalSize)
+        subtitleView.resize(frame.width - 40 - additionalSize)
+        
+        let center = frame.midY
+        titleView.centerX(y: center - titleView.frame.height - 1)
+        subtitleView.centerX(y: center + 1)
+        
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
 private final class WebpageView : View {
     private var indicator: NSView?
     
@@ -111,11 +234,14 @@ private final class WebpageView : View {
     
     private var mainButton:MainButton?
     
+    private let headerView = HeaderView(frame: .zero)
+    
     required init(frame frameRect: NSRect, configuration: WKWebViewConfiguration!) {
         _holder = WKWebView(frame: frameRect.size.bounds, configuration: configuration)
         super.init(frame: frameRect)
         addSubview(webview)
         addSubview(loading)
+        addSubview(headerView)
         self.webview.background = theme.colors.background
         
         webview.wantsLayer = true
@@ -221,17 +347,22 @@ private final class WebpageView : View {
     }
     
     
+    func updateHeader(title: String, subtitle: String, left: HeaderView.Left, animated: Bool, leftCallback: @escaping()->Void, contextMenu:@escaping()->ContextMenu?) {
+        self.headerView.update(title: title, subtitle: subtitle, left: left, animated: animated, leftCallback: leftCallback, contextMenu: contextMenu)
+    }
+    
     override func layout() {
         super.layout()
         self.updateLayout(frame.size, transition: .immediate)
     }
     
     func updateLayout(_ size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: self.headerView, frame: NSMakeRect(0, 0, size.width, 50))
         if let mainButton = mainButton {
             transition.updateFrame(view: mainButton, frame: NSMakeRect(0, size.height - 50, size.width, 50))
-            self.webview.frame = NSMakeRect(0, 0, size.width, size.height - mainButton.frame.height)
+            self.webview.frame = NSMakeRect(0, self.headerView.frame.maxY, size.width, size.height - mainButton.frame.height - self.headerView.frame.height)
         } else {
-            self.webview.frame = bounds
+            self.webview.frame = NSMakeRect(0, self.headerView.frame.maxY, size.width, size.height - self.headerView.frame.height)
         }
         transition.updateFrame(view: self.loading, frame: NSMakeRect(0, 0, size.width, 2))
     }
@@ -328,7 +459,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     private var chatInteraction: ChatInteraction?
     
     fileprivate let loadingProgressPromise = Promise<CGFloat?>(nil)
-
+    
+    private var clickCount: Int = 0
 
     
     init(context: AccountContext, url: String, title: String, effectiveSize: NSSize? = nil, requestData: RequestData? = nil, chatInteraction: ChatInteraction? = nil, thumbFile: TelegramMediaFile? = nil) {
@@ -395,6 +527,25 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     private var genericView: WebpageView {
         return self.view as! WebpageView
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        window?.set(mouseHandler: { [weak self] _ in
+            guard let strongSelf = self else {
+                return .rejected
+            }
+            strongSelf.clickCount += 1
+            delay(5, closure: { [weak strongSelf] in
+                strongSelf?.clickCount = 0
+            })
+            return .rejected
+        }, with: self, for: .leftMouseDown, priority: .supreme)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        window?.removeObserver(for: self)
     }
     
     override func viewDidLoad() {
@@ -644,6 +795,12 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             self.genericView.set(estimatedProgress: CGFloat(genericView._holder.estimatedProgress), animated: true)
         }
     }
+    
+    private var isBackButton: Bool = false {
+        didSet {
+            updateLocalizationAndTheme(theme: theme)
+        }
+    }
 
     
     private func handleScriptMessage(_ message: WKScriptMessage) {
@@ -696,6 +853,16 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             break
         case "web_app_close":
             self.close()
+        case "web_app_open_link":
+            if clickCount > 0 {
+                if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
+                    if let url = json["url"] as? String {
+                        let link = inApp(for: url.nsstring, context: context, openInfo: nil, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
+                        execute(inapp: link)
+                    }
+                }
+            }
+            clickCount = 0
         case "web_app_open_tg_link":
             if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
                 if let path_full = json["path_full"] as? String {
@@ -704,6 +871,12 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 }
             }
             self.close()
+        case "web_app_setup_back_button":
+            if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
+                if let isVisible = json["is_visible"] as? Bool {
+                    self.isBackButton = isVisible
+                }
+            }
         case "web_app_open_invoice":
             if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
                 if let slug = json["slug"] as? String {
@@ -743,6 +916,10 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         })
     }
     
+    private func backButtonPressed() {
+        self.sendEvent(name: "back_button_pressed", data: nil)
+    }
+    
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         
@@ -761,6 +938,43 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         }
         themeParamsString.append("}}")
         self.sendEvent(name: "theme_changed", data: themeParamsString)
+        
+        
+        genericView.updateHeader(title: self.defaultBarTitle, subtitle: strings().presenceBot, left: isBackButton ? .back : .dismiss, animated: true, leftCallback: { [weak self] in
+            if self?.isBackButton == true {
+                self?.backButtonPressed()
+            } else {
+                self?.dismiss()
+            }
+        }, contextMenu: { [weak self] in
+            var items:[ContextMenuItem] = []
+
+            items.append(.init(strings().webAppReload, handler: { [weak self] in
+                self?.reloadPage()
+            }, itemImage: MenuAnimation.menu_reload.value))
+
+            if let installedBots = self?.installedBots {
+                if let data = self?.data, let bot = data.bot as? TelegramUser, let botInfo = bot.botInfo {
+                    if botInfo.flags.contains(.canBeAddedToAttachMenu) {
+                        if installedBots.contains(where: { $0 == bot.id }) {
+                            items.append(ContextSeparatorItem())
+                            items.append(.init(strings().webAppRemoveBot, handler: { [weak self] in
+                                self?.removeBotFromAttachMenu(bot: bot)
+                            }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                        } else {
+                            items.append(.init(strings().webAppInstallBot, handler: { [weak self] in
+                                self?.addBotToAttachMenu(bot: bot)
+                            }, itemImage: MenuAnimation.menu_plus.value))
+                        }
+                    }
+                }
+            }
+            let menu = ContextMenu()
+            for item in items {
+                menu.addItem(item)
+            }
+            return menu
+        })
 
     }
     
@@ -798,36 +1012,36 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         self.updateLocalizationAndTheme(theme: theme)
     }
     
-    override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
-        return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
-            self?.close()
-        }), center: ModalHeaderData(title: self.defaultBarTitle, subtitle: strings().presenceBot), right: ModalHeaderData(image: theme.icons.chatActions, contextMenu: { [weak self] in
-            
-            var items:[ContextMenuItem] = []
-            
-            items.append(.init(strings().webAppReload, handler: { [weak self] in
-                self?.reloadPage()
-            }, itemImage: MenuAnimation.menu_reload.value))
-            
-            if let installedBots = self?.installedBots {
-                if let data = self?.data, let bot = data.bot as? TelegramUser, let botInfo = bot.botInfo {
-                    if botInfo.flags.contains(.canBeAddedToAttachMenu) {
-                        if installedBots.contains(where: { $0 == bot.id }) {
-                            items.append(ContextSeparatorItem())
-                            items.append(.init(strings().webAppRemoveBot, handler: { [weak self] in
-                                self?.removeBotFromAttachMenu(bot: bot)
-                            }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
-                        } else {
-                            items.append(.init(strings().webAppInstallBot, handler: { [weak self] in
-                                self?.addBotToAttachMenu(bot: bot)
-                            }, itemImage: MenuAnimation.menu_plus.value))
-                        }
-                    }
-                }
-            }
-            return items
-        }))
-    }
+//    override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
+//        return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
+//            self?.close()
+//        }), center: ModalHeaderData(title: self.defaultBarTitle, subtitle: strings().presenceBot), right: ModalHeaderData(image: theme.icons.chatActions, contextMenu: { [weak self] in
+//
+//            var items:[ContextMenuItem] = []
+//
+//            items.append(.init(strings().webAppReload, handler: { [weak self] in
+//                self?.reloadPage()
+//            }, itemImage: MenuAnimation.menu_reload.value))
+//
+//            if let installedBots = self?.installedBots {
+//                if let data = self?.data, let bot = data.bot as? TelegramUser, let botInfo = bot.botInfo {
+//                    if botInfo.flags.contains(.canBeAddedToAttachMenu) {
+//                        if installedBots.contains(where: { $0 == bot.id }) {
+//                            items.append(ContextSeparatorItem())
+//                            items.append(.init(strings().webAppRemoveBot, handler: { [weak self] in
+//                                self?.removeBotFromAttachMenu(bot: bot)
+//                            }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+//                        } else {
+//                            items.append(.init(strings().webAppInstallBot, handler: { [weak self] in
+//                                self?.addBotToAttachMenu(bot: bot)
+//                            }, itemImage: MenuAnimation.menu_plus.value))
+//                        }
+//                    }
+//                }
+//            }
+//            return items
+//        }))
+//    }
     
     private func removeBotFromAttachMenu(bot: Peer) {
         let context = self.context
@@ -859,6 +1073,13 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         return self.title
     }
     
+    override func escapeKeyAction() -> KeyHandlerResult {
+        if isBackButton {
+            self.backButtonPressed()
+            return .invoked
+        }
+        return super.escapeKeyAction()
+    }
 
 }
 

@@ -145,6 +145,9 @@ class StickerMediaContentView: ChatMediaContentView {
     
     
     override func update(with media: Media, size: NSSize, context: AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
+        
+        let prev = self.media as? TelegramMediaFile
+        let prevParent = self.parent
                       
         super.update(with: media, size: size, context: context, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
@@ -175,10 +178,24 @@ class StickerMediaContentView: ChatMediaContentView {
         if let content = content as? MediaAnimatedStickerView {
             content.playOnHover = playOnHover
         }
-        content.update(with: file, size: size, context: context, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags, approximateSynchronousValue: approximateSynchronousValue)
+        
+        let aspectSize = file.dimensions?.size.aspectFitted(size) ?? size
+
+        content.update(with: file, size: aspectSize, context: context, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags, approximateSynchronousValue: approximateSynchronousValue)
         
         content.userInteractionEnabled = false
         
+        if let prevParent = prevParent, let parent = parent {
+            let prevSending = prevParent.flags.contains(.Sending) || prevParent.flags.contains(.Unsent)
+            let sending = parent.flags.contains(.Sending) || parent.flags.contains(.Unsent)
+            if prevSending && !sending, file.fileId == prev?.fileId {
+                if file.isPremiumSticker {
+                    parameters?.runPremiumScreenEffect(parent.id)
+                }
+            }
+        }
+        
+        needsLayout = true
     }
     
     
@@ -187,7 +204,7 @@ class StickerMediaContentView: ChatMediaContentView {
         if let view = lockedView {
             view.centerX(y: frame.height - view.frame.height)
         }
-        
+        self.content?.center()
     }
     
     override func copy() -> Any {

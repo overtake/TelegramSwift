@@ -429,6 +429,10 @@ public final class L10n {
   public static var audioRecordHelpFixed: String  { return L10n.tr("Localizable", "AudioRecord.Help.Fixed") }
   /// Release outside of circle to cancel
   public static var audioRecordHelpPlain: String  { return L10n.tr("Localizable", "AudioRecord.Help.Plain") }
+  /// Is %@ your phone number?
+  public static func authLoginConfirmPhone(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Auth.Login.ConfirmPhone", p1)
+  }
   /// , 
   public static var autoDownloadSettingsDelimeter: String  { return L10n.tr("Localizable", "AutoDownloadSettings.Delimeter") }
   ///  and 
@@ -7579,6 +7583,12 @@ public final class L10n {
   public static var premiumBoardingNoAdsInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.NoAds.Info") }
   /// No Ads
   public static var premiumBoardingNoAdsTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.NoAds.Title") }
+  ///  Owners of Telegram Premium accounts have exclusive access to multiple additional features.
+  public static var premiumBoardingPeerInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Peer.Info") }
+  /// [%@](profile) is a subscriber of Telegram Premium
+  public static func premiumBoardingPeerTitle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Peer.Title", p1)
+  }
   /// Additional animated reactions on messages, available only to the Premium subscribers.
   public static var premiumBoardingReactionsInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Reactions.Info") }
   /// Unique Reactions
@@ -7645,7 +7655,7 @@ public final class L10n {
   public static func premiumLimitSavedGifsInfo(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Premium.Limit.SavedGifs.Info", p1, p2)
   }
-  /// You already have Telegram Premium
+  /// You already have Telegram Premium.
   public static var premiumOffsetAlreadyHave: String  { return L10n.tr("Localizable", "Premium.Offset.AlreadyHave") }
   /// bot
   public static var presenceBot: String  { return L10n.tr("Localizable", "Presence.bot") }

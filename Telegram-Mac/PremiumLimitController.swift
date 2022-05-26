@@ -603,7 +603,7 @@ final class PremiumLimitController : ModalViewController {
             case .channels:
                 return .double_limits(.channels)
             case .uploadFile:
-                return .more_upload
+                return .double_limits(.upload_max_fileparts)
             case .caption:
                 return .double_limits(.caption_length)
             }

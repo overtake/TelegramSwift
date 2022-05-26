@@ -23,7 +23,7 @@ final class EmojiScreenEffect {
     
     struct Key : Hashable {
         enum Mode : Equatable, Hashable {
-            case effect
+            case effect(Bool)
             case reaction(String)
         }
         let animationKey: LottieAnimationKey
@@ -91,11 +91,22 @@ final class EmojiScreenEffect {
                         let subSize = animationView.animationSize - contentView.frame.size
                         
                         switch key.mode {
-                        case .effect:
-                            if !item.isIncoming && item.renderType == .bubble {
+                        case let .effect(isPremium):
+                            if !animation.mirror {
                                 point.x-=subSize.width
                             }
                             point.y-=subSize.height/2
+                                       
+                            
+                            if isPremium {
+                                if !animation.mirror {
+                                    point.x += 15
+                                } else {
+                                    point.x -= 15
+                                }
+                                point.y -= 1
+                                
+                            }
                         case .reaction:
                             point.x-=subSize.width/2
                             point.y-=subSize.height/2
@@ -155,7 +166,7 @@ final class EmojiScreenEffect {
             
             dataDisposable.set(signal.start(next: { [weak self, weak parentView] animation in
                 if let animation = animation, let parentView = parentView {
-                    self?.initAnimation(animation, mode: .effect, emoji: emoji, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
+                    self?.initAnimation(animation, mode: .effect(false), emoji: emoji, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
                 }
             }), forKey: messageId)
         } else {
@@ -168,7 +179,7 @@ final class EmojiScreenEffect {
         let context = self.context
         
         if !isLimitExceed(messageId), let item = takeTableItem(messageId) {
-            let animationSize = NSMakeSize(item.contentSize.width * 2, item.contentSize.height * 2)
+            let animationSize = NSMakeSize(item.contentSize.width * 1.5, item.contentSize.height * 1.5)
             let signal: Signal<(LottieAnimation, String)?, NoError> = context.account.postbox.messageAtId(messageId)
             |> mapToSignal { message in
                 if let message = message, let file = message.media.first as? TelegramMediaFile {
@@ -188,7 +199,7 @@ final class EmojiScreenEffect {
 
             dataDisposable.set(signal.start(next: { [weak self, weak parentView] values in
                 if let animation = values?.0, let emoji = values?.1, let parentView = parentView {
-                    self?.initAnimation(animation, mode: .effect, emoji: emoji, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
+                    self?.initAnimation(animation, mode: .effect(true), emoji: emoji, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
                 }
             }), forKey: messageId)
         } else {

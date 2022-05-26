@@ -8,15 +8,30 @@
 
 import Foundation
 import TGUIKit
-
+import SwiftSignalKit
+import Postbox
 
 final class PremiumBoardingHeaderItem : GeneralRowItem {
     fileprivate let titleLayout: TextViewLayout
     fileprivate let infoLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType) {
-        self.titleLayout = .init(.initialize(string: strings().premiumBoardingTitle, color: theme.colors.text, font: .medium(.header)))
+    init(_ initialSize: NSSize, stableId: AnyHashable, peer: Peer?, viewType: GeneralViewType) {
+        
+        let title: NSAttributedString
+        if let peer = peer {
+            title = parseMarkdownIntoAttributedString(strings().premiumBoardingPeerTitle(peer.displayTitle), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.peerAvatarVioletBottom), linkAttribute: { contents in
+                return (NSAttributedString.Key.link.rawValue, contents)
+            }))
+        } else {
+            title = .initialize(string: strings().premiumBoardingTitle, color: theme.colors.text, font: .medium(.header))
+        }
+        self.titleLayout = .init(title, alignment: .center)
+
         let info = NSMutableAttributedString()
-        _ = info.append(string: strings().premiumBoardingInfo, color: theme.colors.text, font: .normal(.text))
+        if let _ = peer {
+            _ = info.append(string: strings().premiumBoardingPeerInfo, color: theme.colors.text, font: .normal(.text))
+        } else {
+            _ = info.append(string: strings().premiumBoardingInfo, color: theme.colors.text, font: .normal(.text))
+        }
         info.detectBoldColorInString(with: .medium(.text))
         self.infoLayout = .init(info, alignment: .center)
         super.init(initialSize, stableId: stableId)
@@ -48,6 +63,7 @@ private final class PremiumBoardingHeaderView : TableRowView {
     private let titleView = TextView()
     private let infoView = TextView()
     private let borderView = View()
+    private var timer: SwiftSignalKit.Timer?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(titleView)
@@ -89,6 +105,12 @@ private final class PremiumBoardingHeaderView : TableRowView {
         infoView.update(item.infoLayout)
         
         borderView.backgroundColor = theme.colors.border
+        
+        timer = SwiftSignalKit.Timer(timeout: 5.0, repeat: true, completion: { [weak self] in
+            self?.premiumView.playAgain()
+        }, queue: .mainQueue())
+        
+        timer?.start()
         
         needsLayout = true
         

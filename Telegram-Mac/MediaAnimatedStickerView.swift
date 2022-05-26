@@ -136,7 +136,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             }))
         }
         previousAccept = accept
-        
+        self.playerView.updateVisible()
         
     }
     
@@ -221,16 +221,20 @@ class MediaAnimatedStickerView: ChatMediaContentView {
     override func update(with media: Media, size: NSSize, context: AccountContext, parent: Message? = nil, table: TableView?, parameters: ChatMediaLayoutParameters? = nil, animated: Bool, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
         
         
+        let prev = self.media as? TelegramMediaFile
+        
         guard let file = media as? TelegramMediaFile else { return }
 
         let updated = self.media != nil ? !file.isSemanticallyEqual(to: self.media!) : true
-        
-        
+                
         if parent?.stableId != self.parent?.stableId {
             self.sticker = nil
-        } else if parent == nil, updated {
+        } else if parent == nil && file.fileId != prev?.fileId {
             self.sticker = nil
         }
+        
+        let prevParent = self.parent
+       
 
         self.nextForceAccept = approximateSynchronousValue || parent?.id.namespace == Namespaces.Message.Local
 
@@ -287,115 +291,123 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             data = context.account.postbox.mediaBox.resourceData(file.resource, attemptSynchronously: approximateSynchronousValue)
         }
         
-        self.loadResourceDisposable.set((data |> map { resourceData -> Data? in
-            if resourceData.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
-                if file.isWebm {
-                    return resourceData.path.data(using: .utf8)!
-                } else {
-                    return data
-                }
-            }
-            return nil
-        } |> deliverOnMainQueue).start(next: { [weak file, weak self] data in
-            if let data = data, let file = file, let `self` = self {
-                var playPolicy: LottiePlayPolicy = parameters?.playPolicy ?? (file.isEmojiAnimatedSticker || !self.chatLoopAnimated ? (self.parameters == nil ? .framesCount(1) : .once) : .loop)
-                
-                if self.playOnHover == true {
-                    playPolicy = .framesCount(1)
-                }
-                var soundEffect: LottieSoundEffect? = nil
-                if file.isEmojiAnimatedSticker, let emoji = file.stickerText {
-                    let emojies = EmojiesSoundConfiguration.with(appConfiguration: context.appConfiguration)
-                    if let file = emojies.sounds[emoji] {
-                        soundEffect = LottieSoundEffect(file: file, postbox: context.account.postbox, triggerOn: 1)
+        if updated {
+            self.loadResourceDisposable.set((data |> map { resourceData -> Data? in
+                if resourceData.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
+                    if file.isWebm {
+                        return resourceData.path.data(using: .utf8)!
+                    } else {
+                        return data
                     }
                 }
-                let maximumFps: Int = size.width < 200 && !file.isEmojiAnimatedSticker ? size.width <= 30 ? 30 : 30 : 60
-                let cache: ASCachePurpose = parameters?.cache ?? (size.width < 200 ? .temporaryLZ4(.thumb) : self.parent != nil ? .temporaryLZ4(.chat) : .none)
-                let fitzModifier = file.animatedEmojiFitzModifier
-                
-                
-                let type: LottieAnimationType
-                if file.isWebm {
-                    type = .webm
-                } else if file.mimeType == "image/webp" {
-                    type = .webp
-                } else {
-                    type = .lottie
-                }
-                self.sticker = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: size, fitzModifier: fitzModifier, mirror: mirror), type: type, cachePurpose: cache, playPolicy: playPolicy, maximumFps: maximumFps, colors: parameters?.colors ?? [], soundEffect: soundEffect, postbox: self.context?.account.postbox)
-                
-                self.fetchStatus = .Local
-            } else {
-                self?.sticker = nil
-                self?.fetchStatus = .Remote(progress: 0)
-            }
-        }))
-        
-        let aspectSize = file.dimensions?.size.aspectFitted(size) ?? size
-        
-        let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: aspectSize, boundingSize: size, intrinsicInsets: NSEdgeInsets())
-        
-               
-        if parameters?.noThumb == false || parameters == nil {
-            self.thumbView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: updated)
-            
-            let hasPlaceholder = (parent == nil || file.immediateThumbnailData != nil) && self.thumbView.image == nil && size.height >= 30 && (parameters == nil || parameters!.shimmer)
-            if updated {
-                if hasPlaceholder {
-                    let current: StickerShimmerEffectView
-                    if let local = self.placeholderView {
-                        current = local
-                    } else {
-                        current = StickerShimmerEffectView()
-                        current.frame = bounds
-                        self.placeholderView = current
-                        addSubview(current, positioned: .below, relativeTo: playerView)
-                        if animated {
-                            current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                return nil
+            } |> deliverOnMainQueue).start(next: { [weak file, weak self] data in
+                if let data = data, let file = file, let `self` = self {
+                    var playPolicy: LottiePlayPolicy = parameters?.playPolicy ?? (file.isEmojiAnimatedSticker || !self.chatLoopAnimated ? (self.parameters == nil ? .framesCount(1) : .once) : .loop)
+                    
+                    if self.playOnHover == true {
+                        playPolicy = .framesCount(1)
+                    }
+                    var soundEffect: LottieSoundEffect? = nil
+                    if file.isEmojiAnimatedSticker, let emoji = file.stickerText {
+                        let emojies = EmojiesSoundConfiguration.with(appConfiguration: context.appConfiguration)
+                        if let file = emojies.sounds[emoji] {
+                            soundEffect = LottieSoundEffect(file: file, postbox: context.account.postbox, triggerOn: 1)
                         }
                     }
-                    current.update(backgroundColor: nil, foregroundColor: NSColor(rgb: 0x748391, alpha: 0.2), shimmeringColor: NSColor(rgb: 0x748391, alpha: 0.35), data: file.immediateThumbnailData, size: size)
-                    current.updateAbsoluteRect(bounds, within: size)
-                } else {
-                    self.removePlaceholder(animated: animated)
-                }
-            }
-            
-            self.thumbView.imageUpdated = { [weak self] value in
-                if value != nil {
-                    self?.removePlaceholder(animated: animated)
-                }
-            }
-            
+                    let maximumFps: Int = size.width < 200 && !file.isEmojiAnimatedSticker ? size.width <= 30 ? 30 : 30 : 60
+                    let cache: ASCachePurpose = parameters?.cache ?? (size.width < 200 ? .temporaryLZ4(.effect) : self.parent != nil ? .temporaryLZ4(.chat) : .none)
+                    let fitzModifier = file.animatedEmojiFitzModifier
                     
-            
-            if !self.thumbView.isFullyLoaded {
-
-                let signal: Signal<ImageDataTransformation, NoError>
                     
-                
-                
-                switch file.mimeType {
-                case "image/webp":
-                    signal = chatMessageSticker(postbox: context.account.postbox, file: reference, small: size.width <= 40, scale: backingScaleFactor, fetched: true)
-                default:
-                    signal = chatMessageAnimatedSticker(postbox: context.account.postbox, file: reference, small: size.width <= 40, scale: backingScaleFactor, size: size, fetched: true, thumbAtFrame: parameters?.thumbAtFrame ?? 0, isVideo: file.fileName == "webm-preview")
-                }
-                self.thumbView.setSignal(signal, cacheImage: { [weak file, weak self] result in
-                    if let file = file {
-                        cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
+                    
+                    let type: LottieAnimationType
+                    if file.isWebm {
+                        type = .webm
+                    } else if file.mimeType == "image/webp" {
+                        type = .webp
+                    } else {
+                        type = .lottie
                     }
-                    self?.removePlaceholder(animated: false)
-                })
+                    let effective = size
+                    
+                    self.sticker = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: effective, fitzModifier: fitzModifier, mirror: mirror), type: type, cachePurpose: cache, playPolicy: playPolicy, maximumFps: maximumFps, colors: parameters?.colors ?? [], soundEffect: soundEffect, postbox: self.context?.account.postbox, metalSupport: false)
+                    
+                    self.fetchStatus = .Local
+                } else {
+                    self?.sticker = nil
+                    self?.fetchStatus = .Remote(progress: 0)
+                }
+            }))
+            
+            let aspectSize = file.dimensions?.size.aspectFitted(size) ?? size
+            
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: aspectSize, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+            
+                   
+            if parameters?.noThumb == false || parameters == nil {
+                self.thumbView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: backingScaleFactor), clearInstantly: updated)
+                
+                let hasPlaceholder = (parent == nil || file.immediateThumbnailData != nil) && self.thumbView.image == nil && size.height >= 30 && (parameters == nil || parameters!.shimmer)
+                if updated {
+                    if hasPlaceholder {
+                        let current: StickerShimmerEffectView
+                        if let local = self.placeholderView {
+                            current = local
+                        } else {
+                            current = StickerShimmerEffectView()
+                            current.frame = bounds
+                            self.placeholderView = current
+                            addSubview(current, positioned: .below, relativeTo: playerView)
+                            if animated {
+                                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                            }
+                        }
+                        current.update(backgroundColor: nil, foregroundColor: NSColor(rgb: 0x748391, alpha: 0.2), shimmeringColor: NSColor(rgb: 0x748391, alpha: 0.35), data: file.immediateThumbnailData, size: size)
+                        current.updateAbsoluteRect(bounds, within: size)
+                    } else {
+                        self.removePlaceholder(animated: animated)
+                    }
+                }
+                
+                self.thumbView.imageUpdated = { [weak self] value in
+                    if value != nil {
+                        self?.removePlaceholder(animated: animated)
+                    }
+                }
+                
+                        
+                
+                if !self.thumbView.isFullyLoaded {
+
+                    let signal: Signal<ImageDataTransformation, NoError>
+                        
+                    
+                    
+                    switch file.mimeType {
+                    case "image/webp":
+                        signal = chatMessageSticker(postbox: context.account.postbox, file: reference, small: size.width <= 40, scale: backingScaleFactor, fetched: true)
+                    default:
+                        signal = chatMessageAnimatedSticker(postbox: context.account.postbox, file: reference, small: size.width <= 40, scale: backingScaleFactor, size: size, fetched: true, thumbAtFrame: parameters?.thumbAtFrame ?? 0, isVideo: file.fileName == "webm-preview")
+                    }
+                    self.thumbView.setSignal(signal, cacheImage: { [weak file, weak self] result in
+                        if let file = file {
+                            cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
+                        }
+                        self?.removePlaceholder(animated: false)
+                    })
+                }
+                self.thumbView.set(arguments: arguments)
+                if updated {
+                    self.playerView.removeFromSuperview()
+                    addSubview(self.thumbView)
+                }
+
             }
-            self.thumbView.set(arguments: arguments)
-            if updated {
-                self.playerView.removeFromSuperview()
-                addSubview(self.thumbView)
-            }
+            
 
         }
+        
         
        
         

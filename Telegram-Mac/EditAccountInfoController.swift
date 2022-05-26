@@ -527,7 +527,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
     }
     
     controller.onDeinit = {
-        cancel()
+       // cancel()
     }
     
     f(controller)

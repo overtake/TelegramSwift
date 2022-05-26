@@ -319,7 +319,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
             isStreamable = file.isStreamable
         }
         
-        videoAccessory?.updateText(text, maxWidth: maxWidth, status: status, isStreamable: isStreamable, isCompact: parent?.groupingKey != nil, soundOffOnImage: nil, isBuffering: isBuffering, animated: animated, fetch: { [weak self] in
+        videoAccessory?.updateText(text, maxWidth: maxWidth, status: status, isStreamable: isStreamable, isCompact: parent?.groupingKey != nil || file.isAnimated, soundOffOnImage: nil, isBuffering: isBuffering, animated: animated, fetch: { [weak self] in
             self?.fetch(userInitiated: true)
         }, cancelFetch: { [weak self] in
             self?.cancelFetching()
@@ -521,7 +521,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 
                
                 
-                if file.isVideo, size.height > 80, !file.isAnimated {
+                if file.isVideo, size.height > 80 {
                     if videoAccessory == nil {
                         videoAccessory = ChatMessageAccessoryView(frame: NSMakeRect(5, 5, 0, 0))
                         addSubview(videoAccessory!)
@@ -585,216 +585,218 @@ class ChatInteractiveContentView: ChatMediaContentView {
                     }
                 })
             }
-        }
-        
-        if let signal = updatedStatusSignal, let parent = parent, let parameters = parameters {
-            updatedStatusSignal = combineLatest(signal, parameters.getUpdatingMediaProgress(parent.id)) |> map { value, updating in
-                if let progress = updating {
-                    return (.Fetching(isActive: true, progress: progress), .Fetching(isActive: true, progress: progress))
-                } else {
-                    return value
+            
+            if let signal = updatedStatusSignal, let parent = parent, let parameters = parameters {
+                updatedStatusSignal = combineLatest(signal, parameters.getUpdatingMediaProgress(parent.id)) |> map { value, updating in
+                    if let progress = updating {
+                        return (.Fetching(isActive: true, progress: progress), .Fetching(isActive: true, progress: progress))
+                    } else {
+                        return value
+                    }
                 }
             }
-        }
-        
-        self.image.set(arguments: arguments)
-        
-        self.image._change(size: size, animated: animated)
-        
-        if arguments.imageSize.width == arguments.boundingSize.width {
-            if let positionFlags = positionFlags {
-                autoplayVideoView?.view.positionFlags = positionFlags
-            } else  {
+            
+            self.image.set(arguments: arguments)
+            
+            self.image._change(size: size, animated: animated)
+            
+            if arguments.imageSize.width == arguments.boundingSize.width {
+                if let positionFlags = positionFlags {
+                    autoplayVideoView?.view.positionFlags = positionFlags
+                } else  {
+                    autoplayVideoView?.view.positionFlags = nil
+                    autoplayVideoView?.view.layer?.cornerRadius = .cornerRadius
+                }
+            } else {
                 autoplayVideoView?.view.positionFlags = nil
-                autoplayVideoView?.view.layer?.cornerRadius = .cornerRadius
+                autoplayVideoView?.view.layer?.cornerRadius = 0
             }
-        } else {
-            autoplayVideoView?.view.positionFlags = nil
-            autoplayVideoView?.view.layer?.cornerRadius = 0
-        }
-        
-        
-        var first: Bool = true
-        
-        if let updateStatusSignal = updatedStatusSignal {
-            self.statusDisposable.set(updateStatusSignal.start(next: { [weak self] (status, authentic) in
-                
-                if let strongSelf = self {
+            
+            
+            var first: Bool = true
+            
+            if let updateStatusSignal = updatedStatusSignal {
+                self.statusDisposable.set(updateStatusSignal.start(next: { [weak self] (status, authentic) in
                     
-                    strongSelf.authenticFetchStatus = authentic
+                    if let strongSelf = self {
+                        
+                        strongSelf.authenticFetchStatus = authentic
 
-                    
-                    var authentic = authentic
-                    if strongSelf.autoplayVideo {
-                        strongSelf.fetchStatus = authentic
-                        authentic = .Local
-                    } else {
-                        switch authentic {
-                        case .Fetching:
-                            strongSelf.fetchStatus = status
-                        default:
-                            strongSelf.fetchStatus = status
-                        }
-                    }
-                    
-                    
-                    if let file = strongSelf.media as? TelegramMediaFile, strongSelf.autoplayVideo {
-                        if strongSelf.autoplayVideoView == nil {
-                            let autoplay: ChatVideoAutoplayView
-                            
-                            let fileReference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file)
-                            
-                            autoplay = ChatVideoAutoplayView(mediaPlayer: MediaPlayer(postbox: context.account.postbox, reference: fileReference.resourceReference(fileReference.media.resource), streamable: file.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: false, volume: 0.0, fetchAutomatically: true), view: MediaPlayerView(backgroundThread: true))
-                            
-                            strongSelf.autoplayVideoView = autoplay
-                            if !strongSelf.blurBackground {
-                                strongSelf.autoplayVideoView?.view.setVideoLayerGravity(.resizeAspectFill)
-                            } else {
-                                strongSelf.autoplayVideoView?.view.setVideoLayerGravity(.resize)
+                        
+                        var authentic = authentic
+                        if strongSelf.autoplayVideo {
+                            strongSelf.fetchStatus = authentic
+                            authentic = .Local
+                        } else {
+                            switch authentic {
+                            case .Fetching:
+                                strongSelf.fetchStatus = status
+                            default:
+                                strongSelf.fetchStatus = status
                             }
-                            strongSelf.updatePlayerIfNeeded()
-                        }
-                        if let autoplay = strongSelf.autoplayVideoView {
-                            let dimensions = (file.dimensions?.size ?? size)
-                            let value = strongSelf.blurBackground ? dimensions.aspectFitted(size) : size
-                            
-                            autoplay.view.frame = NSMakeRect(0, 0, value.width, value.height)
-                            if let positionFlags = positionFlags {
-                                autoplay.view.positionFlags = positionFlags
-                            } else {
-                                autoplay.view.layer?.cornerRadius = .cornerRadius
-                            }
-                            strongSelf.addSubview(autoplay.view, positioned: .above, relativeTo: strongSelf.image)
-                            autoplay.mediaPlayer.attachPlayerView(autoplay.view)
-                            autoplay.view.center()
                         }
                         
-                    } else {
-                        strongSelf.autoplayVideoView = nil
-                    }
-                    
-                    if let autoplay = strongSelf.autoplayVideoView {
-                        strongSelf.mediaPlayerStatusDisposable.set((autoplay.mediaPlayer.status |> deliverOnMainQueue).start(next: { [weak strongSelf] status in
-                            strongSelf?.updateMediaStatus(status, animated: !first)
-                        }))
-                    }
-                   
-                    
-                    
-                    if let file = media as? TelegramMediaFile, strongSelf.autoplayVideoView == nil  {
-                        strongSelf.updateVideoAccessory(parent == nil ? .Local : authentic, file: file, animated: !first)
-                        first = false
-                    }
-                    var containsSecretMedia:Bool = false
-                    
-                    if let message = parent {
-                        containsSecretMedia = message.containsSecretMedia
-                    }
-                    
-                    if let autoremoveAttribute = parent?.autoremoveAttribute, autoremoveAttribute.timeout <= 60, autoremoveAttribute.countdownBeginTime != nil {
-                        strongSelf.progressView?.removeFromSuperview()
-                        strongSelf.progressView = nil
-                        if strongSelf.timableProgressView == nil {
-                            strongSelf.timableProgressView = TimableProgressView(size: NSMakeSize(parent?.groupingKey != nil ? 30 : 40.0, parent?.groupingKey != nil ? 30 : 40.0))
-                            strongSelf.addSubview(strongSelf.timableProgressView!)
-                        }
-                    } else {
-                        strongSelf.timableProgressView?.removeFromSuperview()
-                        strongSelf.timableProgressView = nil
                         
-                        switch status {
-                        case .Local:
-                            self?.image.animatesAlphaOnFirstTransition = false
-                        default:
-                            self?.image.animatesAlphaOnFirstTransition = false
-                        }
-                        
-                        var removeProgress: Bool = strongSelf.autoplayVideo
-                        if case .Local = status, media is TelegramMediaImage, !containsSecretMedia {
-                            removeProgress = true
-                        }
-                        
-                        if removeProgress {
-                             if let progressView = strongSelf.progressView {
-                                switch progressView.state {
-                                case .Fetching:
-                                    progressView.state = .Fetching(progress:1.0, force: false)
-                                case .ImpossibleFetching:
-                                    progressView.state = .ImpossibleFetching(progress:1.0, force: false)
-                                default:
-                                    break
+                        if let file = strongSelf.media as? TelegramMediaFile, strongSelf.autoplayVideo {
+                            if strongSelf.autoplayVideoView == nil {
+                                let autoplay: ChatVideoAutoplayView
+                                
+                                let fileReference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file)
+                                
+                                autoplay = ChatVideoAutoplayView(mediaPlayer: MediaPlayer(postbox: context.account.postbox, reference: fileReference.resourceReference(fileReference.media.resource), streamable: file.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: false, volume: 0.0, fetchAutomatically: true), view: MediaPlayerView(backgroundThread: true))
+                                
+                                strongSelf.autoplayVideoView = autoplay
+                                if !strongSelf.blurBackground {
+                                    strongSelf.autoplayVideoView?.view.setVideoLayerGravity(.resizeAspectFill)
+                                } else {
+                                    strongSelf.autoplayVideoView?.view.setVideoLayerGravity(.resize)
                                 }
-                                strongSelf.progressView = nil
-                                progressView.layer?.animateAlpha(from: 1, to: 0, duration: 0.25, timingFunction: .linear, removeOnCompletion: false, completion: { [weak progressView] completed in
-                                    if completed {
-                                         progressView?.removeFromSuperview()
-                                    }
-                                })
-                               
+                                strongSelf.updatePlayerIfNeeded()
+                            }
+                            if let autoplay = strongSelf.autoplayVideoView {
+                                let dimensions = (file.dimensions?.size ?? size)
+                                let value = strongSelf.blurBackground ? dimensions.aspectFitted(size) : size
+                                
+                                autoplay.view.frame = NSMakeRect(0, 0, value.width, value.height)
+                                if let positionFlags = positionFlags {
+                                    autoplay.view.positionFlags = positionFlags
+                                } else {
+                                    autoplay.view.layer?.cornerRadius = .cornerRadius
+                                }
+                                strongSelf.addSubview(autoplay.view, positioned: .above, relativeTo: strongSelf.image)
+                                autoplay.mediaPlayer.attachPlayerView(autoplay.view)
+                                autoplay.view.center()
+                            }
+                            
+                        } else {
+                            strongSelf.autoplayVideoView = nil
+                        }
+                        
+                        if let autoplay = strongSelf.autoplayVideoView {
+                            strongSelf.mediaPlayerStatusDisposable.set((autoplay.mediaPlayer.status |> deliverOnMainQueue).start(next: { [weak strongSelf] status in
+                                strongSelf?.updateMediaStatus(status, animated: !first)
+                            }))
+                        }
+                       
+                        
+                        
+                        if let file = media as? TelegramMediaFile, strongSelf.autoplayVideoView == nil  {
+                            strongSelf.updateVideoAccessory(parent == nil ? .Local : authentic, file: file, animated: !first)
+                            first = false
+                        }
+                        var containsSecretMedia:Bool = false
+                        
+                        if let message = parent {
+                            containsSecretMedia = message.containsSecretMedia
+                        }
+                        
+                        if let autoremoveAttribute = parent?.autoremoveAttribute, autoremoveAttribute.timeout <= 60, autoremoveAttribute.countdownBeginTime != nil {
+                            strongSelf.progressView?.removeFromSuperview()
+                            strongSelf.progressView = nil
+                            if strongSelf.timableProgressView == nil {
+                                strongSelf.timableProgressView = TimableProgressView(size: NSMakeSize(parent?.groupingKey != nil ? 30 : 40.0, parent?.groupingKey != nil ? 30 : 40.0))
+                                strongSelf.addSubview(strongSelf.timableProgressView!)
                             }
                         } else {
-                            strongSelf.progressView?.layer?.removeAllAnimations()
-                            if strongSelf.progressView == nil {
-                                let progressView = RadialProgressView(theme:RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: playerPlayThumb))
-                                progressView.frame = CGRect(origin: CGPoint(), size: CGSize(width: parent?.groupingKey != nil ? 30 : 40.0, height: parent?.groupingKey != nil ? 30 : 40.0))
-                                strongSelf.progressView = progressView
-                                strongSelf.addSubview(progressView)
-                                strongSelf.progressView?.center()
-                                progressView.fetchControls = strongSelf.fetchControls
+                            strongSelf.timableProgressView?.removeFromSuperview()
+                            strongSelf.timableProgressView = nil
+                            
+                            switch status {
+                            case .Local:
+                                self?.image.animatesAlphaOnFirstTransition = false
+                            default:
+                                self?.image.animatesAlphaOnFirstTransition = false
+                            }
+                            
+                            var removeProgress: Bool = strongSelf.autoplayVideo
+                            if case .Local = status, media is TelegramMediaImage, !containsSecretMedia {
+                                removeProgress = true
+                            }
+                            
+                            if removeProgress {
+                                 if let progressView = strongSelf.progressView {
+                                    switch progressView.state {
+                                    case .Fetching:
+                                        progressView.state = .Fetching(progress:1.0, force: false)
+                                    case .ImpossibleFetching:
+                                        progressView.state = .ImpossibleFetching(progress:1.0, force: false)
+                                    default:
+                                        break
+                                    }
+                                    strongSelf.progressView = nil
+                                    progressView.layer?.animateAlpha(from: 1, to: 0, duration: 0.25, timingFunction: .linear, removeOnCompletion: false, completion: { [weak progressView] completed in
+                                        if completed {
+                                             progressView?.removeFromSuperview()
+                                        }
+                                    })
+                                   
+                                }
+                            } else {
+                                strongSelf.progressView?.layer?.removeAllAnimations()
+                                if strongSelf.progressView == nil {
+                                    let progressView = RadialProgressView(theme:RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: playerPlayThumb))
+                                    progressView.frame = CGRect(origin: CGPoint(), size: CGSize(width: parent?.groupingKey != nil ? 30 : 40.0, height: parent?.groupingKey != nil ? 30 : 40.0))
+                                    strongSelf.progressView = progressView
+                                    strongSelf.addSubview(progressView)
+                                    strongSelf.progressView?.center()
+                                    progressView.fetchControls = strongSelf.fetchControls
+                                }
                             }
                         }
-                    }
-                    
-                    
-                    let progressStatus: MediaResourceStatus
-                    if strongSelf.parent?.groupingKey != nil {
-                        switch authentic {
-                        case .Fetching:
-                            progressStatus = authentic
-                        default:
+                        
+                        
+                        let progressStatus: MediaResourceStatus
+                        if strongSelf.parent?.groupingKey != nil {
+                            switch authentic {
+                            case .Fetching:
+                                progressStatus = authentic
+                            default:
+                                progressStatus = status
+                            }
+                        } else {
                             progressStatus = status
                         }
-                    } else {
-                        progressStatus = status
-                    }
-    
-                    
-                    switch progressStatus {
-                    case let .Fetching(_, progress), let .Paused(progress):
+        
                         
-                        let sentGrouped = parent?.groupingKey != nil && (parent!.flags.contains(.Sending) || parent!.flags.contains(.Unsent))
-                        
-                        strongSelf.progressView?.state = parent == nil ? .ImpossibleFetching(progress: progress, force: false) : (progress == 1.0 && sentGrouped ? .Success : .Fetching(progress: progress, force: false))
-                    case .Local:
-                        var state: RadialProgressState = .None
-                        if containsSecretMedia {
-                            state = .Icon(image: parent?.groupingKey != nil ? theme.icons.chatSecretThumbSmall : theme.icons.chatSecretThumb, mode:.normal)
+                        switch progressStatus {
+                        case let .Fetching(_, progress), let .Paused(progress):
                             
-                            if let attribute = parent?.autoremoveAttribute, let countdownBeginTime = attribute.countdownBeginTime {
-                                let difference:TimeInterval = TimeInterval((countdownBeginTime + attribute.timeout)) - (CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
-                                let start = difference / Double(attribute.timeout) * 100.0
-                                strongSelf.timableProgressView?.theme = TimableProgressTheme(outer: 3, seconds: difference, start: start, border: false)
-                                strongSelf.timableProgressView?.progress = 0
-                                strongSelf.timableProgressView?.startAnimation()
+                            let sentGrouped = parent?.groupingKey != nil && (parent!.flags.contains(.Sending) || parent!.flags.contains(.Unsent))
+                            
+                            strongSelf.progressView?.state = parent == nil ? .ImpossibleFetching(progress: progress, force: false) : (progress == 1.0 && sentGrouped ? .Success : .Fetching(progress: progress, force: false))
+                        case .Local:
+                            var state: RadialProgressState = .None
+                            if containsSecretMedia {
+                                state = .Icon(image: parent?.groupingKey != nil ? theme.icons.chatSecretThumbSmall : theme.icons.chatSecretThumb, mode:.normal)
                                 
-                            }
-                        } else {
-                            if let file = media as? TelegramMediaFile {
-                                if file.isVideo {
-                                    state = .Play
+                                if let attribute = parent?.autoremoveAttribute, let countdownBeginTime = attribute.countdownBeginTime {
+                                    let difference:TimeInterval = TimeInterval((countdownBeginTime + attribute.timeout)) - (CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970)
+                                    let start = difference / Double(attribute.timeout) * 100.0
+                                    strongSelf.timableProgressView?.theme = TimableProgressTheme(outer: 3, seconds: difference, start: start, border: false)
+                                    strongSelf.timableProgressView?.progress = 0
+                                    strongSelf.timableProgressView?.startAnimation()
+                                    
+                                }
+                            } else {
+                                if let file = media as? TelegramMediaFile {
+                                    if file.isVideo {
+                                        state = .Play
+                                    }
                                 }
                             }
+                            
+                            strongSelf.progressView?.state = state
+                        case .Remote:
+                            strongSelf.progressView?.state = .Remote
                         }
-                        
-                        strongSelf.progressView?.state = state
-                    case .Remote:
-                        strongSelf.progressView?.state = .Remote
+                        strongSelf.needsLayout = true
                     }
-                    strongSelf.needsLayout = true
-                }
-            }))
-           
+                }))
+               
+            }
+            
         }
+        
         
     }
     

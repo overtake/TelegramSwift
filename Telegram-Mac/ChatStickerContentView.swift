@@ -62,9 +62,14 @@ class ChatStickerContentView: ChatMediaContentView {
       
         let previous = self.parent
         
+        guard let file = media as? TelegramMediaFile else { return }
+
+        let updated = self.media != nil ? !file.isSemanticallyEqual(to: self.media!) : true
+
+        
         super.update(with: media, size: size, context: context, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
-        if let file = media as? TelegramMediaFile {
+        if let file = media as? TelegramMediaFile, updated {
             
             let reference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : stickerPackFileReference(file)
             

@@ -1544,6 +1544,18 @@ class LottiePlayerView : View {
         super.init()
     }
     
+    private var temporary: LottieAnimation?
+    func updateVisible() {
+        if self.visibleRect == .zero {
+            self.temporary = self.animation
+        } else {
+            if let temporary = temporary {
+                self.set(temporary)
+            }
+            self.temporary = nil
+        }
+    }
+    
     var animation: LottieAnimation? {
         return context?.animation
     }
@@ -1626,6 +1638,10 @@ class LottiePlayerView : View {
     func set(_ animation: LottieAnimation?, reset: Bool = false, saveContext: Bool = false, animated: Bool = false) {
         assertOnMainThread()
         _ignoreCachedContext = false
+        
+        if animation == nil {
+            self.temporary = nil
+        }
         if let animation = animation {
             self.stateValue.set(self._currentState.modify { _ in .initializing })
             if self.context?.animation != animation || reset {
