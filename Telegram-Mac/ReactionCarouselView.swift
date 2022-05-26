@@ -204,7 +204,7 @@ final class ReactionCarouselView: View {
     
     init(context: AccountContext, reactions: [AvailableReactions.Reaction]) {
         self.context = context
-        self.reactions = Array(reactions.filter { $0.aroundAnimation != nil }.shuffled().prefix(6))
+        self.reactions = Array(reactions.filter { $0.isPremium }.filter { $0.aroundAnimation != nil }.shuffled().prefix(6))
         
         super.init(frame: .zero)
         

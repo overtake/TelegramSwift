@@ -65,6 +65,7 @@ private class PictureInpictureView : Control {
 }
 
 fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
+    private let saver: WindowSaver
     fileprivate let _window: Window
     fileprivate let control: PictureInPictureControl
     private let rect:NSRect
@@ -92,6 +93,9 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         self.restoreRect = NSMakeRect(origin.x, origin.y, control.view.frame.width, control.view.frame.height)
         self.item = item
         _window = Window(contentRect: newRect, styleMask: [.resizable], backing: .buffered, defer: true)
+        _window.name = "pip"
+        self.saver = .find(for: _window)
+        _window.setFrame(saver.rect, display: true)
         super.init(contentRect: newRect, styleMask: [.resizable, .nonactivatingPanel], backing: .buffered, defer: true)
 
         //self.isOpaque = false
@@ -181,8 +185,6 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         self.control.setMode(.pip, animated: true)
     }
     
-    
-
     func hide() {
         
 
@@ -269,17 +271,6 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
             }
             setFrame(newFrame, display: true, animate: true)
 
-            
-//            switch alignment {
-//            case .topLeft:
-//                setFrame(NSMakeRect(30, 30, self.frame.width, self.frame.height), display: true, animate: true)
-//            case .topRight:
-//                setFrame(NSMakeRect(frame.width - self.frame.width - 30, 30, self.frame.width, self.frame.height), display: true, animate: true)
-//            case .bottomLeft:
-//                setFrame(NSMakeRect(30, frame.height - self.frame.height - 30, self.frame.width, self.frame.height), display: true, animate: true)
-//            case .bottomRight:
-//                setFrame(NSMakeRect(frame.width - self.frame.width - 30, frame.height - self.frame.height - 30, self.frame.width, self.frame.height), display: true, animate: true)
-//            }
         }
     }
     
@@ -289,6 +280,8 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
     }
     override func setFrame(_ frameRect: NSRect, display flag: Bool, animate animateFlag: Bool) {
         super.setFrame(frameRect, display: flag, animate: animateFlag)
+        saver.rect = frameRect
+        saver.save()
     }
 
     override func makeKeyAndOrderFront(_ sender: Any?) {
@@ -302,8 +295,13 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
             let frame = NSScreen.main?.frame ?? NSMakeRect(0, 0, 1920, 1080)
             
             self.maxSize = self.rect.size.aspectFitted(frame.size)
-
-            self.setFrame(NSMakeRect(screen.frame.maxX - convert_s.width - 30, screen.frame.maxY - convert_s.height - 50, convert_s.width, convert_s.height), display: true, animate: true)
+            
+            var rect = saver.rect
+            if rect.minX == self.frame.minX && rect.minY == self.frame.minY {
+                rect.origin = NSMakePoint(screen.frame.maxX - convert_s.width - 30, screen.frame.maxY - convert_s.height - 50)
+            }
+                        
+            self.setFrame(NSMakeRect(saver.rect.minX, saver.rect.minY, convert_s.width, convert_s.height), display: true, animate: true)
            
         }
     }

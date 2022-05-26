@@ -9,7 +9,7 @@
 import Cocoa
 import SwiftSignalKit
 public class WindowSaver : NSObject, NSCoding {
-    var rect:NSRect
+    public var rect:NSRect
     let requiredName:String
     var isFullScreen: Bool
     private let disposable:MetaDisposable = MetaDisposable()

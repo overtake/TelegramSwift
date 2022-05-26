@@ -725,16 +725,18 @@ private final class NameContainer : View {
                     let attr = parseMarkdownIntoAttributedString(stateText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: .white), bold: MarkdownAttributeSet(font: .bold(.text), textColor: .white), link: MarkdownAttributeSet(font: .normal(.text), textColor: nightAccentPalette.link), linkAttribute: { contents in
                         return (NSAttributedString.Key.link.rawValue, contents)
                     }))
-                    
-                    let interactions = TextViewInteractions.init(processURL: { content in
-                        if let content = content as? String {
-                            if content == "premium" {
-                                showModal(with: PremiumBoardingController(context: context), for: context.window)
+                    if let peerId = item.peer?.id {
+                        let interactions = TextViewInteractions.init(processURL: { content in
+                            if let content = content as? String {
+                                if content == "premium" {
+                                    showModal(with: PremiumBoardingController(context: context, source: .profile(peerId)), for: context.window)
+                                }
                             }
-                        }
-                    })
+                        })
+                        tooltip(for: control, text: "", attributedText: attr, interactions: interactions)
+                    }
                     
-                    tooltip(for: control, text: "", attributedText: attr, interactions: interactions)
+                    
                 }, for: .Click)
             } else {
                 stateImage.scaleOnClick = false

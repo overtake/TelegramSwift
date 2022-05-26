@@ -25,7 +25,7 @@ final class StickerPremiumHolderView: NSVisualEffectView {
     
     private let textView = TextView()
     
-    fileprivate let unlock = AcceptView(frame: .zero)
+    private let unlock = AcceptView(frame: .zero)
     
     fileprivate final class AcceptView : Control {
         private let gradient: PremiumGradientView = PremiumGradientView(frame: .zero)
@@ -74,6 +74,7 @@ final class StickerPremiumHolderView: NSVisualEffectView {
             shimmer.updateAbsoluteRect(size.bounds, within: size)
             shimmer.update(backgroundColor: .clear, foregroundColor: .clear, shimmeringColor: NSColor.white.withAlphaComponent(0.3), shapes: [.roundedRect(rect: size.bounds, cornerRadius: size.height / 2)], horizontal: true, size: size)
 
+
             
             needsLayout = true
             
@@ -120,7 +121,7 @@ final class StickerPremiumHolderView: NSVisualEffectView {
         fetchDisposable.dispose()
     }
     
-    func set(file: TelegramMediaFile, context: AccountContext) -> Void {
+    func set(file: TelegramMediaFile, context: AccountContext, callback:@escaping()->Void) -> Void {
         
         
         var size = NSMakeSize(min(200, frame.width / 2.2), min(200, frame.width / 2.2))
@@ -131,7 +132,7 @@ final class StickerPremiumHolderView: NSVisualEffectView {
         stickerView.update(with: file, size: size, context: context, table: nil, animated: false)
         
         if let effect = file.premiumEffect {
-            var animationSize = NSMakeSize(stickerView.frame.width * 2, stickerView.frame.height * 2)
+            var animationSize = NSMakeSize(stickerView.frame.width * 1.5, stickerView.frame.height * 1.5)
             animationSize = effect.dimensions.size.aspectFitted(animationSize)
             
             stickerEffectView.setFrameSize(animationSize)
@@ -152,6 +153,10 @@ final class StickerPremiumHolderView: NSVisualEffectView {
             }
         }
         
+        unlock.removeAllHandlers()
+        unlock.set(handler: { _ in
+            callback()
+        }, for: .Click)
                
     }
     
@@ -169,7 +174,7 @@ final class StickerPremiumHolderView: NSVisualEffectView {
         containerView.frame = stickerEffectView.frame.size.bounds
         containerView.centerX(y: 0)
         stickerEffectView.center()
-        stickerView.centerY(x: containerView.bounds.width - stickerView.frame.width - 20)
+        stickerView.centerY(x: containerView.bounds.width - stickerView.frame.width - 15, addition: 1)
         unlock.centerX(y: frame.height - unlock.frame.height - 20)
         textView.centerX(y: unlock.frame.minY - textView.frame.height - 10)
     }

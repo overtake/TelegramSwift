@@ -185,7 +185,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             NSApplication.shared.isAutomaticCustomizeTouchBarMenuItemEnabled = true
         }
         
-        
         guard let containerUrl = ApiEnvironment.containerURL else {
             return
         }

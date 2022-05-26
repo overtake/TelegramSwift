@@ -152,10 +152,16 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     private func updateControlVisibility(_ isMouseUpOrDown: Bool = false) {
         updateIdleTimer()
         
+        
         if let rootView = genericView.superview?.superview {
             var hide = !genericView._mouseInside() && !rootView.isHidden && (NSEvent.pressedMouseButtons & (1 << 0)) == 0
             
            
+            if !hide, (NSEvent.pressedMouseButtons & (1 << 0)) != 0 {
+                hide = genericView.controlsStyle.isPip
+            }
+
+            
             if self.fullScreenWindow != nil && isMouseUpOrDown, !genericView.insideControls {
                 hide = true
                 if !self.isPaused {

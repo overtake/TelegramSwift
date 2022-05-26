@@ -10,6 +10,11 @@ import Foundation
 import TGUIKit
 import SceneKit
 import SwiftSignalKit
+import GZIP
+
+private let sceneVersion: Int = 1
+
+
 
 private func deg2rad(_ number: Float) -> Float {
     return number * .pi / 180
@@ -161,9 +166,22 @@ final class PremiumStarSceneView: View, SCNSceneRendererDelegate {
     }
     
     private func setup() {
-        guard let scene = SCNScene(named: "star.scn") else {
+        guard let url = Bundle.main.url(forResource: "star", withExtension: ""),
+              let compressedData = try? Data(contentsOf: url),
+              let decompressedData = TGGUnzipData(compressedData, 8 * 1024 * 1024) else {
             return
         }
+        let fileName = "star_\(sceneVersion).scn"
+        let tmpURL = URL(fileURLWithPath: NSTemporaryDirectory() + fileName)
+        if !FileManager.default.fileExists(atPath: tmpURL.path) {
+            try? decompressedData.write(to: tmpURL)
+        }
+        
+        guard let scene = try? SCNScene(url: tmpURL, options: nil) else {
+            return
+        }
+        
+
         self.sceneView.scene = scene
         self.sceneView.delegate = self
         
@@ -274,6 +292,10 @@ final class PremiumStarSceneView: View, SCNSceneRendererDelegate {
         springAnimation.initialVelocity = velocity.flatMap { abs($0 / CGFloat(distance)) } ?? 1.7
         
         node.addAnimation(springAnimation, forKey: "rotate")
+    }
+    
+    func playAgain() {
+        self.playAppearanceAnimation(explode: true)
     }
     
     func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {

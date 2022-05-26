@@ -212,7 +212,7 @@ class ChatListRowItem: TableRowItem {
         return _animateArchive.swap(false)
     }
     
-    let filter: ChatListFilter?
+    let filter: ChatListFilter
     
     var isCollapsed: Bool {
         if let archiveStatus = archiveStatus {
@@ -359,7 +359,7 @@ class ChatListRowItem: TableRowItem {
 
 
     
-    init(_ initialSize:NSSize, context: AccountContext, pinnedType: ChatListPinnedType, groupId: PeerGroupId, peers: [ChatListGroupReferencePeer], messages: [Message], unreadState: PeerGroupUnreadCountersCombinedSummary, unreadCountDisplayCategory: TotalUnreadCountDisplayCategory, activities: [ChatListInputActivity] = [], animateGroup: Bool = false, archiveStatus: HiddenArchiveStatus = .normal, hasFailed: Bool = false, filter: ChatListFilter? = nil) {
+    init(_ initialSize:NSSize, context: AccountContext, pinnedType: ChatListPinnedType, groupId: PeerGroupId, peers: [ChatListGroupReferencePeer], messages: [Message], unreadState: PeerGroupUnreadCountersCombinedSummary, unreadCountDisplayCategory: TotalUnreadCountDisplayCategory, activities: [ChatListInputActivity] = [], animateGroup: Bool = false, archiveStatus: HiddenArchiveStatus = .normal, hasFailed: Bool = false, filter: ChatListFilter = .allChats) {
         self.groupId = groupId
         self.peer = nil
         self.messages = messages
@@ -476,7 +476,7 @@ class ChatListRowItem: TableRowItem {
     
     private let embeddedState:StoredPeerChatInterfaceState?
     
-    init(_ initialSize:NSSize,  context: AccountContext,  messages: [Message], index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  isMuted:Bool = false, embeddedState:StoredPeerChatInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, peerPresence: PeerPresence? = nil, summaryInfo: [ChatListEntryMessageTagSummaryKey: ChatListMessageTagSummaryInfo] = [:], activities: [ChatListInputActivity] = [], highlightText: String? = nil, associatedGroupId: PeerGroupId = .root, hasFailed: Bool = false, showBadge: Bool = true, filter: ChatListFilter? = nil) {
+    init(_ initialSize:NSSize,  context: AccountContext,  messages: [Message], index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  isMuted:Bool = false, embeddedState:StoredPeerChatInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, peerPresence: PeerPresence? = nil, summaryInfo: [ChatListEntryMessageTagSummaryKey: ChatListMessageTagSummaryInfo] = [:], activities: [ChatListInputActivity] = [], highlightText: String? = nil, associatedGroupId: PeerGroupId = .root, hasFailed: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats) {
         
         
         var embeddedState = embeddedState
@@ -960,11 +960,11 @@ class ChatListRowItem: TableRowItem {
         ChatListRowItem.togglePinned(context: context, chatLocation: chatLocation, filter: filter, associatedGroupId: associatedGroupId)
     }
     
-    static func togglePinned(context: AccountContext, chatLocation: ChatLocation?, filter: ChatListFilter?, associatedGroupId: PeerGroupId) {
+    static func togglePinned(context: AccountContext, chatLocation: ChatLocation?, filter: ChatListFilter, associatedGroupId: PeerGroupId) {
         if let chatLocation = chatLocation {
             let location: TogglePeerChatPinnedLocation
             
-            if let filter = filter {
+            if case .filter = filter {
                 location = .filter(filter.id)
             } else {
                 location = .group(associatedGroupId)
@@ -974,7 +974,7 @@ class ChatListRowItem: TableRowItem {
             _ = (context.engine.peers.toggleItemPinned(location: location, itemId: chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
                 switch result {
                 case .limitExceeded:
-                    if let filter = filter {
+                    if case .filter = filter {
                         showPremiumLimit(context: context, type: .pinInFolders(.group(filter.id)))
                     } else {
                         if case .group = associatedGroupId {
@@ -1094,7 +1094,7 @@ class ChatListRowItem: TableRowItem {
                     firstGroup.append(ContextMenuItem(!isPinned ? strings().chatListContextPin : strings().chatListContextUnpin, handler: togglePin, itemImage: !isPinned ? MenuAnimation.menu_pin.value : MenuAnimation.menu_unpin.value))
                 }
                 
-                if groupId == .root, (canArchive || associatedGroupId != .root), filter == nil {
+                if groupId == .root, (canArchive || associatedGroupId != .root), filter == .allChats {
                     secondGroup.append(ContextMenuItem(associatedGroupId == .root ? strings().chatListSwipingArchive : strings().chatListSwipingUnarchive, handler: toggleArchive, itemImage: associatedGroupId == .root ? MenuAnimation.menu_archive.value : MenuAnimation.menu_unarchive.value))
                 }
                 

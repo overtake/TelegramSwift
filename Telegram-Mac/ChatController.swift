@@ -4252,7 +4252,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     })
                     |> restartIfError
                 
-                topPinnedMessage = combineLatest(
+                topPinnedMessage = combineLatest(queue: prepareQueue,
                     replyHistory,
                     self.topVisibleMessageRange.get(), self.dismissedPinnedIds.get()
                     )

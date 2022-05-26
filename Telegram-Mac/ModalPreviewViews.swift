@@ -287,7 +287,7 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
             
             var size = NSMakeSize(frame.width - 80, frame.height - 80)
             if reference.media.premiumEffect != nil {
-                size = NSMakeSize(150, 150)
+                size = NSMakeSize(200, 200)
             }
             if let dimensions = dimensions {
                 size = dimensions.aspectFitted(size)
@@ -301,12 +301,7 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
             }
 
             
-            if reference.media.premiumEffect != nil {
-                player.center()
-                player.setFrameOrigin(NSMakePoint(player.frame.minX, player.frame.minY))
-            } else {
-                player.center()
-            }
+            player.center()
             
             let mediaId = reference.media.id
             
@@ -363,7 +358,7 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
             }
             
             if let effect = reference.media.premiumEffect {
-                var animationSize = NSMakeSize(size.width * 2, size.height * 2)
+                var animationSize = NSMakeSize(size.width * 1.5, size.height * 1.5)
                 if let dimensions = reference.media.dimensions?.size {
                     animationSize = dimensions.aspectFitted(animationSize)
                 }
@@ -384,7 +379,7 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
                 }
                 
                 addSubview(current, positioned: .above, relativeTo: self.player)
-                current.centerY(x: player.frame.maxX - current.frame.width)
+                current.centerY(x: player.frame.maxX - current.frame.width + 19, addition: -1.5)
                 
                 dataDisposable.set(signal.start(next: { [weak current] animation in
                     current?.set(animation)

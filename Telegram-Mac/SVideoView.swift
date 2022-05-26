@@ -384,6 +384,9 @@ private final class SVideoControlsView : Control {
         volumeSlider.set(progress: CGFloat(status.volume))
         volumeToggle.set(image: status.volume.isZero ? theme.icons.videoPlayerVolumeOff : theme.icons.videoPlayerVolume, for: .Normal)
         
+        rewindForward.isHidden = rewindForward.isHidden || frame.width < 450
+        rewindBackward.isHidden = rewindBackward.isHidden || frame.width < 450
+
         rewindForward.isEnabled = status.duration > 30 && !status.generationTimestamp.isZero
         rewindBackward.isEnabled = status.duration > 30 && !status.generationTimestamp.isZero
         rewindForward.layer?.opacity = rewindForward.isEnabled ? 1.0 : 0.3

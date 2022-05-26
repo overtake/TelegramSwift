@@ -10,15 +10,9 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
+import Postbox
 
-/*
- type = 'premium.promo_screen_show', data  = {'premium_promo_order': ['double_limits',..., на случай рассинхрона с appConfig], 'source': 'settings' (а также предлагается использовать одно из значений в appConfig.premium_promo_order, когда например юзер упирается в лимиты, или тапнул по иконке в рекламе)}
- type = 'premium.promo_screen_tap', data = {'item': 'no_ads'} (юзер нажал на соответствующий пункт в списке)
- type = 'premium.promo_screen_accept' (нажали на главную кнопку в promo-экране)
- type = 'premium.promo_screen_fail' (в сторных версиях, юзер попытался оплатить, но не получилось, если такое умеем собирать)
- */
-
-enum PremiumLogEventsSource {
+enum PremiumLogEventsSource : Equatable {
     
     enum Subsource : String {
         case channels
@@ -40,6 +34,7 @@ enum PremiumLogEventsSource {
     case more_upload
     case unique_reactions
     case premium_stickers
+    case profile(PeerId)
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -58,6 +53,8 @@ enum PremiumLogEventsSource {
             return "unique_reactions"
         case .premium_stickers:
             return "premium_stickers"
+        case let .profile(peerId):
+            return "profile__\(peerId.id)"
         }
     }
     var subsource: String? {
@@ -290,11 +287,12 @@ enum PremiumValue : String {
 
 private struct State : Equatable {
     var values:[PremiumValue] = [.limits, .more_upload, .faster_download, .voice_to_text, .no_ads, .unique_reactions, .premium_stickers, .advanced_chat_management, .profile_badge, .animated_userpics]
+    let source: PremiumLogEventsSource
 }
 
 
 
-private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
+private func entries(_ state: State, peer: Peer?, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId:Int32 = 0
@@ -305,7 +303,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-        return PremiumBoardingHeaderItem(initialSize, stableId: stableId, viewType: .legacy)
+        return PremiumBoardingHeaderItem(initialSize, stableId: stableId, peer: peer, viewType: .legacy)
     }))
     index += 1
     
@@ -479,7 +477,7 @@ private final class PremiumBoardingView : View {
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         transition.updateFrame(view: headerView, frame: NSMakeRect(0, 0, size.width, 50))
-        transition.updateFrame(view: tableView, frame: NSMakeRect(0, 0, size.width, size.height - 60))
+        transition.updateFrame(view: tableView, frame: NSMakeRect(0, 0, size.width, size.height - (bottomView.isHidden ? 0 : 60)))
         transition.updateFrame(view: bottomView, frame: NSMakeRect(0, tableView.frame.maxY, size.width, 60))
         
         transition.updateFrame(view: acceptView, frame: bottomView.focus(acceptView.frame.size))
@@ -490,7 +488,7 @@ private final class PremiumBoardingView : View {
         return NSMakeSize(size.width, min(headerView.frame.height + tableView.listHeight + bottomView.frame.height, size.height))
     }
     
-    func update(animated: Bool) {
+    func update(animated: Bool, hasPremium: Bool) {
         let size = acceptView.update(animated: animated)
         acceptView.setFrameSize(size)
         acceptView.layer?.cornerRadius = size.height / 2
@@ -500,6 +498,8 @@ private final class PremiumBoardingView : View {
         } else {
             transition = .immediate
         }
+        bottomView.isHidden = hasPremium
+        
         self.updateScroll(tableView.scrollPosition().current, animated: false)
 
         updateLayout(size: frame.size, transition: transition)
@@ -555,7 +555,7 @@ final class PremiumBoardingController : ModalViewController {
             self?.close()
         }
 
-        let initialState = State(values: context.premiumOrder.premiumValues)
+        let initialState = State(values: context.premiumOrder.premiumValues, source: source)
         
         let statePromise = ValuePromise(initialState, ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -569,8 +569,16 @@ final class PremiumBoardingController : ModalViewController {
             
         })
         
-        let stateSignal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
-            return InputDataSignalValue(entries: entries(state, arguments: arguments))
+        let peer: Signal<Peer?, NoError>
+        switch source {
+        case let .profile(peerId):
+            peer = context.account.postbox.transaction { $0.getPeer(peerId) }
+        default:
+            peer = .single(nil)
+        }
+        
+        let stateSignal = combineLatest(queue: prepareQueue, statePromise.get(), peer) |> map { state, peer in
+            return InputDataSignalValue(entries: entries(state, peer: peer, arguments: arguments))
         }
         
         let previous: Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
@@ -581,6 +589,10 @@ final class PremiumBoardingController : ModalViewController {
             
         })
         
+        
+        
+
+        
         let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: .mainQueue(), appearanceSignal, stateSignal) |> mapToQueue { appearance, state in
             let entries = state.entries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             return prepareInputDataTransition(left: previous.swap(entries), right: entries, animated: state.animated, searchState: state.searchState, initialSize: initialSize.modify{ $0 }, arguments: inputArguments, onMainQueue: true)
@@ -590,7 +602,7 @@ final class PremiumBoardingController : ModalViewController {
         
         actionsDisposable.add(signal.start(next: { [weak self] transition in
             self?.genericView.tableView.merge(with: transition)
-            self?.genericView.update(animated: transition.animated)
+            self?.genericView.update(animated: transition.animated, hasPremium: context.isPremium)
             self?.updateSize(transition.animated)
             self?.readyOnce()
         }))

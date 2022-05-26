@@ -23,6 +23,8 @@ struct RevealAction {
     
 }
 
+private let duration: Double = 0.2
+
 public class RowAnimateView: View {
     public var stableId:AnyHashable?
 }
@@ -1589,7 +1591,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     newPoint.y -= self.documentOffset.y //self.convert(newPoint, from: self.tableView)
                     newPoint = NSMakePoint(round(newPoint.x), round(newPoint.y))
                     if first {
-                        view.layer?.animatePosition(from: NSMakePoint(0, view.frame.minY - newPoint.y), to: .zero, duration: 0.2, timingFunction: .spring, removeOnCompletion: true, additive: true)
+                        view.layer?.animatePosition(from: NSMakePoint(0, view.frame.minY - newPoint.y), to: .zero, duration: duration, timingFunction: .spring, removeOnCompletion: true, additive: true)
                     }
                     view.setFrameOrigin(newPoint)
                     first = false
@@ -1732,7 +1734,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         item.table = self;
         item._index = at
         let animation = animation != .none ? item.animatable ? animation : .none : .none
-        NSAnimationContext.current.duration = animation != .none ? 0.2 : 0.0
+        NSAnimationContext.current.duration = animation != .none ? duration : 0.0
         NSAnimationContext.current.timingFunction = animation == .none ? nil : CAMediaTimingFunction(name: .easeOut)
         if(redraw) {
             self.tableView.insertRows(at: IndexSet(integer: at), withAnimation: animation)
@@ -1785,7 +1787,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let item = self.item(at: row)
         let height = item.heightValue
         
-        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+        let transition: ContainedViewLayoutTransition = animated ? .animated(duration: duration, curve: .easeOut) : .immediate
         if let view = item.view {
             view.updateLayout(size: NSMakeSize(frame.width, height), transition: transition)
             transition.updateFrame(view: view, frame: CGRect(origin: view.frame.origin, size: NSMakeSize(frame.width, height)))
@@ -1801,7 +1803,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             if view.isKind(of: item.viewClass()) && !presentAsNew {
                 if view.frame.height != item.heightValue {
-                    NSAnimationContext.current.duration = animated ? 0.2 : 0.0
+                    NSAnimationContext.current.duration = animated ? duration : 0.0
                     NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
                     tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
                 }
@@ -1811,12 +1813,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 let width:CGFloat = self is HorizontalTableView ? item.width : frame.width
 
                 let size = NSMakeSize(width, height)
-                let transition: ContainedViewLayoutTransition = animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate
+                let transition: ContainedViewLayoutTransition = animated ? .animated(duration: duration, curve: .easeOut) : .immediate
                 view.set(item: item, animated: animated)
                 view.updateLayout(size: size, transition: transition)
                 transition.updateFrame(view: view, frame: CGRect(origin: view.frame.origin, size: size))
             } else {
-                NSAnimationContext.current.duration = animated ? 0.2 : 0.0
+                NSAnimationContext.current.duration = animated ? duration : 0.0
                 NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
                 self.tableView.removeRows(at: IndexSet(integer: row), withAnimation: !animated ? .none : options)
                 self.tableView.insertRows(at: IndexSet(integer: row), withAnimation: !animated ? .none :  options)
@@ -1851,7 +1853,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         var item:TableRowItem = self.item(at:from);
         let animation: NSTableView.AnimationOptions = animation != .none ? item.animatable ? animation : .none : .none
-        NSAnimationContext.current.duration = animation != .none ? 0.2 : 0.0
+        NSAnimationContext.current.duration = animation != .none ? duration : 0.0
         NSAnimationContext.current.timingFunction = animation != .none ? CAMediaTimingFunction(name: .easeOut) : nil
 
         if let change = changeItem {
@@ -1914,7 +1916,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             item._index = nil
 
             let animation: NSTableView.AnimationOptions = animation != .none ? item.animatable ? animation : .none : .none
-            NSAnimationContext.current.duration = animation == .none ? 0.0 : 0.2
+            NSAnimationContext.current.duration = animation == .none ? 0.0 : duration
             NSAnimationContext.current.timingFunction = animation == .none ? nil : CAMediaTimingFunction(name: .easeOut)
 
             if(redraw) {
@@ -2472,17 +2474,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         var inserted:[(TableRowItem, NSTableView.AnimationOptions)] = []
         var removed:[TableRowItem] = []
         
-        let check = { [weak self] in
-            guard let contentView = self?.contentView, let tableView = self?.tableView else {
-                return
-            }
-            if !tableView.isFlipped {
-                let offset = tableView.frame.height - contentView.bounds.height - contentView.bounds.minY
-                if offset < 0 {
-                    
-                }
-            }
-        }
         
         for rdx in transition.deleted.reversed() {
             let effect:NSTableView.AnimationOptions
@@ -2495,11 +2486,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 removed.append(item(at: rdx))
             }
             self.remove(at: rdx, redraw: true, animation:effect)
-            
-            check()
         }
         
-        //NSAnimationContext.current.duration = transition.animated ? 0.2 : 0.0
+        //NSAnimationContext.current.duration = transition.animated ? duration : 0.0
         
 
         for (idx,item) in transition.inserted {
@@ -2508,31 +2497,17 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             if item.animatable {
                 inserted.append((item, effect))
             }
-            check()
         }
         
         
         //CATransaction.commit()
+       
+        
+        
+        
         if transition.grouping && !transition.isEmpty {
             self.tableView.endUpdates()
         }
-        
-        for (index,item) in transition.updated {
-            let visibleItems = self.visibleItems()
-            let animated:Bool
-            if case .none = transition.state {
-                animated = self.visibleRows().indexIn(index) || !transition.animateVisibleOnly
-            } else {
-                animated = false
-            }
-            replace(item:item, at:index, animated: animated)
-            if !animated {
-                saveScrollState(visibleItems)
-            }
-            check()
-        }
-        
-
         
         for (i, item) in list.enumerated() {
             item._index = i
@@ -2673,8 +2648,26 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             break
         }
-        
-        
+              
+//        if transition.grouping {
+//            self.beginTableUpdates()
+//        }
+        for (index,item) in transition.updated {
+            let animated:Bool
+            let visibleItems = self.visibleItems()
+            if case .none = transition.state {
+                animated = visibleRange.indexIn(index) || !transition.animateVisibleOnly
+            } else {
+                animated = false
+            }
+            replace(item:item, at:index, animated: animated)
+            if !animated {
+                saveScrollState(visibleItems)
+            }
+        }
+//        if transition.grouping {
+//            self.endTableUpdates()
+//        }
         self.endUpdates()
         
         
@@ -2745,7 +2738,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     emptyView = vz.init(frame:bounds)
                     emptyView?.identifier = identifier
                     if animated, let emptyView = emptyView {
-                        emptyView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        emptyView.layer?.animateAlpha(from: 0, to: 1, duration: duration)
                     }
                 }
                 
@@ -2771,7 +2764,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 if let emptyView = emptyView {
                     self.emptyView = nil
                     if animated {
-                        emptyView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak emptyView] completed in
+                        emptyView.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak emptyView] completed in
                             emptyView?.removeFromSuperview()
                         })
                         if animated {

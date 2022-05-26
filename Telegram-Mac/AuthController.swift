@@ -629,7 +629,11 @@ class AuthController : GenericViewController<AuthView> {
                         return current
                     }
                 }, takeNext: { [weak self] value in
-                    self?.sendCode(value, updateState: updateState)
+                    if let window = self?.window {
+                        confirm(for: window, information: strings().authLoginConfirmPhone(formatPhoneNumber(value)), okTitle: strings().alertYes, cancelTitle: strings().alertNO, successHandler: { [weak self] _ in
+                            self?.sendCode(value, updateState: updateState)
+                        })
+                    }
                 })
             case let .confirmationCodeEntry(number, type, _, timeout, nextType, _):
                 controller = code_entry_c
