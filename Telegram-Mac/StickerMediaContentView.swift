@@ -119,18 +119,38 @@ class StickerMediaContentView: ChatMediaContentView {
         super.init(frame:frameRect)
     }
     
+    private var suggestOpenPremiumPack: Bool = false
+    
     override func executeInteraction(_ isControl: Bool) {
-        if let window = window as? Window {
+        if let window = window as? Window, let context = self.context, let media = media as? TelegramMediaFile, let peerId = parent?.id.peerId {
             
-            if NSApp.currentEvent?.modifierFlags.contains(.command) == true {
-                if let media = media as? TelegramMediaFile, media.isPremiumSticker, let parent = parent {
-                    self.playIfNeeded(true)
-                    parameters?.runPremiumScreenEffect(parent.id)
+            if suggestOpenPremiumPack, let reference = media.stickerReference {
+                
+                let title: String?
+                switch reference {
+                case let .name(name):
+                    title = name
+                default:
+                    title = nil
                 }
+                
+                showModalText(for: context.window, text: strings().stickerPremiumClickInfo, title: title, callback: { _ in
+                    showModal(with:StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for:window)
+                })
+                suggestOpenPremiumPack = false
+            } else {
+                if !suggestOpenPremiumPack {
+                    suggestOpenPremiumPack = true
+                }
+            }
+            
+            if media.isPremiumSticker, let parent = parent {
+                self.playIfNeeded(true)
+                parameters?.runPremiumScreenEffect(parent.id)
                 return
             }
             
-            if let context = context, let peerId = parent?.id.peerId, let media = media as? TelegramMediaFile, !media.isEmojiAnimatedSticker, let reference = media.stickerReference {
+            if !media.isEmojiAnimatedSticker, let reference = media.stickerReference {
                 showModal(with:StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for:window)
             } else if let media = media as? TelegramMediaFile, let sticker = media.stickerText, !sticker.isEmpty {
                 self.playIfNeeded(true)

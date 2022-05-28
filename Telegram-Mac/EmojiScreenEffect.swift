@@ -100,9 +100,9 @@ final class EmojiScreenEffect {
                             
                             if isPremium {
                                 if !animation.mirror {
-                                    point.x += 15
+                                    point.x += 18
                                 } else {
-                                    point.x -= 15
+                                    point.x -= 18
                                 }
                                 point.y -= 1
                                 
@@ -177,8 +177,9 @@ final class EmojiScreenEffect {
     func addPremiumEffect(mirror: Bool, isIncoming: Bool, messageId: MessageId, viewFrame: NSRect, for parentView: NSView) {
         
         let context = self.context
-        
-        if !isLimitExceed(messageId), let item = takeTableItem(messageId) {
+        let onair = animations.filter { $0.key.messageId == messageId }
+
+        if onair.isEmpty, let item = takeTableItem(messageId) {
             let animationSize = NSMakeSize(item.contentSize.width * 1.5, item.contentSize.height * 1.5)
             let signal: Signal<(LottieAnimation, String)?, NoError> = context.account.postbox.messageAtId(messageId)
             |> mapToSignal { message in

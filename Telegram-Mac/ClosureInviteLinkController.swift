@@ -125,7 +125,14 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
                     return autoremoveLocalized(Int(value))
                 }
             }
-            return SelectSizeRowItem(initialSize, stableId: stableId, current: current, sizes: sizes, hasMarkers: false, titles: titles, viewType: .firstItem, selectAction: { index in
+            let viewType: GeneralViewType
+            if state.requestApproval {
+                viewType = .singleItem
+            } else {
+                viewType = .firstItem
+            }
+
+            return SelectSizeRowItem(initialSize, stableId: stableId, current: current, sizes: sizes, hasMarkers: false, titles: titles, viewType: viewType, selectAction: { index in
                 arguments.limitDate(sizes[index])
             })
         }))
@@ -184,6 +191,7 @@ private func inviteLinkEntries(state: ClosureInviteLinkState, arguments: InviteL
                     return Int(value).prettyNumber
                 }
             }
+                        
             return SelectSizeRowItem(initialSize, stableId: stableId, current: current, sizes: sizes, hasMarkers: false, titles: titles, viewType: .firstItem, selectAction: { index in
                 arguments.usageLimit(sizes[index])
             })

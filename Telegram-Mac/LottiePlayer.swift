@@ -1069,7 +1069,7 @@ final class LottieAnimation : Equatable {
     var triggerOn:(LottiePlayerTriggerFrame, ()->Void, ()->Void)? 
 
     
-    init(compressed: Data, key: LottieAnimationEntryKey, type: LottieAnimationType = .lottie, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], soundEffect: LottieSoundEffect? = nil, postbox: Postbox? = nil, runOnQueue: Queue = stateQueue, metalSupport: Bool = true) {
+    init(compressed: Data, key: LottieAnimationEntryKey, type: LottieAnimationType = .lottie, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], soundEffect: LottieSoundEffect? = nil, postbox: Postbox? = nil, runOnQueue: Queue = stateQueue, metalSupport: Bool = false) {
         self.compressed = compressed
         self.key = key.withUpdatedColors(colors)
         self.cache = cachePurpose
@@ -1669,11 +1669,11 @@ class LottiePlayerView : View {
                     self.context = PlayerContext(animation, maxRefreshRate: holder.context.refreshRate, displayFrame: { frame, runLoop in
                         layer.takeUnretainedValue().render(frame: frame, runLoop: runLoop)
                     }, release: {
-                        Queue.mainQueue().async {
+                        delay(0.032, closure: {
                             layer.takeRetainedValue().removeFromSuperview()
                             _ = cachedContext?.takeRetainedValue()
                             cachedContext = nil
-                        }
+                        })
                         
                     }, updateState: { [weak self] state in
                         guard let `self` = self else {
@@ -1706,7 +1706,7 @@ class LottiePlayerView : View {
                             layer.takeUnretainedValue().layer?.contents = image
                         }
                     }, release: {
-                        Queue.mainQueue().async {
+                        delay(0.032, closure: {
                             let view = layer.takeRetainedValue()
                             if animated {
                                 view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
@@ -1715,7 +1715,7 @@ class LottiePlayerView : View {
                             } else {
                                 view.removeFromSuperview()
                             }
-                        }
+                        })
                     }, updateState: { [weak self] state in
                         guard let `self` = self else {
                             return

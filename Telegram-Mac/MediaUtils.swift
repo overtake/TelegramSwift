@@ -919,7 +919,7 @@ public func chatMessageSticker(postbox: Postbox, file: FileMediaReference, small
                 thumbnailContextSize.width += thumbnailInset * 2.0
                 thumbnailContextSize.height += thumbnailInset * 2.0
                 let thumbnailContext = DrawingContext(size: thumbnailContextSize, scale: 1.0, clear: true)
-                thumbnailContext.withFlippedContext(isHighQuality: false, { c in
+                thumbnailContext.withFlippedContext(isHighQuality: false, horizontal: arguments.mirror, { c in
                     let cgImage = thumbnailImage
                     c.setBlendMode(.normal)
                     c.interpolationQuality = .medium
@@ -930,7 +930,7 @@ public func chatMessageSticker(postbox: Postbox, file: FileMediaReference, small
                 blurredThumbnailImage = thumbnailContext.generateImage()
             }
             
-            context.withFlippedContext(isHighQuality: data.fullSizeData != nil, { c in
+            context.withFlippedContext(isHighQuality: data.fullSizeData != nil, horizontal: arguments.mirror, { c in
                 if let color = arguments.emptyColor {
                     c.setBlendMode(.normal)
                     switch color {
@@ -1099,7 +1099,7 @@ public func chatMessageAnimatedSticker(postbox: Postbox, file: FileMediaReferenc
                 thumbnailContextSize.width += thumbnailInset * 2.0
                 thumbnailContextSize.height += thumbnailInset * 2.0
                 let thumbnailContext = DrawingContext(size: thumbnailContextSize, scale: 1.0, clear: true)
-                thumbnailContext.withFlippedContext(isHighQuality: false, { c in
+                thumbnailContext.withFlippedContext(isHighQuality: false, horizontal: arguments.mirror, { c in
                     let cgImage = thumbnailImage
                     c.setBlendMode(.normal)
                     c.interpolationQuality = .medium
@@ -1111,7 +1111,7 @@ public func chatMessageAnimatedSticker(postbox: Postbox, file: FileMediaReferenc
                 blurredThumbnailImage = thumbnailContext.generateImage()
             }
             
-            context.withFlippedContext(isHighQuality: data.fullSizeData != nil, { c in
+            context.withFlippedContext(isHighQuality: data.fullSizeData != nil, horizontal: arguments.mirror, { c in
                 if let color = arguments.emptyColor {
                     c.setBlendMode(.normal)
                     switch color {

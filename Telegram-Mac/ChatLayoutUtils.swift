@@ -46,7 +46,7 @@ class ChatLayoutUtils: NSObject {
             }
             if file.isWebm || file.isVideoSticker {
                 let dimensions = file.dimensions?.size
-                size = NSMakeSize(160, 160)
+                size = NSMakeSize(200, 200)
                 if file.isEmojiAnimatedSticker {
                     size = NSMakeSize(112, 112)
                 }
@@ -55,7 +55,7 @@ class ChatLayoutUtils: NSObject {
                 }
             } else if file.isAnimatedSticker && !webpIsFile {
                 let dimensions = file.dimensions?.size
-                size = NSMakeSize(160, 160)
+                size = NSMakeSize(200, 200)
                 if file.isEmojiAnimatedSticker {
                     size = NSMakeSize(112, 112)
                 }

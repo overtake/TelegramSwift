@@ -829,7 +829,12 @@ final class GroupCallUIController : ViewController {
             }
             self.navigationController?.push(GroupCallSettingsController(sharedContext: sharedContext, account: account, callState: callState.get(), call: self.data.call))
         }, invite: { [weak self] peerId in
-            _ = self?.data.call.invitePeer(peerId)
+            let invite = self?.data.call.invitePeer(peerId)
+            
+            if invite == false {
+                var bp = 0
+                bp += 1
+            }
         }, mute: { [weak self] peerId, isMuted in
             _ = self?.data.call.updateMuteState(peerId: peerId, isMuted: isMuted)
         }, toggleSpeaker: { [weak self] in
@@ -860,6 +865,8 @@ final class GroupCallUIController : ViewController {
                 if let peerId = peerId.first, let window = window, let `self` = self {
                     if self.data.call.invitePeer(peerId) {
                         _ = showModalSuccess(for: window, icon: theme.icons.successModalProgress, delay: 2.0).start()
+                    } else {
+                        showModalText(for: window, text: strings().unknownError)
                     }
                 }
             }))

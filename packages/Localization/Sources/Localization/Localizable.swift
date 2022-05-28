@@ -5513,6 +5513,8 @@ public final class L10n {
   public static var inviteLinkRequestedZero: String  { return L10n.tr("Localizable", "InviteLink.Requested_zero") }
   /// Share Link
   public static var inviteLinkShareLink: String  { return L10n.tr("Localizable", "InviteLink.ShareLink") }
+  /// Link created and copied to clipboard.
+  public static var inviteLinkCreateCopied: String  { return L10n.tr("Localizable", "InviteLink.Create.Copied") }
   ///  • expired
   public static var inviteLinkStickerExpired: String  { return L10n.tr("Localizable", "InviteLink.Sticker.Expired") }
   ///  • limit reached
@@ -7611,6 +7613,10 @@ public final class L10n {
   public static var premiumLimitPremium: String  { return L10n.tr("Localizable", "Premium.Limit.Premium") }
   /// Limit Reached
   public static var premiumLimitReached: String  { return L10n.tr("Localizable", "Premium.Limit.Reached") }
+  /// You have reached the limit of %@ connected accounts. You can free one more place by subscribing to Telegram Premium with one of these connected accounts.
+  public static func premiumLimitAccountsInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.Accounts.Info", p1)
+  }
   /// The limit of caption is **%1$@** symbols. You can double this limit to **%2$@** symbols by subscribing to **Telegram Premium**.
   public static func premiumLimitCaptionInfo(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Premium.Limit.Caption.Info", p1, p2)
@@ -9531,6 +9537,8 @@ public final class L10n {
   public static var statusBarHide: String  { return L10n.tr("Localizable", "StatusBar.Hide") }
   /// Quit
   public static var statusBarQuit: String  { return L10n.tr("Localizable", "StatusBar.Quit") }
+  /// This pack contains premium stickers like this one. [View Pack]()
+  public static var stickerPremiumClickInfo: String  { return L10n.tr("Localizable", "Sticker.Premium.Click.Info") }
   /// %d
   public static func stickerPackAdd1Countable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StickerPack.Add1_countable", p1)

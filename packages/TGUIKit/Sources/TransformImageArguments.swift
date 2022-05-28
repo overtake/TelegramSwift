@@ -111,7 +111,7 @@ public struct TransformImageArguments: Equatable {
     public let resizeMode: TransformImageResizeMode
     public let emptyColor: TransformImageEmptyColor?
     public let scale: CGFloat
-    
+    public let mirror: Bool
     public let someObject: Int
     
     public var drawingSize: CGSize {
@@ -129,7 +129,7 @@ public struct TransformImageArguments: Equatable {
         return NSEdgeInsets(top: cornersExtendedEdges.top + self.intrinsicInsets.top, left: cornersExtendedEdges.left + self.intrinsicInsets.left, bottom: cornersExtendedEdges.bottom + self.intrinsicInsets.bottom, right: cornersExtendedEdges.right + self.intrinsicInsets.right)
     }
     
-    public init(corners:ImageCorners, imageSize:NSSize, boundingSize:NSSize, intrinsicInsets:NSEdgeInsets, resizeMode: TransformImageResizeMode = .none, emptyColor: TransformImageEmptyColor? = nil, scale: CGFloat = System.backingScale, someObject: Int = 0) {
+    public init(corners:ImageCorners, imageSize:NSSize, boundingSize:NSSize, intrinsicInsets:NSEdgeInsets, resizeMode: TransformImageResizeMode = .none, emptyColor: TransformImageEmptyColor? = nil, scale: CGFloat = System.backingScale, someObject: Int = 0, mirror: Bool = false) {
         self.corners = corners
         let min = corners.topLeft.corner + corners.topRight.corner
         self.imageSize = NSMakeSize(max(imageSize.width, min), max(imageSize.height, min))
@@ -139,11 +139,12 @@ public struct TransformImageArguments: Equatable {
         self.emptyColor = emptyColor
         self.scale = scale
         self.someObject = someObject
+        self.mirror = mirror
     }
 }
 
 public func ==(lhs: TransformImageArguments, rhs: TransformImageArguments) -> Bool {
-    return lhs.imageSize == rhs.imageSize && lhs.boundingSize == rhs.boundingSize && lhs.corners == rhs.corners && lhs.emptyColor == rhs.emptyColor && lhs.scale == rhs.scale && lhs.someObject == rhs.someObject
+    return lhs.imageSize == rhs.imageSize && lhs.boundingSize == rhs.boundingSize && lhs.corners == rhs.corners && lhs.emptyColor == rhs.emptyColor && lhs.scale == rhs.scale && lhs.someObject == rhs.someObject && lhs.mirror == rhs.mirror
 }
 
 

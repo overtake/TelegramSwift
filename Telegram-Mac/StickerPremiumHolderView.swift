@@ -17,12 +17,14 @@ final class StickerPremiumHolderView: NSVisualEffectView {
     private let dismiss:ImageButton = ImageButton()
     private let containerView = View()
     private let stickerEffectView = LottiePlayerView()
-    private let stickerView = MediaAnimatedStickerView(frame: NSMakeRect(0, 0, 140, 140))
+    private let stickerView = LottiePlayerView()
     var close:(()->Void)?
     
     private let dataDisposable = MetaDisposable()
+    private let dataEffectDisposable = MetaDisposable()
+    private let fetchEffectDisposable = MetaDisposable()
     private let fetchDisposable = MetaDisposable()
-    
+
     private let textView = TextView()
     
     private let unlock = AcceptView(frame: .zero)
@@ -85,6 +87,7 @@ final class StickerPremiumHolderView: NSVisualEffectView {
     required override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(containerView)
+        
         containerView.addSubview(stickerView)
         containerView.addSubview(stickerEffectView)
         addSubview(dismiss)
@@ -119,6 +122,8 @@ final class StickerPremiumHolderView: NSVisualEffectView {
     deinit {
         dataDisposable.dispose()
         fetchDisposable.dispose()
+        fetchEffectDisposable.dispose()
+        dataEffectDisposable.dispose()
     }
     
     func set(file: TelegramMediaFile, context: AccountContext, callback:@escaping()->Void) -> Void {
@@ -129,7 +134,24 @@ final class StickerPremiumHolderView: NSVisualEffectView {
             size = dimensions.aspectFitted(size)
         }
         stickerView.setFrameSize(size)
-        stickerView.update(with: file, size: size, context: context, table: nil, animated: false)
+        
+        let parameters = ChatAnimatedStickerMediaLayoutParameters(playPolicy: nil, media: file)
+        parameters.mirror = true
+        
+        let signal: Signal<LottieAnimation?, NoError> = context.account.postbox.mediaBox.resourceData(file.resource) |> filter { $0.complete } |> take(1) |> map { data in
+            if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
+                return LottieAnimation(compressed: data, key: .init(key: .bundle("_sticker_premium_\(file.fileId)"), size: size, backingScale: Int(System.backingScale), mirror: true), cachePurpose: .temporaryLZ4(.effect), playPolicy: .loop)
+            } else {
+                return nil
+            }
+        } |> deliverOnMainQueue
+        
+        dataDisposable.set(signal.start(next: { [weak self] animation in
+            self?.stickerView.set(animation)
+        }))
+        if let sticker = file.stickerReference {
+            fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .stickerPackThumbnail(stickerPack: sticker, resource: file.resource)).start())
+        }
         
         if let effect = file.premiumEffect {
             var animationSize = NSMakeSize(stickerView.frame.width * 1.5, stickerView.frame.height * 1.5)
@@ -139,17 +161,17 @@ final class StickerPremiumHolderView: NSVisualEffectView {
             
             let signal: Signal<LottieAnimation?, NoError> = context.account.postbox.mediaBox.resourceData(effect.resource) |> filter { $0.complete } |> take(1) |> map { data in
                 if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
-                    return LottieAnimation(compressed: data, key: .init(key: .bundle("_premium_\(file.fileId)"), size: animationSize, backingScale: Int(System.backingScale)), cachePurpose: .temporaryLZ4(.effect), playPolicy: .loop)
+                    return LottieAnimation(compressed: data, key: .init(key: .bundle("_premium_\(file.fileId)"), size: animationSize, backingScale: Int(System.backingScale), mirror: true), cachePurpose: .temporaryLZ4(.effect), playPolicy: .loop)
                 } else {
                     return nil
                 }
             } |> deliverOnMainQueue
             
-            dataDisposable.set(signal.start(next: { [weak self] animation in
+            dataEffectDisposable.set(signal.start(next: { [weak self] animation in
                 self?.stickerEffectView.set(animation)
             }))
             if let sticker = file.stickerReference {
-                fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .stickerPackThumbnail(stickerPack: sticker, resource: effect.resource)).start())
+                fetchEffectDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .stickerPackThumbnail(stickerPack: sticker, resource: effect.resource)).start())
             }
         }
         
@@ -171,10 +193,10 @@ final class StickerPremiumHolderView: NSVisualEffectView {
     override func layout() {
         super.layout()
         dismiss.setFrameOrigin(NSMakePoint(12, 10))
-        containerView.frame = stickerEffectView.frame.size.bounds
-        containerView.centerX(y: 0)
-        stickerEffectView.center()
-        stickerView.centerY(x: containerView.bounds.width - stickerView.frame.width - 15, addition: 1)
+        containerView.frame = NSMakeRect(0, 0, frame.width, stickerEffectView.frame.height)
+        containerView.centerX(y: 50)
+        stickerView.center()
+        stickerEffectView.centerY(x: stickerView.frame.minX - 15, addition: -1)
         unlock.centerX(y: frame.height - unlock.frame.height - 20)
         textView.centerX(y: unlock.frame.minY - textView.frame.height - 10)
     }

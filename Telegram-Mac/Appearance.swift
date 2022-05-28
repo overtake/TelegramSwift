@@ -554,7 +554,7 @@ func generateDialogVerify(background: NSColor, foreground: NSColor, reversed: Bo
             let image = NSImage(named: "Icon_VerifyDialog")!.precomposed(foreground)
             
             ctx.setFillColor(background.cgColor)
-            ctx.fillEllipse(in: NSMakeRect(8, 8, size.width - 16, size.height - 16))
+            ctx.fillEllipse(in: NSMakeRect(4, 4, size.width - 8, size.height - 8))
             
             ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
         })!
@@ -565,7 +565,7 @@ func generateDialogVerify(background: NSColor, foreground: NSColor, reversed: Bo
             let image = NSImage(named: "Icon_VerifyDialog")!.precomposed(foreground)
             
             ctx.setFillColor(background.cgColor)
-            ctx.fillEllipse(in: NSMakeRect(8, 8, size.width - 16, size.height - 16))
+            ctx.fillEllipse(in: NSMakeRect(4, 4, size.width - 8, size.height - 8))
             
             ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
         })!
@@ -2586,7 +2586,8 @@ func generateWebAppThemeParams(_ presentationTheme: PresentationTheme) -> [Strin
         "hint_color": Int32(bitPattern: presentationTheme.colors.grayText.rgb),
         "link_color": Int32(bitPattern: presentationTheme.colors.link.rgb),
         "button_color": Int32(bitPattern: presentationTheme.colors.accent.rgb),
-        "button_text_color": Int32(bitPattern: presentationTheme.colors.underSelectedColor.rgb)
+        "button_text_color": Int32(bitPattern: presentationTheme.colors.underSelectedColor.rgb),
+        "secondary_bg_color":Int32(bitPattern: presentationTheme.colors.listBackground.rgb)
     ]
 }
 

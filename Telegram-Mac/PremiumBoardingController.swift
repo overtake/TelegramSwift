@@ -26,6 +26,7 @@ enum PremiumLogEventsSource : Equatable {
         case caption_length
         case upload_max_fileparts
         case dialogs_folder_pinned
+        case accounts
     }
     
     case deeplink(String?)
@@ -545,14 +546,15 @@ final class PremiumBoardingController : ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
         let actionsDisposable = DisposableSet()
         let context = self.context
         let source = self.source
         
         PremiumLogEvents.promo_screen_show(source).send(context: context)
         
-        let close: ()->Void = { [weak self] in
-            self?.close()
+        let close: ()->Void = {
+            closeAllModals()
         }
 
         let initialState = State(values: context.premiumOrder.premiumValues, source: source)

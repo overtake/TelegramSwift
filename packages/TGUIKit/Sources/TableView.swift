@@ -2671,9 +2671,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.endUpdates()
         
         
+                
+        self.tableView.beginUpdates()
+        self.tableView.setFrameSize(NSMakeSize(frame.width, listHeight))
         self.reflectScrolledClipView(clipView)
-        let tableFrame = tableView.frame
-        self.tableView.frame = tableFrame
+        self.tableView.endUpdates()
+        
         
         self.updatedItems?(self.list)
         

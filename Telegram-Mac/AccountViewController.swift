@@ -13,6 +13,8 @@ import Localization
 import Postbox
 import SwiftSignalKit
 
+let normalAccountsLimit: Int = 3
+
 
 private final class AccountSearchBarView: TitledBarView {
     fileprivate let searchView = SearchView(frame: NSMakeRect(0, 0, 100, 30))
@@ -50,13 +52,15 @@ fileprivate final class AccountInfoArguments {
     let ask:()->Void
     let openUpdateApp:() -> Void
     let openPremium:()->Void
-    init(context: AccountContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping()->Void) {
+    let addAccount:([AccountWithInfo])->Void
+    init(context: AccountContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void) {
         self.context = context
         self.presentController = presentController
         self.openFaq = openFaq
         self.ask = ask
         self.openUpdateApp = openUpdateApp
         self.openPremium = openPremium
+        self.addAccount = addAccount
     }
 }
 
@@ -138,7 +142,7 @@ private final class AnyUpdateStateEquatable  : Equatable {
 private enum AccountInfoEntry : TableItemListNodeEntry {
     case info(index:Int, viewType: GeneralViewType, PeerEquatable)
     case accountRecord(index: Int, viewType: GeneralViewType, info: AccountWithInfo)
-    case addAccount(index: Int, viewType: GeneralViewType)
+    case addAccount(index: Int, [AccountWithInfo], viewType: GeneralViewType)
     case proxy(index: Int, viewType: GeneralViewType, status: String?)
     case general(index: Int, viewType: GeneralViewType)
     case stickers(index: Int, viewType: GeneralViewType)
@@ -209,7 +213,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             return index
         case let .accountRecord(index, _, _):
             return index
-        case let .addAccount(index, _):
+        case let .addAccount(index, _, _):
             return index
         case let  .general(index, _):
             return index
@@ -281,12 +285,10 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                 
                 return .single(items)
-            }, alwaysHighlight: true, badgeNode: GlobalBadgeNode(info.account, sharedContext: arguments.context.sharedContext, getColor: { _ in theme.colors.accent }, sync: true), compactText: true)
-        case let .addAccount(_, viewType):
+            }, alwaysHighlight: true, badgeNode: GlobalBadgeNode(info.account, sharedContext: arguments.context.sharedContext, getColor: { _ in theme.colors.accent }, sync: true), compactText: true, highlightVerified: true)
+        case let .addAccount(_, accounts, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsAddAccount, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accentIcon), type: .none, viewType: viewType, action: {
-                let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
-                arguments.context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
-                
+                arguments.addAccount(accounts)
             }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 35, thumbInset: 0), border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .general(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsGeneral, icon: theme.icons.settingsGeneral, activeIcon: theme.icons.settingsGeneralActive, type: .next, viewType: viewType, action: {
@@ -423,8 +425,12 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
         }
     }
     
-    if accounts.count < 3, !context.isSupport {
-        entries.append(.addAccount(index: index, viewType: .singleItem))
+    let accountsLimit: Int = normalAccountsLimit
+//    let hasPremium = accounts.filter({ $0.peer.isPremium })
+//    let normalCount = accounts.filter({ !$0.peer.isPremium }).count
+
+    if accounts.count < accountsLimit + 1, !context.isSupport {
+        entries.append(.addAccount(index: index, accounts, viewType: .singleItem))
         index += 1
     }
     entries.append(.whiteSpace(index: index, height: 20))
@@ -687,6 +693,18 @@ class LayoutAccountController : TableViewController {
             #endif
         }, openPremium: {
             showModal(with: PremiumBoardingController(context: context), for: context.window)
+        }, addAccount: { accounts in
+            let testingEnvironment = NSApp.currentEvent?.modifierFlags.contains(.command) == true
+            let hasPremium = accounts.contains(where: { $0.peer.isPremium })
+            if accounts.count == normalAccountsLimit {
+                if hasPremium {
+                    context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
+                } else {
+                    showPremiumLimit(context: context, type: .accounts(accounts.count))
+                }
+            } else {
+                context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
+            }
         })
         
         self.arguments = arguments

@@ -2,6 +2,21 @@
 
 #import <CoreText/CoreText.h>
 
+@implementation TGTextAttachment
+-(id)initWithImage:(NSImage *)image identifier:(id _Nonnull)identifier {
+    if (self = [super init]) {
+        
+        NSRect rect = NSMakeRect(0, 0, 18, 18);
+        NSImage *image = [[NSImage alloc] initWithSize:rect.size];
+
+        [super setImage:image];
+        _identifier = identifier;
+    }
+    [self setBounds:NSMakeRect(0, -5, 18, 18)];
+    return self;
+}
+@end
+
 @implementation TGInputTextAttribute
 
 -(id)initWithName:(NSString *)name value:(id)value {

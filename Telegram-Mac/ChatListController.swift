@@ -905,7 +905,12 @@ class ChatListController : PeersListController {
         let location: TogglePeerChatPinnedLocation
         
         if let filter = self.filterValue?.filter {
-            location = .filter(filter.id)
+            switch filter {
+            case .allChats:
+                location = .group(groupId)
+            case let .filter(id, _, _, _):
+                location = .filter(id)
+            }
         } else {
             location = .group(groupId)
         }
@@ -996,12 +1001,12 @@ class ChatListController : PeersListController {
                 }
             } else {
                 if self.genericView.tableView.documentOffset.y == 0 {
-                    if self.filterValue?.filter != nil {
+                    if self.filterValue?.filter == .allChats {
+                        self.context.bindings.mainController().showFastChatSettings()
+                    } else {
                         self.updateFilter {
                             $0.withUpdatedFilter(nil)
                         }
-                    } else {
-                        self.context.bindings.mainController().showFastChatSettings()
                     }
                 } else {
                     self.genericView.tableView.scroll(to: .up(true), ignoreLayerAnimation: true)

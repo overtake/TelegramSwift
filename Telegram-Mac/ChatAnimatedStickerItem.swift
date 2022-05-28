@@ -40,7 +40,9 @@ class ChatAnimatedStickerItem: ChatMediaItem {
     override init(_ initialSize: NSSize, _ chatInteraction: ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
         
-        let isPremiumSticker = (object.message!.media.first as! TelegramMediaFile).isPremiumSticker
+        let file = (object.message!.media.first as! TelegramMediaFile)
+        
+        let isPremiumSticker = file.isPremiumSticker || file.isEmojiAnimatedSticker
         
         let mirror = ((renderType == .bubble && isIncoming) || renderType == .list) && isPremiumSticker
         parameters?.runEmojiScreenEffect = { [weak chatInteraction] emoji in
