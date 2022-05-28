@@ -614,7 +614,7 @@ private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.Check
                     
                     let invoke:(inAppLink)->Void = { link in
                         switch link {
-                        case let .external(detectedUrl, _):
+                        case let .external(detectedUrl, _), let .joinchat(detectedUrl, _, _, _), let .wallpaper(detectedUrl, _, _), let .theme(detectedUrl, _, _), let .instantView(detectedUrl, _, _):
                             subscriber.putNext((detectedUrl, webpagePreview(account: context.account, url: detectedUrl) |> map { value in
                                 return { _ in return value }
                                 }))
@@ -625,7 +625,7 @@ private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.Check
                             } else {
                                 subscriber.putNext((detectedUrl, webpagePreview(account: context.account, url: detectedUrl) |> map { value in
                                     return { _ in return value }
-                                    }))
+                                }))
                             }
                         default:
                             subscriber.putNext((nil, .single({ _ in return nil })))

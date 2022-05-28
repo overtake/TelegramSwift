@@ -37,7 +37,7 @@ func resolveUsername(username: String, context: AccountContext) -> Signal<Peer?,
                     if let peer = peer {
                         return .single(peer)
                     } else {
-                        return context.engine.peers.findChannelById(channelId: peerId.id._internalGetInt64Value())
+                        return context.engine.peers.findChannelById(channelId: peerId.id._internalGetInt64Value()) |> map { $0?._asPeer() }
                     }
             }
             
@@ -366,7 +366,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         return context.engine.peers.findChannelById(channelId: peerId.id._internalGetInt64Value())
                             |> mapToSignalPromotingError { value in
                                 if let value = value {
-                                    return .single(value)
+                                    return .single(value._asPeer())
                                 } else {
                                     return .fail(.privateAccess)
                                 }
@@ -449,7 +449,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         if let peer = peer {
                             return .single(peer)
                         } else {
-                            return context.engine.peers.findChannelById(channelId: peerId.id._internalGetInt64Value())
+                            return context.engine.peers.findChannelById(channelId: peerId.id._internalGetInt64Value()) |> map { $0?._asPeer() }
                         }
                 }
                 

@@ -75,7 +75,7 @@ class ChatStickerContentView: ChatMediaContentView {
             
             let dimensions =  file.dimensions?.size.aspectFitted(size) ?? size
             
-            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets(), mirror: parameters?.mirror ?? false)
             
             self.image.animatesAlphaOnFirstTransition = false
            

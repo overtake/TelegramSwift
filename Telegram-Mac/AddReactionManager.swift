@@ -257,6 +257,9 @@ final class ContextAddReactionsListView : View  {
         scrollView.documentView = documentView
         let size = NSMakeSize(30, 30)
         var x: CGFloat = 0
+        
+        
+        
         for reaction in list {
             let reaction = ReactionView(frame: NSMakeRect(x, 0, size.width, size.height), context: context, reaction: reaction, add: add)
             documentView.addSubview(reaction)

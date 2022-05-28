@@ -118,6 +118,8 @@ private final class PremiumReactionsView : View {
         if carousel == nil {
             carousel = ReactionCarouselView(context: context, reactions: context.reactions.available?.reactions ?? [])
             containerView.addSubview(carousel!)
+            
+            carousel?.playReaction()
         }
         needsLayout = true
     }

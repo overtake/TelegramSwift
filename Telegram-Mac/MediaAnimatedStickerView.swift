@@ -232,9 +232,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         } else if parent == nil && file.fileId != prev?.fileId {
             self.sticker = nil
         }
-        
-        let prevParent = self.parent
-       
+               
 
         self.nextForceAccept = approximateSynchronousValue || parent?.id.namespace == Namespaces.Message.Local
 
@@ -341,8 +339,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             }))
             
             let aspectSize = file.dimensions?.size.aspectFitted(size) ?? size
-            
-            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: aspectSize, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: aspectSize, boundingSize: size, intrinsicInsets: NSEdgeInsets(), mirror: mirror)
             
                    
             if parameters?.noThumb == false || parameters == nil {

@@ -133,7 +133,7 @@ final class InviteLinkPeerManager {
         
     }
     
-    func createPeerExportedInvitation(title: String?, expireDate: Int32?, usageLimit: Int32?, requestNeeded: Bool? = nil) -> Signal<NoValue, NoError> {
+    func createPeerExportedInvitation(title: String?, expireDate: Int32?, usageLimit: Int32?, requestNeeded: Bool? = nil) -> Signal<_ExportedInvitation?, NoError> {
         let context = self.context
         let peerId = self.peerId
         return Signal { [weak self] subscriber in
@@ -149,7 +149,7 @@ final class InviteLinkPeerManager {
                     return state
                 }
                 
-                
+                subscriber.putNext(value?._invitation)
                 subscriber.putCompletion()
             })
             return disposable
@@ -655,8 +655,11 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
         showModal(with: ClosureInviteLinkController(context: context, peerId: peerId, mode: .new, save: { [weak manager] link in
             let signal = manager?.createPeerExportedInvitation(title: link.title, expireDate: link.date == .max ? nil : link.date + Int32(Date().timeIntervalSince1970), usageLimit: link.count == .max ? nil : link.count, requestNeeded: link.requestApproval)
             if let signal = signal {
-                _ = showModalProgress(signal: signal, for: context.window).start(completed:{
-                    _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
+                _ = showModalProgress(signal: signal, for: context.window).start(next: { invitation in
+                    if let invitation = invitation {
+                        copyToClipboard(invitation.link)
+                        showModalText(for: context.window, text: strings().inviteLinkCreateCopied)
+                    }
                 })
             }
         }), for: context.window)

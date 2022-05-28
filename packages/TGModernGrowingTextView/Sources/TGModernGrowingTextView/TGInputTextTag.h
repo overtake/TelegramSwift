@@ -1,5 +1,10 @@
 #import <AppKit/AppKit.h>
 
+@interface TGTextAttachment : NSTextAttachment
+@property (nonatomic,strong,readonly) id _Nonnull identifier;
+-(id)initWithImage:(NSImage * _Nonnull)image identifier:(id _Nonnull)identifier;
+@end
+
 @interface TGInputTextAttribute : NSObject
 @property (nonatomic,strong,readonly) NSString *name;
 @property (nonatomic,strong,readonly) id value;

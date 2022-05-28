@@ -15,8 +15,8 @@ import AppKit
 
 private final class ReactionView : Control {
             
-    private let player = LottiePlayerView(frame: NSMakeRect(0, 0, 140, 140))
-    private let imageView = TransformImageView(frame: NSMakeRect(0, 0, 110, 140))
+    private let player = LottiePlayerView(frame: NSMakeRect(0, 0, 80, 80))
+    private let imageView = TransformImageView(frame: NSMakeRect(0, 0, 80, 80))
     private let disposable = MetaDisposable()
     private let appearDisposable = MetaDisposable()
     let reaction: AvailableReactions.Reaction
@@ -34,7 +34,7 @@ private final class ReactionView : Control {
         addSubview(player)
         
 
-        let signal = context.account.postbox.mediaBox.resourceData(reaction.centerAnimation!.resource, attemptSynchronously: true)
+        let signal = context.account.postbox.mediaBox.resourceData(reaction.activateAnimation.resource, attemptSynchronously: true)
         |> filter {
             $0.complete
         }
@@ -311,7 +311,11 @@ final class ReactionCarouselView: View {
     func setup() {
         for (i, reaction) in self.reactions.enumerated() {
             let itemView = ReactionView(frame: .zero, context: context, reaction: reaction, add: { [weak self] value in
-                self?.scrollTo(i, playReaction: true, duration: 0.5, clockwise: nil)
+                self?.scrollTo(i, playReaction: false, duration: 0.5, clockwise: nil)
+                guard let aroundAnimation = reaction.aroundAnimation else {
+                    return
+                }
+                self?.add(effect: reaction.title, file: aroundAnimation)
             })
             self.addSubview(itemView, positioned: .below, relativeTo: effectViews)
                         

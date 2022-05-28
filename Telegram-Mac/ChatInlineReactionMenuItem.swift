@@ -90,7 +90,22 @@ private final class ChatInlineReactionMenuRowView : AppMenuBasicItemView {
         if self.reactions == nil {
             var width = ContextAddReactionsListView.width(for: item.reactions)
             width = min(width, 30 * 6 + 15)
-            let reactionsView = ContextAddReactionsListView(frame: NSMakeRect(0, 0, width, 30), context: item.context, list: item.reactions, add: { [weak item] value in
+            
+            var needRemove: Bool = false
+            var list = item.reactions
+            list.removeAll(where: { value in
+                if value.isPremium, !item.context.isPremium {
+                    if needRemove {
+                        return true
+                    }
+                    needRemove = true
+                    return false
+                } else {
+                    return false
+                }
+            })
+            
+            let reactionsView = ContextAddReactionsListView(frame: NSMakeRect(0, 0, width, 30), context: item.context, list: list, add: { [weak item] value in
                 item?._handler(value)
                 AppMenu.closeAll()
             }, radiusLayer: false)

@@ -407,9 +407,17 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     
 -(void)boldWord:(id)sender {
     if(self.selectedRange.length == 0) {
+//        TGTextAttachment *attachment = [[TGTextAttachment alloc] initWithImage:[NSImage imageNamed:@"Icon_ChatIV"] identifier:@"e"];
+//
+//        NSAttributedString *attr = [NSAttributedString attributedStringWithAttachment:attachment];
+//        NSLog(@"%ld", attr.length);
+//        [self.textStorage appendAttributedString:attr];
+        
         return;
     }
-
+    
+   
+    
     NSRange effectiveRange;
     NSFont *effectiveFont;
     for (int i = self.selectedRange.location; i < self.selectedRange.location + self.selectedRange.length; i++) {
@@ -865,14 +873,28 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
 @end
 
 
-@interface TGModernGrowingTextView () <NSTextViewDelegate,CAAnimationDelegate> {
+@interface TGModernGrowingTextView () <NSTextViewDelegate,CAAnimationDelegate, NSLayoutManagerDelegate> {
     int _last_height;
 }
     @property (nonatomic,strong) TGGrowingTextView *textView;
     @property (nonatomic,strong) NSScrollView *scrollView;
     @property (nonatomic,assign) BOOL notify_next;
     @property (nonatomic, strong) NSUndoManager *_undo;
-    @end
+    @property (nonatomic, strong) NSView * _Nullable (^ _Nullable getAttachView)();
+
+@end
+
+@interface TGTextLayoutManager : NSLayoutManager
+
+@end
+
+@implementation TGTextLayoutManager
+
+-(void)drawGlyphsForGlyphRange:(NSRange)glyphsToShow atPoint:(NSPoint)origin {
+    [super drawGlyphsForGlyphRange:glyphsToShow atPoint:origin];
+}
+
+@end
 
 
 @implementation TGModernGrowingTextView
@@ -892,8 +914,19 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
         _max_height = 200;
         _animates = YES;
         _cursorColor = [NSColor blackColor];
-        
+//        _textStorage = [[NSTextStorage alloc] init];
+//
+//        TGTextLayoutManager *layoutManager = [[TGTextLayoutManager alloc] init];
+//        [_textStorage addLayoutManager:layoutManager];
+//
+//        NSTextContainer *container = [[NSTextContainer alloc] init];
+//        container.widthTracksTextView = true;
+//        container.heightTracksTextView = true;
+//        [layoutManager addTextContainer:container];
+//
         _textView = [[[self _textViewClass] alloc] initWithFrame:self.bounds];
+
+        
         [_textView setRichText:NO];
         [_textView setImportsGraphics:NO];
         _textView.insertionPointColor = _cursorColor;
@@ -907,6 +940,8 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
         
         [_textView setDrawsBackground:NO];
         
+        
+        _textView.layoutManager.delegate = self;
         
         if (unscrollable) {
             self.scrollView = [[UnscrollableTextScrollView alloc] initWithFrame:self.bounds];
@@ -948,6 +983,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     
     return self;
 }
+
     
 -(NSUndoManager *)undoManagerForTextView:(NSTextView *)view {
     return self._undo;
@@ -1031,10 +1067,47 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     
 - (void)drawRect:(NSRect)dirtyRect {
     [super drawRect:dirtyRect];
-    
+    [self reloadAttachments];
 }
 
+
+-(void)reloadAttachments {
+    NSMutableArray<NSValue *> *ranges = [NSMutableArray array];
+    NSMutableArray<TGTextAttachment *> *attachments = [NSMutableArray array];
+
+    [self.textView.attributedString enumerateAttributesInRange:NSMakeRange(0, self.textView.attributedString.length) options:0 usingBlock:^(NSDictionary<NSAttributedStringKey,id> * _Nonnull attrs, NSRange range, BOOL * _Nonnull stop) {
+        
+        [attrs enumerateKeysAndObjectsUsingBlock:^(NSAttributedStringKey  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+            if ([key isEqualToString:NSAttachmentAttributeName]) {
+                TGTextAttachment *attachment = (TGTextAttachment *)obj;
+                if (attachment) {
+                    [ranges addObject:[NSValue valueWithRange:range]];
+                    [attachments addObject:obj];
+                }
+            }
+        }];
+        
+    }];
     
+    for (int i = 0; i < ranges.count; i++) {
+        NSRange range = ranges[i].rangeValue;
+        TGTextAttachment *attachment = attachments[i];
+        
+        NSRect rect = [_textView.layoutManager boundingRectForGlyphRange:range inTextContainer:_textView.textContainer];
+        NSLog(@"%@", NSStringFromRect(rect));
+        
+        NSView* view =_getAttachView(attachment);
+        view.frame = rect;
+        if(view != nil && view.superview != _textView) {
+            [_textView addSubview:view];
+        }
+    }
+    
+}
+    
+-(void)installGetAttachView:(NSView* _Nullable (^)(TGTextAttachment * _Nonnull))getAttachView {
+    _getAttachView = getAttachView;
+}
     
 -(NSArray<NSTouchBarItemIdentifier> *)textView:(NSTextView *)textView shouldUpdateTouchBarItemIdentifiers:(NSArray<NSTouchBarItemIdentifier> *)identifiers {
     if ([self.delegate respondsToSelector:@selector(textView:shouldUpdateTouchBarItemIdentifiers:)]) {

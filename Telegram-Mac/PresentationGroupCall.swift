@@ -2626,6 +2626,11 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         guard case let .established(callInfo, _, _, _, _) = self.internalState, !self.invitedPeersValue.contains(peerId) else {
             return false
         }
+        
+        guard stateValue.networkState == .connected else {
+            return false
+        }
+        
         if let channel = self.peer as? TelegramChannel {
             if channel.isChannel {
                 return false

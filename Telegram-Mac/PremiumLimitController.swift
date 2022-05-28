@@ -40,6 +40,8 @@ extension PremiumLimitController.LimitType {
             return NSImage(named: "Icon_Premium_Limit_File")!.precomposed(NSColor(hexString: "#FFFFFF"))
         case .caption:
             return NSImage(named: "Icon_Premium_Limit_Chats")!.precomposed(NSColor(hexString: "#FFFFFF"))
+        case .accounts:
+            return NSImage(named: "Icon_Premium_Limit_Chats")!.precomposed(NSColor(hexString: "#FFFFFF"))
         }
     }
     var acceptText: String {
@@ -78,6 +80,9 @@ extension PremiumLimitController.LimitType {
             return strings().premiumLimitFileSizeInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
         case .caption:
             return strings().premiumLimitCaptionInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
+        case .accounts:
+            return strings().premiumLimitAccountsInfo("\(defaultLimit(limits))")
+
         }
     }
     
@@ -103,6 +108,8 @@ extension PremiumLimitController.LimitType {
             return CGFloat(limits.channels_limit_default) / CGFloat(limits.caption_length_limit_premium)
         case let .caption(count):
             return CGFloat(counts != nil ? count : limits.caption_length_limit_default) / CGFloat(limits.caption_length_limit_premium)
+        case let .accounts(count):
+            return CGFloat(count) / CGFloat(normalAccountsLimit + 1)
         case let .uploadFile(count):
             if counts != nil, let count = count {
                 return CGFloat(count) / CGFloat(limits.upload_max_fileparts_premium)
@@ -130,6 +137,8 @@ extension PremiumLimitController.LimitType {
             return "\(counts?.pinnedCount ?? limits.dialog_filters_chats_limit_default)"
         case .pinInFolders:
             return "\(limits.dialog_filters_pinned_limit_default)"
+        case .accounts:
+            return "\(normalAccountsLimit)"
         case .channels:
             return "\(limits.channels_limit_default)"
         case let .caption(count):
@@ -164,6 +173,8 @@ extension PremiumLimitController.LimitType {
             return "\(limits.channels_limit_premium)"
         case .caption:
             return "\(limits.caption_length_limit_premium)"
+        case .accounts:
+            return "\(normalAccountsLimit + 1)"
         case .uploadFile:
             return "\(String.prettySized(with: limits.upload_max_fileparts_premium, afterDot: 0, round: true))"
         }
@@ -581,6 +592,7 @@ final class PremiumLimitController : ModalViewController {
         case channels
         case uploadFile(Int?)
         case caption(Int)
+        case accounts(Int)
         
         var eventSource: PremiumLogEventsSource {
             switch self {
@@ -606,6 +618,8 @@ final class PremiumLimitController : ModalViewController {
                 return .double_limits(.upload_max_fileparts)
             case .caption:
                 return .double_limits(.caption_length)
+            case .accounts:
+                return .double_limits(.accounts)
             }
         }
     }

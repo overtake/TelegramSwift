@@ -5590,18 +5590,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }, itemImage: MenuAnimation.menu_archive.value))
                         }
                         
-                        if peer.canSendMessage(self.mode.isThreadMode), peerView.peerId.namespace != Namespaces.Peer.SecretChat {
-                            let text: String
-                            if peer.id != context.peerId {
-                                text = strings().chatRightContextScheduledMessages
-                            } else {
-                                text = strings().chatRightContextReminder
-                            }
-                            items.append(ContextMenuItem(text, handler: { [weak self] in
-                                self?.openScheduledChat()
-                            }, itemImage: MenuAnimation.menu_schedule_message.value))
-                        }
-                      
                         
                         let deleteChat = { [weak self] in
                             guard let `self` = self else {return}
