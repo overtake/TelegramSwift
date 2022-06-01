@@ -456,15 +456,15 @@ func generateLockPremium(_ palette: ColorPalette) -> CGImage {
     return generateImage(image.backingSize, contextGenerator: { size, ctx in
         ctx.clear(size.bounds)
         
-        ctx.setFillColor(palette.background.cgColor)
-        ctx.fillEllipse(in: size.bounds.insetBy(dx: 2, dy: 2))
-        
-        ctx.fill(NSMakeRect(size.width - 9, 1, 8, 8))
+//        ctx.setFillColor(palette.background.cgColor)
+//        ctx.fillEllipse(in: size.bounds.insetBy(dx: 2, dy: 2))
+//
+//        ctx.fill(NSMakeRect(size.width - 9, 1, 8, 8))
 
         
         ctx.clip(to: size.bounds, mask: image)
 
-        let colors = [NSColor(hexString: "#1391FF")!, NSColor(hexString: "#F977CC")!].map { $0.cgColor } as NSArray
+        let colors = [NSColor(hexString: "#ffffff")!, NSColor(hexString: "#ffffff")!].map { $0.cgColor } as NSArray
         let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
         
         var locations: [CGFloat] = []

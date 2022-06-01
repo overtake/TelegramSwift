@@ -583,7 +583,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
 
         let file: TelegramMediaFile?
         let seekTo: TimeInterval?
-        if let photo = photo, let video = photo.image.videoRepresentations.last {
+        if let photo = photo, let video = photo.image.videoRepresentations.first {
             file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: photo.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
             seekTo = video.startTimestamp
         } else {

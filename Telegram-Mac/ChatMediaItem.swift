@@ -362,19 +362,30 @@ class ChatMediaItem: ChatRowItem {
         self.updateParameters()
                 
         var transcribed: String?
-        
+        var transcribtedColor = theme.chat.textColor(isIncoming, object.renderType == .bubble)
         if let transcribe = entry.additionalData.transribeState {
+                        
             switch transcribe {
-            case .revealed(let optional):
-                transcribed = optional
+            case let .revealed(success):
+                if !success {
+                    transcribed = strings().chatVoiceTransribeError
+                    transcribtedColor = parameters.presentation.activityBackground
+                } else {
+                    if let result = entry.message?.audioTranscription, !result.text.isEmpty {
+                        transcribed = result.text
+                    } else {
+                        transcribed = strings().chatVoiceTransribeError
+                        transcribtedColor = parameters.presentation.activityBackground
+                    }
+                }
             default:
                 break
             }
         }
         
         if let transcribed = transcribed {
-            let caption: NSAttributedString = .initialize(string: transcribed, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(theme.fontSize))
-            captionLayouts = [.init(id: message.stableId, offset: CGPoint(x: 0, y: 0), layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected()))]
+            let caption: NSAttributedString = .initialize(string: transcribed, color: transcribtedColor, font: .normal(theme.fontSize))
+            captionLayouts.append(.init(id: UInt32.max, offset: CGPoint(x: 0, y: 0), layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected())))
         }
         
         if !message.text.isEmpty, canAddCaption, transcribed == nil {
@@ -443,13 +454,13 @@ class ChatMediaItem: ChatRowItem {
                 
                 InlineStickerItem.apply(to: caption, emojies: entry.additionalData.animatedEmojiStickers, context: context)
                 
-                captionLayouts = [.init(id: message.stableId, offset: CGPoint(x: 0, y: 0), layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
+                captionLayouts.append(.init(id: message.stableId, offset: CGPoint(x: 0, y: 0), layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
                     chatInteraction?.update({
                         $0.updatedInterfaceState({
                             $0.withRevealedSpoiler(message.id)
                         })
                     })
-                }))]
+                })))
             }
             
             let interactions = globalLinkExecutor

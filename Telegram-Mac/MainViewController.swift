@@ -74,6 +74,9 @@ final class UpdateTabView : Control {
         addSubview(progressView)
         addSubview(imageView)
         addSubview(shimmer)
+        
+        shimmer.isStatic = true
+        
         progressView.progressColor = .white
         isInstalling = false
         
@@ -398,10 +401,7 @@ class MainViewController: TelegramViewController {
         if unreadCount > 0 {
             items.append(ContextMenuItem(strings().chatListPopoverReadAll, handler: {
                 confirm(for: context.window, information: strings().chatListPopoverConfirm, successHandler: { _ in
-                    _ = context.account.postbox.transaction ({ transaction -> Void in
-                        markAllChatsAsReadInteractively(transaction: transaction, viewTracker: context.account.viewTracker, groupId: .root, filterPredicate: nil)
-                        markAllChatsAsReadInteractively(transaction: transaction, viewTracker: context.account.viewTracker, groupId: Namespaces.PeerGroup.archive, filterPredicate: nil)
-                    }).start()
+                    _ = context.engine.messages.markAllChatsAsReadInteractively(items: [(.root, nil), (.archive, nil)]).start()
                 })
             }, itemImage: MenuAnimation.menu_read.value))
         }

@@ -484,6 +484,15 @@ public extension Message {
         return nil
     }
     
+    var audioTranscription:AudioTranscriptionMessageAttribute? {
+        for attr in attributes {
+            if let attr = attr as? AudioTranscriptionMessageAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
     var isImported: Bool {
         if let forwardInfo = self.forwardInfo, forwardInfo.flags.contains(.isImported) {
             return true

@@ -407,12 +407,6 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     
 -(void)boldWord:(id)sender {
     if(self.selectedRange.length == 0) {
-//        TGTextAttachment *attachment = [[TGTextAttachment alloc] initWithImage:[NSImage imageNamed:@"Icon_ChatIV"] identifier:@"e"];
-//
-//        NSAttributedString *attr = [NSAttributedString attributedStringWithAttachment:attachment];
-//        NSLog(@"%ld", attr.length);
-//        [self.textStorage appendAttributedString:attr];
-        
         return;
     }
     
@@ -881,6 +875,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     @property (nonatomic,assign) BOOL notify_next;
     @property (nonatomic, strong) NSUndoManager *_undo;
     @property (nonatomic, strong) NSView * _Nullable (^ _Nullable getAttachView)();
+    @property (nonatomic,strong) NSMutableDictionary<NSString *, NSView *> *attachments;
 
 @end
 
@@ -926,6 +921,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
 //
         _textView = [[[self _textViewClass] alloc] initWithFrame:self.bounds];
 
+        _attachments = [[NSMutableDictionary alloc] init];
         
         [_textView setRichText:NO];
         [_textView setImportsGraphics:NO];
@@ -1067,11 +1063,11 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     
 - (void)drawRect:(NSRect)dirtyRect {
     [super drawRect:dirtyRect];
-    [self reloadAttachments];
+    [self refreshAttachments];
 }
 
 
--(void)reloadAttachments {
+-(void)refreshAttachments {
     NSMutableArray<NSValue *> *ranges = [NSMutableArray array];
     NSMutableArray<TGTextAttachment *> *attachments = [NSMutableArray array];
 
@@ -1089,20 +1085,38 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
         
     }];
     
+    NSMutableArray<NSString *> *validIds = [NSMutableArray array];
+    
     for (int i = 0; i < ranges.count; i++) {
         NSRange range = ranges[i].rangeValue;
         TGTextAttachment *attachment = attachments[i];
         
-        NSRect rect = [_textView.layoutManager boundingRectForGlyphRange:range inTextContainer:_textView.textContainer];
-        NSLog(@"%@", NSStringFromRect(rect));
-        
-        NSView* view =_getAttachView(attachment);
+        NSRect rect = [self.textView highlightRectForRange:range whole:NO];
+        NSView* view = [self.attachments valueForKey:attachment.identifier];
+        if (view == nil) {
+            view = _getAttachView(attachment);
+        }
+        rect.size.height = view.frame.size.height;
         view.frame = rect;
         if(view != nil && view.superview != _textView) {
             [_textView addSubview:view];
         }
+        [validIds addObject:attachment.identifier];
+        [_attachments setObject:view forKey:attachment.identifier];
     }
     
+    NSMutableArray<NSString *> *toRemove = [NSMutableArray array];
+    [_attachments enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSView * _Nonnull obj, BOOL * _Nonnull stop) {
+        if (![validIds containsObject:key]) {
+            [toRemove addObject:key];
+        }
+    }];
+    
+    for (int i = 0; i < toRemove.count; i++) {
+        NSView *view = [_attachments objectForKey:toRemove[i]];
+        [view removeFromSuperview];
+        [_attachments removeObjectForKey:toRemove[i]];
+    }
 }
     
 -(void)installGetAttachView:(NSView* _Nullable (^)(TGTextAttachment * _Nonnull))getAttachView {
@@ -1607,7 +1621,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
         
     }
     
-    
+    [self refreshAttachments];
 }
 
 -(void)strikethroughWord {
@@ -1623,6 +1637,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     
 -(void)boldWord {
     [self.textView boldWord:nil];
+
 }
 -(void)removeAllAttributes {
     if(self.selectedRange.length == 0) {
@@ -1664,7 +1679,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     NSAttributedString *string = [attributedString attributedSubstringFromRange:NSMakeRange(0, MIN(limit, attributedString.string.length))];
     
     NSMutableAttributedString *attr = [[NSMutableAttributedString alloc] initWithAttributedString: string];
-    
+        
     [string enumerateAttribute:NSFontAttributeName inRange:NSMakeRange(0, string.length) options:0 usingBlock:^(NSFont *value, NSRange range, BOOL * _Nonnull stop) {
         [attr addAttribute:NSFontAttributeName value:[[NSFontManager sharedFontManager] convertFont:value toSize:_textFont.pointSize] range:range];
     }];
@@ -1684,7 +1699,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     self.animates = o;
    
     [self setSelectedRange:NSMakeRange(MIN(selectedRange.location, string.length), 0)];
-
+    
 }
     
     

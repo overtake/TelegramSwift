@@ -51,6 +51,7 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
     case code(Range<Int>)
     case uid(Range<Int>, Int64)
     case url(Range<Int>, String)
+    case animated(Range<Int>, String, MediaId)
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: StringCodingKey.self)
         
@@ -78,6 +79,8 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
             self = .spoiler(range)
         case 8:
             self = .underline(range)
+        case 9:
+            self = .animated(range, try container.decode(String.self, forKey: "id"), try container.decode(MediaId.self, forKey: "mediaId"))
         default:
             fatalError("input attribute not supported")
         }
@@ -102,6 +105,8 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
             return 7
         case .underline:
             return 8
+        case .animated:
+            return 9
         }
     }
     
@@ -139,6 +144,10 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
         case let .url(_, url):
             try container.encode(Int32(5), forKey: "_rawValue")
             try container.encode(url, forKey: "url")
+        case let .animated(_, id, mediaId):
+            try container.encode(Int32(9), forKey: "_rawValue")
+            try container.encode(id, forKey: "id")
+            try container.encode(mediaId, forKey: "mediaId")
         }
     }
 
@@ -166,6 +175,9 @@ extension ChatTextInputAttribute {
         case let .url(range, url):
             let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: url, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
             return (TGCustomLinkAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+        case let .animated(range, id, mediaId):
+            let tag = TGTextAttachment(identifier: "\(id)", mediaId: mediaId, text: "")
+            return (NSAttributedString.Key.attachment.rawValue, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         }
     }
 
@@ -176,6 +188,8 @@ extension ChatTextInputAttribute {
         case let .uid(range, _):
             return range
         case let .url(range, _):
+            return range
+        case let .animated(range, _, _):
             return range
         }
     }
@@ -200,6 +214,8 @@ extension ChatTextInputAttribute {
             return .uid(range, uid)
         case let .url(_, url):
             return .url(range, url)
+        case let .animated(_, id, mediaId):
+            return .animated(range, id, mediaId)
         }
     }
 }
@@ -227,6 +243,10 @@ func chatTextAttributes(from entities:TextEntitiesMessageAttribute) -> [ChatText
             inputAttributes.append(.spoiler(entity.range))
         case .Underline:
             inputAttributes.append(.underline(entity.range))
+        case let .AnimatedEmoji(mediaId):
+            if let mediaId = mediaId {
+                inputAttributes.append(.animated(entity.range, "\(arc4random())", mediaId))
+            }
         default:
             break
         }
@@ -271,6 +291,10 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
                     }
                 } else if let url = tag.attachment as? String {
                     inputAttributes.append(.url(range.location ..< range.location + range.length, url))
+                }
+            } else if let attachment = value as? TGTextAttachment {
+                if let mediaId = attachment.mediaId as? MediaId {
+                    inputAttributes.append(.animated(range.location ..< range.location + range.length, attachment.identifier, mediaId))
                 }
             }
         }
@@ -327,7 +351,6 @@ final class ChatTextInputState: Codable, Equatable {
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: StringCodingKey.self)
-
         try container.encode(self.inputText, forKey: "t")
         try container.encode(Int32(self.selectionRange.lowerBound), forKey: "s0")
         try container.encode(Int32(self.selectionRange.upperBound), forKey: "s1")
@@ -371,7 +394,6 @@ final class ChatTextInputState: Codable, Equatable {
             default:
                 break inner
             }
-
             string.addAttribute(NSAttributedString.Key(rawValue: attr.0), value: attr.1, range: attr.2)
         }
         for (range, fontAttributes) in fontAttributes {
@@ -572,6 +594,8 @@ final class ChatTextInputState: Codable, Equatable {
                     attributes.append(.uid(newRange.min ..< newRange.max, uid))
                 case let .url(_, url):
                     attributes.append(.url(newRange.min ..< newRange.max, url))
+                case let .animated(_, id, mediaId):
+                    attributes.append(.animated(newRange.min ..< newRange.max, id, mediaId))
                 }
           //  }
         }
@@ -623,7 +647,7 @@ final class ChatTextInputState: Codable, Equatable {
     func messageTextEntities(_ detectLinks: ParsingType = [.Hashtags]) -> [MessageTextEntity] {
         var entities:[MessageTextEntity] = []
         for attribute in attributes {
-            switch attribute {
+            sw: switch attribute {
             case let .bold(range):
                 entities.append(.init(range: range, type: .Bold))
             case let .strikethrough(range):
@@ -642,6 +666,8 @@ final class ChatTextInputState: Codable, Equatable {
                 entities.append(.init(range: range, type: .TextMention(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(uid)))))
             case let .url(range, url):
                 entities.append(.init(range: range, type: .TextUrl(url: url)))
+            case let .animated(range, id, mediaId):
+                entities.append(.init(range: range, type: .AnimatedEmoji(mediaId)))
             }
         }
 

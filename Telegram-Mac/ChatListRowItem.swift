@@ -915,7 +915,7 @@ class ChatListRowItem: TableRowItem {
 
     func toggleUnread() {
         if let peerId = peerId {
-            _ = togglePeerUnreadMarkInteractively(postbox: context.account.postbox, viewTracker: context.account.viewTracker, peerId: peerId).start()
+            _ = context.engine.messages.togglePeersUnreadMarkInteractively(peerIds: [peerId], setToValue: nil).start()
         }
     }
     
@@ -999,11 +999,10 @@ class ChatListRowItem: TableRowItem {
         if let peerId = peerId {
             switch associatedGroupId {
             case .root:
-                let postbox = context.account.postbox
                 context.bindings.mainController().chatList.setAnimateGroupNextTransition(Namespaces.PeerGroup.archive)
-                _ = updatePeerGroupIdInteractively(postbox: postbox, peerId: peerId, groupId: Namespaces.PeerGroup.archive).start()
+                _ = context.engine.peers.updatePeersGroupIdInteractively(peerIds: [peerId], groupId: .archive).start()
             default:
-                 _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: .root).start()
+                _ = context.engine.peers.updatePeersGroupIdInteractively(peerIds: [peerId], groupId: .root).start()
             }
         }
     }
@@ -1234,13 +1233,12 @@ class ChatListRowItem: TableRowItem {
                 if !isSecret {
                     if markAsUnread {
                         firstGroup.append(ContextMenuItem(strings().chatListContextMaskAsUnread, handler: {
-                            _ = togglePeerUnreadMarkInteractively(postbox: context.account.postbox, viewTracker: context.account.viewTracker, peerId: peerId).start()
-                            
+                            _ = context.engine.messages.togglePeersUnreadMarkInteractively(peerIds: [peerId], setToValue: true).start()
                         }, itemImage: MenuAnimation.menu_unread.value))
                         
                     } else if isUnread {
                         firstGroup.append(ContextMenuItem(strings().chatListContextMaskAsRead, handler: {
-                            _ = togglePeerUnreadMarkInteractively(postbox: context.account.postbox, viewTracker: context.account.viewTracker, peerId: peerId).start()
+                            _ = context.engine.messages.togglePeersUnreadMarkInteractively(peerIds: [peerId], setToValue: false).start()
                         }, itemImage: MenuAnimation.menu_read.value))
                     }
                 }

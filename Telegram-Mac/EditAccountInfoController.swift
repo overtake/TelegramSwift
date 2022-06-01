@@ -193,7 +193,9 @@ private func editInfoEntries(state: EditInfoState, arguments: EditInfoController
     index += 1
 
     
-    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.about), error: nil, identifier: _id_about, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().bioPlaceholder, filter: {$0}, limit: 70))
+    let limit = arguments.context.isPremium ? arguments.context.premiumLimits.about_length_limit_premium : arguments.context.premiumLimits.about_length_limit_default
+    
+    entries.append(.input(sectionId: sectionId, index: index, value: .string(state.about), error: nil, identifier: _id_about, mode: .plain, data: InputDataRowData(viewType: .singleItem), placeholder: nil, inputPlaceholder: strings().bioPlaceholder, filter: {$0}, limit: Int32(limit)))
     index += 1
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().bioDescription), data: InputDataGeneralTextData(viewType: .textBottomItem)))
@@ -475,6 +477,16 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
             return .fail(.none)
         }
         
+        if let about = data[_id_about]?.stringValue {
+            if context.isPremium {
+                
+            } else {
+                if about.length > context.premiumLimits.about_length_limit_default {
+                    showPremiumLimit(context: context, type: .caption(about.length))
+                }
+            }
+        }
+        
         return .fail(.doSomething { f in
             let current = stateValue.modify {$0}
             if current.firstName.isEmpty {
@@ -519,6 +531,12 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
     controller.didLoaded = { controller, _ in
         if let focusOnItemTag = focusOnItemTag {
             controller.genericView.tableView.scroll(to: .center(id: focusOnItemTag.stableId, innerId: nil, animated: true, focus: .init(focus: true), inset: 0), inset: NSEdgeInsets())
+        }
+    }
+    
+    controller.inputLimitReached = { limit in
+        if !context.isPremium {
+            showPremiumLimit(context: context, type: .about(context.premiumLimits.about_length_limit_default + limit))
         }
     }
     

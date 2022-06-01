@@ -990,7 +990,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         
         if !item.photos.isEmpty {
             
-            if let first = item.photos.first, let video = first.image.videoRepresentations.last, item.updatingPhotoState == nil {
+            if let first = item.photos.first, let video = first.image.videoRepresentations.first, item.updatingPhotoState == nil {
                
                 let equal = videoRepresentation?.resource.id == video.resource.id
                 

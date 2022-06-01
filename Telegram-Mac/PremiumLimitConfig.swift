@@ -65,6 +65,9 @@ final class PremiumLimitConfig {
     let dialogs_folder_pinned_limit_premium: Int
 
     
+    let about_length_limit_default: Int
+    let about_length_limit_premium: Int
+
     init(appConfiguration: AppConfiguration) {
         if let data = appConfiguration.data {
             self.channels_limit_default = Int(data["channels_limit_default"] as? Double ?? 500)
@@ -100,9 +103,9 @@ final class PremiumLimitConfig {
             self.dialogs_folder_pinned_limit_default = Int(data["dialogs_folder_pinned_limit_default"] as? Double ?? 100)
             self.dialogs_folder_pinned_limit_premium = Int(data["dialogs_folder_pinned_limit_premium"] as? Double ?? 200)
 
-            
-            
-            
+            self.about_length_limit_default = Int(data["about_length_limit_default"] as? Double ?? 70)
+            self.about_length_limit_premium = Int(data["about_length_limit_premium"] as? Double ?? 140)
+
         } else {
             self.channels_limit_default = 500
             self.channels_limit_premium = 1000
@@ -136,7 +139,9 @@ final class PremiumLimitConfig {
             
             self.dialogs_folder_pinned_limit_default = 100
             self.dialogs_folder_pinned_limit_premium = 200
-
+            
+            self.about_length_limit_default = 70
+            self.about_length_limit_premium = 140
         }
     }
 }

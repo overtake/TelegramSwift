@@ -121,13 +121,15 @@ private final class Arguments {
     let openPaymentMethod:()->Void
     let selectTip:(Int64?)->Void
     let pay:(TemporaryTwoStepPasswordToken?)->Void
-    init(context: AccountContext, openForm:@escaping(PaymentsShippingInfoFocus?)->Void, openShippingMethod:@escaping()->Void, openPaymentMethod:@escaping()->Void, pay:@escaping(TemporaryTwoStepPasswordToken?)->Void, selectTip:@escaping(Int64?)->Void) {
+    let toggleRecurrentAccept:()->Void
+    init(context: AccountContext, openForm:@escaping(PaymentsShippingInfoFocus?)->Void, openShippingMethod:@escaping()->Void, openPaymentMethod:@escaping()->Void, pay:@escaping(TemporaryTwoStepPasswordToken?)->Void, selectTip:@escaping(Int64?)->Void, toggleRecurrentAccept:@escaping()->Void) {
         self.context = context
         self.openForm = openForm
         self.openShippingMethod = openShippingMethod
         self.openPaymentMethod = openPaymentMethod
         self.pay = pay
         self.selectTip = selectTip
+        self.toggleRecurrentAccept = toggleRecurrentAccept
     }
 }
 
@@ -152,6 +154,7 @@ private struct State : Equatable {
     var shippingOptionId: BotPaymentShippingOption?
     var paymentMethod: BotCheckoutPaymentMethod?
     var currentTip: Int64?
+    var recurrentAccepted: Bool?
     var unfilledInfo: PaymentsShippingInfoFocus? {
         if let form = form {
             if form.invoice.requestedFields.contains(.shippingAddress) {
@@ -190,6 +193,8 @@ private let _id_checkout_name = InputDataIdentifier("_id_checkout_name")
 private let _id_checkout_flex_shipping = InputDataIdentifier("_id_checkout_flex_shipping")
 private let _id_checkout_phone_number = InputDataIdentifier("_id_checkout_phone_number")
 private let _id_checkout_email = InputDataIdentifier("_id_checkout_email")
+
+private let _id_recurrent_info = InputDataIdentifier("_id_checkout_email")
 
 private let _id_tips = InputDataIdentifier("_id_tips")
 
@@ -360,6 +365,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_checkout_phone_number, data: .init(name: strings().checkoutPhone, color: theme.colors.text, type: .nextContext(formatPhoneNumber(savedInfo.phone ?? "")), viewType: fields.isEmpty ? .lastItem : .innerItem, action: {
                 arguments.openForm(.phone)
             })))
+            index += 1
+        }
+        
+        if let info = state.form?.invoice.recurrentInfo, let accept = state.recurrentAccepted {
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_recurrent_info, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+                return PaymentsCheckoutRecurrentRowItem(initialSize, stableId: stableId, termsUrl: info.termsUrl, botName: state.botPeer?.peer.displayTitle ?? "", accept: accept, toggle: arguments.toggleRecurrentAccept)
+            }))
             index += 1
         }
     
@@ -604,6 +619,14 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
             }
             return current
         }
+    }, toggleRecurrentAccept: {
+        updateState { current in
+            var current = current
+            if let value = current.recurrentAccepted {
+                current.recurrentAccepted = !value
+            }
+            return current
+        }
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -655,6 +678,9 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
         updateState { current in
             var current = current
             current.form = form.0
+            if current.recurrentAccepted == nil, current.form?.invoice.recurrentInfo != nil {
+                current.recurrentAccepted = false
+            }
             current.botPeer = botPeer != nil ? PeerEquatable(botPeer!) : nil
             current.validatedInfo = form.1
             if let savedInfo = form.0.savedInfo {
@@ -700,6 +726,11 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
             return .fail(.doSomething(next: { _ in
                 arguments.openPaymentMethod()
             }))
+        }
+        if let recurrent = state.recurrentAccepted {
+            if !recurrent {
+                return .fail(.fields([_id_recurrent_info : .shake]))
+            }
         }
         
         return .fail(.doSomething(next: { _ in

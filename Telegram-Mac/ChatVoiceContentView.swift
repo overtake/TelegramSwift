@@ -197,15 +197,12 @@ class ChatVoiceContentView: ChatAudioContentView {
                 switch status {
                 case let .Fetching(_, progress):
                     state = .Fetching(progress: progress, force: false)
-                    strongSelf.progressView.state = .Fetching(progress: progress, force: false)
                 case .Paused:
                     state = .Remote
-                    strongSelf.progressView.state = .Remote
                 case .Remote:
                     state = .Remote
-                    strongSelf.progressView.state = .Remote
                 case .Local:
-                    strongSelf.progressView.state = .Play
+                    break
                 }
                 if let state = state {
                     let current: RadialProgressView
@@ -255,8 +252,6 @@ class ChatVoiceContentView: ChatAudioContentView {
                         controlState = .expanded
                     case .loading:
                         controlState = .inProgress
-                    case .failed:
-                        controlState = nil
                     }
                 }
                 

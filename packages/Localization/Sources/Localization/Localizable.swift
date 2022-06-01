@@ -3343,6 +3343,8 @@ public final class L10n {
   public static var chatVideoCallIncoming: String  { return L10n.tr("Localizable", "Chat.VideoCall.Incoming") }
   /// Outgoing Video Call
   public static var chatVideoCallOutgoing: String  { return L10n.tr("Localizable", "Chat.VideoCall.Outgoing") }
+  /// No speech detected
+  public static var chatVoiceTransribeError: String  { return L10n.tr("Localizable", "Chat.Voice.Transribe.Error") }
   /// Join
   public static var chatVoiceChatJoinLinkOK: String  { return L10n.tr("Localizable", "Chat.VoiceChat.JoinLink.OK") }
   /// %d
@@ -6643,6 +6645,10 @@ public final class L10n {
   public static var paymentsInvoiceNotExists: String  { return L10n.tr("Localizable", "Payments.Invoice.NotExists") }
   /// Tip
   public static var paymentsReceiptTip: String  { return L10n.tr("Localizable", "Payments.Receipt.Tip") }
+  /// I accept [Terms of Service]() of **Checkboxes %@**.
+  public static func paymentsRecurrentAccept(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Payments.Recurrent.Accept", p1)
+  }
   /// Deleted Account
   public static var peerDeletedUser: String  { return L10n.tr("Localizable", "Peer.DeletedUser") }
   /// Replies Notifications
@@ -7613,6 +7619,10 @@ public final class L10n {
   public static var premiumLimitPremium: String  { return L10n.tr("Localizable", "Premium.Limit.Premium") }
   /// Limit Reached
   public static var premiumLimitReached: String  { return L10n.tr("Localizable", "Premium.Limit.Reached") }
+  /// The limit of about is **%1$@** symbols. You can double this limit to **%2$@** symbols by subscribing to **Telegram Premium**.
+  public static func premiumLimitAboutInfo(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.About.Info", p1, p2)
+  }
   /// You have reached the limit of %@ connected accounts. You can free one more place by subscribing to Telegram Premium with one of these connected accounts.
   public static func premiumLimitAccountsInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Premium.Limit.Accounts.Info", p1)

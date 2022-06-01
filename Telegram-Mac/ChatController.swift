@@ -2615,7 +2615,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.unarchive = {
-            _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: .root).start()
+            _ = context.engine.peers.updatePeersGroupIdInteractively(peerIds: [peerId], groupId: .root).start()
             let removeFlagsSignal = context.account.postbox.transaction { transaction in
                 transaction.updatePeerCachedData(peerIds: [peerId], update: { peerId, cachedData in
                     if let cachedData = cachedData as? CachedUserData {
@@ -3859,7 +3859,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        chatInteraction.transcribeAudio = { [weak self] messageId in
+        chatInteraction.transcribeAudio = { [weak self] message in
+            
+            let messageId = message.id
             
             guard let strongSelf = self else {
                 return
@@ -3871,16 +3873,26 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 strongSelf.updateTransribe { value in
                     var value = value
                     switch state {
-                    case let .revealed(str):
-                        value[messageId] = .collapsed(str)
-                    case let .collapsed(str):
-                        value[messageId] = .revealed(str)
+                    case let .revealed(success):
+                        value[messageId] = .collapsed(success)
+                    case let .collapsed(success):
+                        value[messageId] = .revealed(success)
                     default:
                         break
                     }
                     return value
                 }
             } else {
+                if let result = message.audioTranscription {
+                    if !result.isPending, !result.text.isEmpty {
+                        strongSelf.updateTransribe { value in
+                            var value = value
+                            value[messageId] = .revealed(true)
+                            return value
+                        }
+                        return
+                    }
+                }
                 strongSelf.updateTransribe { value in
                     var value = value
                     value[messageId] = .loading
@@ -3894,22 +3906,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     strongSelf?.updateTransribe { value in
                         var value = value
                         switch result {
-                        case let .success(result):
-                            value[messageId] = .revealed(result.text)
+                        case .success:
+                            value[messageId] = .revealed(true)
                         case .error:
-                            value[messageId] = .failed
+                            value[messageId] = .revealed(false)
                         }
                         return value
                     }
                 }), forKey: messageId)
-                
-//                strongSelf.transcribeDisposable.set(delaySignal(3.0).start(completed: { [weak strongSelf] in
-//                    strongSelf?.updateTransribe { value in
-//                        var value = value
-//                        value[messageId] = .revealed("test transcribed message")
-//                        return value
-//                    }
-//                }), forKey: messageId)
             }
 
         }
@@ -5582,11 +5586,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         
                         if let groupId = peerView.groupId, groupId != .root {
                             items.append(ContextMenuItem(strings().chatContextUnarchive, handler: {
-                                _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: .root).start()
+                                _ = context.engine.peers.updatePeersGroupIdInteractively(peerIds: [peerId], groupId: .root).start()
                             }, itemImage: MenuAnimation.menu_unarchive.value))
                         } else {
                             items.append(ContextMenuItem(strings().chatContextArchive, handler: {
-                                _ = updatePeerGroupIdInteractively(postbox: context.account.postbox, peerId: peerId, groupId: Namespaces.PeerGroup.archive).start()
+                                _ = context.engine.peers.updatePeersGroupIdInteractively(peerIds: [peerId], groupId: .archive).start()
                             }, itemImage: MenuAnimation.menu_archive.value))
                         }
                         
@@ -6367,19 +6371,43 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     }
     
     
-    func findAndSetEditableMessage(_ bottom: Bool = false) -> Bool {
-        if let view = self.previousView.with({ $0?.originalView }), view.laterId == nil {
-            for entry in (!bottom ? view.entries.reversed() : view.entries) {
-                if let messageId = chatInteraction.presentation.interfaceState.editState?.message.id {
-                    if (messageId <= entry.message.id && !bottom) || (messageId >= entry.message.id && bottom) {
-                        continue
-                    }
-                }
-                if canEditMessage(entry.message, chatInteraction: chatInteraction, context: context)  {
-                    chatInteraction.beginEditingMessage(entry.message)
+    func findAndSetEditableMessage() -> Bool {
+        if self.previousView.with({ $0?.originalView?.laterId == nil }) {
+            
+            var edited: Bool = false
+            genericView.tableView.enumerateVisibleItems(with: { item in
+                guard let item = item as? ChatRowItem else {
                     return true
                 }
-            }
+                if item.messages.count > 1 {
+                    var effectiveMessage: Message?
+                    for message in item.messages {
+                        if !message.text.isEmpty {
+                            effectiveMessage = message
+                            break
+                        }
+                    }
+                    effectiveMessage = effectiveMessage ?? item.messages.first
+                    
+                    if let message = effectiveMessage {
+                        if canEditMessage(message, chatInteraction: chatInteraction, context: context)  {
+                            chatInteraction.beginEditingMessage(message)
+                            edited = true
+                            return false
+                        }
+                    }
+                } else if let message = item.message {
+                    if canEditMessage(message, chatInteraction: chatInteraction, context: context)  {
+                        chatInteraction.beginEditingMessage(message)
+                        edited = true
+                        return false
+                    }
+                }
+                
+                
+                return true
+            })
+            return edited
         }
         return false
     }

@@ -40,8 +40,10 @@ extension PremiumLimitController.LimitType {
             return NSImage(named: "Icon_Premium_Limit_File")!.precomposed(NSColor(hexString: "#FFFFFF"))
         case .caption:
             return NSImage(named: "Icon_Premium_Limit_Chats")!.precomposed(NSColor(hexString: "#FFFFFF"))
-        case .accounts:
+        case .about:
             return NSImage(named: "Icon_Premium_Limit_Chats")!.precomposed(NSColor(hexString: "#FFFFFF"))
+        case .accounts:
+            return NSImage(named: "Icon_Premium_Limit_Accounts")!.precomposed(NSColor(hexString: "#FFFFFF"))
         }
     }
     var acceptText: String {
@@ -80,6 +82,8 @@ extension PremiumLimitController.LimitType {
             return strings().premiumLimitFileSizeInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
         case .caption:
             return strings().premiumLimitCaptionInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
+        case .about:
+            return strings().premiumLimitAboutInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
         case .accounts:
             return strings().premiumLimitAccountsInfo("\(defaultLimit(limits))")
 
@@ -108,8 +112,18 @@ extension PremiumLimitController.LimitType {
             return CGFloat(limits.channels_limit_default) / CGFloat(limits.caption_length_limit_premium)
         case let .caption(count):
             return CGFloat(counts != nil ? count : limits.caption_length_limit_default) / CGFloat(limits.caption_length_limit_premium)
+        case let .about(count):
+            return CGFloat(counts != nil ? count : limits.about_length_limit_default) / CGFloat(limits.about_length_limit_premium)
         case let .accounts(count):
-            return CGFloat(count) / CGFloat(normalAccountsLimit + 1)
+            if count == 3 {
+                return 0.5
+            } else if count == 2 {
+                return 0.3
+            } else if count == 1 {
+                return 0
+            } else {
+                return 1
+            }
         case let .uploadFile(count):
             if counts != nil, let count = count {
                 return CGFloat(count) / CGFloat(limits.upload_max_fileparts_premium)
@@ -143,6 +157,8 @@ extension PremiumLimitController.LimitType {
             return "\(limits.channels_limit_default)"
         case let .caption(count):
             return "\(counts != nil ? count : limits.caption_length_limit_default)"
+        case let .about(count):
+            return "\(counts != nil ? count : limits.about_length_limit_default)"
         case let .uploadFile(count):
             if counts != nil, let count = count {
                 return String.prettySized(with: count, afterDot: 1)
@@ -177,6 +193,8 @@ extension PremiumLimitController.LimitType {
             return "\(normalAccountsLimit + 1)"
         case .uploadFile:
             return "\(String.prettySized(with: limits.upload_max_fileparts_premium, afterDot: 0, round: true))"
+        case .about:
+            return "\(limits.about_length_limit_premium)"
         }
     }
 }
@@ -262,19 +280,19 @@ final class PremiumLimitView: View {
         
         override func layout() {
             super.layout()
-            let width = frame.width / 2 - 4
+            let width = frame.width / 2
 
             
             normalText.centerY(x: 10)
             
             normalCount.centerY(x: frame.midX - 2 - normalCount.frame.width - 10 - 10 - 10)
             
-            premiumText.centerY(x: width + 4 + 10)
+            premiumText.centerY(x: width + 10)
             premiumCount.centerY(x: frame.width - 10 - premiumCount.frame.width)
             
             
             normalBackground.frame = NSMakeRect(0, 0, width, frame.height)
-            premiumBackground.frame = NSMakeRect(width + 4, 0, width + 4, frame.height)
+            premiumBackground.frame = NSMakeRect(width, 0, width, frame.height)
         }
         
         required init?(coder: NSCoder) {
@@ -391,12 +409,13 @@ final class PremiumLimitView: View {
         private let gradient: PremiumGradientView = PremiumGradientView(frame: .zero)
         private let shimmer = ShimmerEffectView()
         private let textView = TextView()
-        private let imageView = ImageView()
+        private let imageView = LottiePlayerView(frame: NSMakeRect(0, 0, 24, 24))
         private let container = View()
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
             addSubview(gradient)
             addSubview(shimmer)
+            shimmer.isStatic = true
             container.addSubview(textView)
             container.addSubview(imageView)
             addSubview(container)
@@ -419,14 +438,16 @@ final class PremiumLimitView: View {
             fatalError("init(coder:) has not been implemented")
         }
         
-        func update(type: PremiumLimitController.LimitType) -> NSSize {
+        func update(type: PremiumLimitController.LimitType, lottie: LocalAnimatedSticker) -> NSSize {
             let layout = TextViewLayout(.initialize(string: type.acceptText, color: NSColor.white, font: .medium(.text)))
             layout.measure(width: .greatestFiniteMagnitude)
             textView.update(layout)
             
-            imageView.image = NSImage(named: "Icon_Premium_Limit_2x")?.precomposed(.white)
-            imageView.sizeToFit()
-            
+            if let data = lottie.data {
+                let colors:[LottieColor] = [.init(keyPath: "", color: NSColor(0xffffff))]
+                imageView.set(LottieAnimation(compressed: data, key: .init(key: .bundle("bundle_\(lottie.rawValue)"), size: NSMakeSize(24, 24), colors: colors), cachePurpose: .temporaryLZ4(.thumb), playPolicy: .loop, maximumFps: 60, colors: colors, runOnQueue: .mainQueue()))
+            }
+                        
             container.setFrameSize(NSMakeSize(layout.layoutSize.width + 10 + imageView.frame.width, max(layout.layoutSize.height, imageView.frame.height)))
             
             let size = NSMakeSize(container.frame.width + 100, 40)
@@ -519,7 +540,13 @@ final class PremiumLimitView: View {
     private var topPercent: CGFloat = 0.5
 
     @discardableResult func update(with type: PremiumLimitController.LimitType, counts: PremiumLimitController.Counts?, context: AccountContext, animated: Bool, hasDismiss: Bool = true) -> NSSize {
-        var size = accept.update(type: type)
+        let lottie: LocalAnimatedSticker
+        if case .accounts = type {
+            lottie = LocalAnimatedSticker.premium_addone
+        } else {
+            lottie = LocalAnimatedSticker.premium_double
+        }
+        var size = accept.update(type: type, lottie: lottie)
         accept.setFrameSize(size)
         
         dismiss.isHidden = !hasDismiss
@@ -592,6 +619,7 @@ final class PremiumLimitController : ModalViewController {
         case channels
         case uploadFile(Int?)
         case caption(Int)
+        case about(Int)
         case accounts(Int)
         
         var eventSource: PremiumLogEventsSource {
@@ -620,6 +648,8 @@ final class PremiumLimitController : ModalViewController {
                 return .double_limits(.caption_length)
             case .accounts:
                 return .double_limits(.accounts)
+            case .about:
+                return .double_limits(.about)
             }
         }
     }

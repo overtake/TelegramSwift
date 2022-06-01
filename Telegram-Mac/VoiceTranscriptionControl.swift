@@ -42,7 +42,7 @@ final class VoiceTranscriptionControl: Control {
     
     func update(state: TranscriptionState, parameters: ChatMediaVoiceLayoutParameters, transition: ContainedViewLayoutTransition) {
         
-        self.backgroundColor = parameters.presentation.grayText.withAlphaComponent(0.2)
+        self.backgroundColor = parameters.presentation.grayText.withAlphaComponent(0.1)
         let previousState = self.state
         self.state = state
         

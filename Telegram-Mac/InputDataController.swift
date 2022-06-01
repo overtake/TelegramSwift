@@ -369,6 +369,8 @@ class InputDataController: GenericViewController<InputDataView> {
     let identifier: String
     var ignoreRightBarHandler: Bool = false
     
+    var inputLimitReached:(Int)->Void = { _ in }
+    
     var contextObject: Any?
     var didAppear: ((InputDataController)->Void)?
     
@@ -533,7 +535,31 @@ class InputDataController: GenericViewController<InputDataView> {
     }
     
     private func validateInput(data: [InputDataIdentifier : InputDataValue]) {
-        proccessValidation(self.validateData(data))
+        
+        var values:[InputDataIdentifier : Int] = [:]
+        tableView.enumerateItems { item -> Bool in
+            if let identifier = (item.stableId.base as? InputDataEntryId)?.identifier {
+                if let item = item as? InputDataRowItem {
+                    if let data = data[identifier] {
+                        let length = (data.stringValue?.length ?? 0)
+                        if item.limit < length {
+                            values[identifier] = length - Int(item.limit)
+                        }
+                    }
+                }
+            }
+            return true
+        }
+        if !values.isEmpty {
+            for (key, _) in values {
+                let item = findItem(for: key)
+                item?.view?.shakeView()
+            }
+            let first = values.first!.value
+            self.inputLimitReached(first)
+        } else {
+            proccessValidation(self.validateData(data))
+        }
     }
     
     override func viewDidLoad() {

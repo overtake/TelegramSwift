@@ -12,6 +12,7 @@ import SwiftSignalKit
 import TelegramCore
 
 import Postbox
+import TGModernGrowingTextView
 
 
 enum ESearchCommand {
@@ -481,6 +482,7 @@ public final class EntertainmentInteractions {
     var current:EntertainmentState = .emoji
     
     var sendEmoji:(String) ->Void = {_ in}
+    var sendAnimatedEmoji:(StickerPackItem) ->Void = {_ in}
     var sendSticker:(TelegramMediaFile, Bool, Bool) ->Void = { _, _, _ in}
     var sendGIF:(TelegramMediaFile, Bool, Bool) ->Void = { _, _, _ in}
     
@@ -503,6 +505,7 @@ final class EntertainmentView : View {
     fileprivate var sectionView: NSView
     private let bottomView = View()
     private let borderView = View()
+    fileprivate let animatedEmojies: ImageButton = ImageButton()
     fileprivate let emoji: ImageButton = ImageButton()
     fileprivate let stickers: ImageButton = ImageButton()
     fileprivate let gifs: ImageButton = ImageButton()
@@ -519,6 +522,7 @@ final class EntertainmentView : View {
         addSubview(self.bottomView)
         self.bottomView.addSubview(sectionTabs)
         
+        self.sectionTabs.addSubview(self.animatedEmojies)
         self.sectionTabs.addSubview(self.emoji)
         self.sectionTabs.addSubview(self.stickers)
         self.sectionTabs.addSubview(self.gifs)
@@ -530,12 +534,14 @@ final class EntertainmentView : View {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
         self.borderView.background = theme.colors.border
+        self.animatedEmojies.set(image: theme.icons.entertainment_Emoji, for: .Normal)
         self.emoji.set(image: theme.icons.entertainment_Emoji, for: .Normal)
         self.stickers.set(image: theme.icons.entertainment_Stickers, for: .Normal)
         self.gifs.set(image: theme.icons.entertainment_Gifs, for: .Normal)
         _ = self.emoji.sizeToFit()
         _ = self.stickers.sizeToFit()
         _ = self.gifs.sizeToFit()
+        _ = self.animatedEmojies.sizeToFit()
         
     }
     
@@ -547,6 +553,7 @@ final class EntertainmentView : View {
         self.emoji.isSelected = false
         self.stickers.isSelected = false
         self.gifs.isSelected = false
+        self.animatedEmojies.isSelected = false
         
         switch state {
         case .emoji:
@@ -555,9 +562,12 @@ final class EntertainmentView : View {
             self.stickers.isSelected = true
         case .gifs:
             self.gifs.isSelected = true
+        case .animatedEmojies:
+            self.animatedEmojies.isSelected = true
         }
         emoji.isHidden = mode == .selectAvatar
-        
+        animatedEmojies.isHidden = mode == .selectAvatar
+
         needsLayout = true
     }
     
@@ -602,7 +612,7 @@ final class EntertainmentView : View {
         self.bottomView.frame = NSMakeRect(0, self.frame.height - 50, self.frame.width, 50)
         self.borderView.frame = NSMakeRect(0, 0, self.bottomView.frame.width, .borderSize)
         
-        let buttons:[NSView] = [self.emoji, self.stickers, self.gifs].filter { !$0.isHidden }
+        let buttons:[NSView] = [self.emoji, self.stickers, self.gifs, self.animatedEmojies].filter { !$0.isHidden }
         
         self.sectionTabs.setFrameSize(NSMakeSize(buttons.reduce(0, { $0 + $1.frame.width }) + CGFloat(buttons.count - 1) * 20, 40))
         self.sectionTabs.center()
@@ -644,6 +654,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
 
     private let emoji:EmojiViewController
     private let stickers:NStickersViewController
+    private let animatedEmojies: AnimatedEmojiesController
     private let gifs:GIFViewController
     
     private let searchState = ValuePromise<SearchState>(.init(state: .None, request: nil))
@@ -695,6 +706,15 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             }
         }
         
+        interactions.sendAnimatedEmoji = { [weak self] sticker in
+            if self?.mode == .selectAvatar {
+              
+            } else {
+                let attr = NSAttributedString(attachment: TGTextAttachment(identifier: "\(arc4random())", mediaId: sticker.file.fileId, text: sticker.file.stickerText ?? ""))
+                _ = self?.chatInteraction?.appendText(attr)
+            }
+        }
+        
         interactions.showStickerPremium = { [weak self] file, view in
             self?.genericView.previewPremium(file, context: context, view: view, animated: true)
         }
@@ -710,6 +730,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         emoji.update(with: interactions)
         stickers.update(with: interactions, chatInteraction: chatInteraction)
         gifs.update(with: interactions, chatInteraction: chatInteraction)
+        animatedEmojies.update(with: interactions, chatInteraction: chatInteraction)
     }
     
 
@@ -723,7 +744,8 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         self.emoji = EmojiViewController(context)
         self.stickers = NStickersViewController(context)
         self.gifs = GIFViewController(context)
-        
+        self.animatedEmojies = AnimatedEmojiesController(context)
+
         self.stickers.mode = mode
         self.gifs.mode = mode
         
@@ -734,6 +756,10 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         items.append(SectionControllerItem(title: {strings().entertainmentStickers.uppercased()}, controller: stickers))
         items.append(SectionControllerItem(title: {strings().entertainmentGIF.uppercased()}, controller: gifs))
         
+        if mode == .common {
+            items.append(SectionControllerItem(title:{""}, controller: animatedEmojies))
+        }
+
         let index: Int
         if mode == .selectAvatar {
             index = 0
@@ -758,6 +784,9 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         }
         if gifs.isLoaded() {
             gifs.view.background = theme.colors.background
+        }
+        if animatedEmojies.isLoaded() {
+            animatedEmojies.view.background = theme.colors.background
         }
     }
     
@@ -827,6 +856,10 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         return effectiveSearchView//genericView.searchView?.input
     }
     
+    override func becomeFirstResponder() -> Bool? {
+        return nil
+    }
+    
     override func escapeKeyAction() -> KeyHandlerResult {
         if genericView.isPremium {
             genericView.closePremium()
@@ -887,6 +920,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         let e_index: Int = 0
         let s_index: Int = mode == .selectAvatar ? 0 : 1
         let g_index: Int = mode == .selectAvatar ? 1 : 2
+        let ae_index: Int = mode == .selectAvatar ? 2 : 3
 
         self.genericView.emoji.set(handler: { [weak self] _ in
             guard let `self` = self else {
@@ -917,6 +951,16 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
                 self.gifs.scrollup()
             }
             self.section.select(g_index, true, notifyApper: true)
+        }, for: .Click)
+        
+        self.genericView.animatedEmojies.set(handler: { [weak self] _ in
+            guard let `self` = self else {
+                return
+            }
+            if self.genericView.animatedEmojies.isSelected {
+                self.animatedEmojies.scrollup()
+            }
+            self.section.select(ae_index, true, notifyApper: true)
         }, for: .Click)
         
         

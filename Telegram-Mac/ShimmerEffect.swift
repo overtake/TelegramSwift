@@ -21,6 +21,8 @@ private final class ShimmerEffectForegroundView: View {
     private var isCurrentlyInHierarchy = false
     private var shouldBeAnimating = false
     
+    public var isStatic: Bool = false
+    
     override init() {
         super.init()
         
@@ -136,22 +138,39 @@ private final class ShimmerEffectForegroundView: View {
         guard let containerSize = self.absoluteLocation?.1, let horizontal = self.currentHorizontal else {
             return
         }
-        
+        let animation: CAAnimation
+        let duration: Double = isStatic ? 0.7 : 1.5
         if horizontal {
             let gradientHeight: CGFloat = 320.0
             self.imageView.frame = CGRect(origin: CGPoint(x: -gradientHeight, y: 0.0), size: CGSize(width: gradientHeight, height: containerSize.height))
-            let animation = self.imageView.layer!.makeAnimation(from: 0.0 as NSNumber, to: (containerSize.width + gradientHeight) as NSNumber, keyPath: "position.x", timingFunction: .easeOut, duration: 1.5 * 1.0, delay: 0.0, mediaTimingFunction: nil, removeOnCompletion: true, additive: true)
-            animation.repeatCount = Float.infinity
-            animation.beginTime = 1.0
-            self.imageView.layer!.add(animation, forKey: "shimmer")
+            animation = self.imageView.layer!.makeAnimation(from: 0.0 as NSNumber, to: (containerSize.width + gradientHeight) as NSNumber, keyPath: "position.x", timingFunction: .easeOut, duration: duration * 1.0, delay: 0, mediaTimingFunction: nil, removeOnCompletion: true, additive: true)
+            if !isStatic {
+                animation.repeatCount = Float.infinity
+                animation.beginTime = 1.0
+            }
         } else {
             let gradientHeight: CGFloat = 250.0
             self.imageView.frame = CGRect(origin: CGPoint(x: 0.0, y: -gradientHeight), size: CGSize(width: containerSize.width, height: gradientHeight))
-            let animation = self.imageView.layer!.makeAnimation(from: 0.0 as NSNumber, to: (containerSize.height + gradientHeight) as NSNumber, keyPath: "position.y", timingFunction: .easeOut, duration: 1.5 * 1.0, delay: 0.0, mediaTimingFunction: nil, removeOnCompletion: true, additive: true)
-            animation.repeatCount = Float.infinity
-            animation.beginTime = 1.0
-            self.imageView.layer?.add(animation, forKey: "shimmer")
+            animation = self.imageView.layer!.makeAnimation(from: 0.0 as NSNumber, to: (containerSize.height + gradientHeight) as NSNumber, keyPath: "position.y", timingFunction: .easeOut, duration: duration * 1.0, delay: 0, mediaTimingFunction: nil, removeOnCompletion: true, additive: true)
+            
+            if !isStatic {
+                animation.repeatCount = Float.infinity
+                animation.beginTime = 1.0
+            }
         }
+        if isStatic {
+            animation.delegate = CALayerAnimationDelegate(completion: { [weak self] completed in
+                if completed {
+                    delay(1.3, closure: {
+                        self?.addImageAnimation()
+                    })
+                }
+            })
+        }
+        
+        
+        self.imageView.layer!.add(animation, forKey: "shimmer")
+
     }
 }
 
@@ -239,5 +258,11 @@ public final class ShimmerEffectView: View {
         self.backgroundView.frame = CGRect(origin: CGPoint(), size: size)
         self.foregroundView.frame = CGRect(origin: CGPoint(), size: size)
         self.effectView.frame = CGRect(origin: CGPoint(), size: size)
+    }
+    
+    public var isStatic: Bool = false {
+        didSet {
+            effectView.isStatic = isStatic
+        }
     }
 }
