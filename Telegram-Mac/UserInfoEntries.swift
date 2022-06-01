@@ -426,7 +426,7 @@ enum UserInfoEntry: PeerInfoEntry {
     case setFirstName(sectionId:Int, text: String, viewType: GeneralViewType)
     case setLastName(sectionId:Int, text: String, viewType: GeneralViewType)
     case about(sectionId:Int, text: String, viewType: GeneralViewType)
-    case bio(sectionId:Int, text: String, viewType: GeneralViewType)
+    case bio(sectionId:Int, text: String, PeerEquatable, viewType: GeneralViewType)
     case scam(sectionId:Int, title: String, text: String, viewType: GeneralViewType)
     case phoneNumber(sectionId:Int, index: Int, value: PhoneNumberWithLabel, canCopy: Bool, viewType: GeneralViewType)
     case userName(sectionId:Int, value: String, viewType: GeneralViewType)
@@ -457,7 +457,7 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .setFirstName(sectionId, text, _): return .setFirstName(sectionId: sectionId, text: text, viewType: viewType)
         case let .setLastName(sectionId, text, _): return .setLastName(sectionId: sectionId, text: text, viewType: viewType)
         case let .about(sectionId, text, _): return .about(sectionId: sectionId, text: text, viewType: viewType)
-        case let .bio(sectionId, text, _): return .bio(sectionId: sectionId, text: text, viewType: viewType)
+        case let .bio(sectionId, text, peer, _): return .bio(sectionId: sectionId, text: text, peer, viewType: viewType)
         case let .scam(sectionId, title, text, _): return .scam(sectionId: sectionId, title: title, text: text, viewType: viewType)
         case let .phoneNumber(sectionId, index, value, canCopy, _): return .phoneNumber(sectionId: sectionId, index: index, value: value, canCopy: canCopy, viewType: viewType)
         case let .userName(sectionId, value: String, _): return .userName(sectionId: sectionId, value: String, viewType: viewType)
@@ -564,9 +564,9 @@ enum UserInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
-        case let .bio(sectionId, text, viewType):
+        case let .bio(sectionId, text, peer, viewType):
             switch entry {
-            case .bio(sectionId, text, viewType):
+            case .bio(sectionId, text, peer, viewType):
                 return true
             default:
                 return false
@@ -811,7 +811,7 @@ enum UserInfoEntry: PeerInfoEntry {
             return (sectionId * 1000) + stableIndex
         case let .about(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .bio(sectionId, _, _):
+        case let .bio(sectionId, _, _, _):
             return (sectionId * 1000) + stableIndex
         case let .phoneNumber(sectionId, _, _, _, _):
             return (sectionId * 1000) + stableIndex
@@ -899,8 +899,8 @@ enum UserInfoEntry: PeerInfoEntry {
                     arguments.peerInfo(peerId)
                 }
             }, hashtag: arguments.context.bindings.globalSearch)
-        case let .bio(_, text, viewType):
-            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoBio, copyMenuText: strings().textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, detectLinks: true, onlyInApp: true, openInfo: { peerId, toChat, postId, _ in
+        case let .bio(_, text, peer, viewType):
+            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoBio, copyMenuText: strings().textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, detectLinks: true, onlyInApp: !peer.peer.isPremium, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
                     arguments.peerChat(peerId, postId: postId)
                 } else {
@@ -1056,7 +1056,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                         if peer.isBot {
                             infoBlock.append(UserInfoEntry.about(sectionId: sectionId, text: about, viewType: .singleItem))
                         } else {
-                            infoBlock.append(UserInfoEntry.bio(sectionId: sectionId, text: about, viewType: .singleItem))
+                            infoBlock.append(UserInfoEntry.bio(sectionId: sectionId, text: about, PeerEquatable(peer), viewType: .singleItem))
                         }
                     }
                 }

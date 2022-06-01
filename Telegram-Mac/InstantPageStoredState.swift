@@ -78,15 +78,13 @@ public func instantPageStoredState(postbox: Postbox, webPage: TelegramMediaWebpa
     }
 }
 
-private let collectionSpec = ItemCacheCollectionSpec(lowWaterItemCount: 100, highWaterItemCount: 200)
-
 public func updateInstantPageStoredStateInteractively(postbox: Postbox, webPage: TelegramMediaWebpage, state: InstantPageStoredState?) -> Signal<Void, NoError> {
     return postbox.transaction { transaction -> Void in
         let key = ValueBoxKey(length: 8)
         key.setInt64(0, value: webPage.webpageId.id)
         let id = ItemCacheEntryId(collectionId: ApplicationSpecificItemCacheCollectionId.instantPageStoredState, key: key)
         if let state = state, let entry = CodableEntry(state) {
-            transaction.putItemCacheEntry(id: id, entry: entry, collectionSpec: collectionSpec)
+            transaction.putItemCacheEntry(id: id, entry: entry)
         } else {
             transaction.removeItemCacheEntry(id: id)
         }

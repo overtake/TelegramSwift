@@ -500,6 +500,13 @@
 		27F3B75627391E9200B81F10 /* TelegramIconsTheme in Frameworks */ = {isa = PBXBuildFile; productRef = 27F3B75527391E9200B81F10 /* TelegramIconsTheme */; };
 		27F3B75C2739320000B81F10 /* SwiftSignalKit in Frameworks */ = {isa = PBXBuildFile; productRef = 27F3B75B2739320000B81F10 /* SwiftSignalKit */; };
 		27F3B75E2739320F00B81F10 /* TGUIKit in Frameworks */ = {isa = PBXBuildFile; productRef = 27F3B75D2739320F00B81F10 /* TGUIKit */; };
+		27F4F1782844D91E00A3B4D4 /* AnimatedEmojiesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F4F1772844D91E00A3B4D4 /* AnimatedEmojiesController.swift */; };
+		27F4F17A2844F7C700A3B4D4 /* AnimatedEmojiesSectionRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F4F1792844F7C700A3B4D4 /* AnimatedEmojiesSectionRowItem.swift */; };
+		27F4F17C2845318500A3B4D4 /* ChatInputAnimatedEmojiAttach.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F4F17B2845318500A3B4D4 /* ChatInputAnimatedEmojiAttach.swift */; };
+		27F4F18028463BF100A3B4D4 /* premium_unlock.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27F4F17D28463BF000A3B4D4 /* premium_unlock.tgs */; };
+		27F4F18128463BF100A3B4D4 /* premium_addone.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27F4F17E28463BF000A3B4D4 /* premium_addone.tgs */; };
+		27F4F18228463BF100A3B4D4 /* premium_double.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27F4F17F28463BF100A3B4D4 /* premium_double.tgs */; };
+		27F4F1842846571900A3B4D4 /* PaymentsCheckoutRecurrentRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F4F1832846571900A3B4D4 /* PaymentsCheckoutRecurrentRowItem.swift */; };
 		27F5F23325E7CACE00E8AC69 /* CurrencyFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23225E7CACE00E8AC69 /* CurrencyFormat.swift */; };
 		27F5F23C25E7CCD700E8AC69 /* PaymentsCheckoutPriceItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23B25E7CCD600E8AC69 /* PaymentsCheckoutPriceItem.swift */; };
 		27F5F23F25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23E25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift */; };
@@ -1760,6 +1767,13 @@
 		27F3B75A2739300C00B81F10 /* SSignalKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SSignalKit; path = "submodules/telegram-ios/submodules/SSignalKit"; sourceTree = "<group>"; };
 		27F3B75F273933C800B81F10 /* GraphUI */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GraphUI; path = packages/GraphUI; sourceTree = "<group>"; };
 		27F3B7632739360100B81F10 /* GraphCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GraphCore; path = "submodules/telegram-ios/submodules/GraphCore"; sourceTree = "<group>"; };
+		27F4F1772844D91E00A3B4D4 /* AnimatedEmojiesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedEmojiesController.swift; sourceTree = "<group>"; };
+		27F4F1792844F7C700A3B4D4 /* AnimatedEmojiesSectionRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedEmojiesSectionRowItem.swift; sourceTree = "<group>"; };
+		27F4F17B2845318500A3B4D4 /* ChatInputAnimatedEmojiAttach.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInputAnimatedEmojiAttach.swift; sourceTree = "<group>"; };
+		27F4F17D28463BF000A3B4D4 /* premium_unlock.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = premium_unlock.tgs; sourceTree = "<group>"; };
+		27F4F17E28463BF000A3B4D4 /* premium_addone.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = premium_addone.tgs; sourceTree = "<group>"; };
+		27F4F17F28463BF100A3B4D4 /* premium_double.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = premium_double.tgs; sourceTree = "<group>"; };
+		27F4F1832846571900A3B4D4 /* PaymentsCheckoutRecurrentRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutRecurrentRowItem.swift; sourceTree = "<group>"; };
 		27F5F23225E7CACE00E8AC69 /* CurrencyFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormat.swift; sourceTree = "<group>"; };
 		27F5F23B25E7CCD600E8AC69 /* PaymentsCheckoutPriceItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutPriceItem.swift; sourceTree = "<group>"; };
 		27F5F23E25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsShippingInfoController.swift; sourceTree = "<group>"; };
@@ -2876,6 +2890,7 @@
 				279A1E2725E945A2007D48E7 /* PaymentsReceiptController.swift */,
 				271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */,
 				270202BE261A1BF500CFCE6D /* PaymentsTipsRowItem.swift */,
+				27F4F1832846571900A3B4D4 /* PaymentsCheckoutRecurrentRowItem.swift */,
 			);
 			name = payments;
 			sourceTree = "<group>";
@@ -3204,6 +3219,15 @@
 				279E8EC9274259B7000E1BD5 /* TGVideoCameraMovie */,
 			);
 			name = Packages;
+			sourceTree = "<group>";
+		};
+		27F4F1762844D90F00A3B4D4 /* animated-emojies */ = {
+			isa = PBXGroup;
+			children = (
+				27F4F1772844D91E00A3B4D4 /* AnimatedEmojiesController.swift */,
+				27F4F1792844F7C700A3B4D4 /* AnimatedEmojiesSectionRowItem.swift */,
+			);
+			name = "animated-emojies";
 			sourceTree = "<group>";
 		};
 		27FE779826F4941200E1C90B /* themes */ = {
@@ -3931,6 +3955,7 @@
 				D076F890229823DA004F895A /* ChannelDiscussionInputView.swift */,
 				A7E83213255E992D0095A167 /* WaveView.swift */,
 				A7E832182562CFC70095A167 /* VoiceBlobView.swift */,
+				27F4F17B2845318500A3B4D4 /* ChatInputAnimatedEmojiAttach.swift */,
 			);
 			name = input;
 			sourceTree = "<group>";
@@ -4525,6 +4550,7 @@
 		C2844AD51DA90775009308DC /* entertainment */ = {
 			isa = PBXGroup;
 			children = (
+				27F4F1762844D90F00A3B4D4 /* animated-emojies */,
 				D070DB7F22D36359008A0BBE /* modern-stickers */,
 				C2F93A2B1F3C550A00BCD48F /* tolerance */,
 				C22674361DC0E270000BA9ED /* table */,
@@ -5146,6 +5172,9 @@
 			children = (
 				27CE375C276095DA007E6F1B /* menu */,
 				27D91312283646CA007CF40F /* text_to_voice.tgs */,
+				27F4F17E28463BF000A3B4D4 /* premium_addone.tgs */,
+				27F4F17F28463BF100A3B4D4 /* premium_double.tgs */,
+				27F4F17D28463BF000A3B4D4 /* premium_unlock.tgs */,
 				27D91313283646CA007CF40F /* voice_to_text.tgs */,
 				2755490D2747C24B0098A3CD /* device_android.tgs */,
 				275549052747C2380098A3CD /* device_chrome.tgs */,
@@ -5683,6 +5712,7 @@
 				27672EB126F8D62C00297DB4 /* 3.m4a in Resources */,
 				275549162747C24F0098A3CD /* device_safari.tgs in Resources */,
 				27803C0227A3E944007B0FA9 /* menu_folder_folder.tgs in Resources */,
+				27F4F18228463BF100A3B4D4 /* premium_double.tgs in Resources */,
 				2786368027C7CF1200690B10 /* group_call_maxmin.tgs in Resources */,
 				27672EB226F8D62E00297DB4 /* 4.m4a in Resources */,
 				27336731276231E80027441E /* menu_seen.tgs in Resources */,
@@ -5888,6 +5918,7 @@
 				2733672927620C5A0027441E /* menu_save_as.tgs in Resources */,
 				9FC8ADA8206A77E00094F7B4 /* countries in Resources */,
 				27E7E49E270DFED900CF3A24 /* request_join_link.tgs in Resources */,
+				27F4F18128463BF100A3B4D4 /* premium_addone.tgs in Resources */,
 				2733671B27620B980027441E /* menu_stop_poll.tgs in Resources */,
 				27CB177027638F4000DD25E0 /* menu_replace.tgs in Resources */,
 				C21A48B21F7D0D3F0095ADB1 /* VideoMessage.fsh in Resources */,
@@ -5946,6 +5977,7 @@
 				C21074241E77F5DF006EE5EF /* dsa_pub_prod.pem in Resources */,
 				2733672C276214050027441E /* menu_select_messages.tgs in Resources */,
 				9F03681922771A9700456348 /* anim_archive.json in Resources */,
+				27F4F18028463BF100A3B4D4 /* premium_unlock.tgs in Resources */,
 				C23D0D7C1F1A649900AF5151 /* SFCompactRounded-Semibold.otf in Resources */,
 				2751E79F27F34415003E3937 /* menu_autodelete_never.tgs in Resources */,
 				27CB176C27638EF800DD25E0 /* menu_collapse.tgs in Resources */,
@@ -6060,6 +6092,7 @@
 				27A6977D273D0AED00B33415 /* GroupVideoView.swift in Sources */,
 				27A69770273D0ADF00B33415 /* GroupCallSpeakButton.swift in Sources */,
 				27A69771273D0ADF00B33415 /* GroupCallTitleView.swift in Sources */,
+				27F4F17A2844F7C700A3B4D4 /* AnimatedEmojiesSectionRowItem.swift in Sources */,
 				27A69772273D0ADF00B33415 /* GroupCallControlsView.swift in Sources */,
 				27A69773273D0ADF00B33415 /* GroupCallSchedule.swift in Sources */,
 				27A69774273D0ADF00B33415 /* GroupCallRecorderRowItem.swift in Sources */,
@@ -6301,6 +6334,7 @@
 				C275E9EF1F8FCA4200D3D8C0 /* PhoneNumberIntroController.swift in Sources */,
 				9FC8ADA02062D5E70094F7B4 /* PassportAcceptRowItem.swift in Sources */,
 				D071E8AA214BC589001B6024 /* TouchBarStickerItemView.swift in Sources */,
+				27F4F1842846571900A3B4D4 /* PaymentsCheckoutRecurrentRowItem.swift in Sources */,
 				9F4EEF8821D515C5002C3B33 /* InstantPageStoredState.swift in Sources */,
 				C20B8F401DFD9999008A354E /* ChatListNothingItem.swift in Sources */,
 				D014AA262317D07D00CE5362 /* EditThemeController.swift in Sources */,
@@ -6422,6 +6456,7 @@
 				C24949141E5B763F00D7ED5D /* ApplicationContext.swift in Sources */,
 				C219E1F61D8C09130042F0C8 /* ChatMessageItem.swift in Sources */,
 				C2A71CE31DDB2EBD00C69F73 /* GeneralSettingsViewController.swift in Sources */,
+				27F4F1782844D91E00A3B4D4 /* AnimatedEmojiesController.swift in Sources */,
 				C2271D9C1DACC027001792B6 /* SearchController.swift in Sources */,
 				27F2BBCF27BEA4A400A37463 /* Auth_AwaitingReset.swift in Sources */,
 				D071E8B3214C15C7001B6024 /* TouchBarEmojiPicker.swift in Sources */,
@@ -6508,6 +6543,7 @@
 				C20232AC1D81D1AE007C9ADE /* ChatMessageView.swift in Sources */,
 				D071E8B5214C1935001B6024 /* TouchBarEmojiItemView.swift in Sources */,
 				C250B0291DB769EE004E9FBE /* WPMediaContentView.swift in Sources */,
+				27F4F17C2845318500A3B4D4 /* ChatInputAnimatedEmojiAttach.swift in Sources */,
 				27361ED4282122C700808241 /* StickerPremiumHolderView.swift in Sources */,
 				D06C69522538894C00DD9005 /* SlotsMediaContentView.swift in Sources */,
 				D071E8A8214BBE21001B6024 /* ChatStickersTouchBarPopover.swift in Sources */,

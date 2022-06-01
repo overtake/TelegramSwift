@@ -104,7 +104,7 @@ final class EmojiScreenEffect {
                                 } else {
                                     point.x -= 18
                                 }
-                                point.y -= 1
+                                point.y -= 2
                                 
                             }
                         case .reaction:

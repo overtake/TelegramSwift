@@ -2253,9 +2253,7 @@ public extension NSAttributedString {
                 }
                 if let string = string {
                     let tag = TGInputTextTag(uniqueId: arc4random64(), attachment: string, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
-                    if let tag = tag {
-                        modified.addAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), value: tag, range: range)
-                    }
+                    modified.addAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), value: tag, range: range)
                 }
             } else if let font = attr[.font] as? NSFont {
                 let newFont: NSFont

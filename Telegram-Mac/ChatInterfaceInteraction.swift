@@ -169,7 +169,7 @@ final class ChatInteraction : InterfaceObserver  {
     var scrollToTheFirst: () -> Void = {}
     var openReplyThread:(MessageId, Bool, Bool, ReplyThreadMode)->Void = {  _, _, _, _ in }
     
-    var transcribeAudio:(MessageId)->Void = { _ in }
+    var transcribeAudio:(Message)->Void = { _ in }
     
     var joinGroupCall:(CachedChannelData.ActiveCall, String?)->Void = { _, _ in }
 
@@ -354,10 +354,8 @@ final class ChatInteraction : InterfaceObserver  {
         }
     }
     
-    func appendText(_ text:String, selectedRange:Range<Int>? = nil) -> Range<Int> {
-        
-      
-        
+    func appendText(_ text: NSAttributedString, selectedRange:Range<Int>? = nil) -> Range<Int> {
+
         var selectedRange = selectedRange ?? presentation.effectiveInput.selectionRange
         let inputText = presentation.effectiveInput.attributedString.mutableCopy() as! NSMutableAttributedString
         
@@ -372,26 +370,21 @@ final class ChatInteraction : InterfaceObserver  {
             
             
            // inputText.removeSubrange(minUtfIndex.samePosition(in: inputText)! ..< maxUtfIndex.samePosition(in: inputText)!)
-            inputText.replaceCharacters(in: NSMakeRange(selectedRange.lowerBound, selectedRange.upperBound - selectedRange.lowerBound), with: NSAttributedString(string: text))
+            inputText.replaceCharacters(in: NSMakeRange(selectedRange.lowerBound, selectedRange.upperBound - selectedRange.lowerBound), with: text)
             selectedRange = selectedRange.lowerBound ..< selectedRange.lowerBound
         } else {
-            inputText.insert(NSAttributedString(string: text, font: .normal(theme.fontSize)), at: selectedRange.lowerBound)
+            inputText.insert(text, at: selectedRange.lowerBound)
         }
         
-
-        
-//
-//        var advance:Int = 0
-//        for char in text.characters {
-//            let index = inputText.utf16.index(inputText.utf16.startIndex, offsetBy: selectedRange.lowerBound + advance).samePosition(in: inputText)!
-//            inputText.insert(char, at: index)
-//            advance += 1
-//        }
         let nRange:Range<Int> = selectedRange.lowerBound + text.length ..< selectedRange.lowerBound + text.length
         let state = ChatTextInputState(inputText: inputText.string, selectionRange: nRange, attributes: chatTextAttributes(from: inputText))
         self.update({$0.withUpdatedEffectiveInputState(state)})
         
         return selectedRange.lowerBound ..< selectedRange.lowerBound + text.length
+    }
+        
+    func appendText(_ text:String, selectedRange:Range<Int>? = nil) -> Range<Int> {
+        return self.appendText(NSAttributedString(string: text, font: .normal(theme.fontSize)), selectedRange: selectedRange)
     }
     
     func cancelEditing(_ force: Bool = false) {

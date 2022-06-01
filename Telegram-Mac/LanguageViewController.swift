@@ -384,9 +384,7 @@ class LanguageViewController: TableViewController {
             }
         }, delete: { info in
             confirm(for: context.window, information: strings().languageRemovePack, successHandler: { _ in
-                let _ = (context.account.postbox.transaction { transaction in
-                    removeSavedLocalization(transaction: transaction, languageCode: info.languageCode)
-                }).start()
+                _ = context.engine.localization.removeSavedLocalization(languageCode: info.languageCode).start()
             })
         })
         

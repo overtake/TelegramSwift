@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "lockpremium.png",
+      "filename" : "badgeuser_24.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "lockpremium@2x.png",
+      "filename" : "badgeuser_24@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

@@ -13,9 +13,38 @@ import TelegramCore
 import SwiftSignalKit
 import Postbox
 
+
 class StickerMediaContentView: ChatMediaContentView {
     
-    private var lockedView: ImageView?
+    private class LockView : NSVisualEffectView {
+        private let lockedView: ImageView = ImageView()
+
+        override init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(lockedView)
+            
+            wantsLayer = true
+            self.blendingMode = .withinWindow
+            self.state = .active
+            self.material = .dark
+            
+            lockedView.image = theme.icons.premium_lock
+            lockedView.sizeToFit()
+            lockedView.setFrameSize(lockedView.frame.width * 0.7, lockedView.frame.height * 0.7)
+            self.layer?.cornerRadius = frameRect.height / 2
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func layout() {
+            super.layout()
+            lockedView.center()
+        }
+    }
+
+    private var lockedView: LockView?
     
     private var content: ChatMediaContentView? {
         didSet {
@@ -54,19 +83,17 @@ class StickerMediaContentView: ChatMediaContentView {
             content?.layer?.opacity = 1.0
         }
         if isLocked {
-            let current: ImageView
+            let current: LockView
             if let view = self.lockedView {
                 current = view
             } else {
-                current = ImageView(frame: theme.icons.premium_lock.backingBounds)
+                current = LockView(frame: NSMakeRect(0, 0, 17, 17))
                 self.lockedView = current
                 addSubview(current, positioned: .above, relativeTo: content)
                 if animated {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
             }
-            current.image = theme.icons.premium_lock
-            current.sizeToFit()
         } else if let view = lockedView {
             performSubviewRemoval(view, animated: animated)
             self.lockedView = nil

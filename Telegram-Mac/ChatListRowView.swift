@@ -616,7 +616,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              
              if !item.photos.isEmpty {
                  
-                 if let first = item.photos.first, let video = first.image.videoRepresentations.last {
+                 if let first = item.photos.first, let video = first.image.videoRepresentations.first {
                     
                      let equal = videoRepresentation?.resource.id == video.resource.id
                      

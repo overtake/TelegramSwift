@@ -10,9 +10,8 @@ import Cocoa
 
 enum TranscribeAudioState : Equatable {
     case loading
-    case failed
-    case revealed(String)
-    case collapsed(String)
+    case revealed(Bool)
+    case collapsed(Bool)
 }
 
 import TGUIKit
@@ -66,14 +65,14 @@ class ChatVoiceRowItem: ChatMediaItem {
         let canTranscribe = context.isPremium
 
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
-            if canTranscribe, let messageId = object.message?.id {
+            if canTranscribe, let message = object.message {
                 if let state = entry.additionalData.transribeState {
                     parameters.transcribeState = .state(state)
                 } else {
                     parameters.transcribeState = .possible
                 }
                 parameters.transcribe = { [weak self] in
-                    self?.chatInteraction.transcribeAudio(messageId)
+                    self?.chatInteraction.transcribeAudio(message)
                 }
             }
             

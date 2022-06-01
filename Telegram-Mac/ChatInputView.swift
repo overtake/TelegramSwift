@@ -103,12 +103,16 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         textView = TGModernGrowingTextView(frame: NSMakeRect(attachView.frame.width, yInset, contentView.frame.width - actionsView.frame.width, contentView.frame.height - yInset * 2.0))
         textView.textFont = .normal(.text)
         
-        let test = MediaAnimatedStickerView(frame: NSMakeRect(0, 0, 18, 18))
-        let parameters = ChatAnimatedStickerMediaLayoutParameters(playPolicy: .loop, media: LocalAnimatedSticker.monkey_see.file)
-        test.update(with: LocalAnimatedSticker.monkey_see.file, size: NSMakeSize(18, 18), context: chatInteraction.context, table: nil, parameters: parameters, animated: false)
+        let context = self.chatInteraction.context
                 
         textView.installGetAttach({ attachment in
-            return test
+            
+            if let mediaId = attachment.mediaId as? MediaId {
+                let view = ChatInputAnimatedEmojiAttach(frame: NSMakeRect(0, 0, 18, 18))
+                view.set(mediaId, size: NSMakeSize(18, 18), context: context)
+                return view
+            }
+            return nil
         })
         
         contentView.addSubview(textView)

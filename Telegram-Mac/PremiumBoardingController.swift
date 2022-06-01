@@ -27,6 +27,7 @@ enum PremiumLogEventsSource : Equatable {
         case upload_max_fileparts
         case dialogs_folder_pinned
         case accounts
+        case about
     }
     
     case deeplink(String?)
@@ -342,6 +343,7 @@ private final class PremiumBoardingView : View {
             super.init(frame: frameRect)
             addSubview(gradient)
             addSubview(shimmer)
+            shimmer.isStatic = true
             container.addSubview(textView)
             addSubview(container)
             scaleOnClick = true

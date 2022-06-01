@@ -3,16 +3,18 @@
 #import <CoreText/CoreText.h>
 
 @implementation TGTextAttachment
--(id)initWithImage:(NSImage *)image identifier:(id _Nonnull)identifier {
+-(id)initWithIdentifier:(NSString * _Nonnull)identifier mediaId:(id _Nonnull)mediaId text:(NSString * _Nonnull)text {
     if (self = [super init]) {
         
-        NSRect rect = NSMakeRect(0, 0, 18, 18);
+        NSRect rect = NSMakeRect(0, 0, 18, 16);
         NSImage *image = [[NSImage alloc] initWithSize:rect.size];
 
         [super setImage:image];
         _identifier = identifier;
+        _mediaId = mediaId;
+        _text = text;
     }
-    [self setBounds:NSMakeRect(0, -5, 18, 18)];
+    [self setBounds:NSMakeRect(0, -3, 18, 16)];
     return self;
 }
 @end
