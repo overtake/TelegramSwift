@@ -379,7 +379,7 @@ private enum StickerPackEntry : TableItemListNodeEntry {
     }
 }
 
-private func stickersEntries(view: ItemCollectionsView?, featured:[FeaturedStickerPackItem], settings: StickerSettings, searchData: StickerPacksSearchData?, specificPack:Tuple2<PeerSpecificStickerPackData, Peer>?, mode: EntertainmentViewController.Mode) -> [StickerPackEntry] {
+private func stickersEntries(view: ItemCollectionsView?, context: AccountContext, featured:[FeaturedStickerPackItem], settings: StickerSettings, searchData: StickerPacksSearchData?, specificPack:Tuple2<PeerSpecificStickerPackData, Peer>?, mode: EntertainmentViewController.Mode) -> [StickerPackEntry] {
     var entries:[StickerPackEntry] = []
     
     if let view = view {
@@ -394,8 +394,10 @@ private func stickersEntries(view: ItemCollectionsView?, featured:[FeaturedStick
                 for item in view.orderedItemListsViews[1].items {
                     if let entry = item.contents.get(SavedStickerItem.self) {
                         if let id = entry.file.id, ids[id] == nil {
-                            ids[id] = id
-                            files.append(entry.file)
+                            if !entry.file.isPremiumSticker || !context.premiumIsBlocked {
+                                ids[id] = id
+                                files.append(entry.file)
+                            }
                         }
                     }
                 }
@@ -418,8 +420,10 @@ private func stickersEntries(view: ItemCollectionsView?, featured:[FeaturedStick
                     if let entry = item.contents.get(RecentMediaItem.self) {
                         let file = entry.media
                         if let id = file.id, ids[id] == nil, file.isStaticSticker || file.isAnimatedSticker {
-                            ids[id] = id
-                            files.append(file)
+                            if !file.isPremiumSticker || !context.premiumIsBlocked {
+                                ids[id] = id
+                                files.append(file)
+                            }
                         }
                     }
                     if files.count == 20 {
@@ -437,8 +441,10 @@ private func stickersEntries(view: ItemCollectionsView?, featured:[FeaturedStick
                     if let entry = item.contents.get(RecentMediaItem.self) {
                         let file = entry.media
                         if let id = file.id, ids[id] == nil, file.isStaticSticker || file.isAnimatedSticker {
-                            ids[id] = id
-                            files.append(file)
+                            if !file.isPremiumSticker || !context.premiumIsBlocked {
+                                ids[id] = id
+                                files.append(file)
+                            }
                         }
                     }
                 }
@@ -452,8 +458,10 @@ private func stickersEntries(view: ItemCollectionsView?, featured:[FeaturedStick
                 for item in info.1 {
                     if let item = item as? StickerPackItem {
                         if let id = item.file.id, ids[id] == nil, item.file.isStaticSticker || item.file.isAnimatedSticker {
-                            ids[id] = id
-                            files.append(item.file)
+                            if !item.file.isPremiumSticker || !context.premiumIsBlocked {
+                                ids[id] = id
+                                files.append(item.file)
+                            }
                         }
                     }
                 }
@@ -472,7 +480,9 @@ private func stickersEntries(view: ItemCollectionsView?, featured:[FeaturedStick
                     for (i, entry) in items {
                         if entry.index.collectionId == info.id {
                             if let item = available.remove(at: i).item as? StickerPackItem {
-                                files.insert(item.file, at: 0)
+                                if !item.file.isPremiumSticker || !context.premiumIsBlocked {
+                                    files.insert(item.file, at: 0)
+                                }
                             }
                         }
                     }
@@ -545,7 +555,7 @@ private func stickersEntries(view: ItemCollectionsView?, featured:[FeaturedStick
     return entries
 }
 
-private func packEntries(view: ItemCollectionsView?, specificPack:Tuple2<PeerSpecificStickerPackData, Peer>?, hasUnread: Bool, featured:[FeaturedStickerPackItem], settings: StickerSettings, mode: EntertainmentViewController.Mode) -> [PackEntry] {
+private func packEntries(view: ItemCollectionsView?, context: AccountContext, specificPack:Tuple2<PeerSpecificStickerPackData, Peer>?, hasUnread: Bool, featured:[FeaturedStickerPackItem], settings: StickerSettings, mode: EntertainmentViewController.Mode) -> [PackEntry] {
     var entries:[PackEntry] = []
     var index: Int = 0
     
@@ -561,7 +571,9 @@ private func packEntries(view: ItemCollectionsView?, specificPack:Tuple2<PeerSpe
             entries.append(.recent)
         }
         if !view.orderedItemListsViews[2].items.isEmpty {
-            entries.append(.premium)
+            if context.isPremium || !context.premiumIsBlocked {
+                entries.append(.premium)
+            }
         }
         if let specificPack = specificPack, let info = specificPack._0.packInfo?.0 {
             entries.append(.specificPack(data: SpecificPackData(info: info, peer: specificPack._1)))
@@ -1194,10 +1206,10 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 
                 _ = foundPacks.swap(data.searchData)
                 
-                let entries = stickersEntries(view: data.view, featured: data.featured, settings: data.settings, searchData: data.searchData, specificPack: data.specificPack, mode: mode).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
+                 let entries = stickersEntries(view: data.view, context: context, featured: data.featured, settings: data.settings, searchData: data.searchData, specificPack: data.specificPack, mode: mode).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
                 let from = previous.swap(entries)
                 
-                let entriesPack = packEntries(view: data.view, specificPack: data.specificPack, hasUnread: data.hasUnread, featured: data.featured, settings: data.settings, mode: mode).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
+                 let entriesPack = packEntries(view: data.view, context: context, specificPack: data.specificPack, hasUnread: data.hasUnread, featured: data.featured, settings: data.settings, mode: mode).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
                 let fromPacks = previousPacks.swap(entriesPack)
                 
                 let transition = prepareStickersTransition(from: from, to: entries, initialSize: initialSize.with { $0 }, arguments: arguments, update: data.update)

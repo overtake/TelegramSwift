@@ -1206,7 +1206,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     private func saveScrollState(_ visibleItems: [(TableRowItem,CGFloat,CGFloat)]) -> Void {
         //, clipView.bounds.minY > 0
-        if !visibleItems.isEmpty, documentOffset.y > 0 {
+        if !visibleItems.isEmpty {
             var nrect:NSRect = NSZeroRect
             
             let strideTo:StrideTo<Int> = stride(from: visibleItems.count - 1, to: -1, by: -1)
@@ -1240,7 +1240,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
      func getScrollY(_ visibleItems: [(TableRowItem,CGFloat,CGFloat)]) -> CGFloat? {
-        if !visibleItems.isEmpty, documentOffset.y > 0 {
+        if !visibleItems.isEmpty {
             var nrect:NSRect = NSZeroRect
             
             let strideTo:StrideTo<Int> = stride(from: visibleItems.count - 1, to: -1, by: -1)
@@ -2700,7 +2700,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             if !animated {
                 saveScrollState(visibleItems)
             }
-            if case .none = transition.state, transition.deleted.isEmpty, transition.inserted.isEmpty, !tableView.isFlipped {
+            if transition.deleted.isEmpty, transition.inserted.isEmpty, !tableView.isFlipped {
                 if let y = getScrollY(visibleItems) {
                     let current = contentView.bounds
                     self.clipView._changeBounds(from: current, to: NSMakeRect(0, max(y, 0), current.width, current.height), animated: animated)

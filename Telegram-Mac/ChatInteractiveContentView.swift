@@ -319,7 +319,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
             isStreamable = file.isStreamable
         }
         
-        videoAccessory?.updateText(text, maxWidth: maxWidth, status: status, isStreamable: isStreamable, isCompact: parent?.groupingKey != nil || file.isAnimated, soundOffOnImage: nil, isBuffering: isBuffering, animated: animated, fetch: { [weak self] in
+        videoAccessory?.updateText(text, maxWidth: maxWidth, status: status, isStreamable: isStreamable, isCompact: parent?.groupingKey != nil || file.isAnimated || frame.width < 200, soundOffOnImage: nil, isBuffering: isBuffering, animated: animated, fetch: { [weak self] in
             self?.fetch(userInitiated: true)
         }, cancelFetch: { [weak self] in
             self?.cancelFetching()
