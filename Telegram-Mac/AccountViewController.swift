@@ -490,11 +490,14 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
         index += 1
     }
     
-    entries.append(.premium(index: index, viewType: .singleItem))
-    index += 1
-    
-    entries.append(.whiteSpace(index: index, height: 20))
-    index += 1
+    if !context.premiumIsBlocked {
+        entries.append(.premium(index: index, viewType: .singleItem))
+        index += 1
+        
+        entries.append(.whiteSpace(index: index, height: 20))
+        index += 1
+    }
+   
 
     entries.append(.faq(index: index, viewType: .singleItem))
     index += 1

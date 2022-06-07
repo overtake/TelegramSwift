@@ -810,11 +810,12 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         
         afterComplete(true)
     case let .premiumOffer(_, ref, context):
-     
-        if context.isPremium {
-            showModalText(for: context.window, text: strings().premiumOffsetAlreadyHave)
-        } else {
-            showModal(with: PremiumBoardingController(context: context, source: .deeplink(ref)), for: context.window)
+        if !context.premiumIsBlocked {
+            if context.isPremium {
+                showModalText(for: context.window, text: strings().premiumOffsetAlreadyHave)
+            } else {
+                showModal(with: PremiumBoardingController(context: context, source: .deeplink(ref)), for: context.window)
+            }
         }
         afterComplete(true)
     }

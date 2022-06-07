@@ -105,6 +105,10 @@ public final class ApiEnvironment {
         let shortVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] ?? ""
         return "\(shortVersion) \(suffix)"
     }
+    
+    public static var premiumProductId: String {
+        return "org.telegram.telegramPremium.monthly"
+    }
 }
 
 

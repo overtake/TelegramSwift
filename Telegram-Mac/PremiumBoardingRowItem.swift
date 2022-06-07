@@ -18,23 +18,25 @@ final class PremiumBoardingRowItem : GeneralRowItem {
     fileprivate let infoLayout: TextViewLayout
     
     fileprivate let isLastItem: Bool
+    fileprivate let callback: (PremiumValue)->Void
 
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, value: PremiumValue, limits: PremiumLimitConfig, isLast: Bool) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, value: PremiumValue, limits: PremiumLimitConfig, isLast: Bool, callback: @escaping(PremiumValue)->Void) {
         self.value = value
         self.limits = limits
         self.isLastItem = isLast
+        self.callback = callback
         self.titleLayout = .init(.initialize(string: value.title(limits), color: theme.colors.text, font: .medium(.title)))
         self.infoLayout = .init(.initialize(string: value.info(limits), color: theme.colors.grayText, font: .normal(.text)))
 
-        super.init(initialSize, stableId: stableId, viewType: viewType)
+        super.init(initialSize, stableId: stableId, viewType: viewType, inset: NSEdgeInsets(left: 20, right: 20))
         _ = self.makeSize(initialSize.width)
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         let _ = super.makeSize(width, oldWidth: oldWidth)
         
-        self.titleLayout.measure(width: width - 30 - 50)
-        self.infoLayout.measure(width: width - 30 - 50)
+        self.titleLayout.measure(width: blockWidth - (viewType.innerInset.left + viewType.innerInset.right) - 50)
+        self.infoLayout.measure(width: blockWidth - (viewType.innerInset.left + viewType.innerInset.right) - 50)
 
         return true
     }
@@ -49,22 +51,37 @@ final class PremiumBoardingRowItem : GeneralRowItem {
 }
 
 
-private final class PremiumBoardingRowView: GeneralRowView {
+private final class PremiumBoardingRowView: GeneralContainableRowView {
     private let titleView = TextView()
     private let infoView = TextView()
-    private let borderView = View()
     private let imageView = ImageView()
+    private let nextView = ImageView()
+    private let overlay = Control()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(titleView)
         addSubview(infoView)
         addSubview(imageView)
-        addSubview(borderView)
+        addSubview(nextView)
+        addSubview(overlay)
+        
+        
+        overlay.set(background: .clear, for: .Normal)
+        overlay.set(background: .clear, for: .Hover)
+        overlay.set(background: theme.colors.grayText.withAlphaComponent(0.1), for: .Highlight)
+
+        
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
         
         infoView.userInteractionEnabled = false
         infoView.isSelectable = false
+        
+        overlay.set(handler: { [weak self] _ in
+            if let item = self?.item as? PremiumBoardingRowItem {
+                item.callback(item.value)
+            }
+        }, for: .Click)
         
     }
     
@@ -80,7 +97,10 @@ private final class PremiumBoardingRowView: GeneralRowView {
 
         
         infoView.setFrameOrigin(NSMakePoint(50, titleView.frame.maxY + 4))
-        borderView.frame = NSMakeRect(50, frame.height - .borderSize, frame.width - 50, .borderSize)
+        
+        nextView.centerY(x: containerView.frame.width - 20 - nextView.frame.width)
+        
+        overlay.frame = bounds
     }
     
     override func set(item: TableRowItem, animated: Bool) {
@@ -93,11 +113,14 @@ private final class PremiumBoardingRowView: GeneralRowView {
         imageView.image = item.value.icon
         imageView.sizeToFit()
         
+        nextView.image = theme.icons.premium_boarding_feature_next
+        nextView.sizeToFit()
+        
         titleView.update(item.titleLayout)
         infoView.update(item.infoLayout)
         
-        borderView.backgroundColor = theme.colors.border
-        borderView.isHidden = item.isLastItem
+        
+        
         
         needsLayout = true
     }

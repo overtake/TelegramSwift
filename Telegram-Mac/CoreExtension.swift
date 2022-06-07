@@ -484,6 +484,15 @@ public extension Message {
         return nil
     }
     
+    var consumableContent: ConsumableContentMessageAttribute? {
+        for attr in attributes {
+            if let attr = attr as? ConsumableContentMessageAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
     var audioTranscription:AudioTranscriptionMessageAttribute? {
         for attr in attributes {
             if let attr = attr as? AudioTranscriptionMessageAttribute {

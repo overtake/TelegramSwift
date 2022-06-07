@@ -223,7 +223,7 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
         if let placeholder = placeholder {
             return placeholder.hasLimitationText
         } else {
-            return limit > 0 && defaultText == nil
+            return limit > 30 && defaultText == nil
         }
     }
     
@@ -921,7 +921,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         }
         
         if item.hasTextLimitation {
-            textLimitation.isHidden = item.currentText.length < item.limit / 3 * 2
+            textLimitation.isHidden = item.currentText.length < item.limit / 3 * 2 || item.currentText.length == item.limit
             let color: NSColor = item.currentText.length > item.limit ? self.redColor : self.grayText
             textLimitation.attributedString = .initialize(string: "\(item.limit - Int32(item.currentText.length))", color: color, font: .normal(.small))
             textLimitation.sizeToFit()

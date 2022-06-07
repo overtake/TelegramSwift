@@ -2921,6 +2921,26 @@ public final class L10n {
   public static func chatServicePaymentSent1(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.PaymentSent1", p1, p2, p3)
   }
+  /// You have successfully transferred **%1$@** to **%2$@**
+  public static func chatServicePaymentSent1NoTitle(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PaymentSent1NoTitle", p1, p2)
+  }
+  /// You have just successfully transferred **%1$@** to **%2$@** for **%3$@** and allowed future reccurrent payments
+  public static func chatServicePaymentSentRecurringInit(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PaymentSentRecurringInit", p1, p2, p3)
+  }
+  /// You have just successfully transferred **%1$@** to **%2$@** and allowed future reccurrent payments
+  public static func chatServicePaymentSentRecurringInitNoTitle(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PaymentSentRecurringInitNoTitle", p1, p2)
+  }
+  /// You have just successfully transferred **%1$@** to **%2$@** for **%3$@** via recurrent payments
+  public static func chatServicePaymentSentRecurringUsed(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PaymentSentRecurringUsed", p1, p2, p3)
+  }
+  /// You have just successfully transferred **%1$@** to **%2$@** via recurrent payments
+  public static func chatServicePaymentSentRecurringUsedNoTitle(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PaymentSentRecurringUsedNoTitle", p1, p2)
+  }
   /// %@ joined Telegram
   public static func chatServicePeerJoinedTelegram(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.PeerJoinedTelegram", p1)
@@ -4365,7 +4385,7 @@ public final class L10n {
   public static var editAccountTitle: String  { return L10n.tr("Localizable", "EditAccount.Title") }
   /// Username
   public static var editAccountUsername: String  { return L10n.tr("Localizable", "EditAccount.Username") }
-  /// Customize...
+  /// Sticker or Emoji
   public static var editAvatarCustomize: String  { return L10n.tr("Localizable", "EditAvatar.Customize") }
   /// Photo or Video
   public static var editAvatarPhotoOrVideo: String  { return L10n.tr("Localizable", "EditAvatar.PhotoOrVideo") }
@@ -6645,7 +6665,7 @@ public final class L10n {
   public static var paymentsInvoiceNotExists: String  { return L10n.tr("Localizable", "Payments.Invoice.NotExists") }
   /// Tip
   public static var paymentsReceiptTip: String  { return L10n.tr("Localizable", "Payments.Receipt.Tip") }
-  /// I accept [Terms of Service]() of **Checkboxes %@**.
+  /// I accept [Terms of Service]() of **%@**.
   public static func paymentsRecurrentAccept(_ p1: String) -> String {
     return L10n.tr("Localizable", "Payments.Recurrent.Accept", p1)
   }
@@ -7549,6 +7569,10 @@ public final class L10n {
   public static var preHistorySettingsDescriptionGroupHidden: String  { return L10n.tr("Localizable", "PreHistorySettings.Description.Group.Hidden") }
   /// Go **beyond the limits**, get **exclusive features** and support us by subscribing to **Telegram Premium**.
   public static var premiumBoardingInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Info") }
+  /// Subscribe for %@ per month
+  public static func premiumBoardingSubscribe(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Subscribe", p1)
+  }
   /// Telegram Premium
   public static var premiumBoardingTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Title") }
   /// While the free version of Telegram already gives its users more than any other messaging application, **Telegram Premium** pushes its capabilities even further.\n\n**Telegram Premium** is a paid option, because most Premium Features require additional expenses from Telegram to third parties such as data center providers and server manufacturers. Contributions from **Telegram Premium** users allow us to cover such costs and also help Telegram stay free for everyone.
@@ -7557,6 +7581,10 @@ public final class L10n {
   public static var premiumBoardingAboutTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.About.Title") }
   /// By purchasing a Premium subscription, you agree to our [Terms of Service](terms) and [Privacy Policy](privacy).
   public static var premiumBoardingAboutTos: String  { return L10n.tr("Localizable", "Premium.Boarding.About.Tos") }
+  /// Purchase was cancelled or failed.
+  public static var premiumBoardingAppStoreCancelled: String  { return L10n.tr("Localizable", "Premium.Boarding.AppStore.Cancelled") }
+  /// You successfully subscribed for Telegram Premium.
+  public static var premiumBoardingAppStoreSuccess: String  { return L10n.tr("Localizable", "Premium.Boarding.AppStore.Success") }
   /// Video avatars animated in chat lists and chats to allow for additional self-expression.
   public static var premiumBoardingAvatarInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Avatar.Info") }
   /// Animated Profile Pictures
@@ -7569,12 +7597,68 @@ public final class L10n {
   public static var premiumBoardingChatsInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Chats.Info") }
   /// Advanced Chat Management
   public static var premiumBoardingChatsTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Chats.Title") }
+  /// Connected Accounts
+  public static var premiumBoardingDoubleAccounts: String  { return L10n.tr("Localizable", "Premium.Boarding.Double.Accounts") }
+  /// Bio
+  public static var premiumBoardingDoubleBio: String  { return L10n.tr("Localizable", "Premium.Boarding.Double.Bio") }
+  /// Captions
+  public static var premiumBoardingDoubleCaptions: String  { return L10n.tr("Localizable", "Premium.Boarding.Double.Captions") }
+  /// Chats per Folder
+  public static var premiumBoardingDoubleChatsPerFolder: String  { return L10n.tr("Localizable", "Premium.Boarding.Double.ChatsPerFolder") }
+  /// Favorite Stickers
+  public static var premiumBoardingDoubleFavedStickers: String  { return L10n.tr("Localizable", "Premium.Boarding.Double.FavedStickers") }
+  /// Folders
+  public static var premiumBoardingDoubleFolders: String  { return L10n.tr("Localizable", "Premium.Boarding.Double.Folders") }
+  /// Groups and Channels
+  public static var premiumBoardingDoubleGroupsAndChannels: String  { return L10n.tr("Localizable", "Premium.Boarding.Double.GroupsAndChannels") }
   /// Up to %1$@ channels, %2$@ folders, %3$@ pins, %4$@ public links and more.
   public static func premiumBoardingDoubleInfo(_ p1: String, _ p2: String, _ p3: String, _ p4: String) -> String {
     return L10n.tr("Localizable", "Premium.Boarding.Double.Info", p1, p2, p3, p4)
   }
-  /// Doubled Limits
+  /// Pinned Chats
+  public static var premiumBoardingDoublePinnedChats: String  { return L10n.tr("Localizable", "Premium.Boarding.Double.PinnedChats") }
+  /// Public Links
+  public static var premiumBoardingDoublePublicLinks: String  { return L10n.tr("Localizable", "Premium.Boarding.Double.PublicLinks") }
+  /// Saved GIFs
+  public static var premiumBoardingDoubleSavedGifs: String  { return L10n.tr("Localizable", "Premium.Boarding.Double.SavedGifs") }
+  /// Double Limits
   public static var premiumBoardingDoubleTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Double.Title") }
+  /// Connect %@ accounts with different mobile numbers
+  public static func premiumBoardingDoubleAccountsInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Double.Accounts.Info", p1)
+  }
+  /// Add more symbols and use links in your bio
+  public static var premiumBoardingDoubleBioInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Double.Bio.Info") }
+  /// Use longer descriptions for your photos and videos
+  public static var premiumBoardingDoubleCaptionsInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Double.Captions.Info") }
+  /// Add up to %@ chats into each of your folders
+  public static func premiumBoardingDoubleChatsPerFolderInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Double.ChatsPerFolder.Info", p1)
+  }
+  /// Save up to %@ stickers in your Favorite stickers
+  public static func premiumBoardingDoubleFavedStickersInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Double.FavedStickers.Info", p1)
+  }
+  /// Organize your chats into %@ folders
+  public static func premiumBoardingDoubleFoldersInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Double.Folders.Info", p1)
+  }
+  /// Join up to %@ channels and large groups
+  public static func premiumBoardingDoubleGroupsAndChannelsInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Double.GroupsAndChannels.Info", p1)
+  }
+  /// Pin up to %@ chats in your main chat list
+  public static func premiumBoardingDoublePinnedChatsInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Double.PinnedChats.Info", p1)
+  }
+  /// Reserve up to %@ t.me/name links
+  public static func premiumBoardingDoublePublicLinksInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Double.PublicLinks.Info", p1)
+  }
+  /// Save up to %@ GIFs in your Favorite GIFs
+  public static func premiumBoardingDoubleSavedGifsInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Double.SavedGifs.Info", p1)
+  }
   /// No more limits on the speed with which media and documents are downloaded.
   public static var premiumBoardingDownloadInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Download.Info") }
   /// Faster Download Speed
@@ -7587,10 +7671,16 @@ public final class L10n {
   public static func premiumBoardingFileSizeTitle(_ p1: String) -> String {
     return L10n.tr("Localizable", "Premium.Boarding.FileSize.Title", p1)
   }
+  /// Thank you for subscribing to Telegram Premium. Here's what is now unlocked.
+  public static var premiumBoardingGotInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Got.Info") }
+  /// You are all set!
+  public static var premiumBoardingGotTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Got.Title") }
   /// No more ads in public channels where Telegram sometimes shows ads.
   public static var premiumBoardingNoAdsInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.NoAds.Info") }
   /// No Ads
   public static var premiumBoardingNoAdsTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.NoAds.Title") }
+  /// Not Available
+  public static var premiumBoardingPaymentNotAvailalbe: String  { return L10n.tr("Localizable", "Premium.Boarding.Payment.NotAvailalbe") }
   ///  Owners of Telegram Premium accounts have exclusive access to multiple additional features.
   public static var premiumBoardingPeerInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Peer.Info") }
   /// [%@](profile) is a subscriber of Telegram Premium
@@ -7650,6 +7740,56 @@ public final class L10n {
   /// You have reached the limit of **%1$@** folders. You can double the limit to %2$@ folders by subscribing to **Telegram Premium**.
   public static func premiumLimitFoldersInfo(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Premium.Limit.Folders.Info", p1, p2)
+  }
+  /// The limit of about is **%1$@** symbols. We are working to let you increase this limit in the future.
+  public static func premiumLimitLockedAboutInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.Locked.About.Info", p1)
+  }
+  /// You have reached the limit of %@ connected accounts. We are working to let you increase this limit in the future.
+  public static func premiumLimitLockedAccountsInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.Locked.Accounts.Info", p1)
+  }
+  /// The limit of caption is **%1$@** symbols. We are working to let you increase this limit in the future.
+  public static func premiumLimitLockedCaptionInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.Locked.Caption.Info", p1)
+  }
+  /// You are a member of **%1$@** groups and channels. We are working to let you increase this limit in the future.
+  public static func premiumLimitLockedChannelsInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.Locked.Channels.Info", p1)
+  }
+  /// Sorry, you can't add more than **%1$@** chats to a folder. We are working to let you increase this limit in the future.
+  public static func premiumLimitLockedChatInFoldersInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.Locked.ChatInFolders.Info", p1)
+  }
+  /// Sorry, you can't add more than **%1$@** stickers to favourites. We are working to let you increase this limit in the future.
+  public static func premiumLimitLockedFaveStickersInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.Locked.FaveStickers.Info", p1)
+  }
+  /// The document can't be sent, because it is larger than **%1$@**. We are working to let you increase this limit in the future.
+  public static func premiumLimitLockedFileSizeInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.Locked.FileSize.Info", p1)
+  }
+  /// You have reached the limit of **%1$@** folders. We are working to let you increase this limit in the future.
+  public static func premiumLimitLockedFoldersInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.Locked.Folders.Info", p1)
+  }
+  /// Sorry, you can't pin more than **%1$@** chats to the top. We are working to let you increase this limit in the future.
+  public static func premiumLimitLockedPinInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.Locked.Pin.Info", p1)
+  }
+  /// Sorry, you can't pin more than **%1$@** chats in archive to the top. We are working to let you increase this limit in the future.
+  public static func premiumLimitLockedPinInArchiveInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.Locked.PinInArchive.Info", p1)
+  }
+  /// Sorry, you can't pin more than **%1$@** chats to the top. We are working to let you increase this limit in the future.
+  public static func premiumLimitLockedPinInFoldersInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.Locked.PinInFolders.Info", p1)
+  }
+  /// You have reserved too many public links. We are working to let you increase this limit in the future.
+  public static var premiumLimitLockedPublicLinkInfo: String  { return L10n.tr("Localizable", "Premium.Limit.Locked.PublicLink.Info") }
+  /// Sorry, you can't save more than **%1$@** GIFs. We are working to let you increase this limit in the future.
+  public static func premiumLimitLockedSavedGifsInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Limit.Locked.SavedGifs.Info", p1)
   }
   /// Sorry, you can't pin more than **%1$@** chats to the top. Unpin some of the currently pinned ones or subscribe to **Telegram Premium** to double the limit to **%2$@** chats.
   public static func premiumLimitPinInfo(_ p1: String, _ p2: String) -> String {
@@ -11281,6 +11421,8 @@ public final class L10n {
   public static var webAppReload: String  { return L10n.tr("Localizable", "WebApp.Reload") }
   /// Remove Bot
   public static var webAppRemoveBot: String  { return L10n.tr("Localizable", "WebApp.RemoveBot") }
+  /// Settings
+  public static var webAppSettings: String  { return L10n.tr("Localizable", "WebApp.Settings") }
   /// Webpage
   public static var webAppTitle: String  { return L10n.tr("Localizable", "WebApp.Title") }
   /// Allow

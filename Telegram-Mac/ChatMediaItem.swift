@@ -361,34 +361,8 @@ class ChatMediaItem: ChatRowItem {
         
         self.updateParameters()
                 
-        var transcribed: String?
-        var transcribtedColor = theme.chat.textColor(isIncoming, object.renderType == .bubble)
-        if let transcribe = entry.additionalData.transribeState {
-                        
-            switch transcribe {
-            case let .revealed(success):
-                if !success {
-                    transcribed = strings().chatVoiceTransribeError
-                    transcribtedColor = parameters.presentation.activityBackground
-                } else {
-                    if let result = entry.message?.audioTranscription, !result.text.isEmpty {
-                        transcribed = result.text
-                    } else {
-                        transcribed = strings().chatVoiceTransribeError
-                        transcribtedColor = parameters.presentation.activityBackground
-                    }
-                }
-            default:
-                break
-            }
-        }
-        
-        if let transcribed = transcribed {
-            let caption: NSAttributedString = .initialize(string: transcribed, color: transcribtedColor, font: .normal(theme.fontSize))
-            captionLayouts.append(.init(id: UInt32.max, offset: CGPoint(x: 0, y: 0), layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected())))
-        }
-        
-        if !message.text.isEmpty, canAddCaption, transcribed == nil {
+       
+        if !message.text.isEmpty, canAddCaption {
             
             var caption:NSMutableAttributedString = NSMutableAttributedString()
             _ = caption.append(string: message.text, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(theme.fontSize))
@@ -722,6 +696,17 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
            
             self.contentNode?.update(with: item.media, size: item.contentSize, context: item.context, parent:item.message, table:item.table, parameters:item.parameters, animated: animated, positionFlags: item.positionFlags, approximateSynchronousValue: item.approximateSynchronousValue)
             
+            let transition: ContainedViewLayoutTransition
+            if animated {
+                transition = .animated(duration: 0.2, curve: .easeOut)
+            } else {
+                transition = .immediate
+            }
+            if let contentNode = contentNode {
+                transition.updateFrame(view: contentNode, frame: item.contentSize.bounds)
+                contentNode.updateLayout(size: item.contentSize, transition: transition)
+            }
+            
             if item.isPinchable {
                 self.pinchToZoom?.add(to: contentNode!, size: item.contentSize)
             } else {
@@ -748,6 +733,14 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
        
         if interactive {
             self.contentNode?.interactionControllerDidFinishAnimation(interactive: interactive)
+        }
+    }
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        if let view = contentNode, let item = self.item as? ChatMediaItem {
+            transition.updateFrame(view: view, frame: item.contentSize.bounds)
+            view.updateLayout(size: item.contentSize, transition: transition)
         }
     }
     

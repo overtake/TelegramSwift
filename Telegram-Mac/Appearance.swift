@@ -2467,7 +2467,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 premium_account_active: { generatePremium(false, color: palette.underSelectedColor) },
                                                 premium_account_rev: { generatePremium(true, color: palette.accent) },
                                                 premium_account_rev_active: { generatePremium(true, color: palette.underSelectedColor) },
-                                                premium_reaction_lock: { generateLockPremiumReaction(palette) }
+                                                premium_reaction_lock: { generateLockPremiumReaction(palette) },
+                                                premium_boarding_feature_next: { NSImage(named: "Premium_Boarding_Feature_Next")!.precomposed(palette.grayIcon) }
 
     )
 

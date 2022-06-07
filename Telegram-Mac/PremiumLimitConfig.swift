@@ -67,6 +67,8 @@ final class PremiumLimitConfig {
     
     let about_length_limit_default: Int
     let about_length_limit_premium: Int
+    
+    let premium_purchase_blocked: Bool
 
     init(appConfiguration: AppConfiguration) {
         if let data = appConfiguration.data {
@@ -105,6 +107,8 @@ final class PremiumLimitConfig {
 
             self.about_length_limit_default = Int(data["about_length_limit_default"] as? Double ?? 70)
             self.about_length_limit_premium = Int(data["about_length_limit_premium"] as? Double ?? 140)
+            
+            self.premium_purchase_blocked = data["premium_purchase_blocked"] as? Bool ?? true
 
         } else {
             self.channels_limit_default = 500
@@ -142,6 +146,8 @@ final class PremiumLimitConfig {
             
             self.about_length_limit_default = 70
             self.about_length_limit_premium = 140
+            
+            self.premium_purchase_blocked = true
         }
     }
 }

@@ -503,10 +503,17 @@
 		27F4F1782844D91E00A3B4D4 /* AnimatedEmojiesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F4F1772844D91E00A3B4D4 /* AnimatedEmojiesController.swift */; };
 		27F4F17A2844F7C700A3B4D4 /* AnimatedEmojiesSectionRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F4F1792844F7C700A3B4D4 /* AnimatedEmojiesSectionRowItem.swift */; };
 		27F4F17C2845318500A3B4D4 /* ChatInputAnimatedEmojiAttach.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F4F17B2845318500A3B4D4 /* ChatInputAnimatedEmojiAttach.swift */; };
-		27F4F18028463BF100A3B4D4 /* premium_unlock.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27F4F17D28463BF000A3B4D4 /* premium_unlock.tgs */; };
 		27F4F18128463BF100A3B4D4 /* premium_addone.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27F4F17E28463BF000A3B4D4 /* premium_addone.tgs */; };
 		27F4F18228463BF100A3B4D4 /* premium_double.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27F4F17F28463BF100A3B4D4 /* premium_double.tgs */; };
 		27F4F1842846571900A3B4D4 /* PaymentsCheckoutRecurrentRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F4F1832846571900A3B4D4 /* PaymentsCheckoutRecurrentRowItem.swift */; };
+		27F4F1862848B91C00A3B4D4 /* PremiumLockModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F4F1852848B91C00A3B4D4 /* PremiumLockModalController.swift */; };
+		27F4F1882848CFCC00A3B4D4 /* premium_unlock.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27F4F1872848CFCC00A3B4D4 /* premium_unlock.tgs */; };
+		27F4F18A2849EEEB00A3B4D4 /* TimebasedVideoPreload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F4F1892849EEEB00A3B4D4 /* TimebasedVideoPreload.swift */; };
+		27F4F18C284A256400A3B4D4 /* PremiumBoardingFeaturesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F4F18B284A256400A3B4D4 /* PremiumBoardingFeaturesController.swift */; };
+		27F4F18E284A32EA00A3B4D4 /* PremiumBoardingDoubleController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F4F18D284A32EA00A3B4D4 /* PremiumBoardingDoubleController.swift */; };
+		27F4F190284A33C100A3B4D4 /* PremiumBoardingDoubleRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F4F18F284A33C100A3B4D4 /* PremiumBoardingDoubleRowItem.swift */; };
+		27F4F192284E401200A3B4D4 /* menu_gear.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27F4F191284E401200A3B4D4 /* menu_gear.tgs */; };
+		27F4F194284F654400A3B4D4 /* TranscribeAudioTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F4F193284F654400A3B4D4 /* TranscribeAudioTextView.swift */; };
 		27F5F23325E7CACE00E8AC69 /* CurrencyFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23225E7CACE00E8AC69 /* CurrencyFormat.swift */; };
 		27F5F23C25E7CCD700E8AC69 /* PaymentsCheckoutPriceItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23B25E7CCD600E8AC69 /* PaymentsCheckoutPriceItem.swift */; };
 		27F5F23F25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23E25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift */; };
@@ -1770,10 +1777,17 @@
 		27F4F1772844D91E00A3B4D4 /* AnimatedEmojiesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedEmojiesController.swift; sourceTree = "<group>"; };
 		27F4F1792844F7C700A3B4D4 /* AnimatedEmojiesSectionRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedEmojiesSectionRowItem.swift; sourceTree = "<group>"; };
 		27F4F17B2845318500A3B4D4 /* ChatInputAnimatedEmojiAttach.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInputAnimatedEmojiAttach.swift; sourceTree = "<group>"; };
-		27F4F17D28463BF000A3B4D4 /* premium_unlock.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = premium_unlock.tgs; sourceTree = "<group>"; };
 		27F4F17E28463BF000A3B4D4 /* premium_addone.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = premium_addone.tgs; sourceTree = "<group>"; };
 		27F4F17F28463BF100A3B4D4 /* premium_double.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = premium_double.tgs; sourceTree = "<group>"; };
 		27F4F1832846571900A3B4D4 /* PaymentsCheckoutRecurrentRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutRecurrentRowItem.swift; sourceTree = "<group>"; };
+		27F4F1852848B91C00A3B4D4 /* PremiumLockModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumLockModalController.swift; sourceTree = "<group>"; };
+		27F4F1872848CFCC00A3B4D4 /* premium_unlock.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = premium_unlock.tgs; sourceTree = "<group>"; };
+		27F4F1892849EEEB00A3B4D4 /* TimebasedVideoPreload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimebasedVideoPreload.swift; sourceTree = "<group>"; };
+		27F4F18B284A256400A3B4D4 /* PremiumBoardingFeaturesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumBoardingFeaturesController.swift; sourceTree = "<group>"; };
+		27F4F18D284A32EA00A3B4D4 /* PremiumBoardingDoubleController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumBoardingDoubleController.swift; sourceTree = "<group>"; };
+		27F4F18F284A33C100A3B4D4 /* PremiumBoardingDoubleRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumBoardingDoubleRowItem.swift; sourceTree = "<group>"; };
+		27F4F191284E401200A3B4D4 /* menu_gear.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_gear.tgs; sourceTree = "<group>"; };
+		27F4F193284F654400A3B4D4 /* TranscribeAudioTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscribeAudioTextView.swift; sourceTree = "<group>"; };
 		27F5F23225E7CACE00E8AC69 /* CurrencyFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormat.swift; sourceTree = "<group>"; };
 		27F5F23B25E7CCD600E8AC69 /* PaymentsCheckoutPriceItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutPriceItem.swift; sourceTree = "<group>"; };
 		27F5F23E25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsShippingInfoController.swift; sourceTree = "<group>"; };
@@ -2774,6 +2788,10 @@
 				27034073282BDEBF00D0156C /* PremiumBoardingHeaderItem.swift */,
 				27034077282CF7BE00D0156C /* PremiumStarSceneView.swift */,
 				27D9130D2833BE60007CF40F /* PremiumAboutRowItem.swift */,
+				27F4F1852848B91C00A3B4D4 /* PremiumLockModalController.swift */,
+				27F4F18B284A256400A3B4D4 /* PremiumBoardingFeaturesController.swift */,
+				27F4F18D284A32EA00A3B4D4 /* PremiumBoardingDoubleController.swift */,
+				27F4F18F284A33C100A3B4D4 /* PremiumBoardingDoubleRowItem.swift */,
 			);
 			name = premium;
 			sourceTree = "<group>";
@@ -2985,6 +3003,7 @@
 				27E070F5278D9C120026BFA1 /* menu_poll.tgs */,
 				277C208827A2858D0070B3BF /* menu_speaker_muted.tgs */,
 				27161A9B27EC98280069BCEF /* menu_drugs.tgs */,
+				27F4F191284E401200A3B4D4 /* menu_gear.tgs */,
 				277C208727A2858D0070B3BF /* menu_speaker.tgs */,
 				277619E2280EAA4B0090663C /* menu_monogram.tgs */,
 				277C208B27A2C4C40070B3BF /* menu_sharescreen_slash.tgs */,
@@ -3462,6 +3481,7 @@
 				D02F0A0122E88C6E00553411 /* MediaPlayerFramePreview.swift */,
 				27E070FE27906B8B0026BFA1 /* UniversalSoftwareVideoSource.swift */,
 				27E0710027906B9A0026BFA1 /* SoftwareVideoSource.swift */,
+				27F4F1892849EEEB00A3B4D4 /* TimebasedVideoPreload.swift */,
 			);
 			name = modern;
 			sourceTree = "<group>";
@@ -4511,6 +4531,7 @@
 			isa = PBXGroup;
 			children = (
 				C2777B5A1DCE11A5008B69DD /* SendingClockProgress.swift */,
+				27F4F193284F654400A3B4D4 /* TranscribeAudioTextView.swift */,
 			);
 			name = controls;
 			sourceTree = "<group>";
@@ -5174,7 +5195,7 @@
 				27D91312283646CA007CF40F /* text_to_voice.tgs */,
 				27F4F17E28463BF000A3B4D4 /* premium_addone.tgs */,
 				27F4F17F28463BF100A3B4D4 /* premium_double.tgs */,
-				27F4F17D28463BF000A3B4D4 /* premium_unlock.tgs */,
+				27F4F1872848CFCC00A3B4D4 /* premium_unlock.tgs */,
 				27D91313283646CA007CF40F /* voice_to_text.tgs */,
 				2755490D2747C24B0098A3CD /* device_android.tgs */,
 				275549052747C2380098A3CD /* device_chrome.tgs */,
@@ -5819,6 +5840,7 @@
 				27F2BBC527BE4E7B00A37463 /* code_note.tgs in Resources */,
 				2773A54625FA324B00AB45E9 /* voice_chat_mute.tgs in Resources */,
 				9F03681622771A9700456348 /* anim_mute.json in Resources */,
+				27F4F192284E401200A3B4D4 /* menu_gear.tgs in Resources */,
 				C2057FA81EBBCEA7000423DC /* voip_ringback.caf in Resources */,
 				27E969E12589172D00CB9F64 /* call down.mp3 in Resources */,
 				A731924F25CD5F2300218E0E /* destructor.tgs in Resources */,
@@ -5972,12 +5994,12 @@
 				2733672027620BA40027441E /* menu_report.tgs in Resources */,
 				D07450EC233D61B800769D7F /* swap_money.tgs in Resources */,
 				27B8AFEC26380B4E0044C71B /* screenoff.tgs in Resources */,
+				27F4F1882848CFCC00A3B4D4 /* premium_unlock.tgs in Resources */,
 				27CB176227637D7400DD25E0 /* menu_create_group.tgs in Resources */,
 				A731925925DBA60000218E0E /* gigagroup.tgs in Resources */,
 				C21074241E77F5DF006EE5EF /* dsa_pub_prod.pem in Resources */,
 				2733672C276214050027441E /* menu_select_messages.tgs in Resources */,
 				9F03681922771A9700456348 /* anim_archive.json in Resources */,
-				27F4F18028463BF100A3B4D4 /* premium_unlock.tgs in Resources */,
 				C23D0D7C1F1A649900AF5151 /* SFCompactRounded-Semibold.otf in Resources */,
 				2751E79F27F34415003E3937 /* menu_autodelete_never.tgs in Resources */,
 				27CB176C27638EF800DD25E0 /* menu_collapse.tgs in Resources */,
@@ -6314,6 +6336,7 @@
 				A7F283042395289B00742C20 /* AccountUtils.swift in Sources */,
 				A7F283022395185B00742C20 /* SettingsSearchableItems.swift in Sources */,
 				D0A75F2724486B6D001F84A0 /* EditImageCanvasColorPicker.swift in Sources */,
+				27F4F194284F654400A3B4D4 /* TranscribeAudioTextView.swift in Sources */,
 				C232EA0E1E155E9400C4D38C /* PeersListController.swift in Sources */,
 				C2C415E51FA33D1A00FF36F4 /* InputFormatterPopover.swift in Sources */,
 				9F0AE6C02199CDB500A8B53A /* SVideoView.swift in Sources */,
@@ -6345,6 +6368,7 @@
 				276A6C0F26C5316F00E4FF34 /* StickerPackTrendingItem.swift in Sources */,
 				A7919138240D1077002011CA /* ChatListFilterPredicate.swift in Sources */,
 				C28BAB291DF981320027CE3A /* AudioWaveform.swift in Sources */,
+				27F4F18C284A256400A3B4D4 /* PremiumBoardingFeaturesController.swift in Sources */,
 				C22EBCBA1DFAB64F0034C435 /* ChatMapContentView.swift in Sources */,
 				C234A7FE1ED725C300EBBECE /* LanguageViewController.swift in Sources */,
 				C2E40A1B1E37ADAF0099AC7D /* PeerMediaEmptyRowItem.swift in Sources */,
@@ -6445,6 +6469,7 @@
 				C25911371DF1A68200671E72 /* ChatInputRecordingView.swift in Sources */,
 				C2271DB31DAE127A001792B6 /* GeneralRowView.swift in Sources */,
 				C2167E511DC220E900F98E03 /* PeerMediaMusicRowContent.swift in Sources */,
+				27F4F1862848B91C00A3B4D4 /* PremiumLockModalController.swift in Sources */,
 				27949110260A41EB0003BFA0 /* FFMpegMediaFrameSource.swift in Sources */,
 				9F62AE83202D8759007FB557 /* FetchMediaUtils.swift in Sources */,
 				C2A506751DF438B900971A93 /* AudioWaveformView.swift in Sources */,
@@ -6651,6 +6676,7 @@
 				9FC4DA9A21DD0BE6003E2A62 /* CachedChannelAdmins.swift in Sources */,
 				9F4EEF7E21D3C3E3002C3B33 /* InstantPageDetailsItem.swift in Sources */,
 				C2A315B11E2E656100D89000 /* CalendarMonthController.swift in Sources */,
+				27F4F190284A33C100A3B4D4 /* PremiumBoardingDoubleRowItem.swift in Sources */,
 				C275932E1DF6E1CE00A0807A /* AboutModalController.swift in Sources */,
 				9F1C279321D38A96003CD033 /* InstantPageScrollableItem.swift in Sources */,
 				279A1E2825E945A2007D48E7 /* PaymentsReceiptController.swift in Sources */,
@@ -6718,6 +6744,7 @@
 				C230B9221DD4C24E0057F596 /* GIFPlayerView.swift in Sources */,
 				C2CBCAC51D81649E00142EC0 /* ChatListRowView.swift in Sources */,
 				27949114260A41EB0003BFA0 /* FFMpegMediaPassthroughVideoFrameDecoder.swift in Sources */,
+				27F4F18E284A32EA00A3B4D4 /* PremiumBoardingDoubleController.swift in Sources */,
 				270A262A269D8F1000B31B2B /* WidgetStickersController.swift in Sources */,
 				C20232A81D81D189007C9ADE /* ChatController.swift in Sources */,
 				D00C73B62302C196004B1E2B /* ChatScheduleController.swift in Sources */,
@@ -6819,6 +6846,7 @@
 				9FC4DA9C21DD187C003E2A62 /* SearchPeerMembers.swift in Sources */,
 				2713B220260A42FE00CE0EC6 /* MediaTrackDecodableFrame.swift in Sources */,
 				C22E06321D8044CC00A11C88 /* ChatListController.swift in Sources */,
+				27F4F18A2849EEEB00A3B4D4 /* TimebasedVideoPreload.swift in Sources */,
 				2773A53A25FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift in Sources */,
 				2786368527C8B76200690B10 /* DownloadsControl.swift in Sources */,
 				C246D6281FAB72D4004C17FA /* MediaGroupPreviewRowItem.swift in Sources */,

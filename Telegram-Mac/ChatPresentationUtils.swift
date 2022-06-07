@@ -44,12 +44,8 @@ final class ChatMediaPresentation : Equatable {
         let isIncoming: Bool = message.isIncoming(account, renderType == .bubble)
         
         
-        var grayText = theme.chat.grayText(isIncoming, renderType == .bubble)
-        if renderType == .bubble {
-            if isIncoming {
-                grayText = theme.colors.accent
-            }
-        }
+        let grayText = theme.chat.grayText(isIncoming, renderType == .bubble)
+
         return ChatMediaPresentation(presentation: theme, isIncoming: isIncoming,
                                      isBubble: renderType == .bubble,
                                      activityBackground: theme.chat.activityBackground(isIncoming, renderType == .bubble),

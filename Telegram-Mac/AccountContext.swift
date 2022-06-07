@@ -135,6 +135,12 @@ final class AccountContext {
             #endif
         }
     }
+    #if !SHARE
+    var premiumIsBlocked: Bool {
+        return self.premiumLimits.premium_purchase_blocked
+    }
+    #endif
+    
     private let premiumDisposable = MetaDisposable()
     
     let globalPeerHandler:Promise<ChatLocation?> = Promise()

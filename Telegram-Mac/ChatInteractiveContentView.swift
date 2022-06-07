@@ -800,15 +800,13 @@ class ChatInteractiveContentView: ChatMediaContentView {
         
     }
     
-    override func change(size: NSSize, animated: Bool, _ save:Bool = true, removeOnCompletion: Bool = true, duration:Double = 0.2, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, completion:((Bool)->Void)? = nil) {
-        super._change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
         
-        image._change(size: size, animated: animated, save, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
+        transition.updateFrame(view: image, frame: bounds)
+        
     }
     
-    override func setContent(size: NSSize) {
-        super.setContent(size: size)
-    }
     
     override func clean() {
         statusDisposable.dispose()
@@ -837,6 +835,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
             }
         }
     }
+    
     
     
     override func preloadStreamblePart() {

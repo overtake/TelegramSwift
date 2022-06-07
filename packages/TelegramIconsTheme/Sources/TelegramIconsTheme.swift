@@ -8481,6 +8481,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var premium_boarding_feature_next: CGImage {
+      if let image = cached.with({ $0["premium_boarding_feature_next"] }) {
+          return image
+      } else {
+          let image = _premium_boarding_feature_next()
+          _ = cached.modify { current in 
+              var current = current
+              current["premium_boarding_feature_next"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -9134,6 +9147,7 @@ public final class TelegramIconsTheme {
   private let _premium_account_rev: ()->CGImage
   private let _premium_account_rev_active: ()->CGImage
   private let _premium_reaction_lock: ()->CGImage
+  private let _premium_boarding_feature_next: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -9787,7 +9801,8 @@ public final class TelegramIconsTheme {
       premium_account_active: @escaping()->CGImage,
       premium_account_rev: @escaping()->CGImage,
       premium_account_rev_active: @escaping()->CGImage,
-      premium_reaction_lock: @escaping()->CGImage
+      premium_reaction_lock: @escaping()->CGImage,
+      premium_boarding_feature_next: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -10441,5 +10456,6 @@ public final class TelegramIconsTheme {
       self._premium_account_rev = premium_account_rev
       self._premium_account_rev_active = premium_account_rev_active
       self._premium_reaction_lock = premium_reaction_lock
+      self._premium_boarding_feature_next = premium_boarding_feature_next
   }
 }

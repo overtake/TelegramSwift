@@ -500,10 +500,7 @@ class ChatFileContentView: ChatMediaContentView {
         return progressView ?? self
     }
     
-    override func setContent(size: NSSize) {
-        super.setContent(size: size)
-    }
-    
+
     override func cancel() {
         fetchDisposable.set(nil)
         statusDisposable.set(nil)

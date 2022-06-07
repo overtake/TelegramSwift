@@ -205,9 +205,6 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
         return self.progressView
     }
     
-    override func setContent(size: NSSize) {
-        super.setContent(size: size)
-    }
     
     override func cancel() {
         fetchDisposable.set(nil)

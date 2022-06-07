@@ -88,6 +88,7 @@ private final class ChatInlineReactionMenuRowView : AppMenuBasicItemView {
             return
         }
         if self.reactions == nil {
+            let context = item.context
             var width = ContextAddReactionsListView.width(for: item.reactions)
             width = min(width, 30 * 6 + 15)
             
@@ -99,7 +100,7 @@ private final class ChatInlineReactionMenuRowView : AppMenuBasicItemView {
                         return true
                     }
                     needRemove = true
-                    return false
+                    return context.premiumIsBlocked
                 } else {
                     return false
                 }

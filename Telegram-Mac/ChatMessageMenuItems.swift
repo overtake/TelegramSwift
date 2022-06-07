@@ -226,9 +226,11 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     }
                 })
             }))
-            items.append(ContextMenuItem.init(strings().chatContextHideAd, handler: {
-                showModal(with: PremiumBoardingController(context: context), for: context.window)
-            }))
+            if !context.premiumIsBlocked {
+                items.append(ContextMenuItem.init(strings().chatContextHideAd, handler: {
+                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+                }))
+            }
             return items
         }
         

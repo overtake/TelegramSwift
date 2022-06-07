@@ -80,7 +80,7 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
     sectionId += 1
     
     
-    if arguments.context.isPremium {
+    if arguments.context.isPremium && !arguments.context.premiumIsBlocked {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_text"), equatable: nil, comparable: nil, item: { initialSize, stableId in
             return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: source.localizedString, font: .normal(.text), header: GeneralBlockTextHeader(text: source.header, icon: theme.icons.sentFailed))
         }))
@@ -91,7 +91,7 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
     }
 
     
-    if !arguments.context.isPremium {
+    if !arguments.context.isPremium && !arguments.context.premiumIsBlocked {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_premium"), equatable: nil, comparable: nil, item: { initialSize, stableId in
             return PremiumIncreaseLimitItem.init(initialSize, stableId: stableId, context: arguments.context, type: .channels, counts: nil, viewType: .singleItem, callback: arguments.premium)
         }))

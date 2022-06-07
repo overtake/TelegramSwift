@@ -143,7 +143,7 @@ private final class ShimmerEffectForegroundView: View {
         if horizontal {
             let gradientHeight: CGFloat = 320.0
             self.imageView.frame = CGRect(origin: CGPoint(x: -gradientHeight, y: 0.0), size: CGSize(width: gradientHeight, height: containerSize.height))
-            animation = self.imageView.layer!.makeAnimation(from: 0.0 as NSNumber, to: (containerSize.width + gradientHeight) as NSNumber, keyPath: "position.x", timingFunction: .easeOut, duration: duration * 1.0, delay: 0, mediaTimingFunction: nil, removeOnCompletion: true, additive: true)
+            animation = self.imageView.layer!.makeAnimation(from: 0.0 as NSNumber, to: (containerSize.width + gradientHeight) as NSNumber, keyPath: "position.x", timingFunction: .easeOut, duration: duration, delay: 0, mediaTimingFunction: nil, removeOnCompletion: true, additive: true)
             if !isStatic {
                 animation.repeatCount = Float.infinity
                 animation.beginTime = 1.0
@@ -151,7 +151,7 @@ private final class ShimmerEffectForegroundView: View {
         } else {
             let gradientHeight: CGFloat = 250.0
             self.imageView.frame = CGRect(origin: CGPoint(x: 0.0, y: -gradientHeight), size: CGSize(width: containerSize.width, height: gradientHeight))
-            animation = self.imageView.layer!.makeAnimation(from: 0.0 as NSNumber, to: (containerSize.height + gradientHeight) as NSNumber, keyPath: "position.y", timingFunction: .easeOut, duration: duration * 1.0, delay: 0, mediaTimingFunction: nil, removeOnCompletion: true, additive: true)
+            animation = self.imageView.layer!.makeAnimation(from: 0.0 as NSNumber, to: (containerSize.height + gradientHeight) as NSNumber, keyPath: "position.y", timingFunction: .easeOut, duration: duration, delay: 0, mediaTimingFunction: nil, removeOnCompletion: true, additive: true)
             
             if !isStatic {
                 animation.repeatCount = Float.infinity
@@ -161,7 +161,7 @@ private final class ShimmerEffectForegroundView: View {
         if isStatic {
             animation.delegate = CALayerAnimationDelegate(completion: { [weak self] completed in
                 if completed {
-                    delay(1.3, closure: {
+                    delay(2 - duration, closure: {
                         self?.addImageAnimation()
                     })
                 }
