@@ -59,34 +59,64 @@ extension PremiumLimitController.LimitType {
         }
     }
     func descText(_ limits: PremiumLimitConfig) -> String {
-        switch self {
-        case .pin:
-            return strings().premiumLimitPinInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
-        case .pinInArchive:
-            return strings().premiumLimitPinInArchiveInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
-        case .savedGifs:
-            return strings().premiumLimitSavedGifsInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
-        case .publicLink:
-            return strings().premiumLimitPublicLinkInfo("\(premiumLimit(limits))")
-        case .folders:
-            return strings().premiumLimitFoldersInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
-        case .faveStickers:
-            return strings().premiumLimitFaveStickersInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
-        case .chatInFolders:
-            return strings().premiumLimitChatInFoldersInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
-        case .pinInFolders:
-            return strings().premiumLimitPinInFoldersInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
-        case .channels:
-            return strings().premiumLimitChannelsInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
-        case .uploadFile:
-            return strings().premiumLimitFileSizeInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
-        case .caption:
-            return strings().premiumLimitCaptionInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
-        case .about:
-            return strings().premiumLimitAboutInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
-        case .accounts:
-            return strings().premiumLimitAccountsInfo("\(defaultLimit(limits))")
-
+        if limits.premium_purchase_blocked {
+            switch self {
+            case .pin:
+                return strings().premiumLimitLockedPinInfo(defaultLimit(limits))
+            case .pinInArchive:
+                return strings().premiumLimitLockedPinInArchiveInfo("\(defaultLimit(limits))")
+            case .savedGifs:
+                return strings().premiumLimitLockedSavedGifsInfo("\(defaultLimit(limits))")
+            case .publicLink:
+                return strings().premiumLimitLockedPublicLinkInfo
+            case .folders:
+                return strings().premiumLimitLockedFoldersInfo("\(defaultLimit(limits))")
+            case .faveStickers:
+                return strings().premiumLimitLockedFaveStickersInfo("\(defaultLimit(limits))")
+            case .chatInFolders:
+                return strings().premiumLimitLockedChatInFoldersInfo("\(defaultLimit(limits))")
+            case .pinInFolders:
+                return strings().premiumLimitLockedPinInFoldersInfo("\(defaultLimit(limits))")
+            case .channels:
+                return strings().premiumLimitLockedChannelsInfo("\(defaultLimit(limits))")
+            case .uploadFile:
+                return strings().premiumLimitLockedFileSizeInfo("\(defaultLimit(limits))")
+            case .caption:
+                return strings().premiumLimitLockedCaptionInfo("\(defaultLimit(limits))")
+            case .about:
+                return strings().premiumLimitLockedAboutInfo("\(defaultLimit(limits))")
+            case .accounts:
+                return strings().premiumLimitLockedAccountsInfo("\(defaultLimit(limits))")
+            }
+        } else {
+            switch self {
+            case .pin:
+                return strings().premiumLimitPinInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
+            case .pinInArchive:
+                return strings().premiumLimitPinInArchiveInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
+            case .savedGifs:
+                return strings().premiumLimitSavedGifsInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
+            case .publicLink:
+                return strings().premiumLimitPublicLinkInfo("\(premiumLimit(limits))")
+            case .folders:
+                return strings().premiumLimitFoldersInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
+            case .faveStickers:
+                return strings().premiumLimitFaveStickersInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
+            case .chatInFolders:
+                return strings().premiumLimitChatInFoldersInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
+            case .pinInFolders:
+                return strings().premiumLimitPinInFoldersInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
+            case .channels:
+                return strings().premiumLimitChannelsInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
+            case .uploadFile:
+                return strings().premiumLimitFileSizeInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
+            case .caption:
+                return strings().premiumLimitCaptionInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
+            case .about:
+                return strings().premiumLimitAboutInfo("\(defaultLimit(limits))", "\(premiumLimit(limits))")
+            case .accounts:
+                return strings().premiumLimitAccountsInfo("\(defaultLimit(limits))")
+            }
         }
     }
     
@@ -109,7 +139,7 @@ extension PremiumLimitController.LimitType {
         case .pinInFolders:
             return CGFloat(counts?.pinnedCount ?? limits.dialog_filters_pinned_limit_default) / CGFloat(limits.dialog_filters_pinned_limit_premium)
         case .channels:
-            return CGFloat(limits.channels_limit_default) / CGFloat(limits.caption_length_limit_premium)
+            return CGFloat(limits.channels_limit_default) / CGFloat(limits.channels_limit_premium)
         case let .caption(count):
             return CGFloat(counts != nil ? count : limits.caption_length_limit_default) / CGFloat(limits.caption_length_limit_premium)
         case let .about(count):
@@ -204,10 +234,12 @@ final class PremiumGradientView : View {
         super.init(frame: frameRect)
         self.layer = CAGradientLayer()
         
+        self.gradient.startPoint = CGPoint(x: 0, y: 1)
+        self.gradient.endPoint = CGPoint(x: 1, y: 1)
+        
         gradient.colors = premiumGradient.compactMap { $0?.cgColor }
-        gradient.startPoint = CGPoint(x: 0, y: 1)
-        gradient.endPoint = CGPoint(x: 1, y: 1)
     }
+    
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -276,6 +308,7 @@ final class PremiumLimitView: View {
 
             
             normalBackground.backgroundColor = theme.colors.grayForeground
+            
         }
         
         override func layout() {
@@ -346,9 +379,11 @@ final class PremiumLimitView: View {
 
             container.setFrameSize(NSMakeSize(layout.layoutSize.width + 10 + imageView.frame.width, 40))
             
-            let size = NSMakeSize(container.frame.width + 40, 50)
+            let canPremium = !context.premiumIsBlocked
             
-            let image = generateImage(NSMakeSize(size.width, size.height - 10), contextGenerator: { size, ctx in
+            let size = NSMakeSize(container.frame.width + 40, canPremium ? 50 : 40)
+            
+            let image = generateImage(NSMakeSize(size.width, canPremium ? size.height - 10 : size.height), contextGenerator: { size, ctx in
                 ctx.clear(size.bounds)
                
                 let path = CGMutablePath()
@@ -378,21 +413,26 @@ final class PremiumLimitView: View {
             let fullImage = generateImage(size, contextGenerator: { size, ctx in
                 ctx.clear(size.bounds)
 
-                ctx.clip(to: size.bounds, mask: clipImage)
-                
-                let colors = premiumGradient.compactMap { $0?.cgColor } as NSArray
-                
-                let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
-                
-                var locations: [CGFloat] = []
-                for i in 0 ..< colors.count {
-                    locations.append(delta * CGFloat(i))
+                if !canPremium {
+                    ctx.clip(to: size.bounds, mask: image)
+                    ctx.setFillColor(theme.colors.accent.cgColor)
+                    ctx.fill(size.bounds)
+                } else {
+                    ctx.clip(to: size.bounds, mask: clipImage)
+                    
+                    let colors = premiumGradient.compactMap { $0?.cgColor } as NSArray
+                    
+                    let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+                    
+                    var locations: [CGFloat] = []
+                    for i in 0 ..< colors.count {
+                        locations.append(delta * CGFloat(i))
+                    }
+                    let colorSpace = deviceColorSpace
+                    let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
+                    
+                    ctx.drawLinearGradient(gradient, start: CGPoint(x: 0, y: size.height), end: CGPoint(x: size.width, y: size.height), options: CGGradientDrawingOptions())
                 }
-                let colorSpace = deviceColorSpace
-                let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
-                
-                ctx.drawLinearGradient(gradient, start: CGPoint(x: 0, y: size.height), end: CGPoint(x: size.width, y: size.height), options: CGGradientDrawingOptions())
-
             })!
             
             self.backgrounView.image = fullImage
@@ -464,6 +504,7 @@ final class PremiumLimitView: View {
     private let header = View()
     private let dismiss = ImageButton()
     private let accept = AcceptView(frame: .zero)
+    private let acceptOK = TitleButton(frame: .zero)
     private let title = TextView()
     private let desc = TextView()
     private let top = TypeView(frame: .zero)
@@ -480,12 +521,16 @@ final class PremiumLimitView: View {
         addSubview(desc)
         header.addSubview(title)
         addSubview(accept)
-        
+        addSubview(acceptOK)
         dismiss.set(handler: { [weak self] _ in
             self?.close?()
         }, for: .Click)
         
         accept.set(handler: { [weak self] _ in
+            self?.premium?()
+        }, for: .Click)
+        
+        acceptOK.set(handler: { [weak self] _ in
             self?.premium?()
         }, for: .Click)
         
@@ -510,10 +555,14 @@ final class PremiumLimitView: View {
         dismiss.sizeToFit()
         backgroundColor = theme.colors.background
         
-        accept.setFrameSize(NSMakeSize(100, 40))
     }
     
     func playAppearanceAnimation() {
+        
+        if lineView.isHidden {
+            return
+        }
+        
         self.top.layer!.animateScaleSpring(from: 0.1, to: 1.0, duration: 1.0)
         
         let now = self.top.layer!.convertTime(CACurrentMediaTime(), from: nil)
@@ -549,6 +598,19 @@ final class PremiumLimitView: View {
         var size = accept.update(type: type, lottie: lottie)
         accept.setFrameSize(size)
         
+        acceptOK.set(font: .medium(.text), for: .Normal)
+        acceptOK.set(background: theme.colors.accent, for: .Normal)
+        acceptOK.set(color: theme.colors.underSelectedColor, for: .Normal)
+        acceptOK.set(text: strings().modalOK, for: .Normal)
+        acceptOK.layer?.cornerRadius = 10
+        acceptOK.sizeToFit(NSMakeSize(0, 0), NSMakeSize(size.width, size.height), thatFit: true)
+        acceptOK.autohighlight = false
+        acceptOK.scaleOnClick = true
+        
+        
+        accept.isHidden = context.premiumIsBlocked
+        acceptOK.isHidden = !context.premiumIsBlocked || !hasDismiss
+
         dismiss.isHidden = !hasDismiss
         
         size = top.update(type: type, counts: counts, context: context)
@@ -576,10 +638,22 @@ final class PremiumLimitView: View {
         self.desc.update(desc)
 
 //        top.layer?.cornerRadius = size.height / 2
-        accept.layer?.cornerRadius = accept.frame.height / 2
+        accept.layer?.cornerRadius = 10
     
+        
+        self.lineView.isHidden = context.premiumIsBlocked
 
-        return NSMakeSize(frame.width, accept.frame.height + 30 + self.desc.frame.height + 20 + self.title.frame.height + 10 + top.frame.height + lineView.frame.height + 10 + 20 + 30)
+        var height: CGFloat = 0
+        
+        height += accept.frame.height + 30
+        height += self.desc.frame.height + 20
+        height += self.title.frame.height + 10 + top.frame.height
+        
+        if !lineView.isHidden {
+            height += lineView.frame.height + 10
+        }
+        
+        return NSMakeSize(frame.width, height + 20 + 30)
         
     }
     
@@ -589,15 +663,20 @@ final class PremiumLimitView: View {
         dismiss.centerY(x: 10)
         title.center()
         accept.centerX(y: frame.height - 30 - accept.frame.height)
+        acceptOK.centerX(y: frame.height - 30 - accept.frame.height)
         desc.centerX(y: accept.frame.minY - desc.frame.height - 20)
         lineView.centerX(y: desc.frame.minY - lineView.frame.height - 20)
         
         //let topX = max(lineView.frame.minX, min(lineView.frame.maxX - top.frame.width, lineView.frame.width * topPercent))
         
-        let topX = lineView.frame.minX + (lineView.frame.width - top.frame.width) * max(min(1, topPercent), 0)
 
+        if lineView.isHidden {
+            top.centerX(y: header.frame.maxY + 10)
+        } else {
+            let topX = lineView.frame.minX + (lineView.frame.width - top.frame.width) * max(min(1, topPercent), 0)
+            top.setFrameOrigin(NSMakePoint(topX, lineView.frame.minY - top.frame.height - 10))
+        }
         
-        top.setFrameOrigin(NSMakePoint(topX, lineView.frame.minY - top.frame.height - 10))
     }
     
     required init?(coder: NSCoder) {
@@ -700,7 +779,9 @@ final class PremiumLimitController : ModalViewController {
         let source = type.eventSource
         
         self.genericView.premium = { [weak self] in
-            showModal(with: PremiumBoardingController(context: context, source: source), for: context.window)
+            if !context.premiumIsBlocked {
+                showModal(with: PremiumBoardingController(context: context, source: source), for: context.window)
+            }
             self?.close()
         }
         
@@ -743,7 +824,6 @@ final class PremiumLimitController : ModalViewController {
         
         
         actionsDisposable.add(signal.start(next: { [weak self] counts in
-            
             self?.genericView.update(with: type, counts: counts, context: context, animated: false)
             if self?.didSetReady == false {
                 self?.genericView.playAppearanceAnimation()

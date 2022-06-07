@@ -1006,7 +1006,7 @@ final class AddReactionManager : NSObject, Notifable {
                     return true
                 }
                 needRemove = true
-                return false
+                return context.premiumIsBlocked
             } else {
                 return false
             }

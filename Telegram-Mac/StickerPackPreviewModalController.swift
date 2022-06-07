@@ -270,6 +270,8 @@ private class StickersModalView : View {
             
             let files = collectionItems.map { item -> TelegramMediaFile in
                 return item.file
+            }.filter { file in
+                !file.isPremiumSticker || !context.premiumIsBlocked
             }
             
             let allInstalled = featured.filter { !installedIds.contains($0.info.id) }.isEmpty
@@ -339,6 +341,7 @@ private class StickersModalView : View {
                     entries.append(.init(item: item, index: i, installed: installedIds.contains(item.info.id)))
                 }
                 
+
                 let (delete, insert, update) = mergeListsStableWithUpdates(leftList: self.featuredEntries, rightList: entries)
                 
                 for index in delete.reversed() {

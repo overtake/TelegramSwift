@@ -14,7 +14,7 @@ import Postbox
 final class PremiumBoardingHeaderItem : GeneralRowItem {
     fileprivate let titleLayout: TextViewLayout
     fileprivate let infoLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, peer: Peer?, viewType: GeneralViewType) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, isPremium: Bool, peer: Peer?, viewType: GeneralViewType) {
         
         let title: NSAttributedString
         if let peer = peer {
@@ -22,7 +22,11 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
                 return (NSAttributedString.Key.link.rawValue, contents)
             }))
         } else {
-            title = .initialize(string: strings().premiumBoardingTitle, color: theme.colors.text, font: .medium(.header))
+            if isPremium {
+                title = .initialize(string: strings().premiumBoardingGotTitle, color: theme.colors.text, font: .medium(.header))
+            } else {
+                title = .initialize(string: strings().premiumBoardingTitle, color: theme.colors.text, font: .medium(.header))
+            }
         }
         self.titleLayout = .init(title, alignment: .center)
 
@@ -30,7 +34,11 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
         if let _ = peer {
             _ = info.append(string: strings().premiumBoardingPeerInfo, color: theme.colors.text, font: .normal(.text))
         } else {
-            _ = info.append(string: strings().premiumBoardingInfo, color: theme.colors.text, font: .normal(.text))
+            if isPremium {
+                _ = info.append(string: strings().premiumBoardingGotInfo, color: theme.colors.text, font: .normal(.text))
+            } else {
+                _ = info.append(string: strings().premiumBoardingInfo, color: theme.colors.text, font: .normal(.text))
+            }
         }
         info.detectBoldColorInString(with: .medium(.text))
         self.infoLayout = .init(info, alignment: .center)
@@ -41,8 +49,8 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
-        titleLayout.measure(width: width - 60)
-        infoLayout.measure(width: width - 60)
+        titleLayout.measure(width: width - 40)
+        infoLayout.measure(width: width - 40)
 
         return true
     }
@@ -62,14 +70,12 @@ private final class PremiumBoardingHeaderView : TableRowView {
     private let premiumView = PremiumStarSceneView(frame: NSMakeRect(0, 0, 150, 150))
     private let titleView = TextView()
     private let infoView = TextView()
-    private let borderView = View()
     private var timer: SwiftSignalKit.Timer?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(titleView)
         addSubview(infoView)
         addSubview(premiumView)
-        addSubview(borderView)
         
         
         titleView.userInteractionEnabled = false
@@ -81,13 +87,16 @@ private final class PremiumBoardingHeaderView : TableRowView {
         premiumView.updateLayout(size: premiumView.frame.size, transition: .immediate)
     }
     
+    override var backdorColor: NSColor {
+        return theme.colors.listBackground
+    }
+    
     
     override func layout() {
         super.layout()
         premiumView.centerX(y: -30)
         titleView.centerX(y: premiumView.frame.maxY - 30 + 10)
         infoView.centerX(y: titleView.frame.maxY + 10)
-        borderView.frame = NSMakeRect(0, frame.height - .borderSize, frame.width, .borderSize)
     }
     
     
@@ -103,9 +112,7 @@ private final class PremiumBoardingHeaderView : TableRowView {
         }
         titleView.update(item.titleLayout)
         infoView.update(item.infoLayout)
-        
-        borderView.backgroundColor = theme.colors.border
-        
+                
         timer = SwiftSignalKit.Timer(timeout: 5.0, repeat: true, completion: { [weak self] in
             self?.premiumView.playAgain()
         }, queue: .mainQueue())

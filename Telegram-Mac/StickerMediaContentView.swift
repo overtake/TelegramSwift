@@ -171,7 +171,7 @@ class StickerMediaContentView: ChatMediaContentView {
                 }
             }
             
-            if media.isPremiumSticker, let parent = parent {
+            if media.isPremiumSticker, !context.premiumIsBlocked, let parent = parent {
                 self.playIfNeeded(true)
                 parameters?.runPremiumScreenEffect(parent.id)
                 return
@@ -179,7 +179,7 @@ class StickerMediaContentView: ChatMediaContentView {
             
             if !media.isEmojiAnimatedSticker, let reference = media.stickerReference {
                 showModal(with:StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for:window)
-            } else if let media = media as? TelegramMediaFile, let sticker = media.stickerText, !sticker.isEmpty {
+            } else if let sticker = media.stickerText, !sticker.isEmpty {
                 self.playIfNeeded(true)
                 parameters?.runEmojiScreenEffect(sticker)
             }

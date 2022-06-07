@@ -22,6 +22,7 @@ private final class ProgressModalView : NSVisualEffectView {
         self.addSubview(self.progressView)
         self.material = presentation.colors.isDark ? .dark : .light
         self.blendingMode = .withinWindow
+        self.state = .active
     }
     
     override func setFrameSize(_ newSize: NSSize) {

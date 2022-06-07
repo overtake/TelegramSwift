@@ -483,7 +483,7 @@ private func channelVisibilityControllerEntries(view: PeerView, arguments: Chann
             if displayAvailability {
                 if let publicChannelsToRevoke = publicChannelsToRevoke {
                     
-                    if !arguments.context.isPremium {
+                    if !arguments.context.isPremium && !arguments.context.premiumIsBlocked {
                         entries.append(.increaseLimit(sectionId: sectionId, counts: counts, .singleItem))
                     } else {
                         entries.append(.publicLinkAvailability(sectionId: sectionId, false, .textTopItem))
@@ -591,7 +591,7 @@ private func channelVisibilityControllerEntries(view: PeerView, arguments: Chann
             if displayAvailability {
                 if let publicChannelsToRevoke = publicChannelsToRevoke {
                     
-                    if !arguments.context.isPremium {
+                    if !arguments.context.isPremium && !arguments.context.premiumIsBlocked {
                         entries.append(.increaseLimit(sectionId: sectionId, counts: counts, .singleItem))
                     } else {
                         entries.append(.publicLinkAvailability(sectionId: sectionId, false, .singleItem))

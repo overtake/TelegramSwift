@@ -566,7 +566,7 @@ final class EntertainmentView : View {
             self.animatedEmojies.isSelected = true
         }
         emoji.isHidden = mode == .selectAvatar
-        animatedEmojies.isHidden = mode == .selectAvatar
+        animatedEmojies.isHidden = true//mode == .selectAvatar
 
         needsLayout = true
     }
@@ -756,9 +756,9 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         items.append(SectionControllerItem(title: {strings().entertainmentStickers.uppercased()}, controller: stickers))
         items.append(SectionControllerItem(title: {strings().entertainmentGIF.uppercased()}, controller: gifs))
         
-        if mode == .common {
-            items.append(SectionControllerItem(title:{""}, controller: animatedEmojies))
-        }
+//        if mode == .common {
+//            items.append(SectionControllerItem(title:{""}, controller: animatedEmojies))
+//        }
 
         let index: Int
         if mode == .selectAvatar {

@@ -286,7 +286,7 @@ class ChatServiceItem: ChatRowItem {
                         _ = attributedString.append(string: " ")
                     }
                     _ = attributedString.append(string: strings().chatListServiceGameScored1Countable(Int(score), gameName), color: grayTextColor, font: NSFont.normal(theme.fontSize))
-                case let .paymentSent(currency, totalAmount, invoiceSlug):
+                case let .paymentSent(currency, totalAmount, invoiceSlug, isRecurringInit, isRecurringUsed):
                     var paymentMessage:Message?
                     for attr in message.attributes {
                         if let attr = attr as? ReplyMessageAttribute {
@@ -295,16 +295,30 @@ class ChatServiceItem: ChatRowItem {
                             }
                         }
                     }
+                    let media = paymentMessage?.media.first as? TelegramMediaInvoice
                     
-                    if let paymentMessage = paymentMessage, let media = paymentMessage.media.first as? TelegramMediaInvoice, let peer = paymentMessage.peers[paymentMessage.id.peerId] {
-                        _ = attributedString.append(string: strings().chatServicePaymentSent1(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency), peer.displayTitle, media.title), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    if let paymentMessage = paymentMessage, let media = media, let peer = paymentMessage.peers[paymentMessage.id.peerId] {
+                        if isRecurringInit {
+                            _ = attributedString.append(string: strings().chatServicePaymentSentRecurringInit(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency), peer.displayTitle, media.title), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        } else if isRecurringUsed {
+                            _ = attributedString.append(string: strings().chatServicePaymentSentRecurringUsed(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency), peer.displayTitle, media.title), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        } else {
+                            _ = attributedString.append(string: strings().chatServicePaymentSent1(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency), peer.displayTitle, media.title), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        }
                         attributedString.detectBoldColorInString(with: .medium(theme.fontSize))
                         
                         attributedString.add(link:inAppLink.callback("", { _ in
                             showModal(with: PaymentsReceiptController(context: context, messageId: message.id, invoice: media), for: context.window)
                         }), for: attributedString.range, color: grayTextColor)
-                    } else {
-                        _ = attributedString.append(string: strings().chatServicePaymentSent1("", "", ""), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    } else if let peer = coreMessageMainPeer(message) {
+                        if isRecurringInit {
+                            _ = attributedString.append(string: strings().chatServicePaymentSentRecurringInitNoTitle(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency), peer.displayTitle), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        } else if isRecurringUsed {
+                            _ = attributedString.append(string: strings().chatServicePaymentSentRecurringUsedNoTitle(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency), peer.displayTitle), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        } else {
+                            _ = attributedString.append(string: strings().chatServicePaymentSent1NoTitle(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency), peer.displayTitle), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        }
+                        attributedString.detectBoldColorInString(with: .medium(theme.fontSize))
                     }
                 case let .botDomainAccessGranted(domain):
                     _ = attributedString.append(string: strings().chatServiceBotPermissionAllowed(domain), color: grayTextColor, font: NSFont.normal(theme.fontSize))

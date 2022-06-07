@@ -13,11 +13,11 @@ import QuartzCore
 final class VoiceTranscriptionControl: Control {
     
     
-    enum TranscriptionState {
+    enum TranscriptionState : Equatable {
         case possible
         case inProgress
-        case expanded
-        case collapsed
+        case expanded(Bool)
+        case collapsed(Bool)
     }
 
     
@@ -48,8 +48,18 @@ final class VoiceTranscriptionControl: Control {
         
         let size = self.frame.size
         let cornerRadius = self.layer?.cornerRadius ?? 8
+        
+        let inProgress: Bool
         switch state {
         case .inProgress:
+            inProgress = true
+        case let .expanded(progress), let .collapsed(progress):
+            inProgress = progress
+        default:
+            inProgress = false
+        }
+        
+        if inProgress {
             if self.inProgressLayer == nil {
                 let inProgressLayer = CAShapeLayer()
                 inProgressLayer.isOpaque = false
@@ -84,7 +94,7 @@ final class VoiceTranscriptionControl: Control {
                 
                 self.layer?.addSublayer(inProgressLayer)
             }
-        default:
+        } else {
             if let inProgressLayer = self.inProgressLayer {
                 self.inProgressLayer = nil
                 if transition.isAnimated {

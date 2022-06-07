@@ -2355,9 +2355,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
             let text = inputState.inputText.trimmed
             if text.length > chatInteraction.maxInputCharacters {
-                if context.isPremium {
+                if context.isPremium || context.premiumIsBlocked {
                     alert(for: context.window, info: strings().chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.maxInputCharacters)))
-                } else {
+                } else if !context.premiumIsBlocked {
                     confirm(for: context.window, information: strings().chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.maxInputCharacters)), okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().premiumGetPremiumDouble, successHandler: { result in
                         switch result {
                         case .thrid:
@@ -5438,7 +5438,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.genericView.tableView.enumerateVisibleItems(with: { item in
                 if let item = item as? ChatRowItem, let view = item.view {
                     if view.visibleRect == view.bounds {
-                        if let file = item.message?.media.first as? TelegramMediaFile, file.isPremiumSticker {
+                        if let file = item.message?.media.first as? TelegramMediaFile, !file.noPremium {
                             items.append(item)
                         }
                     }

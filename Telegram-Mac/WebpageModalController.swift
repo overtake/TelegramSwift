@@ -396,14 +396,22 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     enum RequestData {
         case simple(url: String, bot: Peer)
-        case normal(url: String?, peerId: PeerId, bot: Peer, replyTo: MessageId?, buttonText: String, payload: String?, fromMenu: Bool, complete:(()->Void)?)
+        case normal(url: String?, peerId: PeerId, bot: Peer, replyTo: MessageId?, buttonText: String, payload: String?, fromMenu: Bool, hasSettings: Bool, complete:(()->Void)?)
         
         var bot: Peer {
             switch self {
             case let .simple(_, bot):
                 return bot
-            case let .normal(_, _, bot, _, _, _, _, _):
+            case let .normal(_, _, bot, _, _, _, _, _, _):
                 return bot
+            }
+        }
+        var hasSettings: Bool {
+            switch self {
+            case .simple:
+                return false
+            case let .normal(_, _, _, _, _, _, _, hasSettings, _):
+                return hasSettings
             }
         }
     }
@@ -582,7 +590,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                         self?.close()
                     }
                 }))
-            case .normal(let url, let peerId, let bot, let replyTo, let buttonText, let payload, let fromMenu, let complete):
+            case .normal(let url, let peerId, let bot, let replyTo, let buttonText, let payload, let fromMenu, _, let complete):
   
 
                 
@@ -715,7 +723,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             switch requestData {
             case .simple(_, let bot):
                 request(bot)
-            case .normal(_, _, let bot, _, _, _, _, _):
+            case .normal(_, _, let bot, _, _, _, _, _, _):
                 request(bot)
             }
         } else {
@@ -919,6 +927,9 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     private func backButtonPressed() {
         self.sendEvent(name: "back_button_pressed", data: nil)
     }
+    private func settingsPressed() {
+        self.sendEvent(name: "settings_button_pressed", data: nil)
+    }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
@@ -953,6 +964,12 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 self?.reloadPage()
             }, itemImage: MenuAnimation.menu_reload.value))
 
+            if self?.requestData?.hasSettings == true {
+                items.append(.init(strings().webAppSettings, handler: { [weak self] in
+                    self?.settingsPressed()
+                }, itemImage: MenuAnimation.menu_gear.value))
+            }
+            
             if let installedBots = self?.installedBots {
                 if let data = self?.data, let bot = data.bot as? TelegramUser, let botInfo = bot.botInfo {
                     if botInfo.flags.contains(.canBeAddedToAttachMenu) {

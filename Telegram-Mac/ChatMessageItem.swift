@@ -38,9 +38,9 @@ final class InlineStickerItem: Hashable {
         var currentCount = 0
         var startIndex = copy.string.startIndex
         
-        if !context.isPremium {
+        //if !context.isPremium {
             return
-        }
+        //}
         while true {
             var hadUpdates = false
             copy.string.enumerateSubstrings(in: startIndex ..< copy.string.endIndex, options: [.byComposedCharacterSequences]) { substring, substringRange, _, stop in

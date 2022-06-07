@@ -5,13 +5,18 @@ import StoreKit
 import Postbox
 import TelegramCore
 
+
 public final class InAppPurchaseManager: NSObject {
-    public final class Product {
+    public final class Product : NSObject {
         let skProduct: SKProduct
         
         init(skProduct: SKProduct) {
             self.skProduct = skProduct
         }
+//
+//        var subscriptionInfo: String {
+//            return skProduct.
+//        }
         
         public var price: String {
             let numberFormatter = NumberFormatter()
@@ -22,27 +27,27 @@ public final class InAppPurchaseManager: NSObject {
     }
     
     public enum PurchaseState {
-        case purchased(transactionId: String)
+        case purchased(transactionId: SKPaymentTransaction)
     }
     
     public enum PurchaseError {
-        case generic
+        case generic(SKPaymentTransaction?)
     }
     
     private final class PaymentTransactionContext {
-        var state: SKPaymentTransactionState?
-        let subscriber: (TransactionState) -> Void
+        var state: TransactionState?
+        var subscriber: ((TransactionState) -> Void)?
         
-        init(subscriber: @escaping (TransactionState) -> Void) {
+        init(subscriber: ((TransactionState) -> Void)? = nil) {
             self.subscriber = subscriber
         }
     }
     
     private enum TransactionState {
-        case purchased(transactionId: String?)
-        case restored(transactionId: String?)
-        case purchasing
-        case failed
+        case purchased(transactionId: SKPaymentTransaction?)
+        case restored(transactionId: SKPaymentTransaction?)
+        case purchasing(transactionId: SKPaymentTransaction?)
+        case failed(transactionId: SKPaymentTransaction?)
         case deferred
     }
     
@@ -79,6 +84,9 @@ public final class InAppPurchaseManager: NSObject {
         self.productRequest = productRequest
     }
     
+    public func canMakePayments() -> Bool {
+        return SKPaymentQueue.canMakePayments()
+    }
     
     public var availableProducts: Signal<[Product], NoError> {
         if self.products.isEmpty && self.productRequest == nil {
@@ -87,8 +95,13 @@ public final class InAppPurchaseManager: NSObject {
         return self.productsPromise.get()
     }
     
+    public func finishTransaction(_ transaction: SKPaymentTransaction) {
+        SKPaymentQueue.default().finishTransaction(transaction)
+    }
+    
     public func buyProduct(_ product: Product, account: Account) -> Signal<PurchaseState, PurchaseError> {
         let payment = SKMutablePayment(product: product.skProduct)
+        
         SKPaymentQueue.default().add(payment)
         
         let productIdentifier = payment.productIdentifier
@@ -96,22 +109,28 @@ public final class InAppPurchaseManager: NSObject {
             let disposable = MetaDisposable()
             
             self.stateQueue.async {
-                let paymentContext = PaymentTransactionContext(subscriber: { state in
+                
+                let paymentContext: PaymentTransactionContext? = self.paymentContexts[productIdentifier] ?? PaymentTransactionContext(subscriber: nil)
+                
+                paymentContext?.subscriber = { state in
                     switch state {
                         case let .purchased(transactionId), let .restored(transactionId):
                             if let transactionId = transactionId {
                                 subscriber.putNext(.purchased(transactionId: transactionId))
                                 subscriber.putCompletion()
                             } else {
-                                subscriber.putError(.generic)
+                                subscriber.putError(.generic(nil))
                             }
-                        case .failed:
-                            subscriber.putError(.generic)
+                        case let .failed(transaction):
+                            subscriber.putError(.generic(transaction))
                         case .deferred, .purchasing:
                             break
                     }
-                })
-                self.paymentContexts[productIdentifier] = paymentContext
+                }
+                if let state = paymentContext?.state {
+                    paymentContext?.subscriber?(state)
+                }
+                self.paymentContexts[productIdentifier] = paymentContext!
                 
                 disposable.set(ActionDisposable { [weak paymentContext] in
                     self.stateQueue.async {
@@ -140,28 +159,38 @@ extension InAppPurchaseManager: SKProductsRequestDelegate {
 
 extension InAppPurchaseManager: SKPaymentTransactionObserver {
     public func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
-        if let transaction = transactions.first {
+        if let transaction = transactions.last {
             let productIdentifier = transaction.payment.productIdentifier
             self.stateQueue.async {
-                if let context = self.paymentContexts[productIdentifier] {
-                    let transactionState: TransactionState?
-                    switch transaction.transactionState {
-                        case .purchased:
-                            transactionState = .purchased(transactionId: transaction.transactionIdentifier)
-                        case .restored:
-                            transactionState = .restored(transactionId: transaction.transactionIdentifier)
-                        case .failed:
-                            transactionState = .failed
-                        case .purchasing:
-                            transactionState = .purchasing
-                        case .deferred:
-                            transactionState = .deferred
-                        default:
-                            transactionState = nil
+                let transactionState: TransactionState?
+                switch transaction.transactionState {
+                    case .purchased:
+                        transactionState = .purchased(transactionId: transaction)
+                    case .restored:
+                        transactionState = .restored(transactionId: transaction)
+                    case .failed:
+                        transactionState = .failed(transactionId: transaction)
+                    case .purchasing:
+                        transactionState = .purchasing(transactionId: transaction)
+                    case .deferred:
+                        transactionState = .deferred
+                    default:
+                        transactionState = nil
+                }
+                if let transactionState = transactionState {
+                    if let context = self.paymentContexts[productIdentifier] {
+                        context.state = transactionState
+                        context.subscriber?(transactionState)
+                    } else {
+                        let context = PaymentTransactionContext(subscriber: nil)
+                        context.state = transactionState
+                        self.paymentContexts[productIdentifier] = context
                     }
-                    if let transactionState = transactionState {
-                        context.subscriber(transactionState)
-                    }
+                }
+            }
+            for transaction in transactions {
+                if transaction != transactions.last {
+                    SKPaymentQueue.default().finishTransaction(transaction)
                 }
             }
         }

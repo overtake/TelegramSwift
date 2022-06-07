@@ -26,6 +26,41 @@ class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
         case state(TranscribeAudioState)
     }
     
+    final class TranscribeData {
+        var state: TranscribeState
+        var text: TextViewLayout?
+        var isPending: Bool
+        init(state: TranscribeState, text: TextViewLayout?, isPending: Bool) {
+            self.state = state
+            self.text = text
+            self.isPending = isPending
+        }
+        
+        func makeSize(_ width: CGFloat) -> NSSize? {
+            switch state {
+            case .possible:
+                self.size = nil
+            case  let .state(state):
+                switch state {
+                case .loading:
+                    self.size = nil
+                case .collapsed:
+                    self.size = nil
+                case .revealed:
+                    if let textLayout = text {
+                        textLayout.measure(width: width)
+                        self.size = NSMakeSize(width, textLayout.layoutSize.height)
+                    } else {
+                        self.size = nil
+                    }
+                }
+            }
+            return self.size
+        }
+        
+        var size: NSSize?
+    }
+    
     let showPlayer:(APController) -> Void
     let waveform:AudioWaveform?
     let durationLayout:TextViewLayout
@@ -33,10 +68,11 @@ class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
     let isWebpage:Bool
     let resource: TelegramMediaResource
     fileprivate(set) var waveformWidth:CGFloat = 120
-    fileprivate(set) var transcribeState: TranscribeState?
     let duration:Int
     
     var transcribe:()->Void = {}
+    
+    fileprivate(set) var transcribeData: TranscribeData?
     
     init(showPlayer:@escaping(APController) -> Void, waveform:AudioWaveform?, duration:Int, isMarked:Bool, isWebpage: Bool, resource: TelegramMediaResource, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool) {
         self.showPlayer = showPlayer
@@ -67,15 +103,49 @@ class ChatVoiceRowItem: ChatMediaItem {
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
             if canTranscribe, let message = object.message {
                 if let state = entry.additionalData.transribeState {
-                    parameters.transcribeState = .state(state)
+                    let pending: Bool
+                    if let transcribe = message.audioTranscription {
+                        pending = transcribe.isPending
+                    } else {
+                        pending = false
+                    }
+                    
+                    var transcribed: String?
+                    var transcribtedColor = theme.chat.textColor(isIncoming, object.renderType == .bubble)
+                    if let transcribe = entry.additionalData.transribeState {
+                                    
+                        switch transcribe {
+                        case let .revealed(success):
+                            if !success {
+                                transcribed = strings().chatVoiceTransribeError
+                                transcribtedColor = parameters.presentation.activityBackground
+                            } else {
+                                if let result = entry.message?.audioTranscription, !result.text.isEmpty {
+                                    transcribed = result.text
+                                } 
+                            }
+                        default:
+                            break
+                        }
+                    }
+                    
+                    let textLayout: TextViewLayout?
+                    if let transcribed = transcribed {
+                        let caption: NSAttributedString = .initialize(string: transcribed, color: transcribtedColor, font: .normal(theme.fontSize))
+                        
+                        textLayout = TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected())
+                    } else {
+                        textLayout = nil
+                    }
+                    
+                    parameters.transcribeData = .init(state: .state(state), text: textLayout, isPending: pending)
                 } else {
-                    parameters.transcribeState = .possible
+                    parameters.transcribeData = .init(state: .possible, text: nil, isPending: false)
                 }
                 parameters.transcribe = { [weak self] in
                     self?.chatInteraction.transcribeAudio(message)
                 }
             }
-            
         }
     }
     
@@ -111,8 +181,14 @@ class ChatVoiceRowItem: ChatMediaItem {
 
             parameters.waveformWidth = maxVoiceWidth
             
+            let width = parameters.waveformWidth + 50 + (canTranscribe ? 35 : 0)
             
-            return NSMakeSize(parameters.waveformWidth + 50 + (canTranscribe ? 35 : 0), 40)
+            var addition: CGFloat = 0
+            if let height = parameters.transcribeData?.makeSize(width)?.height {
+                addition += height + 20
+            }
+
+            return NSMakeSize(parameters.waveformWidth + 50 + (canTranscribe ? 35 : 0), 40 + addition)
         }
         return NSZeroSize
     }

@@ -1230,7 +1230,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         y = nrect.minY - visible.1
                     }
                     
-                    self.contentView.scroll(to: NSMakePoint(0, y))
+                    self.clipView.scroll(to: NSMakePoint(0, y))
                    // reflectScrolledClipView(clipView)
                    // flashScrollers()
                     break
@@ -1238,6 +1238,39 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
         }
     }
+    
+     func getScrollY(_ visibleItems: [(TableRowItem,CGFloat,CGFloat)]) -> CGFloat? {
+        if !visibleItems.isEmpty, documentOffset.y > 0 {
+            var nrect:NSRect = NSZeroRect
+            
+            let strideTo:StrideTo<Int> = stride(from: visibleItems.count - 1, to: -1, by: -1)
+            
+            for i in strideTo {
+                let visible = visibleItems[i]
+                if let item = self.item(stableId: visible.0.stableId) {
+                    
+                    nrect = rectOf(item: item)
+                    
+                    if let view = viewNecessary(at: i) {
+                        if view.isInsertionAnimated {
+                            break
+                        }
+                    }
+                    
+                    let y:CGFloat
+                    if !tableView.isFlipped {
+                        y = nrect.minY - (frame.height - visible.1) + nrect.height
+                    } else {
+                        y = nrect.minY - visible.1
+                    }
+                    
+                    return y
+                }
+            }
+        }
+         return nil
+    }
+
     
     private let stickTimeoutDisposable = MetaDisposable()
     private var previousStickMinY: CGFloat? = nil
@@ -2652,11 +2685,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 //        if transition.grouping {
 //            self.beginTableUpdates()
 //        }
+        
         for (index,item) in transition.updated {
             let animated:Bool
             let visibleItems = self.visibleItems()
             if case .none = transition.state {
-                animated = visibleRange.indexIn(index) || !transition.animateVisibleOnly
+                let gap = abs(self.list[index].height - item.height)
+                let value = (gap < frame.height)
+                animated = (visibleRange.indexIn(index) || !transition.animateVisibleOnly) && value
             } else {
                 animated = false
             }
@@ -2664,7 +2700,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             if !animated {
                 saveScrollState(visibleItems)
             }
+            if case .none = transition.state, transition.deleted.isEmpty, transition.inserted.isEmpty, !tableView.isFlipped {
+                if let y = getScrollY(visibleItems) {
+                    let current = contentView.bounds
+                    self.clipView._changeBounds(from: current, to: NSMakeRect(0, max(y, 0), current.width, current.height), animated: animated)
+                }
+            }
         }
+        
 //        if transition.grouping {
 //            self.endTableUpdates()
 //        }

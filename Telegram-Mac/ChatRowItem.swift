@@ -2632,7 +2632,7 @@ class ChatRowItem: TableRowItem {
                         return true
                     }
                     needRemove = true
-                    return false
+                    return context.premiumIsBlocked
                 } else {
                     return false
                 }
@@ -2716,6 +2716,24 @@ class ChatRowItem: TableRowItem {
             return false
         }
         return media.isInteractiveMedia
+    }
+    
+    var hasTranscribeText: Bool {
+        if let transcribe = entry.additionalData.transribeState {
+            switch transcribe {
+            case .loading:
+                return false
+            case .revealed(let bool):
+                return bool
+            case .collapsed(let bool):
+                return bool
+            }
+        }
+        return false
+    }
+    
+    var transcribeSize: NSSize {
+        return NSMakeSize(40, 40)
     }
     
     struct LastLineData {

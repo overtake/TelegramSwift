@@ -725,8 +725,8 @@ private final class NameContainer : View {
                     let attr = parseMarkdownIntoAttributedString(stateText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: .white), bold: MarkdownAttributeSet(font: .bold(.text), textColor: .white), link: MarkdownAttributeSet(font: .normal(.text), textColor: nightAccentPalette.link), linkAttribute: { contents in
                         return (NSAttributedString.Key.link.rawValue, contents)
                     }))
-                    if let peerId = item.peer?.id {
-                        let interactions = TextViewInteractions.init(processURL: { content in
+                    if let peerId = item.peer?.id, !context.premiumIsBlocked {
+                        let interactions = TextViewInteractions(processURL: { content in
                             if let content = content as? String {
                                 if content == "premium" {
                                     showModal(with: PremiumBoardingController(context: context, source: .profile(peerId)), for: context.window)

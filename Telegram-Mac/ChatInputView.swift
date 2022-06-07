@@ -635,7 +635,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             let text = textView.string().trimmed
             let context = chatInteraction.context
             if text.length > chatInteraction.maxInputCharacters {
-                if context.isPremium {
+                if context.isPremium || context.premiumIsBlocked {
                     alert(for: context.window, info: strings().chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.maxInputCharacters)))
                 } else {
                     confirm(for: context.window, information: strings().chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.maxInputCharacters)), okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().premiumGetPremiumDouble, successHandler: { result in

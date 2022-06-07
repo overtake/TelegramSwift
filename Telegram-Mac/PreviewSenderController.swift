@@ -854,7 +854,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         
         let text = self.genericView.textView.string().trimmed
         let context = self.context
-        if context.isPremium {
+        if context.isPremium || context.premiumIsBlocked {
             if text.length > context.premiumLimits.caption_length_limit_premium {
                 alert(for: chatInteraction.context.window, info: strings().chatInputErrorMessageTooLongCountable(text.length - Int(context.premiumLimits.caption_length_limit_premium)))
                 return

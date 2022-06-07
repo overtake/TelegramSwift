@@ -88,8 +88,9 @@ class WPMediaContentView: WPContentView {
     
     override func layout() {
         super.layout()
-        if let content = content as? WPMediaLayout {
-            self.contentNode?.setFrameOrigin(NSMakePoint(0, containerView.frame.height - content.mediaSize.height))
+        if let contentNode = contentNode, let content = content as? WPMediaLayout {
+            let rect = CGRect(origin: NSMakePoint(0, containerView.frame.height - content.mediaSize.height), size: content.mediaSize)
+            contentNode.frame = rect
         }
     }
     

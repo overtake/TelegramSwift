@@ -882,6 +882,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
+
+    
     func fillCaption(_ item:ChatRowItem, animated: Bool) -> Void {
         
         var removeIndexes:[Int] = []

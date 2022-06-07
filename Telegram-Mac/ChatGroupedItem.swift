@@ -667,9 +667,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         let approximateSynchronousValue = item.approximateSynchronousValue
         
         contentView.frame = self.contentFrame(item)
-        
-        var offset: CGFloat = 0
-        
+                
         for i in 0 ..< item.layout.count {
             contents[i].change(size: item.layout.frame(at: i).size, animated: animated)
             var positionFlags: LayoutPositionFlags = item.isBubbled ? item.positionFlags ?? item.layout.position(at: i) : []
@@ -686,7 +684,14 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
             
             contents[i].update(with: item.layout.messages[i].media[0], size: item.layout.frame(at: i).size, context: item.context, parent: item.layout.messages[i], table: item.table, parameters: item.parameters[i], animated: animated, positionFlags: positionFlags, approximateSynchronousValue: approximateSynchronousValue)
             
-            contents[i].change(pos: item.layout.frame(at: i).origin.offsetBy(dx: 0, dy: offset), animated: animated)
+            let transition: ContainedViewLayoutTransition
+            if animated {
+                transition = .animated(duration: 0.2, curve: .easeOut)
+            } else {
+                transition = .immediate
+            }
+            transition.updateFrame(view: contents[i], frame: item.layout.frame(at: i))
+            contents[i].updateLayout(size: item.layout.frame(at: i).size, transition: transition)
             
         }
 
@@ -1128,25 +1133,33 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         return .zero
     }
     
-    override func layout() {
-        super.layout()
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        
         guard let item = item as? ChatGroupedItem else {return}
 
         assert(contents.count == item.layout.count)
-        
+
         for i in 0 ..< item.layout.count {
-            contents[i].setFrameOrigin(item.layout.frame(at: i).origin)
+            transition.updateFrame(view: contents[i], frame: item.layout.frame(at: i))
+            contents[i].updateLayout(size: item.layout.frame(at: i).size, transition: transition)
         }
         
         for content in contents {
             let subviews = content.subviews
             for subview in subviews {
                 if subview is SelectingControl {
-                    subview.setFrameOrigin(selectionOrigin(content))
-                    break
+                    transition.updateFrame(view: subview, frame: CGRect(origin: selectionOrigin(content), size: subview.frame.size))
                 }
             }
         }
+    }
+    
+    override func layout() {
+        super.layout()
+
+        
+        
         
     }
     
