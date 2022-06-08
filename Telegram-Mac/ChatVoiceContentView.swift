@@ -244,15 +244,20 @@ class ChatVoiceContentView: ChatAudioContentView {
                 if let view = self.unreadView {
                     current = view
                 } else {
-                    current = View(frame: NSMakeRect(leftInset + parameters.durationLayout.layoutSize.width + 3, waveformView.frame.maxY + 5, 5, 5))
+                    current = View(frame: NSMakeRect(leftInset + parameters.durationLayout.layoutSize.width + 3, waveformView.frame.maxY + 10, 5, 5))
                     self.addSubview(current)
                     self.unreadView = current
+                    
+                    if animated {
+                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+                    }
                 }
                 current.backgroundColor = parameters.presentation.activityBackground
                 current.layer?.cornerRadius = current.frame.height / 2
             } else if let view = self.unreadView {
-                performSubviewRemoval(view, animated: animated)
-                self.unreadView = view
+                performSubviewRemoval(view, animated: animated, scale: true)
+                self.unreadView = nil
             }
 
         }
@@ -276,7 +281,7 @@ class ChatVoiceContentView: ChatAudioContentView {
                 case .revealed:
                     controlState = .expanded(data.isPending)
                 case .loading:
-                    controlState = .inProgress
+                    controlState = .collapsed(data.isPending)
                 }
             }
             if let controlState = controlState {
@@ -313,7 +318,7 @@ class ChatVoiceContentView: ChatAudioContentView {
             if let view = self.transcribeAudio {
                 current = view
             } else {
-                current = TranscribeAudioTextView(frame: size.bounds)
+                current = TranscribeAudioTextView(frame: NSMakeRect(0, 45, size.width, size.height))
                 self.transcribeAudio = current
                 addSubview(current)
                 if animated {
@@ -346,7 +351,7 @@ class ChatVoiceContentView: ChatAudioContentView {
         transition.updateFrame(view: durationView, frame: NSMakeRect(leftInset, center + 2, durationView.frame.width, durationView.frame.height))
         
         if let view = self.unreadView {
-            transition.updateFrame(view: view, frame: NSMakeRect(durationView.frame.maxX + 3, durationView.frame.minY + 6, view.frame.width, view.frame.height))
+            transition.updateFrame(view: view, frame: NSMakeRect(durationView.frame.maxX + 3, waveformView.frame.maxY + 10, view.frame.width, view.frame.height))
         }
         
         if let control = transcribeControl {

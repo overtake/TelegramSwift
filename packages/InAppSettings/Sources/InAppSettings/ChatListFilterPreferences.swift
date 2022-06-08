@@ -107,6 +107,10 @@ public struct ChatListFolders : Equatable {
         self.list = list
         self.sidebar = sidebar
     }
+    
+    public var isEmpty: Bool {
+        return list.isEmpty || (list.count == 1 && list[0] == .allChats)
+    }
 }
 
 public func chatListFilterPreferences(engine: TelegramEngine) -> Signal<ChatListFolders, NoError> {

@@ -238,7 +238,7 @@ class LeftSidebarController: TelegramGenericViewController<LeftSidebarView> {
             self.genericView.tableView.resortController = TableResortController(resortRange: range, start: { _ in }, resort: { _ in }, complete: { from, to in
                 _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
                     var filters = filters
-                    filters.move(at: from - range.location, to: to - range.location)
+                    filters.move(at: from - 1, to: to - 1)
                     return filters
                 }).start()
             })

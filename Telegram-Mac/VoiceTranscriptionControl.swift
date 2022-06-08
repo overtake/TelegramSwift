@@ -15,7 +15,6 @@ final class VoiceTranscriptionControl: Control {
     
     enum TranscriptionState : Equatable {
         case possible
-        case inProgress
         case expanded(Bool)
         case collapsed(Bool)
     }
@@ -51,8 +50,6 @@ final class VoiceTranscriptionControl: Control {
         
         let inProgress: Bool
         switch state {
-        case .inProgress:
-            inProgress = true
         case let .expanded(progress), let .collapsed(progress):
             inProgress = progress
         default:
@@ -112,8 +109,6 @@ final class VoiceTranscriptionControl: Control {
         switch state {
         case .possible:
             animation = .voice_to_text
-        case .inProgress:
-            animation = .voice_to_text
         case .collapsed:
             animation = .text_to_voice
         case .expanded:
@@ -127,7 +122,7 @@ final class VoiceTranscriptionControl: Control {
         if let data = animation.data, state != previousState {
             
             let play: LottiePlayPolicy
-            if previousState == nil || state == .inProgress {
+            if previousState == nil {
                 play = .framesCount(1)
             } else {
                 play = .onceEnd

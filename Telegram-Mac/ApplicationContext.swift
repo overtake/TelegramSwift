@@ -727,9 +727,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     private var previousLayout: SplitViewState?
     private let foldersReadyDisposable = MetaDisposable()
     private func updateLeftSidebar(with folders: ChatListFolders, layout: SplitViewState, animated: Bool) -> Void {
-        
-        let currentSidebar = !folders.list.isEmpty && (folders.sidebar || layout == .minimisize)
-        let previousSidebar = self.folders == nil ? nil : !self.folders!.list.isEmpty && (self.folders!.sidebar || self.previousLayout == SplitViewState.minimisize)
+                
+        let currentSidebar = !folders.isEmpty && (folders.sidebar || layout == .minimisize)
+        let previousSidebar = self.folders == nil ? nil : !self.folders!.isEmpty && (self.folders!.sidebar || self.previousLayout == SplitViewState.minimisize)
 
         let readySignal: Signal<Bool, NoError>
         

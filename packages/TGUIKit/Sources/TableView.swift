@@ -2686,6 +2686,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 //            self.beginTableUpdates()
 //        }
         
+        var nonAnimatedItems: [(Int, TableRowItem)] = []
+        var animatedItems: [(Int, TableRowItem)] = []
+
         for (index,item) in transition.updated {
             let animated:Bool
             let visibleItems = self.visibleItems()
@@ -2696,21 +2699,42 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             } else {
                 animated = false
             }
-            replace(item:item, at:index, animated: animated)
-            if !animated {
-                saveScrollState(visibleItems)
+            
+            if animated {
+                animatedItems.append((index, item))
+            } else {
+                nonAnimatedItems.append((index, item))
             }
-            if transition.deleted.isEmpty, transition.inserted.isEmpty, !tableView.isFlipped {
-                if let y = getScrollY(visibleItems) {
-                    let current = contentView.bounds
-                    self.clipView._changeBounds(from: current, to: NSMakeRect(0, max(y, 0), current.width, current.height), animated: animated)
-                }
-            }
+            
+//            if !animated {
+//                saveScrollState(visibleItems)
+//            }
+            
         }
         
-//        if transition.grouping {
-//            self.endTableUpdates()
-//        }
+        let visible = self.visibleItems()
+        
+        self.beginTableUpdates()
+        for (index, item) in nonAnimatedItems {
+            replace(item: item, at: index, animated: false)
+        }
+        self.endTableUpdates()
+        
+        saveScrollState(visible)
+        
+        self.beginTableUpdates()
+        for (index, item) in animatedItems {
+            replace(item: item, at: index, animated: true)
+        }
+        self.endTableUpdates()
+        
+        if transition.deleted.isEmpty, transition.inserted.isEmpty, !tableView.isFlipped, !animatedItems.isEmpty {
+            if let y = getScrollY(visible) {
+                let current = contentView.bounds
+                self.clipView._changeBounds(from: current, to: NSMakeRect(0, max(y, 0), current.width, current.height), animated: true)
+            }
+        }
+
         self.endUpdates()
         
         

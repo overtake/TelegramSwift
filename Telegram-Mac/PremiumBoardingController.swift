@@ -895,7 +895,7 @@ final class PremiumBoardingController : ModalViewController {
                 if case let .purchased(transaction) = status, let id = transaction.transactionIdentifier {
                                         
                                         
-                    let activate = showModalProgress(signal: context.engine.payments.assignAppStoreTransaction(transactionId: id), for: context.window)
+                    let activate = showModalProgress(signal: context.engine.payments.assignAppStoreTransaction(transactionId: id, receipt: Data(), restore: false), for: context.window)
                     activationDisposable.set(activate.start(error: { _ in
                         showModalText(for: context.window, text: strings().errorAnError)
                         inAppPurchaseManager.finishTransaction(transaction)
