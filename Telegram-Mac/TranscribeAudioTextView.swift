@@ -11,6 +11,7 @@ import TGUIKit
 
 final class TranscribeAudioTextView : View {
     private let textView = TextView()
+    private let lottiePlayer = LottiePlayerView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(textView)

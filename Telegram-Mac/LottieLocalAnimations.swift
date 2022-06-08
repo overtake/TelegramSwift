@@ -104,6 +104,7 @@ enum LocalAnimatedSticker : String {
     
     case text_to_voice
     case voice_to_text
+    case voice_dots
     
     case premium_addone
     case premium_double

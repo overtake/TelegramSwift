@@ -496,6 +496,7 @@
 		27F2BBCF27BEA4A400A37463 /* Auth_AwaitingReset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F2BBCE27BEA4A400A37463 /* Auth_AwaitingReset.swift */; };
 		27F2BBD127BF694800A37463 /* qrcode_matrix.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27F2BBD027BF694800A37463 /* qrcode_matrix.tgs */; };
 		27F2BBD327BF8CD300A37463 /* Auth_Signup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F2BBD227BF8CD300A37463 /* Auth_Signup.swift */; };
+		27F37A262850F8F200AC8B90 /* voice_dots.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27F37A252850F8F200AC8B90 /* voice_dots.tgs */; };
 		27F3B75427391E6B00B81F10 /* TelegramIconsTheme in Frameworks */ = {isa = PBXBuildFile; productRef = 27F3B75327391E6B00B81F10 /* TelegramIconsTheme */; };
 		27F3B75627391E9200B81F10 /* TelegramIconsTheme in Frameworks */ = {isa = PBXBuildFile; productRef = 27F3B75527391E9200B81F10 /* TelegramIconsTheme */; };
 		27F3B75C2739320000B81F10 /* SwiftSignalKit in Frameworks */ = {isa = PBXBuildFile; productRef = 27F3B75B2739320000B81F10 /* SwiftSignalKit */; };
@@ -1768,6 +1769,7 @@
 		27F2BBCE27BEA4A400A37463 /* Auth_AwaitingReset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_AwaitingReset.swift; sourceTree = "<group>"; };
 		27F2BBD027BF694800A37463 /* qrcode_matrix.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = qrcode_matrix.tgs; sourceTree = "<group>"; };
 		27F2BBD227BF8CD300A37463 /* Auth_Signup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_Signup.swift; sourceTree = "<group>"; };
+		27F37A252850F8F200AC8B90 /* voice_dots.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = voice_dots.tgs; sourceTree = "<group>"; };
 		27F3B75027391B1000B81F10 /* MergeLists */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MergeLists; path = packages/MergeLists; sourceTree = "<group>"; };
 		27F3B75227391D7700B81F10 /* TelegramIconsTheme */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TelegramIconsTheme; path = packages/TelegramIconsTheme; sourceTree = "<group>"; };
 		27F3B7572739212200B81F10 /* TGUIKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TGUIKit; path = packages/TGUIKit; sourceTree = "<group>"; };
@@ -5197,6 +5199,7 @@
 				27F4F17F28463BF100A3B4D4 /* premium_double.tgs */,
 				27F4F1872848CFCC00A3B4D4 /* premium_unlock.tgs */,
 				27D91313283646CA007CF40F /* voice_to_text.tgs */,
+				27F37A252850F8F200AC8B90 /* voice_dots.tgs */,
 				2755490D2747C24B0098A3CD /* device_android.tgs */,
 				275549052747C2380098A3CD /* device_chrome.tgs */,
 				275549092747C2430098A3CD /* device_edge.tgs */,
@@ -5846,6 +5849,7 @@
 				A731924F25CD5F2300218E0E /* destructor.tgs in Resources */,
 				27D91323283BC0EB007CF40F /* star in Resources */,
 				2773A56C25FAA63E00AB45E9 /* voice_chat_hand_on_unmuted.tgs in Resources */,
+				27F37A262850F8F200AC8B90 /* voice_dots.tgs in Resources */,
 				27803C0727A3E944007B0FA9 /* menu_folder_personal.tgs in Resources */,
 				C252532D1DF04AF500ADBC98 /* begin_record.caf in Resources */,
 				2733674927625BD80027441E /* menu_promote.tgs in Resources */,

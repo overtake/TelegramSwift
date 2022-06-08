@@ -126,6 +126,7 @@ class FastSettings {
     private static let kEntertainmentType = "kEntertainmentType"
     private static let kSidebarType = "kSidebarType1"
     private static let kSidebarShownType = "kSidebarShownType2"
+    private static let kDebugWebApp = "kDebugWebApp"
     private static let kRecordingStateType = "kRecordingStateType"
     private static let kInAppSoundsType = "kInAppSoundsType"
     private static let kIsMinimisizeType = "kIsMinimisizeType"
@@ -262,6 +263,15 @@ class FastSettings {
     
     static var sidebarShown: Bool {
         return !UserDefaults.standard.bool(forKey: kSidebarShownType)
+    }
+    
+    static var debugWebApp: Bool {
+        return UserDefaults.standard.bool(forKey: kDebugWebApp)
+    }
+    
+    static func toggleDebugWebApp() {
+        UserDefaults.standard.set(!debugWebApp, forKey: kDebugWebApp)
+        
     }
     
     static var recordingState: RecordingStateSettings {

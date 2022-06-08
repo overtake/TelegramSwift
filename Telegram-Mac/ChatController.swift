@@ -1467,7 +1467,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
 
             let ph: CGFloat = 36
-            let gap: CGFloat = 10
+            let gap: CGFloat = 13
             let inset: CGFloat = 3
             
             
@@ -3877,22 +3877,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         value[messageId] = .collapsed(success)
                     case let .collapsed(success):
                         value[messageId] = .revealed(success)
-                    default:
+                    case .loading:
                         break
                     }
                     return value
                 }
             } else {
-                if let result = message.audioTranscription {
-                    if !result.isPending, !result.text.isEmpty {
-                        strongSelf.updateTransribe { value in
-                            var value = value
-                            value[messageId] = .revealed(true)
-                            return value
-                        }
-                        return
-                    }
-                }
                 strongSelf.updateTransribe { value in
                     var value = value
                     value[messageId] = .loading

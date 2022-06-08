@@ -50,8 +50,6 @@ class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
                     if let textLayout = text {
                         textLayout.measure(width: width)
                         self.size = NSMakeSize(width, textLayout.layoutSize.height)
-                    } else {
-                        self.size = nil
                     }
                 }
             }
@@ -102,33 +100,31 @@ class ChatVoiceRowItem: ChatMediaItem {
 
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
             if canTranscribe, let message = object.message {
+                var pending: Bool
+                if let transcribe = message.audioTranscription {
+                    pending = transcribe.isPending
+                } else {
+                    pending = false
+                }
                 if let state = entry.additionalData.transribeState {
-                    var pending: Bool
-                    if let transcribe = message.audioTranscription {
-                        pending = transcribe.isPending
-                    } else {
-                        pending = false
-                    }
+                    
                     
                     var transcribed: String?
                     var transcribtedColor = theme.chat.textColor(isIncoming, object.renderType == .bubble)
-                    if let transcribe = entry.additionalData.transribeState {
-                                    
-                        switch transcribe {
-                        case let .revealed(success):
-                            if !success {
-                                transcribed = strings().chatVoiceTransribeError
-                                transcribtedColor = parameters.presentation.activityBackground
-                            } else {
-                                if let result = entry.message?.audioTranscription, !result.text.isEmpty {
-                                    transcribed = result.text
-                                } 
+                    switch state {
+                    case let .revealed(success):
+                        if !success {
+                            transcribed = strings().chatVoiceTransribeError
+                            transcribtedColor = parameters.presentation.activityBackground
+                        } else {
+                            if let result = entry.message?.audioTranscription, !result.text.isEmpty {
+                                transcribed = result.text
                             }
-                        case .loading:
-                            pending = true
-                        default:
-                            break
                         }
+                    case .loading:
+                        pending = true
+                    default:
+                        break
                     }
                     
                     let textLayout: TextViewLayout?
@@ -142,7 +138,7 @@ class ChatVoiceRowItem: ChatMediaItem {
                     
                     parameters.transcribeData = .init(state: .state(state), text: textLayout, isPending: pending)
                 } else {
-                    parameters.transcribeData = .init(state: .possible, text: nil, isPending: false)
+                    parameters.transcribeData = .init(state: .possible, text: nil, isPending: pending)
                 }
                 parameters.transcribe = { [weak self] in
                     self?.chatInteraction.transcribeAudio(message)

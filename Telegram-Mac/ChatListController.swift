@@ -1303,16 +1303,11 @@ class ChatListController : PeersListController {
             let prefs = chatListFilterPreferences(engine: context.engine) |> deliverOnMainQueue |> take(1)
             
             _ = prefs.start(next: { [weak self] filters in
-                if filters.list.isEmpty {
+                if filters.isEmpty {
                     self?._openChat(index)
-                } else if index == 0 {
-                    self?.updateFilter {
-                        $0.withUpdatedFilter(nil)
-                    }
-                    self?.scrollup(force: true)
                 } else if filters.list.count >= index {
                     self?.updateFilter {
-                        $0.withUpdatedFilter(filters.list[index - 1])
+                        $0.withUpdatedFilter(filters.list[index])
                     }
                     self?.scrollup(force: true)
                 } else {
