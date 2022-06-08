@@ -14,9 +14,29 @@ final class VoiceTranscriptionControl: Control {
     
     
     enum TranscriptionState : Equatable {
-        case possible
+        case possible(Bool)
         case expanded(Bool)
         case collapsed(Bool)
+        
+        func isSameState(to value: TranscriptionState?) -> Bool {
+            switch self {
+            case .possible:
+                if case .possible = value {
+                    return true
+                }
+            case .expanded:
+                if case .expanded = value {
+                    return true
+                }
+            case .collapsed:
+                if case .collapsed = value {
+                    return true
+                } else if case .possible = value {
+                    return true
+                }
+            }
+            return false
+        }
     }
 
     
@@ -50,10 +70,8 @@ final class VoiceTranscriptionControl: Control {
         
         let inProgress: Bool
         switch state {
-        case let .expanded(progress), let .collapsed(progress):
+        case let .expanded(progress), let .collapsed(progress), let .possible(progress):
             inProgress = progress
-        default:
-            inProgress = false
         }
         
         if inProgress {
@@ -119,7 +137,8 @@ final class VoiceTranscriptionControl: Control {
 
         self.inProgressLayer?.strokeColor = parameters.presentation.activityBackground.cgColor
 
-        if let data = animation.data, state != previousState {
+        
+        if let data = animation.data, !state.isSameState(to: previousState) {
             
             let play: LottiePlayPolicy
             if previousState == nil {

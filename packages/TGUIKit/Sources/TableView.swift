@@ -940,6 +940,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public var _scrollDidEndLiveScrolling:(()->Void)?
 
     open func scrollWillStartLiveScrolling() {
+        self.clipView.layer?.removeAllAnimations()
         liveScrollStartPosition = documentOffset
         _scrollWillStartLiveScrolling?()
     }
@@ -2691,7 +2692,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
         for (index,item) in transition.updated {
             let animated:Bool
-            let visibleItems = self.visibleItems()
             if case .none = transition.state {
                 let gap = abs(self.list[index].height - item.height)
                 let value = (gap < frame.height)
@@ -2705,11 +2705,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             } else {
                 nonAnimatedItems.append((index, item))
             }
-            
-//            if !animated {
-//                saveScrollState(visibleItems)
-//            }
-            
         }
         
         let visible = self.visibleItems()
@@ -2728,7 +2723,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         self.endTableUpdates()
         
-        if transition.deleted.isEmpty, transition.inserted.isEmpty, !tableView.isFlipped, !animatedItems.isEmpty {
+        if transition.deleted.isEmpty, transition.inserted.isEmpty, !tableView.isFlipped {
             if let y = getScrollY(visible) {
                 let current = contentView.bounds
                 self.clipView._changeBounds(from: current, to: NSMakeRect(0, max(y, 0), current.width, current.height), animated: true)

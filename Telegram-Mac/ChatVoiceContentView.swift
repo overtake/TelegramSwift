@@ -273,7 +273,7 @@ class ChatVoiceContentView: ChatAudioContentView {
             let controlState: VoiceTranscriptionControl.TranscriptionState?
             switch data.state {
             case .possible:
-                controlState = .possible
+                controlState = .possible(data.isPending)
             case let .state(inner):
                 switch inner {
                 case .collapsed:
@@ -281,7 +281,7 @@ class ChatVoiceContentView: ChatAudioContentView {
                 case .revealed:
                     controlState = .expanded(data.isPending)
                 case .loading:
-                    controlState = .collapsed(data.isPending)
+                    controlState = .possible(data.isPending)
                 }
             }
             if let controlState = controlState {

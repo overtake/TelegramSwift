@@ -364,6 +364,10 @@ private final class WebpageView : View {
         } else {
             self.webview.frame = NSMakeRect(0, self.headerView.frame.maxY, size.width, size.height - self.headerView.frame.height)
         }
+        
+        if let indicator = indicator {
+            transition.updateFrame(view: indicator, frame: indicator.centerFrame())
+        }
         transition.updateFrame(view: self.loading, frame: NSMakeRect(0, 0, size.width, 2))
     }
     
@@ -515,9 +519,9 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         let configuration = WKWebViewConfiguration()
         let userController = WKUserContentController()
 
-        #if BETA || STABLE
-        configuration.preferences.setValue(true, forKey: "developerExtrasEnabled")
-        #endif
+        if FastSettings.debugWebApp {
+            configuration.preferences.setValue(true, forKey: "developerExtrasEnabled")
+        }
         
         let userScript = WKUserScript(source: js, injectionTime: .atDocumentStart, forMainFrameOnly: false)
         userController.addUserScript(userScript)
@@ -781,7 +785,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             self.modal?.resize(with:size, animated: false)
             self.genericView.updateLayout(size, transition: .immediate)
         } else {
-            let size = NSMakeSize(380, 450)
+            let size = NSMakeSize(380, size.height - 80)
             self.modal?.resize(with:size, animated: false)
             self.genericView.updateLayout(size, transition: .immediate)
         }
@@ -913,9 +917,14 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         genericView.update(inProgress: false, preload: self.preloadData, animated: true)
     }
     
+    
     private func updateSize() {
-        
+        if let contentSize = self.modal?.window.contentView?.frame.size {
+           measure(size: contentSize)
+        }
     }
+    
+
     
     func sendEvent(name: String, data: String?) {
         let script = "window.TelegramGameProxy.receiveEvent(\"\(name)\", \(data ?? "null"))"
