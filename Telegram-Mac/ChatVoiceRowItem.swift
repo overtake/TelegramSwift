@@ -103,7 +103,7 @@ class ChatVoiceRowItem: ChatMediaItem {
         if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
             if canTranscribe, let message = object.message {
                 if let state = entry.additionalData.transribeState {
-                    let pending: Bool
+                    var pending: Bool
                     if let transcribe = message.audioTranscription {
                         pending = transcribe.isPending
                     } else {
@@ -124,6 +124,8 @@ class ChatVoiceRowItem: ChatMediaItem {
                                     transcribed = result.text
                                 } 
                             }
+                        case .loading:
+                            pending = true
                         default:
                             break
                         }
@@ -185,7 +187,11 @@ class ChatVoiceRowItem: ChatMediaItem {
             
             var addition: CGFloat = 0
             if let height = parameters.transcribeData?.makeSize(width)?.height {
-                addition += height + 20
+                
+                addition += height + 5
+                if captionLayouts.isEmpty, renderType == .bubble {
+                    addition += rightSize.height
+                }
             }
 
             return NSMakeSize(parameters.waveformWidth + 50 + (canTranscribe ? 35 : 0), 40 + addition)

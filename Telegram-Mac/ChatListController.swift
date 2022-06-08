@@ -265,6 +265,10 @@ struct FilterData : Equatable {
         self.request = request
     }
     
+    var isEmpty: Bool {
+        return self.tabs.isEmpty || (self.tabs.count == 1 && self.tabs[0] == .allChats)
+    }
+    
     var isFirst: Bool {
         return self.tabs.firstIndex(of: filter) == 0
     }
@@ -615,7 +619,7 @@ class ChatListController : PeersListController {
             }
             
             
-            if !filterData.tabs.isEmpty && !filterData.sidebar {
+            if !filterData.isEmpty && !filterData.sidebar {
                 mapped.append(.reveal(filterData.tabs, filterData.filter, filtersCounter))
             }
             
