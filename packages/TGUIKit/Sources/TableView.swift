@@ -1037,6 +1037,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     self?.scrollDidChangedBounds()
                 }
                
+                if self?.updating == true {
+                    return
+                }
                 var isNextCallLocked: Bool {
                     if let beginPendingTime = beginPendingTime {
                         if CFAbsoluteTimeGetCurrent() - beginPendingTime < 0.05 {
@@ -2645,8 +2648,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     } else {
                         y = nrect.minY - visible.1
                     }
-                    contentView.layer?.removeAllAnimations()
-                    self.layer?.removeAllAnimations()
+//                    contentView.layer?.removeAnimation(forKey: "bounds")
                     self.clipView.scroll(to: NSMakePoint(0, y), animated: false)
                     //reflectScrolledClipView(clipView)
 //                    tile()
@@ -2692,13 +2694,14 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
         for (index,item) in transition.updated {
             let animated:Bool
-            if case .none = transition.state {
-                let gap = abs(self.list[index].height - item.height)
-                let value = (gap < frame.height)
-                animated = (visibleRange.indexIn(index) || !transition.animateVisibleOnly) && value
-            } else {
-                animated = false
-            }
+            let gap = abs(self.list[index].height - item.height)
+            let value = (gap < frame.height)
+            animated = (visibleRange.indexIn(index) || !transition.animateVisibleOnly) && value
+//            if case .none = transition.state {
+//
+//            } else {
+//                animated = false
+//            }
             
             if animated {
                 animatedItems.append((index, item))
@@ -2706,6 +2709,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 nonAnimatedItems.append((index, item))
             }
         }
+        
+        
+       
         
         let visible = self.visibleItems()
         
@@ -2723,21 +2729,26 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         self.endTableUpdates()
         
-        if transition.deleted.isEmpty, transition.inserted.isEmpty, !tableView.isFlipped {
-            if let y = getScrollY(visible) {
-                let current = contentView.bounds
-                self.clipView._changeBounds(from: current, to: NSMakeRect(0, max(y, 0), current.width, current.height), animated: true)
-            }
-        }
-
-        self.endUpdates()
         
-        
-                
         self.tableView.beginUpdates()
         self.tableView.setFrameSize(NSMakeSize(frame.width, listHeight))
         self.reflectScrolledClipView(clipView)
         self.tableView.endUpdates()
+        
+        if !tableView.isFlipped, !animatedItems.isEmpty, case .none = transition.state {
+            if let y = getScrollY(visible) {
+                let current = contentView.bounds
+                if current.minY != y {
+                    self.clipView.scroll(to: NSMakePoint(0, max(y, 0)))
+                    self.clipView.layer?.animateBoundsOriginYAdditive(from: current.minY - clipView.bounds.minY, to: 0, duration: 0.2)
+                }
+            }
+        }
+        
+       
+
+        self.endUpdates()
+        
         
         
         self.updatedItems?(self.list)
@@ -2985,33 +2996,23 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
             if !tableView.isFlipped {
                 
-                CATransaction.begin()
-                var presentBounds:NSRect = self.layer?.bounds ?? self.bounds
-                let presentation = self.layer?.presentation()
-                if let presentation = presentation, self.layer?.animation(forKey:"bounds") != nil {
-                    presentBounds = presentation.bounds
+                if self.frame.size != size {
+                    var bounds = self.layer?.presentation()?.bounds ?? self.bounds
+                    var y = (size.height - bounds.height)
+
+                    self.layer?.animateBoundsOriginYAdditive(from: -y, to: 0, duration: duration)
+
+                    
+                    if let layer = contentView.layer {
+                        let animation = layer.makeAnimation(from: NSNumber(value: -y), to: NSNumber(value: 0), keyPath: "bounds.size.height", timingFunction: timingFunction, duration: 0.2, additive: true)
+                        layer.add(animation, forKey: "height")
+                    }
                 }
                 
-                self.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, self.bounds.minY, size.width, size.height), duration: duration, timingFunction: timingFunction)
-                let y = (size.height - presentBounds.height)
+              
                 
-                presentBounds = contentView.layer?.bounds ?? contentView.bounds
-                if let presentation = contentView.layer?.presentation(), contentView.layer?.animation(forKey:"bounds") != nil {
-                    presentBounds = presentation.bounds
-                }
-                
-                if y > 0 {
-                    presentBounds.origin.y -= y
-                    presentBounds.size.height += y
-                } else {
-                    presentBounds.origin.y += y
-                    presentBounds.size.height -= y
-                }
-                
-                contentView.layer?.animateBounds(from: presentBounds, to: NSMakeRect(0, contentView.bounds.minY, size.width, size.height), duration: duration, timingFunction: timingFunction, removeOnCompletion: removeOnCompletion, forKey: "bounds", completion: { completed in
-                    completion?(completed)
-                })
-                CATransaction.commit()
+                self.updateStickAfterScroll(animated)
+                return
             }
         }
         
