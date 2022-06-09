@@ -1648,10 +1648,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     override func forceClick(in location: NSPoint) {
-        guard let item = item as? ChatRowItem else { return }
-        
-        
-        if let item = self.item as? ChatRowItem, item.chatInteraction.presentation.state == .normal {
+            
+        if let item = self.item as? ChatRowItem, item.chatInteraction.presentation.state != .editing {
             if self.hitTest(location) == nil || self.hitTest(location) == self || !clickInContent(point: location) || self.hitTest(location) == rowView || self.hitTest(location) == bubbleView || self.hitTest(location) == replyView {
                 if let avatar = avatar {
                     if NSPointInRect(location, avatar.frame) {

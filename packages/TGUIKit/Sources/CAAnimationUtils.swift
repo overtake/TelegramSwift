@@ -583,8 +583,8 @@ public extension CALayer {
         self.animate(from: NSValue(rect: from), to: NSValue(rect: to), keyPath: "bounds", timingFunction: timingFunction, duration: duration, removeOnCompletion: removeOnCompletion, additive: additive, completion: completion, forKey: forKey)
     }
     
-    func animateBoundsOriginYAdditive(from: CGFloat, to: CGFloat, duration: Double) {
-        self.animateAdditive(from: from as NSNumber, to: to as NSNumber, keyPath: "bounds.origin.y", key: "boundsOriginYAdditive", timingFunction: CAMediaTimingFunctionName.easeOut, duration: duration, removeOnCompletion: true)
+    func animateBoundsOriginYAdditive(from: CGFloat, to: CGFloat, duration: Double, completion: ((Bool) -> Void)? = nil) {
+        self.animateAdditive(from: from as NSNumber, to: to as NSNumber, keyPath: "bounds.origin.y", key: "boundsOriginYAdditive", timingFunction: CAMediaTimingFunctionName.easeOut, duration: duration, removeOnCompletion: true, completion: completion)
     }
     
     func animateFrame(from: CGRect, to: CGRect, duration: Double, timingFunction: CAMediaTimingFunctionName, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {

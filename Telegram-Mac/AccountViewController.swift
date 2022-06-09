@@ -426,10 +426,16 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     }
     
     let accountsLimit: Int = normalAccountsLimit
+    let effectiveLimit: Int
+    if context.premiumIsBlocked {
+        effectiveLimit = accountsLimit
+    } else {
+        effectiveLimit = accountsLimit + 1
+    }
 //    let hasPremium = accounts.filter({ $0.peer.isPremium })
 //    let normalCount = accounts.filter({ !$0.peer.isPremium }).count
 
-    if accounts.count < accountsLimit + 1, !context.isSupport {
+    if accounts.count < effectiveLimit, !context.isSupport {
         entries.append(.addAccount(index: index, accounts, viewType: .singleItem))
         index += 1
     }
