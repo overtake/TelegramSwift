@@ -14,6 +14,8 @@ import SwiftSignalKit
 import TGUIKit
 import ApiCredentials
 
+private let enableDifference = true
+
 private enum WriteResult {
     case success
     case failed
@@ -158,13 +160,13 @@ final class TRLotData {
 
         let path = TRLotData.directory + animation.cacheKey
         
-        return path + "-v36-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-map"
+        return path + "-v47-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-map"
     }
     
     static func dataPath(_ animation: LottieAnimation, bufferSize: Int) -> String {
         let path = TRLotData.directory + animation.cacheKey
         
-        return path + "-v36-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-data"
+        return path + "-v47-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-data"
     }
     
     init(_ animation: LottieAnimation, bufferSize: Int, queue: Queue) {
@@ -259,6 +261,7 @@ final class TRLotFileSupplyment {
     }
     
     func addFrame(_ previous: RenderedFrame?, _ current: RenderedFrame) {
+
         if shouldWaitToRead[Int(current.frame)] == nil {
             shouldWaitToRead[Int(current.frame)] = Int(current.frame)
             queue.async {
@@ -267,7 +270,7 @@ final class TRLotFileSupplyment {
                     
                     let dst: UnsafeMutablePointer<UInt8> = malloc(self.bufferSize)!.assumingMemoryBound(to: UInt8.self)
                     var length:Int = self.bufferSize
-                    if let previous = previous {
+                    if let previous = previous, enableDifference {
                         let uint64Bs = self.bufferSize / 8
                         let dstDelta: UnsafeMutablePointer<UInt8> = malloc(self.bufferSize)!.assumingMemoryBound(to: UInt8.self)
                         memcpy(dstDelta, previous.data!.assumingMemoryBound(to: UInt8.self), self.bufferSize)
@@ -320,7 +323,7 @@ final class TRLotFileSupplyment {
 
                         let _ = compression_decode_buffer(address, bufferSize, unsafePointer, data.count, nil, COMPRESSION_LZ4)
 
-                        if let previous = previous {
+                        if let previous = previous, enableDifference {
 
                             let previousBytes = previous.data!.assumingMemoryBound(to: UInt64.self)
 

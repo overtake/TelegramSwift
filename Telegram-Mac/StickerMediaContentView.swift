@@ -166,8 +166,10 @@ class StickerMediaContentView: ChatMediaContentView {
                 })
                 suggestOpenPremiumPack = false
             } else {
-                if !suggestOpenPremiumPack {
-                    suggestOpenPremiumPack = true
+                if media.isPremiumSticker, !context.premiumIsBlocked {
+                    if !suggestOpenPremiumPack {
+                        suggestOpenPremiumPack = true
+                    }
                 }
             }
             

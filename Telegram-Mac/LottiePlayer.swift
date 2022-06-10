@@ -736,7 +736,18 @@ struct LottieAnimationEntryKey : Hashable {
     }
     
     func hash(into hasher: inout Hasher) {
-        
+        hasher.combine(size.width)
+        hasher.combine(size.height)
+        hasher.combine(backingScale)
+        hasher.combine(key.hashValue)
+        if let fitzModifier = fitzModifier {
+            hasher.combine(fitzModifier)
+        }
+        for color in colors {
+            hasher.combine(color.keyPath)
+            hasher.combine(color.color.argb)
+        }
+        hasher.combine(mirror)
     }
 }
 

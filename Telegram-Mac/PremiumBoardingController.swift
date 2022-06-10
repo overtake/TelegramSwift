@@ -280,6 +280,7 @@ enum PremiumValue : String {
 }
 
 
+
 private struct State : Equatable {
     var values:[PremiumValue] = [.double_limits, .more_upload, .faster_download, .voice_to_text, .no_ads, .unique_reactions, .premium_stickers, .advanced_chat_management, .profile_badge, .animated_userpics]
     let source: PremiumLogEventsSource
@@ -709,7 +710,7 @@ final class PremiumBoardingController : ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let inAppPurchaseManager = context.sharedContext.inAppPurchaseManager
+        let inAppPurchaseManager = context.inAppPurchaseManager
         
         let actionsDisposable = DisposableSet()
         let paymentDisposable = MetaDisposable()
@@ -886,42 +887,107 @@ final class PremiumBoardingController : ModalViewController {
                 }
             })
             
-            paymentDisposable.set((inAppPurchaseManager.buyProduct(premiumProduct, account: context.account)
-            |> deliverOnMainQueue).start(next: { [weak lockModal] status in
-                
-                lockModal?.close()
-                needToShow = false
-                
-                if case let .purchased(transaction) = status, let id = transaction.transactionIdentifier {
-                                        
-                                        
-                    let activate = showModalProgress(signal: context.engine.payments.assignAppStoreTransaction(transactionId: id, receipt: Data(), restore: false), for: context.window)
-                    activationDisposable.set(activate.start(error: { _ in
-                        showModalText(for: context.window, text: strings().errorAnError)
-                        inAppPurchaseManager.finishTransaction(transaction)
-                    }, completed: {
-                        close()
-                        inAppPurchaseManager.finishTransaction(transaction)
-                        delay(0.2, closure: {
-                            PlayConfetti(for: context.window)
-                            showModalText(for: context.window, text: strings().premiumBoardingAppStoreSuccess)
-                        })
+            
+            let _ = (self.context.engine.payments.canPurchasePremium()
+            |> deliverOnMainQueue).start(next: { [weak lockModal] available in
+                if available {
+                    actionsDisposable.add((inAppPurchaseManager.buyProduct(premiumProduct, account: context.account)
+                    |> deliverOnMainQueue).start(next: { [weak lockModal] status in
+                        
+                        lockModal?.close()
+                        needToShow = false
+
+                        
+                        if case .purchased = status {
+                            activationDisposable.set((context.account.postbox.peerView(id: context.account.peerId)
+                            |> castError(AssignAppStoreTransactionError.self)
+                            |> take(until: { view in
+                                if let peer = view.peers[view.peerId], peer.isPremium {
+                                    return SignalTakeAction(passthrough: false, complete: true)
+                                } else {
+                                    return SignalTakeAction(passthrough: false, complete: false)
+                                }
+                            })
+                            |> mapToSignal { _ -> Signal<Never, AssignAppStoreTransactionError> in
+                                return .never()
+                            }
+                            |> deliverOnMainQueue).start(error: { _ in
+                                showModalText(for: context.window, text: strings().errorAnError)
+                            }, completed: {
+                                close()
+                                let _ = updatePremiumPromoConfigurationOnce(account: context.account).start()
+                                delay(0.2, closure: {
+                                    PlayConfetti(for: context.window)
+                                    showModalText(for: context.window, text: strings().premiumBoardingAppStoreSuccess)
+                                })
+                            }))
+                        }
+                    }, error: { [weak lockModal] error in
+                        
+                        lockModal?.close()
+                        needToShow = false
+                        
+                        var errorText: String?
+                        switch error {
+                            case .generic:
+                                errorText = strings().premiumPurchaseErrorUnknown
+                            case .network:
+                                errorText = strings().premiumPurchaseErrorNetwork
+                            case .notAllowed:
+                                errorText = strings().premiumPurchaseErrorNotAllowed
+                            case .cancelled:
+                                break
+                        }
+                        
+                        if let errorText = errorText {
+                            PremiumLogEvents.promo_screen_fail.send(context: context)
+                            showModalText(for: context.window, text: errorText)
+                        }
                     }))
+                } else {
+                    lockModal?.close()
+                    needToShow = false
                 }
-            }, error: { [weak lockModal] error in
-                
-                lockModal?.close()
-                showModalText(for: context.window, text: strings().premiumBoardingAppStoreCancelled)
-                
-                switch error {
-                case let .generic(transaction):
-                    addAppLogEvent(postbox: context.account.postbox, type: PremiumLogEvents.promo_screen_fail.value)
-                    if let transaction = transaction {
-                        inAppPurchaseManager.finishTransaction(transaction)
-                    }
-                }
-                
-            }))
+            })
+
+            
+            
+//
+//            paymentDisposable.set((inAppPurchaseManager.buyProduct(premiumProduct, account: context.account)
+//            |> deliverOnMainQueue).start(next: { [weak lockModal] status in
+//
+//                lockModal?.close()
+//                needToShow = false
+//
+//                if case let .purchased(transaction) = status {
+//
+////
+////                    let activate = showModalProgress(signal: context.engine.payments.assignAppStoreTransaction(transactionId: id, receipt: Data(), restore: false), for: context.window)
+////                    activationDisposable.set(activate.start(error: { _ in
+////                        showModalText(for: context.window, text: strings().errorAnError)
+////                        inAppPurchaseManager.finishTransaction(transaction)
+////                    }, completed: {
+////                        close()
+////                        inAppPurchaseManager.finishTransaction(transaction)
+////                        delay(0.2, closure: {
+////                            PlayConfetti(for: context.window)
+////                            showModalText(for: context.window, text: strings().premiumBoardingAppStoreSuccess)
+////                        })
+////                    }))
+//                }
+//            }, error: { [weak lockModal] error in
+//
+//                lockModal?.close()
+//                showModalText(for: context.window, text: strings().premiumBoardingAppStoreCancelled)
+//
+//                switch error {
+//                case .generic:
+//                    addAppLogEvent(postbox: context.account.postbox, type: PremiumLogEvents.promo_screen_fail.value)
+//                    inAppPurchaseManager.finishAllTransactions()
+//                case .
+//                }
+//
+//            }))
         }
         
         

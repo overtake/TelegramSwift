@@ -813,6 +813,9 @@ class ChatListRowItem: TableRowItem {
         if isSecret {
             offset += 10
         }
+        if self.isPremium {
+            offset += 20
+        }
         return max(300, size.width) - 50 - margin * 4 - dateSize - (isOutMessage ? isRead ? 14 : 8 : 0) - offset
     }
     var messageWidth:CGFloat {

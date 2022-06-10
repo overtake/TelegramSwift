@@ -2732,6 +2732,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         self.tableView.beginUpdates()
         self.tableView.setFrameSize(NSMakeSize(frame.width, listHeight))
+        self.tableView.tile()
         self.reflectScrolledClipView(clipView)
         self.tableView.endUpdates()
         

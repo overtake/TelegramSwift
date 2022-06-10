@@ -72,7 +72,6 @@ class SharedAccountContext {
     var baseSettings: BaseApplicationSettings {
         return _baseSettings.with { $0 }
     }
-    let inAppPurchaseManager: InAppPurchaseManager
     #endif
    
     private let managedAccountDisposables = DisposableDict<AccountRecordId>()
@@ -213,7 +212,6 @@ class SharedAccountContext {
         self.displayUpgradeProgress = displayUpgradeProgress
         self.appEncryption = Atomic(value: appEncryption)
         #if !SHARE
-        self.inAppPurchaseManager = .init(premiumProductId: ApiEnvironment.premiumProductId)
         self.devicesContext = DevicesContext(accountManager)
         self.accountManager.mediaBox.fetchCachedResourceRepresentation = { (resource, representation) -> Signal<CachedMediaResourceRepresentationResult, NoError> in
             return fetchCachedSharedResourceRepresentation(accountManager: accountManager, resource: resource, representation: representation)

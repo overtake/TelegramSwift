@@ -541,27 +541,8 @@ class ChatMessageItem: ChatRowItem {
                             }
                         } else if let item = self?.table?.item(stableId: id) as? ChatMessageItem {
                             if let content = item.webpageLayout?.content {
-                                self?.youtubeExternalLoader.set((sharedVideoLoader.status(for: content) |> deliverOnMainQueue).start(next: { [weak item] status in
-                                    if let item = item, let message = item.message {
-                                        if let status = status {
-                                            let content = content.withUpdatedYoutubeTimecode(timecode)
-                                            if let media = message.media.first as? TelegramMediaWebpage {
-                                                switch status {
-                                                case .fail:
-                                                    execute(inapp: .external(link: content.url, false))
-                                                case .loaded:
-                                                    let message = message.withUpdatedMedia([TelegramMediaWebpage(webpageId: media.webpageId, content: .Loaded(content))])
-                                                    showChatGallery(context: item.context, message: message, item.table)
-                                                default:
-                                                    break
-                                                }
-                                            }
-                                            
-                                            
-                                        }
-                                    }
-                                    
-                                }))
+                                let content = content.withUpdatedYoutubeTimecode(timecode)
+                                execute(inapp: .external(link: content.url, false))
                             }
                         }
                     }

@@ -16,7 +16,8 @@ import InAppSettings
 import ThemeSettings
 import Reactions
 import FetchManager
-
+import InAppPurchaseManager
+import ApiCredentials
 protocol ChatLocationContextHolder: AnyObject {
 }
 
@@ -83,6 +84,7 @@ final class AccountContext {
     let diceCache: DiceCache
     let cachedGroupCallContexts: AccountGroupCallContextCacheImpl
     let networkStatusManager: NetworkStatusManager
+    let inAppPurchaseManager: InAppPurchaseManager
     #endif
     private(set) var timeDifference:TimeInterval  = 0
     #if !SHARE
@@ -231,6 +233,7 @@ final class AccountContext {
         self.engine = TelegramEngine(account: account)
         self.isSupport = isSupport
         #if !SHARE
+        self.inAppPurchaseManager = .init(engine: engine, premiumProductId: ApiEnvironment.premiumProductId)
         self.peerChannelMemberCategoriesContextsManager = PeerChannelMemberCategoriesContextsManager(self.engine, account: account)
         self.diceCache = DiceCache(postbox: account.postbox, engine: self.engine)
         self.fetchManager = FetchManagerImpl(postbox: account.postbox, storeManager: DownloadedMediaStoreManagerImpl(postbox: account.postbox, accountManager: sharedContext.accountManager))

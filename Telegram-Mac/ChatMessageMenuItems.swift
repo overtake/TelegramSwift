@@ -611,7 +611,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         thirdBlock.append(ContextMenuItem(strings().messageContextSaveGif, handler: {
                             
                             let limit = context.isPremium ? context.premiumLimits.saved_gifs_limit_premium : context.premiumLimits.saved_gifs_limit_default
-                            if limit >= data.savedGifsCount, !context.isPremium {
+                            if limit >= data.savedGifsCount, !context.isPremium, !context.premiumIsBlocked {
                                 showModalText(for: context.window, text: strings().chatContextFavoriteGifsLimitInfo("\(context.premiumLimits.saved_gifs_limit_premium)"), title: strings().chatContextFavoriteGifsLimitTitle, callback: { value in
                                     showPremiumLimit(context: context, type: .savedGifs)
                                 })
@@ -627,7 +627,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     thirdBlock.append(ContextMenuItem(!saved ? strings().chatContextAddFavoriteSticker : strings().chatContextRemoveFavoriteSticker, handler: {
                         if !saved {
                             let limit = context.isPremium ? context.premiumLimits.stickers_faved_limit_premium : context.premiumLimits.stickers_faved_limit_default
-                            if limit >= data.savedStickersCount, !context.isPremium {
+                            if limit >= data.savedStickersCount, !context.isPremium, !context.premiumIsBlocked {
                                 showModalText(for: context.window, text: strings().chatContextFavoriteStickersLimitInfo("\(context.premiumLimits.stickers_faved_limit_premium)"), title: strings().chatContextFavoriteStickersLimitTitle, callback: { value in
                                     showPremiumLimit(context: context, type: .faveStickers)
                                 })
