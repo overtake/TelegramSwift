@@ -14,7 +14,7 @@ import Postbox
 final class PremiumBoardingHeaderItem : GeneralRowItem {
     fileprivate let titleLayout: TextViewLayout
     fileprivate let infoLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, isPremium: Bool, peer: Peer?, viewType: GeneralViewType) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, isPremium: Bool, peer: Peer?, premiumText: NSAttributedString?, viewType: GeneralViewType) {
         
         let title: NSAttributedString
         if let peer = peer {
@@ -30,18 +30,20 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
         }
         self.titleLayout = .init(title, alignment: .center)
 
-        let info = NSMutableAttributedString()
+        var info = NSMutableAttributedString()
         if let _ = peer {
             _ = info.append(string: strings().premiumBoardingPeerInfo, color: theme.colors.text, font: .normal(.text))
+            info.detectBoldColorInString(with: .medium(.text))
         } else {
-            if isPremium {
-                _ = info.append(string: strings().premiumBoardingGotInfo, color: theme.colors.text, font: .normal(.text))
+            if isPremium, let premiumText = premiumText {
+                info = premiumText.mutableCopy() as! NSMutableAttributedString
             } else {
                 _ = info.append(string: strings().premiumBoardingInfo, color: theme.colors.text, font: .normal(.text))
+                info.detectBoldColorInString(with: .medium(.text))
             }
         }
-        info.detectBoldColorInString(with: .medium(.text))
         self.infoLayout = .init(info, alignment: .center)
+        self.infoLayout.interactions = globalLinkExecutor
         super.init(initialSize, stableId: stableId)
         _ = makeSize(initialSize.width)
     }

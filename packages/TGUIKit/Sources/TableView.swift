@@ -1209,7 +1209,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     private func saveScrollState(_ visibleItems: [(TableRowItem,CGFloat,CGFloat)]) -> Void {
-        //, clipView.bounds.minY > 0
+        //
         if !visibleItems.isEmpty {
             var nrect:NSRect = NSZeroRect
             
@@ -1243,7 +1243,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
     }
     
-     func getScrollY(_ visibleItems: [(TableRowItem,CGFloat,CGFloat)]) -> CGFloat? {
+    func getScrollY(_ visibleItems: [(TableRowItem,CGFloat,CGFloat)]) -> CGFloat? {
         if !visibleItems.isEmpty {
             var nrect:NSRect = NSZeroRect
             
@@ -2568,13 +2568,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let state: TableScrollState
         
         if case .none = transition.state, !transition.deleted.isEmpty || !transition.inserted.isEmpty {
-            let isSomeOfItemVisible = !inserted.filter({$0.0.isVisible}).isEmpty || !removed.filter({$0.isVisible}).isEmpty
-            if isSomeOfItemVisible {
-                state = transition.state
-            } else {
-                state = transition.state
-               // state = .saveVisible(.upper)
-            }
+            state = transition.state
         } else {
             state = transition.state
         }
@@ -2671,10 +2665,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         case let .none(animation):
             // print("scroll do nothing")
             animation?.animate(table:self, documentOffset: documentOffset, added: inserted.map{ $0.0 }, removed: removed, previousRange: visibleRange)
-            if let animation = animation, !animation.scrollBelow, !transition.isEmpty, contentView.bounds.minY > 0 {
-                saveVisible(.lower)
-            }
-            
         case .bottom, .top, .center:
             self.scroll(to: transition.state)
         case .up, .down, .upOffset:
@@ -2721,20 +2711,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         self.endTableUpdates()
         
-        saveScrollState(visible)
+        if !tableView.isFlipped, case .none = transition.state {
+            saveScrollState(visible)
+        }
         
         self.beginTableUpdates()
         for (index, item) in animatedItems {
             replace(item: item, at: index, animated: true)
         }
         self.endTableUpdates()
-        
-        
-        self.tableView.beginUpdates()
-        self.tableView.setFrameSize(NSMakeSize(frame.width, listHeight))
-        self.tableView.tile()
-        self.reflectScrolledClipView(clipView)
-        self.tableView.endUpdates()
         
         if !tableView.isFlipped, !animatedItems.isEmpty, case .none = transition.state {
             if let y = getScrollY(visible) {
@@ -2746,7 +2731,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
         }
         
-       
+        self.tableView.beginUpdates()
+        self.tableView.setFrameSize(NSMakeSize(frame.width, listHeight))
+        self.tableView.tile()
+        self.reflectScrolledClipView(clipView)
+        self.tableView.endUpdates()
 
         self.endUpdates()
         
@@ -2998,8 +2987,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             if !tableView.isFlipped {
                 
                 if self.frame.size != size {
-                    var bounds = self.layer?.presentation()?.bounds ?? self.bounds
-                    var y = (size.height - bounds.height)
+                    let bounds = self.layer?.presentation()?.bounds ?? self.bounds
+                    let y = (size.height - bounds.height)
 
                     self.layer?.animateBoundsOriginYAdditive(from: -y, to: 0, duration: duration)
 

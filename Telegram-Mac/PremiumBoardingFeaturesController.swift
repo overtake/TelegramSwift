@@ -10,8 +10,19 @@ import Foundation
 import TGUIKit
 
 final class PremiumBoardingFeaturesView: View {
+    
+    private let headerView = PremiumGradientView(frame: .zero)
+    private let bottomView = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        addSubview(headerView)
+        addSubview(bottomView)
+    }
+    
+    override func layout() {
+        super.layout()
+        bottomView.frame = NSMakeRect(0, frame.height - 174, frame.width, 174)
+        headerView.frame = NSMakeRect(0, 0, frame.width, frame.height - bottomView.frame.height)
     }
     
     required init?(coder: NSCoder) {
@@ -22,6 +33,7 @@ final class PremiumBoardingFeaturesView: View {
 final class PremiumBoardingFeaturesController : TelegramGenericViewController<PremiumBoardingFeaturesView> {
     override init(_ context: AccountContext) {
         super.init(context)
+        bar = .init(height: 0)
     }
     
     override func viewDidLoad() {
