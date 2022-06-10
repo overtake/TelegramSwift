@@ -178,10 +178,10 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
             controller.loadViewIfNeeded(NSMakeRect(0, 0, genericView.frame.width - 350, genericView.frame.height))
         } else {
             var offset: CGFloat = 0
-            if let header = header {
+            if let header = header, header.isShown {
                 offset += header.height
             }
-            if let header = callHeader {
+            if let header = callHeader, header.isShown {
                 offset += header.height
             }
             let bounds = genericView.bounds

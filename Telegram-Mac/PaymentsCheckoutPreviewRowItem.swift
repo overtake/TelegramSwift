@@ -30,7 +30,12 @@ final class PaymentsCheckoutPreviewRowItem : GeneralRowItem {
         _ = attr.append(string: "\n")
         _ = attr.append(string: botPeer?.displayTitle ?? "", color: theme.colors.grayText, font: .normal(.text))
         
+        attr.detectLinks(type: [.Links], context: context)
         self.textLayout = TextViewLayout(attr)
+
+        self.textLayout.interactions = globalLinkExecutor
+        
+        
         super.init(initialSize, viewType: viewType)
     }
     

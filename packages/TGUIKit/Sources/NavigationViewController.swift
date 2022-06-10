@@ -66,7 +66,7 @@ open class NavigationHeader {
     let initializer:(NavigationHeader, Any, NavigationHeaderView?)->(NavigationHeaderView, CGFloat)
     weak var navigation:NavigationViewController?
     fileprivate let disposable:MetaDisposable = MetaDisposable()
-    fileprivate var isShown:Bool = false
+    fileprivate(set) var isShown:Bool = false
     public var needShown:Bool = false
     public init(_ height:CGFloat, initializer:@escaping(NavigationHeader, Any, NavigationHeaderView?)->(NavigationHeaderView, CGFloat)) {
         self.height = height

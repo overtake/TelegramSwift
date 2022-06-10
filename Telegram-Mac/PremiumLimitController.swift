@@ -235,7 +235,7 @@ final class PremiumGradientView : View {
         self.layer = CAGradientLayer()
         
         self.gradient.startPoint = CGPoint(x: 0, y: 1)
-        self.gradient.endPoint = CGPoint(x: 1, y: 1)
+        self.gradient.endPoint = CGPoint(x: 1, y: 0)
         
         gradient.colors = premiumGradient.compactMap { $0?.cgColor }
     }

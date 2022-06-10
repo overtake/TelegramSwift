@@ -305,8 +305,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
 
     
+    let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 13, openInfo: arguments.openInfo)
+
+    
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-        return PremiumBoardingHeaderItem(initialSize, stableId: stableId, isPremium: state.isPremium, peer: state.peer?.peer, viewType: .legacy)
+        return PremiumBoardingHeaderItem(initialSize, stableId: stableId, isPremium: state.isPremium, peer: state.peer?.peer, premiumText: status, viewType: .legacy)
     }))
     index += 1
     
@@ -464,7 +467,6 @@ private final class PremiumBoardingView : View {
     private var bottomView: View?
     private let bottomBorder = View()
     private let acceptView = AcceptView(frame: .zero)
-    private let statusView = TextView()
     
     private let containerView = View()
     private var fadeView: View?
@@ -486,7 +488,6 @@ private final class PremiumBoardingView : View {
                 
         bottomBorder.backgroundColor = theme.colors.border
         
-        statusView.isSelectable = false
         
         tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
             self?.updateScroll(position, animated: true)
@@ -527,12 +528,8 @@ private final class PremiumBoardingView : View {
     }
     
     var bottomHeight: CGFloat {
-        if let state = self.state {
-            if state.isPremium {
-                return statusView.frame.height + 20
-            } else {
-                return acceptView.frame.height + 20
-            }
+        if let _ = bottomView {
+            return acceptView.frame.height + 20
         } else {
             return 0
         }
@@ -547,7 +544,6 @@ private final class PremiumBoardingView : View {
             transition.updateFrame(view: bottomView, frame: NSMakeRect(0, tableView.frame.maxY, size.width, bottomHeight))
             
             transition.updateFrame(view: acceptView, frame: bottomView.focus(acceptView.frame.size))
-            transition.updateFrame(view: statusView, frame: bottomView.focus(statusView.frame.size))
             
             transition.updateFrame(view: bottomBorder, frame: NSMakeRect(0, 0, bottomView.frame.width, .borderSize))
         }
@@ -575,36 +571,31 @@ private final class PremiumBoardingView : View {
         }
         
         
-        let attr = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 13, openInfo: arguments.openInfo)
-        
-        let statusLayout = TextViewLayout(attr, alignment: .center)
-        statusLayout.measure(width: frame.width - 40)
-        statusLayout.interactions = globalLinkExecutor
-        
-        self.statusView.update(statusLayout)
-        
         if state.isPremium != previousState?.isPremium {
-            let bottomView = View(frame: NSMakeRect(0, frame.height - bottomHeight, frame.width, bottomHeight))
-            containerView.addSubview(bottomView)
-            
-            if state.isPremium {
-                bottomView.addSubview(statusView)
-            } else {
+            if state.peer == nil && !state.isPremium {
+                let bottomView = View(frame: NSMakeRect(0, frame.height - bottomHeight, frame.width, bottomHeight))
+                containerView.addSubview(bottomView)
+                
                 bottomView.addSubview(acceptView)
+                bottomView.addSubview(bottomBorder)
+                
+                if let view = self.bottomView {
+                    performSubviewRemoval(view, animated: animated)
+                }
+                
+                self.bottomView = bottomView
+                
+                if animated {
+                    bottomView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
             }
-            bottomView.addSubview(bottomBorder)
-            
-            if let view = self.bottomView {
-                performSubviewRemoval(view, animated: animated)
-            }
-            
-            self.bottomView = bottomView
-            
-            if animated {
-                bottomView.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+        } else if let bottomView = bottomView {
+            if state.peer != nil || state.isPremium {
+                self.bottomView = nil
+                performSubviewRemoval(bottomView, animated: animated)
             }
         }
-        
+                
         self.updateScroll(tableView.scrollPosition().current, animated: false)
 
         updateLayout(size: frame.size, transition: transition)
@@ -763,7 +754,7 @@ final class PremiumBoardingController : ModalViewController {
                     _ = strongSelf.escapeKeyAction()
                 }, acceptView: stateValue.with { !$0.isPremium } ? strongSelf.genericView.makeAcceptView() : nil), animated: true)
             default:
-                break
+                strongSelf.genericView.append(PremiumBoardingFeaturesController(context), animated: true)
             }
         })
         
