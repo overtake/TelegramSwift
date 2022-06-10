@@ -546,6 +546,34 @@ func generatePremium(_ reversed: Bool = false, color: NSColor? = nil) -> CGImage
 
 }
 
+
+func generateStickerPackPremium() -> CGImage {
+    
+    let draw: (NSSize, CGContext)->Void = { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+
+        let image = NSImage(named: "Icon_Premium_StickerPack")!.precomposed()
+        ctx.clip(to: size.bounds, mask: image)
+
+        let colors = premiumGradient.compactMap { $0?.cgColor } as NSArray
+        let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+        
+        var locations: [CGFloat] = []
+        for i in 0 ..< colors.count {
+            locations.append(delta * CGFloat(i))
+        }
+
+        let colorSpace = deviceColorSpace
+        let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
+        
+        ctx.drawLinearGradient(gradient, start: CGPoint(x: size.width, y: 0), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
+        
+    }
+    return generateImage(NSMakeSize(24, 24), contextGenerator: { size, ctx in
+        draw(size, ctx)
+    })!
+}
+
 func generateDialogVerify(background: NSColor, foreground: NSColor, reversed: Bool = false) -> CGImage {
     if reversed {
         return generateImage(NSMakeSize(16, 16), contextGenerator: { size, ctx in
@@ -2468,7 +2496,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 premium_account_rev: { generatePremium(true, color: palette.accent) },
                                                 premium_account_rev_active: { generatePremium(true, color: palette.underSelectedColor) },
                                                 premium_reaction_lock: { generateLockPremiumReaction(palette) },
-                                                premium_boarding_feature_next: { NSImage(named: "Premium_Boarding_Feature_Next")!.precomposed(palette.grayIcon) }
+                                                premium_boarding_feature_next: { NSImage(named: "Premium_Boarding_Feature_Next")!.precomposed(palette.grayIcon) },
+                                                premium_stickers: { generateStickerPackPremium() }
 
     )
 

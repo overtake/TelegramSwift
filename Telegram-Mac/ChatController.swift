@@ -507,14 +507,20 @@ class ChatControllerView : View, ChatInputDelegate {
             tableHeight += inputView.frame.height
         }
                 
-        transition.updateFrame(view: tableView, frame: NSMakeRect(0, header.state.toleranceHeight, frame.width, tableHeight))
-        tableView.tile()
+        let tableRect = NSMakeRect(0, header.state.toleranceHeight, frame.width, tableHeight)
+        if tableRect != tableView.frame {
+            transition.updateFrame(view: tableView, frame: tableRect)
+            tableView.tile()
+        }
 
         
         let inputY: CGFloat = themeSelectorView != nil ? frame.height : tableView.frame.maxY
         
-        transition.updateFrame(view: inputView, frame: NSMakeRect(0, inputY, frame.width, inputView.frame.height))
-        inputView.updateLayout(size: NSMakeSize(frame.width, inputView.frame.height), transition: transition)
+        let inputRect = NSMakeRect(0, inputY, frame.width, inputView.frame.height)
+        if inputRect != inputView.frame {
+            transition.updateFrame(view: inputView, frame: inputRect)
+            inputView.updateLayout(size: NSMakeSize(frame.width, inputView.frame.height), transition: transition)
+        }
 
         
         transition.updateFrame(view: gradientMaskView, frame: tableView.frame)
@@ -522,9 +528,6 @@ class ChatControllerView : View, ChatInputDelegate {
         if let progressView = progressView {
             transition.updateFrame(view: progressView, frame: progressView.centerFrame().offsetBy(dx: 0, dy: -inputView.frame.height/2))
         }
-        
-        
-        
         transition.updateFrame(view: scroller, frame: scrollerRect)
         
         if let mentions = mentions {

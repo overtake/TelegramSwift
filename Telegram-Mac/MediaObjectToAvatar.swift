@@ -187,7 +187,7 @@ private final class StickerToMp4Context {
                 data = try? Data(contentsOf: URL(fileURLWithPath: path))
             }
             if let data = data {
-                let animation = LottieAnimation(compressed: data, key: .init(key: .bundle(""), size: NSMakeSize(640, 640)), type: type)
+                let animation = LottieAnimation(compressed: data, key: .init(key: .bundle("_convert_file_\(path)"), size: NSMakeSize(640, 640)), type: type)
                 self?.process(animation, background: background)
             }
         }))

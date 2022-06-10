@@ -142,7 +142,7 @@ final class AppMenuAnimatedRemoteImage : LottiePlayerView, AppMenuItemImageDrawa
             colors = []
         }
 
-        let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .bundle(self.sticker.thumb.rawValue), size: frame.size), type: .lottie, cachePurpose: .none, playPolicy: .framesCount(1), maximumFps: 60, colors: colors, metalSupport: false)
+        let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .bundle("file_id_\(self.sticker.file.fileId)"), size: frame.size), type: .lottie, cachePurpose: .none, playPolicy: .framesCount(1), maximumFps: 60, colors: colors, metalSupport: false)
 
         self.set(animation, reset: true, saveContext: false, animated: false)
         

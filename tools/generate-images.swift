@@ -747,6 +747,8 @@ func initialize() -> [String] {
     array.append("premium_reaction_lock")
     
     array.append("premium_boarding_feature_next")
+    
+    array.append("premium_stickers")
 
     return array
 }

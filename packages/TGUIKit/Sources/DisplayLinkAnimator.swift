@@ -123,7 +123,7 @@ public final class DisplayLinkAnimator {
     private var completed = false
     private var timingControlPoints:[Float] = [0, 0, 0, 0];
 
-    public init(duration: Double, from fromValue: CGFloat, to toValue: CGFloat, timingFunction: CAMediaTimingFunction = .init(name: .easeInEaseOut), update: @escaping (CGFloat) -> Void, completion: @escaping () -> Void) {
+    public init(duration: Double, from fromValue: CGFloat, to toValue: CGFloat, timingFunction: CAMediaTimingFunction = .init(name: .easeOut), update: @escaping (CGFloat) -> Void, completion: @escaping () -> Void) {
         self.duration = duration
         self.fromValue = fromValue
         self.toValue = toValue

@@ -27,14 +27,18 @@ class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
     }
     
     final class TranscribeData {
-        var state: TranscribeState
-        var text: TextViewLayout?
-        var isPending: Bool
-        init(state: TranscribeState, text: TextViewLayout?, isPending: Bool) {
+        let state: TranscribeState
+        let text: TextViewLayout?
+        let isPending: Bool
+        let fontColor: NSColor
+        init(state: TranscribeState, text: TextViewLayout?, isPending: Bool, fontColor: NSColor) {
             self.state = state
             self.text = text
             self.isPending = isPending
+            self.fontColor = fontColor
         }
+        
+        let dotsSize: NSSize = NSMakeSize(18, 18)
         
         func makeSize(_ width: CGFloat) -> NSSize? {
             switch state {
@@ -49,7 +53,16 @@ class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
                 case .revealed:
                     if let textLayout = text {
                         textLayout.measure(width: width)
-                        self.size = NSMakeSize(width, textLayout.layoutSize.height)
+                        
+                        var size = NSMakeSize(width, textLayout.layoutSize.height)
+                        if let line = textLayout.lines.last {
+                            if line.frame.maxX + dotsSize.width > width {
+                                size.height += 10
+                            }
+                        }
+                        self.size = size
+                    } else {
+                        self.size = dotsSize
                     }
                 }
             }
@@ -106,11 +119,11 @@ class ChatVoiceRowItem: ChatMediaItem {
                 } else {
                     pending = false
                 }
+                var transcribtedColor = theme.chat.textColor(isIncoming, object.renderType == .bubble)
                 if let state = entry.additionalData.transribeState {
                     
                     
                     var transcribed: String?
-                    var transcribtedColor = theme.chat.textColor(isIncoming, object.renderType == .bubble)
                     switch state {
                     case let .revealed(success):
                         if !success {
@@ -136,9 +149,9 @@ class ChatVoiceRowItem: ChatMediaItem {
                         textLayout = nil
                     }
                     
-                    parameters.transcribeData = .init(state: .state(state), text: textLayout, isPending: pending)
+                    parameters.transcribeData = .init(state: .state(state), text: textLayout, isPending: pending, fontColor: transcribtedColor)
                 } else {
-                    parameters.transcribeData = .init(state: .possible, text: nil, isPending: pending)
+                    parameters.transcribeData = .init(state: .possible, text: nil, isPending: pending, fontColor: transcribtedColor)
                 }
                 parameters.transcribe = { [weak self] in
                     self?.chatInteraction.transcribeAudio(message)
@@ -175,7 +188,7 @@ class ChatVoiceRowItem: ChatMediaItem {
             let canTranscribe = context.isPremium
 
             
-            let maxVoiceWidth:CGFloat = min(blockWidth, width - 50 - (canTranscribe ? 35 : 0))
+            let maxVoiceWidth:CGFloat = min(min(250, blockWidth), width - 50 - (canTranscribe ? 35 : 0))
 
             parameters.waveformWidth = maxVoiceWidth
             

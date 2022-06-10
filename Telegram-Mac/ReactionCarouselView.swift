@@ -110,11 +110,11 @@ private final class ReactionView : Control {
     override func stateDidUpdate(_ state: ControlState) {
         super.stateDidUpdate(state)
         
-        if previous == .Hover, state == .Highlight {
-            self.layer?.animateScaleCenter(from: 1, to: 0.95, duration: 0.2, removeOnCompletion: false)
-        } else if state == .Hover && previous == .Highlight {
-            self.layer?.animateScaleCenter(from: 0.95, to: 1, duration: 0.2, removeOnCompletion: true)
-        }
+//        if previous == .Hover, state == .Highlight {
+//            self.layer?.animateScaleCenter(from: 1, to: 0.95, duration: 0.2, removeOnCompletion: false)
+//        } else if state == .Hover && previous == .Highlight {
+//            self.layer?.animateScaleCenter(from: 0.95, to: 1, duration: 0.2, removeOnCompletion: true)
+//        }
         previous = state
     }
     
@@ -142,7 +142,7 @@ private final class ReactionView : Control {
 
 
 
-private let itemSize = CGSize(width: 110.0, height: 110.0)
+private let itemSize = CGSize(width: 110, height: 110)
 
 final class ReactionCarouselView: View {
     
@@ -171,8 +171,8 @@ final class ReactionCarouselView: View {
         }
             
         func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-            transition.updateFrame(view: self.player, frame: CGRect(origin: .zero, size: animationSize))
-            self.player.update(size: animationSize, transition: transition)
+            transition.updateFrame(view: self.player, frame: size.bounds)
+            self.player.update(size: size, transition: transition)
         }
 
         
@@ -192,7 +192,7 @@ final class ReactionCarouselView: View {
     private let scrollView: ScrollView = ScrollView()
     private let tapView = View()
     
-    private let effectViews: View = View()
+    private var timer: SwiftSignalKit.Timer?
     
     private let disposable = MetaDisposable()
     
@@ -204,7 +204,7 @@ final class ReactionCarouselView: View {
     
     init(context: AccountContext, reactions: [AvailableReactions.Reaction]) {
         self.context = context
-        self.reactions = Array(reactions.filter { $0.isPremium }.filter { $0.aroundAnimation != nil }.shuffled().prefix(6))
+        self.reactions = Array(reactions.filter { $0.isPremium }.filter { $0.aroundAnimation != nil })
         
         super.init(frame: .zero)
         
@@ -213,8 +213,6 @@ final class ReactionCarouselView: View {
                 
         self.scrollView.documentView = tapView
         
-        addSubview(effectViews)
-        effectViews.isEventLess = true
         
 //        NotificationCenter.default.addObserver(forName: NSScrollView.didEndLiveScrollNotification, object: scrollView, queue: nil, using: { [weak self] notification in
 //            self?.scrollDidEndLiveScrolling()
@@ -250,13 +248,18 @@ final class ReactionCarouselView: View {
     }
     
     func scrollTo(_ index: Int, playReaction: Bool, duration: Double, clockwise: Bool? = nil) {
-        guard index >= 0 && index < self.itemViews.count else {
+        
+        let totatCount = self.itemViews.count
+        
+        guard index >= 0 && index < totatCount else {
             return
         }
         
 
+        self.timer?.invalidate()
+        self.timer = nil
         
-        let delta = 1.0 / CGFloat(self.itemViews.count)
+        let delta = 1.0 / CGFloat(totatCount)
         
         
         
@@ -305,6 +308,16 @@ final class ReactionCarouselView: View {
             if playReaction {
                 self?.playReaction()
             }
+            
+            self?.timer = SwiftSignalKit.Timer(timeout: 2.5, repeat: false, completion: {
+                var updated: Int = index - 1
+                if updated < 0 {
+                    updated = totatCount - 1
+                }
+                self?.scrollTo(updated, playReaction: true, duration: 0.5, clockwise: nil)
+            }, queue: .mainQueue())
+            
+            self?.timer?.start()
         })
     }
     
@@ -315,9 +328,9 @@ final class ReactionCarouselView: View {
                 guard let aroundAnimation = reaction.aroundAnimation else {
                     return
                 }
-                self?.add(effect: reaction.title, file: aroundAnimation)
+                self?.add(effect: reaction.value, file: aroundAnimation)
             })
-            self.addSubview(itemView, positioned: .below, relativeTo: effectViews)
+            self.addSubview(itemView)
                         
             self.itemViews.append(itemView)
         }
@@ -365,9 +378,9 @@ final class ReactionCarouselView: View {
                     itemView.playSelectAnimation()
                 }
             }
-            effectViews.addSubview(current)
+            self.addSubview(current)
         }
-        needsLayout = true
+        updateLayout(size: self.frame.size, transition: .immediate)
     }
     
     private func removeEffect(_ view: NSView?) {
@@ -452,7 +465,6 @@ final class ReactionCarouselView: View {
         let size = NSMakeSize(size.width, size.height - 40)
         
         self.scrollView.frame = CGRect(origin: CGPoint(), size: NSMakeSize(size.width, size.height))
-        self.effectViews.frame = CGRect(origin: CGPoint(), size: NSMakeSize(size.width, size.height + 40))
         if self.scrollView.contentSize.width.isZero {
             self.resetScrollPosition()
         }
@@ -460,7 +472,7 @@ final class ReactionCarouselView: View {
         
         let delta = 1.0 / CGFloat(self.itemViews.count)
     
-        let areaSize = CGSize(width: floor(size.width * 0.7), height: size.height * 0.5)
+        let areaSize = CGSize(width: floor(size.width * 0.7), height: size.height * 0.44)
         
         var i = 0
         for itemView in self.itemViews {
@@ -479,28 +491,36 @@ final class ReactionCarouselView: View {
                 }
                 return relativeAngle
             }
+                        
+            let rotatedAngle = angle - CGFloat.pi / 2.0
             
-            let relativeAngle = calculateRelativeAngle(angle)
+            var updatedAngle = rotatedAngle + 0.5 * sin(rotatedAngle)
+            updatedAngle = updatedAngle + CGFloat.pi / 2.0
+
+            let relativeAngle = calculateRelativeAngle(updatedAngle)
             let distance = abs(relativeAngle) / CGFloat.pi
             
             let point = CGPoint(
-                x: cos(angle),
-                y: sin(angle)
+                x: cos(updatedAngle),
+                y: sin(updatedAngle)
             )
+
+            let value = 1.0 - distance * 0.8
+
             
             let itemFrame = CGRect(origin: CGPoint(x: size.width * 0.5 + point.x * areaSize.width * 0.5 - itemSize.width * 0.5, y: size.height * 0.5 + point.y * areaSize.height * 0.5 - itemSize.height * 0.5), size: itemSize)
             itemView.frame = itemFrame
             
-//            let value = 1.0 - distance * 0.45
 //
-//            var fr = CATransform3DIdentity
-//            fr = CATransform3DTranslate(fr, itemFrame.width / 2, itemFrame.height / 2, 0)
-//            fr = CATransform3DScale(fr, value, value, 1)
-//            fr = CATransform3DTranslate(fr, -(itemFrame.width / 2), -(itemFrame.height / 2), 0)
-//            itemView.layer?.transform = fr
+            var fr = CATransform3DIdentity
+            fr = CATransform3DTranslate(fr, itemFrame.width / 2, itemFrame.height / 2, 0)
+            fr = CATransform3DScale(fr, value, value, 1)
+            fr = CATransform3DTranslate(fr, -(itemFrame.width / 2), -(itemFrame.height / 2), 0)
+            itemView.layer?.sublayerTransform = fr
+            
             
             transition.updateFrame(view: itemView, frame: itemFrame)
-            for view in effectViews.subviews {
+            for view in self.subviews {
                 if let view = view as? EffectView {
                     if view.value == itemView.reaction.value {
                         let rect = NSMakeRect(itemFrame.midX - view.frame.width / 2, itemFrame.midY - view.frame.height / 2, view.frame.width, view.frame.height)

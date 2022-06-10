@@ -177,7 +177,16 @@ open class MajorNavigationController: NavigationViewController, SplitViewDelegat
         if genericView.nextLayout == .dual {
             controller.loadViewIfNeeded(NSMakeRect(0, 0, genericView.frame.width - 350, genericView.frame.height))
         } else {
-            controller.loadViewIfNeeded(genericView.bounds)
+            var offset: CGFloat = 0
+            if let header = header {
+                offset += header.height
+            }
+            if let header = callHeader {
+                offset += header.height
+            }
+            let bounds = genericView.bounds
+            let frame = NSMakeRect(0, offset, bounds.width, bounds.height - offset)
+            controller.loadViewIfNeeded(frame)
         }
         
         self.genericView.update()

@@ -6133,6 +6133,8 @@ public final class L10n {
   public static var messagesPlaceholderComment: String  { return L10n.tr("Localizable", "Messages.Placeholder.Comment") }
   /// Reply...
   public static var messagesPlaceholderReply: String  { return L10n.tr("Localizable", "Messages.Placeholder.Reply") }
+  /// Schedule a message...
+  public static var messagesPlaceholderScheduled: String  { return L10n.tr("Localizable", "Messages.Placeholder.Scheduled") }
   /// Write a message...
   public static var messagesPlaceholderSentMessage: String  { return L10n.tr("Localizable", "Messages.Placeholder.SentMessage") }
   /// Silent Broadcast...
@@ -7813,6 +7815,12 @@ public final class L10n {
   }
   /// You already have Telegram Premium.
   public static var premiumOffsetAlreadyHave: String  { return L10n.tr("Localizable", "Premium.Offset.AlreadyHave") }
+  /// Please check your internet connection and try again.
+  public static var premiumPurchaseErrorNetwork: String  { return L10n.tr("Localizable", "Premium.Purchase.ErrorNetwork") }
+  /// The device is not not allowed to make the payment.
+  public static var premiumPurchaseErrorNotAllowed: String  { return L10n.tr("Localizable", "Premium.Purchase.ErrorNotAllowed") }
+  /// An error occurred. Please try again.
+  public static var premiumPurchaseErrorUnknown: String  { return L10n.tr("Localizable", "Premium.Purchase.ErrorUnknown") }
   /// bot
   public static var presenceBot: String  { return L10n.tr("Localizable", "Presence.bot") }
   /// support

@@ -450,9 +450,9 @@ private final class MediaVideoCell : MediaCell {
         if let layoutItem = self.layoutItem {
             let context = layoutItem.chatInteraction.context
             if context.autoplayMedia.preloadVideos {
-                if let media = layoutItem.message.media.first as? TelegramMediaFile, let fileSize = media.size {
+                if let media = layoutItem.message.media.first as? TelegramMediaFile {
                     let reference = FileMediaReference.message(message: MessageReference(layoutItem.message), media: media)
-                    let preload = combineLatest(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: reference.resourceReference(media.resource), range: (0 ..< Int64(2.0 * 1024 * 1024), .default), statsCategory: .video), fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: reference.resourceReference(media.resource), range: (max(0, fileSize - Int64(256 * 1024)) ..< Int64(Int32.max), .default), statsCategory: .video))
+                    let preload = preloadVideoResource(postbox: context.account.postbox, resourceReference: reference.resourceReference(media.resource), duration: 3.0)
                     partDisposable.set(preload.start())
                 }
             }

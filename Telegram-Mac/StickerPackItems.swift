@@ -141,7 +141,7 @@ class RecentPackRowView: HorizontalRowView {
             case .recent:
                 imageView.image = theme.icons.stickersTabRecent
             case .premium:
-                imageView.image = theme.icons.premium_account
+                imageView.image = theme.icons.premium_stickers
             case let .featured(hasUnred):
                 imageView.image = hasUnred ? theme.icons.stickers_add_featured_unread : theme.icons.stickers_add_featured
             default:
