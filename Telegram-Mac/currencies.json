@@ -546,7 +546,7 @@
         "decimalSeparator": ",",
         "symbolOnLeft": true,
         "spaceBetweenAmountAndSymbol": false,
-        "decimalDigits": 0
+        "decimalDigits": 2
     },
     "ILS": {
         "code": "ILS",
