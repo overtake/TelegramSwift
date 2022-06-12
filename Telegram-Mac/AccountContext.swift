@@ -233,7 +233,7 @@ final class AccountContext {
         self.engine = TelegramEngine(account: account)
         self.isSupport = isSupport
         #if !SHARE
-        self.inAppPurchaseManager = .init(engine: engine, premiumProductId: ApiEnvironment.premiumProductId)
+        self.inAppPurchaseManager = .init(premiumProductId: ApiEnvironment.premiumProductId)
         self.peerChannelMemberCategoriesContextsManager = PeerChannelMemberCategoriesContextsManager(self.engine, account: account)
         self.diceCache = DiceCache(postbox: account.postbox, engine: self.engine)
         self.fetchManager = FetchManagerImpl(postbox: account.postbox, storeManager: DownloadedMediaStoreManagerImpl(postbox: account.postbox, accountManager: sharedContext.accountManager))

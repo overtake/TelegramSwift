@@ -30,16 +30,14 @@ final class ContextAddReactionsListView : View  {
         private var selectAnimationData: Data?
         private var currentKey: String?
         
-        private let premium: ImageView?
+        private let premium: LockView?
 
         
         required init(frame frameRect: NSRect, context: AccountContext, reaction: AvailableReactions.Reaction, add: @escaping(String)->Void) {
             self.reaction = reaction
             self.context = context
             if reaction.isPremium, !context.isPremium {
-                self.premium = ImageView()
-                self.premium?.image = theme.icons.premium_reaction_lock
-                self.premium?.setFrameSize(imageView.frame.size)
+                self.premium = LockView()
             } else {
                 self.premium = nil
             }
@@ -100,13 +98,16 @@ final class ContextAddReactionsListView : View  {
                 add(reaction.value)
             }, for: .Click)
             
-            contextMenu = {
-                let menu = ContextMenu()
-                menu.addItem(ContextMenuItem(strings().chatContextReactionQuick, handler: {
-                    context.reactions.updateQuick(reaction.value)
-                }, itemImage: MenuAnimation.menu_add_to_favorites.value))
-                return menu
+            if !reaction.isPremium || context.isPremium {
+                contextMenu = {
+                    let menu = ContextMenu()
+                    menu.addItem(ContextMenuItem(strings().chatContextReactionQuick, handler: {
+                        context.reactions.updateQuick(reaction.value)
+                    }, itemImage: MenuAnimation.menu_add_to_favorites.value))
+                    return menu
+                }
             }
+            
 
         }
         
@@ -162,6 +163,10 @@ final class ContextAddReactionsListView : View  {
         }
         
         func playAppearAnimation() {
+            
+            if let premium = premium {
+                premium.layer?.animateScaleSpring(from: 0.7, to: 1, duration: 0.3, bounce: true)
+            }
                         
             let signal = context.account.postbox.mediaBox.resourceData(reaction.appearAnimation.resource, attemptSynchronously: true)
             |> filter {
@@ -234,7 +239,7 @@ final class ContextAddReactionsListView : View  {
             scrollView.addSubview(bottomGradient)
         }
         
-        visualEffect.material = theme.colors.isDark ? .dark : .light
+        visualEffect.material = theme.colors.isDark ? .dark : .mediumLight
 
         if #available(macOS 11.0, *), radiusLayer {
             self.addSubview(visualEffect)
@@ -366,7 +371,35 @@ final class ContextAddReactionsListView : View  {
     }
 }
 
-
+private final class LockView : View {
+    private let visualEffect = NSVisualEffectView()
+    override init() {
+        let frameRect = NSMakeSize(20, 20).bounds
+        super.init(frame: frameRect)
+        addSubview(visualEffect)
+        visualEffect.wantsLayer = true
+        visualEffect.blendingMode = .withinWindow
+        visualEffect.state = .active
+        visualEffect.material = theme.dark ? .dark : .light
+        
+        let maskLayer = CALayer()
+        maskLayer.frame = frameRect
+        maskLayer.contents = theme.icons.premium_reaction_lock
+        
+        self.layer?.mask = maskLayer
+        
+        self.background = theme.colors.grayText.withAlphaComponent(0.5)
+        
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
 
 
 
@@ -399,14 +432,12 @@ final class AddReactionManager : NSObject, Notifable {
             let reaction: AvailableReactions.Reaction
             private let stateDisposable = MetaDisposable()
             
-            private let premium: ImageView?
+            private let premium: LockView?
             
             required init(frame frameRect: NSRect, context: AccountContext, reaction: AvailableReactions.Reaction, add: @escaping(String)->Void) {
                 self.reaction = reaction
                 if reaction.isPremium, !context.isPremium {
-                    self.premium = ImageView()
-                    self.premium?.image = theme.icons.premium_reaction_lock
-                    self.premium?.setFrameSize(imageView.frame.size)
+                    self.premium = LockView()
                 } else {
                     self.premium = nil
                 }
@@ -462,13 +493,16 @@ final class AddReactionManager : NSObject, Notifable {
                     add(reaction.value)
                 }, for: .Click)
                 
-                contextMenu = {
-                    let menu = ContextMenu()
-                    menu.addItem(ContextMenuItem(strings().chatContextReactionQuick, handler: {
-                        context.reactions.updateQuick(reaction.value)
-                    }, itemImage: MenuAnimation.menu_add_to_favorites.value))
-                    return menu
+                if !reaction.isPremium || context.isPremium {
+                    contextMenu = {
+                        let menu = ContextMenu()
+                        menu.addItem(ContextMenuItem(strings().chatContextReactionQuick, handler: {
+                            context.reactions.updateQuick(reaction.value)
+                        }, itemImage: MenuAnimation.menu_add_to_favorites.value))
+                        return menu
+                    }
                 }
+                
                 if let premium = premium {
                     addSubview(premium)
                 }

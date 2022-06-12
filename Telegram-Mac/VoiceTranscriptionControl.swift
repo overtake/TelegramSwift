@@ -59,9 +59,9 @@ final class VoiceTranscriptionControl: Control {
     
     private var state: TranscriptionState?
     
-    func update(state: TranscriptionState, parameters: ChatMediaVoiceLayoutParameters, transition: ContainedViewLayoutTransition) {
+    func update(state: TranscriptionState, color: NSColor, parameters: ChatMediaVoiceLayoutParameters, transition: ContainedViewLayoutTransition) {
         
-        self.backgroundColor = parameters.presentation.grayText.withAlphaComponent(0.1)
+        self.backgroundColor = color
         let previousState = self.state
         self.state = state
         

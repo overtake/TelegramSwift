@@ -273,15 +273,15 @@ class ChatVoiceContentView: ChatAudioContentView {
             let controlState: VoiceTranscriptionControl.TranscriptionState?
             switch data.state {
             case .possible:
-                controlState = .possible(data.isPending)
+                controlState = .possible(false)
             case let .state(inner):
                 switch inner {
                 case .collapsed:
-                    controlState = .collapsed(data.isPending)
+                    controlState = .collapsed(false)
                 case .revealed:
                     controlState = .expanded(data.isPending)
                 case .loading:
-                    controlState = .possible(data.isPending)
+                    controlState = .possible(true)
                 }
             }
             if let controlState = controlState {
@@ -303,7 +303,7 @@ class ChatVoiceContentView: ChatAudioContentView {
                         }
                     }, for: .Click)
                 }
-                control.update(state: controlState, parameters: parameters, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+                control.update(state: controlState, color: data.backgroundColor, parameters: parameters, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
             }
             
             if removeTransribeControl, let view = transcribeControl {

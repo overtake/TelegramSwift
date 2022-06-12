@@ -31,11 +31,13 @@ class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
         let text: TextViewLayout?
         let isPending: Bool
         let fontColor: NSColor
-        init(state: TranscribeState, text: TextViewLayout?, isPending: Bool, fontColor: NSColor) {
+        let backgroundColor: NSColor
+        init(state: TranscribeState, text: TextViewLayout?, isPending: Bool, fontColor: NSColor, backgroundColor: NSColor) {
             self.state = state
             self.text = text
             self.isPending = isPending
             self.fontColor = fontColor
+            self.backgroundColor = backgroundColor
         }
         
         let dotsSize: NSSize = NSMakeSize(18, 18)
@@ -106,7 +108,9 @@ class ChatVoiceRowItem: ChatMediaItem {
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ object: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
         
-        self.parameters = ChatMediaLayoutParameters.layout(for: media as! TelegramMediaFile, isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(object.message!), isIncoming: object.message!.isIncoming(context.account, object.renderType == .bubble), autoplayMedia: object.autoplayMedia)
+        let isIncoming = object.message!.isIncoming(context.account, object.renderType == .bubble)
+        
+        self.parameters = ChatMediaLayoutParameters.layout(for: media as! TelegramMediaFile, isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(object.message!), isIncoming: isIncoming, autoplayMedia: object.autoplayMedia)
         
         
         let canTranscribe = context.isPremium
@@ -119,6 +123,18 @@ class ChatVoiceRowItem: ChatMediaItem {
                 } else {
                     pending = false
                 }
+                let bgColor: NSColor
+                if renderType == .list {
+                    bgColor = theme.colors.accent.withAlphaComponent(0.1)
+                } else {
+                    if isIncoming {
+                        bgColor = theme.colors.accent.withAlphaComponent(0.1)
+                    } else {
+                        bgColor = theme.chat.grayText(false, true).withAlphaComponent(0.1)
+                    }
+                }
+
+                
                 var transcribtedColor = theme.chat.textColor(isIncoming, object.renderType == .bubble)
                 if let state = entry.additionalData.transribeState {
                     
@@ -149,9 +165,9 @@ class ChatVoiceRowItem: ChatMediaItem {
                         textLayout = nil
                     }
                     
-                    parameters.transcribeData = .init(state: .state(state), text: textLayout, isPending: pending, fontColor: transcribtedColor)
+                    parameters.transcribeData = .init(state: .state(state), text: textLayout, isPending: pending, fontColor: transcribtedColor, backgroundColor: bgColor)
                 } else {
-                    parameters.transcribeData = .init(state: .possible, text: nil, isPending: pending, fontColor: transcribtedColor)
+                    parameters.transcribeData = .init(state: .possible, text: nil, isPending: pending, fontColor: transcribtedColor, backgroundColor: bgColor)
                 }
                 parameters.transcribe = { [weak self] in
                     self?.chatInteraction.transcribeAudio(message)

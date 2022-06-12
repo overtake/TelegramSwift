@@ -181,10 +181,11 @@ public class InputDataModalController : ModalViewController {
             self?.modal?.updateLocalizationAndTheme(theme: appearance.presentation)
             self?.controller.updateLocalizationAndTheme(theme: appearance.presentation)
         }))
-        
+        var first = true
         controller.modalTransitionHandler = { [weak self] animated in
             if self?.dynamicSize == true {
-                self?.updateSize(animated)
+                self?.updateSize(animated && !first)
+                first = false
             }
         }
     }
@@ -325,14 +326,7 @@ final class InputDataView : BackgroundView {
     }
     override func layout() {
         super.layout()
-        let size = tableView.frame.size
         tableView.frame = bounds
-        
-        if size.height > bounds.height {
-            self.tableView.beginTableUpdates()
-            self.tableView.layoutSubtreeIfNeeded()
-            self.tableView.endTableUpdates()
-        }
     }
 }
 
