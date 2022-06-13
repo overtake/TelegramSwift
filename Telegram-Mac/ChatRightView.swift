@@ -166,6 +166,12 @@ class ChatRightView: View, ViewDisplayDelegate {
             if isSending {
                 var rect = size.bounds.focus(NSMakeSize(12, 12))
                 rect.origin.x = x + 2
+                if isStateOverlay {
+                    if System.backingScale > 1 {
+                        rect.origin.y -= 0.5
+                    }
+                    rect.origin.x += 1
+                }
                 x = rect.maxX
                 return rect
             }

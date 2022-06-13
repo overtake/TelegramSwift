@@ -677,7 +677,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                     _ = genericView.highlight(item: genericView.item(at: selectIndex ?? 0))
                 }
                 if !firstWord {
-                    _ = selectFirstInRowIfCan()
+                    selectFirstInRowIfCan()
                 }
             default:
                 break
@@ -939,15 +939,9 @@ class InputContextHelper: NSObject {
                     let count:Int = min(max(6 - messages.0.count, 1), suggestPeers.count)
                     for i in 0 ..< count {
                         let peer = suggestPeers[i]
-                        entries.append(.peer(peer, Int(index), arc4random64()))
+                        entries.append(.peer(peer, Int(index), peer.id.toInt64()))
                         index += 1
                     }
-                    
-                   
-//                    if suggestPeers.count > 1, messages.0.count > 0 {
-//                        entries.append(.showPeers(Int(index), arc4random64()))
-//                        index += 1
-//                    }
                     
                     for message in messages.0 {
                         entries.append(.message(index, message, searchText))

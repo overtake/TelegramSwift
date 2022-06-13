@@ -840,8 +840,8 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
     override func preloadStreamblePart() {
         if let context = context {
-            if let media = media as? TelegramMediaFile {
-                let reference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: media) : FileMediaReference.standalone(media: media)
+            if let media = media as? TelegramMediaFile, let parent = parent {
+                let reference = FileMediaReference.message(message: MessageReference(parent), media: media)
                 
                 let preload = preloadVideoResource(postbox: context.account.postbox, resourceReference: reference.resourceReference(media.resource), duration: 3.0)
                 partDisposable.set(preload.start())
