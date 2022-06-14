@@ -10,7 +10,7 @@ import Foundation
 import TGUIKit
 
 
-private final class ShimmerEffectForegroundView: View {
+final class ShimmerEffectForegroundView: View {
     private var currentBackgroundColor: NSColor?
     private var currentForegroundColor: NSColor?
     private var currentHorizontal: Bool?

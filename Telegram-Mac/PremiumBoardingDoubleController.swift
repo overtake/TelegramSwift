@@ -251,7 +251,7 @@ final class PremiumBoardingDoubleView: View {
     func setAccept(_ view: Control?) {
         self.acceptView = view
         if let view = view {
-            view.layer?.cornerRadius = view.frame.height / 2
+            view.layer?.cornerRadius = 10
             bottomView.addSubview(view)
         }
     }
@@ -268,10 +268,10 @@ final class PremiumBoardingDoubleView: View {
 
 final class PremiumBoardingDoubleController : TelegramGenericViewController<PremiumBoardingDoubleView> {
     private let back:()->Void
-    private let acceptView: Control?
-    init(_ context: AccountContext, back:@escaping()->Void, acceptView: Control?) {
+    private let makeAcceptView:()->Control
+    init(_ context: AccountContext, back:@escaping()->Void, makeAcceptView: @escaping()->Control) {
         self.back = back
-        self.acceptView = acceptView
+        self.makeAcceptView = makeAcceptView
         super.init(context)
         bar = .init(height: 0)
     }
@@ -292,7 +292,7 @@ final class PremiumBoardingDoubleController : TelegramGenericViewController<Prem
             self?.back()
         }, for: .Click)
         
-        genericView.setAccept(acceptView)
+        genericView.setAccept(self.makeAcceptView())
         genericView.updateScroll(genericView.tableView.scrollPosition().current, animated: false)
 
         readyOnce()
