@@ -208,6 +208,7 @@ final class ReactionCarouselView: View {
         
         super.init(frame: .zero)
         
+        self.scrollView.background = .clear
         
         self.addSubview(self.scrollView)
                 
@@ -240,11 +241,17 @@ final class ReactionCarouselView: View {
 
     
     func animateIn() {
-        self.scrollTo(1, playReaction: true, duration: 0.5, clockwise: true)
+        delay(0.2, closure: {
+            let delta = 1.0 / CGFloat(self.itemViews.count)
+            let currentIndex = max(0, min(self.itemViews.count - 1, Int(round(self.currentPosition / delta))))
+            self.scrollTo(abs(self.itemViews.count - currentIndex - 1), playReaction: true, duration: 0.5, clockwise: true)
+        })
     }
     
     func animateOut() {
-        
+        self.timer?.invalidate()
+        self.timer = nil
+        self.animator = nil
     }
     
     func scrollTo(_ index: Int, playReaction: Bool, duration: Double, clockwise: Bool? = nil) {

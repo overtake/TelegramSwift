@@ -13,7 +13,7 @@ import TelegramCore
 
 import SwiftSignalKit
 
-final class InstantPageMediaView: View, InstantPageView {
+final class InstantPageMediaView: View, InstantPageView, SlideViewProtocol {
     private let context: AccountContext
     let media: InstantPageMedia
     private let arguments: InstantPageMediaArguments
@@ -43,6 +43,13 @@ final class InstantPageMediaView: View, InstantPageView {
                 (strongSelf.imageView as? GIFPlayerView)?.set(data: accept ? strongSelf.videoData : nil)
             }
         }))
+    }
+    
+    func willAppear() {
+        
+    }
+    func willDisappear() {
+        
     }
     
     private func updatePlayerListenters() {

@@ -2,7 +2,7 @@ import TGUIKit
 import Foundation
 
 
-private final class ShimmerEffectForegroundView: View {
+private final class ShimmerEffectForegroundView1: View {
     private var currentBackgroundColor: NSColor?
     private var currentForegroundColor: NSColor?
     private let imageViewContainer: View

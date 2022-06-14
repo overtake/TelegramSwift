@@ -371,8 +371,14 @@ private final class PremiumBoardingView : View {
         
         override func layout() {
             super.layout()
+            
+            
             gradient.frame = bounds
             shimmer.frame = bounds
+            
+            shimmer.updateAbsoluteRect(bounds, within: frame.size)
+            shimmer.update(backgroundColor: .clear, foregroundColor: .clear, shimmeringColor: NSColor.white.withAlphaComponent(0.3), shapes: [.roundedRect(rect: bounds, cornerRadius: frame.height / 2)], horizontal: true, size: frame.size)
+            
             container.center()
             textView.center()
         }
@@ -403,8 +409,6 @@ private final class PremiumBoardingView : View {
             
             let size = NSMakeSize(container.frame.width + 100, 40)
             
-            shimmer.updateAbsoluteRect(size.bounds, within: size)
-            shimmer.update(backgroundColor: .clear, foregroundColor: .clear, shimmeringColor: NSColor.white.withAlphaComponent(0.3), shapes: [.roundedRect(rect: size.bounds, cornerRadius: size.height / 2)], horizontal: true, size: size)
 
             needsLayout = true
             
@@ -554,15 +558,15 @@ private final class PremiumBoardingView : View {
     }
     
     func contentSize(maxSize size: NSSize) -> NSSize {
-        return NSMakeSize(size.width, min(min(headerView.frame.height + tableView.listHeight + bottomHeight, 528), size.height))
+        return NSMakeSize(size.width, min(min(headerView.frame.height + tableView.listHeight + bottomHeight, 523), size.height))
     }
     
     func update(animated: Bool, arguments: Arguments, state: State) {
         let previousState = self.state
         self.state = state
         let size = acceptView.update(animated: animated, state: state)
-        acceptView.setFrameSize(size)
-        acceptView.layer?.cornerRadius = size.height / 2
+        acceptView.setFrameSize(NSMakeSize(frame.width - 40, size.height))
+        acceptView.layer?.cornerRadius = 10
         let transition: ContainedViewLayoutTransition
         if animated {
             transition = .animated(duration: 0.2, curve: .easeOut)
@@ -602,16 +606,43 @@ private final class PremiumBoardingView : View {
     }
     
     func makeAcceptView() -> Control {
-        let acceptView = AcceptView(frame: .zero)
-        if let state = self.state {
+        if let state = self.state, !state.isPremium {
+            let acceptView = AcceptView(frame: .zero)
             let size = acceptView.update(animated: false, state: state)
-            acceptView.setFrameSize(size)
+            acceptView.setFrameSize(NSMakeSize(frame.width - 40, size.height))
+            acceptView.layer?.cornerRadius = 10
+            acceptView.set(handler: { [weak self] _ in
+                self?.accept?()
+            }, for: .Click)
+            
+            return acceptView
+        } else {
+            let okButton = TitleButton()
+            okButton.scaleOnClick = true
+            okButton.autohighlight = false
+            okButton.set(font: .medium(.text), for: .Normal)
+            okButton.set(color: .white, for: .Normal)
+            okButton.layer?.cornerRadius = 10
+            okButton.set(text: strings().modalOK, for: .Normal)
+            okButton.sizeToFit(.zero, NSMakeSize(frame.width - 40, 40), thatFit: true)
+            okButton.layer?.cornerRadius = 10
+            let gradient = CAGradientLayer()
+            gradient.frame = okButton.bounds
+            gradient.disableActions()
+            gradient.startPoint = CGPoint(x: 0, y: 0)
+            gradient.endPoint = CGPoint(x: 1, y: 0)
+            
+            gradient.colors = premiumGradient.compactMap { $0?.cgColor }
+            
+            okButton.layer?.insertSublayer(gradient, at: 0)
+            
+            okButton.set(handler: { [weak self] _ in
+                self?.dismiss?()
+            }, for: .Click)
+            
+            return okButton
         }
-        acceptView.set(handler: { [weak self] _ in
-            self?.accept?()
-        }, for: .Click)
         
-        return acceptView
     }
     
     private var currentController: ViewController?
@@ -673,7 +704,7 @@ final class PremiumBoardingController : ModalViewController {
     init(context: AccountContext, source: PremiumLogEventsSource = .settings) {
         self.context = context
         self.source = source
-        super.init(frame: NSMakeRect(0, 0, 350, 300))
+        super.init(frame: NSMakeRect(0, 0, 380, 300))
     }
     
     override func measure(size: NSSize) {
@@ -682,7 +713,7 @@ final class PremiumBoardingController : ModalViewController {
     
     func updateSize(_ animated: Bool) {
         if let contentSize = self.modal?.window.contentView?.frame.size {
-            self.modal?.resize(with: genericView.contentSize(maxSize: NSMakeSize(350, contentSize.height - 80)), animated: animated)
+            self.modal?.resize(with: genericView.contentSize(maxSize: NSMakeSize(380, contentSize.height - 80)), animated: animated)
         }
     }
     
@@ -750,11 +781,14 @@ final class PremiumBoardingController : ModalViewController {
             }
             switch value {
             case .double_limits:
-                strongSelf.genericView.append(PremiumBoardingDoubleController(context, back: {
-                    _ = strongSelf.escapeKeyAction()
-                }, acceptView: stateValue.with { !$0.isPremium } ? strongSelf.genericView.makeAcceptView() : nil), animated: true)
+                strongSelf.genericView.append(PremiumBoardingDoubleController(context, back: { [weak strongSelf] in
+                    _ = strongSelf?.escapeKeyAction()
+                }, makeAcceptView: strongSelf.genericView.makeAcceptView), animated: true)
             default:
-                strongSelf.genericView.append(PremiumBoardingFeaturesController(context), animated: true)
+                
+                strongSelf.genericView.append(PremiumBoardingFeaturesController(context, value: value, configuration: stateValue.with { $0.premiumConfiguration }, back: { [weak strongSelf] in
+                    _ = strongSelf?.escapeKeyAction()
+                }, makeAcceptView: strongSelf.genericView.makeAcceptView), animated: true)
             }
         })
         
@@ -809,9 +843,6 @@ final class PremiumBoardingController : ModalViewController {
             
         })
         
-        
-        
-
         
         let signal: Signal<(TableUpdateTransition, State), NoError> = combineLatest(queue: .mainQueue(), appearanceSignal, stateSignal) |> mapToQueue { appearance, state in
             let entries = state.0.entries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
@@ -928,7 +959,11 @@ final class PremiumBoardingController : ModalViewController {
         }
         
       
-        genericView.dismiss = close
+        genericView.dismiss = { [weak self] in
+            if self?.genericView.stackBack(animated: true) == false {
+                close()
+            }
+        }
         genericView.accept = {
             
             addAppLogEvent(postbox: context.account.postbox, type: PremiumLogEvents.promo_screen_accept.value)
