@@ -15,6 +15,9 @@ final class EmojiAnimationEffectView : View {
     private let animation: LottieAnimation
     let animationSize: NSSize
     private var animationPoint: CGPoint
+    
+    var index: Int? = nil
+    
     init(animation: LottieAnimation, animationSize: NSSize, animationPoint: CGPoint, frameRect: NSRect) {
         self.animation = animation
         self.player = LottiePlayerView(frame: .init(origin: animationPoint, size: animationSize))

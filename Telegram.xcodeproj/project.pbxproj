@@ -252,6 +252,7 @@
 		27803C0927A3E944007B0FA9 /* menu_folder_unread.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27803BEE27A3E944007B0FA9 /* menu_folder_unread.tgs */; };
 		2780DE40271F0BB30092323F /* zoom.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2780DE3F271F0BB20092323F /* zoom.tgs */; };
 		2780E3EC272186D00092323F /* SmartThemeListRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2780E3EB272186CF0092323F /* SmartThemeListRowItem.swift */; };
+		2784186A285A05840010E0F1 /* StickersCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27841869285A05840010E0F1 /* StickersCarouselView.swift */; };
 		2786367A27C66F5A00690B10 /* RTMPStartController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2786367927C66F5A00690B10 /* RTMPStartController.swift */; };
 		2786367C27C7C5D600690B10 /* group_call_share.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2786367B27C7C5D600690B10 /* group_call_share.tgs */; };
 		2786367E27C7C5F800690B10 /* group_call_minmax.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2786367D27C7C5F800690B10 /* group_call_minmax.tgs */; };
@@ -1586,6 +1587,7 @@
 		2780DE3F271F0BB20092323F /* zoom.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = zoom.tgs; sourceTree = "<group>"; };
 		2780E3EB272186CF0092323F /* SmartThemeListRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartThemeListRowItem.swift; sourceTree = "<group>"; };
 		2783BA9426E24795004A1591 /* GroupCallVideoOrientationRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallVideoOrientationRowItem.swift; sourceTree = "<group>"; };
+		27841869285A05840010E0F1 /* StickersCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickersCarouselView.swift; sourceTree = "<group>"; };
 		2785F7FE274F707F00FDF88F /* InAppSettings */ = {isa = PBXFileReference; lastKnownFileType = folder; name = InAppSettings; path = packages/InAppSettings; sourceTree = "<group>"; };
 		2785F801274F75D300FDF88F /* ThemeSettings */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ThemeSettings; path = packages/ThemeSettings; sourceTree = "<group>"; };
 		2785F802274F764100FDF88F /* ColorPalette */ = {isa = PBXFileReference; lastKnownFileType = folder; name = ColorPalette; path = packages/ColorPalette; sourceTree = "<group>"; };
@@ -2818,7 +2820,6 @@
 				27ABFD152857B9AC006C3301 /* features */,
 				27361ED3282122C700808241 /* StickerPremiumHolderView.swift */,
 				27361ED52821234200808241 /* PremiumReactionsModal.swift */,
-				2703404F28212EE700D0156C /* ReactionCarouselView.swift */,
 				2703405F2823D45300D0156C /* PremiumLimitController.swift */,
 				270340612823FE5200D0156C /* PremiumLimitConfig.swift */,
 				2703406B2825434700D0156C /* PremiumLimitRowItem.swift */,
@@ -3033,6 +3034,8 @@
 				27ABFD162857B9F7006C3301 /* PremiumFeatureSlideView.swift */,
 				27ABFD182858A4C4006C3301 /* PremiumDemoLegacyPhoneView.swift */,
 				27ABFD322858DF9E006C3301 /* PremiumStickersDemoView.swift */,
+				2703404F28212EE700D0156C /* ReactionCarouselView.swift */,
+				27841869285A05840010E0F1 /* StickersCarouselView.swift */,
 			);
 			name = features;
 			sourceTree = "<group>";
@@ -6243,6 +6246,7 @@
 				C253A9631D91A90100CDC850 /* ChatFileMediaItem.swift in Sources */,
 				2703406E282A657300D0156C /* PremiumBoardingController.swift in Sources */,
 				C219E1D71D8869F20042F0C8 /* ChatHoleRowItem.swift in Sources */,
+				2784186A285A05840010E0F1 /* StickersCarouselView.swift in Sources */,
 				9F1668B82007E3BC00DD39FB /* ThemeGridControllerItem.swift in Sources */,
 				A76C8AA424221F5400FDB071 /* StatisticsLoadingRowItem.swift in Sources */,
 				C2DE5D2C1F3CA6E80081EC1E /* InstantPageMediaItem.swift in Sources */,

@@ -289,7 +289,7 @@ private struct State : Equatable {
     var isPremium: Bool
     var peer: PeerEquatable?
     var premiumConfiguration: PremiumPromoConfiguration
-    
+    var stickers: [TelegramMediaFile]
     var canMakePayment: Bool
 }
 
@@ -305,10 +305,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
 
     
-    let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 13, openInfo: arguments.openInfo)
 
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+        let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 13, openInfo: arguments.openInfo)
         return PremiumBoardingHeaderItem(initialSize, stableId: stableId, isPremium: state.isPremium, peer: state.peer?.peer, premiumText: status, viewType: .legacy)
     }))
     index += 1
@@ -332,13 +332,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: strings().premiumBoardingAboutText, font: .normal(.text), insets: NSEdgeInsets(left: 20, right: 20))
     }))
     
-    entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().premiumBoardingAboutTos, linkHandler: { content in
-        if content == "privacy" {
-            arguments.showPrivacy()
-        } else if content == "terms" {
-            arguments.showTerms()
-        }
-    }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+    
+    let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 11.5, openInfo: arguments.openInfo, textColor: theme.colors.listGrayText)
+
+    entries.append(.desc(sectionId: sectionId, index: index, text: .attributed(status), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     index += 1
     
     entries.append(.sectionId(sectionId, type: .customModern(15)))
@@ -605,7 +602,7 @@ private final class PremiumBoardingView : View {
         updateLayout(size: frame.size, transition: transition)
     }
     
-    func makeAcceptView() -> Control {
+    func makeAcceptView() -> Control? {
         if let state = self.state, !state.isPremium {
             let acceptView = AcceptView(frame: .zero)
             let size = acceptView.update(animated: false, state: state)
@@ -751,7 +748,7 @@ final class PremiumBoardingController : ModalViewController {
         canMakePayment = inAppPurchaseManager.canMakePayments()
         #endif
         
-        let initialState = State(values: context.premiumOrder.premiumValues, source: source, isPremium: context.isPremium, premiumConfiguration: PremiumPromoConfiguration.defaultValue, canMakePayment: canMakePayment)
+        let initialState = State(values: context.premiumOrder.premiumValues, source: source, isPremium: context.isPremium, premiumConfiguration: PremiumPromoConfiguration.defaultValue, stickers: [], canMakePayment: canMakePayment)
         
         let statePromise: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -783,12 +780,15 @@ final class PremiumBoardingController : ModalViewController {
             case .double_limits:
                 strongSelf.genericView.append(PremiumBoardingDoubleController(context, back: { [weak strongSelf] in
                     _ = strongSelf?.escapeKeyAction()
-                }, makeAcceptView: strongSelf.genericView.makeAcceptView), animated: true)
+                }, makeAcceptView: { [weak strongSelf] in 
+                    return strongSelf?.genericView.makeAcceptView()
+                }), animated: true)
             default:
-                
-                strongSelf.genericView.append(PremiumBoardingFeaturesController(context, value: value, configuration: stateValue.with { $0.premiumConfiguration }, back: { [weak strongSelf] in
+                strongSelf.genericView.append(PremiumBoardingFeaturesController(context, value: value, stickers: stateValue.with { $0.stickers }, configuration: stateValue.with { $0.premiumConfiguration }, back: { [weak strongSelf] in
                     _ = strongSelf?.escapeKeyAction()
-                }, makeAcceptView: strongSelf.genericView.makeAcceptView), animated: true)
+                }, makeAcceptView: { [weak strongSelf] in
+                    return strongSelf?.genericView.makeAcceptView()
+                }), animated: true)
             }
         })
         
@@ -805,20 +805,44 @@ final class PremiumBoardingController : ModalViewController {
         let premiumPromo = context.engine.data.get(TelegramEngine.EngineData.Item.Configuration.PremiumPromo())
         |> deliverOnMainQueue
         
+        
+        let stickersKey: PostboxViewKey = .orderedItemList(id: Namespaces.OrderedItemList.CloudPremiumStickers)
+
+        let stickers: Signal<[TelegramMediaFile], NoError> = context.account.postbox.combinedView(keys: [stickersKey])
+        |> map { views -> [OrderedItemListEntry] in
+            if let view = views.views[stickersKey] as? OrderedItemListView, !view.items.isEmpty {
+                return view.items
+            } else {
+                return []
+            }
+        }
+        |> map { items in
+            var result: [TelegramMediaFile] = []
+            for item in items {
+                if let mediaItem = item.contents.get(RecentMediaItem.self) {
+                    result.append(mediaItem.media)
+                }
+            }
+            return result
+        }
+        |> take(1)
+        |> deliverOnMainQueue
 
         actionsDisposable.add(combineLatest(
             queue: Queue.mainQueue(),
             inAppPurchaseManager.availableProducts,
             premiumPromo,
+            stickers,
             context.account.postbox.peerView(id: context.account.peerId)
             |> map { view -> Bool in
                 return view.peers[view.peerId]?.isPremium ?? false
-            }, peer).start(next: { products, promoConfiguration, isPremium, peer in
+            }, peer).start(next: { products, promoConfiguration, stickers, isPremium, peer in
                 updateState { current in
                     var current = current
                     current.premiumProduct = products.first
                     current.isPremium = isPremium
                     current.premiumConfiguration = promoConfiguration
+                    current.stickers = stickers
                     if let peer = peer {
                         current.peer = .init(peer)
                     }
@@ -910,7 +934,7 @@ final class PremiumBoardingController : ModalViewController {
             })
             
             
-            let _ = (self.context.engine.payments.canPurchasePremium()
+            let _ = (context.engine.payments.canPurchasePremium()
             |> deliverOnMainQueue).start(next: { [weak lockModal] available in
                 if available {
                     paymentDisposable.set((inAppPurchaseManager.buyProduct(premiumProduct, account: context.account)
@@ -977,6 +1001,23 @@ final class PremiumBoardingController : ModalViewController {
                 
         self.onDeinit = {
             actionsDisposable.dispose()
+        }
+    }
+    
+    func buy() {
+        if isLoaded() {
+            self.genericView.accept?()
+        }
+    }
+    
+    func restore() {
+        if let receiptData = InAppPurchaseManager.getReceiptData() {
+            let context = self.context
+            _ = showModalProgress(signal: context.engine.payments.sendAppStoreReceipt(receipt: receiptData, restore: true), for: context.window).start(error: { _ in
+                showModalText(for: context.window, text: strings().premiumRestoreErrorUnknown)
+            }, completed: {
+                showModalText(for: context.window, text: strings().premiumRestoreSuccess)
+            })
         }
     }
     

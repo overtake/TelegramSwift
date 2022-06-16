@@ -814,8 +814,17 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             if context.isPremium {
                 showModalText(for: context.window, text: strings().premiumOffsetAlreadyHave)
             } else {
-                showModal(with: PremiumBoardingController(context: context, source: .deeplink(ref)), for: context.window)
+                if let modal = findModal(PremiumBoardingController.self) {
+                    modal.buy()
+                } else {
+                    showModal(with: PremiumBoardingController(context: context, source: .deeplink(ref)), for: context.window)
+                }
             }
+        }
+        afterComplete(true)
+    case let .restorePurchase(_, context):
+        if let modal = findModal(PremiumBoardingController.self) {
+            modal.restore()
         }
         afterComplete(true)
     }
@@ -951,6 +960,7 @@ enum inAppLink {
     case joinGroupCall(link: String, context: AccountContext, peerId: PeerId, call: CachedChannelData.ActiveCall)
     case invoice(link: String, context: AccountContext, slug: String)
     case premiumOffer(link: String, ref: String?, context: AccountContext)
+    case restorePurchase(link: String, context: AccountContext)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -1000,6 +1010,8 @@ enum inAppLink {
             return link
         case let .premiumOffer(link, _, _):
             return link
+        case let .restorePurchase(link, _):
+            return link
         case .nothing:
             return ""
         case .logout:
@@ -1012,7 +1024,7 @@ let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
 let actions_me:[String] = ["joinchat/","addstickers/","confirmphone","socks", "proxy", "setlanguage", "bg", "addtheme/","invoice/"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases"]
 
 let ton_scheme:String = "ton://"
 
@@ -1549,6 +1561,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 case known_scheme[14]:
                     if let context = context {
                         return .premiumOffer(link: urlString, ref: vars[keyURLRef], context: context)
+                    }
+                case known_scheme[15]:
+                    if let context = context {
+                        return .restorePurchase(link: urlString, context: context)
                     }
                 default:
                     break

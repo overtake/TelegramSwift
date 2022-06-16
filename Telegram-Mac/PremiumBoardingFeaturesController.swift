@@ -11,6 +11,8 @@ import TGUIKit
 import AppKit
 import TelegramCore
 import SwiftSignalKit
+import Postbox
+
 final class PremiumBoardingFeaturesView: View {
     
     private let headerView = PremiumGradientView(frame: .zero)
@@ -63,13 +65,15 @@ final class PremiumBoardingFeaturesView: View {
         dismiss.setFrameOrigin(NSMakePoint(10, 10))
     }
     
-    fileprivate func setAccept(_ control: Control) {
-        self.accept = control
-        self.bottomView.addSubview(control)
+    fileprivate func setAccept(_ control: Control?) {
+        if let control = control {
+            self.accept = control
+            self.bottomView.addSubview(control)
+        }
         needsLayout = true
     }
     
-    func setup(context: AccountContext, value: PremiumValue, configuration: PremiumPromoConfiguration) {
+    func setup(context: AccountContext, value: PremiumValue, stickers: [TelegramMediaFile], configuration: PremiumPromoConfiguration) {
         let more_upload = PremiumFeatureSlideView(frame: slideView.bounds)
         more_upload.setup(context: context, type: .more_upload, decoration: .dataRain, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
@@ -120,9 +124,10 @@ final class PremiumBoardingFeaturesView: View {
         slideView.addSlide(unique_reactions)
         
         let premium_stickers = PremiumFeatureSlideView(frame: slideView.bounds)
+        
+        
         premium_stickers.setup(context: context, type: .premium_stickers, decoration: .none, getView: { _ in
-            let view = PremiumStickersDemoView(frame: .zero)
-            view.backgroundColor = .random
+            let view = StickersCarouselView(context: context, stickers: Array(stickers.prefix(15)))
             return view
         })
         slideView.addSlide(premium_stickers)
@@ -184,12 +189,14 @@ final class PremiumBoardingFeaturesView: View {
 
 final class PremiumBoardingFeaturesController : TelegramGenericViewController<PremiumBoardingFeaturesView> {
     private let back:()->Void
-    private let makeAcceptView:()->Control
+    private let makeAcceptView:()->Control?
     private let configuration: PremiumPromoConfiguration
     private let value: PremiumValue
-    init(_ context: AccountContext, value: PremiumValue, configuration: PremiumPromoConfiguration, back: @escaping()->Void, makeAcceptView: @escaping()->Control) {
+    private let stickers: [TelegramMediaFile]
+    init(_ context: AccountContext, value: PremiumValue, stickers: [TelegramMediaFile], configuration: PremiumPromoConfiguration, back: @escaping()->Void, makeAcceptView: @escaping()->Control?) {
         self.back = back
         self.value = value
+        self.stickers = stickers
         self.makeAcceptView = makeAcceptView
         self.configuration = configuration
         super.init(context)
@@ -199,14 +206,19 @@ final class PremiumBoardingFeaturesController : TelegramGenericViewController<Pr
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        genericView.setup(context: context, value: value, configuration: configuration)
+        let context = self.context
         
+        
+        self.genericView.setup(context: context, value: value, stickers: stickers, configuration: configuration)
+
         genericView.dismiss.set(handler: { [weak self] _ in
             self?.back()
         }, for: .Click)
         
         genericView.setAccept(self.makeAcceptView())
         
-        readyOnce()
+        self.readyOnce()
+
+        
     }
 }
