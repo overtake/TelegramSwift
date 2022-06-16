@@ -507,12 +507,17 @@ func generateLockPremiumReaction(_ palette: ColorPalette) -> CGImage {
     })!
 }
 
-func generatePremium(_ reversed: Bool = false, color: NSColor? = nil) -> CGImage {
+func generatePremium(_ reversed: Bool = false, color: NSColor? = nil, small: Bool = false) -> CGImage {
     
     let draw: (NSSize, CGContext)->Void = { size, ctx in
         ctx.clear(CGRect(origin: CGPoint(), size: size))
 
-        let image = NSImage(named: "Icon_Peer_Premium")!.precomposed()
+        let image: CGImage
+        if small {
+            image = NSImage(named: "Icon_Premium_Badge_Small")!.precomposed()
+        } else {
+            image = NSImage(named: "Icon_Peer_Premium")!.precomposed()
+        }
         ctx.clip(to: size.bounds, mask: image)
 
         if let color = color {
@@ -534,12 +539,19 @@ func generatePremium(_ reversed: Bool = false, color: NSColor? = nil) -> CGImage
         }
         
     }
+    
+    let size: NSSize
+    if small {
+        size = NSMakeSize(14, 14)
+    } else {
+        size = NSMakeSize(16, 16)
+    }
     if reversed {
-        return generateImage(NSMakeSize(16, 16), rotatedContext: { size, ctx in
+        return generateImage(size, rotatedContext: { size, ctx in
             draw(size, ctx)
         })!
     } else {
-        return generateImage(NSMakeSize(16, 16), contextGenerator: { size, ctx in
+        return generateImage(size, contextGenerator: { size, ctx in
             draw(size, ctx)
         })!
     }
@@ -2494,7 +2506,11 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 premium_account: { generatePremium(false, color: palette.accent) },
                                                 premium_account_active: { generatePremium(false, color: palette.underSelectedColor) },
                                                 premium_account_rev: { generatePremium(true, color: palette.accent) },
-                                                premium_account_rev_active: { generatePremium(true, color: palette.underSelectedColor) },
+                                                premium_account_rev_active: { generatePremium(true, color: palette.underSelectedColor, small: true) },
+                                                premium_account_small: { generatePremium(false, color: palette.accent) },
+                                                premium_account_small_active: { generatePremium(false, color: palette.underSelectedColor, small: true) },
+                                                premium_account_small_rev: { generatePremium(true, color: palette.accent, small: true) },
+                                                premium_account_small_rev_active: { generatePremium(true, color: palette.underSelectedColor, small: true) },
                                                 premium_reaction_lock: { NSImage(named: "Icon_Premium_ReactionLock")!.precomposed(palette.accent) },
                                                 premium_boarding_feature_next: { NSImage(named: "Premium_Boarding_Feature_Next")!.precomposed(palette.grayIcon) },
                                                 premium_stickers: { generateStickerPackPremium() }

@@ -8468,6 +8468,58 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var premium_account_small: CGImage {
+      if let image = cached.with({ $0["premium_account_small"] }) {
+          return image
+      } else {
+          let image = _premium_account_small()
+          _ = cached.modify { current in 
+              var current = current
+              current["premium_account_small"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var premium_account_small_active: CGImage {
+      if let image = cached.with({ $0["premium_account_small_active"] }) {
+          return image
+      } else {
+          let image = _premium_account_small_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["premium_account_small_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var premium_account_small_rev: CGImage {
+      if let image = cached.with({ $0["premium_account_small_rev"] }) {
+          return image
+      } else {
+          let image = _premium_account_small_rev()
+          _ = cached.modify { current in 
+              var current = current
+              current["premium_account_small_rev"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var premium_account_small_rev_active: CGImage {
+      if let image = cached.with({ $0["premium_account_small_rev_active"] }) {
+          return image
+      } else {
+          let image = _premium_account_small_rev_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["premium_account_small_rev_active"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var premium_reaction_lock: CGImage {
       if let image = cached.with({ $0["premium_reaction_lock"] }) {
           return image
@@ -9159,6 +9211,10 @@ public final class TelegramIconsTheme {
   private let _premium_account_active: ()->CGImage
   private let _premium_account_rev: ()->CGImage
   private let _premium_account_rev_active: ()->CGImage
+  private let _premium_account_small: ()->CGImage
+  private let _premium_account_small_active: ()->CGImage
+  private let _premium_account_small_rev: ()->CGImage
+  private let _premium_account_small_rev_active: ()->CGImage
   private let _premium_reaction_lock: ()->CGImage
   private let _premium_boarding_feature_next: ()->CGImage
   private let _premium_stickers: ()->CGImage
@@ -9815,6 +9871,10 @@ public final class TelegramIconsTheme {
       premium_account_active: @escaping()->CGImage,
       premium_account_rev: @escaping()->CGImage,
       premium_account_rev_active: @escaping()->CGImage,
+      premium_account_small: @escaping()->CGImage,
+      premium_account_small_active: @escaping()->CGImage,
+      premium_account_small_rev: @escaping()->CGImage,
+      premium_account_small_rev_active: @escaping()->CGImage,
       premium_reaction_lock: @escaping()->CGImage,
       premium_boarding_feature_next: @escaping()->CGImage,
       premium_stickers: @escaping()->CGImage
@@ -10470,6 +10530,10 @@ public final class TelegramIconsTheme {
       self._premium_account_active = premium_account_active
       self._premium_account_rev = premium_account_rev
       self._premium_account_rev_active = premium_account_rev_active
+      self._premium_account_small = premium_account_small
+      self._premium_account_small_active = premium_account_small_active
+      self._premium_account_small_rev = premium_account_small_rev
+      self._premium_account_small_rev_active = premium_account_small_rev_active
       self._premium_reaction_lock = premium_reaction_lock
       self._premium_boarding_feature_next = premium_boarding_feature_next
       self._premium_stickers = premium_stickers

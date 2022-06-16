@@ -744,6 +744,13 @@ func initialize() -> [String] {
     array.append("premium_account_rev")
     array.append("premium_account_rev_active")
     
+    
+    array.append("premium_account_small")
+    array.append("premium_account_small_active")
+
+    array.append("premium_account_small_rev")
+    array.append("premium_account_small_rev_active")
+    
     array.append("premium_reaction_lock")
     
     array.append("premium_boarding_feature_next")
