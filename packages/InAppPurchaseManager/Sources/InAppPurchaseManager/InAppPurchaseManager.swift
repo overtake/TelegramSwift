@@ -51,6 +51,12 @@ public final class InAppPurchaseManager: NSObject {
         case deferred
     }
     
+    public enum RestoreState {
+           case succeed
+           case failed
+       }
+
+    
     private let premiumProductId: String
     
     private var products: [Product] = []
@@ -59,6 +65,10 @@ public final class InAppPurchaseManager: NSObject {
     
     private let stateQueue = Queue()
     private var paymentContexts: [String: PaymentTransactionContext] = [:]
+    
+    private var onRestoreCompletion: ((RestoreState) -> Void)?
+
+
     
     public init(premiumProductId: String) {
         self.premiumProductId = premiumProductId
@@ -98,6 +108,15 @@ public final class InAppPurchaseManager: NSObject {
     public func finishTransaction(_ transaction: SKPaymentTransaction) {
         SKPaymentQueue.default().finishTransaction(transaction)
     }
+    
+    public func restorePurchases(completion: @escaping (RestoreState) -> Void) {
+        Logger.shared.log("InAppPurchaseManager", "Restoring purchases")
+        self.onRestoreCompletion = completion
+        
+        let paymentQueue = SKPaymentQueue.default()
+        paymentQueue.restoreCompletedTransactions()
+    }
+
     
     public func buyProduct(_ product: Product, account: Account) -> Signal<PurchaseState, PurchaseError> {
         let payment = SKMutablePayment(product: product.skProduct)
@@ -158,6 +177,19 @@ extension InAppPurchaseManager: SKProductsRequestDelegate {
 }
 
 extension InAppPurchaseManager: SKPaymentTransactionObserver {
+    
+    
+    public func paymentQueueRestoreCompletedTransactionsFinished(_ queue: SKPaymentQueue) {
+        Queue.mainQueue().async {
+            if let onRestoreCompletion = self.onRestoreCompletion {
+                Logger.shared.log("InAppPurchaseManager", "Transactions restoration finished")
+                onRestoreCompletion(.succeed)
+                self.onRestoreCompletion = nil
+            }
+        }
+    }
+
+    
     public func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
         if let transaction = transactions.last {
             let productIdentifier = transaction.payment.productIdentifier

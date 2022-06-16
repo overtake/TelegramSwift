@@ -37,8 +37,7 @@ class RestrictionWrappedView : Control {
     
     override func layout() {
         super.layout()
-        textView.textLayout?.measure(width: frame.width - 40)
-        textView.update(textView.textLayout)
+        textView.resize(frame.width - 40)
         textView.center()
     }
 }

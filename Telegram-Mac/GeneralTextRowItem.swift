@@ -12,6 +12,7 @@ import SwiftSignalKit
 
 enum GeneralRowTextType : Equatable {
     case plain(String)
+    case attributed(NSAttributedString)
     case markdown(String, linkHandler: (String)->Void)
     case customMarkdown(String, linkColor: NSColor, linkFont: NSFont, linkHandler: (String)->Void)
 
@@ -19,6 +20,12 @@ enum GeneralRowTextType : Equatable {
         switch lhs {
         case let .plain(text):
             if case .plain(text) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .attributed(text):
+            if case .attributed(text) = rhs {
                 return true
             } else {
                 return false
@@ -86,6 +93,8 @@ class GeneralTextRowItem: GeneralRowItem {
         self.contextMenu = contextMenu
         self.clickable = clickable
         switch text {
+        case let .attributed(attr):
+            attributedText = attr.mutableCopy() as! NSMutableAttributedString
         case let .plain(text):
             attributedText = NSAttributedString.initialize(string: text, color: textColor, font: .normal(fontSize ?? 11.5)).mutableCopy() as! NSMutableAttributedString
         case let .markdown(text, handler):

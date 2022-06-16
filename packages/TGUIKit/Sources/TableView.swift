@@ -2998,7 +2998,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
                     
                     if let layer = contentView.layer {
-                        let animation = layer.makeAnimation(from: NSNumber(value: -y), to: NSNumber(value: 0), keyPath: "bounds.size.height", timingFunction: timingFunction, duration: 0.2, additive: true)
+                        let animation = layer.makeAnimation(from: NSNumber(value: -y), to: NSNumber(value: 0), keyPath: "bounds.size.height", timingFunction: timingFunction, duration: duration, additive: true)
                         layer.add(animation, forKey: "height")
                     }
                 }

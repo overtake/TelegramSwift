@@ -7685,7 +7685,7 @@ public final class L10n {
   public static var premiumBoardingPaymentNotAvailalbe: String  { return L10n.tr("Localizable", "Premium.Boarding.Payment.NotAvailalbe") }
   ///  Owners of Telegram Premium accounts have exclusive access to multiple additional features.
   public static var premiumBoardingPeerInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Peer.Info") }
-  /// [%@](profile) is a subscriber of Telegram Premium
+  /// [%@](profile) is a subscriber of\nTelegram Premium
   public static func premiumBoardingPeerTitle(_ p1: String) -> String {
     return L10n.tr("Localizable", "Premium.Boarding.Peer.Title", p1)
   }
@@ -7821,6 +7821,10 @@ public final class L10n {
   public static var premiumPurchaseErrorNotAllowed: String  { return L10n.tr("Localizable", "Premium.Purchase.ErrorNotAllowed") }
   /// An error occurred. Please try again.
   public static var premiumPurchaseErrorUnknown: String  { return L10n.tr("Localizable", "Premium.Purchase.ErrorUnknown") }
+  /// An error occurred. Please try again.
+  public static var premiumRestoreErrorUnknown: String  { return L10n.tr("Localizable", "Premium.Restore.ErrorUnknown") }
+  /// Done
+  public static var premiumRestoreSuccess: String  { return L10n.tr("Localizable", "Premium.Restore.Success") }
   /// bot
   public static var presenceBot: String  { return L10n.tr("Localizable", "Presence.bot") }
   /// support

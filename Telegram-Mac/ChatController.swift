@@ -510,7 +510,7 @@ class ChatControllerView : View, ChatInputDelegate {
         let tableRect = NSMakeRect(0, header.state.toleranceHeight, frame.width, tableHeight)
         if tableRect != tableView.frame {
             transition.updateFrame(view: tableView, frame: tableRect)
-            tableView.tile()
+//            tableView.tile()
         }
 
         
@@ -5431,7 +5431,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.genericView.tableView.enumerateVisibleItems(with: { item in
                 if let item = item as? ChatRowItem, let view = item.view {
                     if view.visibleRect == view.bounds {
-                        if let file = item.message?.media.first as? TelegramMediaFile, !file.noPremium {
+                        if let file = item.message?.media.first as? TelegramMediaFile, !file.noPremium, !context.premiumIsBlocked {
                             items.append(item)
                         }
                     }
@@ -5440,8 +5440,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             })
             for item in items {
                 if let message = item.message {
-                    let mirror = item.renderType == .list || message.isIncoming(item.context.account, item.renderType == .bubble)
-                    chatInteraction.runPremiumScreenEffect(message.id, mirror, false)
+                    if !FastSettings.diceHasAlreadyPlayed(message) {
+                        let mirror = item.renderType == .list || message.isIncoming(item.context.account, item.renderType == .bubble)
+                        chatInteraction.runPremiumScreenEffect(message.id, mirror, false)
+                        FastSettings.markDiceAsPlayed(message)
+                    }
                 }
             }
             checkPremiumStickers = false

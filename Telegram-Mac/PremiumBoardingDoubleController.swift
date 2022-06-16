@@ -268,8 +268,8 @@ final class PremiumBoardingDoubleView: View {
 
 final class PremiumBoardingDoubleController : TelegramGenericViewController<PremiumBoardingDoubleView> {
     private let back:()->Void
-    private let makeAcceptView:()->Control
-    init(_ context: AccountContext, back:@escaping()->Void, makeAcceptView: @escaping()->Control) {
+    private let makeAcceptView:()->Control?
+    init(_ context: AccountContext, back:@escaping()->Void, makeAcceptView: @escaping()->Control?) {
         self.back = back
         self.makeAcceptView = makeAcceptView
         super.init(context)
@@ -296,5 +296,10 @@ final class PremiumBoardingDoubleController : TelegramGenericViewController<Prem
         genericView.updateScroll(genericView.tableView.scrollPosition().current, animated: false)
 
         readyOnce()
+    }
+    
+    deinit {
+        var bp = 0
+        bp += 1
     }
 }
