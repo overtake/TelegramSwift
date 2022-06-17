@@ -145,7 +145,7 @@ final class GroupInfoArguments : PeerInfoArguments {
             }
             
             if let titleValue = updateValues.title, titleValue.isEmpty {
-                controller.genericView.item(stableId: IntPeerInfoEntryStableId(value: 1).hashValue)?.view?.shakeView()
+                controller.genericView.tableView.item(stableId: IntPeerInfoEntryStableId(value: 1).hashValue)?.view?.shakeView()
                 return false
             }
             
