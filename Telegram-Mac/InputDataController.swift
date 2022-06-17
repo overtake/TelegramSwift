@@ -650,6 +650,12 @@ class InputDataController: GenericViewController<InputDataView> {
         return .invokeNext
     }
     
+    func jumpNext() {
+        if haveNextResponder {
+            _ = window?.makeFirstResponder(self.nextResponder())
+        }
+    }
+    
     override func becomeFirstResponder() -> Bool? {
         return true
     }
