@@ -321,22 +321,25 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         index += 1
     }
     
-    entries.append(.sectionId(sectionId, type: .customModern(15)))
-    sectionId += 1
+//    entries.append(.sectionId(sectionId, type: .customModern(15)))
+//    sectionId += 1
    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().premiumBoardingAboutTitle.uppercased()), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-    index += 1
+//    entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().premiumBoardingAboutTitle.uppercased()), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+//    index += 1
+//
+//
+//    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("about"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+//        return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: strings().premiumBoardingAboutText, font: .normal(.text), insets: NSEdgeInsets(left: 20, right: 20))
+//    }))
     
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("about"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-        return GeneralBlockTextRowItem(initialSize, stableId: stableId, viewType: .singleItem, text: strings().premiumBoardingAboutText, font: .normal(.text), insets: NSEdgeInsets(left: 20, right: 20))
-    }))
-    
-    
-    let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 11.5, openInfo: arguments.openInfo, textColor: theme.colors.listGrayText)
+    if !state.isPremium {
+        let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 11.5, openInfo: arguments.openInfo, textColor: theme.colors.listGrayText)
 
-    entries.append(.desc(sectionId: sectionId, index: index, text: .attributed(status), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-    index += 1
+        entries.append(.desc(sectionId: sectionId, index: index, text: .attributed(status), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+        index += 1
+    }
+    
     
     entries.append(.sectionId(sectionId, type: .customModern(15)))
     sectionId += 1

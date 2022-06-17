@@ -221,8 +221,25 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<PeerInfoSortableEnt
     
 }
 
+final class PeerInfoView : View {
+    let tableView: TableView
+    required init(frame frameRect: NSRect) {
+        tableView = .init(frame: frameRect.size.bounds)
+        super.init(frame: frameRect)
+        addSubview(tableView)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func layout() {
+        super.layout()
+        tableView.frame = bounds
+    }
+}
 
-class PeerInfoController: EditableViewController<TableView> {
+class PeerInfoController: EditableViewController<PeerInfoView> {
     
     private let updatedChannelParticipants:MetaDisposable = MetaDisposable()
     let peerId:PeerId
@@ -306,8 +323,9 @@ class PeerInfoController: EditableViewController<TableView> {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        genericView.reloadData()
+        genericView.tableView.reloadData()
     }
+    
     
     
     override func returnKeyAction() -> KeyHandlerResult {
@@ -324,7 +342,7 @@ class PeerInfoController: EditableViewController<TableView> {
     override func viewDidLoad() -> Void {
         super.viewDidLoad()
         
-        self.genericView.getBackgroundColor = {
+        self.genericView.tableView.getBackgroundColor = {
             theme.colors.listBackground
         }
         
@@ -335,7 +353,7 @@ class PeerInfoController: EditableViewController<TableView> {
         let initialSize = atomicSize
         let onMainQueue: Atomic<Bool> = Atomic(value: true)
         
-        
+                
         mediaController.navigationController = self.navigationController
         mediaController._frameRect = bounds
         mediaController.bar = .init(height: 0)
@@ -472,13 +490,13 @@ class PeerInfoController: EditableViewController<TableView> {
             }
             self?.set(editable: editable)
             
-            self?.genericView.merge(with:transition)
+            self?.genericView.tableView.merge(with:transition)
             self?.readyOnce()
 
         }))
         
      
-        genericView.setScrollHandler { position in
+        genericView.tableView.setScrollHandler { position in
             if let loadMoreControl = loadMoreControl {
                 switch position.direction {
                 case .bottom:
@@ -514,7 +532,7 @@ class PeerInfoController: EditableViewController<TableView> {
                     return
                 }
                 let updateState = arguments.updateEditable(state == .Edit, peerView: peerView, controller: self)
-                self.genericView.scroll(to: .up(true))
+                self.genericView.tableView.scroll(to: .up(true))
                 
                 if updateState {
                     self.applyState(state)
