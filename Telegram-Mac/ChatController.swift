@@ -1419,7 +1419,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
                 }))
             } else {
-                genericView.tableView.scroll(to: .down(!force))
+                genericView.tableView.scroll(to: .down(true))
             }
 
         }

@@ -111,7 +111,7 @@ private final class PremiumReactionsView : View {
         
         let size = unlock.update()
         unlock.setFrameSize(size)
-        unlock.layer?.cornerRadius = unlock.frame.height / 2
+        unlock.layer?.cornerRadius = 10
     }
     
     deinit {

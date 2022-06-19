@@ -75,7 +75,7 @@ final class StickerPremiumHolderView: NSVisualEffectView {
             }
             container.setFrameSize(NSMakeSize(layout.layoutSize.width + 10 + imageView.frame.width, max(layout.layoutSize.height, imageView.frame.height)))
             
-            let size = NSMakeSize(container.frame.width + 100, 40)
+            let size = NSMakeSize(container.frame.width + 40, 40)
             
             shimmer.updateAbsoluteRect(size.bounds, within: size)
             shimmer.update(backgroundColor: .clear, foregroundColor: .clear, shimmeringColor: NSColor.white.withAlphaComponent(0.3), shapes: [.roundedRect(rect: size.bounds, cornerRadius: size.height / 2)], horizontal: true, size: size)
