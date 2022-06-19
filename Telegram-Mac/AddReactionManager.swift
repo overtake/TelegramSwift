@@ -1164,7 +1164,7 @@ final class AddReactionManager : NSObject, Notifable {
                                             
                                             let reaction = available.first(where: { $0.value == value })
                                             
-                                            context.reactions.react(message.id, value: isSelected ? nil : value)
+                                            context.reactions.react(message.id, value: isSelected ? nil : value, checkPrem: true)
                                             
                                             self?.clearAndLock()
                                         })

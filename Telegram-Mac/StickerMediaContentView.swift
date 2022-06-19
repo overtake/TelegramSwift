@@ -173,7 +173,7 @@ class StickerMediaContentView: ChatMediaContentView {
                 }
             }
             
-            if media.isPremiumSticker, !context.premiumIsBlocked, let parent = parent {
+            if media.isPremiumSticker, !media.noPremium, !context.premiumIsBlocked, let parent = parent {
                 self.playIfNeeded(true)
                 parameters?.runPremiumScreenEffect(parent.id)
                 return
@@ -238,7 +238,7 @@ class StickerMediaContentView: ChatMediaContentView {
             let prevSending = prevParent.flags.contains(.Sending) || prevParent.flags.contains(.Unsent)
             let sending = parent.flags.contains(.Sending) || parent.flags.contains(.Unsent)
             if prevSending && !sending, file.fileId == prev?.fileId {
-                if file.isPremiumSticker {
+                if file.isPremiumSticker, !file.noPremium {
                     parameters?.runPremiumScreenEffect(parent.id)
                 }
             }

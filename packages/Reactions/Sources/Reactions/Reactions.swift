@@ -33,11 +33,11 @@ public final class Reactions {
         }))
     }
     
-    public func react(_ messageId: MessageId, value: String?) {
+    public func react(_ messageId: MessageId, value: String?, checkPrem: Bool = false) {
         _ = _isInteractive.swap(messageId)
         
         if let reaction = self.available?.reactions.first(where: { $0.value == value}) {
-            if reaction.isPremium && !isPremium {
+            if reaction.isPremium && !isPremium && checkPrem {
                 needsPremium()
                 return
             }
