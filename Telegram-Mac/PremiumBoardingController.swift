@@ -950,10 +950,10 @@ final class PremiumBoardingController : ModalViewController {
                             let activate = showModalProgress(signal: context.engine.payments.sendAppStoreReceipt(receipt: InAppPurchaseManager.getReceiptData() ?? Data(), restore: false), for: context.window)
                             activationDisposable.set(activate.start(error: { _ in
                                 showModalText(for: context.window, text: strings().errorAnError)
-                                inAppPurchaseManager.finishTransaction(transaction)
+                                inAppPurchaseManager.finishAllTransactions()
                             }, completed: {
                                 close()
-                                inAppPurchaseManager.finishTransaction(transaction)
+                                inAppPurchaseManager.finishAllTransactions()
                                 delay(0.2, closure: {
                                     PlayConfetti(for: context.window)
                                     showModalText(for: context.window, text: strings().premiumBoardingAppStoreSuccess)
@@ -968,9 +968,7 @@ final class PremiumBoardingController : ModalViewController {
                         switch error {
                         case let .generic(transaction):
                             addAppLogEvent(postbox: context.account.postbox, type: PremiumLogEvents.promo_screen_fail.value)
-                            if let transaction = transaction {
-                                inAppPurchaseManager.finishTransaction(transaction)
-                            }
+                            inAppPurchaseManager.finishAllTransactions()
                         }
                     }))
                 } else {
@@ -995,7 +993,7 @@ final class PremiumBoardingController : ModalViewController {
             
             addAppLogEvent(postbox: context.account.postbox, type: PremiumLogEvents.promo_screen_accept.value)
             
-            #if APP_STORE || DEBUG
+            #if APP_STORE 
             buyAppStore()
             #else
             buyNonStore()

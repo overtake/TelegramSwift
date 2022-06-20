@@ -109,6 +109,12 @@ public final class InAppPurchaseManager: NSObject {
         SKPaymentQueue.default().finishTransaction(transaction)
     }
     
+    public func finishAllTransactions() {
+        for transaction in SKPaymentQueue.default().transactions {
+            SKPaymentQueue.default().finishTransaction(transaction)
+        }
+    }
+    
     public func restorePurchases(completion: @escaping (RestoreState) -> Void) {
         Logger.shared.log("InAppPurchaseManager", "Restoring purchases")
         self.onRestoreCompletion = completion

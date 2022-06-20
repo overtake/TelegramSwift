@@ -128,8 +128,8 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
                             if let _ = gifItems.firstIndex(where: {$0.media.id == mediaId}) {
                                 items.append(ContextMenuItem(strings().messageContextRemoveGif, handler: {
                                     let _ = removeSavedGif(postbox: context.account.postbox, mediaId: mediaId).start()
+                                    showModalText(for: context.window, text: strings().chatContextGifRemoved) 
                                 }, itemImage: MenuAnimation.menu_remove_gif.value))
-                                showModalText(for: context.window, text: strings().chatContextGifRemoved)
                             } else {
                                 items.append(ContextMenuItem(strings().messageContextSaveGif, handler: {
                                     let limit = context.isPremium ? context.premiumLimits.saved_gifs_limit_premium : context.premiumLimits.saved_gifs_limit_default

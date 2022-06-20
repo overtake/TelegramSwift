@@ -1332,6 +1332,9 @@ class ChatRowItem: TableRowItem {
             if chatInteraction.isLogInteraction {
                 return nil
             }
+            if unsupported {
+                return nil
+            }
             let reactions = message.effectiveReactions(context.peerId)
             
             let chatInteraction = self.chatInteraction
