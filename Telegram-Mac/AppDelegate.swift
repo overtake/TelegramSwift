@@ -412,6 +412,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         let networkDisposable = MetaDisposable()
         
         
+        self.window.closeInterceptor = {
+            
+            self.currentContext?.bindings.rootNavigation().gotoEmpty()
+            
+            return false
+        }
+        
         let displayUpgrade:(Float?) -> Void = { progress in
             if let progress = progress {
                 let view = HackUtils.findElements(byClass: "Telegram.OpmizeDatabaseView", in: self.window.contentView!).first as? OpmizeDatabaseView ?? OpmizeDatabaseView(frame: self.window.bounds)

@@ -609,7 +609,13 @@ struct ChatPresentationInterfaceState: Equatable {
                     if let permissionText = permissionText(from: peer, for: .banSendMessages) {
                         return .restricted(permissionText)
                     } else if peer.participationStatus == .left {
-                        return .normal
+                        if peer.flags.contains(.joinToSend) {
+                            return .action(strings().chatInputJoin, { chatInteraction in
+                                chatInteraction.joinChannel()
+                            }, nil)
+                        } else {
+                            return .normal
+                        }
                     } else if peer.participationStatus == .kicked {
                         return .restricted(strings().chatCommentsKicked)
                     } else if peer.participationStatus == .member {
