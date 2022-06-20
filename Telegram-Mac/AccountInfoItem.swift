@@ -304,7 +304,7 @@ private class AccountInfoView : GeneralContainableRowView {
         avatarView.centerY(x:16)
         
         
-        container.setFrameSize(NSMakeSize(max(titleView.frame.width, textView.frame.width), titleView.frame.height + textView.frame.height + 2))
+        container.setFrameSize(NSMakeSize(max(titleView.frame.width, textView.frame.width + (additionImage != nil ? 25 : 0)), titleView.frame.height + textView.frame.height + 2))
         
         titleView.setFrameOrigin(0, 0)
         textView.setFrameOrigin(0, titleView.frame.maxY + 2)
