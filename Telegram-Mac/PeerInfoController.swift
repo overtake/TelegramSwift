@@ -137,9 +137,10 @@ private struct PeerInfoSortableStableId: Hashable {
         return lhs.id.isEqual(to: rhs.id)
     }
     
-    var hashValue: Int {
-        return self.id.hashValue
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(self.id.hashValue)
     }
+    
 }
 
 private struct PeerInfoSortableEntry: Identifiable, Comparable {
@@ -209,6 +210,14 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<PeerInfoSortableEnt
             let (deleted,inserted, updated) = proccessEntriesWithoutReverse(from, right: to, { (peerInfoSortableEntry) -> TableRowItem in
                 return peerInfoSortableEntry.entry.entry.item(initialSize: initialSize, arguments: arguments)
             })
+            
+            if inserted.count == 1, updated.count == 1 {
+                if from?[0].stableId == to[0].stableId {
+                    var bp = 0
+                    bp += 1
+                }
+            }
+            
             subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated: animated, state: animated ? .none(nil) : .saveVisible(.lower), grouping: true, animateVisibleOnly: false))
             subscriber.putCompletion()
         }
