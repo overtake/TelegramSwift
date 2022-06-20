@@ -414,7 +414,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         self.window.closeInterceptor = {
             
-            self.currentContext?.bindings.rootNavigation().gotoEmpty()
+            self.currentContext?.bindings.rootNavigation().gotoEmpty(false)
             
             return false
         }
