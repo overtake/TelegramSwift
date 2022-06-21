@@ -48,8 +48,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     switch state.mode {
     case .chat:
-        let all = state.availableReactions?.enabled.map { $0.value } ?? []
-      
+        let all = state.availableReactions?.enabled.filter { value in
+            return !value.isPremium || arguments.context.isPremium
+        }.map { $0.value } ?? []
+        
         entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_allow, data: .init(name: strings().reactionSettingsAllow, color: theme.colors.text, type: .switchable(!state.reactions.isEmpty), viewType: .singleItem, action: {
             arguments.toggleReaction(state.reactions.isEmpty ? all : [])
         })))
