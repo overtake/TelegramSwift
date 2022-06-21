@@ -1009,8 +1009,8 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
     var entries: [PeerInfoEntry] = []
     
     var sectionId:Int = 0
-//    entries.append(UserInfoEntry.section(sectionId: sectionId))
-//    sectionId += 1
+    entries.append(UserInfoEntry.section(sectionId: sectionId))
+    sectionId += 1
     
     
     func applyBlock(_ block:[UserInfoEntry]) {

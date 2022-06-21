@@ -87,10 +87,10 @@ class AccountInfoItem: GeneralRowItem {
     }
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         let success = super.makeSize(width, oldWidth: oldWidth)
-        textLayout.measure(width: width - 100)
-        activeTextlayout.measure(width: width - 100)
-        self.titleLayout.measure(width: width - 100)
-        self.titleActiveLayout.measure(width: width - 100)
+        textLayout.measure(width: width - 140)
+        activeTextlayout.measure(width: width - 140)
+        self.titleLayout.measure(width: width - 140 - (addition != nil ? 35 : 0))
+        self.titleActiveLayout.measure(width: width - 140 - (addition != nil ? 35 : 0))
         return success
     }
     
@@ -304,7 +304,7 @@ private class AccountInfoView : GeneralContainableRowView {
         avatarView.centerY(x:16)
         
         
-        container.setFrameSize(NSMakeSize(max(titleView.frame.width, textView.frame.width + (additionImage != nil ? 25 : 0)), titleView.frame.height + textView.frame.height + 2))
+        container.setFrameSize(NSMakeSize(max(titleView.frame.width, textView.frame.width + (additionImage != nil ? 35 : 0)), titleView.frame.height + textView.frame.height + 2))
         
         titleView.setFrameOrigin(0, 0)
         textView.setFrameOrigin(0, titleView.frame.maxY + 2)
