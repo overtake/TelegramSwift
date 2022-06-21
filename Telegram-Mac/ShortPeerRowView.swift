@@ -166,7 +166,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                         } else if item.peer.isFake && item.highlightVerified {
                             ctx.draw(isRowSelected ? theme.icons.fakeActive : theme.icons.fake, in: NSMakeRect(item.textInset + title.0.size.width + 5, tY + 1, theme.icons.fake.backingSize.width, theme.icons.fake.backingSize.height))
                         } else if item.peer.isPremium && item.highlightVerified {
-                            ctx.draw(isRowSelected ? theme.icons.premium_account_small_rev_active : theme.icons.premium_account_small_rev, in: NSMakeRect(item.textInset + title.0.size.width + 2, tY + 3, theme.icons.premium_account_small_rev.backingSize.width, theme.icons.premium_account_small_rev.backingSize.height))
+                            ctx.draw(isRowSelected ? theme.icons.premium_account_small_rev_active : theme.icons.premium_account_small_rev, in: NSMakeRect(item.textInset + title.0.size.width + 2, tY + (item.status == nil ? 2 : 2), theme.icons.premium_account_small_rev.backingSize.width, theme.icons.premium_account_small_rev.backingSize.height))
                         }
                     }
                 case .modern:
@@ -200,7 +200,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                         } else if item.peer.isFake && item.highlightVerified {
                             ctx.draw(isRowSelected ? theme.icons.fakeActive : theme.icons.fake, in: NSMakeRect(item.textInset + title.0.size.width + 5, tY + 1, theme.icons.fake.backingSize.width, theme.icons.fake.backingSize.height))
                         } else if item.peer.isPremium && item.highlightVerified {
-                            ctx.draw(isRowSelected ? theme.icons.premium_account_small_rev_active : theme.icons.premium_account_small_rev, in: NSMakeRect(item.textInset + title.0.size.width + 2, tY + 1, theme.icons.premium_account_small_rev.backingSize.width, theme.icons.premium_account_small_rev.backingSize.height))
+                            ctx.draw(isRowSelected ? theme.icons.premium_account_small_rev_active : theme.icons.premium_account_small_rev, in: NSMakeRect(item.textInset + title.0.size.width + 2, tY + (item.status == nil ? 2 : 1), theme.icons.premium_account_small_rev.backingSize.width, theme.icons.premium_account_small_rev.backingSize.height))
                          }
                         
                     }
