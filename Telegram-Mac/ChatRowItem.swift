@@ -2583,7 +2583,9 @@ class ChatRowItem: TableRowItem {
             var available:[AvailableReactions.Reaction] = []
             let allowed = chatInteraction.presentation.allowedReactions
             if let reactions = self.entry.additionalData.reactions {
-                available = reactions.enabled.filter {
+                available = reactions.enabled.filter { value in
+                    return !value.isPremium || context.isPremium
+                }.filter {
                     allowed == nil || allowed!.contains($0.value)
                 }
             }
