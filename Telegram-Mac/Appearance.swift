@@ -155,7 +155,7 @@ private func generateChatAction(_ image: CGImage, background: NSColor) -> CGImag
         let rect = CGRect(origin: CGPoint(), size: size)
         ctx.clear(rect)
         
-        ctx.setFillColor(background.cgColor)
+        ctx.setFillColor(NSColor.clear.cgColor)
         ctx.fillEllipse(in: rect)
         ctx.draw(image, in: rect.focus(image.backingSize))
         
