@@ -623,6 +623,13 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     }
                 }
                 if file.isSticker, let saved = data.isStickerSaved {
+                    
+                    if let reference = file.stickerReference {
+                        thirdBlock.append(ContextMenuItem(strings().contextViewStickerSet, handler: {
+                            showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for: context.window)
+                        }, itemImage: MenuAnimation.menu_view_sticker_set.value))
+                    }
+                    
                     let image = saved ? MenuAnimation.menu_remove_from_favorites.value : MenuAnimation.menu_add_to_favorites.value
                     thirdBlock.append(ContextMenuItem(!saved ? strings().chatContextAddFavoriteSticker : strings().chatContextRemoveFavoriteSticker, handler: {
                         if !saved {
