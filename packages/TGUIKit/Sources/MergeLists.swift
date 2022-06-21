@@ -182,7 +182,7 @@ public func mergeListsStableWithUpdates<T>(leftList: [T], rightList: [T], allUpd
         let right: T? = j < rightList.count ? rightList[j] : nil
         
         if let left = left, let right = right {
-            if left.stableId == right.stableId {
+            if left == right {
                 //print("\(left.stableId)==\(right.stableId)")
                 //print("i++, j++")
                 i += 1
