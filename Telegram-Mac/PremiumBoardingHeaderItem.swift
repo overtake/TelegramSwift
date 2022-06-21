@@ -83,7 +83,6 @@ private final class PremiumBoardingHeaderView : TableRowView {
         titleView.userInteractionEnabled = false
         titleView.isSelectable = false
         
-        infoView.userInteractionEnabled = false
         infoView.isSelectable = false
         
         premiumView.updateLayout(size: premiumView.frame.size, transition: .immediate)
