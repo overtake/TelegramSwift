@@ -250,9 +250,30 @@ private final class WebpageView : View {
 
     }
     
+    var _backgroundColor: NSColor? {
+        didSet {
+            updateLocalizationAndTheme(theme: theme)
+        }
+    }
+    var _headerColorKey: String? {
+        didSet {
+            updateLocalizationAndTheme(theme: theme)
+        }
+    }
+    
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         loading.style = ControlStyle(foregroundColor: theme.colors.accent, backgroundColor: .clear, highlightColor: .clear)
+        self.backgroundColor = _backgroundColor ?? theme.colors.background
+        if let key = _headerColorKey {
+            if key == "bg_color" {
+                self.headerView.backgroundColor = self.backgroundColor
+            } else {
+                self.headerView.backgroundColor = theme.colors.listBackground
+            }
+        } else {
+            self.headerView.backgroundColor = self.backgroundColor
+        }
     }
     
     func load(url: String, preload: (TelegramMediaFile, AccountContext)?, animated: Bool) {
@@ -473,6 +494,17 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     fileprivate let loadingProgressPromise = Promise<CGFloat?>(nil)
     
     private var clickCount: Int = 0
+    
+    private var _backgroundColor: NSColor? {
+        didSet {
+            genericView._backgroundColor = _backgroundColor
+        }
+    }
+    private var _headerColorKey: String? {
+        didSet {
+            genericView._headerColorKey = _headerColorKey
+        }
+    }
 
     
     init(context: AccountContext, url: String, title: String, effectiveSize: NSSize? = nil, requestData: RequestData? = nil, chatInteraction: ChatInteraction? = nil, thumbFile: TelegramMediaFile? = nil) {
@@ -827,6 +859,11 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             return
         }
         
+        let eventData = (body["eventData"] as? String)?.data(using: .utf8)
+        let json = try? JSONSerialization.jsonObject(with: eventData ?? Foundation.Data(), options: []) as? [String: Any]
+
+
+        
         switch eventName {
         case "web_app_data_send":
             if let eventData = body["eventData"] as? String {
@@ -907,6 +944,15 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     })
                 }
             }
+            case "web_app_set_background_color":
+            if let json = json, let colorValue = json["color"] as? String, let color = NSColor(hexString: colorValue) {
+                self._backgroundColor = color
+            }
+        case "web_app_set_header_color":
+            if let json = json, let colorKey = json["color_key"] as? String, ["bg_color", "secondary_bg_color"].contains(colorKey) {
+                self._headerColorKey = colorKey
+            }
+
         default:
             break
         }
@@ -964,7 +1010,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             if self?.isBackButton == true {
                 self?.backButtonPressed()
             } else {
-                self?.dismiss()
+                self?.close()
             }
         }, contextMenu: { [weak self] in
             var items:[ContextMenuItem] = []
