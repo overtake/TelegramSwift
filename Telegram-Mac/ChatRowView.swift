@@ -786,10 +786,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     static func makePhotoView(_ item: ChatRowItem) -> NSView {
-        let avatar = AvatarControl(font: .avatar(.text))
+        let avatar = ChatAvatarView(frame: NSMakeSize(36, 36).bounds)
         avatar.setFrameSize(36,36)
         if let peer = item.peer {
-            avatar.setPeer(account: item.context.account, peer: peer, message: item.message)
+            avatar.setPeer(context: item.context, peer: peer, message: item.message)
         }
         return avatar
     }

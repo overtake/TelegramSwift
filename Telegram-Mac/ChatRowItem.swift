@@ -2658,9 +2658,9 @@ class ChatRowItem: TableRowItem {
             
 
             
-            let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value in
+            let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem in
                 let isSelected = message.reactionsAttribute?.reactions.contains(where: { $0.value == value && $0.isSelected }) == true
-                context.reactions.react(message.id, value: isSelected ? nil : value, checkPrem: true)
+                context.reactions.react(message.id, value: isSelected ? nil : value, checkPrem: checkPrem)
             })
             
             

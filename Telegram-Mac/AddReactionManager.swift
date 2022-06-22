@@ -33,7 +33,7 @@ final class ContextAddReactionsListView : View  {
         private let premium: LockView?
 
         
-        required init(frame frameRect: NSRect, context: AccountContext, reaction: AvailableReactions.Reaction, add: @escaping(String)->Void) {
+        required init(frame frameRect: NSRect, context: AccountContext, reaction: AvailableReactions.Reaction, add: @escaping(String, Bool)->Void) {
             self.reaction = reaction
             self.context = context
             if reaction.isPremium, !context.isPremium {
@@ -95,7 +95,7 @@ final class ContextAddReactionsListView : View  {
                 }
             }))
             set(handler: { _ in
-                add(reaction.value)
+                add(reaction.value, true)
             }, for: .Click)
             
             if !reaction.isPremium || context.isPremium {
@@ -202,7 +202,7 @@ final class ContextAddReactionsListView : View  {
     private let backgroundView = View()
     private let visualEffect = NSVisualEffectView(frame: .zero)
     private let radiusLayer: Bool
-    required init(frame frameRect: NSRect, context: AccountContext, list: [AvailableReactions.Reaction], add:@escaping(String)->Void, radiusLayer: Bool = true) {
+    required init(frame frameRect: NSRect, context: AccountContext, list: [AvailableReactions.Reaction], add:@escaping(String, Bool)->Void, radiusLayer: Bool = true) {
         self.list = list
         self.radiusLayer = radiusLayer
         super.init(frame: frameRect)
@@ -396,7 +396,7 @@ private final class LockView : View {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override required init(frame frameRect: NSRect) {
+    required init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")
     }
 }

@@ -1588,7 +1588,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         self.grouppedFloatingPhotos = groupped.compactMap { value in
             let item = value[value.count - 1]
             let view = cached[item.message!.id] ?? ChatRowView.makePhotoView(item)
-            let control = view as? AvatarControl
+            let control = view as? Control
             control?.toolTip = item.nameHide
             control?.removeAllHandlers()
             control?.set(handler: { [weak item, weak self] control in

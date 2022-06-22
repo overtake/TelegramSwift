@@ -664,12 +664,14 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 escapeTextMarked = nil
             }
             switch result {
-            case .mentions, .searchMessages, .commands, .hashtags:
+            case .mentions, .searchMessages, .commands:
                 if !highlightInsteadOfSelect {
                     _ = genericView.select(item: genericView.item(at: selectIndex ?? 0))
                 } else {
                     _ = genericView.highlight(item: genericView.item(at: selectIndex ?? 0))
                 }
+            case .hashtags:
+                _ = genericView.highlight(item: genericView.item(at: selectIndex ?? 0))
             case let .emoji(_, firstWord):
                 if !highlightInsteadOfSelect {
                     _ = genericView.select(item: genericView.item(at: selectIndex ?? 0))

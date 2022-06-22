@@ -57,7 +57,7 @@ enum PremiumLogEventsSource : Equatable {
         case .premium_stickers:
             return "premium_stickers"
         case let .profile(peerId):
-            return "profile__\(peerId.id)"
+            return "profile__\(peerId.id._internalGetInt64Value())"
         }
     }
     var subsource: String? {

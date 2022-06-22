@@ -246,14 +246,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var activitiesModel:ChatActivitiesModel?
     private let photo: AvatarControl = AvatarControl(font: .avatar(22))
     private var photoVideoView: MediaPlayerView?
-    private var photoVideoPlayer: MediaPlayer? {
-        didSet {
-            if oldValue != nil, photoVideoPlayer == nil {
-                var bp = 0
-                bp += 1
-            }
-        }
-    }
+    private var photoVideoPlayer: MediaPlayer? 
 
     private var hiddemMessage:Bool = false
     private let peerInputActivitiesDisposable:MetaDisposable = MetaDisposable()
@@ -649,9 +642,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                          
                          let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, reference: reference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
                          
-                         mediaPlayer.actionAtEnd = .action({
-                             
-                         })
+                         mediaPlayer.actionAtEnd = .loop(nil)
                          
                          self.photoVideoPlayer = mediaPlayer
                          
