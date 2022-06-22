@@ -126,7 +126,7 @@ final class ChatReactionsLayout {
         let mode: ChatReactionsLayout.Mode
         let disposable: MetaDisposable = MetaDisposable()
         let delayDisposable = MetaDisposable()
-        let action:(String)->Void
+        let action:(String, Bool)->Void
         let context: AccountContext
         let message: Message
         let openInfo: (PeerId)->Void
@@ -154,7 +154,7 @@ final class ChatReactionsLayout {
             return self.value.value
         }
         
-        init(value: MessageReaction, recentPeers:[Peer], list: [AvailableReactions.Reaction], canViewList: Bool, message: Message, context: AccountContext, mode: ChatReactionsLayout.Mode, index: Int, available: AvailableReactions.Reaction, presentation: Theme, action:@escaping(String)->Void, openInfo: @escaping (PeerId)->Void, runEffect:@escaping(String)->Void) {
+        init(value: MessageReaction, recentPeers:[Peer], list: [AvailableReactions.Reaction], canViewList: Bool, message: Message, context: AccountContext, mode: ChatReactionsLayout.Mode, index: Int, available: AvailableReactions.Reaction, presentation: Theme, action:@escaping(String, Bool)->Void, openInfo: @escaping (PeerId)->Void, runEffect:@escaping(String)->Void) {
             self.value = value
             self.index = index
             self.message = message
@@ -398,12 +398,12 @@ final class ChatReactionsLayout {
                 }
                 
                 
-                return .init(value: reaction, recentPeers: recentPeers, list: list, canViewList: reactions.canViewList, message: message, context: context, mode: mode, index: getIndex(), available: current, presentation: presentation, action: { value in
+                return .init(value: reaction, recentPeers: recentPeers, list: list, canViewList: reactions.canViewList, message: message, context: context, mode: mode, index: getIndex(), available: current, presentation: presentation, action: { value, checkPrem in
                     let reaction = sorted.first(where: { $0.value == value})
                     if let reaction = reaction {
-                        engine.react(message.id, value: reaction.isSelected ? nil : reaction.value)
+                        engine.react(message.id, value: reaction.isSelected ? nil : reaction.value, checkPrem: checkPrem)
                     } else {
-                        engine.react(message.id, value: value)
+                        engine.react(message.id, value: value, checkPrem: checkPrem)
                     }
                 }, openInfo: openInfo, runEffect: runEffect)
             } else {
@@ -531,7 +531,7 @@ final class ChatReactionsView : View {
             
             self.set(handler: { [weak self] _ in
                 if let reaction = self?.reaction {
-                    reaction.action(reaction.value.value)
+                    reaction.action(reaction.value.value, false)
                 }
             }, for: .Click)
             

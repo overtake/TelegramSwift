@@ -13,9 +13,9 @@ import TelegramCore
 class ChatInlineReactionMenuItem : ContextMenuItem {
     
     private let context: AccountContext
-    private let _handler:(String) -> Void
+    private let _handler:(String, Bool) -> Void
     private let reactions: [AvailableReactions.Reaction]
-    init(context: AccountContext, reactions: [AvailableReactions.Reaction], handler: @escaping(String) -> Void) {
+    init(context: AccountContext, reactions: [AvailableReactions.Reaction], handler: @escaping(String, Bool) -> Void) {
         self.context = context
         self._handler = handler
         self.reactions = reactions
@@ -34,9 +34,9 @@ class ChatInlineReactionMenuItem : ContextMenuItem {
 
 private final class ChatInlineReactionMenuRowItem : AppMenuRowItem {
     fileprivate let context: AccountContext
-    fileprivate let _handler:(String) -> Void
+    fileprivate let _handler:(String, Bool) -> Void
     fileprivate let reactions: [AvailableReactions.Reaction]
-    init(_ initialSize: NSSize, item: ContextMenuItem, interaction: AppMenuBasicItem.Interaction, presentation: AppMenu.Presentation, context: AccountContext, handler: @escaping(String) -> Void, reactions: [AvailableReactions.Reaction]) {
+    init(_ initialSize: NSSize, item: ContextMenuItem, interaction: AppMenuBasicItem.Interaction, presentation: AppMenu.Presentation, context: AccountContext, handler: @escaping(String, Bool) -> Void, reactions: [AvailableReactions.Reaction]) {
         
         self.context = context
         self._handler = handler
@@ -106,8 +106,8 @@ private final class ChatInlineReactionMenuRowView : AppMenuBasicItemView {
                 }
             })
             
-            let reactionsView = ContextAddReactionsListView(frame: NSMakeRect(0, 0, width, 30), context: item.context, list: list, add: { [weak item] value in
-                item?._handler(value)
+            let reactionsView = ContextAddReactionsListView(frame: NSMakeRect(0, 0, width, 30), context: item.context, list: list, add: { [weak item] value, checkPrem in
+                item?._handler(value, checkPrem)
                 AppMenu.closeAll()
             }, radiusLayer: false)
             self.reactions = reactionsView

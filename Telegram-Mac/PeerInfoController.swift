@@ -211,13 +211,6 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<PeerInfoSortableEnt
                 return peerInfoSortableEntry.entry.entry.item(initialSize: initialSize, arguments: arguments)
             })
             
-            if inserted.count == 1, updated.count == 1 {
-                if from?[0].stableId == to[0].stableId {
-                    var bp = 0
-                    bp += 1
-                }
-            }
-            
             subscriber.putNext(TableUpdateTransition(deleted: deleted, inserted: inserted, updated: updated, animated: animated, state: animated ? .none(nil) : .saveVisible(.lower), grouping: true, animateVisibleOnly: false))
             subscriber.putCompletion()
         }
