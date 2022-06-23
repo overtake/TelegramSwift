@@ -420,15 +420,23 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
     
     enum RequestData {
-        case simple(url: String, bot: Peer)
+        case simple(url: String, bot: Peer, buttonText: String)
         case normal(url: String?, peerId: PeerId, bot: Peer, replyTo: MessageId?, buttonText: String, payload: String?, fromMenu: Bool, hasSettings: Bool, complete:(()->Void)?)
         
         var bot: Peer {
             switch self {
-            case let .simple(_, bot):
+            case let .simple(_, bot, _):
                 return bot
             case let .normal(_, _, bot, _, _, _, _, _, _):
                 return bot
+            }
+        }
+        var buttonText: String {
+            switch self {
+            case let .simple(_, _, buttonText):
+                return buttonText
+            case let .normal(_, _, _, _, buttonText, _, _, _, _):
+                return buttonText
             }
         }
         var hasSettings: Bool {
@@ -613,12 +621,12 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             
             
             switch requestData {
-            case .simple(let url, let bot):
+            case .simple(let url, let bot, _):
                 let signal = context.engine.messages.requestSimpleWebView(botId: bot.id, url: url, themeParams: generateWebAppThemeParams(theme)) |> deliverOnMainQueue
                                 
                 requestWebDisposable.set(signal.start(next: { [weak self] url in
-                    self?.genericView.load(url: url, preload: self?.preloadData, animated: true)
                     self?.url = url
+                    self?.genericView.load(url: url, preload: self?.preloadData, animated: true)
                 }, error: { [weak self] error in
                     switch error {
                     case .generic:
@@ -757,7 +765,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         
         if let requestData = self.requestData {
             switch requestData {
-            case .simple(_, let bot):
+            case .simple(_, let bot, _):
                 request(bot)
             case .normal(_, _, let bot, _, _, _, _, _, _):
                 request(bot)
@@ -1058,9 +1066,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
 
     
     private func handleSendData(data string: String) {
-        guard let controllerData = self.data else {
-            return
-        }
+        
         
         counter += 1
         
@@ -1073,7 +1079,9 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 resultString = convertedString
             }
             if let resultString = resultString {
-                let _ = (self.context.engine.messages.sendWebViewData(botId: controllerData.bot.id, buttonText: controllerData.buttonText, data: resultString)).start()
+                if let requestData = self.requestData {
+                    let _ = (self.context.engine.messages.sendWebViewData(botId: requestData.bot.id, buttonText: requestData.buttonText, data: resultString)).start()
+                }
             }
         }
         self.close()

@@ -42,14 +42,14 @@ class ChatAnimatedStickerItem: ChatMediaItem {
         
         let file = (object.message!.media.first as! TelegramMediaFile)
         
-        let isPremiumSticker = file.isPremiumSticker || file.isEmojiAnimatedSticker
+        let isPremiumSticker = file.isPremiumSticker
         
         let mirror = ((renderType == .bubble && isIncoming) || renderType == .list) && isPremiumSticker
         parameters?.runEmojiScreenEffect = { [weak chatInteraction] emoji in
             chatInteraction?.runEmojiScreenEffect(emoji, object.message!.id, mirror, false)
         }
-        parameters?.runPremiumScreenEffect = { [weak chatInteraction] messageId in
-            chatInteraction?.runPremiumScreenEffect(messageId, mirror, false)
+        parameters?.runPremiumScreenEffect = { [weak chatInteraction] message in
+            chatInteraction?.runPremiumScreenEffect(message, mirror, false)
         }
         parameters?.mirror = mirror
         

@@ -175,7 +175,7 @@ class StickerMediaContentView: ChatMediaContentView {
             
             if media.isPremiumSticker, !media.noPremium, !context.premiumIsBlocked, let parent = parent {
                 self.playIfNeeded(true)
-                parameters?.runPremiumScreenEffect(parent.id)
+                parameters?.runPremiumScreenEffect(parent)
                 return
             }
             
@@ -197,6 +197,8 @@ class StickerMediaContentView: ChatMediaContentView {
         
         let prev = self.media as? TelegramMediaFile
         let prevParent = self.parent
+        
+        suggestOpenPremiumPack = false
                       
         super.update(with: media, size: size, context: context, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
@@ -239,7 +241,7 @@ class StickerMediaContentView: ChatMediaContentView {
             let sending = parent.flags.contains(.Sending) || parent.flags.contains(.Unsent)
             if prevSending && !sending, file.fileId == prev?.fileId {
                 if file.isPremiumSticker, !file.noPremium {
-                    parameters?.runPremiumScreenEffect(parent.id)
+                    parameters?.runPremiumScreenEffect(parent)
                 }
             }
         }

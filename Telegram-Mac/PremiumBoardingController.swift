@@ -830,10 +830,17 @@ final class PremiumBoardingController : ModalViewController {
         }
         |> take(1)
         |> deliverOnMainQueue
-
+        
+        let products: Signal<[InAppPurchaseManager.Product], NoError>
+        #if APP_STORE
+        products = inAppPurchaseManager.availableProducts
+        #else
+        products = .single([])
+        #endif
+        
         actionsDisposable.add(combineLatest(
             queue: Queue.mainQueue(),
-            inAppPurchaseManager.availableProducts,
+            products,
             premiumPromo,
             stickers,
             context.account.postbox.peerView(id: context.account.peerId)

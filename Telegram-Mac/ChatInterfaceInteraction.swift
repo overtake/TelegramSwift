@@ -174,7 +174,7 @@ final class ChatInteraction : InterfaceObserver  {
     var joinGroupCall:(CachedChannelData.ActiveCall, String?)->Void = { _, _ in }
 
     var runEmojiScreenEffect:(String, MessageId, Bool, Bool)->Void = { _, _, _, _ in }
-    var runPremiumScreenEffect:(MessageId, Bool, Bool)->Void = { _, _, _ in }
+    var runPremiumScreenEffect:(Message, Bool, Bool)->Void = { _, _, _ in }
     var runReactionEffect:(String, MessageId)->Void = { _, _ in }
 
     var toggleSendAs: (PeerId)->Void = { _ in }
@@ -730,7 +730,7 @@ final class ChatInteraction : InterfaceObserver  {
                             if simple {
                                 let signal = context.engine.messages.requestSimpleWebView(botId: botId, url: hashUrl, themeParams: generateWebAppThemeParams(theme))
                                 _ = showModalProgress(signal: signal, for: context.window).start(next: { url in
-                                    showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .simple(url: hashUrl, bot: bot), chatInteraction: strongSelf, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
+                                    showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .simple(url: hashUrl, bot: bot, buttonText: button.title), chatInteraction: strongSelf, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
                                 })
                             } else {
                                 _ = showModalProgress(signal: context.engine.messages.getAttachMenuBot(botId: bot.id, cached: true), for: context.window).start(next: { [weak strongSelf] attach in

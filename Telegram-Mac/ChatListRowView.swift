@@ -470,19 +470,22 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     var mutedInset:CGFloat = item.isSecret ? theme.icons.secretImage.backingSize.width + 2 : 0
                     
                     if item.isVerified {
-                        ctx.draw(highlighted ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin, 16, 16))
+                        ctx.draw(highlighted ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2 + mutedInset, item.margin, 16, 16))
                         mutedInset += 17
                     }
-                    if item.isPremium {
-                        ctx.draw(highlighted ? theme.icons.premium_account_rev_active : theme.icons.premium_account_rev, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin, 16, 16))
-                        mutedInset += 17
-                    }
+                   
                     
                     
                     if item.isScam || item.isFake {
-                        ctx.draw(highlighted ? item.badHighlightIcon : item.badIcon, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
+                        ctx.draw(highlighted ? item.badHighlightIcon : item.badIcon, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2 + mutedInset, item.margin + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
                         mutedInset += item.badIcon.backingSize.width + 3
                     }
+                    
+                    if item.isPremium {
+                        ctx.draw(highlighted ? theme.icons.premium_account_rev_active : theme.icons.premium_account_rev, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2 + mutedInset, item.margin, 16, 16))
+                        mutedInset += 17
+                    }
+                    
                     var messageOffset: CGFloat = 0
                     if let chatNameLayout = item.ctxChatNameLayout, !hiddemMessage {
                         chatNameLayout.1.draw(NSMakeRect(item.leftInset, displayLayout.0.size.height + item.margin + 2, chatNameLayout.0.size.width, chatNameLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
@@ -1162,7 +1165,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
 
             revealRightView.addSubview(delete)
             
-            if item.filter == nil {
+            if item.filter == .allChats {
                 revealRightView.addSubview(archive)
             }
             

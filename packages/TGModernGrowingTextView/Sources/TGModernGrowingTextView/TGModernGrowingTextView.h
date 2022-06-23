@@ -11,6 +11,8 @@
 
 extern NSString * _Nonnull const TGCustomLinkAttributeName;
 extern NSString * _Nonnull const TGSpoilerAttributeName;
+extern NSString * _Nonnull const TGAnimatedEmojiAttributeName;
+
 @class TGModernGrowingTextView;
 
 @interface MarkdownUndoItem : NSObject

@@ -710,7 +710,11 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             if self?.mode == .selectAvatar {
               
             } else {
-                let attr = NSAttributedString(attachment: TGTextAttachment(identifier: "\(arc4random())", mediaId: sticker.file.fileId, text: sticker.file.stickerText ?? ""))
+                let attr = NSMutableAttributedString()
+                let text = (sticker.file.stickerText ?? "😀").fixed
+                _ = attr.append(string: text)
+                attr.addAttribute(.attachment, value: TGTextAttachment(identifier: "\(arc4random())", mediaId: sticker.file.fileId, text: text), range: attr.range)
+//                let attr = NSAttributedString(attachment: )
                 _ = self?.chatInteraction?.appendText(attr)
             }
         }

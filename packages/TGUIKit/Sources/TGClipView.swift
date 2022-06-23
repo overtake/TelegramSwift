@@ -296,6 +296,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
         self.shouldAnimateOriginChange = animated
         self.scrollCompletion = completion
         if animated {
+            self.layer?.removeAllAnimations()
             beginScroll()
         }
         if animated && abs(bounds.minY - point.y) > frame.height {
