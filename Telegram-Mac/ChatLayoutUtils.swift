@@ -64,9 +64,9 @@ class ChatLayoutUtils: NSObject {
                 }
             } else if file.isStaticSticker && !webpIsFile {
                 if contentSize == NSZeroSize {
-                    return NSMakeSize(160, 160)
+                    return NSMakeSize(240, 240)
                 }
-                size = contentSize.aspectFitted(NSMakeSize(140, 140))
+                size = contentSize.aspectFitted(NSMakeSize(240, 240))
                 size = NSMakeSize(max(size.width, 40), max(size.height, 40))
             } else if file.isInstantVideo {
                 size = NSMakeSize(280, 280)

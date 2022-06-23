@@ -1124,9 +1124,9 @@ final class LottieAnimation : Equatable {
         case let .media(id):
             if let id = id {
                 if let fitzModifier = key.fitzModifier {
-                    return "animation-\(id.namespace)-\(id.id)-fitz\(fitzModifier.rawValue)" + self.colors.map { $0.keyPath + $0.color.hexString }.joined(separator: " ")
+                    return "animation-\(id.namespace)-\(id.id)-\(key.mirror)-fitz\(fitzModifier.rawValue)" + self.colors.map { $0.keyPath + $0.color.hexString }.joined(separator: " ")
                 } else {
-                    return "animation-\(id.namespace)-\(id.id)" + self.colors.map { $0.keyPath + $0.color.hexString }.joined(separator: " ")
+                    return "animation-\(id.namespace)-\(id.id)-\(key.mirror)" + self.colors.map { $0.keyPath + $0.color.hexString }.joined(separator: " ")
                 }
             } else {
                 return "\(arc4random())"

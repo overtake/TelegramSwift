@@ -31,7 +31,7 @@ class ChatMediaLayoutParameters : Equatable {
     
     var runEmojiScreenEffect:(String)->Void = { _ in }
     
-    var runPremiumScreenEffect:(MessageId)->Void = { _ in }
+    var runPremiumScreenEffect:(Message)->Void = { _ in }
     
     var mirror: Bool = false
     

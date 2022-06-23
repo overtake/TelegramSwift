@@ -177,7 +177,7 @@ extension ChatTextInputAttribute {
             return (TGCustomLinkAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         case let .animated(range, id, mediaId):
             let tag = TGTextAttachment(identifier: "\(id)", mediaId: mediaId, text: "")
-            return (NSAttributedString.Key.attachment.rawValue, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+            return (TGAnimatedEmojiAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         }
     }
 

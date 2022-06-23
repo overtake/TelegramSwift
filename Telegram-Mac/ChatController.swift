@@ -509,6 +509,10 @@ class ChatControllerView : View, ChatInputDelegate {
                 
         let tableRect = NSMakeRect(0, header.state.toleranceHeight, frame.width, tableHeight)
         if tableRect != tableView.frame {
+            if transition.isAnimated {
+                var bp = 0
+                bp += 1
+            }
             transition.updateFrame(view: tableView, frame: tableRect)
 //            tableView.tile()
         }
@@ -3245,10 +3249,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             })
         }
         
-        chatInteraction.runPremiumScreenEffect = { [weak self] messageId, mirror, isIncoming in
+        chatInteraction.runPremiumScreenEffect = { [weak self] message, mirror, isIncoming in
             guard let strongSelf = self else {
                 return
             }
+            let messageId = message.id
+            FastSettings.markDiceAsPlayed(message)
             if strongSelf.isOnScreen {
                 strongSelf.emojiEffects.addPremiumEffect(mirror: mirror, isIncoming: isIncoming, messageId: messageId, viewFrame: context.window.bounds, for: context.window.contentView!)
             }
@@ -5447,8 +5453,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 if let message = item.message {
                     if !FastSettings.diceHasAlreadyPlayed(message) {
                         let mirror = item.renderType == .list || message.isIncoming(item.context.account, item.renderType == .bubble)
-                        chatInteraction.runPremiumScreenEffect(message.id, mirror, false)
-                        FastSettings.markDiceAsPlayed(message)
+                        chatInteraction.runPremiumScreenEffect(message, mirror, false)
                     }
                 }
             }

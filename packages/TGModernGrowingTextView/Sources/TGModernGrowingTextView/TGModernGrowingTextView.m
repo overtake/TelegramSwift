@@ -102,6 +102,7 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar) {
 
 NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
+NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
 
 
 
@@ -195,6 +196,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     
     NSMutableArray<NSValue *> *ranges = [NSMutableArray array];
     
+    
     [self.attributedString enumerateAttribute:TGSpoilerAttributeName inRange:range options:0 usingBlock:^(__unused id value, NSRange range, __unused BOOL *stop) {
         if ([value isKindOfClass:[TGInputTextTag class]]) {
             TGInputTextTag *tag = (TGInputTextTag *)value;
@@ -213,8 +215,8 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
         }
 
     }
-
-
+    
+   
     
 }
 
@@ -396,6 +398,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     NSMutableAttributedString *attr = [self.attributedString mutableCopy];
     [attr removeAttribute:TGCustomLinkAttributeName range:selectedRange];
     [attr removeAttribute:TGSpoilerAttributeName range:selectedRange];
+    [attr removeAttribute:TGAnimatedEmojiAttributeName range:selectedRange];
     [attr addAttribute:NSFontAttributeName value:[NSFont systemFontOfSize:self.font.pointSize] range: selectedRange];
     
     [self.textStorage setAttributedString:attr];
@@ -1071,10 +1074,11 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     NSMutableArray<NSValue *> *ranges = [NSMutableArray array];
     NSMutableArray<TGTextAttachment *> *attachments = [NSMutableArray array];
 
+        
     [self.textView.attributedString enumerateAttributesInRange:NSMakeRange(0, self.textView.attributedString.length) options:0 usingBlock:^(NSDictionary<NSAttributedStringKey,id> * _Nonnull attrs, NSRange range, BOOL * _Nonnull stop) {
         
         [attrs enumerateKeysAndObjectsUsingBlock:^(NSAttributedStringKey  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
-            if ([key isEqualToString:NSAttachmentAttributeName]) {
+            if ([key isEqualToString:TGAnimatedEmojiAttributeName]) {
                 TGTextAttachment *attachment = (TGTextAttachment *)obj;
                 if (attachment) {
                     [ranges addObject:[NSValue valueWithRange:range]];
@@ -1468,7 +1472,21 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
         [self.textView.textStorage addAttribute:NSForegroundColorAttributeName value:self.textColor range:NSMakeRange(0, string.length)];
         
         
-        NSArray<NSString *> *attributes = @[TGCustomLinkAttributeName, TGSpoilerAttributeName];
+        NSMutableArray<NSValue *> *ranges = [NSMutableArray array];
+        
+        [self.textView.attributedString enumerateAttribute:TGAnimatedEmojiAttributeName inRange:NSMakeRange(0, string.length) options:0 usingBlock:^(__unused id value, NSRange range, __unused BOOL *stop) {
+            if ([value isKindOfClass:[TGTextAttachment class]]) {
+                [ranges addObject:[NSValue valueWithRange:range]];
+            }
+        }];
+        
+        for (int i = 0; i < ranges.count; i++) {
+            NSRange range = [[ranges objectAtIndex:i] rangeValue];
+            [self.textView.textStorage addAttribute:NSForegroundColorAttributeName value:[NSColor clearColor] range:range];
+        }
+        
+        
+        NSArray<NSString *> *attributes = @[TGCustomLinkAttributeName, TGSpoilerAttributeName, TGAnimatedEmojiAttributeName];
         
         for (int i = 0; i < attributes.count; i++) {
             NSString *attributeName = attributes[i];
@@ -1647,6 +1665,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     [attr removeAttribute:NSFontAttributeName range:self.selectedRange];
     [attr removeAttribute:TGCustomLinkAttributeName range:self.selectedRange];
     [attr removeAttribute:TGSpoilerAttributeName range:self.selectedRange];
+    [attr removeAttribute:TGAnimatedEmojiAttributeName range:self.selectedRange];
     [self.textView.textStorage setAttributedString:attr];
 }
     
@@ -1684,7 +1703,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
         [attr addAttribute:NSFontAttributeName value:[[NSFontManager sharedFontManager] convertFont:value toSize:_textFont.pointSize] range:range];
     }];
     
-  
+        
     
     NSRange selectedRange = _textView.selectedRange;
     if (selectedRange.location == self.textView.string.length) {
