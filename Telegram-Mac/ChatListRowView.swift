@@ -1177,7 +1177,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             
             revealLeftView.backgroundColor = unreadBackground
-            revealRightView.backgroundColor = item.filter == nil ? theme.colors.revealAction_inactive_background : theme.colors.revealAction_destructive_background
+            revealRightView.backgroundColor = item.filter == .allChats ? theme.colors.revealAction_inactive_background : theme.colors.revealAction_destructive_background
             
             
             unread.setFrameSize(frame.height, frame.height)

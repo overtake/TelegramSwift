@@ -5437,7 +5437,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        if !isLoading, checkPremiumStickers {
+        if !isLoading {
             var items:[ChatRowItem] = []
             self.genericView.tableView.enumerateVisibleItems(with: { item in
                 if let item = item as? ChatRowItem, let view = item.view {
@@ -5457,7 +5457,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                 }
             }
-            checkPremiumStickers = false
+//            checkPremiumStickers = false
         }
     }
     
