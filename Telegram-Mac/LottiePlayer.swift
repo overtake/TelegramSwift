@@ -394,6 +394,15 @@ private final class PlayerRenderer {
     }
     private func play(_ player: RenderContainer) {
         
+        switch self.animation.playPolicy {
+        case let.framesCount(count):
+            if count == 0 {
+                return
+            }
+        default:
+            break
+        }
+        
         self.finished = false
         
         let runOnQueue = animation.runOnQueue

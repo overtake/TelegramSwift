@@ -99,7 +99,7 @@ final class AnimatedEmojiesController : TelegramGenericViewController<AnimatedEm
         
         let initialState = State(sections: [])
         
-        let statePromise = ValuePromise(initialState, ignoreRepeated: true)
+        let statePromise = ValuePromise<State>(ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
         let updateState: ((State) -> State) -> Void = { f in
             statePromise.set(stateValue.modify (f))
@@ -134,6 +134,7 @@ final class AnimatedEmojiesController : TelegramGenericViewController<AnimatedEm
         
         disposable.set(transition.start(next: { [weak self] transition in
             self?.genericView.update(transition)
+            self?.readyOnce()
         }))
         
         actionsDisposable.add(context.engine.stickers.loadedStickerPack(reference: .animatedEmoji, forceActualized: false).start(next: { pack in
@@ -153,7 +154,6 @@ final class AnimatedEmojiesController : TelegramGenericViewController<AnimatedEm
              actionsDisposable.dispose()
          }
         
-        readyOnce()
     }
     
     func update(with interactions:EntertainmentInteractions?, chatInteraction: ChatInteraction) {

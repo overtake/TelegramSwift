@@ -50,7 +50,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
     }
     
     func play() {
-        if self.playerView.animation?.playPolicy == .framesCount(1) {
+        if self.playerView.animation?.playPolicy == .framesCount(0) {
             playerView.set(self.playerView.animation?.withUpdatedPolicy(.onceEnd), reset: false)
         } else {
             playerView.playAgain()
@@ -302,7 +302,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                     var playPolicy: LottiePlayPolicy = parameters?.playPolicy ?? (file.isEmojiAnimatedSticker || !self.chatLoopAnimated ? (self.parameters == nil ? .framesCount(1) : .once) : .loop)
                     
                     if self.playOnHover == true {
-                        playPolicy = .framesCount(1)
+                        playPolicy = .framesCount(0)
                     }
                     var soundEffect: LottieSoundEffect? = nil
                     if file.isEmojiAnimatedSticker, let emoji = file.stickerText {
