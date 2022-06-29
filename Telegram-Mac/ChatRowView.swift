@@ -924,20 +924,20 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
-    private func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
-        var nextIndexById: [MediaId: Int] = [:]
+    func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
+        var nextIndexById: [Int64: Int] = [:]
         var validIds: [InlineStickerItemView.Key] = []
         
         for item in textLayout.embeddedItems {
             if let stickerItem = item.value as? InlineStickerItem {
                 let index: Int
-                if let currentNext = nextIndexById[stickerItem.file.fileId] {
+                if let currentNext = nextIndexById[stickerItem.emoji.fileId] {
                     index = currentNext
                 } else {
                     index = 0
                 }
-                nextIndexById[stickerItem.file.fileId] = index + 1
-                let id = InlineStickerItemView.Key(id: stickerItem.file.fileId, index: index)
+                nextIndexById[stickerItem.emoji.fileId] = index + 1
+                let id = InlineStickerItemView.Key(id: stickerItem.emoji.fileId, index: index)
                 validIds.append(id)
                 
                 let rect = CGRect(origin: item.rect.offsetBy(dx: textLayout.insets.width, dy: textLayout.insets.height + 0.0).center, size: CGSize()).insetBy(dx: -12.0, dy: -12.0)
@@ -946,7 +946,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 if let current = self.inlineStickerItemViews[id] {
                     view = current
                 } else {
-                    view = InlineStickerItemView(context: context, file: stickerItem.file, size: item.rect.size)
+                    view = InlineStickerItemView(context: context, emoji: stickerItem.emoji, size: item.rect.size)
                     self.inlineStickerItemViews[id] = view
                     textView.addEmbeddedView(view)
                 }

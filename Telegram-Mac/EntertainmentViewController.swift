@@ -482,7 +482,7 @@ public final class EntertainmentInteractions {
     var current:EntertainmentState = .emoji
     
     var sendEmoji:(String) ->Void = {_ in}
-    var sendAnimatedEmoji:(StickerPackItem) ->Void = {_ in}
+    var sendAnimatedEmoji:(StickerPackReference, StickerPackItem) ->Void = { _, _ in}
     var sendSticker:(TelegramMediaFile, Bool, Bool) ->Void = { _, _, _ in}
     var sendGIF:(TelegramMediaFile, Bool, Bool) ->Void = { _, _, _ in}
     
@@ -534,7 +534,7 @@ final class EntertainmentView : View {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
         self.borderView.background = theme.colors.border
-        self.animatedEmojies.set(image: theme.icons.entertainment_Emoji, for: .Normal)
+        self.animatedEmojies.set(image: theme.icons.entertainment_AnimatedEmoji, for: .Normal)
         self.emoji.set(image: theme.icons.entertainment_Emoji, for: .Normal)
         self.stickers.set(image: theme.icons.entertainment_Stickers, for: .Normal)
         self.gifs.set(image: theme.icons.entertainment_Gifs, for: .Normal)
@@ -706,15 +706,14 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             }
         }
         
-        interactions.sendAnimatedEmoji = { [weak self] sticker in
+        interactions.sendAnimatedEmoji = { [weak self] reference, sticker in
             if self?.mode == .selectAvatar {
               
             } else {
                 let attr = NSMutableAttributedString()
                 let text = (sticker.file.stickerText ?? "😀").fixed
                 _ = attr.append(string: text)
-                attr.addAttribute(.attachment, value: TGTextAttachment(identifier: "\(arc4random())", mediaId: sticker.file.fileId, text: text), range: attr.range)
-//                let attr = NSAttributedString(attachment: )
+                attr.addAttribute(.attachment, value: TGTextAttachment(identifier: "\(arc4random())", reference: reference, fileId: sticker.file.fileId.id, text: text), range: attr.range)
                 _ = self?.chatInteraction?.appendText(attr)
             }
         }

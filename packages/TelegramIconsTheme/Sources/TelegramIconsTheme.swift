@@ -5283,6 +5283,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var entertainment_AnimatedEmoji: CGImage {
+      if let image = cached.with({ $0["entertainment_AnimatedEmoji"] }) {
+          return image
+      } else {
+          let image = _entertainment_AnimatedEmoji()
+          _ = cached.modify { current in 
+              var current = current
+              current["entertainment_AnimatedEmoji"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var scheduledAvatar: CGImage {
       if let image = cached.with({ $0["scheduledAvatar"] }) {
           return image
@@ -8966,6 +8979,7 @@ public final class TelegramIconsTheme {
   private let _entertainment_Search: ()->CGImage
   private let _entertainment_Settings: ()->CGImage
   private let _entertainment_SearchCancel: ()->CGImage
+  private let _entertainment_AnimatedEmoji: ()->CGImage
   private let _scheduledAvatar: ()->CGImage
   private let _scheduledInputAction: ()->CGImage
   private let _verifyDialog: ()->CGImage
@@ -9626,6 +9640,7 @@ public final class TelegramIconsTheme {
       entertainment_Search: @escaping()->CGImage,
       entertainment_Settings: @escaping()->CGImage,
       entertainment_SearchCancel: @escaping()->CGImage,
+      entertainment_AnimatedEmoji: @escaping()->CGImage,
       scheduledAvatar: @escaping()->CGImage,
       scheduledInputAction: @escaping()->CGImage,
       verifyDialog: @escaping()->CGImage,
@@ -10285,6 +10300,7 @@ public final class TelegramIconsTheme {
       self._entertainment_Search = entertainment_Search
       self._entertainment_Settings = entertainment_Settings
       self._entertainment_SearchCancel = entertainment_SearchCancel
+      self._entertainment_AnimatedEmoji = entertainment_AnimatedEmoji
       self._scheduledAvatar = scheduledAvatar
       self._scheduledInputAction = scheduledInputAction
       self._verifyDialog = verifyDialog

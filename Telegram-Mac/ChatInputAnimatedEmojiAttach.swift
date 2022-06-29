@@ -11,6 +11,7 @@ import TGUIKit
 import Postbox
 import TelegramCore
 import SwiftSignalKit
+import TGModernGrowingTextView
 
 final class ChatInputAnimatedEmojiAttach: View {
     
@@ -19,23 +20,24 @@ final class ChatInputAnimatedEmojiAttach: View {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(media)
+        
+        media.backgroundColor = .clear
     }
     
-    func set(_ mediaId: MediaId, size: NSSize, context: AccountContext) -> Void {
-        let signal: Signal<StickerPackItem?, NoError> = context.engine.stickers.loadedStickerPack(reference: .animatedEmoji, forceActualized: false) |> map { value in
-            switch value {
-            case let .result(_, items, _):
-                return items.first(where: { $0.file.fileId == mediaId })
-            default:
-                return nil
-            }
+    func set(_ attachment: TGTextAttachment, size: NSSize, context: AccountContext) -> Void {
+        
+        let reference = attachment.reference as! StickerPackReference
+        let fileId = attachment.fileId as! Int64
+        
+        let signal: Signal<TelegramMediaFile?, NoError> = context.inlinePacksContext.stickerPack(reference: reference) |> map { files in
+            return files.first(where: { $0.fileId.id == fileId })
         } |> deliverOnMainQueue
         
-        disposable.set(signal.start(next: { [weak self] item in
-            if let item = item {
-                let size = item.file.dimensions?.size.aspectFitted(size) ?? size
+        disposable.set(signal.start(next: { [weak self] file in
+            if let file = file {
+                let size = file.dimensions?.size.aspectFitted(size) ?? size
                 self?.media.setFrameSize(size)
-                self?.media.update(with: item.file, size: size, context: context, table: nil, animated: false)
+                self?.media.update(with: file, size: size, context: context, table: nil, animated: false)
             }
             self?.needsLayout = true
         }))

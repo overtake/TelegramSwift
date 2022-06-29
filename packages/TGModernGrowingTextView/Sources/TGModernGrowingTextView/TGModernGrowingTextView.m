@@ -190,7 +190,6 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
     CGContextSetAllowsFontSmoothing(context,!isRetina);
     
     
-    [super drawRect:dirtyRect];
     
     NSRange range = NSMakeRange(0, self.attributedString.length);
     
@@ -206,17 +205,20 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
         }
     }];
     
+    
     for (int i = 0; i < ranges.count; i++) {
         NSRange range = [[ranges objectAtIndex:i] rangeValue];
         for (int j = 0; j < range.length; j++) {
             NSRect rect = [self highlightRectForRange:NSMakeRange(range.location + j, 1) whole:false];
+            CGContextClearRect(context, rect);
             CGContextSetFillColorWithColor(context, [[_weakTextView.textColor colorWithAlphaComponent:0.15] CGColor]);
             CGContextFillRect(context, rect);
         }
 
     }
     
-   
+    [super drawRect:dirtyRect];
+
     
 }
 
@@ -1074,8 +1076,10 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
     NSMutableArray<NSValue *> *ranges = [NSMutableArray array];
     NSMutableArray<TGTextAttachment *> *attachments = [NSMutableArray array];
 
+    
+    NSRange range = NSMakeRange(0, self.textView.attributedString.length);
         
-    [self.textView.attributedString enumerateAttributesInRange:NSMakeRange(0, self.textView.attributedString.length) options:0 usingBlock:^(NSDictionary<NSAttributedStringKey,id> * _Nonnull attrs, NSRange range, BOOL * _Nonnull stop) {
+    [self.textView.attributedString enumerateAttributesInRange:range options:0 usingBlock:^(NSDictionary<NSAttributedStringKey,id> * _Nonnull attrs, NSRange range, BOOL * _Nonnull stop) {
         
         [attrs enumerateKeysAndObjectsUsingBlock:^(NSAttributedStringKey  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
             if ([key isEqualToString:TGAnimatedEmojiAttributeName]) {
@@ -1100,13 +1104,15 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
         if (view == nil) {
             view = _getAttachView(attachment);
         }
-        rect.size.height = view.frame.size.height;
-        view.frame = rect;
-        if(view != nil && view.superview != _textView) {
-            [_textView addSubview:view];
+        if (view != nil) {
+            rect.size.height = view.frame.size.height;
+            view.frame = rect;
+            if(view != nil && view.superview != _textView) {
+                [_textView addSubview:view];
+            }
+            [validIds addObject:attachment.identifier];
+            [_attachments setObject:view forKey:attachment.identifier];
         }
-        [validIds addObject:attachment.identifier];
-        [_attachments setObject:view forKey:attachment.identifier];
     }
     
     NSMutableArray<NSString *> *toRemove = [NSMutableArray array];
@@ -1121,6 +1127,19 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
         [view removeFromSuperview];
         [_attachments removeObjectForKey:toRemove[i]];
     }
+    
+        
+    [self.textView.attributedString enumerateAttribute:TGAnimatedEmojiAttributeName inRange:range options:0 usingBlock:^(__unused id value, NSRange range, __unused BOOL *stop) {
+        if ([value isKindOfClass:[TGTextAttachment class]]) {
+            [ranges addObject:[NSValue valueWithRange:range]];
+        }
+    }];
+    
+    for (int i = 0; i < ranges.count; i++) {
+        NSRange range = [[ranges objectAtIndex:i] rangeValue];
+        [self.textView.textStorage addAttribute:NSForegroundColorAttributeName value:[NSColor clearColor] range:range];
+    }
+    
 }
     
 -(void)installGetAttachView:(NSView* _Nullable (^)(TGTextAttachment * _Nonnull))getAttachView {
@@ -1471,22 +1490,9 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
         
         [self.textView.textStorage addAttribute:NSForegroundColorAttributeName value:self.textColor range:NSMakeRange(0, string.length)];
         
+       
         
-        NSMutableArray<NSValue *> *ranges = [NSMutableArray array];
-        
-        [self.textView.attributedString enumerateAttribute:TGAnimatedEmojiAttributeName inRange:NSMakeRange(0, string.length) options:0 usingBlock:^(__unused id value, NSRange range, __unused BOOL *stop) {
-            if ([value isKindOfClass:[TGTextAttachment class]]) {
-                [ranges addObject:[NSValue valueWithRange:range]];
-            }
-        }];
-        
-        for (int i = 0; i < ranges.count; i++) {
-            NSRange range = [[ranges objectAtIndex:i] rangeValue];
-            [self.textView.textStorage addAttribute:NSForegroundColorAttributeName value:[NSColor clearColor] range:range];
-        }
-        
-        
-        NSArray<NSString *> *attributes = @[TGCustomLinkAttributeName, TGSpoilerAttributeName, TGAnimatedEmojiAttributeName];
+        NSArray<NSString *> *attributes = @[TGCustomLinkAttributeName, TGSpoilerAttributeName];
         
         for (int i = 0; i < attributes.count; i++) {
             NSString *attributeName = attributes[i];
@@ -1702,9 +1708,7 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
     [string enumerateAttribute:NSFontAttributeName inRange:NSMakeRange(0, string.length) options:0 usingBlock:^(NSFont *value, NSRange range, BOOL * _Nonnull stop) {
         [attr addAttribute:NSFontAttributeName value:[[NSFontManager sharedFontManager] convertFont:value toSize:_textFont.pointSize] range:range];
     }];
-    
         
-    
     NSRange selectedRange = _textView.selectedRange;
     if (selectedRange.location == self.textView.string.length) {
         selectedRange = NSMakeRange(attr.length, 0);

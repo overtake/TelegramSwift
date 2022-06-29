@@ -174,6 +174,7 @@ var globalLinkExecutor:TextViewInteractions {
             }
             let modified: NSMutableAttributedString = string.mutableCopy() as! NSMutableAttributedString
             
+            
             string.enumerateAttributes(in: string.range, options: [], using: { attr, range, _ in
                 if let appLink = attr[NSAttributedString.Key.link] as? inAppLink {
                     switch appLink {
@@ -185,28 +186,44 @@ var globalLinkExecutor:TextViewInteractions {
                         }
                     }
                     
-                } else if let appLink = attr[NSAttributedString.Key(TGCustomLinkAttributeName)] as? TGInputTextTag {
+                }
+                if let appLink = attr[NSAttributedString.Key(TGCustomLinkAttributeName)] as? TGInputTextTag {
                     if (appLink.attachment as? String) != modified.string.nsstring.substring(with: range) {
                         modified.addAttribute(NSAttributedString.Key.link, value: appLink.attachment, range: range)
                     }
-                } else if attr[.foregroundColor] != nil {
+                }
+                if let sticker = attr[.init("Attribute__EmbeddedItem")] as? InlineStickerItem {
+                    modified.addAttribute(.init(TGAnimatedEmojiAttributeName), value: sticker.emoji.attachment, range: range)
+                }
+                if attr[.foregroundColor] != nil {
                     modified.removeAttribute(.foregroundColor, range: range)
-                } else if let font = attr[.font] as? NSFont {
+                }
+                if let font = attr[.font] as? NSFont {
                     if let newFont = NSFont(name: font.fontName, size: 0) {
                         modified.setFont(font: newFont, range: range)
                     }
-                } else if attr[.paragraphStyle] != nil {
+                }
+                if attr[.paragraphStyle] != nil {
                     modified.removeAttribute(.paragraphStyle, range: range)
                 }
             })
             
+            let input = ChatTextInputState(inputText: modified.string, selectionRange: 0 ..< modified.string.length, attributes: chatTextAttributes(from: modified))
             
             if !modified.string.isEmpty {
                 pb.clearContents()
-                
                 let rtf = try? modified.data(from: modified.range, documentAttributes: [NSAttributedString.DocumentAttributeKey.documentType : NSAttributedString.DocumentType.rtf])
+                
+                
+                pb.declareTypes([.rtf, .kInApp, .string], owner: nil)
+
+                let encoder = AdaptedPostboxEncoder()
+                let encoded = try? encoder.encode(input)
+                
+                if let data = encoded {
+                    pb.setData(data, forType: .kInApp)
+                }
                 if let rtf = rtf {
-                    pb.declareTypes([.rtf], owner: nil)
                     pb.setData(rtf, forType: .rtf)
                     pb.setString(modified.string, forType: .string)
                     return true

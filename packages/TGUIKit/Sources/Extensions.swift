@@ -261,6 +261,9 @@ public extension NSPasteboard.PasteboardType {
     static var kUrl:NSPasteboard.PasteboardType {
         return NSPasteboard.PasteboardType(kUTTypeURL as String)
     }
+    static var kInApp:NSPasteboard.PasteboardType {
+        return NSPasteboard.PasteboardType("TelegramTextPboardType" as String)
+    }
     static var kFilenames:NSPasteboard.PasteboardType {
         return NSPasteboard.PasteboardType("NSFilenamesPboardType")
     }

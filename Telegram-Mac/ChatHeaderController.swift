@@ -649,17 +649,19 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
             current.autohighlight = false
             current.scaleOnClick = true
             
-            current.set(handler: { [weak self] _ in
-                self?.chatInteraction.processBotKeyboard(with: message).proccess(button, { _ in
-                    
-                })
-            }, for: .Click)
+            
             
             if animated {
                 current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
             self.inlineButton = current
         }
+        current.removeAllHandlers()
+        current.set(handler: { [weak self] _ in
+            self?.chatInteraction.processBotKeyboard(with: message).proccess(button, { _ in
+                
+            })
+        }, for: .Click)
         
         addSubview(current)
 

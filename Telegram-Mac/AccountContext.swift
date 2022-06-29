@@ -82,9 +82,11 @@ final class AccountContext {
     #if !SHARE
     let fetchManager: FetchManager
     let diceCache: DiceCache
+    let inlinePacksContext: InlineStickersContext
     let cachedGroupCallContexts: AccountGroupCallContextCacheImpl
     let networkStatusManager: NetworkStatusManager
     let inAppPurchaseManager: InAppPurchaseManager
+    
     #endif
     private(set) var timeDifference:TimeInterval  = 0
     #if !SHARE
@@ -236,6 +238,7 @@ final class AccountContext {
         self.inAppPurchaseManager = .init(premiumProductId: ApiEnvironment.premiumProductId)
         self.peerChannelMemberCategoriesContextsManager = PeerChannelMemberCategoriesContextsManager(self.engine, account: account)
         self.diceCache = DiceCache(postbox: account.postbox, engine: self.engine)
+        self.inlinePacksContext = .init(postbox: account.postbox, engine: self.engine)
         self.fetchManager = FetchManagerImpl(postbox: account.postbox, storeManager: DownloadedMediaStoreManagerImpl(postbox: account.postbox, accountManager: sharedContext.accountManager))
         self.blockedPeersContext = BlockedPeersContext(account: account)
         self.cacheCleaner = AccountClearCache(account: account)

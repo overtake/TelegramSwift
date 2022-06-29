@@ -175,6 +175,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
         
+    
+    
+        
         appDelegate = self
         ApiEnvironment.migrate()
         

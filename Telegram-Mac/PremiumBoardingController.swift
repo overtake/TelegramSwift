@@ -49,7 +49,7 @@ enum PremiumLogEventsSource : Equatable {
         case .settings:
             return "settings"
         case let .double_limits(sub):
-            return "double_limits__\(sub)"
+            return "double_limits__\(sub.rawValue)"
         case .more_upload:
             return "more_upload"
         case .unique_reactions:

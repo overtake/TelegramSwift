@@ -106,7 +106,7 @@ final class AnimatedEmojiesController : TelegramGenericViewController<AnimatedEm
         }
 
         let arguments = Arguments(context: context, send: { [weak self] item in
-            self?.interactions?.sendAnimatedEmoji(item)
+            self?.interactions?.sendAnimatedEmoji(.animatedEmoji, item)
         })
         
         let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

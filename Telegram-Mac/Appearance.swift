@@ -2256,6 +2256,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                entertainment_Search: { NSImage(named: "Icon_Entertainment_Search")!.precomposed(palette.grayIcon) },
                                                entertainment_Settings: { NSImage(named: "Icon_Entertainment_Settings")!.precomposed(palette.grayIcon) },
                                                entertainment_SearchCancel: { NSImage(named: "Icon_Entertainment_SearchCancel")!.precomposed(palette.grayIcon) },
+                                               entertainment_AnimatedEmoji:  { NSImage(named: "Icon_Entertainment_AnimatedEmoji")!.precomposed(palette.grayIcon) },
                                                scheduledAvatar: { NSImage(named: "Icon_AvatarScheduled")!.precomposed(.white) },
                                                scheduledInputAction: { NSImage(named: "Icon_ChatActionScheduled")!.precomposed(palette.accentIcon) },
                                                verifyDialog: { generateDialogVerify(background: palette.underSelectedColor, foreground: palette.basicAccent) },
