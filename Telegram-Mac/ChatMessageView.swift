@@ -14,20 +14,37 @@ import Postbox
 
 final class InlineStickerItemView : View {
     struct Key: Hashable {
-        var id: MediaId
+        var id: Int64
         var index: Int
     }
     private let context: AccountContext
-    private let file: TelegramMediaFile
-    private let view = StickerMediaContentView(frame: .zero)
-    init(context: AccountContext, file: TelegramMediaFile, size: NSSize) {
+    private let emoji: ChatTextCustomEmojiAttribute
+    private let view: StickerMediaContentView
+    private var infoDisposable: Disposable?
+    init(context: AccountContext, emoji: ChatTextCustomEmojiAttribute, size: NSSize) {
         self.context = context
-        self.file = file
+        self.emoji = emoji
+        self.view = StickerMediaContentView(frame: size.bounds)
         super.init(frame: size.bounds)
         addSubview(view)
-//        backgroundColor = .random
-        view.update(with: file, size: size, context: context, parent: nil, table: nil)
+            
+        self.infoDisposable = (context.inlinePacksContext.stickerPack(reference: emoji.reference)
+        |> deliverOnMainQueue).start(next: { [weak self] files in
+            guard let strongSelf = self else {
+                return
+            }
+            for file in files {
+                if file.fileId.id == emoji.fileId {
+                    strongSelf.view.update(with: file, size: size, context: context, parent: nil, table: nil)
+                    break
+                }
+            }
+        })
         
+    }
+    
+    deinit {
+        infoDisposable?.dispose()
     }
     
     override var isHidden: Bool {
@@ -156,49 +173,6 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     }
     
     
-    private func updateInlineStickers(context: AccountContext, textLayout: TextViewLayout) {
-        var nextIndexById: [MediaId: Int] = [:]
-        var validIds: [InlineStickerItemView.Key] = []
-        
-        for item in textLayout.embeddedItems {
-            if let stickerItem = item.value as? InlineStickerItem {
-                let index: Int
-                if let currentNext = nextIndexById[stickerItem.file.fileId] {
-                    index = currentNext
-                } else {
-                    index = 0
-                }
-                nextIndexById[stickerItem.file.fileId] = index + 1
-                let id = InlineStickerItemView.Key(id: stickerItem.file.fileId, index: index)
-                validIds.append(id)
-                
-                let rect = item.rect.insetBy(dx: -1.5, dy: -1.5) //CGRect(origin: item.rect.offsetBy(dx: textLayout.insets.width, dy: textLayout.insets.height + 0.0).center, size: CGSize()).insetBy(dx: -10, dy: -8.0)
-                
-                
-                let view: InlineStickerItemView
-                if let current = self.inlineStickerItemViews[id] {
-                    view = current
-                } else {
-                    view = InlineStickerItemView(context: context, file: stickerItem.file, size: rect.size)
-                    self.inlineStickerItemViews[id] = view
-                    self.text.addEmbeddedView(view)
-                }
-                
-                view.frame = rect
-            }
-        }
-        
-        var removeKeys: [InlineStickerItemView.Key] = []
-        for (key, itemLayer) in self.inlineStickerItemViews {
-            if !validIds.contains(key) {
-                removeKeys.append(key)
-                itemLayer.removeFromSuperview()
-            }
-        }
-        for key in removeKeys {
-            self.inlineStickerItemViews.removeValue(forKey: key)
-        }
-    }
 
 
     override func set(item:TableRowItem, animated:Bool = false) {
@@ -207,7 +181,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         if let item = item as? ChatMessageItem {
             self.text.update(item.textLayout)
             
-            updateInlineStickers(context: item.context, textLayout: item.textLayout)
+            updateInlineStickers(context: item.context, view: self.text, textLayout: item.textLayout)
             
             if let webpageLayout = item.webpageLayout {
                 let updated = webpageContent == nil || !webpageContent!.isKind(of: webpageLayout.viewClass())

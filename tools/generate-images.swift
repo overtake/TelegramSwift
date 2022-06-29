@@ -408,6 +408,7 @@ func initialize() -> [String] {
     array.append("entertainment_Search")
     array.append("entertainment_Settings")
     array.append("entertainment_SearchCancel")
+    array.append("entertainment_AnimatedEmoji")
     array.append("scheduledAvatar")
     array.append("scheduledInputAction")
     array.append("verifyDialog")

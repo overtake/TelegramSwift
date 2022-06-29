@@ -211,6 +211,9 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             if peer.id != item.context.peerId, item.peerView.peerIsContact, peer.phone != nil {
                 items.append(ActionItem(text: strings().peerInfoActionShare, image: theme.icons.profile_share, animation: .menu_forward, action: arguments.shareContact))
             }
+            if peer.id != item.context.peerId, !peer.isPremium {
+                items.append(ActionItem(text: strings().peerInfoActionGiftPremium, image: theme.icons.profile_share, animation: .menu_gift, action: arguments.giftPremium))
+            }
             if peer.id != item.context.peerId, let cachedData = item.peerView.cachedData as? CachedUserData, item.peerView.peerIsContact {
                 items.append(ActionItem(text: (!cachedData.isBlocked ? strings().peerInfoBlockUser : strings().peerInfoUnblockUser), image: !cachedData.isBlocked ? theme.icons.profile_block : theme.icons.profile_unblock, animation: cachedData.isBlocked ? .menu_unblock : .menu_restrict, destruct: true, action: {
                     arguments.updateBlocked(peer: peer, !cachedData.isBlocked, false)

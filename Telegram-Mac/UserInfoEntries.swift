@@ -97,6 +97,10 @@ class UserInfoArguments : PeerInfoArguments {
     private let deletePeerContactDisposable = MetaDisposable()
     private let callDisposable = MetaDisposable()
     
+    func giftPremium() {
+        showModal(with: PremiumGiftController(context: context, peerId: self.peerId), for: context.window)
+    }
+    
     func shareContact() {
         let context = self.context
         let peer = context.account.postbox.peerView(id: peerId) |> take(1) |> map {

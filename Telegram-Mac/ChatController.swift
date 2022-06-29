@@ -1379,13 +1379,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     }
 
     func scrollUpOrToUnread() {
-        if let mentions = self.genericView.mentions {
-            mentions.send(event: .Click)
-        } else if let reactions = self.genericView.reactions {
-            reactions.send(event: .Click)
-        } else {
-            self.scrollup()
-        }
+        self.scrollup()
     }
     
     override func scrollup(force: Bool = false) -> Void {

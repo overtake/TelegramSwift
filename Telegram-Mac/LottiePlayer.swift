@@ -394,14 +394,6 @@ private final class PlayerRenderer {
     }
     private func play(_ player: RenderContainer) {
         
-        switch self.animation.playPolicy {
-        case let.framesCount(count):
-            if count == 0 {
-                return
-            }
-        default:
-            break
-        }
         
         self.finished = false
         
@@ -1577,9 +1569,7 @@ class LottiePlayerView : View {
         }
     }
     
-    var animation: LottieAnimation? {
-        return context?.animation
-    }
+    var animation: LottieAnimation?
     
     override var isFlipped: Bool {
         return true
@@ -1656,14 +1646,30 @@ class LottiePlayerView : View {
         context?.setColors(colors)
     }
     
+    
+    
     func set(_ animation: LottieAnimation?, reset: Bool = false, saveContext: Bool = false, animated: Bool = false) {
         assertOnMainThread()
         _ignoreCachedContext = false
         
+        self.animation = animation
+        
         if animation == nil {
             self.temporary = nil
         }
-        if let animation = animation {
+        
+        var accept: Bool = true
+        switch animation?.playPolicy {
+        case let.framesCount(count):
+            accept = count != 0
+        default:
+            break
+        }
+        
+        if let animation = animation, accept {
+            
+            
+            
             self.stateValue.set(self._currentState.modify { _ in .initializing })
             if self.context?.animation != animation || reset {
                 if !animation.runOnQueue.isCurrent() && animation.supportsMetal {

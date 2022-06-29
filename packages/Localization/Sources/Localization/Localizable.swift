@@ -7117,6 +7117,8 @@ public final class L10n {
   public static var peerInfoActionCall: String  { return L10n.tr("Localizable", "PeerInfo.Action.Call") }
   /// Discuss
   public static var peerInfoActionDiscussion: String  { return L10n.tr("Localizable", "PeerInfo.Action.Discussion") }
+  /// Gift Premium
+  public static var peerInfoActionGiftPremium: String  { return L10n.tr("Localizable", "PeerInfo.Action.GiftPremium") }
   /// Leave
   public static var peerInfoActionLeave: String  { return L10n.tr("Localizable", "PeerInfo.Action.Leave") }
   /// Live Stream
@@ -7703,6 +7705,12 @@ public final class L10n {
   public static var premiumBoardingVoiceTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Voice.Title") }
   /// Double the Limit
   public static var premiumGetPremiumDouble: String  { return L10n.tr("Localizable", "Premium.GetPremium.Double") }
+  /// Let **%@** enjoy exclusive features of Telegram with **Telegram Premium**.
+  public static func premiumGiftText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Gift.Text", p1)
+  }
+  /// Gift Telegram Premium
+  public static var premiumGiftTitle: String  { return L10n.tr("Localizable", "Premium.Gift.Title") }
   /// Free
   public static var premiumLimitFree: String  { return L10n.tr("Localizable", "Premium.Limit.Free") }
   /// Increase Limit

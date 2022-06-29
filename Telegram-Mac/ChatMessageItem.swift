@@ -13,61 +13,81 @@ import InAppVideoServices
 import Postbox
 import SwiftSignalKit
 import InAppSettings
+import TGModernGrowingTextView
+
+/*
+ static func == (lhs: ChatTextCustomEmojiAttribute, rhs: ChatTextCustomEmojiAttribute) -> Bool {
+     if lhs.fileId != rhs.fileId {
+         return false
+     }
+     if lhs.reference != rhs.reference {
+         return false
+     }
+     if lhs.emoji != rhs.emoji {
+         return false
+     }
+     return true
+ }
+ 
+ */
+
+struct ChatTextCustomEmojiAttribute : Equatable {
+  
+    let fileId: Int64
+    let reference: StickerPackReference
+    let emoji: String
+    init(fileId: Int64, reference: StickerPackReference, emoji: String) {
+        self.fileId = fileId
+        self.reference = reference
+        self.emoji = emoji
+    }
+    var attachment: TGTextAttachment {
+        return .init(identifier: "\(arc4random64())", reference: self.reference, fileId: self.fileId, text: emoji)
+    }
+}
 
 
 final class InlineStickerItem: Hashable {
-    let file: TelegramMediaFile
+    let emoji: ChatTextCustomEmojiAttribute
     
-    init(file: TelegramMediaFile) {
-        self.file = file
+    init(emoji: ChatTextCustomEmojiAttribute) {
+        self.emoji = emoji
     }
     
     func hash(into hasher: inout Hasher) {
-        hasher.combine(self.file.fileId)
+        hasher.combine(emoji.fileId)
     }
     
+    
     static func ==(lhs: InlineStickerItem, rhs: InlineStickerItem) -> Bool {
-        if lhs.file.fileId != rhs.file.fileId {
+        if lhs.emoji != rhs.emoji {
             return false
         }
         return true
     }
     
-    static func apply(to attr: NSMutableAttributedString, emojies: [String: StickerPackItem], context: AccountContext) {
+    static func apply(to attr: NSMutableAttributedString, entities: [MessageTextEntity], context: AccountContext) {
         let copy = attr
-        var currentCount = 0
-        var startIndex = copy.string.startIndex
         
-        //if !context.isPremium {
+        if !context.isPremium {
             return
-        //}
-        while true {
-            var hadUpdates = false
-            copy.string.enumerateSubstrings(in: startIndex ..< copy.string.endIndex, options: [.byComposedCharacterSequences]) { substring, substringRange, _, stop in
-                if let substring = substring {
-                    let emoji = substring.basicEmoji.0
-                    
-                    var emojiFile: TelegramMediaFile?
-                    emojiFile = emojies[emoji]?.file
-                    if emojiFile == nil {
-                        emojiFile = emojies[emoji.strippedEmoji]?.file
-                    }
-                    if let emojiFile = emojiFile {
-                        let currentDict = copy.attributes(at: NSRange(substringRange, in: copy.string).lowerBound, effectiveRange: nil)
-                        var updatedAttributes: [NSAttributedString.Key: Any] = currentDict
-                        updatedAttributes[NSAttributedString.Key.foregroundColor] = NSColor.clear.cgColor
-                        updatedAttributes[NSAttributedString.Key("Attribute__EmbeddedItem")] = InlineStickerItem(file: emojiFile)
-                        copy.addAttributes(updatedAttributes, range: NSRange(substringRange, in: copy.string))
-                        startIndex = substringRange.upperBound
-                        currentCount += 1
-                        hadUpdates = true
-                        stop = true
-                    }
-                }
+        }
+        for entity in entities.sorted(by: { $0.range.lowerBound > $1.range.lowerBound }) {
+            guard case let .CustomEmoji(stickerPack, fileId) = entity.type else {
+                continue
             }
-            if !hadUpdates {
-                break
-            }
+            let range = NSRange(location: entity.range.lowerBound, length: entity.range.upperBound - entity.range.lowerBound)
+            let currentDict = copy.attributes(at: range.lowerBound, effectiveRange: nil)
+            var updatedAttributes: [NSAttributedString.Key: Any] = currentDict
+            
+            let text = copy.string.nsstring.substring(with: range)
+            
+            updatedAttributes[.foregroundColor] = NSColor.clear
+            updatedAttributes[NSAttributedString.Key("Attribute__EmbeddedItem")] = InlineStickerItem(emoji: ChatTextCustomEmojiAttribute(fileId: fileId, reference: stickerPack, emoji: text))
+            
+            let insertString = NSAttributedString(string: text, attributes: updatedAttributes)
+            copy.replaceCharacters(in: range, with: insertString)
+
         }
 
     }
@@ -375,17 +395,13 @@ class ChatMessageItem: ChatRowItem {
             self.containsBigEmoji = containsBigEmoji
              
              if !containsBigEmoji {
-                 InlineStickerItem.apply(to: copy, emojies: entry.additionalData.animatedEmojiStickers, context: context)
+                 InlineStickerItem.apply(to: copy, entities: message.textEntities?.entities ?? [], context: context)
              }
             
             if message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
                 copy.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: context, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), openInfo: chatInteraction.openInfo, hashtag: { _ in }, command: { _ in }, applyProxy: chatInteraction.applyProxy)
             }
-            if let text = message.restrictedText(context.contentSettings) {
-                self.messageText = .initialize(string: text, color: theme.colors.grayText, font: .italic(theme.fontSize))
-            } else {
-                self.messageText = copy
-            }
+           
            
              var spoilers:[TextViewLayout.Spoiler] = []
              for attr in message.attributes {
@@ -399,7 +415,9 @@ class ChatMessageItem: ChatRowItem {
                              } else {
                                  color = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
                              }
-                             spoilers.append(.init(range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound), color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
+                             let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
+                             copy.addAttribute(.init(rawValue: TGSpoilerAttributeName), value: TGInputTextTag(uniqueId: arc4random64(), attachment: NSNumber(value: -1), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.text)), range: range)
+                             spoilers.append(.init(range: range, color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
                          default:
                              break
                          }
@@ -407,7 +425,11 @@ class ChatMessageItem: ChatRowItem {
                  }
              }
              
-             
+             if let text = message.restrictedText(context.contentSettings) {
+                 self.messageText = .initialize(string: text, color: theme.colors.grayText, font: .italic(theme.fontSize))
+             } else {
+                 self.messageText = copy
+             }
              textLayout = TextViewLayout(self.messageText, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble && !containsBigEmoji, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
                  chatInteraction?.update({
                      $0.updatedInterfaceState({
