@@ -44,14 +44,14 @@ class ChatAnimatedStickerItem: ChatMediaItem {
         
         let isPremiumSticker = file.isPremiumSticker
         
-        let mirror = ((renderType == .bubble && isIncoming) || renderType == .list) && isPremiumSticker
+        let mirror = ((renderType == .bubble && isIncoming) || renderType == .list)
         parameters?.runEmojiScreenEffect = { [weak chatInteraction] emoji in
             chatInteraction?.runEmojiScreenEffect(emoji, object.message!.id, mirror, false)
         }
         parameters?.runPremiumScreenEffect = { [weak chatInteraction] message in
             chatInteraction?.runPremiumScreenEffect(message, mirror, false)
         }
-        parameters?.mirror = mirror
-        
+        parameters?.mirror = mirror && isPremiumSticker
+
     }
 }
