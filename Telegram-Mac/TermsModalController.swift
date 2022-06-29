@@ -113,7 +113,11 @@ class TermsModalController: ModalViewController {
         }, cancelTitle: strings().termsOfServiceDisagree, cancel: {
             confirm(for: context.window, header: strings().termsOfServiceTitle, information: strings().termsOfServiceDisagreeText, okTitle: strings().termsOfServiceDisagreeOK, successHandler: { _ in
                 confirm(for: context.window, header: strings().termsOfServiceTitle, information: strings().termsOfServiceDisagreeTextLast, okTitle: strings().termsOfServiceDisagreeTextLastOK, successHandler: { _ in
-                    context.engine.accountData.resetAccountDueTermsOfService().start()
+                    _ = showModalProgress(signal: context.engine.auth.deleteAccount(reason: "GDPR"), for: context.window).start(error: { _ in
+                        showModalText(for: context.window, text: strings().unknownError)
+                    }, completed: {
+                        _ = logoutFromAccount(id: context.account.id, accountManager: context.sharedContext.accountManager, alreadyLoggedOutRemotely: true).start()
+                    })
                 })
             })
         }, drawBorder: true, height: 50, alignCancelLeft: true)
