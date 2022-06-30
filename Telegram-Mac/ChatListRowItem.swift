@@ -749,7 +749,7 @@ class ChatListRowItem: TableRowItem {
             }
             
             if let messageText = messageText?.mutableCopy() as? NSMutableAttributedString {
-                InlineStickerItem.apply(to: messageText, entities: message?.textEntities?.entities ?? [], context: context)
+                InlineStickerItem.apply(to: messageText, entities: message?.textEntities?.entities ?? [], context: context, ignoreSpoiler: true)
 
                 self.messageLayout = .init(messageText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2, cutout: textCutout)
                 
@@ -757,7 +757,7 @@ class ChatListRowItem: TableRowItem {
                 if let color = selectedText.attribute(.selectedColor, at: 0, effectiveRange: nil) {
                     selectedText.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedText.range)
                 }
-                InlineStickerItem.apply(to: selectedText, entities: message?.textEntities?.entities ?? [], context: context)
+                InlineStickerItem.apply(to: selectedText, entities: message?.textEntities?.entities ?? [], context: context, ignoreSpoiler: true)
 
                 self.messageSelectedLayout = .init(selectedText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2, cutout: textCutout)
 

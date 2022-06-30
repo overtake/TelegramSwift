@@ -94,6 +94,8 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         
         var accept = ((self.window != nil && self.window!.isKeyWindow) || (self.window != nil && !(self.window is Window))) && !NSIsEmptyRect(self.visibleRect) && !self.isDynamicContentLocked && self.sticker != nil
         
+        NSLog("w:\(self.window != nil), s:\(self.sticker != nil)")
+        
         let parameters = self.parameters as? ChatAnimatedStickerMediaLayoutParameters
         
         accept = parameters?.alwaysAccept ?? accept
@@ -225,12 +227,14 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         
         guard let file = media as? TelegramMediaFile else { return }
 
-        let updated = self.media != nil ? !file.isSemanticallyEqual(to: self.media!) : true
+        var updated = self.media != nil ? !file.isSemanticallyEqual(to: self.media!) : true
                 
         if parent?.stableId != self.parent?.stableId {
             self.sticker = nil
+            updated = true
         } else if parent == nil && file.fileId != prev?.fileId {
             self.sticker = nil
+            updated = true
         }
                
 
@@ -297,8 +301,8 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                     }
                 }
                 return nil
-            } |> deliverOnMainQueue).start(next: { [weak file, weak self] data in
-                if let data = data, let file = file, let `self` = self {
+            } |> deliverOnMainQueue).start(next: { [weak self] data in
+                if let data = data, let `self` = self {
                     var playPolicy: LottiePlayPolicy = parameters?.playPolicy ?? (file.isEmojiAnimatedSticker || !self.chatLoopAnimated ? (self.parameters == nil ? .framesCount(1) : .once) : .loop)
                     
                     if self.playOnHover == true {
