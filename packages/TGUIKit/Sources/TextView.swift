@@ -1590,7 +1590,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                     additionY -= 4
                 }
                                 
-                ctx.textPosition = CGPoint(x: penOffset, y: startPosition.y + line.frame.minY + additionY)
+                ctx.textPosition = CGPoint(x: penOffset + line.frame.minX, y: startPosition.y + line.frame.minY + additionY)
                 
                 let glyphRuns = CTLineGetGlyphRuns(line.line) as NSArray
                 if glyphRuns.count != 0 {

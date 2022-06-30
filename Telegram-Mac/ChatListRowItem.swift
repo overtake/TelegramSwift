@@ -473,6 +473,14 @@ class ChatListRowItem: TableRowItem {
             }
             self.messageText = textString
         }
+        if let messageText = messageText?.mutableCopy() as? NSMutableAttributedString {
+            self.messageLayout = .init(messageText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2)
+            let selectedText:NSMutableAttributedString = messageText.mutableCopy() as! NSMutableAttributedString
+            if let color = selectedText.attribute(.selectedColor, at: 0, effectiveRange: nil) {
+                selectedText.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedText.range)
+            self.messageSelectedLayout = .init(selectedText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2)
+            }
+        }
 
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
@@ -760,7 +768,6 @@ class ChatListRowItem: TableRowItem {
                 InlineStickerItem.apply(to: selectedText, entities: message?.textEntities?.entities ?? [], context: context, ignoreSpoiler: true)
 
                 self.messageSelectedLayout = .init(selectedText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2, cutout: textCutout)
-
             }
         }
         
