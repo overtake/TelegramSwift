@@ -232,8 +232,10 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     private let revealRightView: View = View()
     private var titleText:TextNode = TextNode()
-    private var messageText:TextNode = TextNode()
+    private var messageTextView:TextView? = nil
     
+    private var inlineStickerItemViews: [InlineStickerItemView.Key: InlineStickerItemView] = [:]
+
         
     private var badgeView:View?
     private var additionalBadgeView:View?
@@ -248,7 +250,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer? 
 
-    private var hiddemMessage:Bool = false
+    private var hiddenMessage:Bool = false
     private let peerInputActivitiesDisposable:MetaDisposable = MetaDisposable()
     private var removeControl:ImageButton? = nil
     private var animatedView: RowAnimateView?
@@ -304,7 +306,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     activitiesModel?.clean()
                     activitiesModel?.view?.removeFromSuperview()
                     activitiesModel = nil
-                    self.hiddemMessage = false
+                    self.hiddenMessage = false
                     containerView.needsDisplay = true
                 } else if activitiesModel == nil {
                     activitiesModel = ChatActivitiesModel()
@@ -329,7 +331,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         if let item = self?.item as? ChatListRowItem, let displayLayout = item.ctxDisplayLayout {
                             self?.activitiesModel?.view?.setFrameOrigin(item.leftInset, displayLayout.0.size.height + item.margin + 3)
                         }
-                        self?.hiddemMessage = show
+                        self?.hiddenMessage = show
                         self?.containerView.needsDisplay = true
                     })
                 }
@@ -340,7 +342,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 activitiesModel?.clean()
                 activitiesModel?.view?.removeFromSuperview()
                 activitiesModel = nil
-                hiddemMessage = false
+                hiddenMessage = false
             }
         }
     }
@@ -487,11 +489,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     }
                     
                     var messageOffset: CGFloat = 0
-                    if let chatNameLayout = item.ctxChatNameLayout, !hiddemMessage {
+                    if let chatNameLayout = item.ctxChatNameLayout, !hiddenMessage {
                         chatNameLayout.1.draw(NSMakeRect(item.leftInset, displayLayout.0.size.height + item.margin + 2, chatNameLayout.0.size.width, chatNameLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                         messageOffset += chatNameLayout.0.size.height + 2
                     }
-                    if let messageLayout = item.ctxMessageLayout, !hiddemMessage {
+                    if let messageLayout = item.ctxMessageLayout, !hiddenMessage {
                         messageLayout.1.draw(NSMakeRect(item.leftInset, displayLayout.0.size.height + item.margin + 1 + messageOffset, messageLayout.0.size.width, messageLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                     }
                     
@@ -586,6 +588,50 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         expandView?.backgroundColor = theme.colors.grayBackground
     }
     
+    func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
+        var nextIndexById: [Int64: Int] = [:]
+        var validIds: [InlineStickerItemView.Key] = []
+                
+        for item in textLayout.embeddedItems {
+            if let stickerItem = item.value as? InlineStickerItem {
+                let index: Int
+                if let currentNext = nextIndexById[stickerItem.emoji.fileId] {
+                    index = currentNext
+                } else {
+                    index = 0
+                }
+                nextIndexById[stickerItem.emoji.fileId] = index + 1
+                let id = InlineStickerItemView.Key(id: stickerItem.emoji.fileId, index: index)
+                validIds.append(id)
+                
+                let rect = CGRect(origin: item.rect.offsetBy(dx: textLayout.insets.width, dy: textLayout.insets.height + 0.0).center, size: CGSize()).insetBy(dx: -12.0, dy: -12.0)
+                
+                let view: InlineStickerItemView
+                if let current = self.inlineStickerItemViews[id] {
+                    view = current
+                } else {
+                    view = InlineStickerItemView(context: context, emoji: stickerItem.emoji, size: item.rect.size)
+                    self.inlineStickerItemViews[id] = view
+                    textView.addEmbeddedView(view)
+                }
+                
+                view.frame = rect
+            }
+        }
+        
+        var removeKeys: [InlineStickerItemView.Key] = []
+        for (key, itemLayer) in self.inlineStickerItemViews {
+            if !validIds.contains(key) {
+                removeKeys.append(key)
+                itemLayer.removeFromSuperview()
+            }
+        }
+        for key in removeKeys {
+            self.inlineStickerItemViews.removeValue(forKey: key)
+        }
+    }
+
+    
     private var videoRepresentation: TelegramMediaImage.VideoRepresentation?
 
     override func set(item:TableRowItem, animated:Bool = false) {
@@ -609,6 +655,30 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         
                 
          if let item = item as? ChatListRowItem {
+             
+             if let messageText = item.ctxMessageText, !hiddenMessage {
+                 let current: TextView
+                 if let view = self.messageTextView {
+                     current = view
+                 } else {
+                     current = TextView()
+                     current.userInteractionEnabled = false
+                     current.isSelectable = false
+                     self.messageTextView = current
+                     self.containerView.addSubview(current)
+                     if animated {
+                         current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                     }
+                 }
+                 current.update(messageText)
+                 
+                 updateInlineStickers(context: item.context, view: current, textLayout: messageText)
+                 
+             } else if let view = self.messageTextView {
+                 self.messageTextView = nil
+                 performSubviewRemoval(view, animated: animated)
+             }
+             
              
              if !item.photos.isEmpty {
                  
@@ -1710,7 +1780,14 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     mediaPreviewOffset.x += mediaSize.width + contentImageSpacing
                 }
 
+                var messageOffset: CGFloat = 0
+                if let chatNameLayout = item.ctxChatNameLayout, !hiddenMessage {
+                    messageOffset += chatNameLayout.0.size.height + 2
+                }
+                messageTextView?.setFrameOrigin(NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 1 + messageOffset))
             }
+            
+            
         }
     }
     

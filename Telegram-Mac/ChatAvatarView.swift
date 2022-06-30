@@ -134,7 +134,7 @@ final class ChatAvatarView : Control {
         NotificationCenter.default.removeObserver(self)
     }
     deinit {
-        removeNotificationListeners()
+        NotificationCenter.default.removeObserver(self)
     }
     
     required init?(coder: NSCoder) {

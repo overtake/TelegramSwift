@@ -602,7 +602,6 @@ private final class PlayerRenderer {
                         stateValue.addFrame(frame)
                     } else {
                         if stateValue.startFrame != currentFrame {
-                            NSLog("finish at: \(currentFrame)")
                             stateValue.updateCurrentFrame(stateValue.startFrame)
                             stateValue.loopComplete()
                         } else {
