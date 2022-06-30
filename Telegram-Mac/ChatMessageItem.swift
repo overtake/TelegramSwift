@@ -66,28 +66,48 @@ final class InlineStickerItem: Hashable {
         return true
     }
     
-    static func apply(to attr: NSMutableAttributedString, entities: [MessageTextEntity], context: AccountContext) {
+    static func apply(to attr: NSMutableAttributedString, entities: [MessageTextEntity], context: AccountContext, ignoreSpoiler: Bool = false) {
         let copy = attr
         
         if !context.isPremium {
             return
         }
+        
+        var ranges: [NSRange] = []
+        if ignoreSpoiler {
+            for entity in entities.sorted(by: { $0.range.lowerBound > $1.range.lowerBound }) {
+                guard case .Spoiler = entity.type else {
+                    continue
+                }
+                let range = NSRange(location: entity.range.lowerBound, length: entity.range.upperBound - entity.range.lowerBound)
+                ranges.append(range)
+            }
+        }
+        
+        
+        
         for entity in entities.sorted(by: { $0.range.lowerBound > $1.range.lowerBound }) {
             guard case let .CustomEmoji(stickerPack, fileId) = entity.type else {
                 continue
             }
+            
             let range = NSRange(location: entity.range.lowerBound, length: entity.range.upperBound - entity.range.lowerBound)
-            let currentDict = copy.attributes(at: range.lowerBound, effectiveRange: nil)
-            var updatedAttributes: [NSAttributedString.Key: Any] = currentDict
             
-            let text = copy.string.nsstring.substring(with: range)
-            
-            updatedAttributes[.foregroundColor] = NSColor.clear
-            updatedAttributes[NSAttributedString.Key("Attribute__EmbeddedItem")] = InlineStickerItem(emoji: ChatTextCustomEmojiAttribute(fileId: fileId, reference: stickerPack, emoji: text))
-            
-            let insertString = NSAttributedString(string: text, attributes: updatedAttributes)
-            copy.replaceCharacters(in: range, with: insertString)
-
+            let intersection = ranges.first(where: { r in
+                return r.intersection(range) != nil
+            })
+            if intersection == nil {
+                let currentDict = copy.attributes(at: range.lowerBound, effectiveRange: nil)
+                var updatedAttributes: [NSAttributedString.Key: Any] = currentDict
+                
+                let text = copy.string.nsstring.substring(with: range)
+                
+                updatedAttributes[.foregroundColor] = NSColor.clear
+                updatedAttributes[NSAttributedString.Key("Attribute__EmbeddedItem")] = InlineStickerItem(emoji: ChatTextCustomEmojiAttribute(fileId: fileId, reference: stickerPack, emoji: text))
+                
+                let insertString = NSAttributedString(string: text, attributes: updatedAttributes)
+                copy.replaceCharacters(in: range, with: insertString)
+            }
         }
 
     }

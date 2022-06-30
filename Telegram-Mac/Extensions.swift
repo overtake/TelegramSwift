@@ -1787,11 +1787,14 @@ extension String {
             let char = string.character(at: range.location + i)
             rep += "\(chars[Int(char) % chars.count])"
         }
-        if string.length <= range.upperBound {
-            return string.replacingCharacters(in: range, with: rep)
-        } else {
-            return string.replacingCharacters(in: NSMakeRange(range.location, string.length), with: rep)
-        }
+        return string.replacingCharacters(in: range, with: rep)
+
+//        if string.length <= range.upperBound {
+//            return string.replacingCharacters(in: range, with: rep)
+//        } else {
+//            NSLog("\(string.length), \(range.upperBound)")
+//            return string.replacingCharacters(in: NSMakeRange(range.location, string.length), with: rep)
+//        }
     }
 }
 
