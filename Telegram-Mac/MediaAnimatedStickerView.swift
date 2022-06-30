@@ -93,9 +93,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
     @objc func updatePlayerIfNeeded() {
         
         var accept = ((self.window != nil && self.window!.isKeyWindow) || (self.window != nil && !(self.window is Window))) && !NSIsEmptyRect(self.visibleRect) && !self.isDynamicContentLocked && self.sticker != nil
-        
-        NSLog("w:\(self.window != nil), s:\(self.sticker != nil)")
-        
+                
         let parameters = self.parameters as? ChatAnimatedStickerMediaLayoutParameters
         
         accept = parameters?.alwaysAccept ?? accept
