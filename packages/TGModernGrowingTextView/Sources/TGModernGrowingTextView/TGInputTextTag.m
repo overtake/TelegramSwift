@@ -19,6 +19,7 @@
     return self;
 }
 
+
 -(id)unique {
     return [[TGTextAttachment alloc] initWithIdentifier:[NSString stringWithFormat:@"%d", arc4random()] reference:_reference fileId:_fileId text:_text];
 }

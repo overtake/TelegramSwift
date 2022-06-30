@@ -1790,7 +1790,7 @@ extension String {
         if string.length <= range.upperBound {
             return string.replacingCharacters(in: range, with: rep)
         } else {
-            return self
+            return string.replacingCharacters(in: NSMakeRange(range.location, string.length), with: rep)
         }
     }
 }

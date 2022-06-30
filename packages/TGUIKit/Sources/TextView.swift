@@ -627,7 +627,7 @@ public final class TextViewLayout : Equatable {
                     }
                 }
                 
-                lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush, isBlocked: isWasPreformatted, isRTL: isRTL, strikethrough: strikethroughs))
+                lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush, isBlocked: isWasPreformatted, isRTL: isRTL, strikethrough: strikethroughs, embeddedItems: embeddedItems))
                 
                 break
             } else {
@@ -765,7 +765,7 @@ public final class TextViewLayout : Equatable {
             self.blockImage.0 = NSMakePoint(0, 0)
             
             layoutSize.width += 20
-            lines[0] = TextViewLine(line: lines[0].line, frame: lines[0].frame.offsetBy(dx: 0, dy: 2), range: lines[0].range, penFlush: self.penFlush)
+            lines[0] = TextViewLine(line: lines[0].line, frame: lines[0].frame.offsetBy(dx: 0, dy: 2), range: lines[0].range, penFlush: self.penFlush, strikethrough: lines[0].strikethrough, embeddedItems: lines[0].embeddedItems)
             layoutSize.height = rects.last!.maxY
         }
         
