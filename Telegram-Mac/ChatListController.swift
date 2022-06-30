@@ -311,7 +311,7 @@ class ChatListController : PeersListController {
         
         if !context.isPremium {
             if let index = data.tabs.firstIndex(of: data.filter) {
-                if index + 2 > context.premiumLimits.dialog_filters_limit_default {
+                if index > context.premiumLimits.dialog_filters_limit_default {
                     showPremiumLimit(context: context, type: .folders)
                     return
                 }

@@ -146,8 +146,8 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
         $0.orderedItemListsViews[0].items.count
     }
     
-    let _savedGifsCount: Signal<Int, NoError> = account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentGifs], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: 100) |> take(1) |> map {
-        $0.orderedItemListsViews[0].items.count
+    let _savedGifsCount: Signal<Int, NoError> = context.account.postbox.combinedView(keys: [.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)]) |> take(1) |> map {
+        return ($0.views[.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)] as! OrderedItemListView).items.count
     }
 
     
@@ -611,7 +611,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         thirdBlock.append(ContextMenuItem(strings().messageContextSaveGif, handler: {
                             
                             let limit = context.isPremium ? context.premiumLimits.saved_gifs_limit_premium : context.premiumLimits.saved_gifs_limit_default
-                            if limit >= data.savedGifsCount, !context.isPremium, !context.premiumIsBlocked {
+                            if limit <= data.savedGifsCount, !context.isPremium, !context.premiumIsBlocked {
                                 showModalText(for: context.window, text: strings().chatContextFavoriteGifsLimitInfo("\(context.premiumLimits.saved_gifs_limit_premium)"), title: strings().chatContextFavoriteGifsLimitTitle, callback: { value in
                                     showPremiumLimit(context: context, type: .savedGifs)
                                 })
