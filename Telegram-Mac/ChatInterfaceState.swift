@@ -80,7 +80,7 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
         case 8:
             self = .underline(range)
         case 9:
-            self = .animated(range, try container.decode(String.self, forKey: "id"), .animatedEmoji, try container.decode(Int64.self, forKey: "fileId"))
+            self = .animated(range, try container.decode(String.self, forKey: "id"), try container.decode(StickerPackReference.self, forKey: "ref"), try container.decode(Int64.self, forKey: "fileId"))
         default:
             fatalError("input attribute not supported")
         }

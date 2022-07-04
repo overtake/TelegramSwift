@@ -106,8 +106,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         let context = self.chatInteraction.context
                 
         textView.installGetAttach({ attachment in
-            let view = ChatInputAnimatedEmojiAttach(frame: NSMakeRect(0, 0, 18, 18))
-            view.set(attachment, size: NSMakeSize(18, 18), context: context)
+            let view = ChatInputAnimatedEmojiAttach(frame: NSMakeRect(0, 0, 6 + theme.fontSize, 6 + theme.fontSize))
+            view.set(attachment, size: NSMakeSize(6 + theme.fontSize, 6 + theme.fontSize), context: context)
             return view
         })
         

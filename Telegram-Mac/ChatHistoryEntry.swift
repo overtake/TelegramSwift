@@ -467,36 +467,48 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         
         if message.media.isEmpty {
             if message.text.length <= 7 {
+                
+                let customRange: [NSRange] = message.textEntities?.entities.compactMap { entity in
+                    if case .CustomEmoji = entity.type {
+                        let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
+                        return range
+                    }
+                    return nil
+                } ?? []
+                
+                
                 let original = message.text.fixed
                 let unmodified = original.emojiUnmodified
                 if original.isSingleEmoji, let item = animatedEmojiStickers[unmodified] {
-                    var file = item.file
-                    var attributes = file.attributes
-                    attributes.removeAll { attr in
-                        if case .FileName = attr {
-                            return true
-                        } else {
-                            return false
+                    if !customRange.contains(where: { $0.intersection(NSMakeRange(0, message.text.length)) != nil }) {
+                        var file = item.file
+                        var attributes = file.attributes
+                        attributes.removeAll { attr in
+                            if case .FileName = attr {
+                                return true
+                            } else {
+                                return false
+                            }
                         }
-                    }
-                    attributes = attributes.map { attribute -> TelegramMediaFileAttribute in
-                        switch attribute {
-                        case let .Sticker(_, packReference, maskData):
-                            return .Sticker(displayText: original, packReference: packReference, maskData: maskData)
-                        default:
-                            return attribute
+                        attributes = attributes.map { attribute -> TelegramMediaFileAttribute in
+                            switch attribute {
+                            case let .Sticker(_, packReference, maskData):
+                                return .Sticker(displayText: original, packReference: packReference, maskData: maskData)
+                            default:
+                                return attribute
+                            }
                         }
-                    }
-                    var disableStickers: Bool = false
-                    if let peer = coreMessageMainPeer(message) as? TelegramChannel {
-                        if permissionText(from: peer, for: [.banSendGifs, .banSendStickers]) != nil {
-                            disableStickers = true
+                        var disableStickers: Bool = false
+                        if let peer = coreMessageMainPeer(message) as? TelegramChannel {
+                            if permissionText(from: peer, for: [.banSendGifs, .banSendStickers]) != nil {
+                                disableStickers = true
+                            }
                         }
-                    }
-                    if !disableStickers {
-                        attributes.append(.FileName(fileName: "telegram-animoji.tgs"))
-                        file = file.withUpdatedAttributes(attributes)
-                        message = message.withUpdatedMedia([file])
+                        if !disableStickers {
+                            attributes.append(.FileName(fileName: "telegram-animoji.tgs"))
+                            file = file.withUpdatedAttributes(attributes)
+                            message = message.withUpdatedMedia([file])
+                        }
                     }
                 }
             }

@@ -250,7 +250,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer? 
 
-    private var hiddenMessage:Bool = false
+    private var hiddenMessage:Bool = false {
+        didSet {
+            if hiddenMessage != oldValue, let item = self.item {
+                self.set(item: item, animated: false)
+            }
+        }
+    }
     private let peerInputActivitiesDisposable:MetaDisposable = MetaDisposable()
     private var removeControl:ImageButton? = nil
     private var animatedView: RowAnimateView?
@@ -493,9 +499,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         chatNameLayout.1.draw(NSMakeRect(item.leftInset, displayLayout.0.size.height + item.margin + 2, chatNameLayout.0.size.width, chatNameLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                         messageOffset += chatNameLayout.0.size.height + 2
                     }
-                    if let messageLayout = item.ctxMessageLayout, !hiddenMessage {
-                        messageLayout.1.draw(NSMakeRect(item.leftInset, displayLayout.0.size.height + item.margin + 1 + messageOffset, messageLayout.0.size.width, messageLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
-                    }
                     
                     if item.isMuted {
                         ctx.draw(highlighted ? theme.icons.dialogMuteImageSelected : theme.icons.dialogMuteImage, in: NSMakeRect(item.leftInset + displayLayout.0.size.width + 4 + mutedInset, item.margin + round((displayLayout.0.size.height - theme.icons.dialogMuteImage.backingSize.height) / 2.0) - 1, theme.icons.dialogMuteImage.backingSize.width, theme.icons.dialogMuteImage.backingSize.height))
@@ -604,13 +607,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 let id = InlineStickerItemView.Key(id: stickerItem.emoji.fileId, index: index)
                 validIds.append(id)
                 
-                let rect = CGRect(origin: item.rect.offsetBy(dx: textLayout.insets.width, dy: textLayout.insets.height + 0.0).center, size: CGSize()).insetBy(dx: -12.0, dy: -12.0)
+                let rect = item.rect.insetBy(dx: -1.5, dy: -1.5)
                 
                 let view: InlineStickerItemView
                 if let current = self.inlineStickerItemViews[id] {
                     view = current
                 } else {
-                    view = InlineStickerItemView(context: context, emoji: stickerItem.emoji, size: item.rect.size)
+                    view = InlineStickerItemView(context: context, emoji: stickerItem.emoji, size: rect.size)
                     self.inlineStickerItemViews[id] = view
                     textView.addEmbeddedView(view)
                 }
@@ -666,9 +669,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                      current.isSelectable = false
                      self.messageTextView = current
                      self.containerView.addSubview(current)
-                     if animated {
-                         current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                     }
                  }
                  current.update(messageText)
                  
@@ -676,7 +676,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  
              } else if let view = self.messageTextView {
                  self.messageTextView = nil
-                 performSubviewRemoval(view, animated: animated)
+                 performSubviewRemoval(view, animated: false)
              }
              
              
@@ -1781,7 +1781,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 }
 
                 var messageOffset: CGFloat = 0
-                if let chatNameLayout = item.ctxChatNameLayout, !hiddenMessage {
+                if let chatNameLayout = item.ctxChatNameLayout {
                     messageOffset += chatNameLayout.0.size.height + 2
                 }
                 messageTextView?.setFrameOrigin(NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 1 + messageOffset))

@@ -429,7 +429,7 @@ class ChatMediaItem: ChatRowItem {
             }
             if !(self is ChatVideoMessageItem) {
                 
-                InlineStickerItem.apply(to: caption, entities: message.textEntities?.entities ?? [], context: context)
+                InlineStickerItem.apply(to: caption, entities: message.textEntities?.entities ?? [], isPremium: context.isPremium)
                 
                 captionLayouts.append(.init(id: message.stableId, offset: CGPoint(x: 0, y: 0), layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
                     chatInteraction?.update({

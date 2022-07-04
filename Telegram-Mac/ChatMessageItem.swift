@@ -66,10 +66,10 @@ final class InlineStickerItem: Hashable {
         return true
     }
     
-    static func apply(to attr: NSMutableAttributedString, entities: [MessageTextEntity], context: AccountContext, ignoreSpoiler: Bool = false) {
+    static func apply(to attr: NSMutableAttributedString, entities: [MessageTextEntity], isPremium: Bool, ignoreSpoiler: Bool = false) {
         let copy = attr
-        
-        if !context.isPremium {
+    
+        if !isPremium {
             return
         }
         
@@ -101,6 +101,7 @@ final class InlineStickerItem: Hashable {
                 var updatedAttributes: [NSAttributedString.Key: Any] = currentDict
                 
                 let text = copy.string.nsstring.substring(with: range)
+                
                 
                 updatedAttributes[.foregroundColor] = NSColor.clear
                 updatedAttributes[NSAttributedString.Key("Attribute__EmbeddedItem")] = InlineStickerItem(emoji: ChatTextCustomEmojiAttribute(fileId: fileId, reference: stickerPack, emoji: text))
@@ -395,6 +396,7 @@ class ChatMessageItem: ChatRowItem {
 
             let containsBigEmoji: Bool
             if message.media.first == nil, bigEmojiMessage(context.sharedContext, message: message) {
+                
                 switch copy.string.glyphCount {
                 case 1:
                     copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 5.8), range: copy.range)
@@ -414,9 +416,7 @@ class ChatMessageItem: ChatRowItem {
             
             self.containsBigEmoji = containsBigEmoji
              
-             if !containsBigEmoji {
-                 InlineStickerItem.apply(to: copy, entities: message.textEntities?.entities ?? [], context: context)
-             }
+             InlineStickerItem.apply(to: copy, entities: message.textEntities?.entities ?? [], isPremium: context.isPremium)
             
             if message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
                 copy.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: context, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), openInfo: chatInteraction.openInfo, hashtag: { _ in }, command: { _ in }, applyProxy: chatInteraction.applyProxy)

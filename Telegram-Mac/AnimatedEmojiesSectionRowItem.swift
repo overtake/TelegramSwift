@@ -13,14 +13,23 @@ import TelegramCore
 final class AnimatedEmojiesSectionRowItem : GeneralRowItem {
     
     let items: [[StickerPackItem]]
+    let info: StickerPackCollectionInfo?
+    let nameLayout: TextViewLayout?
     let context: AccountContext
     let callback:(StickerPackItem)->Void
     let itemSize: NSSize
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, items: [StickerPackItem], callback:@escaping(StickerPackItem)->Void ) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, info: StickerPackCollectionInfo?, items: [StickerPackItem], callback:@escaping(StickerPackItem)->Void ) {
         self.items = items.chunks(8)
         self.context = context
+        self.info = info
         self.callback = callback
         self.itemSize = NSMakeSize(floor(initialSize.width / 8.0), floor(initialSize.width / 8.0))
+        
+        if let info = info {
+            self.nameLayout = TextViewLayout(.initialize(string: info.title.uppercased(), color: theme.colors.grayText, font: .normal(.text)))
+        } else {
+            self.nameLayout = nil
+        }
         super.init(initialSize, stableId: stableId)
     }
     
@@ -28,8 +37,22 @@ final class AnimatedEmojiesSectionRowItem : GeneralRowItem {
         return AnimatedEmojiesSectionRowView.self
     }
     
+    override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
+        _ = super.makeSize(width, oldWidth: oldWidth)
+        
+        nameLayout?.measure(width: width - 60)
+        
+        return true
+    }
+    
     override var height: CGFloat {
-        return self.itemSize.height * CGFloat(items.count)
+        var height: CGFloat = 0
+        if let nameLayout = nameLayout {
+            height += nameLayout.layoutSize.height + 15
+        }
+        height += self.itemSize.height * CGFloat(items.count)
+        
+        return height
     }
 }
 
@@ -120,15 +143,29 @@ private final class AnimatedEmojiesSectionRowView : TableRowView {
         }
     }
     
+    private let contentView = View()
+    private var nameView: TextView?
+    
     private let lines = View()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(lines)
+        addSubview(contentView)
+        contentView.addSubview(lines)
     }
     
     override func layout() {
         super.layout()
-        lines.frame = bounds
+        
+        var contentRect = bounds
+        if let nameView = nameView {
+            nameView.setFrameOrigin(NSMakePoint(10, 15))
+            contentRect.origin.y = nameView.frame.maxY
+            contentRect.size.height -= nameView.frame.maxY
+        }
+        
+        contentView.frame = contentRect
+        
+        lines.frame = contentView.bounds
 
         for (i, line) in lines.subviews.enumerated() {
             line.setFrameSize(NSMakeSize(frame.width, line.frame.height))
@@ -142,6 +179,21 @@ private final class AnimatedEmojiesSectionRowView : TableRowView {
         
         guard let item = item as? AnimatedEmojiesSectionRowItem else {
             return
+        }
+        
+        if let nameLayout = item.nameLayout {
+            let current: TextView
+            if let view = nameView {
+                current = view
+            } else {
+                current = TextView()
+                self.nameView = current
+                addSubview(current)
+            }
+            current.update(nameLayout)
+        } else if let view = nameView {
+            self.nameView = nil
+            performSubviewRemoval(view, animated: animated)
         }
         
         while lines.subviews.count > item.items.count {

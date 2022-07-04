@@ -21,12 +21,22 @@ final class InlineStickerItemView : View {
     private let emoji: ChatTextCustomEmojiAttribute
     private let view: StickerMediaContentView
     private var infoDisposable: Disposable?
+    
+    private var file: TelegramMediaFile?
+    
     init(context: AccountContext, emoji: ChatTextCustomEmojiAttribute, size: NSSize) {
         self.context = context
         self.emoji = emoji
         self.view = StickerMediaContentView(frame: size.bounds)
         super.init(frame: size.bounds)
+        
+        
         addSubview(view)
+        
+        isEventLess = true
+
+        view.userInteractionEnabled = false
+        view.isEventLess = true
             
         self.infoDisposable = (context.inlinePacksContext.stickerPack(reference: emoji.reference)
         |> deliverOnMainQueue).start(next: { [weak self] files in
@@ -35,12 +45,19 @@ final class InlineStickerItemView : View {
             }
             for file in files {
                 if file.fileId.id == emoji.fileId {
-                    strongSelf.view.update(with: file, size: size, context: context, parent: nil, table: nil)
+                    strongSelf.file = file
+                    strongSelf.updateSize(size: size)
                     break
                 }
             }
         })
         
+    }
+    
+    func updateSize(size: NSSize) {
+        if let file = self.file {
+            self.view.update(with: file, size: size, context: context, parent: nil, table: nil)
+        }
     }
     
     deinit {

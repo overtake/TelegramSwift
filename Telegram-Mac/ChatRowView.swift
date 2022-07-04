@@ -940,13 +940,14 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 let id = InlineStickerItemView.Key(id: stickerItem.emoji.fileId, index: index)
                 validIds.append(id)
                 
-                let rect = CGRect(origin: item.rect.offsetBy(dx: textLayout.insets.width, dy: textLayout.insets.height + 0.0).center, size: CGSize()).insetBy(dx: -12.0, dy: -12.0)
+                let rect = item.rect.insetBy(dx: -1.5, dy: -1.5)
                 
                 let view: InlineStickerItemView
-                if let current = self.inlineStickerItemViews[id] {
+                if let current = self.inlineStickerItemViews[id], current.frame.size != rect.size {
                     view = current
                 } else {
-                    view = InlineStickerItemView(context: context, emoji: stickerItem.emoji, size: item.rect.size)
+                    self.inlineStickerItemViews[id]?.removeFromSuperview()
+                    view = InlineStickerItemView(context: context, emoji: stickerItem.emoji, size: rect.size)
                     self.inlineStickerItemViews[id] = view
                     textView.addEmbeddedView(view)
                 }
