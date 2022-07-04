@@ -566,6 +566,8 @@ final class EntertainmentView : View {
             self.animatedEmojies.isSelected = true
         }
         emoji.isHidden = mode == .selectAvatar
+        stickers.isHidden = mode == .emojies
+        gifs.isHidden = mode == .emojies
         animatedEmojies.isHidden = mode == .selectAvatar
 
         needsLayout = true
@@ -648,6 +650,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
     enum Mode {
         case common
         case selectAvatar
+        case emojies
     }
     
     private let mode: Mode
@@ -753,24 +756,27 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         self.gifs.mode = mode
         
         var items:[SectionControllerItem] = []
-        if mode == .common {
+        if mode == .common || mode == .emojies {
             items.append(SectionControllerItem(title:{strings().entertainmentEmoji.uppercased()}, controller: emoji))
         }
-        items.append(SectionControllerItem(title: {strings().entertainmentStickers.uppercased()}, controller: stickers))
-        items.append(SectionControllerItem(title: {strings().entertainmentGIF.uppercased()}, controller: gifs))
+        if mode != .emojies {
+            items.append(SectionControllerItem(title: {strings().entertainmentStickers.uppercased()}, controller: stickers))
+            items.append(SectionControllerItem(title: {strings().entertainmentGIF.uppercased()}, controller: gifs))
+        }
         
-        if mode == .common {
+        if mode == .common || mode == .emojies {
             items.append(SectionControllerItem(title:{""}, controller: animatedEmojies))
         }
 
         let index: Int
-        if mode == .selectAvatar {
+        if mode == .selectAvatar || mode == .emojies {
             index = 0
         } else {
             index = Int(FastSettings.entertainmentState.rawValue)
         }
         self.section = SectionViewController(sections: items, selected: index, hasHeaderView: false)
         super.init(context)
+        _frameRect = size.bounds
         bar = .init(height: 0)
     }
 
@@ -878,6 +884,8 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         let state:EntertainmentState
         if mode == .selectAvatar {
             state = .stickers
+        } else if mode == .emojies {
+            state = .emoji
         } else {
             state = FastSettings.entertainmentState
         }
@@ -924,7 +932,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         let e_index: Int = 0
         let s_index: Int = mode == .selectAvatar ? 0 : 1
         let g_index: Int = mode == .selectAvatar ? 1 : 2
-        let ae_index: Int = mode == .selectAvatar ? 2 : 3
+        let ae_index: Int = mode == .selectAvatar ? 2 : (mode == .emojies ? 1 : 3)
 
         self.genericView.emoji.set(handler: { [weak self] _ in
             guard let `self` = self else {
@@ -974,10 +982,12 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             var index = index
             if mode == .selectAvatar {
                 index += 1
+            } else if mode == .emojies, index == 1 {
+                index += 2
             }
             
             let state = EntertainmentState(rawValue: Int32(index))!
-            if mode != .selectAvatar {
+            if mode == .common {
                 FastSettings.changeEntertainmentState(state)
             }
             self?.chatInteraction?.update({ $0.withUpdatedIsEmojiSection(state == .emoji )})

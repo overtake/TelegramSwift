@@ -482,7 +482,7 @@ public final class TextViewLayout : Equatable {
                     rightOffset = ceil(secondaryRightOffset)
                 }
                 
-                embeddedItems.append(TextViewEmbeddedItem(range: NSMakeRange(startIndex, endIndex - startIndex + 1), frame: CGRect(x: min(leftOffset, rightOffset), y: descent - (ascent + descent), width: abs(rightOffset - leftOffset) + rightInset, height: ascent + descent), item: item))
+                embeddedItems.append(TextViewEmbeddedItem(range: NSMakeRange(startIndex, endIndex - startIndex + 1), frame: CGRect(x: floor(min(leftOffset, rightOffset)), y: floor(descent - (ascent + descent)), width: floor(abs(rightOffset - leftOffset) + rightInset), height: floor(ascent + descent)), item: item))
             }
             
 
@@ -626,7 +626,6 @@ public final class TextViewLayout : Equatable {
                         isRTL = true
                     }
                 }
-                
                 lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush, isBlocked: isWasPreformatted, isRTL: isRTL, strikethrough: strikethroughs, embeddedItems: embeddedItems))
                 
                 break
@@ -724,6 +723,12 @@ public final class TextViewLayout : Equatable {
         for line in lines {
             for embeddedItem in line.embeddedItems {
                 embeddedItems.append(EmbeddedItem(range: embeddedItem.range, rect: embeddedItem.frame.offsetBy(dx: line.frame.minX, dy: line.frame.minY), value: embeddedItem.item))
+            }
+        }
+        if lines.count == 1 {
+            let line = lines[0]
+            if !line.embeddedItems.isEmpty {
+                layoutSize.height += 2.0
             }
         }
 
@@ -1752,17 +1757,6 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     public func update(_ layout:TextViewLayout?, origin:NSPoint? = nil) -> Void {
         self.textLayout = layout
         
-        /*
-         
-         inkView = .init(textView: nil)
-         addSubview(inkView!)
-         let rect = NSMakeRect(0, 0, 50, 50)
-         
-         inkView?.frame = rect
-                 
-         inkView?.update(size: NSMakeSize(50, 50), color: .random, textColor: .random, rects: [rect], wordRects: [rect])
-
-         */
         
         self.updateInks(layout)
         

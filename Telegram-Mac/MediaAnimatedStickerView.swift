@@ -227,6 +227,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
 
         var updated = self.media != nil ? !file.isSemanticallyEqual(to: self.media!) : true
                 
+        
         if parent?.stableId != self.parent?.stableId {
             self.sticker = nil
             updated = true

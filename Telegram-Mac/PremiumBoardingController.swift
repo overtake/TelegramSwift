@@ -954,7 +954,7 @@ final class PremiumBoardingController : ModalViewController {
                         needToShow = false
         
                         if case let .purchased(transaction) = status {
-                            let activate = showModalProgress(signal: context.engine.payments.sendAppStoreReceipt(receipt: InAppPurchaseManager.getReceiptData() ?? Data(), restore: false), for: context.window)
+                            let activate = showModalProgress(signal: context.engine.payments.sendAppStoreReceipt(receipt: InAppPurchaseManager.getReceiptData() ?? Data(), purpose: .subscription), for: context.window)
                             activationDisposable.set(activate.start(error: { _ in
                                 showModalText(for: context.window, text: strings().errorAnError)
                                 inAppPurchaseManager.finishAllTransactions()
@@ -1021,7 +1021,7 @@ final class PremiumBoardingController : ModalViewController {
     func restore() {
         if let receiptData = InAppPurchaseManager.getReceiptData() {
             let context = self.context
-            _ = showModalProgress(signal: context.engine.payments.sendAppStoreReceipt(receipt: receiptData, restore: true), for: context.window).start(error: { _ in
+            _ = showModalProgress(signal: context.engine.payments.sendAppStoreReceipt(receipt: receiptData, purpose: .restore), for: context.window).start(error: { _ in
                 showModalText(for: context.window, text: strings().premiumRestoreErrorUnknown)
             }, completed: {
                 showModalText(for: context.window, text: strings().premiumRestoreSuccess)

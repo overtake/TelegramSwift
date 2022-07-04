@@ -52,6 +52,7 @@
 		2726BDDB286A45FD0044D260 /* PremiumGiftHeaderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2726BDDA286A45FD0044D260 /* PremiumGiftHeaderItem.swift */; };
 		2726BDDD286B082C0044D260 /* menu_gift.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2726BDDC286B082C0044D260 /* menu_gift.tgs */; };
 		2726BDDF286B0BAE0044D260 /* PremiumGiftRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2726BDDE286B0BAE0044D260 /* PremiumGiftRowItem.swift */; };
+		2726BDF5286F31B30044D260 /* AnimatedEmojiesPackItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2726BDF4286F31B30044D260 /* AnimatedEmojiesPackItem.swift */; };
 		2728991926CBC0D100F4D288 /* UNUserNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2728991826CBC0D100F4D288 /* UNUserNotifications.swift */; };
 		2728991C26CBCDA900F4D288 /* TurnOnNotificationsRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2728991B26CBCDA900F4D288 /* TurnOnNotificationsRowItem.swift */; };
 		272934102778DFFA00F10D3C /* menu_file.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2729340F2778DFF900F10D3C /* menu_file.tgs */; };
@@ -1388,6 +1389,7 @@
 		2726BDDA286A45FD0044D260 /* PremiumGiftHeaderItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumGiftHeaderItem.swift; sourceTree = "<group>"; };
 		2726BDDC286B082C0044D260 /* menu_gift.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_gift.tgs; sourceTree = "<group>"; };
 		2726BDDE286B0BAE0044D260 /* PremiumGiftRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumGiftRowItem.swift; sourceTree = "<group>"; };
+		2726BDF4286F31B30044D260 /* AnimatedEmojiesPackItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedEmojiesPackItem.swift; sourceTree = "<group>"; };
 		2728991826CBC0D100F4D288 /* UNUserNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UNUserNotifications.swift; sourceTree = "<group>"; };
 		2728991B26CBCDA900F4D288 /* TurnOnNotificationsRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TurnOnNotificationsRowItem.swift; sourceTree = "<group>"; };
 		2729340F2778DFF900F10D3C /* menu_file.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_file.tgs; sourceTree = "<group>"; };
@@ -3335,6 +3337,7 @@
 			children = (
 				27F4F1772844D91E00A3B4D4 /* AnimatedEmojiesController.swift */,
 				27F4F1792844F7C700A3B4D4 /* AnimatedEmojiesSectionRowItem.swift */,
+				2726BDF4286F31B30044D260 /* AnimatedEmojiesPackItem.swift */,
 			);
 			name = "animated-emojies";
 			sourceTree = "<group>";
@@ -6362,6 +6365,7 @@
 				C2271F471DB4FC130045E719 /* EStickItem.swift in Sources */,
 				2703405028212EE700D0156C /* ReactionCarouselView.swift in Sources */,
 				C2844AD71DA907E8009308DC /* EntertainmentViewController.swift in Sources */,
+				2726BDF5286F31B30044D260 /* AnimatedEmojiesPackItem.swift in Sources */,
 				27FE779A26F4944800E1C90B /* ChatThemeSelectorController.swift in Sources */,
 				C2303E731D9966BD00098E12 /* ChatInputActionsView.swift in Sources */,
 				27D9130E2833BE60007CF40F /* PremiumAboutRowItem.swift in Sources */,

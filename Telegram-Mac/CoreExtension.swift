@@ -3154,7 +3154,7 @@ extension MessageForwardInfo {
 
 
 func bigEmojiMessage(_ sharedContext: SharedAccountContext, message: Message) -> Bool {
-    return sharedContext.baseSettings.bigEmoji && message.media.isEmpty && message.replyMarkup == nil && message.text.count == 1 && message.text.containsOnlyEmoji
+    return sharedContext.baseSettings.bigEmoji && message.media.isEmpty && message.replyMarkup == nil && message.text.count <= 3 && message.text.containsOnlyEmoji
 }
 
 

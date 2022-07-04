@@ -135,7 +135,7 @@ class StickerMediaContentView: ChatMediaContentView {
     }
     
     override func mouseInside() -> Bool {
-        return content?.mouseInside() ?? mouseInside()
+        return content?.mouseInside() ?? super.mouseInside()
     }
     
     override func previewMediaIfPossible() -> Bool {

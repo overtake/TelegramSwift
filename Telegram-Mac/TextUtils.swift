@@ -162,7 +162,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
     
 }
 
-func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:RenderedPeer? = nil, embeddedState:StoredPeerChatInterfaceState? = nil, folder: Bool = false, applyUserName: Bool = false) -> NSAttributedString {
+func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:RenderedPeer? = nil, embeddedState:StoredPeerChatInterfaceState? = nil, folder: Bool = false, applyUserName: Bool = false, isPremium: Bool = false) -> NSAttributedString {
     
     let interfaceState = embeddedState.flatMap(_internal_decodeStoredChatInterfaceState).flatMap({
         ChatInterfaceState.parse($0, peerId: nil, context: nil)
@@ -170,9 +170,18 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
     
     if let embeddedState = interfaceState, !embeddedState.inputState.inputText.isEmpty {
         let mutableAttributedText = NSMutableAttributedString()
-        _ = mutableAttributedText.append(string: strings().chatListDraft, color: theme.colors.redUI, font: .normal(.text))
-        _ = mutableAttributedText.append(string: " \(embeddedState.inputState.inputText.fullTrimmed.replacingOccurrences(of: "\n", with: " "))", color: theme.chatList.grayTextColor, font: .normal(.text))
+        _ = mutableAttributedText.append(string: "\(strings().chatListDraft) ", color: theme.colors.redUI, font: .normal(.text))
+        
+                
+        let textAttr = NSMutableAttributedString()
+        _ = textAttr.append(string: embeddedState.inputState.inputText, color: theme.chatList.grayTextColor, font: .normal(.text))
+        
+        InlineStickerItem.apply(to: textAttr, entities:  embeddedState.inputState.messageTextEntities(), isPremium: isPremium, ignoreSpoiler: true)
+                
+        mutableAttributedText.append(textAttr)
+        
         mutableAttributedText.setSelected(color: theme.colors.underSelectedColor, range: mutableAttributedText.range)
+        
         return mutableAttributedText
     }
         
@@ -538,6 +547,9 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             return text
         case let .webViewData(data):
             return strings().chatServiceWebData(data)
+        case let .giftPremium(currency, amount, months):
+            //TODOLANG
+            return "gifted"
         }
     }
     

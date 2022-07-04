@@ -202,8 +202,6 @@ class ChatListRowItem: TableRowItem {
     private var additionalBadgeSelectedNode:BadgeNode? = nil
 
     
-    private var typingLayout:(TextNodeLayout, TextNode)?
-    private var typingSelectedLayout:(TextNodeLayout, TextNode)?
     
     private let clearHistoryDisposable = MetaDisposable()
     private let deleteChatDisposable = MetaDisposable()
@@ -473,7 +471,8 @@ class ChatListRowItem: TableRowItem {
             }
             self.messageText = textString
         }
-        if let messageText = messageText?.mutableCopy() as? NSMutableAttributedString {
+        if let messageText = messageText?.mutableCopy() as? NSMutableAttributedString, !messageText.string
+            .isEmpty {
             self.messageLayout = .init(messageText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2)
             let selectedText:NSMutableAttributedString = messageText.mutableCopy() as! NSMutableAttributedString
             if let color = selectedText.attribute(.selectedColor, at: 0, effectiveRange: nil) {
@@ -750,14 +749,16 @@ class ChatListRowItem: TableRowItem {
                 }
             }
         } else {
-            self.messageText = chatListText(account: context.account, for: message, messagesCount: messages.count, folder: false)
+            self.messageText = chatListText(account: context.account, for: message, messagesCount: messages.count, embeddedState: embeddedState, folder: false, isPremium: context.isPremium)
             var textCutout: TextViewCutout?
             if !textLeftCutout.isZero {
                 textCutout = TextViewCutout(topLeft: CGSize(width: textLeftCutout, height: 14))
             }
             
-            if let messageText = messageText?.mutableCopy() as? NSMutableAttributedString {
-                InlineStickerItem.apply(to: messageText, entities: message?.textEntities?.entities ?? [], context: context, ignoreSpoiler: true)
+            if let messageText = messageText?.mutableCopy() as? NSMutableAttributedString, !messageText.string.isEmpty {
+                if embeddedState == nil {
+                    InlineStickerItem.apply(to: messageText, entities: message?.textEntities?.entities ?? [], isPremium: context.isPremium, ignoreSpoiler: true)
+                }
 
                 self.messageLayout = .init(messageText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2, cutout: textCutout)
                 
@@ -765,7 +766,13 @@ class ChatListRowItem: TableRowItem {
                 if let color = selectedText.attribute(.selectedColor, at: 0, effectiveRange: nil) {
                     selectedText.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedText.range)
                 }
-                InlineStickerItem.apply(to: selectedText, entities: message?.textEntities?.entities ?? [], context: context, ignoreSpoiler: true)
+                
+                messageText.enumerateAttributes(in: messageText.range, options: .init(rawValue: 0), using: { attrs, range, stop in
+                    if attrs[.init(rawValue: "Attribute__EmbeddedItem")] != nil {
+                        selectedText.addAttribute(.foregroundColor, value: NSColor.clear, range: range)
+                    }
+                })
+                
 
                 self.messageSelectedLayout = .init(selectedText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2, cutout: textCutout)
             }
@@ -1377,29 +1384,15 @@ class ChatListRowItem: TableRowItem {
         return chatNameLayout
     }
     
-    var ctxMessageLayout:(TextNodeLayout, TextNode)? {
-        if isSelected && context.layout != .single {
-            if let typingSelectedLayout = typingSelectedLayout {
-                return typingSelectedLayout
-            }
-        }
-        if let typingLayout = typingLayout {
-            return typingLayout
-        }
-        return nil
-    }
     
     var ctxMessageText:TextViewLayout? {
-        if isSelected && context.layout != .single {
-            if let _ = typingSelectedLayout {
-                return nil
+        if self.activities.isEmpty {
+            if isSelected && context.layout != .single {
+                return messageSelectedLayout
             }
-            return messageSelectedLayout
+            return messageLayout
         }
-        if let _ = typingLayout {
-            return nil
-        }
-        return messageLayout
+        return nil
     }
     
     var ctxDateLayout:(TextNodeLayout, TextNode)? {
