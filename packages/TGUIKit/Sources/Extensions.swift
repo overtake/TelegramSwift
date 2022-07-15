@@ -403,6 +403,11 @@ public extension CALayer {
         animation.duration = 0.2
         self.add(animation, forKey: "borderColor")
     }
+    func animateCornerRadius() ->Void {
+        let animation = CABasicAnimation(keyPath: "cornerRadius")
+        animation.duration = 0.2
+        self.add(animation, forKey: "cornerRadius")
+    }
     
     func animateContents() ->Void {
         let animation = CABasicAnimation(keyPath: "contents")

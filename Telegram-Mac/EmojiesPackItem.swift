@@ -1,5 +1,5 @@
 //
-//  AnimatedEmojiesPackItem.swift
+//  EmojiesPackItem.swift
 //  Telegram
 //
 //  Created by Mike Renoir on 01.07.2022.
@@ -14,7 +14,7 @@ import TelegramCore
 import Postbox
 import SwiftSignalKit
 
-class AnimatedEmojiesPackItem: TableRowItem {
+class EmojiesPackItem: TableRowItem {
     
     override var height:CGFloat {
         return 40.0
@@ -47,12 +47,12 @@ class AnimatedEmojiesPackItem: TableRowItem {
     }
     
     override func viewClass() -> AnyClass {
-        return AnimatedEmojiesPackView.self
+        return EmojiesPackView.self
     }
 }
 
 
-private final class AnimatedEmojiesPackView : HorizontalRowView {
+private final class EmojiesPackView : HorizontalRowView {
     
     
     var overlay:ImageButton = ImageButton()
@@ -73,7 +73,7 @@ private final class AnimatedEmojiesPackView : HorizontalRowView {
         
         
         control.set(handler: { [weak self] _ in
-            if let item = self?.item as? AnimatedEmojiesPackItem {
+            if let item = self?.item as? EmojiesPackItem {
                 item.focusHandler(item.info)
             }
         }, for: .Click)
@@ -125,7 +125,7 @@ private final class AnimatedEmojiesPackView : HorizontalRowView {
     }
     
     override func set(item:TableRowItem, animated:Bool = false) {
-        if let item = item as? AnimatedEmojiesPackItem {
+        if let item = item as? EmojiesPackItem {
             if contentNode == nil || !contentNode!.isKind(of: item.contentNode())  {
                 self.contentNode?.removeFromSuperview()
                 let node = item.contentNode()

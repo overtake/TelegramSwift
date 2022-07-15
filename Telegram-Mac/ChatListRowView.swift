@@ -40,8 +40,9 @@ private class ChatListDraggingContainerView : View {
                 let list = sender.draggingPasteboard.propertyList(forType: .kFilenames) as? [String]
                 if let item = item, let list = list {
                     let list = list.filter { path -> Bool in
-                        if let size = fs(path) {
-                            return size <= 2000 * 1024 * 1024
+                        if let size = fileSize(path) {
+                            let exceed = fileSizeLimitExceed(context: item.context, fileSize: size)
+                            return exceed
                         }
                         return false
                     }
@@ -234,7 +235,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var titleText:TextNode = TextNode()
     private var messageTextView:TextView? = nil
     
-    private var inlineStickerItemViews: [InlineStickerItemView.Key: InlineStickerItemView] = [:]
+    private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
 
         
     private var badgeView:View?
@@ -427,6 +428,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     override func draw(_ layer: CALayer, in ctx: CGContext) {
 
         super.draw(layer, in: ctx)
+
+                
+       // NSLog("\(ctx.bytesPerRow), \(ctx.bitsPerComponent), \(ctx.bitsPerPixel), \(ctx.bitmapInfo), \(ctx.colorSpace)")
         
 //
          if let item = self.item as? ChatListRowItem {
@@ -591,42 +595,63 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         expandView?.backgroundColor = theme.colors.grayBackground
     }
     
+    
+    private func updateListeners() {
+        let center = NotificationCenter.default
+        if let window = window {
+            center.removeObserver(self)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didBecomeKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
+        } else {
+            center.removeObserver(self)
+        }
+    }
+    
+    @objc func updateAnimatableContent() -> Void {
+        for (_, value) in inlineStickerItemViews {
+            if let superview = value.superview {
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow
+            }
+        }
+    }
+    
+    
     func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
-        var nextIndexById: [Int64: Int] = [:]
-        var validIds: [InlineStickerItemView.Key] = []
-                
+        var validIds: [InlineStickerItemLayer.Key] = []
+        var index: Int = textView.hashValue
+
         for item in textLayout.embeddedItems {
-            if let stickerItem = item.value as? InlineStickerItem {
-                let index: Int
-                if let currentNext = nextIndexById[stickerItem.emoji.fileId] {
-                    index = currentNext
-                } else {
-                    index = 0
-                }
-                nextIndexById[stickerItem.emoji.fileId] = index + 1
-                let id = InlineStickerItemView.Key(id: stickerItem.emoji.fileId, index: index)
+            if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
+                
+                let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index)
                 validIds.append(id)
                 
                 let rect = item.rect.insetBy(dx: -1.5, dy: -1.5)
                 
-                let view: InlineStickerItemView
-                if let current = self.inlineStickerItemViews[id] {
+                let view: InlineStickerItemLayer
+                if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
                     view = current
                 } else {
-                    view = InlineStickerItemView(context: context, emoji: stickerItem.emoji, size: rect.size)
+                    self.inlineStickerItemViews[id]?.removeFromSuperlayer()
+                    view = InlineStickerItemLayer(context: context, emoji: emoji, size: rect.size)
                     self.inlineStickerItemViews[id] = view
-                    textView.addEmbeddedView(view)
+                    view.superview = textView
+                    textView.addEmbeddedLayer(view)
                 }
+                index += 1
                 
+                view.isPlayable = NSIntersectsRect(rect, textView.visibleRect) && window != nil && window!.isKeyWindow
                 view.frame = rect
             }
         }
         
-        var removeKeys: [InlineStickerItemView.Key] = []
+        var removeKeys: [InlineStickerItemLayer.Key] = []
         for (key, itemLayer) in self.inlineStickerItemViews {
             if !validIds.contains(key) {
                 removeKeys.append(key)
-                itemLayer.removeFromSuperview()
+                itemLayer.removeFromSuperlayer()
             }
         }
         for key in removeKeys {
@@ -1714,16 +1739,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         updatePlayerIfNeeded()
     }
     
-    func updateListeners() {
-        if let window = window {
-            NotificationCenter.default.removeObserver(self)
-            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSWindow.didBecomeKeyNotification, object: window)
-            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSWindow.didResignKeyNotification, object: window)
-            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSView.boundsDidChangeNotification, object: item?.table?.clipView)
-        } else {
-            removeNotificationListeners()
-        }
-    }
+
     
     func removeNotificationListeners() {
         NotificationCenter.default.removeObserver(self)

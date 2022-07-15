@@ -429,7 +429,7 @@ class ChatMediaItem: ChatRowItem {
             }
             if !(self is ChatVideoMessageItem) {
                 
-                InlineStickerItem.apply(to: caption, entities: message.textEntities?.entities ?? [], isPremium: context.isPremium)
+                InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: message.textEntities?.entities ?? [], isPremium: context.isPremium)
                 
                 captionLayouts.append(.init(id: message.stableId, offset: CGPoint(x: 0, y: 0), layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
                     chatInteraction?.update({
@@ -564,7 +564,7 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let contentNode = contentNode {

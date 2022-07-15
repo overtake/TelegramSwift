@@ -2191,6 +2191,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.startRecording = { [weak self] hold, view in
             guard let chatInteraction = self?.chatInteraction else {return}
+            if hasModals(context.window) || hasPopover(context.window) {
+                return
+            }
             if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
                 if let last = slowMode.sendingIds.last {
                     chatInteraction.focusMessageId(nil, last, .CenterEmpty)
@@ -3616,7 +3619,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
                 strongSelf.shareContactDisposable.set((context.account.viewTracker.peerView(context.account.peerId) |> take(1)).start(next: { [weak strongSelf] peerView in
                     if let strongSelf = strongSelf, let peer = peerViewMainPeer(peerView) as? TelegramUser {
-                        _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil)), replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil), context: context, peerId: strongSelf.chatInteraction.peerId).start()
+                        _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil)), replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil), context: context, peerId: strongSelf.chatInteraction.peerId).start()
                     }
                 }))
             }
@@ -6910,10 +6913,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 var items:[DragItem] = []
                 
                 let list = list.filter { path -> Bool in
-                    if let size = fs(path) {
-                        return size <= 2000 * 1024 * 1024
+                    if let size = fileSize(path) {
+                        let exceed = fileSizeLimitExceed(context: context, fileSize: size)
+                        return exceed
                     }
-
                     return false
                 }
                 

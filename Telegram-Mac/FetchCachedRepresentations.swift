@@ -341,52 +341,13 @@ private func fetchCachedAnimatedStickerRepresentation(account: Account, resource
     return data |> deliverOn(lottieThreadPool) |> map { resourceData -> (CGImage?, Data?, MediaResourceData) in
         if resourceData.complete {
             if let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
-                if !representation.thumb {
-                    var dataValue: Data! = TGGUnzipData(data, 8 * 1024 * 1024)
-                    if dataValue == nil {
-                        dataValue = data
-                    }
-                    if let json = String(data: transformedWithFitzModifier(data: dataValue, fitzModifier: representation.fitzModifier), encoding: .utf8), json.length > 0 {
-                        let rlottie = RLottieBridge(json: json, key: resourceData.path)
-                        if let rlottie = rlottie {
-                            let unmanaged = rlottie.renderFrame(min(Int32(representation.frame), rlottie.endFrame()), width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
-                            let colorImage = unmanaged.takeRetainedValue()
-                            return (colorImage, nil, resourceData)
-                        } else {
-                            return (nil, nil, resourceData)
-                        }
-                        
-                    }
-                } else {
-                    return (nil, data, resourceData)
-                }
+                return (nil, data, resourceData)
             }
         }
         return (nil, nil, resourceData)
     } |> runOn(cacheThreadPool) |> mapToSignal { frame, data, resourceData in
         if resourceData.complete {
-            if !representation.thumb {
-                let path = NSTemporaryDirectory() + "\(arc4random64())"
-                let url = URL(fileURLWithPath: path)
-                
-                let colorData = NSMutableData()
-                if let colorImage = frame, let colorDestination = CGImageDestinationCreateWithData(colorData as CFMutableData, kUTTypePNG, 1, nil){
-                    CGImageDestinationSetProperties(colorDestination, [:] as CFDictionary)
-                    
-                    let colorQuality: Float
-                    colorQuality = 0.4
-                    
-                    let options = NSMutableDictionary()
-                    options.setObject(colorQuality as NSNumber, forKey: kCGImageDestinationLossyCompressionQuality as NSString)
-                    CGImageDestinationAddImage(colorDestination, colorImage, options as CFDictionary)
-                    if CGImageDestinationFinalize(colorDestination)  {
-                        try? colorData.write(to: url, options: .atomic)
-                        return .single(.temporaryPath(path))
-                    }
-                } else {
-                    return .complete()
-                }
-            } else if let data = data {
+            if let data = data {
                 
                 let path = NSTemporaryDirectory() + "\(arc4random64())"
                 let url = URL(fileURLWithPath: path)
@@ -403,8 +364,19 @@ private func fetchCachedAnimatedStickerRepresentation(account: Account, resource
                     if image == nil, let data = TGGUnzipData(data, 8 * 1024 * 1024) {
                         if let json = String(data: transformedWithFitzModifier(data: data, fitzModifier: representation.fitzModifier), encoding: .utf8), json.length > 0 {
                             let rlottie = RLottieBridge(json: json, key: resourceData.path)
-                            let unmanaged = rlottie?.renderFrame(0, width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
-                            image = unmanaged?.takeRetainedValue()
+                            
+                            let s:(w: Int, h: Int) = (w: Int(representation.size.width) * 2, h: Int(representation.size.height) * 2)
+
+                            let bytesPerRow = DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: s.w)
+                            let bufferSize = s.h * bytesPerRow
+                            let memoryData = malloc(bufferSize)!
+                            let frameData = memoryData.assumingMemoryBound(to: UInt8.self)
+                            
+                            rlottie?.renderFrame(with: 0, into: frameData, width: Int32(s.w), height: Int32(s.h), bytesPerRow: Int32(bytesPerRow))
+                            
+                            image = generateImagePixel(representation.size, scale: 2, pixelGenerator: { (_, pixelData, bytesPerRow) in
+                                memcpy(pixelData, frameData, bufferSize)
+                            })
                         }
                     } else if image != nil {
                         let webp = WebPImageDecoder(data: data, scale: 2.0)
@@ -680,10 +652,22 @@ private func fetchCachedSlotRepresentation(account: Account, data: [(Data, Int32
             if let json = String(data: dataValue, encoding: .utf8) {
                 let rlottie = RLottieBridge(json: json, key: "\(arc4random())")
                 if let rlottie = rlottie {
-                    let unmanaged = rlottie.renderFrame(Int32.max == frame ? rlottie.endFrame() - 1 : frame, width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
-                    let colorImage = unmanaged.takeRetainedValue()
-                    images.append(colorImage)
-                   
+                    
+                    let s:(w: Int, h: Int) = (w: Int(representation.size.width) * 2, h: Int(representation.size.height) * 2)
+
+                    let bytesPerRow = DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: s.w)
+                    let bufferSize = s.h * bytesPerRow
+                    let memoryData = malloc(bufferSize)!
+                    let frameData = memoryData.assumingMemoryBound(to: UInt8.self)
+                    
+                    rlottie.renderFrame(with: Int32.max == frame ? rlottie.endFrame() - 1 : frame, into: frameData, width: Int32(s.w), height: Int32(s.h), bytesPerRow: Int32(bytesPerRow))
+                    
+                    let image = generateImagePixel(representation.size, scale: 2, pixelGenerator: { (_, pixelData, bytesPerRow) in
+                        memcpy(pixelData, frameData, bufferSize)
+                    })
+                    if let image = image {
+                        images.append(image)
+                    }
                 }
             }
         }
@@ -733,8 +717,20 @@ private func fetchCachedDiceRepresentation(account: Account, data: Data, represe
         if let json = String(data: dataValue, encoding: .utf8) {
             let rlottie = RLottieBridge(json: json, key: representation.emoji + representation.value)
             if let rlottie = rlottie {
-                let unmanaged = rlottie.renderFrame(representation.value == diceIdle ? 0 : rlottie.endFrame() - 1, width: Int(representation.size.width * 2), height: Int(representation.size.height * 2))
-                let colorImage = unmanaged.takeRetainedValue()
+                
+                let s:(w: Int, h: Int) = (w: Int(representation.size.width) * 2, h: Int(representation.size.height) * 2)
+
+                let bytesPerRow = DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: s.w)
+                let bufferSize = s.h * bytesPerRow
+                let memoryData = malloc(bufferSize)!
+                let frameData = memoryData.assumingMemoryBound(to: UInt8.self)
+                
+                rlottie.renderFrame(with: representation.value == diceIdle ? 0 : rlottie.endFrame() - 1, into: frameData, width: Int32(s.w), height: Int32(s.h), bytesPerRow: Int32(bytesPerRow))
+                
+                let colorImage = generateImagePixel(representation.size, scale: 2, pixelGenerator: { (_, pixelData, bytesPerRow) in
+                    memcpy(pixelData, frameData, bufferSize)
+                })!
+                
                 
                 let path = NSTemporaryDirectory() + "\(arc4random64())"
                 let url = URL(fileURLWithPath: path)
@@ -776,10 +772,21 @@ func getAnimatedStickerThumb(data: Data, size: NSSize = NSMakeSize(512, 512)) ->
         }
         if let json = String(data: transformedWithFitzModifier(data: dataValue, fitzModifier: nil), encoding: .utf8), json.length > 0 {
             let rlottie = RLottieBridge(json: json, key: "\(arc4random())")
-            let unmanaged = rlottie?.renderFrame(0, width: Int(size.width), height: Int(size.height))
-            let colorImage = unmanaged?.takeRetainedValue()
             
-            if let image = colorImage {
+            let s:(w: Int, h: Int) = (w: Int(size.width) * 2, h: Int(size.height) * 2)
+
+            let bytesPerRow = DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: s.w)
+            let bufferSize = s.h * bytesPerRow
+            let memoryData = malloc(bufferSize)!
+            let frameData = memoryData.assumingMemoryBound(to: UInt8.self)
+            
+            rlottie?.renderFrame(with: 0, into: frameData, width: Int32(s.w), height: Int32(s.h), bytesPerRow: Int32(bytesPerRow))
+            
+            let image = generateImagePixel(size, scale: 2, pixelGenerator: { (_, pixelData, bytesPerRow) in
+                memcpy(pixelData, frameData, bufferSize)
+            })
+            
+            if let image = image {
                 let rep = NSBitmapImageRep(cgImage: image)
                 let data = rep.representation(using: .png, properties: [:])
                 let path = NSTemporaryDirectory() + "temp_as_\(arc4random64()).png"

@@ -1,13 +1,13 @@
 {
   "images" : [
     {
+      "filename" : "animals.png",
       "idiom" : "universal",
-      "filename" : "Animals.png",
       "scale" : "1x"
     },
     {
+      "filename" : "animals@2x.png",
       "idiom" : "universal",
-      "filename" : "Animals@2x.png",
       "scale" : "2x"
     },
     {
@@ -16,7 +16,7 @@
     }
   ],
   "info" : {
-    "version" : 1,
-    "author" : "xcode"
+    "author" : "xcode",
+    "version" : 1
   }
 }

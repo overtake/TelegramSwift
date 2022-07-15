@@ -37,6 +37,7 @@ enum PremiumLogEventsSource : Equatable {
     case more_upload
     case unique_reactions
     case premium_stickers
+    case premium_emoji
     case profile(PeerId)
     var value: String {
         switch self {
@@ -56,6 +57,8 @@ enum PremiumLogEventsSource : Equatable {
             return "unique_reactions"
         case .premium_stickers:
             return "premium_stickers"
+        case .premium_emoji:
+            return "premium_emoji"
         case let .profile(peerId):
             return "profile__\(peerId.id._internalGetInt64Value())"
         }
@@ -136,6 +139,7 @@ enum PremiumValue : String {
     case no_ads
     case unique_reactions
     case premium_stickers
+    case animated_emoji
     case advanced_chat_management
     case profile_badge
     case animated_userpics
@@ -156,6 +160,8 @@ enum PremiumValue : String {
             return [NSColor(rgb: 0xA868FC)]
         case .premium_stickers:
             return [NSColor(rgb: 0x9279FF)]
+        case .animated_emoji:
+            return [NSColor(rgb: 0x846EF6)]
         case .advanced_chat_management:
             return [NSColor(rgb: 0x7561eb)]
         case .profile_badge:
@@ -220,6 +226,8 @@ enum PremiumValue : String {
             return NSImage(named: "Icon_Premium_Boarding_Reactions")!.precomposed(theme.colors.accent)
         case .premium_stickers:
             return NSImage(named: "Icon_Premium_Boarding_Stickers")!.precomposed(theme.colors.accent)
+        case .animated_emoji:
+            return NSImage(named: "Icon_Premium_Boarding_Emoji")!.precomposed(theme.colors.accent)
         case .advanced_chat_management:
             return NSImage(named: "Icon_Premium_Boarding_Chats")!.precomposed(theme.colors.accent)
         case .profile_badge:
@@ -245,6 +253,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingReactionsTitle
         case .premium_stickers:
             return strings().premiumBoardingStickersTitle
+        case .animated_emoji:
+            return strings().premiumBoardingEmojiTitle
         case .advanced_chat_management:
             return strings().premiumBoardingChatsTitle
         case .profile_badge:
@@ -269,6 +279,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingReactionsInfo
         case .premium_stickers:
             return strings().premiumBoardingStickersInfo
+        case .animated_emoji:
+            return strings().premiumBoardingEmojiInfo
         case .advanced_chat_management:
             return strings().premiumBoardingChatsInfo
         case .profile_badge:
@@ -282,7 +294,7 @@ enum PremiumValue : String {
 
 
 private struct State : Equatable {
-    var values:[PremiumValue] = [.double_limits, .more_upload, .faster_download, .voice_to_text, .no_ads, .unique_reactions, .premium_stickers, .advanced_chat_management, .profile_badge, .animated_userpics]
+    var values:[PremiumValue] = [.double_limits, .more_upload, .faster_download, .voice_to_text, .no_ads, .unique_reactions, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics]
     let source: PremiumLogEventsSource
     
     var premiumProduct: InAppPurchaseManager.Product?

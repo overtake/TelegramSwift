@@ -754,7 +754,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     private let context:AccountContext
     let chatInteraction:ChatInteraction
     private let disposable = MetaDisposable()
-    private let emoji: EntertainmentViewController
+    private let emoji: EmojiesController
     private var cachedMedia:[PreviewSendingState: (media: [Media], items: [TableRowItem])] = [:]
     private var sent: Bool = false
     private let pasteDisposable = MetaDisposable()
@@ -950,7 +950,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             self?.genericView.textView.appendText(emoji)
         }
         
-        emoji.update(with: contextChatInteraction)
+        emoji.update(with: interactions, chatInteraction: contextChatInteraction)
         
         let actionsDisposable = DisposableSet()
         self.disposable.set(actionsDisposable)
@@ -1453,7 +1453,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         let context = chatInteraction.context
         self.asMedia = asMedia
         self.context = context
-        self.emoji = EntertainmentViewController(size: NSMakeSize(350, 300), context: context, mode: .emojies)
+        self.emoji = EmojiesController(context)
         
        
 
@@ -1675,7 +1675,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     
     func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
         
-        let result = InputPasteboardParser.canProccessPasteboard(pasteboard)
+        let result = InputPasteboardParser.canProccessPasteboard(pasteboard, context: context)
         
     
         let pasteRtf:()->Void = { [weak self] in
@@ -1705,7 +1705,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         }
         
         if !result {
-            self.pasteDisposable.set(InputPasteboardParser.getPasteboardUrls(pasteboard).start(next: { [weak self] urls in
+            self.pasteDisposable.set(InputPasteboardParser.getPasteboardUrls(pasteboard, context: context).start(next: { [weak self] urls in
                 self?.insertAdditionUrls?(urls)
                 
                 if urls.isEmpty {

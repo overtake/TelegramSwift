@@ -216,7 +216,6 @@ func initialize() -> [String] {
     array.append("chatMentionActive")
     array.append("sliderControl")
     array.append("sliderControlActive")
-    array.append("stickersTabFave")
     array.append("chatInstantView")
     array.append("chatInstantViewBubble_incoming")
     array.append("chatInstantViewBubble_outgoing")
@@ -531,6 +530,13 @@ func initialize() -> [String] {
     
     array.append("stickers_add_featured")
     array.append("stickers_add_featured_unread")
+    
+    array.append("stickers_add_featured_active")
+    array.append("stickers_add_featured_unread_active")
+
+    
+    array.append("stickers_favorite")
+    array.append("stickers_favorite_active")
 
     array.append("channel_info_promo")
     array.append("channel_info_promo_bubble_incoming")
@@ -757,6 +763,8 @@ func initialize() -> [String] {
     array.append("premium_boarding_feature_next")
     
     array.append("premium_stickers")
+    
+    array.append("premium_emoji_lock")
 
     return array
 }

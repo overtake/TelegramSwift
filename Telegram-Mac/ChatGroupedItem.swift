@@ -123,7 +123,7 @@ class ChatGroupedItem: ChatRowItem {
                 default:
                     break
                 }
-                InlineStickerItem.apply(to: caption, entities: message.textEntities?.entities ?? [], isPremium: context.isPremium)
+                InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: message.textEntities?.entities ?? [], isPremium: context.isPremium)
 
                 let layout: ChatRowItem.RowCaption = .init(id: stableId, offset: .zero, layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
                     chatInteraction?.update({

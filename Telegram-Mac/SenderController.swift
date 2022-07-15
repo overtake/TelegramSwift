@@ -221,7 +221,7 @@ class Sender: NSObject {
                 attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
             }
             if !subState.inputText.isEmpty || mediaReference != nil {
-                return .message(text: subState.inputText, attributes: attributes, mediaReference: mediaReference, replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil)
+                return .message(text: subState.inputText, attributes: attributes, inlineStickers: subState.inlineMedia, mediaReference: mediaReference, replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil)
             } else {
                 return nil
             }
@@ -490,7 +490,7 @@ class Sender: NSObject {
             attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
         }
         
-        return enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: contact.firstName ?? "", lastName: contact.lastName ?? "", phoneNumber: contact.phone ?? "", peerId: contact.id, vCardData: nil)), replyToMessageId: nil, localGroupingKey: nil, correlationId: nil)])
+        return enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: contact.firstName ?? "", lastName: contact.lastName ?? "", phoneNumber: contact.phone ?? "", peerId: contact.id, vCardData: nil)), replyToMessageId: nil, localGroupingKey: nil, correlationId: nil)])
     }
     
     public static func enqueue(media:[MediaSenderContainer], context: AccountContext, peerId:PeerId, chatInteraction:ChatInteraction, silent: Bool = false, atDate:Date? = nil, sendAsPeerId:PeerId? = nil, query: String? = nil) ->Signal<[MessageId?], NoError> {
@@ -516,7 +516,7 @@ class Sender: NSObject {
         
         for path in media {
             senders.append(generateMedia(for: path, account: context.account, isSecretRelated: peerId.namespace == Namespaces.Peer.SecretChat) |> mapToSignal { media, caption -> Signal< [MessageId?], NoError> in
-                return enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: caption, attributes:attributes, mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil)])
+                return enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: caption, attributes:attributes, inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil)])
             })
         }
         
@@ -570,14 +570,15 @@ class Sender: NSObject {
         let count = media.count
         for (i, media) in media.enumerated() {
             let text: String
+            let current = caption.swap(.init())
             if media.isInteractiveMedia {
-                text = caption.swap(.init()).inputText
+                text = current.inputText
             } else if i == count - 1 {
-                text = caption.swap(.init()).inputText
+                text = current.inputText
             } else {
                 text = ""
             }
-            messages.append(EnqueueMessage.message(text: text, attributes: attributes, mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: replyId, localGroupingKey: localGroupingKey, correlationId: nil))
+            messages.append(EnqueueMessage.message(text: text, attributes: attributes, inlineStickers: current.inlineMedia, mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: replyId, localGroupingKey: localGroupingKey, correlationId: nil))
         }
         
         if let input = additionText {
@@ -603,7 +604,7 @@ class Sender: NSObject {
                     attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
                 }
                 
-                return EnqueueMessage.message(text: subState.inputText, attributes: attributes, mediaReference: nil, replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil)
+                return EnqueueMessage.message(text: subState.inputText, attributes: attributes, inlineStickers: subState.inlineMedia, mediaReference: nil, replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil)
             }
             messages.insert(contentsOf: mapped, at: 0)
         }

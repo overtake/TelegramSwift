@@ -1068,7 +1068,6 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
     
 - (void)drawRect:(NSRect)dirtyRect {
     [super drawRect:dirtyRect];
-    [self refreshAttachments];
 }
 
 
@@ -1723,6 +1722,8 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
     self.animates = o;
    
     [self setSelectedRange:NSMakeRange(MIN(selectedRange.location, string.length), 0)];
+    
+    [self refreshAttachments];
     
 }
     

@@ -34,44 +34,52 @@ import TGModernGrowingTextView
 struct ChatTextCustomEmojiAttribute : Equatable {
   
     let fileId: Int64
-    let reference: StickerPackReference
+    let file: TelegramMediaFile?
     let emoji: String
-    init(fileId: Int64, reference: StickerPackReference, emoji: String) {
+    init(fileId: Int64, file: TelegramMediaFile?, emoji: String) {
         self.fileId = fileId
-        self.reference = reference
         self.emoji = emoji
+        self.file = file
     }
     var attachment: TGTextAttachment {
-        return .init(identifier: "\(arc4random64())", reference: self.reference, fileId: self.fileId, text: emoji)
+        return .init(identifier: "\(arc4random64())", fileId: self.fileId, file: file, text: emoji)
     }
 }
 
 
-final class InlineStickerItem: Hashable {
-    let emoji: ChatTextCustomEmojiAttribute
+final class InlineStickerItem : Hashable {
     
-    init(emoji: ChatTextCustomEmojiAttribute) {
-        self.emoji = emoji
+    enum Source : Equatable {
+        case attribute(ChatTextCustomEmojiAttribute)
+        case reference(StickerPackItem)
+    }
+    
+    let source: Source
+    
+    init(source: Source) {
+        self.source = source
     }
     
     func hash(into hasher: inout Hasher) {
-        hasher.combine(emoji.fileId)
+        switch source {
+        case let .attribute(emoji):
+            hasher.combine(emoji.fileId)
+        case let .reference(sticker):
+            hasher.combine(sticker.file.fileId.id)
+        }
     }
     
     
     static func ==(lhs: InlineStickerItem, rhs: InlineStickerItem) -> Bool {
-        if lhs.emoji != rhs.emoji {
+        if lhs.source != rhs.source {
             return false
         }
         return true
     }
     
-    static func apply(to attr: NSMutableAttributedString, entities: [MessageTextEntity], isPremium: Bool, ignoreSpoiler: Bool = false) {
+    static func apply(to attr: NSMutableAttributedString, associatedMedia: [MediaId : Media], entities: [MessageTextEntity], isPremium: Bool, ignoreSpoiler: Bool = false) {
         let copy = attr
     
-        if !isPremium {
-            return
-        }
         
         var ranges: [NSRange] = []
         if ignoreSpoiler {
@@ -87,7 +95,7 @@ final class InlineStickerItem: Hashable {
         
         
         for entity in entities.sorted(by: { $0.range.lowerBound > $1.range.lowerBound }) {
-            guard case let .CustomEmoji(stickerPack, fileId) = entity.type else {
+            guard case let .CustomEmoji(_, fileId) = entity.type else {
                 continue
             }
             
@@ -102,9 +110,7 @@ final class InlineStickerItem: Hashable {
                 
                 let text = copy.string.nsstring.substring(with: range)
                 
-                
-                updatedAttributes[.foregroundColor] = NSColor.clear
-                updatedAttributes[NSAttributedString.Key("Attribute__EmbeddedItem")] = InlineStickerItem(emoji: ChatTextCustomEmojiAttribute(fileId: fileId, reference: stickerPack, emoji: text))
+                updatedAttributes[NSAttributedString.Key("Attribute__EmbeddedItem")] = InlineStickerItem(source: .attribute(.init(fileId: fileId, file: associatedMedia[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] as? TelegramMediaFile, emoji: text)))
                 
                 let insertString = NSAttributedString(string: text, attributes: updatedAttributes)
                 copy.replaceCharacters(in: range, with: insertString)
@@ -416,7 +422,7 @@ class ChatMessageItem: ChatRowItem {
             
             self.containsBigEmoji = containsBigEmoji
              
-             InlineStickerItem.apply(to: copy, entities: message.textEntities?.entities ?? [], isPremium: context.isPremium)
+             InlineStickerItem.apply(to: copy, associatedMedia: message.associatedMedia, entities: message.textEntities?.entities ?? [], isPremium: context.isPremium)
             
             if message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
                 copy.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: context, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), openInfo: chatInteraction.openInfo, hashtag: { _ in }, command: { _ in }, applyProxy: chatInteraction.applyProxy)

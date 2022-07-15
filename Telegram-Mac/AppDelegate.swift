@@ -92,6 +92,22 @@ final class SharedApplicationContext {
     }
 }
 
+private final class CtxInstallLayer : SimpleLayer {
+    override init() {
+        super.init()
+        frame = NSMakeRect(0, 0, 1, 1)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func draw(in ctx: CGContext) {
+        DeviceGraphicsContextSettings.install(ctx)
+        self.removeFromSuperlayer()
+    }
+}
+
 
 @NSApplicationMain
 class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterDelegate, NSWindowDelegate {
@@ -172,11 +188,12 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         return contextValue?.context
     }
     
+    private var ctxLayer: CtxInstallLayer?
+    
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         
+      
         
-    
-    
         
         appDelegate = self
         ApiEnvironment.migrate()
@@ -202,6 +219,14 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         window.contentView = v
         window.contentView?.autoresizingMask = [.width, .height]
         window.contentView?.autoresizesSubviews = true
+        
+        
+        let ctxLayer = CtxInstallLayer()
+        self.ctxLayer = ctxLayer
+        window.contentView?.layer?.addSublayer(ctxLayer)
+        
+        ctxLayer.setNeedsDisplay()
+        ctxLayer.display()
         
         let crashed = isCrashedLastTime(containerUrl.path)
         deinitCrashHandler(containerUrl.path)
