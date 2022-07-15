@@ -61,11 +61,14 @@ public class TGClipView: NSClipView,CALayerDelegate {
     public var decelerationRate:CGFloat = 0.8
     
     
-    var isScrolling: Bool {
+    public var isScrolling: Bool {
         if let displayLink = displayLink {
             return CVDisplayLinkIsRunning(displayLink)
         }
         return false
+    }
+    public var destination: NSPoint? {
+        return self.destinationOrigin
     }
 
     override init(frame frameRect: NSRect) {

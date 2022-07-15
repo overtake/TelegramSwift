@@ -151,9 +151,9 @@ class ChatInputActionsView: View, Notifable {
     
     var entertaimentsPopover: ViewController {
         if chatInteraction.presentation.state == .editing {
-            let emoji = EmojiViewController(chatInteraction.context)
+            let emoji = EmojiesController(chatInteraction.context)
             if let interactions = chatInteraction.context.bindings.entertainment().interactions {
-                emoji.update(with: interactions)
+                emoji.update(with: interactions, chatInteraction: chatInteraction)
             }
             return emoji
         }

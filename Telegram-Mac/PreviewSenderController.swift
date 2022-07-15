@@ -754,7 +754,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     private let context:AccountContext
     let chatInteraction:ChatInteraction
     private let disposable = MetaDisposable()
-    private let emoji: EmojiViewController
+    private let emoji: EmojiesController
     private var cachedMedia:[PreviewSendingState: (media: [Media], items: [TableRowItem])] = [:]
     private var sent: Bool = false
     private let pasteDisposable = MetaDisposable()
@@ -917,6 +917,15 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        let context = self.context
+        let initialSize = self.atomicSize
+
+        
+        genericView.textView.installGetAttach({ attachment in
+            let view = ChatInputAnimatedEmojiAttach(frame: NSMakeRect(0, 0, 19, 19))
+            view.set(attachment, size: NSMakeSize(19, 19), context: context)
+            return view
+        })
         
         genericView.draggingView.controller = self
         genericView.controller = self
@@ -941,13 +950,11 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             self?.genericView.textView.appendText(emoji)
         }
         
-        emoji.update(with: interactions)
+        emoji.update(with: interactions, chatInteraction: contextChatInteraction)
         
         let actionsDisposable = DisposableSet()
         self.disposable.set(actionsDisposable)
         
-        let context = self.context
-        let initialSize = self.atomicSize
         
         let initialState = PreviewState(urls: [], medias: [], currentState: .init(state: .media, isCollage: FastSettings.isNeedCollage), editedData: [:])
         
@@ -1446,7 +1453,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         let context = chatInteraction.context
         self.asMedia = asMedia
         self.context = context
-        self.emoji = EmojiViewController(context)
+        self.emoji = EmojiesController(context)
         
        
 
@@ -1668,7 +1675,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     
     func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
         
-        let result = InputPasteboardParser.canProccessPasteboard(pasteboard)
+        let result = InputPasteboardParser.canProccessPasteboard(pasteboard, context: context)
         
     
         let pasteRtf:()->Void = { [weak self] in
@@ -1698,7 +1705,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         }
         
         if !result {
-            self.pasteDisposable.set(InputPasteboardParser.getPasteboardUrls(pasteboard).start(next: { [weak self] urls in
+            self.pasteDisposable.set(InputPasteboardParser.getPasteboardUrls(pasteboard, context: context).start(next: { [weak self] urls in
                 self?.insertAdditionUrls?(urls)
                 
                 if urls.isEmpty {

@@ -261,6 +261,9 @@ public extension NSPasteboard.PasteboardType {
     static var kUrl:NSPasteboard.PasteboardType {
         return NSPasteboard.PasteboardType(kUTTypeURL as String)
     }
+    static var kInApp:NSPasteboard.PasteboardType {
+        return NSPasteboard.PasteboardType("TelegramTextPboardType" as String)
+    }
     static var kFilenames:NSPasteboard.PasteboardType {
         return NSPasteboard.PasteboardType("NSFilenamesPboardType")
     }
@@ -399,6 +402,11 @@ public extension CALayer {
         let animation = CABasicAnimation(keyPath: "borderColor")
         animation.duration = 0.2
         self.add(animation, forKey: "borderColor")
+    }
+    func animateCornerRadius() ->Void {
+        let animation = CABasicAnimation(keyPath: "cornerRadius")
+        animation.duration = 0.2
+        self.add(animation, forKey: "cornerRadius")
     }
     
     func animateContents() ->Void {

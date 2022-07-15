@@ -324,6 +324,27 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             }
         }
         
+        if let attr = message.textEntities {
+            var reference:StickerPackReference? = attr.entities.compactMap({ value in
+                if case let .CustomEmoji(reference, _) = value.type {
+                    return reference
+                } else {
+                    return nil
+                }
+            }).first
+            
+            if reference == nil {
+                reference = (message.associatedMedia.first?.value as? TelegramMediaFile)?.stickerReference
+            }
+            
+            if let reference = reference {
+                thirdBlock.append(ContextMenuItem(strings().chatContextViewEmojiSet, handler: {
+                    showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: .stickers(reference)), for: context.window)
+                }, itemImage: MenuAnimation.menu_view_sticker_set.value))
+            }
+        }
+
+        
         if !data.message.isCopyProtected() {
             if let textLayout = data.textLayout?.0 {
                 
@@ -597,7 +618,8 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 }
             }
         }
-
+        
+     
         
         if let resourceData = data.resourceData, !protected, !isService {
             if let file = data.file {
@@ -626,7 +648,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     
                     if let reference = file.stickerReference {
                         thirdBlock.append(ContextMenuItem(strings().contextViewStickerSet, handler: {
-                            showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for: context.window)
+                            showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: .stickers(reference)), for: context.window)
                         }, itemImage: MenuAnimation.menu_view_sticker_set.value))
                     }
                     

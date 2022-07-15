@@ -12,6 +12,7 @@ import TelegramCore
 import InAppSettings
 import Postbox
 import SwiftSignalKit
+import TGModernGrowingTextView
 
 class ChatGroupedItem: ChatRowItem {
 
@@ -105,7 +106,9 @@ class ChatGroupedItem: ChatRowItem {
                                 } else {
                                     color = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
                                 }
-                                spoilers.append(.init(range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound), color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
+                                let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
+                                caption.addAttribute(.init(rawValue: TGSpoilerAttributeName), value: TGInputTextTag(uniqueId: arc4random64(), attachment: NSNumber(value: -1), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.text)), range: range)
+                                spoilers.append(.init(range: range, color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
                             default:
                                 break
                             }
@@ -120,7 +123,7 @@ class ChatGroupedItem: ChatRowItem {
                 default:
                     break
                 }
-                InlineStickerItem.apply(to: caption, emojies: entry.additionalData.animatedEmojiStickers, context: context)
+                InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: message.textEntities?.entities ?? [], isPremium: context.isPremium)
 
                 let layout: ChatRowItem.RowCaption = .init(id: stableId, offset: .zero, layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
                     chatInteraction?.update({
