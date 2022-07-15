@@ -144,44 +144,32 @@ enum PremiumValue : String {
     case profile_badge
     case animated_userpics
     
-    var gradient: [NSColor] {
-        switch self {
-        case .double_limits:
-            return [NSColor(rgb: 0xF17D2F)]
-        case .more_upload:
-            return [NSColor(rgb: 0xE9574A)]
-        case .faster_download:
-            return [NSColor(rgb: 0xD84C7D)]
-        case .voice_to_text:
-            return [NSColor(rgb: 0xc14998)]
-        case .no_ads:
-            return [NSColor(rgb: 0xC258B7)]
-        case .unique_reactions:
-            return [NSColor(rgb: 0xA868FC)]
-        case .premium_stickers:
-            return [NSColor(rgb: 0x9279FF)]
-        case .animated_emoji:
-            return [NSColor(rgb: 0x846EF6)]
-        case .advanced_chat_management:
-            return [NSColor(rgb: 0x7561eb)]
-        case .profile_badge:
-            return [NSColor(rgb: 0x758EFF)]
-        case .animated_userpics:
-            return [NSColor(rgb: 0x59A4FF)]
-        }
+    func gradient(_ index: Int) -> [NSColor] {
+        let colors:[NSColor] = [NSColor(rgb: 0xF17D2F),
+                                NSColor(rgb: 0xE9574A),
+                                NSColor(rgb: 0xD84C7D),
+                                NSColor(rgb: 0xc14998),
+                                NSColor(rgb: 0xC258B7),
+                                NSColor(rgb: 0xA868FC),
+                                NSColor(rgb: 0x9279FF),
+                                NSColor(rgb: 0x846EF6),
+                                NSColor(rgb: 0x7561eb),
+                                NSColor(rgb: 0x758EFF),
+                                NSColor(rgb: 0x59A4FF)]
+        return [colors[index]]
     }
     
-    var icon: CGImage {
+    func icon(_ index: Int) -> CGImage {
         let image = self.image
         let size = image.backingSize
         let img = generateImage(size, contextGenerator: { size, ctx in
             ctx.clear(size.bounds)
             ctx.clip(to: size.bounds, mask: image)
             
-            let colors = gradient.compactMap { $0.cgColor } as NSArray
+            let colors = gradient(index).compactMap { $0.cgColor } as NSArray
 
-            if gradient.count == 1 {
-                ctx.setFillColor(gradient[0].cgColor)
+            if gradient(index).count == 1 {
+                ctx.setFillColor(gradient(index)[0].cgColor)
                 ctx.fill(size.bounds)
             } else {
                 let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
@@ -328,7 +316,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     for (i, value) in state.values.enumerated() {
         let viewType = bestGeneralViewType(state.values, for: i)
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init(value.rawValue), equatable: InputDataEquatable(value), comparable: nil, item: { initialSize, stableId in
-            return PremiumBoardingRowItem(initialSize, stableId: stableId, viewType: viewType, value: value, limits: arguments.context.premiumLimits, isLast: false, callback: arguments.openFeature)
+            return PremiumBoardingRowItem(initialSize, stableId: stableId, viewType: viewType, index: i, value: value, limits: arguments.context.premiumLimits, isLast: false, callback: arguments.openFeature)
         }))
         index += 1
     }
