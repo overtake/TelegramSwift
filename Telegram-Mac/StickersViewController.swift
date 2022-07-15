@@ -735,8 +735,12 @@ class NStickersView : View {
     
     func updateSelectionState(animated: Bool) {
         
-        let item = packsView.selectedItem() ?? packsView.firstItem
-
+        var animated = animated
+        var item = packsView.selectedItem()
+        if item == nil, let value = packsView.firstItem {
+            item = value
+            animated = false
+        }
         
         guard let item = item, let view = item.view else {
             return

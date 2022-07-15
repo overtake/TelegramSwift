@@ -11,6 +11,7 @@ import Postbox
 import SwiftSignalKit
 import TelegramCore
 import Strings
+import TGUIKit
 
 public let diceSymbol: String = "🎲"
 public let dartSymbol: String = "🎯"
@@ -56,13 +57,15 @@ public struct EmojiSkinModifier : Codable, Equatable {
 public class RecentUsedEmoji: Codable, Equatable {
     private let _emojies:[String]
     public let skinModifiers:[EmojiSkinModifier]
-    public init(emojies:[String], skinModifiers: [EmojiSkinModifier]) {
+    public let animated:[MediaId]
+    public init(emojies:[String], animated: [MediaId], skinModifiers: [EmojiSkinModifier]) {
         self._emojies = emojies
+        self.animated = animated
         self.skinModifiers = skinModifiers
     }
     
     public static var defaultSettings: RecentUsedEmoji {
-        return RecentUsedEmoji(emojies: ["😂", "😘", "❤️", "😍", "😊", "🤔", "😁", "👍", "☺️", "😔", "😄", "😭", "💋", "😒", "😳", "😜", "🙈", "😉", "😃", "😢", "😝", "😱", "😡", "😏", "😞", "😅", "😚", "🙊", "😌", "😀", "😋", "😆", "🌚", "😐", "😕", "👎", diceSymbol, dartSymbol], skinModifiers: [])
+        return RecentUsedEmoji(emojies: ["😂", "😘", "❤️", "😍", "😊", "🤔", "😁", "👍", "☺️", "😔", "😄", "😭", "💋", "😒", "😳", "😜", "🙈", "😉", "😃", "😢", "😝", "😱", "😡", "😏", "😞", "😅", "😚", "🙊", "😌", "😀", "😋", "😆", "🌚", "😐", "😕", "👎", diceSymbol, dartSymbol], animated: [], skinModifiers: [])
     }
     
     public var emojies: [String] {
@@ -96,8 +99,9 @@ public class RecentUsedEmoji: Codable, Equatable {
     public required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: StringCodingKey.self)
         
-        let emojies = try container.decode([String].self, forKey: "e")
+        self.animated = try container.decode([MediaId].self, forKey: "ae")
         self.skinModifiers = try container.decode([EmojiSkinModifier].self, forKey: "sm_new")
+        let emojies = try container.decode([String].self, forKey: "e")
 
         var isset:[String: String] = [:]
         var list:[String] = []
@@ -123,6 +127,9 @@ public class RecentUsedEmoji: Codable, Equatable {
         var container = encoder.container(keyedBy: StringCodingKey.self)
         try container.encode(_emojies, forKey: "e")
         try container.encode(skinModifiers, forKey: "sm_new")
+        try container.encode(animated, forKey: "ae")
+
+        
     }
 }
 
@@ -135,11 +142,8 @@ public func saveUsedEmoji(_ list:[String], postbox:Postbox) -> Signal<Void, NoEr
     return postbox.transaction { transaction -> Void in
         transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.recentEmoji, { entry in
             var emojies: [String]
-            if let entry = entry?.get(RecentUsedEmoji.self) {
-                emojies = entry.emojies
-            } else {
-                emojies = RecentUsedEmoji.defaultSettings.emojies
-            }
+            let value: RecentUsedEmoji = entry?.get(RecentUsedEmoji.self) ?? RecentUsedEmoji.defaultSettings
+            emojies = value.emojies
             
             for emoji in list.reversed() {
                 if emoji.containsOnlyEmoji {
@@ -153,7 +157,22 @@ public func saveUsedEmoji(_ list:[String], postbox:Postbox) -> Signal<Void, NoEr
                 }
             }
             emojies = Array(emojies.filter({$0.containsEmoji}).prefix(35))
-            return PreferencesEntry(RecentUsedEmoji(emojies: emojies, skinModifiers: entry?.get(RecentUsedEmoji.self)?.skinModifiers ?? []))
+            return PreferencesEntry(RecentUsedEmoji(emojies: emojies, animated: value.animated, skinModifiers: value.skinModifiers))
+        })
+    }
+}
+
+public func saveAnimatedUsedEmoji(_ list:[MediaId], postbox:Postbox) -> Signal<Void, NoError> {
+    return postbox.transaction { transaction -> Void in
+        transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.recentEmoji, { entry in
+            let value: RecentUsedEmoji = entry?.get(RecentUsedEmoji.self) ?? RecentUsedEmoji.defaultSettings
+
+            var animated: [MediaId] = value.animated
+            
+            animated.insert(contentsOf: list, at: 0)
+            animated = animated.uniqueElements
+            animated = Array(animated.prefix(32))
+            return PreferencesEntry(RecentUsedEmoji(emojies: value.emojies, animated: animated, skinModifiers: value.skinModifiers))
         })
     }
 }
@@ -175,7 +194,7 @@ public func modifySkinEmoji(_ emoji:String, modifier: String?, postbox: Postbox)
                 skinModifiers.remove(at: index)
             }
            
-            return PreferencesEntry(RecentUsedEmoji(emojies: settings.emojies, skinModifiers: skinModifiers))
+            return PreferencesEntry(RecentUsedEmoji(emojies: settings.emojies, animated: settings.animated, skinModifiers: skinModifiers))
             
         })
     }

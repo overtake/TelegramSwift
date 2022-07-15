@@ -13,13 +13,151 @@ import TelegramCore
 import InAppSettings
 import Postbox
 
+
+enum EmojiSegment : Int64, Comparable  {
+    case RecentAnimated = 100
+    case Recent = 0
+    case People = 1
+    case AnimalsAndNature = 2
+    case FoodAndDrink = 3
+    case ActivityAndSport = 4
+    case TravelAndPlaces = 5
+    case Objects = 6
+    case Symbols = 7
+    case Flags = 8
+    
+    var localizedString: String {
+        switch self {
+        case .RecentAnimated: return strings().emojiRecent
+        case .Recent: return strings().emojiRecentNew
+        case .People: return strings().emojiSmilesAndPeople
+        case .AnimalsAndNature: return strings().emojiAnimalsAndNature
+        case .FoodAndDrink: return strings().emojiFoodAndDrink
+        case .ActivityAndSport: return strings().emojiActivityAndSport
+        case .TravelAndPlaces: return strings().emojiTravelAndPlaces
+        case .Objects: return strings().emojiObjects
+        case .Symbols: return strings().emojiSymbols
+        case .Flags: return strings().emojiFlags
+        }
+    }
+    
+    static var all: [EmojiSegment] {
+        return [.People, .AnimalsAndNature, .FoodAndDrink, .ActivityAndSport, .TravelAndPlaces, .Objects, .Symbols, .Flags]
+    }
+    
+    var hashValue:Int {
+        return Int(self.rawValue)
+    }
+}
+
+func ==(lhs:EmojiSegment, rhs:EmojiSegment) -> Bool {
+    return lhs.rawValue == rhs.rawValue
+}
+
+func <(lhs:EmojiSegment, rhs:EmojiSegment) -> Bool {
+    return lhs.rawValue < rhs.rawValue
+}
+
+let emojiesInstance:[EmojiSegment:[String]] = {
+    assertNotOnMainThread()
+    var local:[EmojiSegment:[String]] = [EmojiSegment:[String]]()
+    
+    let resource:URL?
+    if #available(OSX 11.1, *) {
+        resource = Bundle.main.url(forResource:"emoji1016", withExtension:"txt")
+    } else if #available(OSX 10.14.1, *) {
+        resource = Bundle.main.url(forResource:"emoji1014-1", withExtension:"txt")
+    } else  if #available(OSX 10.12, *) {
+        resource = Bundle.main.url(forResource:"emoji", withExtension:"txt")
+    } else {
+        resource = Bundle.main.url(forResource:"emoji11", withExtension:"txt")
+    }
+    if let resource = resource {
+        
+        var file:String = ""
+        
+        do {
+            file = try String(contentsOf: resource)
+            
+        } catch {
+            print("emoji file not loaded")
+        }
+        
+        let segments = file.components(separatedBy: "\n\n")
+        
+        for segment in segments {
+            
+            let list = segment.components(separatedBy: " ")
+            
+            if let value = EmojiSegment(rawValue: Int64(local.count + 1)) {
+                local[value] = list
+            }
+            
+        }
+        
+    }
+    
+    return local
+    
+}()
+
+private func segments(_ emoji: [EmojiSegment : [String]], skinModifiers: [EmojiSkinModifier]) -> [EmojiSegment:[[NSAttributedString]]] {
+    var segments:[EmojiSegment:[[NSAttributedString]]] = [:]
+    for (key,list) in emoji {
+        
+        var line:[NSAttributedString] = []
+        var lines:[[NSAttributedString]] = []
+        var i = 0
+        
+        for emoji in list {
+            
+            var e:String = emoji.emojiUnmodified
+            for modifier in skinModifiers {
+                if e == modifier.emoji {
+                    if e.length == 5 {
+                        let mutable = NSMutableString()
+                        mutable.insert(e, at: 0)
+                        mutable.insert(modifier.modifier, at: 2)
+                        e = mutable as String
+                    } else {
+                        e = e + modifier.modifier
+                    }
+                }
+
+            }
+            if !line.contains(where: {$0.string == String(e.first!) }), let first = e.first {
+                line.append(.initialize(string: String(first), font: .normal(26.0)))
+                i += 1
+            }
+            
+            
+            if i == 8 {
+                
+                lines.append(line)
+                line.removeAll()
+                i = 0
+            }
+        }
+        if line.count > 0 {
+            lines.append(line)
+        }
+        if lines.count > 0 {
+            segments[key] = lines
+        }
+        
+    }
+    return segments
+}
+
+
+
 private final class Arguments {
     let context: AccountContext
-    let send:(StickerPackItem, StickerPackReference)->Void
+    let send:(StickerPackItem)->Void
     let sendEmoji:(String)->Void
     let selectEmojiSegment:(EmojiSegment)->Void
     let viewSet:(StickerPackCollectionInfo)->Void
-    init(context: AccountContext, send:@escaping(StickerPackItem, StickerPackReference)->Void, sendEmoji:@escaping(String)->Void, selectEmojiSegment:@escaping(EmojiSegment)->Void, viewSet:@escaping(StickerPackCollectionInfo)->Void) {
+    init(context: AccountContext, send:@escaping(StickerPackItem)->Void, sendEmoji:@escaping(String)->Void, selectEmojiSegment:@escaping(EmojiSegment)->Void, viewSet:@escaping(StickerPackCollectionInfo)->Void) {
         self.context = context
         self.send = send
         self.sendEmoji = sendEmoji
@@ -124,13 +262,42 @@ private func entries(_ state: State, recent: RecentUsedEmoji, arguments: Argumen
     }.sorted(by: <)
     
     
+    let isPremium = state.peer?.peer.isPremium == true
+    
+    let recentDict:[MediaId: StickerPackItem] = state.sections.reduce([:], { current, value in
+        return current + value.items.toDictionary(with: { item in
+            return item.file.fileId
+        })
+    })
+    let recentAnimated:[StickerPackItem] = recent.animated.compactMap { mediaId in
+        if let item = recentDict[mediaId] {
+            if !item.file.isPremiumEmoji || isPremium {
+                return item
+            }
+        }
+        return nil
+    }
+    
     for key in seglist {
-        if key != .Recent {
+        
+        
+        if key == .Recent, !recentAnimated.isEmpty {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(recentAnimated), comparable: nil, item: { initialSize, stableId in
+                return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, info: nil, items: recentAnimated, callback: { item in
+                    arguments.send(item)
+                })
+            }))
+            index += 1
+        }
+        
+        if key != .Recent || !recentAnimated.isEmpty {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_segment(key.rawValue), equatable: InputDataEquatable(key), comparable: nil, item: { initialSize, stableId in
                 return EStickItem(initialSize, stableId: stableId, segmentName:key.localizedString)
             }))
             index += 1
         }
+        
+       
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(key.rawValue), equatable: InputDataEquatable(key), comparable: nil, item: { initialSize, stableId in
             return EBlockItem(initialSize, stableId: stableId, attrLines: seg[key]!, segment: key, account: arguments.context.account, selectHandler: arguments.sendEmoji)
@@ -156,7 +323,7 @@ private func entries(_ state: State, recent: RecentUsedEmoji, arguments: Argumen
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_section(section.info.id.id), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
             return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, info: section.info, items: section.items, callback: { item in
-                arguments.send(item, .name(section.info.shortName))
+                arguments.send(item)
             }, viewSet: { info in
                 arguments.viewSet(info)
             })
@@ -228,7 +395,12 @@ final class AnimatedEmojiesView : View {
     
     func updateSelectionState(animated: Bool) {
         
-        let item = packsView.selectedItem() ?? packsView.firstItem
+        var animated = animated
+        var item = packsView.selectedItem()
+        if item == nil, packsView.count > 1 {
+            item = packsView.item(at: 1)
+            animated = false
+        }
 
         
         guard let item = item, let view = item.view else {
@@ -299,7 +471,7 @@ final class AnimatedEmojiesView : View {
             if identifier.hasPrefix("_id_emoji_segment_") || identifier.hasPrefix("_id_emoji_block_") {
                 if let segmentId = Int64(identifier.suffix(1)), let segment = EmojiSegment(rawValue: segmentId) {
                     switch segment {
-                    case .Recent:
+                    case .Recent, .RecentAnimated:
                         _stableId = InputDataEntryId.custom(_id_recent_pack)
                     default:
                         _stableId = InputDataEntryId.custom(_id_segments_pack)
@@ -344,7 +516,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
     }
     
     private func updatePackReorder(_ sections: [State.Section]) {
-        var resortRange: NSRange = NSMakeRange(3, genericView.packsView.count - 4)
+        let resortRange: NSRange = NSMakeRange(3, genericView.packsView.count - 4)
         
         let context = self.context
         
@@ -419,7 +591,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             updateState(f)
         }
         
-        let arguments = Arguments(context: context, send: { [weak self] item, reference in
+        let arguments = Arguments(context: context, send: { [weak self] item in
             if !context.isPremium && item.file.isPremiumEmoji {
                 showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
                     showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)

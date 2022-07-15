@@ -212,7 +212,11 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
                 items.append(ActionItem(text: strings().peerInfoActionShare, image: theme.icons.profile_share, animation: .menu_forward, action: arguments.shareContact))
             }
             if peer.id != item.context.peerId, !peer.isPremium {
-                items.append(ActionItem(text: strings().peerInfoActionGiftPremium, image: theme.icons.profile_share, animation: .menu_gift, action: arguments.giftPremium))
+                if let cachedData = item.peerView.cachedData as? CachedUserData {
+                    if !cachedData.premiumGiftOptions.isEmpty {
+                        items.append(ActionItem(text: strings().peerInfoActionGiftPremium, image: theme.icons.profile_share, animation: .menu_gift, action: arguments.giftPremium))
+                    }
+                }
             }
             if peer.id != item.context.peerId, let cachedData = item.peerView.cachedData as? CachedUserData, item.peerView.peerIsContact {
                 items.append(ActionItem(text: (!cachedData.isBlocked ? strings().peerInfoBlockUser : strings().peerInfoUnblockUser), image: !cachedData.isBlocked ? theme.icons.profile_block : theme.icons.profile_unblock, animation: cachedData.isBlocked ? .menu_unblock : .menu_restrict, destruct: true, action: {

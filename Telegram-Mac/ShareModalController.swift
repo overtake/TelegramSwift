@@ -1240,7 +1240,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
             self?.genericView.textView.appendText(emoji)
             _ = self?.window?.makeFirstResponder(self?.genericView.textView.inputView)
         }
-        emoji.update(with: interactions)
+        emoji.update(with: interactions, chatInteraction: self.contextChatInteraction)
         
         genericView.emojiButton.set(handler: { [weak self] control in
             self?.showEmoji(for: control)
@@ -1770,11 +1770,11 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         return .rejected
     }
 
-    private let emoji: EmojiViewController
+    private let emoji: EmojiesController
     
     init(_ share:ShareObject) {
         self.share = share
-        emoji = EmojiViewController(share.context)
+        emoji = EmojiesController(share.context)
         self.contextChatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: share.context)
         inputContextHelper = InputContextHelper(chatInteraction: contextChatInteraction)
         super.init(frame: NSMakeRect(0, 0, 360, 400))

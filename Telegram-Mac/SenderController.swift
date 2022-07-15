@@ -228,9 +228,12 @@ class Sender: NSObject {
         }
         
         if !mapped.isEmpty {
+            let inlineMedia = input.inlineMedia.map { $0.key }
             return enqueueMessages(account: context.account, peerId: peerId, messages: mapped) |> mapToSignal { value in
                 if !emojis.isEmpty {
-                    return saveUsedEmoji(emojis, postbox: context.account.postbox) |> map {
+                    let es = saveUsedEmoji(emojis, postbox: context.account.postbox)
+                    let aes = saveAnimatedUsedEmoji(inlineMedia, postbox: context.account.postbox)
+                    return combineLatest(es, aes) |> map { _ in
                         return value
                     }
                 }
