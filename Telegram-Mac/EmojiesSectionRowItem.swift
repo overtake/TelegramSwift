@@ -24,13 +24,13 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     let context: AccountContext
     let callback:(StickerPackItem)->Void
     let itemSize: NSSize
-    let info: StickerPackCollectionInfo
+    let info: StickerPackCollectionInfo?
     let viewSet: ((StickerPackCollectionInfo)->Void)?
     
     let nameLayout: TextViewLayout?
     let isPremium: Bool
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, info: StickerPackCollectionInfo, items: [StickerPackItem], callback:@escaping(StickerPackItem)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, info: StickerPackCollectionInfo?, items: [StickerPackItem], callback:@escaping(StickerPackItem)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil) {
         self.itemSize = NSMakeSize(41, 34)
         self.info = info
         self.viewSet = viewSet
@@ -49,7 +49,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         self.context = context
         self.callback = callback
         
-        if stableId != AnyHashable(0) {
+        if stableId != AnyHashable(0), let info = info {
             let layout = TextViewLayout(.initialize(string: info.title.uppercased(), color: theme.colors.grayText, font: .normal(12)), alwaysStaticItems: true)
             layout.measure(width: 300)
             self.nameLayout = layout
@@ -97,10 +97,12 @@ final class EmojiesSectionRowItem : GeneralRowItem {
             return super.menuItems(in: location)
         }
         
-        
-        items.append(ContextMenuItem(strings().contextViewEmojiSet, handler: { [weak self] in
-            self?.viewSet?(info)
-        }, itemImage: MenuAnimation.menu_view_sticker_set.value))
+        if let info = info {
+            items.append(ContextMenuItem(strings().contextViewEmojiSet, handler: { [weak self] in
+                self?.viewSet?(info)
+            }, itemImage: MenuAnimation.menu_view_sticker_set.value))
+        }
+       
         
         
 //        items.append(ContextMenuItem(strings().emojiContextRemove, handler: {

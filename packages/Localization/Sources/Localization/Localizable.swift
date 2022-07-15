@@ -4477,6 +4477,8 @@ public final class L10n {
   public static var emojiObjects: String  { return L10n.tr("Localizable", "Emoji.Objects") }
   /// Frequently Used
   public static var emojiRecent: String  { return L10n.tr("Localizable", "Emoji.Recent") }
+  /// Frequently Used Emoji
+  public static var emojiRecentNew: String  { return L10n.tr("Localizable", "Emoji.RecentNew") }
   /// Smileys & People
   public static var emojiSmilesAndPeople: String  { return L10n.tr("Localizable", "Emoji.SmilesAndPeople") }
   /// Symbols
