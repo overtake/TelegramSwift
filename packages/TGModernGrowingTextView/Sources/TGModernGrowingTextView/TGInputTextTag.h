@@ -3,9 +3,9 @@
 @interface TGTextAttachment : NSTextAttachment
 @property (nonatomic,strong,readonly) NSString * _Nonnull identifier;
 @property (nonatomic,strong,readonly) NSString * _Nonnull text;
-@property (nonatomic,strong,readonly) id _Nonnull reference;
 @property (nonatomic,strong,readonly) id _Nonnull fileId;
--(id _Nonnull)initWithIdentifier:(NSString * _Nonnull)identifier reference:(id _Nonnull)reference fileId:(id _Nonnull)fileId text:(NSString * _Nonnull)text;
+@property (nonatomic,strong,readonly) id _Nullable file;
+-(id _Nonnull)initWithIdentifier:(NSString * _Nonnull)identifier fileId:(id _Nonnull)fileId file:(id _Nullable)file text:(NSString * _Nonnull)text;
 -(id _Nonnull)unique;
 @end
 

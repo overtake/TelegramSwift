@@ -25,6 +25,10 @@ enum EmojiSegment : Int64, Comparable  {
     case Symbols = 7
     case Flags = 8
     
+    static var all: [EmojiSegment] {
+        return [.People, .AnimalsAndNature, .FoodAndDrink, .ActivityAndSport, .TravelAndPlaces, .Objects, .Symbols, .Flags]
+    }
+    
     var localizedString: String {
         switch self {
         case .Recent: return strings().emojiRecent
@@ -95,7 +99,8 @@ let emojiesInstance:[EmojiSegment:[String]] = {
     
 }()
 
-private func segments(_ emoji: [EmojiSegment : [String]], skinModifiers: [EmojiSkinModifier]) -> [EmojiSegment:[[NSAttributedString]]] {
+
+func segments(_ emoji: [EmojiSegment : [String]], skinModifiers: [EmojiSkinModifier]) -> [EmojiSegment:[[NSAttributedString]]] {
     var segments:[EmojiSegment:[[NSAttributedString]]] = [:]
     for (key,list) in emoji {
         
@@ -230,9 +235,7 @@ class EmojiControllerView : View {
 
 class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, TableViewDelegate {
     
-    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
-        return nil
-    }
+    
     private let searchValue = ValuePromise<SearchState>(.init(state: .None, request: nil))
     private var searchState: SearchState = .init(state: .None, request: nil) {
         didSet {
@@ -270,7 +273,9 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         updateLocalizationAndTheme(theme: theme)
     }
     
-    
+    func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
+        return nil
+    }
     func isSelectable(row: Int, item: TableRowItem) -> Bool {
         return true
     }
@@ -325,9 +330,7 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         
         genericView.searchView.searchInteractions = searchInteractions
         
-        
-        // DO NOT WRITE CODE OUTSIZE READY BLOCK
-      
+              
         let ready:([[NSAttributedString]], RecentUsedEmoji, [String]?)->Void = { [weak self] animatedEmojiList, recent, search in
             if let strongSelf = self {
                 strongSelf.makeSearchCommand?(.normal)
@@ -371,18 +374,18 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
         }))
         
         
-        genericView.tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] _ in
-            if let view = self?.genericView {
-                view.tableView.enumerateVisibleItems(with: { item -> Bool in
-                    if let item = item as? EStickItem {
-                        view.tabs.changeSelection(stableId: AnyHashable(Int64(item.segment.rawValue)))
-                    } else if let item = item as? EBlockItem {
-                        view.tabs.changeSelection(stableId: AnyHashable(Int64(item.segment.rawValue)))
-                    }
-                    return false
-                })
-            }
-        }))
+//        genericView.tableView.addScroll(listener: TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] _ in
+//            if let view = self?.genericView {
+//                view.tableView.enumerateVisibleItems(with: { item -> Bool in
+//                    if let item = item as? EStickItem {
+//                        view.tabs.changeSelection(stableId: AnyHashable(Int64(item.segment.rawValue)))
+//                    } else if let item = item as? EBlockItem {
+//                        view.tabs.changeSelection(stableId: AnyHashable(Int64(item.segment.rawValue)))
+//                    }
+//                    return false
+//                })
+//            }
+//        }))
     }
     
     func readyForDisplay(_ animatedEmojiList: [[NSAttributedString]], _ recent: RecentUsedEmoji, _ search: [String]?) -> Void {
@@ -398,19 +401,16 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
             let lines = search.chunks(8).map({ clues -> [NSAttributedString] in
                 return clues.map({NSAttributedString.initialize(string: $0, font: .normal(26.0))})
             })
-            if lines.count > 0 {
-                let _ = genericView.tableView.addItem(item: EBlockItem(initialSize, attrLines: lines, segment: .Recent, account: context.account, selectHandler: { [weak self] emoji in
-                    self?.interactions?.sendEmoji(emoji)
-                }))
-            }
+//            if lines.count > 0 {
+//                let _ = genericView.tableView.addItem(item: EBlockItem(initialSize, attrLines: lines, segment: .Recent, account: context.account, selectHandler: { [weak self] emoji in
+//                    self?.interactions?.sendEmoji(emoji)
+//                }))
+//            }
 
         } else {
             var e = emojiesInstance
             e[EmojiSegment.Recent] = recent.emojies
             var seg = segments(e, skinModifiers: recent.skinModifiers)
-//            if !animatedEmojiList.isEmpty {
-//                seg[.Recent] = seg[.Recent]! + animatedEmojiList
-//            }
             let seglist = seg.map { (key,_) -> EmojiSegment in
                 return key
             }.sorted(by: <)
@@ -444,14 +444,14 @@ class EmojiViewController: TelegramGenericViewController<EmojiControllerView>, T
             
             for key in seglist {
                 if key != .Recent {
-                    let _ = genericView.tableView.addItem(item: EStickItem(initialSize, segment:key, segmentName:key.localizedString))
+                  //  let _ = genericView.tableView.addItem(item: EStickItem(initialSize, stableId: key.rawValue, segment: key, segmentName:key.localizedString))
                 }
-                let _ = genericView.tableView.addItem(item: EBlockItem(initialSize, attrLines: seg[key]!, segment: key, account: context.account, selectHandler: { [weak self] emoji in
-                    self?.interactions?.sendEmoji(emoji)
-                }))
-                let _ = genericView.tabs.addItem(item: ETabRowItem(initialSize, icon: tabIcons[key.hashValue], iconSelected:tabIconsSelected[key.hashValue], stableId:key.rawValue, width:w, clickHandler:{[weak self] (stableId) in
-                    self?.scrollTo(stableId: stableId)
-                }))
+//                let _ = genericView.tableView.addItem(item: EBlockItem(initialSize, attrLines: seg[key]!, segment: key, account: context.account, selectHandler: { [weak self] emoji in
+//                    self?.interactions?.sendEmoji(emoji)
+//                }))
+//                let _ = genericView.tabs.addItem(item: ETabRowItem(initialSize, icon: tabIcons[key.hashValue], iconSelected:tabIconsSelected[key.hashValue], stableId:key.rawValue, width:w, clickHandler:{[weak self] (stableId) in
+//                    self?.scrollTo(stableId: stableId)
+//                }))
             }
         }
         genericView.tableView.endTableUpdates()

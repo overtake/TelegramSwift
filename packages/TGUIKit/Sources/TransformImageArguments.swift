@@ -89,7 +89,7 @@ public func ==(lhs: ImageCorners, rhs: ImageCorners) -> Bool {
     return lhs.topLeft == rhs.topLeft && lhs.topRight == rhs.topRight && lhs.bottomLeft == rhs.bottomLeft && lhs.bottomRight == rhs.bottomRight
 }
 
-public enum TransformImageResizeMode {
+public enum TransformImageResizeMode : Hashable {
     case fill(NSColor)
     case blurBackground
     case none
@@ -97,12 +97,12 @@ public enum TransformImageResizeMode {
     case imageColor(NSColor)
 }
 
-public enum TransformImageEmptyColor : Equatable {
+public enum TransformImageEmptyColor : Equatable, Hashable {
     case color(NSColor)
     case gradient(colors: [NSColor], intensity: CGFloat, rotation: Int32?)
 }
 
-public struct TransformImageArguments: Equatable {
+public struct TransformImageArguments: Equatable, Hashable {
     public let corners: ImageCorners
     
     public let imageSize: NSSize
@@ -113,6 +113,26 @@ public struct TransformImageArguments: Equatable {
     public let scale: CGFloat
     public let mirror: Bool
     public let someObject: Int
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(imageSize.width)
+        hasher.combine(imageSize.height)
+        hasher.combine(boundingSize.height)
+        hasher.combine(boundingSize.width)
+        hasher.combine(scale)
+        hasher.combine(mirror)
+        hasher.combine(someObject)
+        if let emptyColor = emptyColor {
+            hasher.combine(emptyColor)
+        }
+        hasher.combine(resizeMode)
+        
+        hasher.combine(intrinsicInsets.top)
+        hasher.combine(intrinsicInsets.left)
+        hasher.combine(intrinsicInsets.right)
+        hasher.combine(intrinsicInsets.bottom)
+
+    }
     
     public var drawingSize: CGSize {
         let cornersExtendedEdges = self.corners.extendedEdges

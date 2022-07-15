@@ -51,7 +51,7 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
     case code(Range<Int>)
     case uid(Range<Int>, Int64)
     case url(Range<Int>, String)
-    case animated(Range<Int>, String, StickerPackReference, Int64)
+    case animated(Range<Int>, String, Int64, TelegramMediaFile?)
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: StringCodingKey.self)
         
@@ -80,7 +80,7 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
         case 8:
             self = .underline(range)
         case 9:
-            self = .animated(range, try container.decode(String.self, forKey: "id"), try container.decode(StickerPackReference.self, forKey: "ref"), try container.decode(Int64.self, forKey: "fileId"))
+            self = .animated(range, try container.decode(String.self, forKey: "id"), try container.decode(Int64.self, forKey: "fileId"), try container.decodeIfPresent(TelegramMediaFile.self, forKey: "file"))
         default:
             fatalError("input attribute not supported")
         }
@@ -144,11 +144,13 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
         case let .url(_, url):
             try container.encode(Int32(5), forKey: "_rawValue")
             try container.encode(url, forKey: "url")
-        case let .animated(_, id, ref, fileId):
+        case let .animated(_, id, fileId, file):
             try container.encode(Int32(9), forKey: "_rawValue")
             try container.encode(id, forKey: "id")
-            try container.encode(ref, forKey: "ref")
             try container.encode(fileId, forKey: "fileId")
+            if let file = file {
+                try container.encode(file, forKey: "file")
+            }
         }
     }
 
@@ -176,8 +178,8 @@ extension ChatTextInputAttribute {
         case let .url(range, url):
             let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: url, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
             return (TGCustomLinkAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
-        case let .animated(range, id, ref, fileId):
-            let tag = TGTextAttachment(identifier: "\(id)", reference: ref, fileId: fileId, text: "")
+        case let .animated(range, id, fileId, file):
+            let tag = TGTextAttachment(identifier: "\(id)", fileId: fileId, file: file, text: "")
             return (TGAnimatedEmojiAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         }
     }
@@ -215,14 +217,14 @@ extension ChatTextInputAttribute {
             return .uid(range, uid)
         case let .url(_, url):
             return .url(range, url)
-        case let .animated(_, id, ref, fileId):
-            return .animated(range, id, ref, fileId)
+        case let .animated(_, id, fileId, file):
+            return .animated(range, id, fileId, file)
         }
     }
 }
 
 
-func chatTextAttributes(from entities:TextEntitiesMessageAttribute) -> [ChatTextInputAttribute] {
+func chatTextAttributes(from entities:TextEntitiesMessageAttribute, associatedMedia:[MediaId : Media] = [:]) -> [ChatTextInputAttribute] {
     var inputAttributes:[ChatTextInputAttribute] = []
     for entity in entities.entities {
         switch entity.type {
@@ -244,8 +246,8 @@ func chatTextAttributes(from entities:TextEntitiesMessageAttribute) -> [ChatText
             inputAttributes.append(.spoiler(entity.range))
         case .Underline:
             inputAttributes.append(.underline(entity.range))
-        case let .CustomEmoji(stickerPack, fileId):
-            inputAttributes.append(.animated(entity.range, "\(arc4random())", stickerPack, fileId))
+        case let .CustomEmoji(_, fileId):
+            inputAttributes.append(.animated(entity.range, "\(arc4random())", fileId, nil))
         default:
             break
         }
@@ -292,8 +294,8 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
                     inputAttributes.append(.url(range.location ..< range.location + range.length, url))
                 }
             } else if let attachment = value as? TGTextAttachment {
-                if let ref = attachment.reference as? StickerPackReference, let fileId = attachment.fileId as? Int64 {
-                    inputAttributes.append(.animated(range.location ..< range.location + range.length, attachment.identifier, ref, fileId))
+                if let fileId = attachment.fileId as? Int64 {
+                    inputAttributes.append(.animated(range.location ..< range.location + range.length, attachment.identifier, fileId, attachment.file as? TelegramMediaFile))
                 }
             }
         }
@@ -329,6 +331,21 @@ final class ChatTextInputState: Codable, Equatable {
         self.selectionRange = selectionRange
         self.attributes = attributes.sorted(by: <)
     }
+    
+    var inlineMedia: [MediaId : Media] {
+        var media:[MediaId : Media] = [:]
+        for attribute in attributes {
+            switch attribute {
+            case .animated(_, _, let fileId, let file):
+                if let file = file {
+                    media[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] = file
+                }
+            default:
+                break
+            }
+        }
+        return media
+    }
 
     init(inputText: String) {
         self.inputText = inputText
@@ -356,11 +373,14 @@ final class ChatTextInputState: Codable, Equatable {
         try container.encode(self.attributes, forKey: "t.a")
     }
     
-    func unique() -> ChatTextInputState {
-        let attributes:[ChatTextInputAttribute] = self.attributes.map { attr in
+    func unique(isPremium: Bool) -> ChatTextInputState {
+        let attributes:[ChatTextInputAttribute] = self.attributes.compactMap { attr in
             switch attr {
-            case let .animated(range, _, ref, fileId):
-                return .animated(range, "\(arc4random64())", ref, fileId)
+            case let .animated(range, _, fileId, file):
+                if !isPremium && file?.isPremiumEmoji == true {
+                    return nil
+                }
+                return .animated(range, "\(arc4random64())", fileId, file)
             default:
                 return attr
             }
@@ -605,8 +625,8 @@ final class ChatTextInputState: Codable, Equatable {
                     attributes.append(.uid(newRange.min ..< newRange.max, uid))
                 case let .url(_, url):
                     attributes.append(.url(newRange.min ..< newRange.max, url))
-                case let .animated(_, id, ref, fileId):
-                    attributes.append(.animated(newRange.min ..< newRange.max, id, ref, fileId))
+                case let .animated(_, id, fileId, file):
+                    attributes.append(.animated(newRange.min ..< newRange.max, id, fileId, file))
                 }
           //  }
         }
@@ -677,8 +697,8 @@ final class ChatTextInputState: Codable, Equatable {
                 entities.append(.init(range: range, type: .TextMention(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(uid)))))
             case let .url(range, url):
                 entities.append(.init(range: range, type: .TextUrl(url: url)))
-            case let .animated(range, _, ref, fileId):
-                entities.append(.init(range: range, type: .CustomEmoji(stickerPack: ref, fileId: fileId)))
+            case let .animated(range, _, fileId, _):
+                entities.append(.init(range: range, type: .CustomEmoji(stickerPack: nil, fileId: fileId)))
             }
         }
 

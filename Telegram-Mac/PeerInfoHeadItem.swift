@@ -849,7 +849,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                 if let list = list {
                     let list = list.filter { path -> Bool in
                         if let size = fs(path) {
-                            return size <= 2000 * 1024 * 1024
+                            return size <= 5 * 1024 * 1024
                         }
                         return false
                     }

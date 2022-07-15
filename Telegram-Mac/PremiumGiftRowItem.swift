@@ -102,10 +102,16 @@ private final class PremiumGiftRowView: GeneralContainableRowView {
         }
         
         func update(_ option: PremiumGiftOption, selected: Bool, context: AccountContext, animated: Bool, select: @escaping(PremiumGiftOption)->Void) {
-            self.imageView.image = selected ? theme.chat_toggle_selected : theme.chat_toggle_unselected
+            
+            let selected_image = generateChatGroupToggleSelected(foregroundColor: theme.colors.premium, backgroundColor: theme.colors.underSelectedColor)
+            
+            let unselected_image = generateChatGroupToggleUnselected(foregroundColor: theme.colors.grayIcon.withAlphaComponent(0.6), backgroundColor: NSColor.black.withAlphaComponent(0.05))
+
+            
+            self.imageView.image = selected ? selected_image : unselected_image
             self.imageView.setFrameSize(20, 20)
             
-            self.selected.layer?.borderColor = theme.colors.accent.cgColor
+            self.selected.layer?.borderColor = theme.colors.premium.cgColor
             self.selected.layer?.cornerRadius = 10
             self.selected.layer?.borderWidth = 1.5
             
@@ -132,7 +138,7 @@ private final class PremiumGiftRowView: GeneralContainableRowView {
             self.discount.update(discountLayout)
             self.discount.setFrameSize(discountLayout.layoutSize.width + 8, discountLayout.layoutSize.height + 4)
             self.discount.layer?.cornerRadius = .cornerRadius
-            self.discount.backgroundColor = theme.colors.accent
+            self.discount.backgroundColor = theme.colors.premium
 
             
             self.removeAllHandlers()

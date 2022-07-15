@@ -11,16 +11,16 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 
-private final class StickerReferenceDataContext {
-    var data: [TelegramMediaFile] = []
-    let subscribers = Bag<([TelegramMediaFile]) -> Void>()
+private final class InlineFileDataContext {
+    var data: TelegramMediaFile?
+    let subscribers = Bag<(TelegramMediaFile?) -> Void>()
 }
 
 final class InlineStickersContext {
     
     private let postbox: Postbox
     private let engine: TelegramEngine
-    private var dataContexts: [StickerPackReference : StickerReferenceDataContext] = [:]
+    private var dataContexts: [Int64 : InlineFileDataContext] = [:]
     
     private let fetchDisposable = MetaDisposable()
     private let loadDataDisposable = MetaDisposable()
@@ -30,44 +30,38 @@ final class InlineStickersContext {
         self.engine = engine
     }
     
-    func stickerPack(reference: StickerPackReference) -> Signal<[TelegramMediaFile], NoError> {
+    func load(fileId: Int64) -> Signal<TelegramMediaFile?, NoError> {
         return Signal { subscriber in
             
-            let context = self.dataContexts[reference] ?? .init()
-            
-            
+            let context = self.dataContexts[fileId] ?? .init()
             
             subscriber.putNext(context.data)
 
-            self.dataContexts[reference] = context
-            
-            
             let index = context.subscribers.add({ data in
                 subscriber.putNext(data)
             })
             
+            var disposable: Disposable?
             
-            let signal = self.engine.stickers.loadedStickerPack(reference: reference, forceActualized: false) |> deliverOnMainQueue
-            
-            let disposable = signal.start(next: { pack in
-                let context = self.dataContexts[reference]!
-                switch pack {
-                case let .result(_, items, _):
-                    context.data = items.map { $0.file }
-                default:
-                    break
-                }
-                for subscriber in context.subscribers.copyItems() {
-                    subscriber(context.data)
-                }
-                self.dataContexts[reference] = context
-            })
-            
+            if self.dataContexts[fileId] == nil {
+                let signal = self.engine.stickers.resolveInlineSticker(fileId: fileId)
+                
+                disposable = signal.start(next: { file in
+                    context.data = file
+                    for subscriber in context.subscribers.copyItems() {
+                        subscriber(context.data)
+                    }
+                    self.dataContexts[fileId] = context
+                })
+            }
+                
+            self.dataContexts[fileId] = context
+
             return ActionDisposable {
-                if let current = self.dataContexts[reference] {
+                if let current = self.dataContexts[fileId] {
                     current.subscribers.remove(index)
                 }
-                disposable.dispose()
+                disposable?.dispose()
             }
         }
     }

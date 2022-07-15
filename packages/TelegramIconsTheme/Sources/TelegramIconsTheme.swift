@@ -2787,19 +2787,6 @@ public final class TelegramIconsTheme {
           return image
       }
   }
-  public var stickersTabFave: CGImage {
-      if let image = cached.with({ $0["stickersTabFave"] }) {
-          return image
-      } else {
-          let image = _stickersTabFave()
-          _ = cached.modify { current in 
-              var current = current
-              current["stickersTabFave"] = image
-              return current
-          }
-          return image
-      }
-  }
   public var chatInstantView: CGImage {
       if let image = cached.with({ $0["chatInstantView"] }) {
           return image
@@ -6544,6 +6531,58 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var stickers_add_featured_active: CGImage {
+      if let image = cached.with({ $0["stickers_add_featured_active"] }) {
+          return image
+      } else {
+          let image = _stickers_add_featured_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["stickers_add_featured_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var stickers_add_featured_unread_active: CGImage {
+      if let image = cached.with({ $0["stickers_add_featured_unread_active"] }) {
+          return image
+      } else {
+          let image = _stickers_add_featured_unread_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["stickers_add_featured_unread_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var stickers_favorite: CGImage {
+      if let image = cached.with({ $0["stickers_favorite"] }) {
+          return image
+      } else {
+          let image = _stickers_favorite()
+          _ = cached.modify { current in 
+              var current = current
+              current["stickers_favorite"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var stickers_favorite_active: CGImage {
+      if let image = cached.with({ $0["stickers_favorite_active"] }) {
+          return image
+      } else {
+          let image = _stickers_favorite_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["stickers_favorite_active"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var channel_info_promo: CGImage {
       if let image = cached.with({ $0["channel_info_promo"] }) {
           return image
@@ -8572,6 +8611,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var premium_emoji_lock: CGImage {
+      if let image = cached.with({ $0["premium_emoji_lock"] }) {
+          return image
+      } else {
+          let image = _premium_emoji_lock()
+          _ = cached.modify { current in 
+              var current = current
+              current["premium_emoji_lock"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -8787,7 +8839,6 @@ public final class TelegramIconsTheme {
   private let _chatMentionActive: ()->CGImage
   private let _sliderControl: ()->CGImage
   private let _sliderControlActive: ()->CGImage
-  private let _stickersTabFave: ()->CGImage
   private let _chatInstantView: ()->CGImage
   private let _chatInstantViewBubble_incoming: ()->CGImage
   private let _chatInstantViewBubble_outgoing: ()->CGImage
@@ -9076,6 +9127,10 @@ public final class TelegramIconsTheme {
   private let _chat_quiz_explanation_bubble_outgoing: ()->CGImage
   private let _stickers_add_featured: ()->CGImage
   private let _stickers_add_featured_unread: ()->CGImage
+  private let _stickers_add_featured_active: ()->CGImage
+  private let _stickers_add_featured_unread_active: ()->CGImage
+  private let _stickers_favorite: ()->CGImage
+  private let _stickers_favorite_active: ()->CGImage
   private let _channel_info_promo: ()->CGImage
   private let _channel_info_promo_bubble_incoming: ()->CGImage
   private let _channel_info_promo_bubble_outgoing: ()->CGImage
@@ -9232,6 +9287,7 @@ public final class TelegramIconsTheme {
   private let _premium_reaction_lock: ()->CGImage
   private let _premium_boarding_feature_next: ()->CGImage
   private let _premium_stickers: ()->CGImage
+  private let _premium_emoji_lock: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -9448,7 +9504,6 @@ public final class TelegramIconsTheme {
       chatMentionActive: @escaping()->CGImage,
       sliderControl: @escaping()->CGImage,
       sliderControlActive: @escaping()->CGImage,
-      stickersTabFave: @escaping()->CGImage,
       chatInstantView: @escaping()->CGImage,
       chatInstantViewBubble_incoming: @escaping()->CGImage,
       chatInstantViewBubble_outgoing: @escaping()->CGImage,
@@ -9737,6 +9792,10 @@ public final class TelegramIconsTheme {
       chat_quiz_explanation_bubble_outgoing: @escaping()->CGImage,
       stickers_add_featured: @escaping()->CGImage,
       stickers_add_featured_unread: @escaping()->CGImage,
+      stickers_add_featured_active: @escaping()->CGImage,
+      stickers_add_featured_unread_active: @escaping()->CGImage,
+      stickers_favorite: @escaping()->CGImage,
+      stickers_favorite_active: @escaping()->CGImage,
       channel_info_promo: @escaping()->CGImage,
       channel_info_promo_bubble_incoming: @escaping()->CGImage,
       channel_info_promo_bubble_outgoing: @escaping()->CGImage,
@@ -9892,7 +9951,8 @@ public final class TelegramIconsTheme {
       premium_account_small_rev_active: @escaping()->CGImage,
       premium_reaction_lock: @escaping()->CGImage,
       premium_boarding_feature_next: @escaping()->CGImage,
-      premium_stickers: @escaping()->CGImage
+      premium_stickers: @escaping()->CGImage,
+      premium_emoji_lock: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -10108,7 +10168,6 @@ public final class TelegramIconsTheme {
       self._chatMentionActive = chatMentionActive
       self._sliderControl = sliderControl
       self._sliderControlActive = sliderControlActive
-      self._stickersTabFave = stickersTabFave
       self._chatInstantView = chatInstantView
       self._chatInstantViewBubble_incoming = chatInstantViewBubble_incoming
       self._chatInstantViewBubble_outgoing = chatInstantViewBubble_outgoing
@@ -10397,6 +10456,10 @@ public final class TelegramIconsTheme {
       self._chat_quiz_explanation_bubble_outgoing = chat_quiz_explanation_bubble_outgoing
       self._stickers_add_featured = stickers_add_featured
       self._stickers_add_featured_unread = stickers_add_featured_unread
+      self._stickers_add_featured_active = stickers_add_featured_active
+      self._stickers_add_featured_unread_active = stickers_add_featured_unread_active
+      self._stickers_favorite = stickers_favorite
+      self._stickers_favorite_active = stickers_favorite_active
       self._channel_info_promo = channel_info_promo
       self._channel_info_promo_bubble_incoming = channel_info_promo_bubble_incoming
       self._channel_info_promo_bubble_outgoing = channel_info_promo_bubble_outgoing
@@ -10553,5 +10616,6 @@ public final class TelegramIconsTheme {
       self._premium_reaction_lock = premium_reaction_lock
       self._premium_boarding_feature_next = premium_boarding_feature_next
       self._premium_stickers = premium_stickers
+      self._premium_emoji_lock = premium_emoji_lock
   }
 }

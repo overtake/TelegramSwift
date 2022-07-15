@@ -2059,6 +2059,8 @@ public final class L10n {
   public static var chatContextTranslate: String  { return L10n.tr("Localizable", "Chat.Context.Translate") }
   /// Unarchive
   public static var chatContextUnarchive: String  { return L10n.tr("Localizable", "Chat.Context.Unarchive") }
+  /// View Emoji Set
+  public static var chatContextViewEmojiSet: String  { return L10n.tr("Localizable", "Chat.Context.ViewEmojiSet") }
   /// View Statistics
   public static var chatContextViewStatistics: String  { return L10n.tr("Localizable", "Chat.Context.ViewStatistics") }
   /// Cancel
@@ -4143,6 +4145,8 @@ public final class L10n {
   public static var contextSaveMedia: String  { return L10n.tr("Localizable", "Context.SaveMedia") }
   /// Show In Finder
   public static var contextShowInFinder: String  { return L10n.tr("Localizable", "Context.ShowInFinder") }
+  /// View Emoji Set
+  public static var contextViewEmojiSet: String  { return L10n.tr("Localizable", "Context.ViewEmojiSet") }
   /// View Sticker Set
   public static var contextViewStickerSet: String  { return L10n.tr("Localizable", "Context.ViewStickerSet") }
   /// Copied to Clipboard
@@ -4479,6 +4483,50 @@ public final class L10n {
   public static var emojiSymbols: String  { return L10n.tr("Localizable", "Emoji.Symbols") }
   /// Travel & Places
   public static var emojiTravelAndPlaces: String  { return L10n.tr("Localizable", "Emoji.TravelAndPlaces") }
+  /// Remove
+  public static var emojiContextRemove: String  { return L10n.tr("Localizable", "Emoji.Context.Remove") }
+  /// %d
+  public static func emojiPackAddCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Add_countable", p1)
+  }
+  /// Add %d Emojies
+  public static func emojiPackAddFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Add_few", p1)
+  }
+  /// Add %d Emojies
+  public static func emojiPackAddMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Add_many", p1)
+  }
+  /// Add %d Emoji
+  public static func emojiPackAddOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Add_one", p1)
+  }
+  /// Add %d Emojies
+  public static func emojiPackAddOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Add_other", p1)
+  }
+  /// Add %d Emojies
+  public static func emojiPackAddTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Add_two", p1)
+  }
+  /// Add %d Emojies
+  public static func emojiPackAddZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Add_zero", p1)
+  }
+  /// Subscribe to Telegram Premium to unlock this emoji. [Read More]()
+  public static var emojiPackPremiumAlert: String  { return L10n.tr("Localizable", "EmojiPack.PremiumAlert") }
+  /// %@ has been added to your emojies.
+  public static func emojiPackAddedInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Added.Info", p1)
+  }
+  /// Emojies Added
+  public static var emojiPackAddedTitle: String  { return L10n.tr("Localizable", "EmojiPack.Added.Title") }
+  /// %@ is no longer in your emojies.
+  public static func emojiPackRemovedInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Removed.Info", p1)
+  }
+  /// Emojies Added
+  public static var emojiPackRemovedTitle: String  { return L10n.tr("Localizable", "EmojiPack.Removed.Title") }
   /// Appearance
   public static var emptyChatAppearance: String  { return L10n.tr("Localizable", "EmptyChat.Appearance") }
   /// Suggest Stickers By Emoji
@@ -7667,6 +7715,10 @@ public final class L10n {
   public static var premiumBoardingDownloadInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Download.Info") }
   /// Faster Download Speed
   public static var premiumBoardingDownloadTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Download.Title") }
+  /// Include animated emoji from different emoji sets in any message you send.
+  public static var premiumBoardingEmojiInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Emoji.Info") }
+  /// Animated Emoji
+  public static var premiumBoardingEmojiTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Emoji.Title") }
   /// Increased upload size from %1$@ to %2$@ per document, unlimited storage overall.
   public static func premiumBoardingFileSizeInfo(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Premium.Boarding.FileSize.Info", p1, p2)
@@ -9739,8 +9791,20 @@ public final class L10n {
   }
   /// Discover More
   public static var stickerPackShowMore: String  { return L10n.tr("Localizable", "StickerPack.ShowMore") }
+  /// %@ has been added to your stickers.
+  public static func stickerPackAddedInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StickerPack.Added.Info", p1)
+  }
+  /// Stickers Added
+  public static var stickerPackAddedTitle: String  { return L10n.tr("Localizable", "StickerPack.Added.Title") }
   /// Featured Packs
   public static var stickerPackFeaturedTitle: String  { return L10n.tr("Localizable", "StickerPack.Featured.Title") }
+  /// %@ is no longer in your stickers.
+  public static func stickerPackRemovedInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StickerPack.Removed.Info", p1)
+  }
+  /// Stickers Removed
+  public static var stickerPackRemovedTitle: String  { return L10n.tr("Localizable", "StickerPack.Removed.Title") }
   /// Sorry, this sticker set doesn't seem to exist.
   public static var stickerSetDontExist: String  { return L10n.tr("Localizable", "StickerSet.DontExist") }
   /// Remove
@@ -11499,6 +11563,10 @@ public final class L10n {
   public static var webAuthorizationsLoggedInDescrpiption: String  { return L10n.tr("Localizable", "WebAuthorizations.LoggedIn.Descrpiption") }
   /// You can log in on websites that support signing in with Telegram.
   public static var webAuthorizationsLogoutAllDescription: String  { return L10n.tr("Localizable", "WebAuthorizations.LogoutAll.Description") }
+  /// Changes that you made may not be saved.
+  public static var webpageConfirmClose: String  { return L10n.tr("Localizable", "Webpage.Confirm.Close") }
+  /// Close Anyway
+  public static var webpageConfirmOk: String  { return L10n.tr("Localizable", "Webpage.Confirm.Ok") }
   /// Fri
   public static var weekdayShortFriday: String  { return L10n.tr("Localizable", "Weekday.ShortFriday") }
   /// Mon

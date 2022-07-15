@@ -25,7 +25,6 @@ enum EntertainmentState : Int32 {
     case emoji = 0
     case stickers = 1
     case gifs = 2
-    case animatedEmojies = 3
 }
 
 enum RecordingStateSettings : Int32 {

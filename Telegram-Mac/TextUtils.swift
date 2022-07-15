@@ -176,7 +176,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
         let textAttr = NSMutableAttributedString()
         _ = textAttr.append(string: embeddedState.inputState.inputText, color: theme.chatList.grayTextColor, font: .normal(.text))
         
-        InlineStickerItem.apply(to: textAttr, entities:  embeddedState.inputState.messageTextEntities(), isPremium: isPremium, ignoreSpoiler: true)
+        InlineStickerItem.apply(to: textAttr, associatedMedia: message?.associatedMedia ?? [:], entities:  embeddedState.inputState.messageTextEntities(), isPremium: isPremium, ignoreSpoiler: true)
                 
         mutableAttributedText.append(textAttr)
         

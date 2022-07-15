@@ -844,7 +844,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 if let data = pasteboard.data(forType: .kInApp) {
                     let decoder = AdaptedPostboxDecoder()
                     if let decoded = try? decoder.decode(ChatTextInputState.self, from: data) {
-                        let attributed = decoded.unique().attributedString
+                        let attributed = decoded.unique(isPremium: chatInteraction.context.isPremium).attributedString
                                                 
                         let current = textView.attributedString().copy() as! NSAttributedString
                         let currentRange = textView.selectedRange()

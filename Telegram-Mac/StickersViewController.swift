@@ -625,7 +625,7 @@ fileprivate func preparePackTransition(from:[AppearanceWrapperEntry<PackEntry>]?
     let (deleted,inserted,updated) = proccessEntriesWithoutReverse(from, right: to, { (entry) -> TableRowItem in
         switch entry.entry {
         case let .stickerPack(index, stableId, info, topItem):
-            return StickerPackRowItem(initialSize, packIndex: index, context: context, stableId: stableId, info: info, topItem: topItem)
+            return StickerPackRowItem(initialSize, stableId: stableId, packIndex: index, isPremium: false, context: context, info: info, topItem: topItem)
         case .recent:
             return RecentPackRowItem(initialSize, entry.entry.stableId)
         case .premium:
@@ -654,7 +654,8 @@ class NStickersView : View {
     fileprivate let packsView:HorizontalTableView = HorizontalTableView(frame: NSZeroRect)
     private let separator:View = View()
     fileprivate let tabsContainer: View = View()
-    
+    private let selectionView: View = View(frame: NSMakeRect(0, 0, 36, 36))
+
 
     
     required init(frame frameRect: NSRect) {
@@ -666,6 +667,7 @@ class NStickersView : View {
         addSubview(searchContainer)
         
         emptySearchContainer.addSubview(emptySearchView)
+        tabsContainer.addSubview(selectionView)
         tabsContainer.addSubview(packsView)
         tabsContainer.addSubview(separator)
         addSubview(tabsContainer)
@@ -675,6 +677,14 @@ class NStickersView : View {
         emptySearchContainer.isEventLess = true
         
         updateLocalizationAndTheme(theme: theme)
+        
+        packsView.getBackgroundColor = {
+            .clear
+        }
+        
+        self.packsView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
+            self?.updateSelectionState(animated: false)
+        }))
     }
     
     func updateRestricion(_ peer: Peer?) {
@@ -686,7 +696,6 @@ class NStickersView : View {
             restrictedView?.removeFromSuperview()
             restrictedView = nil
         }
-        setFrameSize(frame.size)
         needsLayout = true
     }
     
@@ -724,6 +733,31 @@ class NStickersView : View {
 
     }
     
+    func updateSelectionState(animated: Bool) {
+        
+        let item = packsView.selectedItem() ?? packsView.firstItem
+
+        
+        guard let item = item, let view = item.view else {
+            return
+        }
+        
+        let transition: ContainedViewLayoutTransition
+        if animated {
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        } else {
+            transition = .immediate
+        }
+        let point = packsView.clipView.destination ?? packsView.contentOffset
+        let rect = NSMakeRect(view.frame.origin.y - point.y, 5, item.height, packsView.frame.height)
+        
+        selectionView.layer?.cornerRadius = item.height == item.width ? .cornerRadius : item.width / 2
+        selectionView.background = theme.colors.grayBackground
+        if animated {
+            selectionView.layer?.animateCornerRadius()
+        }
+        transition.updateFrame(view: selectionView, frame: rect)
+    }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         self.restrictedView?.updateLocalizationAndTheme(theme: theme)
@@ -738,18 +772,15 @@ class NStickersView : View {
         self.searchView.updateLocalizationAndTheme(theme: theme)
     }
     
-    override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-    }
     
     override func layout() {
         super.layout()
 
-        let initial: CGFloat = searchState?.state == .Focus ? -50 : 0
+        let initial: CGFloat = searchState?.state == .Focus ? -46 : 0
         
-        tabsContainer.frame = NSMakeRect(0, initial, frame.width, 50)
+        tabsContainer.frame = NSMakeRect(0, initial, frame.width, 46)
         separator.frame = NSMakeRect(0, tabsContainer.frame.height - .borderSize, tabsContainer.frame.width, .borderSize)
-        packsView.frame = tabsContainer.focus(NSMakeSize(frame.width, 40))
+        packsView.frame = tabsContainer.focus(NSMakeSize(frame.width, 36))
         
         
         searchContainer.frame = NSMakeRect(0, tabsContainer.frame.maxY, frame.width, 50)
@@ -763,6 +794,8 @@ class NStickersView : View {
         emptySearchContainer.frame = tableView.frame
         emptySearchView.center()
         
+        
+        self.updateSelectionState(animated: false)
     }
     
     
@@ -890,7 +923,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     self.position.set(.navigate(index: index))
                 }
             }
-            
+            genericView.updateSelectionState(animated: row != 0)
         }
     }
     func findGroupStableId(for stableId: AnyHashable) -> AnyHashable? {
@@ -929,13 +962,14 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         
         genericView.searchView.searchInteractions = searchInteractions
         
-        listener = TableScrollListener(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
+        listener = TableScrollListener(dispatchWhenVisibleRangeUpdated: true, { [weak self] position in
             guard let `self` = self, position.visibleRows.length > 0 else {
                 return
             }
             let item = self.genericView.tableView.item(at: position.visibleRows.location)
             self.genericView.packsView.changeSelection(stableId: item.stableId)
             self.genericView.packsView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0))
+            self.genericView.updateSelectionState(animated: true)
         })
 
         self.genericView.packsView.delegate = self
@@ -963,7 +997,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
             }
         }, showPack: { [weak self] reference in
             if let peerId = self?.chatInteraction?.peerId {
-                showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for: context.window)
+                showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: .stickers(reference)), for: context.window)
             }
         }, addPack: { [weak self] reference in
             
@@ -1227,7 +1261,6 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
             self.genericView.tableView.merge(with: transition)
             self.genericView.packsView.merge(with: packTransition)
             self.genericView.updateEmpties(isEmpty: self.genericView.tableView.isEmpty, animated: !first)
-            
             self.genericView.tableView.addScroll(listener: self.listener)
             first = false
             
@@ -1240,6 +1273,8 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 let item = self.genericView.tableView.item(at: visibleRows.location)
                 self.genericView.packsView.changeSelection(stableId: item.stableId)
             }
+            
+            self.genericView.updateSelectionState(animated: transition.animated)
             
             self.makeSearchCommand?(.normal)
             

@@ -11,278 +11,194 @@ import TGUIKit
 import SwiftSignalKit
 import InAppSettings
 
-extension CATiledLayer {
-    func fadeDuration() -> CFTimeInterval {
-        return 0.00
-    }
-}
+private let xAdd:CGFloat = 41
+private let yAdd:CGFloat = 34
 
-class ETiledLayer : CALayer {
-    
-    
-    fileprivate var layoutNextRequest: Bool = true
-    
-//    open override func setNeedsDisplay() {
-//        if layoutNextRequest {
-//            super.setNeedsDisplay()
-//            layoutNextRequest = false
-//        }
-//    }
-}
 
-private class EmojiSegmentView: View {
+private final class LineLayer : SimpleLayer {
     
-    fileprivate override var isFlipped: Bool {
-        return true
+    struct Key: Hashable {
+        let value: Int
+        let index: Int
     }
     
-    private var item: EBlockItem?
-    
-    fileprivate override func draw(_ layer: CALayer, in ctx: CGContext) {
+    init(emoji: NSAttributedString) {
+        self.emoji = emoji
+        super.init()
+        contentsGravity = .center
+        let signal = generateEmoji(emoji) |> deliverOnMainQueue
         
-        if let item = self.item {
-            ctx.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
-            var ts:NSPoint = NSMakePoint(17, 29)
-            
-            for segment in item.lineAttr {
-                for line in segment {
-
-                    ctx.textPosition = ts
-                    CTLineDraw(CTLineCreateWithAttributedString(line), ctx)
-                    ts.x+=xAdd
-                }
-                ts.y += yAdd
-                ts.x = 17
-            }
+        let value = cachedEmoji(emoji: emoji.string, scale: System.backingScale)
+        
+        self.contents = value
+        
+        if self.contents == nil {
+            self.disposable = signal.start(next: { [weak self] image in
+                self?.contents = image
+                cacheEmoji(image, emoji: emoji.string, scale: System.backingScale)
+            })
         }
-        
     }
     
-    
-    
-    required init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
+    deinit {
+        disposable?.dispose()
     }
+    
+    private var disposable: Disposable?
+    
+    let emoji: NSAttributedString
+    
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    override func viewDidChangeBackingProperties() {
-        super.viewDidChangeBackingProperties()
-    }
-    
-    
-    func update(with item:EBlockItem?) -> Void {
-        self.item = item
-        background = theme.colors.background
-        self.needsDisplay = true
-    }
-    
 }
-
-private let xAdd:CGFloat = 41
-private let yAdd:CGFloat = 34
 
 class EBlockRowView: TableRowView {
     
-    var button:Control = Control()
-    private var segmentView:EmojiSegmentView = EmojiSegmentView(frame: NSZeroRect)
-    var mouseDown:Bool = false
     private var popover: NSPopover?
     
     var selectedEmoji:String = ""
     
     private let longHandle = MetaDisposable()
     private var useEmoji: Bool = true
+    private let content = Control()
+    
+    
+    private var lines:[LineLayer.Key : LineLayer] = [:]
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        
-       // self.segmentView.backgroundColor = .clear
-        
-        button.frame = NSMakeRect(0, 0, 33, 33)
-        self.button.layer?.cornerRadius = 4.0
-        self.button.backgroundColor = .clear
-        self.button.set(background: theme.colors.grayBackground, for: .Highlight)
-        
-        self.addSubview(button)
-        self.addSubview(segmentView)
-       // segmentView.layer?.shouldRasterize = true
-        self.button.userInteractionEnabled = false
-//        self.button.set(handler: { 
-//            var bp:Int = 0
-//            bp += 1
-//        }, for: .Click)
-        
-      //  self.layer?.addSublayer(tiled)
-       // tiled.frame = self.bounds
-       // tiled.levelsOfDetailBias = 2
-       // self.tiled.delegate = self
-    }
-    
-    func update(with location:NSPoint) -> Bool {
-        
-        if self.isMousePoint(location, in: self.visibleRect) {
-            if let item = item as? EBlockItem {
-                
-                var point:NSPoint = location
-                var ts:NSPoint = NSMakePoint(15, 0)
-                var stop:Bool = false
-                var xIndex:Int = 0
-                var yIndex:Int = 0
-                for line in item.lineAttr {
-                    for _ in line {
-                        
-                        if point.x >= ts.x && point.x < ts.x + xAdd {
-                            if point.y >= ts.y && point.y < ts.y + xAdd {
-                                point = NSMakePoint(ts.x, ts.y )
-                                stop = true
-                                break
-                            }
-                        }
+        addSubview(content)
 
-                        ts.x+=xAdd
-                        xIndex += 1
-                    }
-                    if stop {
-                        break
-                    }
-                    ts.y += yAdd 
-                    ts.x = 15
-                    yIndex += 1
-                    xIndex = 0
-                }
-                
-                if stop {
-                    selectedEmoji = item.lineAttr[yIndex][xIndex].string
-                }
-                
-                if point != button.frame.origin {
-                    if self.button.isSelected {
-                        button.layer?.animatePosition(from: button.frame.origin, to: point, duration: 0.1, timingFunction: CAMediaTimingFunctionName.linear)
-                    }
-                    button.frame = NSMakeRect(point.x, point.y, button.frame.width, button.frame.height)
-                    
-                    popover?.close()
-                    self.popover = nil
-                }
-                
-                if stop {
-                    return true
-                }
-                
+        
+        content.set(handler: { [weak self] _ in
+            self?.updateDown()
+        }, for: .Down)
+        
+        content.set(handler: { [weak self] _ in
+            self?.updateDragging()
+        }, for: .MouseDragging)
+        
+        content.set(handler: { [weak self] _ in
+            self?.updateUp()
+        }, for: .Up)
+    }
+    
+    private var currentDownItem: (LineLayer, NSAttributedString, Bool)?
+    private func updateDown() {
+        if let item = itemUnderMouse {
+            self.currentDownItem = (item.0, item.1, true)
+        }
+        if let itemUnderMouse = self.currentDownItem {
+            itemUnderMouse.0.animateScale(from: 1, to: 0.85, duration: 0.2, removeOnCompletion: false)
+        }
+    }
+    private func updateDragging() {
+        if let current = self.currentDownItem {
+            if self.itemUnderMouse?.1 != current.1, current.2  {
+                current.0.animateScale(from: 0.85, to: 1, duration: 0.2, removeOnCompletion: true)
+                self.currentDownItem?.2 = false
+            } else if !current.2, self.itemUnderMouse?.1 == current.1 {
+                current.0.animateScale(from: 1, to: 0.85, duration: 0.2, removeOnCompletion: false)
+                self.currentDownItem?.2 = true
             }
+        }
+    }
+    private func updateUp() {
+        if let itemUnderMouse = self.currentDownItem {
+            itemUnderMouse.0.animateScale(from: 0.85, to: 1, duration: 0.2, removeOnCompletion: true)
+            if itemUnderMouse.1 == self.itemUnderMouse?.1 {
+                self.click()
+            }
+        }
+        self.currentDownItem = nil
+    }
+    
+    private var itemUnderMouse: (LineLayer, NSAttributedString)? {
+        guard let window = self.window else {
+            return nil
+        }
+        let point = self.content.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+        
 
+        let firstLayer = self.lines.first(where: { layer in
+            return NSPointInRect(point, layer.1.frame)
+        })?.value
+        
+        if let firstLayer = firstLayer {
+            return (firstLayer, firstLayer.emoji)
         }
         
-        return false
+        return nil
     }
     
-    override func rightMouseUp(with event: NSEvent) {
-        if selectedEmoji.emojiUnmodified != selectedEmoji, let item = item as? EBlockItem {
-            popover?.close()
-            popover = NSPopover()
-            popover?.contentViewController = EmojiToleranceController(selectedEmoji.emojiUnmodified, postbox: item.account.postbox, handle: { [weak self, weak item] emoji, modifier in
-                if let item = item {
-                    _ = modifySkinEmoji(emoji, modifier: modifier, postbox: item.account.postbox).start()
-                }
-                
-                self?.popover?.close()
-                self?.popover = nil
-            })
-            popover?.show(relativeTo: NSZeroRect, of: button, preferredEdge: .minY)
+    private func click() {
+        if let currentDownItem = currentDownItem, let item = item as? EBlockItem {
+            item.selectHandler(currentDownItem.1.string)
         }
-    }
-    
-    override func mouseDown(with event: NSEvent) {
-        mouseDown = true
-        
-        self.button.isSelected = self.update(with: segmentView.convert(event.locationInWindow, from: nil))
-        let emoji = selectedEmoji
-        let lhs = emoji.emojiUnmodified.glyphCount
-        let rhs = emoji.emojiUnmodified.emojiWithSkinModifier("🏻").glyphCount
-        longHandle.set((Signal<Void, NoError>.single(Void()) |> delay(0.3, queue: Queue.mainQueue())).start(next: { [weak self] in
-            if let strongSelf = self, lhs == rhs, let item = self?.item as? EBlockItem {
-                strongSelf.useEmoji = false
-                strongSelf.popover?.close()
-                strongSelf.popover = NSPopover()
-                strongSelf.popover?.contentViewController = EmojiToleranceController(emoji.emojiUnmodified, postbox: item.account.postbox, handle: { [weak strongSelf, weak item] emoji, modifier in
-                    if let item = item {
-                        _ = modifySkinEmoji(emoji, modifier: modifier, postbox: item.account.postbox).start()
-                        if let modifier = modifier {
-                            item.selectHandler(emoji + modifier)
-                        } else {
-                            item.selectHandler(emoji)
-                        }
-                    }
-                    strongSelf?.popover?.close()
-                    strongSelf?.popover = nil
-                })
-                strongSelf.popover?.show(relativeTo: NSZeroRect, of: strongSelf.button, preferredEdge: .minY)
-            }
-        }))
-        
-       
-        
-    }
-    
-    override func mouseUp(with event: NSEvent) {
-        mouseDown = false
-        
-        longHandle.set(nil)
-        
-        if let item = item as? EBlockItem, button.isSelected, useEmoji {
-            item.selectHandler(selectedEmoji)
-        }
-        useEmoji = true
-        button.isSelected = false
-    }
-    
-    deinit {
-        longHandle.dispose()
-    }
-    
-    override func viewDidMoveToWindow() {
-        if window == nil {
-            popover?.close()
-            popover = nil
-        }
-    }
-    
-    override func mouseDragged(with event: NSEvent) {
-        super.mouseDragged(with: event)
-        self.button.isSelected = self.update(with: segmentView.convert(event.locationInWindow, from: nil))
-    }
-    
-    override func viewDidChangeBackingProperties() {
-        super.viewDidChangeBackingProperties()
-        segmentView.layer?.rasterizationScale = CGFloat(backingScaleFactor)
-        // tiled.levelsOfDetailBias = Int(System.backingScale)
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    
-    override func draw(_ layer: CALayer, in ctx: CGContext) {
-        super.draw(layer, in: ctx)
-        
-       
-    }
-    
-    override func setFrameSize(_ newSize: NSSize) {
-        super.setFrameSize(newSize)
-        segmentView.frame = bounds
-      //  tiled.frame = bounds
-      //  tiled.tileSize = bounds.size
+    override func layout() {
+        super.layout()
+        content.frame = bounds
     }
     
     override func set(item:TableRowItem, animated:Bool = false) {
         super.set(item: item, animated: animated)
-        segmentView.frame = NSMakeRect(0, 0, item.width, item.height)
-        segmentView.update(with: item as? EBlockItem)
-        segmentView.background = .clear
+        
+        guard let item = item as? EBlockItem else {
+            return
+        }
+        
+        updateLines(item: item)
     }
+    
+   
+    
+    func updateLines(item: EBlockItem) {
+        
+        var validIds: [LineLayer.Key] = []
+        var point: NSPoint = NSMakePoint(10, 0)
+        var index: Int = 0
+        for line in item.lineAttr {
+            for symbol in line {
+                let id = LineLayer.Key(value: symbol.string.hashValue, index: index)
+                let view: LineLayer
+                if let current = self.lines[id] {
+                    view = current
+                } else {
+                    view = LineLayer(emoji: symbol)
+                    self.lines[id] = view
+                    self.content.layer?.addSublayer(view)
+                }
+                let size = NSMakeSize(xAdd, yAdd)
+                view.frame = CGRect(origin: point, size: size)
+                point.x += xAdd
+                
+                validIds.append(id)
+                index += 1
+            }
+            point.y += yAdd
+            point.x = 10
+        }
+        
+        
+        var removeKeys: [LineLayer.Key] = []
+        for (key, itemLayer) in self.lines {
+            if !validIds.contains(key) {
+                removeKeys.append(key)
+                itemLayer.removeFromSuperlayer()
+            }
+        }
+        for key in removeKeys {
+            self.lines.removeValue(forKey: key)
+        }
+    }
+    
     
 }

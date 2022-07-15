@@ -192,8 +192,8 @@ var globalLinkExecutor:TextViewInteractions {
                         modified.addAttribute(NSAttributedString.Key.link, value: appLink.attachment, range: range)
                     }
                 }
-                if let sticker = attr[.init("Attribute__EmbeddedItem")] as? InlineStickerItem {
-                    modified.addAttribute(.init(TGAnimatedEmojiAttributeName), value: sticker.emoji.attachment, range: range)
+                if let sticker = attr[.init("Attribute__EmbeddedItem")] as? InlineStickerItem, case let .attribute(emoji) = sticker.source {
+                    modified.addAttribute(.init(TGAnimatedEmojiAttributeName), value: emoji.attachment, range: range)
                 }
                 if attr[.foregroundColor] != nil {
                     modified.removeAttribute(.foregroundColor, range: range)
@@ -962,7 +962,7 @@ enum inAppLink {
     case shareUrl(link: String, AccountContext, String)
     case joinchat(link: String, String, context: AccountContext, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
     case logout(()->Void)
-    case stickerPack(link: String, StickerPackReference, context: AccountContext, peerId:PeerId?)
+    case stickerPack(link: String, StickerPackPreviewSource, context: AccountContext, peerId:PeerId?)
     case confirmPhone(link: String, context: AccountContext, phone: String, hash: String)
     case nothing
     case socks(link: String, ProxyServerSettings, applyProxy:(ProxyServerSettings)->Void)
@@ -1038,10 +1038,10 @@ enum inAppLink {
 }
 
 let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
-let actions_me:[String] = ["joinchat/","addstickers/","confirmphone","socks", "proxy", "setlanguage", "bg", "addtheme/","invoice/"]
+let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage", "bg", "addtheme/","invoice/"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases"]
 
 let ton_scheme:String = "ton://"
 
@@ -1099,14 +1099,18 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         }
                     case actions_me[1]:
                         if let context = context {
-                            return .stickerPack(link: urlString, StickerPackReference.name(value), context: context, peerId: peerId)
+                            return .stickerPack(link: urlString, .stickers(.name(value)), context: context, peerId: peerId)
                         }
                     case actions_me[2]:
+                        if let context = context {
+                            return .stickerPack(link: urlString, .emoji(.name(value)), context: context, peerId: peerId)
+                        }
+                    case actions_me[3]:
                         let (vars, _) = urlVars(with: string)
                         if let context = context, let phone = vars[keyURLPhone], let hash = vars[keyURLHash] {
                             return .confirmPhone(link: urlString, context: context, phone: phone, hash: hash)
                         }
-                    case actions_me[3]:
+                    case actions_me[4]:
                         let (vars, _) = urlVars(with: string)
                         if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort) {
                             let server = escape(with: server)
@@ -1114,7 +1118,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             let pass = vars[keyURLPass] != nil ? escape(with: vars[keyURLPass]!) : nil
                             return .socks(link: urlString, ProxyServerSettings(host: server, port: port, connection: .socks5(username: username, password: pass)), applyProxy: applyProxy)
                         }
-                    case actions_me[4]:
+                    case actions_me[5]:
                         let (vars, _) = urlVars(with: string)
                         if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort), let rawSecret = vars[keyURLSecret]  {
                             let server = escape(with: server)
@@ -1122,13 +1126,13 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 return .socks(link: urlString, ProxyServerSettings(host: server, port: port, connection: .mtp(secret: secret)), applyProxy: applyProxy)
                             }
                         }
-                    case actions_me[5]:
+                    case actions_me[6]:
                         if let context = context, !value.isEmpty {
                             return .applyLocalization(link: urlString, context: context, value: String(value[value.index(after: value.startIndex) ..< value.endIndex]))
                         } else {
                             
                         }
-                    case actions_me[6]:
+                    case actions_me[7]:
                         if !value.isEmpty {
                             var component = String(value[value.index(after: value.startIndex) ..< value.endIndex])
                             component = component.components(separatedBy: "?")[0]
@@ -1200,13 +1204,13 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             }
                         }
                         return .external(link: urlString, false)
-                    case actions_me[7]:
+                    case actions_me[8]:
                         let data = string.components(separatedBy: "/")
                         if data.count == 2, let context = context {
                             return .theme(link: urlString, context: context, name: data[1])
                         }
                         return .external(link: urlString, false)
-                    case actions_me[8]:
+                    case actions_me[9]:
                         let data = string.components(separatedBy: "/")
                         if data.count == 2, let context = context {
                             return .invoice(link: urlString, context: context, slug: value)
@@ -1445,25 +1449,29 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                     }
                 case known_scheme[3]:
                     if let set = vars[keyURLSet], let context = context {
-                        return .stickerPack(link: urlString, .name(set), context: context, peerId:nil)
+                        return .stickerPack(link: urlString, .stickers(.name(set)), context: context, peerId:nil)
                     }
                 case known_scheme[4]:
+                    if let set = vars[keyURLSet], let context = context {
+                        return .stickerPack(link: urlString, .emoji(.name(set)), context: context, peerId:nil)
+                    }
+                case known_scheme[5]:
                     if let context = context, let phone = vars[keyURLPhone], let hash = vars[keyURLHash] {
                         return .confirmPhone(link: urlString, context: context, phone: phone, hash: hash)
                     }
-                case known_scheme[5]:
+                case known_scheme[6]:
                     if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort) {
                         let server = escape(with: server)
                         return .socks(link: urlString, ProxyServerSettings(host: server, port: port, connection: .socks5(username: vars[keyURLUser], password: vars[keyURLPass])), applyProxy: applyProxy)
                     }
-                case known_scheme[6]:
+                case known_scheme[7]:
                     if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort), let rawSecret = vars[keyURLSecret] {
                         let server = escape(with: server)
                         if let secret = MTProxySecret.parse(rawSecret)?.serialize() {
                             return .socks(link: urlString, ProxyServerSettings(host: server, port: port, connection: .mtp(secret: secret)), applyProxy: applyProxy)
                         }
                     }
-                case known_scheme[7]:
+                case known_scheme[8]:
                     if let scope = vars["scope"], let publicKey = vars["public_key"], let rawBotId = vars["bot_id"], let botId = Int64(rawBotId), let context = context {
                         
                         
@@ -1479,11 +1487,11 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         let callbackUrl = vars["callback_url"] != nil ? escape(with: vars["callback_url"]!, addPercent: false) : nil
                         return .requestSecureId(link: urlString, context: context, value: inAppSecureIdRequest(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(botId)), scope: scope, callback: callbackUrl, publicKey: escape(with: publicKey, addPercent: false), nonce: nonce, isModern: isModern))
                     }
-                case known_scheme[8]:
+                case known_scheme[9]:
                     if let context = context, let value = vars["lang"] {
                         return .applyLocalization(link: urlString, context: context, value: value)
                     }
-                case known_scheme[9]:
+                case known_scheme[10]:
                     if let context = context, let value = vars[keyURLSlug] {
                         
                         var blur: Bool = false
@@ -1550,7 +1558,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             return .wallpaper(link: urlString, context: context, preview: .gradient(0, colors, WallpaperSettings(rotation: rotation)))
                         }
                     }
-                case known_scheme[10]:
+                case known_scheme[11]:
                     if let username = vars["channel"], let openInfo = openInfo {
                         let post = vars[keyURLPostId]?.nsstring.intValue
                         let threadId = vars[keyURLThreadId]?.nsstring.intValue
@@ -1560,26 +1568,26 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             return .followResolvedName(link: urlString, username: "_private_\(username)", postId: post, context: context, action:nil, callback: openInfo)
                         }
                     }
-                case known_scheme[11]:
+                case known_scheme[12]:
                     if let context = context, let value = vars[keyURLSlug] {
                         return .theme(link: urlString, context: context, name: value)
                     }
-                case known_scheme[12]:
+                case known_scheme[13]:
                     if let context = context, let range = action.range(of: known_scheme[12] + "/") {
                         let section = String(action[range.upperBound...])
                         if let section = InAppSettingsSection(rawValue: section) {
                             return .settings(link: urlString, context: context, section: section)
                         }
                     }
-                case known_scheme[13]:
+                case known_scheme[14]:
                     if let context = context, let value = vars[keyURLSlug] {
                         return .invoice(link: urlString, context: context, slug: value)
                     }
-                case known_scheme[14]:
+                case known_scheme[15]:
                     if let context = context {
                         return .premiumOffer(link: urlString, ref: vars[keyURLRef], context: context)
                     }
-                case known_scheme[15]:
+                case known_scheme[16]:
                     if let context = context {
                         return .restorePurchase(link: urlString, context: context)
                     }

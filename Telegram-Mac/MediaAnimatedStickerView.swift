@@ -96,6 +96,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 
         let parameters = self.parameters as? ChatAnimatedStickerMediaLayoutParameters
         
+        
         accept = parameters?.alwaysAccept ?? accept
 
         if playOnHover == true {
@@ -106,13 +107,14 @@ class MediaAnimatedStickerView: ChatMediaContentView {
             accept = false
         }
         
+        
         if let value = overridePlayValue {
             accept = value
         }
        
         var signal = Signal<Void, NoError>.single(Void())
         if accept && !nextForceAccept && self.sticker != nil {
-            signal = signal |> delay(accept ? 0.1 : 0, queue: .mainQueue())
+            signal = signal |> delay(accept ? 0.15 : 0, queue: .mainQueue())
         }
         if accept && self.sticker != nil {
             nextForceAccept = false
@@ -163,7 +165,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
     override func executeInteraction(_ isControl: Bool) {
         if let window = window as? Window {
             if let context = context, let peerId = parent?.id.peerId, let media = media as? TelegramMediaFile, !media.isEmojiAnimatedSticker, let reference = media.stickerReference {
-                showModal(with:StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for:window)
+                showModal(with:StickerPackPreviewModalController(context, peerId: peerId, reference: .stickers(reference)), for:window)
             } else if let media = media as? TelegramMediaFile, let sticker = media.stickerText, !sticker.isEmpty {
                 self.playerView.playIfNeeded(true)
                 parameters?.runEmojiScreenEffect(sticker)
@@ -380,12 +382,10 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                     case "image/webp":
                         signal = chatMessageSticker(postbox: context.account.postbox, file: reference, small: size.width <= 5, scale: backingScaleFactor, fetched: true)
                     default:
-                        signal = chatMessageAnimatedSticker(postbox: context.account.postbox, file: reference, small: size.width <= 5, scale: backingScaleFactor, size: size, fetched: true, thumbAtFrame: parameters?.thumbAtFrame ?? 0, isVideo: file.fileName == "webm-preview")
+                        signal = chatMessageAnimatedSticker(postbox: context.account.postbox, file: reference, small: size.width <= 5, scale: backingScaleFactor, size: size, fetched: true, thumbAtFrame: parameters?.thumbAtFrame ?? 0, isVideo: file.fileName == "webm-preview" || file.isVideoSticker)
                     }
-                    self.thumbView.setSignal(signal, cacheImage: { [weak file, weak self] result in
-                        if let file = file {
-                            cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
-                        }
+                    self.thumbView.setSignal(signal, cacheImage: { [weak self] result in
+                        cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
                         self?.removePlaceholder(animated: false)
                     })
                 }

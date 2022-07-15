@@ -100,14 +100,14 @@ class UNUserNotifications : NSObject {
                     if sourceMessageId.peerId.namespace != Namespaces.Peer.CloudUser {
                         replyToMessageId = sourceMessageId
                     }
-                    _ = enqueueMessages(account: account, peerId: sourceMessageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], mediaReference: nil, replyToMessageId: replyToMessageId, localGroupingKey: nil, correlationId: nil)]).start()
+                    _ = enqueueMessages(account: account, peerId: sourceMessageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: replyToMessageId, localGroupingKey: nil, correlationId: nil)]).start()
 
                 } else {
                     var replyToMessageId:MessageId?
                     if messageId.peerId.namespace != Namespaces.Peer.CloudUser {
                         replyToMessageId = messageId
                     }
-                    _ = enqueueMessages(account: account, peerId: messageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], mediaReference: nil, replyToMessageId: replyToMessageId, localGroupingKey: nil, correlationId: nil)]).start()
+                    _ = enqueueMessages(account: account, peerId: messageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: replyToMessageId, localGroupingKey: nil, correlationId: nil)]).start()
                 }
             } else {
                 if let threadId = getNotificationMessageId(userInfo: userInfo, for: "thread"), let fromId = getNotificationMessageId(userInfo: userInfo, for: "source") {

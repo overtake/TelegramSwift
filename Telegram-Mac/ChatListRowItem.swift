@@ -757,7 +757,7 @@ class ChatListRowItem: TableRowItem {
             
             if let messageText = messageText?.mutableCopy() as? NSMutableAttributedString, !messageText.string.isEmpty {
                 if embeddedState == nil {
-                    InlineStickerItem.apply(to: messageText, entities: message?.textEntities?.entities ?? [], isPremium: context.isPremium, ignoreSpoiler: true)
+                    InlineStickerItem.apply(to: messageText, associatedMedia: message?.associatedMedia ?? [:], entities: message?.textEntities?.entities ?? [], isPremium: context.isPremium, ignoreSpoiler: true)
                 }
 
                 self.messageLayout = .init(messageText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2, cutout: textCutout)
@@ -767,11 +767,11 @@ class ChatListRowItem: TableRowItem {
                     selectedText.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedText.range)
                 }
                 
-                messageText.enumerateAttributes(in: messageText.range, options: .init(rawValue: 0), using: { attrs, range, stop in
-                    if attrs[.init(rawValue: "Attribute__EmbeddedItem")] != nil {
-                        selectedText.addAttribute(.foregroundColor, value: NSColor.clear, range: range)
-                    }
-                })
+//                messageText.enumerateAttributes(in: messageText.range, options: .init(rawValue: 0), using: { attrs, range, stop in
+//                    if attrs[.init(rawValue: "Attribute__EmbeddedItem")] != nil {
+//                        selectedText.addAttribute(.foregroundColor, value: NSColor.clear, range: range)
+//                    }
+//                })
                 
 
                 self.messageSelectedLayout = .init(selectedText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2, cutout: textCutout)
@@ -983,13 +983,26 @@ class ChatListRowItem: TableRowItem {
             _ = (context.engine.peers.toggleItemPinned(location: location, itemId: chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
                 switch result {
                 case .limitExceeded:
-                    if case .filter = filter {
-                        showPremiumLimit(context: context, type: .pinInFolders(.group(filter.id)))
+                    
+                    if context.isPremium {
+                        confirm(for: context.window, information: strings().chatListContextPinErrorNew2, okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().chatListContextPinErrorNewSetupFolders, successHandler: { result in
+                            switch result {
+                            case .thrid:
+                                context.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
+                            default:
+                                break
+                            }
+                        })
+
                     } else {
-                        if case .group = associatedGroupId {
-                            showPremiumLimit(context: context, type: .pinInArchive)
+                        if case .filter = filter {
+                            showPremiumLimit(context: context, type: .pinInFolders(.group(filter.id)))
                         } else {
-                            showPremiumLimit(context: context, type: .pin)
+                            if case .group = associatedGroupId {
+                                showPremiumLimit(context: context, type: .pinInArchive)
+                            } else {
+                                showPremiumLimit(context: context, type: .pin)
+                            }
                         }
                     }
                 default:

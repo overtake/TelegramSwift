@@ -15,37 +15,28 @@ import TGModernGrowingTextView
 
 final class ChatInputAnimatedEmojiAttach: View {
     
-    private let media = MediaAnimatedStickerView(frame: .zero)
-    private let disposable = MetaDisposable()
+    private var media: InlineStickerItemLayer!
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(media)
         
-        media.backgroundColor = .clear
     }
     
     func set(_ attachment: TGTextAttachment, size: NSSize, context: AccountContext) -> Void {
         
-        let reference = attachment.reference as! StickerPackReference
         let fileId = attachment.fileId as! Int64
+        let file = attachment.file as? TelegramMediaFile
+
+    
+        self.media = .init(context: context, emoji: .init(fileId: fileId, file: file, emoji: attachment.text), size: frame.size)
+        self.media.isPlayable = true
+        self.layer?.addSublayer(media)
         
-        let signal: Signal<TelegramMediaFile?, NoError> = context.inlinePacksContext.stickerPack(reference: reference) |> map { files in
-            return files.first(where: { $0.fileId.id == fileId })
-        } |> deliverOnMainQueue
-        
-        disposable.set(signal.start(next: { [weak self] file in
-            if let file = file {
-                let size = file.dimensions?.size.aspectFitted(size) ?? size
-                self?.media.setFrameSize(size)
-                self?.media.update(with: file, size: size, context: context, table: nil, animated: false)
-            }
-            self?.needsLayout = true
-        }))
+        needsLayout = true
     }
     
     override func layout() {
         super.layout()
-        self.media.center()
+        self.media.frame = focus(media.frame.size)
     }
     
     required init?(coder: NSCoder) {

@@ -12,83 +12,9 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 
-final class InlineStickerItemView : View {
-    struct Key: Hashable {
-        var id: Int64
-        var index: Int
-    }
-    private let context: AccountContext
-    private let emoji: ChatTextCustomEmojiAttribute
-    private let view: StickerMediaContentView
-    private var infoDisposable: Disposable?
-    
-    private var file: TelegramMediaFile?
-    
-    init(context: AccountContext, emoji: ChatTextCustomEmojiAttribute, size: NSSize) {
-        self.context = context
-        self.emoji = emoji
-        self.view = StickerMediaContentView(frame: size.bounds)
-        super.init(frame: size.bounds)
-        
-        
-        addSubview(view)
-        
-        isEventLess = true
-
-        view.userInteractionEnabled = false
-        view.isEventLess = true
-            
-        self.infoDisposable = (context.inlinePacksContext.stickerPack(reference: emoji.reference)
-        |> deliverOnMainQueue).start(next: { [weak self] files in
-            guard let strongSelf = self else {
-                return
-            }
-            for file in files {
-                if file.fileId.id == emoji.fileId {
-                    strongSelf.file = file
-                    strongSelf.updateSize(size: size)
-                    break
-                }
-            }
-        })
-        
-    }
-    
-    func updateSize(size: NSSize) {
-        if let file = self.file {
-            self.view.update(with: file, size: size, context: context, parent: nil, table: nil)
-        }
-    }
-    
-    deinit {
-        infoDisposable?.dispose()
-    }
-    
-    override var isHidden: Bool {
-        didSet {
-            view.isHidden = isHidden
-        }
-    }
-    
-    override func layout() {
-        super.layout()
-        view.center()
-    }
-    
-    required init(frame frameRect: NSRect) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-}
 
 class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
     
-    private var inlineStickerItemViews: [InlineStickerItemView.Key: InlineStickerItemView] = [:]
-
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let webpageContent = webpageContent {

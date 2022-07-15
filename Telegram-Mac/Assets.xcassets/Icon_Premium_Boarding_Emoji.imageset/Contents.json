@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "custom_emoji.png",
+      "filename" : "Emoji (1).png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "custom_emoji@2x.png",
+      "filename" : "Emoji@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
