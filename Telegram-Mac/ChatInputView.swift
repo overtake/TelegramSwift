@@ -106,13 +106,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         let context = self.chatInteraction.context
                 
         textView.installGetAttach({ attachment in
-            
-            if let mediaId = attachment.mediaId as? MediaId {
-                let view = ChatInputAnimatedEmojiAttach(frame: NSMakeRect(0, 0, 18, 18))
-                view.set(mediaId, size: NSMakeSize(18, 18), context: context)
-                return view
-            }
-            return nil
+            let view = ChatInputAnimatedEmojiAttach(frame: NSMakeRect(0, 0, 6 + theme.fontSize, 6 + theme.fontSize))
+            view.set(attachment, size: NSMakeSize(6 + theme.fontSize, 6 + theme.fontSize), context: context)
+            return view
         })
         
         contentView.addSubview(textView)
@@ -844,7 +840,25 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             
             let result = InputPasteboardParser.proccess(pasteboard: pasteboard, chatInteraction:self.chatInteraction, window: window)
             if result {
-                if let data = pasteboard.data(forType: .rtf) {
+                
+                if let data = pasteboard.data(forType: .kInApp) {
+                    let decoder = AdaptedPostboxDecoder()
+                    if let decoded = try? decoder.decode(ChatTextInputState.self, from: data) {
+                        let attributed = decoded.unique(isPremium: chatInteraction.context.isPremium).attributedString
+                                                
+                        let current = textView.attributedString().copy() as! NSAttributedString
+                        let currentRange = textView.selectedRange()
+                        let (attributedString, range) = current.appendAttributedString(attributed, selectedRange: currentRange)
+                        let item = SimpleUndoItem(attributedString: current, be: attributedString, wasRange: currentRange, be: range)
+                        self.textView.addSimpleItem(item)
+                        
+                        DispatchQueue.main.async { [weak self] in
+                            self?.textView.scrollToCursor()
+                        }
+                        
+                        return true
+                    }
+                } else if let data = pasteboard.data(forType: .rtf) {
                     if let attributed = (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtfd], documentAttributes: nil)) ?? (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtf], documentAttributes: nil))  {
                         
                         let (attributed, attachments) = attributed.applyRtf()
@@ -862,7 +876,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                             let item = SimpleUndoItem(attributedString: current, be: attributedString, wasRange: currentRange, be: range)
                             self.textView.addSimpleItem(item)
                         }
-                        Queue.mainQueue().async { [weak self] in
+                        DispatchQueue.main.async { [weak self] in
                             self?.textView.scrollToCursor()
                         }
                         return true

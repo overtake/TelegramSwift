@@ -3,7 +3,7 @@
 #import <CoreText/CoreText.h>
 
 @implementation TGTextAttachment
--(id)initWithIdentifier:(NSString * _Nonnull)identifier mediaId:(id _Nonnull)mediaId text:(NSString * _Nonnull)text {
+-(id)initWithIdentifier:(NSString * _Nonnull)identifier fileId:(id _Nonnull)fileId file:(id _Nullable)file text:(NSString * _Nonnull)text {
     if (self = [super init]) {
         
         NSRect rect = NSMakeRect(0, 0, 18, 16);
@@ -11,12 +11,19 @@
 
         [super setImage:image];
         _identifier = identifier;
-        _mediaId = mediaId;
+        _fileId = fileId;
         _text = text;
+        _file = file;
     }
     [self setBounds:NSMakeRect(0, -3, 18, 16)];
     return self;
 }
+
+
+-(id)unique {
+    return [[TGTextAttachment alloc] initWithIdentifier:[NSString stringWithFormat:@"%d", arc4random()] fileId:_fileId file: _file text:_text];
+}
+
 @end
 
 @implementation TGInputTextAttribute

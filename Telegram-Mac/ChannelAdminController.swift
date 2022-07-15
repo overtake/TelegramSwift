@@ -987,45 +987,53 @@ class ChannelAdminController: TableModalViewController {
                             updateState { current in
                                 return current.withUpdatedUpdating(true)
                             }
-                            updateRightsDisposable.set(context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: peerId, memberIds: [adminId]).start(next: { peerIds in
+                            
+                            if let peer = values.adminView.peers[adminId] {
                                 
-                                updateRightsDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(rights: updateFlags), rank: stateValue.with { $0.rank }) |> deliverOnMainQueue).start(error: { _ in
-                                    
-                                }, completed: {
-                                    updated(TelegramChatAdminRights(rights: updateFlags))
-                                    dismissImpl()
-                                }))
+                                let updateRights = {
+                                    updateRightsDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberAdminRights(peerId: peerId, memberId: adminId, adminRights: TelegramChatAdminRights(rights: updateFlags), rank: stateValue.with { $0.rank }) |> deliverOnMainQueue).start(error: { _ in
+                                        
+                                    }, completed: {
+                                        updated(TelegramChatAdminRights(rights: updateFlags))
+                                        dismissImpl()
+                                    }))
+                                }
                                 
-                            }, error: { [weak self] error in
-                                var errorText: String?
-                                switch error {
-                                case .tooMuchJoined:
-                                    errorText = strings().inviteChannelsTooMuch
-                                case .restricted:
-                                    if let admin = values.adminView.peers[adminId] {
-                                        switch channel.info {
-                                            case .broadcast:
-                                            errorText = strings().privacyGroupsAndChannelsInviteToChannelError(admin.compactDisplayTitle, admin.compactDisplayTitle)
-                                            case .group:
-                                            errorText = strings().privacyGroupsAndChannelsInviteToGroupError(admin.compactDisplayTitle, admin.compactDisplayTitle)
+                                if peer.isBot {
+                                    updateRights()
+                                } else {
+                                    updateRightsDisposable.set(context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: peerId, memberIds: [adminId]).start(next: { peerIds in
+                                        updateRights()
+                                    }, error: { [weak self] error in
+                                        var errorText: String?
+                                        switch error {
+                                        case .tooMuchJoined:
+                                            errorText = strings().inviteChannelsTooMuch
+                                        case .restricted:
+                                            if let admin = values.adminView.peers[adminId] {
+                                                switch channel.info {
+                                                    case .broadcast:
+                                                    errorText = strings().privacyGroupsAndChannelsInviteToChannelError(admin.compactDisplayTitle, admin.compactDisplayTitle)
+                                                    case .group:
+                                                    errorText = strings().privacyGroupsAndChannelsInviteToGroupError(admin.compactDisplayTitle, admin.compactDisplayTitle)
+                                                }
+                                            }
+                                        case .notMutualContact:
+                                            if case .broadcast = channel.info {
+                                                errorText = strings().channelInfoAddUserLeftError
+                                            } else {
+                                                errorText = strings().groupInfoAddUserLeftError
+                                            }
+                                        default:
+                                            break
                                         }
-                                    }
-                                case .notMutualContact:
-                                    if case .broadcast = channel.info {
-                                        errorText = strings().channelInfoAddUserLeftError
-                                    } else {
-                                        errorText = strings().groupInfoAddUserLeftError
-                                    }
-                                default:
-                                    break
+                                        if let errorText = errorText {
+                                            alert(for: context.window, info: errorText)
+                                        }
+                                        self?.close()
+                                    }))
                                 }
-                                if let errorText = errorText {
-                                    alert(for: context.window, info: errorText)
-                                }
-                                self?.close()
-                            }))
-                            
-                            
+                            }
                         }
                     }
                 } else if let _ = values.channelView.peers[values.channelView.peerId] as? TelegramGroup {

@@ -1787,11 +1787,14 @@ extension String {
             let char = string.character(at: range.location + i)
             rep += "\(chars[Int(char) % chars.count])"
         }
-        if string.length <= range.upperBound {
-            return string.replacingCharacters(in: range, with: rep)
-        } else {
-            return self
-        }
+        return string.replacingCharacters(in: range, with: rep)
+
+//        if string.length <= range.upperBound {
+//            return string.replacingCharacters(in: range, with: rep)
+//        } else {
+//            NSLog("\(string.length), \(range.upperBound)")
+//            return string.replacingCharacters(in: NSMakeRange(range.location, string.length), with: rep)
+//        }
     }
 }
 
@@ -2240,6 +2243,7 @@ public extension NSAttributedString {
                 break
             }
         }
+        NSLog("\(modified)")
         
         var attachments:[NSTextAttachment] = []
         
@@ -2255,6 +2259,9 @@ public extension NSAttributedString {
                     let tag = TGInputTextTag(uniqueId: arc4random64(), attachment: string, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
                     modified.addAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), value: tag, range: range)
                 }
+            } else if let attach = attr[.init(rawValue: TGAnimatedEmojiAttributeName)] {
+                var bp = 0
+                bp += 1
             } else if let font = attr[.font] as? NSFont {
                 let newFont: NSFont
                 if font.fontDescriptor.symbolicTraits.contains(.bold) && font.fontDescriptor.symbolicTraits.contains(.italic) {

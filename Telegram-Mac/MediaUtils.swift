@@ -982,7 +982,7 @@ private func chatMessageAnimatedStickerDatas(postbox: Postbox, file: FileMediaRe
             if maybeData.complete, let loadedData = loadedData, loadedData.count > 0 {
                 return .single(ImageRenderData(nil, loadedData, true))
             } else {
-                let thumbnailData:Signal<MediaResourceData?, NoError> =  postbox.mediaBox.cachedResourceRepresentation(thumbnailResource, representation: CachedAnimatedStickerRepresentation(thumb: true, size: size.aspectFitted(NSMakeSize(60, 60)), fitzModifier: file.media.animatedEmojiFitzModifier, frame: thumbAtFrame, isVideo: isVideo), complete: true) |> map(Optional.init)
+                let thumbnailData:Signal<MediaResourceData?, NoError> =  postbox.mediaBox.cachedResourceRepresentation(thumbnailResource, representation: CachedAnimatedStickerRepresentation(thumb: true, size: size.aspectFitted(NSMakeSize(60, 60)), fitzModifier: file.media.animatedEmojiFitzModifier, frame: thumbAtFrame, isVideo: false), complete: true) |> map(Optional.init)
                 
                 
                 let fullSizeData:Signal<ImageRenderData, NoError> = .single(ImageRenderData(nil, nil, false)) |> then(postbox.mediaBox.cachedResourceRepresentation(resource, representation: CachedAnimatedStickerRepresentation(thumb: false, size: size, fitzModifier: file.media.animatedEmojiFitzModifier, frame: thumbAtFrame, isVideo: isVideo), complete: true)
@@ -1110,7 +1110,6 @@ public func chatMessageAnimatedSticker(postbox: Postbox, file: FileMediaReferenc
                 
                 blurredThumbnailImage = thumbnailContext.generateImage()
             }
-            
             context.withFlippedContext(isHighQuality: data.fullSizeData != nil, horizontal: arguments.mirror, { c in
                 if let color = arguments.emptyColor {
                     c.setBlendMode(.normal)
@@ -3782,4 +3781,28 @@ public func chatMapSnapshotImage(account: Account, resource: MapSnapshotMediaRes
             return context
         })
     }
+}
+
+
+
+
+func generateEmoji(_ emoji: NSAttributedString) -> Signal<CGImage, NoError> {
+    return Signal { subscriber in
+        
+        let node = TextNode.layoutText(maybeNode: nil, emoji, nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
+
+        
+        let image = generateImage(node.0.size, rotatedContext: { size, ctx in
+            ctx.clear(size.bounds)
+            node.1.draw(size.bounds, in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
+            
+        })!
+        
+        subscriber.putNext(image)
+        subscriber.putCompletion()
+        
+        return ActionDisposable {
+            
+        }
+    } |> runOn(resourcesQueue)
 }

@@ -11,39 +11,32 @@ import TGUIKit
 import Postbox
 import TelegramCore
 import SwiftSignalKit
+import TGModernGrowingTextView
 
 final class ChatInputAnimatedEmojiAttach: View {
     
-    private let media = MediaAnimatedStickerView(frame: .zero)
-    private let disposable = MetaDisposable()
+    private var media: InlineStickerItemLayer!
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(media)
+        
     }
     
-    func set(_ mediaId: MediaId, size: NSSize, context: AccountContext) -> Void {
-        let signal: Signal<StickerPackItem?, NoError> = context.engine.stickers.loadedStickerPack(reference: .animatedEmoji, forceActualized: false) |> map { value in
-            switch value {
-            case let .result(_, items, _):
-                return items.first(where: { $0.file.fileId == mediaId })
-            default:
-                return nil
-            }
-        } |> deliverOnMainQueue
+    func set(_ attachment: TGTextAttachment, size: NSSize, context: AccountContext) -> Void {
         
-        disposable.set(signal.start(next: { [weak self] item in
-            if let item = item {
-                let size = item.file.dimensions?.size.aspectFitted(size) ?? size
-                self?.media.setFrameSize(size)
-                self?.media.update(with: item.file, size: size, context: context, table: nil, animated: false)
-            }
-            self?.needsLayout = true
-        }))
+        let fileId = attachment.fileId as! Int64
+        let file = attachment.file as? TelegramMediaFile
+
+    
+        self.media = .init(context: context, emoji: .init(fileId: fileId, file: file, emoji: attachment.text), size: frame.size)
+        self.media.isPlayable = true
+        self.layer?.addSublayer(media)
+        
+        needsLayout = true
     }
     
     override func layout() {
         super.layout()
-        self.media.center()
+        self.media.frame = focus(media.frame.size)
     }
     
     required init?(coder: NSCoder) {

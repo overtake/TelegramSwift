@@ -36,8 +36,20 @@ extension FeaturedStickerPackItem : Equatable {
     public static func == (lhs: FeaturedStickerPackItem, rhs: FeaturedStickerPackItem) -> Bool {
         return lhs.info == rhs.info && lhs.unread == rhs.unread && lhs.topItems == rhs.topItems
     }
+}
+
+enum StickerPackPreviewSource {
+    case stickers(StickerPackReference)
+    case emoji(StickerPackReference)
     
-    
+    var reference: StickerPackReference {
+        switch self {
+        case let .stickers(reference):
+            return reference
+        case let .emoji(reference):
+            return reference
+        }
+    }
 }
 
 private struct FeaturedEntry : TableItemListNodeEntry {
@@ -73,10 +85,6 @@ private class StickersModalView : View {
     private var indicatorView:ProgressIndicator?
     private let shadowView: ShadowView = ShadowView()
     
-    private let showMore = TitleButton()
-    private var isFeaturedActive: Bool?
-    
-    var activateFeatured:(()->Void)? = nil
         
     private var premiumView: StickerPremiumHolderView? = nil
     
@@ -89,7 +97,6 @@ private class StickersModalView : View {
         addSubview(close)
         addSubview(headerSeparatorView)
         addSubview(dismiss)
-        addSubview(showMore)
         shadowView.shadowBackground = theme.colors.background
         shadowView.setFrameSize(frame.width, 70)
         
@@ -111,25 +118,6 @@ private class StickersModalView : View {
         add.scaleOnClick = true
 
         
-        showMore.disableActions()
-        showMore.layer?.cornerRadius = 20
-        
-        showMore.set(color: theme.colors.underSelectedColor, for: .Normal)
-        showMore.set(font: .medium(.title), for: .Normal)
-        showMore.set(background: theme.colors.accent, for: .Normal)
-        showMore.set(background: theme.colors.accent, for: .Hover)
-        showMore.set(background: theme.colors.accent, for: .Highlight)
-        showMore.set(text: strings().stickerPackShowMore, for: .Normal)
-        showMore.sizeToFit(NSMakeSize(20, 0), NSMakeSize(0, 40), thatFit: true)
-        
-        showMore.set(handler: { [weak self] _ in
-            self?.activateFeatured?()
-            
-        }, for: .Click)
-
-        showMore.scaleOnClick = true
-        
-        addSubview(showMore)
         headerTitle.backgroundColor = theme.colors.background
         headerSeparatorView.backgroundColor = theme.colors.border
         
@@ -176,9 +164,8 @@ private class StickersModalView : View {
         }
     }
     
-    private var featuredEntries:[FeaturedEntry] = []
     
-    func layout(with result: LoadedStickerPack, featured: [FeaturedStickerPackItem], showFeatured: Bool, installedIds: [ItemCollectionId], arguments: StickerPackArguments) -> Void {
+    func layout(with result: LoadedStickerPack, source: StickerPackPreviewSource, installedIds: [ItemCollectionId], arguments: StickerPackArguments) -> Void {
         
         
         switch result {
@@ -203,45 +190,35 @@ private class StickersModalView : View {
             }
             dismiss.isHidden = !installed
             shareView.isHidden = false
-            add.set(text: strings().stickerPackAdd1Countable(collectionItems.count).uppercased(), for: .Normal)
+            switch source {
+            case .emoji:
+                add.set(text: strings().emojiPackAddCountable(collectionItems.count).uppercased(), for: .Normal)
+            case .stickers:
+                add.set(text: strings().stickerPackAdd1Countable(collectionItems.count).uppercased(), for: .Normal)
+            }
             _ = add.sizeToFit(NSMakeSize(20, 0), NSMakeSize(frame.width - 40, 40), thatFit: false)
             add.isHidden = installed
             shadowView.isHidden = installed
             
-            if !showFeatured {
-                let attr = NSMutableAttributedString()
-                
-                _ = attr.append(string: info.title, color: theme.colors.text, font: .medium(16.0))
-                attr.detectLinks(type: [.Mentions], context: arguments.context, color: theme.colors.accent, openInfo: { (peerId, _, _, _) in
-                    _ = (arguments.context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { peer in
-                        arguments.close()
-                        if peer.isUser || peer.isBot {
-                            arguments.context.bindings.rootNavigation().push(PeerInfoController(context: arguments.context, peerId: peerId))
-                        } else {
-                            arguments.context.bindings.rootNavigation().push(ChatAdditionController(context: arguments.context, chatLocation: .peer(peer.id)))
-                        }
-                    })
+            let attr = NSMutableAttributedString()
+            
+            _ = attr.append(string: info.title, color: theme.colors.text, font: .medium(16.0))
+            attr.detectLinks(type: [.Mentions], context: arguments.context, color: theme.colors.accent, openInfo: { (peerId, _, _, _) in
+                _ = (arguments.context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { peer in
+                    arguments.close()
+                    if peer.isUser || peer.isBot {
+                        arguments.context.bindings.rootNavigation().push(PeerInfoController(context: arguments.context, peerId: peerId))
+                    } else {
+                        arguments.context.bindings.rootNavigation().push(ChatAdditionController(context: arguments.context, chatLocation: .peer(peer.id)))
+                    }
                 })
-                let layout = TextViewLayout(attr, maximumNumberOfLines: 2, alignment: .center)
-                layout.interactions = globalLinkExecutor
-                
-                
-                layout.measure(width: frame.width - 160)
-                headerTitle.update(layout)
-                
-            } else {
-                let attr = NSMutableAttributedString()
-                _ = attr.append(string: strings().stickerPackFeaturedTitle, color: theme.colors.text, font: .medium(16.0))
-                let layout = TextViewLayout(attr, maximumNumberOfLines: 1, alignment: .center)
-                layout.interactions = globalLinkExecutor
-                
-                layout.measure(width: frame.width - 160)
-                headerTitle.update(layout)
-                
-                self.dismiss.isHidden = true
-                self.shareView.isHidden = true
-            }
-           
+            })
+            let layout = TextViewLayout(attr, maximumNumberOfLines: 2, alignment: .center)
+            layout.interactions = globalLinkExecutor
+            
+            
+            layout.measure(width: frame.width - 160)
+            headerTitle.update(layout)
             let context = arguments.context
             
             let stickerArguments = StickerPanelArguments(context: arguments.context, sendMedia: {  media, view, silent, schedule in
@@ -274,102 +251,36 @@ private class StickersModalView : View {
                 !file.isPremiumSticker || !context.premiumIsBlocked
             }
             
-            let allInstalled = featured.filter { !installedIds.contains($0.info.id) }.isEmpty
-            if !showFeatured || allInstalled {
-                
-                self.featuredEntries = []
-                
-                let item = StickerPackPanelRowItem(frame.size, context: arguments.context, arguments: stickerArguments, files: files, packInfo: .emojiRelated, collectionId: .pack(info.id), canSend: arguments.context.bindings.rootNavigation().controller is ChatController, isPreview: true)
-                _ = item.makeSize(frame.width)
-                
-                tableView.beginTableUpdates()
-                tableView.removeAll()
-                _ = tableView.addItem(item: item, animation: .effectFade)
-                
-                _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 70, stableId: arc4random64()))
-
-                tableView.endTableUpdates()
-            } else {
-                
-                let arguments = StickerPanelArguments(context: arguments.context, sendMedia: { _, _, _, _ in
-                    
-                }, showPack: { _ in
-                    
-                }, addPack: { reference in
-                    _ = showModalProgress(signal: context.engine.stickers.loadedStickerPack(reference: reference, forceActualized: false)
-                        |> filter { result in
-                            switch result {
-                            case .result:
-                                return true
-                            default:
-                                return false
-                            }
-                        }
-                        |> take(1)
-                        |> mapToSignal { result -> Signal<ItemCollectionId, NoError> in
-                            switch result {
-                            case let .result(info, items, _):
-                                return context.engine.stickers.addStickerPackInteractively(info: info, items: items) |> map { info.id }
-                            default:
-                                return .complete()
-                            }
-                        }
-                        |> deliverOnMainQueue, for: context.window).start(next: { _ in
-                            
-                        })
-                }, navigate: { _ in
-                    
-                }, clearRecent: {
-                    
-                }, removePack: { _ in
-                    
-                }, closeInlineFeatured: { _ in
-                    
-                }, openFeatured: { _ in
-                    
-                }, mode: .common)
-                
-                
-                tableView.beginTableUpdates()
-                
-                if self.featuredEntries.isEmpty {
-                    self.tableView.removeAll()
-                }
-
-                var entries:[FeaturedEntry] = []
-                for (i, item) in featured.enumerated() {
-                    entries.append(.init(item: item, index: i, installed: installedIds.contains(item.info.id)))
-                }
-                
-
-                let (delete, insert, update) = mergeListsStableWithUpdates(leftList: self.featuredEntries, rightList: entries)
-                
-                for index in delete.reversed() {
-                    tableView.remove(at: index)
-                }
-                for insert in insert {
-                    _ = tableView.insert(item: insert.1.item(arguments, initialSize: frame.size), at: insert.0, redraw: true, animation: .effectFade)
-                }
-                for update in update {
-                    tableView.replace(item: update.1.item(arguments, initialSize: frame.size), at: update.0, animated: true)
-                }
-                self.featuredEntries = entries
-
-                tableView.endTableUpdates()
-
+            
+            let item: TableRowItem
+            switch source {
+            case .emoji:
+                item = EmojiesSectionRowItem(frame.size, stableId: 0, context: arguments.context, info: info, items: collectionItems, callback: { _ in })
+            case .stickers:
+                item = StickerPackPanelRowItem(frame.size, context: arguments.context, arguments: stickerArguments, files: files, packInfo: .emojiRelated, collectionId: .pack(info.id), canSend: arguments.context.bindings.rootNavigation().controller is ChatController, isPreview: true)
             }
-                       
+                        
+            _ = item.makeSize(frame.width)
+            
+            tableView.beginTableUpdates()
+            tableView.removeAll()
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 10, stableId: arc4random64()))
+            _ = tableView.addItem(item: item, animation: .effectFade)
+            
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 70, stableId: arc4random64()))
+
+            tableView.endTableUpdates()
             
             self.needsLayout = true
-            
-            if installed, !featured.isEmpty && !showFeatured {
-                showMore.isHidden = false
-            } else {
-                showMore.isHidden = true
-            }
+        
             
             shareView.set(handler: { _ in
-                arguments.share("https://t.me/addstickers/\(info.shortName)")
+                switch source {
+                case .emoji:
+                    arguments.share("https://t.me/addemoji/\(info.shortName)")
+                case .stickers:
+                    arguments.share("https://t.me/addstickers/\(info.shortName)")
+                }
             }, for: .SingleClick)
             
             add.removeAllHandlers()
@@ -412,7 +323,6 @@ private class StickersModalView : View {
         dismiss.setFrameOrigin(NSMakePoint(shareView.frame.minX - dismiss.frame.width - 15, floorToScreenPixels(backingScaleFactor, (headerHeight - shareView.frame.height)/2)))
         
         shadowView.setFrameOrigin(0, frame.height - shadowView.frame.height)
-        showMore.centerX(y: frame.height - showMore.frame.height - 15)
         premiumView?.frame = bounds
     }
 }
@@ -430,12 +340,12 @@ private final class SetPreviewController: TableViewController {
 class StickerPackPreviewModalController: ModalViewController {
     private let context:AccountContext
     private let peerId:PeerId?
-    private let reference:StickerPackReference
+    private let reference:StickerPackPreviewSource
     private let disposable: MetaDisposable = MetaDisposable()
     private var arguments:StickerPackArguments!
     private var onAdd:(()->Void)? = nil
 
-    init(_ context: AccountContext, peerId:PeerId?, reference:StickerPackReference, onAdd:(()->Void)? = nil) {
+    init(_ context: AccountContext, peerId:PeerId?, reference: StickerPackPreviewSource, onAdd:(()->Void)? = nil) {
         self.context = context
         self.peerId = peerId
         self.reference = reference
@@ -457,11 +367,31 @@ class StickerPackPreviewModalController: ModalViewController {
         }, addpack: { [weak self] info, items, installed in
             self?.close()
             self?.disposable.dispose()
+            let title: String
+            let text: String
             if !installed {
                 _ = context.engine.stickers.addStickerPackInteractively(info: info, items: items).start()
+                switch reference {
+                case .stickers:
+                    title = strings().stickerPackAddedTitle
+                    text = strings().stickerPackAddedInfo(info.title)
+                case .emoji:
+                    title = strings().emojiPackAddedTitle
+                    text = strings().emojiPackAddedInfo(info.title)
+                }
             } else {
+                switch reference {
+                case .stickers:
+                    title = strings().stickerPackRemovedTitle
+                    text = strings().stickerPackRemovedInfo(info.title)
+                case .emoji:
+                    title = strings().emojiPackRemovedTitle
+                    text = strings().emojiPackRemovedInfo(info.title)
+                }
                 _ = context.engine.stickers.removeStickerPackInteractively(id: info.id, option: .archive).start()
             }
+            showModalText(for: context.window, text: text, title: title)
+
             self?.onAdd?()
             
         }, share: { [weak self] link in
@@ -496,35 +426,39 @@ class StickerPackPreviewModalController: ModalViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        func namespaceForMode(_ mode: StickerPackPreviewSource) -> ItemCollectionId.Namespace {
+            switch mode {
+                case .stickers:
+                    return Namespaces.ItemCollection.CloudStickerPacks
+                case .emoji:
+                    return Namespaces.ItemCollection.CloudEmojiPacks
+            }
+        }
+        let namespace = namespaceForMode(reference)
+
+        let reference = self.reference
         let context = self.context
-        let signal = context.engine.stickers.loadedStickerPack(reference: reference, forceActualized: true)
+        let signal = context.engine.stickers.loadedStickerPack(reference: reference.reference, forceActualized: true)
         
-        let installedIds = context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])]) |> map { view in
-            return view.views[.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])] as? ItemCollectionInfosView
+        let installedIds = context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [namespace])]) |> map { view in
+            return view.views[.itemCollectionInfos(namespaces: [namespaceForMode(reference)])] as? ItemCollectionInfosView
         } |> map { view in
-            return view?.entriesByNamespace[Namespaces.ItemCollection.CloudStickerPacks]
+            return view?.entriesByNamespace[namespace]
         } |> map { entries -> [ItemCollectionId] in
             return entries?.map { $0.id } ?? []
         }
         
         
 
-        let featuredView = context.account.viewTracker.featuredStickerPacks()
-        
-        let showFeatured: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
-        
-        genericView.activateFeatured = {
-            showFeatured.set(true)
-        }
-
-        disposable.set(combineLatest(queue: .mainQueue(), signal, featuredView, showFeatured.get(), installedIds).start(next: { [weak self] result, featured, showFeatured, installedIds in
+   
+        disposable.set(combineLatest(queue: .mainQueue(), signal, installedIds).start(next: { [weak self] result, installedIds in
             guard let `self` = self else {return}
             switch result {
             case .none:
                 alert(for: context.window, info: strings().stickerSetDontExist)
                 self.close()
             default:
-                self.genericView.layout(with: result, featured: featured, showFeatured: showFeatured, installedIds: installedIds, arguments: self.arguments)
+                self.genericView.layout(with: result, source: reference, installedIds: installedIds, arguments: self.arguments)
                 self.readyOnce()
             }
         }))

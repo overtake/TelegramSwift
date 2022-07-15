@@ -238,7 +238,7 @@ enum LocalAnimatedSticker : String {
     case menu_note_slash
     case menu_smile
     case menu_monogram
-    
+    case menu_gift
     
     
     var file: TelegramMediaFile {

@@ -229,6 +229,8 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                             effectiveFile = FileMediaReference.avatarList(peer: reference, media: media)
                         case let .attachBot(peer, media):
                             effectiveFile = FileMediaReference.attachBot(peer: peer, media: media)
+                        case let .customEmoji(media):
+                            effectiveFile = FileMediaReference.customEmoji(media: media)
                         }
                         
                     }
