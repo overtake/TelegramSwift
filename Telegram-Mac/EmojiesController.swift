@@ -429,9 +429,9 @@ final class AnimatedEmojiesView : View {
     
     
     func scroll(to segment: EmojiSegment, animated: Bool) {
-        if let item = packsView.item(stableId: InputDataEntryId.custom(_id_segments_pack)) {
-            _ = self.packsView.select(item: item)
-        }
+//        if let item = packsView.item(stableId: InputDataEntryId.custom(_id_segments_pack)) {
+//            _ = self.packsView.select(item: item)
+//        }
         let stableId = InputDataEntryId.custom(_id_emoji_segment(segment.rawValue))
         tableView.scroll(to: .top(id: stableId, innerId: nil, animated: animated, focus: .init(focus: false), inset: 0))
         
@@ -453,6 +453,10 @@ final class AnimatedEmojiesView : View {
                 if let collectionId = Int64(collectionId) {
                     let stableId = InputDataEntryId.custom(_id_aemoji_block(collectionId))
                     tableView.scroll(to: .top(id: stableId, innerId: nil, animated: animated, focus: .init(focus: false), inset: 0))
+                    
+                    let packStableId = InputDataEntryId.custom(_id_pack(collectionId))
+                    packsView.scroll(to: .center(id: packStableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0))
+
                 }
             }
         }
@@ -602,13 +606,13 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         }, sendEmoji: { [weak self] emoji in
             self?.interactions?.sendEmoji(emoji)
         }, selectEmojiSegment: { [weak self] segment in
-            self?.genericView.scroll(to: segment, animated: true)
             
             updateState { current in
                 var current = current
                 current.emojiState.selected = segment
                 return current
             }
+            self?.genericView.scroll(to: segment, animated: true)
         }, viewSet: { info in
             showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .emoji(.name(info.shortName))), for: context.window)
         })

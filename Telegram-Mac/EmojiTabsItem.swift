@@ -163,7 +163,7 @@ private final class EmojiTabsView: HorizontalRowView {
             } else if let selected = selected {
                 rect.origin.x = floor( min(0, max(-selected.frame.minX + size.width / 2 - selected.frame.width / 2, size.width - rect.width)) )
             }
-            
+
             transition.updateFrame(view: container, frame: rect)
             transition.updateFrame(view: leftGradient, frame: NSMakeRect(0, 0, 5, size.height))
             transition.updateFrame(view: rightGradient, frame: NSMakeRect(size.width - 5, 0, 5, size.height))

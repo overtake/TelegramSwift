@@ -272,7 +272,7 @@ private func twoStepVerificationUnlockSettingsControllerEntries(state: TwoStepVe
                     
                     let forgot:()->Void = {
                         if !hasRecoveryEmail {
-                            confirm(for: context.window, header: strings().twoStepAuthErrorHaventEmailResetHeader, information: strings().twoStepAuthErrorHaventEmail, okTitle: strings().twoStepAuthErrorHaventEmailReset, successHandler: { _ in
+                            confirm(for: context.window, header: strings().twoStepAuthErrorHaventEmailResetHeader, information: strings().twoStepAuthErrorHaventEmailNew, okTitle: strings().twoStepAuthErrorHaventEmailReset, successHandler: { _ in
                                 forgotPassword()
                             })
                         } else {

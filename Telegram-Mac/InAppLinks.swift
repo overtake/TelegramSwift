@@ -1271,12 +1271,16 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         action = .joinVoiceChat(nil)
                     }
                 }
-
+                 
                 if let openInfo = openInfo {
                     if username == "iv" || username.isEmpty {
                         return .external(link: urlString, username.isEmpty)
                     } else if let context = context {
 
+                        if username.hasPrefix("$") {
+                            return .invoice(link: urlString, context: context, slug: String(username.suffix(username.length - 1)))
+                        }
+                        
                         let joinKeys:[String] = ["+", "%20"]
                         let phone = username.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
                         if "+\(phone)" == username {
@@ -1295,6 +1299,9 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             action = .attachBot(vars[keyURLAttach] ?? username, vars[keyURLStartattach])
                         } else if components.contains(keyURLLivestream) {
                             action = .joinVoiceChat(nil)
+                        }
+                        if username.hasPrefix("$") {
+                            return .invoice(link: urlString, context: context, slug: String(username.suffix(username.length - 1)))
                         }
                         return .followResolvedName(link: urlString, username: username, postId: nil, context: context, action: action, callback: openInfo)
                     }

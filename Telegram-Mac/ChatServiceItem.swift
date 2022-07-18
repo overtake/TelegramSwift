@@ -523,6 +523,20 @@ class ChatServiceItem: ChatRowItem {
                     }
                 case let .webViewData(text):
                     let _ =  attributedString.append(string: strings().chatServiceWebData(text), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                case let .giftPremium(currency, amount, months):
+                    let text: String
+                    if authorId == context.peerId {
+                        text = strings().chatServicePremiumGiftSentYou(formatCurrencyAmount(amount, currency: currency))
+                    } else {
+                        text = strings().chatServicePremiumGiftSent(authorName, formatCurrencyAmount(amount, currency: currency))
+                    }
+                    let _ =  attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    
+                    if let authorId = authorId {
+                        let range = attributedString.string.nsstring.range(of: authorName)
+                        attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                        attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                    }
                 default:
                     break
                 }

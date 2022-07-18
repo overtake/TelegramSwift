@@ -3792,7 +3792,7 @@ func generateEmoji(_ emoji: NSAttributedString) -> Signal<CGImage, NoError> {
         let node = TextNode.layoutText(maybeNode: nil, emoji, nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
 
         
-        let image = generateImage(node.0.size, rotatedContext: { size, ctx in
+        let image = generateImage(node.0.size, scale: System.backingScale, rotatedContext: { size, ctx in
             ctx.clear(size.bounds)
             node.1.draw(size.bounds, in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
             

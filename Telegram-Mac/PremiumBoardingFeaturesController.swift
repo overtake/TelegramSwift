@@ -135,7 +135,7 @@ final class PremiumBoardingFeaturesView: View {
         let animated_emoji = PremiumFeatureSlideView(frame: slideView.bounds)
         animated_emoji.setup(context: context, type: .animated_emoji, decoration: .swirlStars, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
-            view.setup(context: context, video: configuration.videos[PremiumValue.animated_emoji.rawValue], position: .top)
+            view.setup(context: context, video: configuration.videos[PremiumValue.animated_emoji.rawValue], position: .bottom)
             return view
         })
         slideView.addSlide(animated_emoji)

@@ -16,7 +16,7 @@ import SwiftSignalKit
 //
 let iconsInset:CGFloat = 20.0
 
-class ChatInputActionsView: View, Notifable {
+class ChatInputActionsView: View {
     
     let chatInteraction:ChatInteraction
     private let send:ImageButton = ImageButton()
@@ -527,7 +527,7 @@ class ChatInputActionsView: View, Notifable {
     }
     
     deinit {
-        chatInteraction.remove(observer: self)
+        
     }
     
     func prepare(with chatInteraction:ChatInteraction) -> Void {
@@ -585,9 +585,7 @@ class ChatInputActionsView: View, Notifable {
                 showSlowModeTimeoutTooltip(slowMode, for: control)
             }
         }, for: .Click)
-        
-        chatInteraction.add(observer: self)
-        
+                
 
         
         notify(with: chatInteraction.presentation, oldValue: chatInteraction.presentation, animated: false)

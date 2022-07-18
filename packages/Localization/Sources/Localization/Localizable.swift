@@ -1665,6 +1665,8 @@ public final class L10n {
   public static var chatSendMessageErrorGroupRestricted: String  { return L10n.tr("Localizable", "Chat.SendMessageErrorGroupRestricted") }
   /// Slowmode is enabled.
   public static var chatSendMessageSlowmodeError: String  { return L10n.tr("Localizable", "Chat.SendMessageSlowmodeError") }
+  /// Sorry, you can't send voice messages due to privacy settings.
+  public static var chatSendMessageVoicePrivacyError: String  { return L10n.tr("Localizable", "Chat.SendMessageVoicePrivacyError") }
   /// Share
   public static var chatShareInlineResultActionHeader: String  { return L10n.tr("Localizable", "Chat.ShareInlineResultActionHeader") }
   /// Feed
@@ -3074,6 +3076,14 @@ public final class L10n {
   /// %@ updated group video
   public static func chatServiceGroupUpdatedVideo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.UpdatedVideo", p1)
+  }
+  /// %1$@ sent you a gift for %2$@
+  public static func chatServicePremiumGiftSent(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PremiumGift.Sent", p1, p2)
+  }
+  /// You sent a gift for %@
+  public static func chatServicePremiumGiftSentYou(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PremiumGift.SentYou", p1)
   }
   /// %@ disabled the auto-delete timer
   public static func chatServiceSecretChatDisabledTimer1(_ p1: String) -> String {
@@ -7887,6 +7897,14 @@ public final class L10n {
   public static var premiumRestoreErrorUnknown: String  { return L10n.tr("Localizable", "Premium.Restore.ErrorUnknown") }
   /// Done
   public static var premiumRestoreSuccess: String  { return L10n.tr("Localizable", "Premium.Restore.Success") }
+  /// Gift subscription for %@
+  public static func premiumGiftButtonText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "PremiumGift.ButtonText", p1)
+  }
+  /// %@ / Month
+  public static func premiumGiftMonth(_ p1: String) -> String {
+    return L10n.tr("Localizable", "PremiumGift.Month", p1)
+  }
   /// bot
   public static var presenceBot: String  { return L10n.tr("Localizable", "Presence.bot") }
   /// support
@@ -10919,6 +10937,8 @@ public final class L10n {
   public static var twoStepAuthErrorGeneric: String  { return L10n.tr("Localizable", "TwoStepAuth.Error.Generic") }
   /// Since you haven't provided a recovery e-mail when setting up your password, your remaining options are either to remember your password or to reset your account.
   public static var twoStepAuthErrorHaventEmail: String  { return L10n.tr("Localizable", "TwoStepAuth.Error.HaventEmail") }
+  /// Since you didn’t provide a recovery email when setting up your password, your remaining options are either to remember your password or wait 7 days until your password is reset.
+  public static var twoStepAuthErrorHaventEmailNew: String  { return L10n.tr("Localizable", "TwoStepAuth.Error.HaventEmailNew") }
   /// Please enter valid e-mail address.
   public static var twoStepAuthErrorInvalidEmail: String  { return L10n.tr("Localizable", "TwoStepAuth.Error.InvalidEmail") }
   /// You have entered an invalid password too many times. Please try again later.

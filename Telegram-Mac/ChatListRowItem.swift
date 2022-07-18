@@ -759,6 +759,8 @@ class ChatListRowItem: TableRowItem {
                 if embeddedState == nil {
                     InlineStickerItem.apply(to: messageText, associatedMedia: message?.associatedMedia ?? [:], entities: message?.textEntities?.entities ?? [], isPremium: context.isPremium, ignoreSpoiler: true)
                 }
+                
+//                messageText.fixUndefinedEmojies()
 
                 self.messageLayout = .init(messageText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2, cutout: textCutout)
                 

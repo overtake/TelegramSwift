@@ -704,7 +704,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
               
             } else {
                 let attr = NSMutableAttributedString()
-                let text = (sticker.file.stickerText ?? "😀").fixed
+                let text = (sticker.file.customEmojiText ?? sticker.file.stickerText ?? "😀").fixed
                 _ = attr.append(string: text)
                 attr.addAttribute(.init(rawValue: TGAnimatedEmojiAttributeName), value: TGTextAttachment(identifier: "\(arc4random())", fileId: sticker.file.fileId.id, file: sticker.file, text: text), range: attr.range)
                 _ = self?.chatInteraction?.appendText(attr)

@@ -13,59 +13,33 @@ import Postbox
 import TGUIKit
 
 struct PremiumGiftOption : Equatable {
-    enum Discount : Equatable {
-        case fifteen
-        case ten
-        case five
-    }
-    enum Duration : Equatable {
-        case threeMotnh
-        case sixMonth
-        case oneYear
-    }
-    var discount: Discount
-    var duration: Duration
+    
+    let option: CachedPremiumGiftOption
+    let configuration: PremiumPromoConfiguration
     
     var titleString: String {
-        switch duration {
-        case .threeMotnh:
-            return "3 Months"
-        case .sixMonth:
-            return "6 Months"
-        case .oneYear:
-            return "1 Year"
-        }
+        return strings().timerMonthsCountable(Int(option.months))
     }
     var discountString: String {
-        switch discount {
-        case .fifteen:
-            return "-15%"
-        case .ten:
-            return "-10%"
-        case .five:
-            return "-5%"
-        }
+        
+        let optionMonthly = Int64((CGFloat(option.amount) / CGFloat(option.months)))
+        
+        let monthlyDiscount = configuration.monthlyAmount - optionMonthly
+        
+        let discountPercent = ceil(abs(Float(optionMonthly) / Float(configuration.monthlyAmount) * 100.0))
+        
+        return "-\(discountPercent)%"
+
+    
     }
     
     var priceString: String {
-        switch discount {
-        case .fifteen:
-            return "49.99$"
-        case .ten:
-            return "26.99$"
-        case .five:
-            return "14.39$"
-        }
+        return formatCurrencyAmount(option.amount, currency: option.currency)
     }
     var priceDiscountString: String {
-        switch discount {
-        case .fifteen:
-            return "4.19$ / month"
-        case .ten:
-            return "4.49$ / month"
-        case .five:
-            return "4.79$ / month"
-        }
+        let optionMonthly = Int64((CGFloat(option.amount) / CGFloat(option.months)))
+        return strings().premiumGiftMonth(formatCurrencyAmount(optionMonthly, currency: option.currency))
+        
     }
 }
 
@@ -74,19 +48,32 @@ struct PremiumGiftOption : Equatable {
 
 private struct State : Equatable {
     var peer: PeerEquatable?
-    var options: [PremiumGiftOption] = [.init(discount: .fifteen, duration: .oneYear),
-                                            .init(discount: .ten, duration: .sixMonth),
-                                            .init(discount: .five, duration: .threeMotnh)]
-    var option: PremiumGiftOption = .init(discount: .fifteen, duration: .oneYear)
+    var options: [CachedPremiumGiftOption]
+    var option: CachedPremiumGiftOption
+    var premiumConfiguration: PremiumPromoConfiguration
+    
+    
+    var values: [PremiumGiftOption] {
+        return self.options.map({
+            .init(option: $0, configuration: self.premiumConfiguration)
+        })
+    }
+    var value: PremiumGiftOption {
+        return .init(option: self.option, configuration: self.premiumConfiguration)
+    }
 }
 
 
 private final class Arguments {
     let context: AccountContext
     let select:(PremiumGiftOption)->Void
-    init(context: AccountContext, select:@escaping(PremiumGiftOption)->Void) {
+    let openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void
+    let buy:(String)->Void
+    init(context: AccountContext, select:@escaping(PremiumGiftOption)->Void, openInfo:@escaping(PeerId, Bool, MessageId?, ChatInitialAction?)->Void, buy:@escaping(String)->Void) {
         self.select = select
         self.context = context
+        self.openInfo = openInfo
+        self.buy = buy
     }
 }
 
@@ -113,20 +100,20 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("discount"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-        return PremiumGiftRowItem(initialSize, stableId: stableId, viewType: .singleItem, context: arguments.context, selectedOption: state.option, options: state.options, select: arguments.select)
+        return PremiumGiftRowItem(initialSize, stableId: stableId, viewType: .singleItem, context: arguments.context, selectedOption: state.value, options: state.values, select: arguments.select)
     }))
     index += 1
     
     
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
-  
-    entries.append(.input(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_message, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: "Message", filter: { $0 }, limit: 140))
-    index += 1
-    
-    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("You can include a message with your gift."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-    index += 1
-    
+//    entries.append(.sectionId(sectionId, type: .normal))
+//    sectionId += 1
+//  
+//    entries.append(.input(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_message, mode: .plain, data: .init(viewType: .singleItem), placeholder: nil, inputPlaceholder: "Message", filter: { $0 }, limit: 140))
+//    index += 1
+//    
+//    entries.append(.desc(sectionId: sectionId, index: index, text: .plain("You can include a message with your gift."), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+//    index += 1
+//    
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -174,7 +161,7 @@ private final class PremiumBoardingView : View {
         
         func update(animated: Bool, state: State) -> NSSize {
             
-            let layout = TextViewLayout(.initialize(string: "Gift subscription for \(state.option.priceString)", color: NSColor.white, font: .medium(.text)))
+            let layout = TextViewLayout(.initialize(string: strings().premiumGiftButtonText(state.value.priceString), color: NSColor.white, font: .medium(.text)))
             layout.measure(width: .greatestFiniteMagnitude)
             textView.update(layout)
                         
@@ -354,9 +341,11 @@ final class PremiumGiftController : ModalViewController {
 
     private let context: AccountContext
     private let peerId: PeerId
-    init(context: AccountContext, peerId: PeerId) {
+    private let options: [CachedPremiumGiftOption]
+    init(context: AccountContext, peerId: PeerId, options: [CachedPremiumGiftOption]) {
         self.context = context
         self.peerId = peerId
+        self.options = options
         super.init(frame: NSMakeRect(0, 0, 380, 300))
     }
     
@@ -406,7 +395,7 @@ final class PremiumGiftController : ModalViewController {
             closeAllModals()
         }
 
-        let initialState = State(peer: nil)
+        let initialState = State(peer: nil, options: options, option: options[0], premiumConfiguration: PremiumPromoConfiguration.defaultValue)
         
         let statePromise: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -417,9 +406,39 @@ final class PremiumGiftController : ModalViewController {
         let arguments = Arguments(context: context, select: { option in
             updateState { current in
                 var current = current
-                current.option = option
+                current.option = option.option
                 return current
             }
+        }, openInfo: { peerId, _, _, initialAction in
+            var updated: ChatInitialAction? = initialAction
+            switch initialAction {
+            case let .start(parameter, _):
+                updated = .start(parameter: parameter, behavior: .automatic)
+            default:
+                break
+            }
+            let controller = ChatController(context: context, chatLocation: .peer(peerId), initialAction: updated)
+            context.bindings.rootNavigation().push(controller)
+            
+            close()
+        }, buy: { slug in
+            let signal = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: .slug(slug)), for: context.window)
+
+            _ = signal.start(next: { invoice in
+                showModal(with: PaymentsCheckoutController(context: context, source: .slug(slug), invoice: invoice, completion: { status in
+                    switch status {
+                    case .paid:
+                        PlayConfetti(for: context.window)
+                        close()
+                    case .cancelled:
+                        break
+                    case .failed:
+                        break
+                    }
+                }), for: context.window)
+            }, error: { error in
+                showModalText(for: context.window, text: strings().paymentsInvoiceNotExists)
+            })
         })
         
         let stateSignal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -435,6 +454,8 @@ final class PremiumGiftController : ModalViewController {
         })
         
         
+        
+        
         let signal: Signal<(TableUpdateTransition, State), NoError> = combineLatest(queue: .mainQueue(), appearanceSignal, stateSignal) |> mapToQueue { appearance, state in
             let entries = state.0.entries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
             return prepareInputDataTransition(left: previous.swap(entries), right: entries, animated: state.0.animated, searchState: state.0.searchState, initialSize: initialSize.modify{ $0 }, arguments: inputArguments, onMainQueue: true)
@@ -447,11 +468,16 @@ final class PremiumGiftController : ModalViewController {
                
         let peer = context.account.postbox.loadedPeerWithId(peerId)
         
+        let premiumPromo = context.engine.data.get(TelegramEngine.EngineData.Item.Configuration.PremiumPromo())
+        |> deliverOnMainQueue
         
-        actionsDisposable.add(peer.start(next: { peer in
+
+        
+        actionsDisposable.add(combineLatest(peer, premiumPromo).start(next: { peer, configuration in
             updateState { current in
                 var current = current
                 current.peer = .init(peer)
+                current.premiumConfiguration = configuration
                 return current
             }
         }))
@@ -463,12 +489,38 @@ final class PremiumGiftController : ModalViewController {
             self?.readyOnce()
         }))
         
+        let buyAppStore: ()->Void = {
+            
+        }
+        let buyNonAppStore: ()->Void = {
+            
+            let url = inApp(for: stateValue.with { $0.option.botUrl.nsstring }, context: context, openInfo: arguments.openInfo)
+            switch url {
+            case let .invoice(_, context, slug):
+                arguments.buy(slug)
+            case .followResolvedName:
+                execute(inapp: url)
+            default:
+                break
+            }
+            
+        }
+        
         genericView.accept = {
-            close()
-            PlayConfetti(for: context.window)
-            delay(0.2, closure: {
-                showModalText(for: context.window, text: "You successfully gifted Telegram Premium")
-            })
+            
+            #if APP_STORE
+            buyAppStore()
+            #else
+            buyNonAppStore()
+            #endif
+            
+//            close()
+//            PlayConfetti(for: context.window)
+//
+//
+//            delay(0.2, closure: {
+//                showModalText(for: context.window, text: "You successfully gifted Telegram Premium")
+//            })
         }
     }
     

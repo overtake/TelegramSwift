@@ -481,8 +481,8 @@ public final class TextViewLayout : Equatable {
                 if !rawRightOffset.isEqual(to: secondaryRightOffset) {
                     rightOffset = ceil(secondaryRightOffset)
                 }
-                        
-                if rightOffset > leftOffset {
+                                        
+                if rightOffset > leftOffset, abs(rightOffset - leftOffset) < 100 {
                     embeddedItems.append(TextViewEmbeddedItem(range: NSMakeRange(startIndex, endIndex - startIndex), frame: CGRect(x: floor(min(leftOffset, rightOffset)), y: floor(descent - (ascent + descent)), width: floor(abs(rightOffset - leftOffset) + rightInset), height: floor(ascent + descent)), item: item))
                 }
             }
