@@ -6032,6 +6032,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     text = strings().chatSendMessageSlowmodeError
                 case .tooMuchScheduled:
                     text = strings().chatSendMessageErrorTooMuchScheduled
+                case .voiceMessagesForbidden:
+                    text = strings().chatSendMessageVoicePrivacyError
                 }
                 confirm(for: context.window, information: text, cancelTitle: "", thridTitle: strings().genericErrorMoreInfo, successHandler: { [weak strongSelf] confirm in
                     guard let strongSelf = strongSelf else {return}

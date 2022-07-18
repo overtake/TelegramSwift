@@ -1226,7 +1226,6 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
         
         [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
         
-        newSize.width = [_delegate textViewSize: self].width;
         
         NSSize layoutSize = NSMakeSize(roundf(newSize.width), roundf(newSize.height));
         

@@ -121,7 +121,6 @@ private final class EmojiesSectionRowView : TableRowView {
 
     private let contentView = Control()
     
-    private let shapeLayer = SimpleShapeLayer()
     private var nameView: TextView?
     
     private var lockView: ImageView?
@@ -132,9 +131,6 @@ private final class EmojiesSectionRowView : TableRowView {
         addSubview(container)
         addSubview(contentView)
         
-        
-        self.layer?.addSublayer(shapeLayer)
-
         contentView.set(handler: { [weak self] _ in
             self?.updateDown()
         }, for: .Down)
@@ -207,7 +203,7 @@ private final class EmojiesSectionRowView : TableRowView {
         }
         
         
-        container.centerX(y: 0)
+        container.setFrameOrigin(NSMakePoint(20, 0))
         
         var contentRect = bounds
         if let nameView = nameView {
@@ -215,41 +211,7 @@ private final class EmojiesSectionRowView : TableRowView {
         }
         contentView.frame = contentRect
         
-        let groupBorderFrame = NSMakeRect(10, 8, bounds.width - 20, bounds.height - 2 - 8)
-
-        
-        shapeLayer.frame = groupBorderFrame
-        
-        
-        let radius: CGFloat = 10
-        
-        let headerWidth: CGFloat = container.frame.width + 10
-        
-        let path = CGMutablePath()
-        path.move(to: CGPoint(x: floor((groupBorderFrame.width - headerWidth) / 2.0), y: 0.0))
-        path.addLine(to: CGPoint(x: radius, y: 0.0))
-        path.addArc(tangent1End: CGPoint(x: 0.0, y: 0.0), tangent2End: CGPoint(x: 0.0, y: radius), radius: radius)
-        path.addLine(to: CGPoint(x: 0.0, y: groupBorderFrame.height - radius))
-        path.addArc(tangent1End: CGPoint(x: 0.0, y: groupBorderFrame.height), tangent2End: CGPoint(x: radius, y: groupBorderFrame.height), radius: radius)
-        path.addLine(to: CGPoint(x: groupBorderFrame.width - radius, y: groupBorderFrame.height))
-        path.addArc(tangent1End: CGPoint(x: groupBorderFrame.width, y: groupBorderFrame.height), tangent2End: CGPoint(x: groupBorderFrame.width, y: groupBorderFrame.height - radius), radius: radius)
-        path.addLine(to: CGPoint(x: groupBorderFrame.width, y: radius))
-        path.addArc(tangent1End: CGPoint(x: groupBorderFrame.width, y: 0.0), tangent2End: CGPoint(x: groupBorderFrame.width - radius, y: 0.0), radius: radius)
-        path.addLine(to: CGPoint(x: floor((groupBorderFrame.width - headerWidth) / 2.0) + headerWidth, y: 0.0))
-        
-        let pathLength = (2.0 * groupBorderFrame.width + 2.0 * groupBorderFrame.height - 8.0 * radius + 2.0 * .pi * radius) - headerWidth
-        
-        var numberOfDashes = Int(floor(pathLength / 6.0))
-        if numberOfDashes % 2 == 0 {
-            numberOfDashes -= 1
-        }
-        let wholeLength = 6.0 * CGFloat(numberOfDashes)
-        let remainingLength = pathLength - wholeLength
-        let dashSpace = remainingLength / CGFloat(numberOfDashes)
-                               
-        shapeLayer.path = path
-        shapeLayer.lineDashPattern = [(5.0 + dashSpace) as NSNumber, (7.0 + dashSpace) as NSNumber]
-
+     
 
     }
     
@@ -291,12 +253,7 @@ private final class EmojiesSectionRowView : TableRowView {
             return
         }
         
-        shapeLayer.strokeColor = theme.colors.grayIcon.withAlphaComponent(0.7).cgColor
-        shapeLayer.lineWidth = 1
-        shapeLayer.lineCap = .round
-        shapeLayer.fillColor = nil
-        
-        shapeLayer.opacity = !item.context.isPremium && item.isPremium ? 1 : 0
+       
         
         if !item.context.isPremium && item.isPremium {
             let current: ImageView
@@ -356,6 +313,7 @@ private final class EmojiesSectionRowView : TableRowView {
             center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
             center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
             center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self)
         } else {
             center.removeObserver(self)
         }
@@ -415,3 +373,49 @@ private final class EmojiesSectionRowView : TableRowView {
         fatalError("init(coder:) has not been implemented")
     }
 }
+
+
+/*
+ let groupBorderFrame = NSMakeRect(10, 8, bounds.width - 20, bounds.height - 2 - 8)
+
+ 
+ shapeLayer.frame = groupBorderFrame
+ 
+ 
+ let radius: CGFloat = 10
+ 
+ let headerWidth: CGFloat = container.frame.width + 10
+ 
+ let path = CGMutablePath()
+ path.move(to: CGPoint(x: floor((groupBorderFrame.width - headerWidth) / 2.0), y: 0.0))
+ path.addLine(to: CGPoint(x: radius, y: 0.0))
+ path.addArc(tangent1End: CGPoint(x: 0.0, y: 0.0), tangent2End: CGPoint(x: 0.0, y: radius), radius: radius)
+ path.addLine(to: CGPoint(x: 0.0, y: groupBorderFrame.height - radius))
+ path.addArc(tangent1End: CGPoint(x: 0.0, y: groupBorderFrame.height), tangent2End: CGPoint(x: radius, y: groupBorderFrame.height), radius: radius)
+ path.addLine(to: CGPoint(x: groupBorderFrame.width - radius, y: groupBorderFrame.height))
+ path.addArc(tangent1End: CGPoint(x: groupBorderFrame.width, y: groupBorderFrame.height), tangent2End: CGPoint(x: groupBorderFrame.width, y: groupBorderFrame.height - radius), radius: radius)
+ path.addLine(to: CGPoint(x: groupBorderFrame.width, y: radius))
+ path.addArc(tangent1End: CGPoint(x: groupBorderFrame.width, y: 0.0), tangent2End: CGPoint(x: groupBorderFrame.width - radius, y: 0.0), radius: radius)
+ path.addLine(to: CGPoint(x: floor((groupBorderFrame.width - headerWidth) / 2.0) + headerWidth, y: 0.0))
+ 
+ let pathLength = (2.0 * groupBorderFrame.width + 2.0 * groupBorderFrame.height - 8.0 * radius + 2.0 * .pi * radius) - headerWidth
+ 
+ var numberOfDashes = Int(floor(pathLength / 6.0))
+ if numberOfDashes % 2 == 0 {
+     numberOfDashes -= 1
+ }
+ let wholeLength = 6.0 * CGFloat(numberOfDashes)
+ let remainingLength = pathLength - wholeLength
+ let dashSpace = remainingLength / CGFloat(numberOfDashes)
+                        
+ shapeLayer.path = path
+ shapeLayer.lineDashPattern = [(5.0 + dashSpace) as NSNumber, (7.0 + dashSpace) as NSNumber]
+
+ 
+ shapeLayer.strokeColor = theme.colors.grayIcon.withAlphaComponent(0.7).cgColor
+ shapeLayer.lineWidth = 1
+ shapeLayer.lineCap = .round
+ shapeLayer.fillColor = nil
+ 
+ shapeLayer.opacity = !item.context.isPremium && item.isPremium ? 1 : 0
+ */

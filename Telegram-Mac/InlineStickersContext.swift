@@ -44,10 +44,10 @@ final class InlineStickersContext {
             var disposable: Disposable?
             
             if self.dataContexts[fileId] == nil {
-                let signal = self.engine.stickers.resolveInlineSticker(fileId: fileId)
+                let signal = self.engine.stickers.resolveInlineStickers(fileIds: [fileId])
                 
                 disposable = signal.start(next: { file in
-                    context.data = file
+                    context.data = file[fileId]
                     for subscriber in context.subscribers.copyItems() {
                         subscriber(context.data)
                     }

@@ -571,17 +571,17 @@ class Sender: NSObject {
         
         var messages: [EnqueueMessage] = []
         let count = media.count
+        let inlineMdeia = caption.with { $0.inlineMedia }
         for (i, media) in media.enumerated() {
             let text: String
-            let current = caption.swap(.init())
             if media.isInteractiveMedia {
-                text = current.inputText
+                text = caption.swap(.init()).inputText
             } else if i == count - 1 {
-                text = current.inputText
+                text =  caption.swap(.init()).inputText
             } else {
                 text = ""
             }
-            messages.append(EnqueueMessage.message(text: text, attributes: attributes, inlineStickers: current.inlineMedia, mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: replyId, localGroupingKey: localGroupingKey, correlationId: nil))
+            messages.append(EnqueueMessage.message(text: text, attributes: attributes, inlineStickers: inlineMdeia, mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: replyId, localGroupingKey: localGroupingKey, correlationId: nil))
         }
         
         if let input = additionText {

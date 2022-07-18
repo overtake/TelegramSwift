@@ -944,7 +944,7 @@ final class PremiumBoardingController : ModalViewController {
             })
             
             
-            let _ = (context.engine.payments.canPurchasePremium()
+            let _ = (context.engine.payments.canPurchasePremium(purpose: .subscription)
             |> deliverOnMainQueue).start(next: { [weak lockModal] available in
                 if available {
                     paymentDisposable.set((inAppPurchaseManager.buyProduct(premiumProduct, account: context.account)

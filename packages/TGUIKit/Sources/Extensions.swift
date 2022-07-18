@@ -345,13 +345,13 @@ public extension NSMutableAttributedString {
     }
     
     func fixEmojiesFont(_ fontSize: CGFloat) {
-        let nsString = self.string.nsstring
-        for i in 0 ..< min(nsString.length, 300) {
-            let sub = nsString.substring(with: NSMakeRange(i, 1))
-            if sub.containsOnlyEmoji, let font = NSFont(name: "AppleColorEmoji", size: fontSize) {
-                self.addAttribute(.font, value: font, range: NSMakeRange(i, 1))
-            }
-        }
+//        let nsString = self.string.nsstring
+//        for i in 0 ..< min(nsString.length, 300) {
+//            let sub = nsString.substring(with: NSMakeRange(i, 1))
+//            if sub.containsOnlyEmoji, let font = NSFont(name: "AppleColorEmoji", size: fontSize) {
+//                self.addAttribute(.font, value: font, range: NSMakeRange(i, 1))
+//            }
+//        }
     }
     
     func add(link:Any, for range:NSRange, color: NSColor = presentation.colors.link)  {

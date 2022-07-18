@@ -513,7 +513,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         guard let item = item as? StickerPackPanelRowItem else {
             return
         }
-        self.packNameView.centerX(y: item.namePoint.y)
+        self.packNameView.setFrameOrigin(item.namePoint)
         self.clearRecentButton?.setFrameOrigin(frame.width - 34, item.namePoint.y - 10)
         
         self.contentView.frame = bounds
@@ -579,6 +579,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
             center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
             center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
             center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self)
         } else {
             center.removeObserver(self)
         }

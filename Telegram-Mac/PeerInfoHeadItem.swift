@@ -214,7 +214,9 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             if peer.id != item.context.peerId, !peer.isPremium {
                 if let cachedData = item.peerView.cachedData as? CachedUserData {
                     if !cachedData.premiumGiftOptions.isEmpty {
-                        items.append(ActionItem(text: strings().peerInfoActionGiftPremium, image: theme.icons.profile_share, animation: .menu_gift, action: arguments.giftPremium))
+                        items.append(ActionItem(text: strings().peerInfoActionGiftPremium, image: theme.icons.profile_share, animation: .menu_gift, action: {
+                            arguments.giftPremium(cachedData.premiumGiftOptions)
+                        }))
                     }
                 }
             }

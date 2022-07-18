@@ -91,8 +91,7 @@ final class InlineStickerItem : Hashable {
                 ranges.append(range)
             }
         }
-        
-        
+                
         
         for entity in entities.sorted(by: { $0.range.lowerBound > $1.range.lowerBound }) {
             guard case let .CustomEmoji(_, fileId) = entity.type else {
@@ -101,6 +100,7 @@ final class InlineStickerItem : Hashable {
             
             let range = NSRange(location: entity.range.lowerBound, length: entity.range.upperBound - entity.range.lowerBound)
             
+            
             let intersection = ranges.first(where: { r in
                 return r.intersection(range) != nil
             })
@@ -108,7 +108,8 @@ final class InlineStickerItem : Hashable {
                 let currentDict = copy.attributes(at: range.lowerBound, effectiveRange: nil)
                 var updatedAttributes: [NSAttributedString.Key: Any] = currentDict
                 
-                let text = copy.string.nsstring.substring(with: range)
+                let text = copy.string.nsstring.substring(with: range).fixed
+                
                 
                 updatedAttributes[NSAttributedString.Key("Attribute__EmbeddedItem")] = InlineStickerItem(source: .attribute(.init(fileId: fileId, file: associatedMedia[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] as? TelegramMediaFile, emoji: text)))
                 
@@ -116,7 +117,8 @@ final class InlineStickerItem : Hashable {
                 copy.replaceCharacters(in: range, with: insertString)
             }
         }
-
+        var bp = 0
+        bp += 1
     }
 }
 
@@ -342,7 +344,6 @@ class ChatMessageItem: ChatRowItem {
                     openSpecificTimecodeFromReply?(timecode)
                 }).mutableCopy() as! NSMutableAttributedString
 
-                messageAttr.fixUndefinedEmojies()
                 
                 
                 var formatting: Bool = messageAttr.length > 0 
@@ -451,11 +452,17 @@ class ChatMessageItem: ChatRowItem {
                  }
              }
              
+             copy.fixUndefinedEmojies()
+
+             
              if let text = message.restrictedText(context.contentSettings) {
                  self.messageText = .initialize(string: text, color: theme.colors.grayText, font: .italic(theme.fontSize))
              } else {
                  self.messageText = copy
              }
+             
+
+             
              textLayout = TextViewLayout(self.messageText, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble && !containsBigEmoji, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
                  chatInteraction?.update({
                      $0.updatedInterfaceState({

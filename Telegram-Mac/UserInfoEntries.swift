@@ -97,8 +97,8 @@ class UserInfoArguments : PeerInfoArguments {
     private let deletePeerContactDisposable = MetaDisposable()
     private let callDisposable = MetaDisposable()
     
-    func giftPremium() {
-        showModal(with: PremiumGiftController(context: context, peerId: self.peerId), for: context.window)
+    func giftPremium(_ options: [CachedPremiumGiftOption]) {
+        showModal(with: PremiumGiftController(context: context, peerId: self.peerId, options: options), for: context.window)
     }
     
     func shareContact() {

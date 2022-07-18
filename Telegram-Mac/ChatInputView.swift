@@ -220,6 +220,18 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     
     func notify(with value: Any, oldValue:Any, animated:Bool) {
+        
+        let transition: ContainedViewLayoutTransition
+        if animated {
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        } else {
+            transition = .immediate
+        }
+        
+        updateLayout(size: frame.size, transition: transition)
+
+        self.actionsView.notify(with: value, oldValue: oldValue, animated: animated)
+
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
             
             if value.effectiveInput != oldValue.effectiveInput {
@@ -776,7 +788,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         if let sendAsView = self.sendAsView {
             leftInset += sendAsView.frame.width
         }
-        return NSMakeSize(contentView.frame.width - actionsView.frame.width - leftInset, textView.frame.height)
+        let size = NSMakeSize(contentView.frame.width - actionsView.size(chatInteraction.presentation).width - leftInset, textView.frame.height)
+        return size
     }
     
     func textViewIsTypingEnabled() -> Bool {
@@ -845,13 +858,11 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                     let decoder = AdaptedPostboxDecoder()
                     if let decoded = try? decoder.decode(ChatTextInputState.self, from: data) {
                         let attributed = decoded.unique(isPremium: chatInteraction.context.isPremium).attributedString
-                                                
                         let current = textView.attributedString().copy() as! NSAttributedString
                         let currentRange = textView.selectedRange()
                         let (attributedString, range) = current.appendAttributedString(attributed, selectedRange: currentRange)
                         let item = SimpleUndoItem(attributedString: current, be: attributedString, wasRange: currentRange, be: range)
                         self.textView.addSimpleItem(item)
-                        
                         DispatchQueue.main.async { [weak self] in
                             self?.textView.scrollToCursor()
                         }

@@ -397,6 +397,14 @@ public extension TelegramMediaFile {
         }
         return nil
     }
+    var customEmojiText:String? {
+        for attr in attributes {
+            if case let .CustomEmoji(_, alt, _) = attr {
+                return alt
+            }
+        }
+        return nil
+    }
     
     var stickerReference:StickerPackReference? {
         for attr in attributes {

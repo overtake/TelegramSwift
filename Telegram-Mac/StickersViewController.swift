@@ -1073,7 +1073,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         let signal = combineLatest(queue: prepareQueue, self.searchValue.get(), self.position.get()) |> mapToSignal { values -> Signal<StickerPacksUpdateData, NoError> in
             
             let count = initialSize.with { size -> Int in
-                return Int(round((size.height * (values.1 == .initial ? 2 : 20)) / 60 * 5))
+                return max(100, Int(round((size.height * (values.1 == .initial ? 2 : 20)) / 60 * 5)))
             }
             if values.0.state == .None {
                 var firstTime: Bool = true
@@ -1081,7 +1081,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 let settings = stickerSettings(postbox: context.account.postbox)
                 switch values.1 {
                 case .initial:
-                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.PremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: count)
+                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.CloudPremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: count)
                     let featuredView = context.account.viewTracker.featuredStickerPacks()
                     
                     return combineLatest(packsView, featuredView, settings) |> mapToSignal { view, featured, settings in
@@ -1093,7 +1093,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     }
                 case let .scroll(aroundIndex):
                     var firstTime = true
-                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.PremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: aroundIndex.packIndex, count: count)
+                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.CloudPremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: aroundIndex.packIndex, count: count)
                     let featuredView = context.account.viewTracker.featuredStickerPacks()
 
                     
@@ -1112,7 +1112,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     }
                 case let .navigate(index):
                     var firstTime = true
-                    return context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.PremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: index.packIndex, count: count)
+                    return context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.CloudPremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: index.packIndex, count: count)
                         |> mapToSignal { view in
                             return specificPackData |> map { specificPack in
                                 let update: StickerPacksUpdate

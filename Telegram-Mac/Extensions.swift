@@ -2297,7 +2297,7 @@ public extension NSAttributedString {
         let inputText = self.mutableCopy() as! NSMutableAttributedString
         
         
-        var range: NSRange = NSMakeRange(selectedRange.location + string.string.length, 0);
+        let range: NSRange = NSMakeRange(selectedRange.location + string.string.length, 0);
         if selectedRange.upperBound - selectedRange.lowerBound > 0 {
             inputText.replaceCharacters(in: NSMakeRange(selectedRange.lowerBound, selectedRange.upperBound - selectedRange.lowerBound), with: string)
         } else {

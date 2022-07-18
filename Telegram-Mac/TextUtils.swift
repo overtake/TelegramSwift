@@ -44,9 +44,9 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                 if !message.text.isEmpty {
                     switch mediaViewType {
                     case .emoji:
-                        messageText = ("🖼 " + messageText.fixed)
+                        messageText = ("🖼 " + messageText)
                     case .text:
-                        messageText = messageText.fixed
+                        break
                     case .none:
                         break
                     }
@@ -58,10 +58,10 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             messageText = dice.emoji
         case let fileMedia as TelegramMediaFile:
             if fileMedia.probablySticker {
-                messageText = strings().chatListSticker(fileMedia.stickerText?.fixed ?? "")
+                messageText = strings().chatListSticker(fileMedia.stickerText ?? "")
             } else if fileMedia.isVoice {
-                if !message.text.fixed.isEmpty {
-                    messageText = ("🎤" + " " + messageText.fixed)
+                if !message.text.isEmpty {
+                    messageText = ("🎤" + " " + messageText)
                 } else {
                     messageText = strings().chatListVoice
                 }
@@ -75,18 +75,18 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                     messageText = strings().chatListServiceDestructingVideo
                 } else {
                     if fileMedia.isAnimated {
-                        if !messageText.fixed.isEmpty {
-                             messageText = (strings().chatListGIF + ", " + messageText.fixed)
+                        if !messageText.isEmpty {
+                             messageText = (strings().chatListGIF + ", " + messageText)
                         } else {
                             messageText = strings().chatListGIF
                         }
                     } else {
-                        if !message.text.fixed.isEmpty {
+                        if !message.text.isEmpty {
                             switch mediaViewType {
                             case .emoji:
-                                messageText = ("📹 " + messageText.fixed)
+                                messageText = ("📹 " + messageText)
                             case .text:
-                                messageText = messageText.fixed
+                                break
                             case .none:
                                 break
                             }
@@ -101,14 +101,14 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                 if !message.text.isEmpty {
                     switch mediaViewType {
                     case .emoji:
-                        messageText = ("📎 " + messageText.fixed)
+                        messageText = ("📎 " + messageText)
                     case .text:
-                        messageText = messageText.fixed
+                        break
                     case .none:
                         break
                     }
                 } else {
-                    messageText = fileMedia.fileName?.fixed ?? "File"
+                    messageText = fileMedia.fileName ?? "File"
                 }
             }
         case _ as TelegramMediaMap:
@@ -126,9 +126,9 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                 if let _ = content.image {
                     switch mediaViewType {
                     case .emoji:
-                        messageText = ("🖼 " + messageText.fixed)
+                        messageText = ("🖼 " + messageText)
                     case .text:
-                        messageText = messageText.fixed
+                        break
                     case .none:
                         break
                     }
@@ -136,18 +136,18 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                     if (file.isVideo && !file.isInstantVideo)  {
                         switch mediaViewType {
                         case .emoji:
-                            messageText = ("🖼 " + messageText.fixed)
+                            messageText = ("🖼 " + messageText)
                         case .text:
-                            messageText = messageText.fixed
+                            break
                         case .none:
                             break
                         }
                     } else if file.isGraphicFile {
                         switch mediaViewType {
                         case .emoji:
-                            messageText = ("📹 " + messageText.fixed)
+                            messageText = ("📹 " + messageText)
                         case .text:
-                            messageText = messageText.fixed
+                            break
                         case .none:
                             break
                         }
@@ -158,7 +158,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             break
         }
     }
-    return messageText.replacingOccurrences(of: "\n", with: " ").nsstring.replacingOccurrences(of: "\r", with: " ").trimmed.fixed.nsstring
+    return messageText.replacingOccurrences(of: "\n", with: " ").nsstring.replacingOccurrences(of: "\r", with: " ").nsstring
     
 }
 
@@ -547,9 +547,14 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             return text
         case let .webViewData(data):
             return strings().chatServiceWebData(data)
-        case let .giftPremium(currency, amount, months):
-            //TODOLANG
-            return "gifted"
+        case let .giftPremium(currency, amount, _):
+            let text: String
+            if message.author?.id == account.peerId {
+                text = strings().chatServicePremiumGiftSentYou(formatCurrencyAmount(amount, currency: currency))
+            } else {
+                text = strings().chatServicePremiumGiftSent(authorName, formatCurrencyAmount(amount, currency: currency))
+            }
+            return text
         }
     }
     
