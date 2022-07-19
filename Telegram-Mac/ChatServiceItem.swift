@@ -22,8 +22,48 @@ class ChatServiceItem: ChatRowItem {
     private(set) var imageArguments:TransformImageArguments?
     private(set) var image:TelegramMediaImage?
     
+    struct GiftData {
+        let from: PeerId
+        let to: PeerId
+        let text: TextViewLayout
+        let months: Int32
+        
+        init(from: PeerId, to: PeerId, text: TextViewLayout, months: Int32) {
+            self.from = from
+            self.to = to
+            self.text = text
+            self.months = months
+            self.text.measure(width: 180)
+        }
+        
+        var height: CGFloat {
+            return 150 + text.layoutSize.height + 10 + 10
+        }
+        var alt: String {
+            let alt: String
+            switch months {
+            case 1:
+                alt = "1️⃣"
+            case 3:
+                alt = "2️⃣"
+            case 6:
+                alt = "3️⃣"
+            case 12:
+                alt = "4️⃣"
+            case 24:
+                alt = "5️⃣"
+            default:
+                alt = "5️⃣"
+            }
+            return alt
+        }
+    }
+    
+    private(set) var giftData: GiftData? = nil
+    
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         let message:Message = entry.message!
+        
         
         
         
@@ -524,6 +564,13 @@ class ChatServiceItem: ChatRowItem {
                 case let .webViewData(text):
                     let _ =  attributedString.append(string: strings().chatServiceWebData(text), color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 case let .giftPremium(currency, amount, months):
+                    
+                    let info = NSMutableAttributedString()
+                    _ = info.append(string: strings().chatServicePremiumGiftInfoCountable(Int(months)), color: grayTextColor, font: .normal(theme.fontSize))
+                    info.detectBoldColorInString(with: .medium(theme.fontSize))
+                    
+                    self.giftData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(info, alignment: .center), months: months)
+                    
                     let text: String
                     if authorId == context.peerId {
                         text = strings().chatServicePremiumGiftSentYou(formatCurrencyAmount(amount, currency: currency))
@@ -583,6 +630,9 @@ class ChatServiceItem: ChatRowItem {
         if let imageArguments = imageArguments {
             height += imageArguments.imageSize.height + (isBubbled ? 9 : 6)
         }
+        if let giftData = self.giftData {
+            height += giftData.height + (isBubbled ? 9 : 6)
+        }
         return height
     }
     
@@ -605,11 +655,105 @@ class ChatServiceItem: ChatRowItem {
 
 class ChatServiceRowView: TableRowView {
     
+    private class GiftView : Control {
+        
+        private let disposable = MetaDisposable()
+        private let stickerView: MediaAnimatedStickerView = MediaAnimatedStickerView(frame: NSMakeSize(150, 150).bounds)
+        
+        private var visualEffect: VisualEffect?
+        
+        private let textView = TextView()
+        
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(stickerView)
+            addSubview(textView)
+            textView.userInteractionEnabled = false
+            textView.isSelectable = false
+            
+            stickerView.userInteractionEnabled = false 
+            self.scaleOnClick = true
+            layer?.cornerRadius = 10
+        }
+        
+        func update(item: ChatServiceItem, data: ChatServiceItem.GiftData, animated: Bool) {
+            
+            let context = item.context
+            
+            let alt:String = data.alt
+            
+            
+            textView.update(data.text)
+            
+            let stickerFile: Signal<TelegramMediaFile, NoError> = item.context.engine.stickers.loadedStickerPack(reference: .premiumGifts, forceActualized: false)
+            |> map { pack in
+                switch pack {
+                case let .result(_, items, _):
+                    return items.first(where: {
+                        $0.file.stickerText?.fixed == alt
+                    })?.file ?? items.first?.file
+                default:
+                    return nil
+                }
+            }
+            |> filter { $0 != nil }
+            |> map { $0! }
+            |> take(1)
+            |> deliverOnMainQueue
+            
+            disposable.set(stickerFile.start(next: { [weak self] file in
+                self?.setFile(file, context: context)
+            }))
+            
+            if item.presentation.shouldBlurService {
+                let current: VisualEffect
+                if let view = self.visualEffect {
+                    current = view
+                } else {
+                    current = VisualEffect(frame: bounds)
+                    self.visualEffect = current
+                    addSubview(current, positioned: .below, relativeTo: self.subviews.first)
+                }
+                current.bgColor = item.presentation.blurServiceColor
+                
+                self.backgroundColor = .clear
+                
+            } else if let view = visualEffect {
+                performSubviewRemoval(view, animated: animated)
+                self.visualEffect = nil
+                self.backgroundColor = item.presentation.chatServiceItemColor
+            }
+        }
+        
+        private func setFile(_ file: TelegramMediaFile, context: AccountContext) {
+            let parameters = ChatAnimatedStickerMediaLayoutParameters(playPolicy: .onceEnd, media: file)
+            stickerView.update(with: file, size: NSMakeSize(150, 150), context: context, table: nil, parameters: parameters, animated: false)
+            needsLayout = true
+        }
+        
+        override func layout() {
+            super.layout()
+            stickerView.centerX(y: 0)
+            textView.centerX(y: stickerView.frame.height + 10)
+        }
+        
+        deinit {
+            disposable.dispose()
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
+    
+    
     private var textView:TextView
     private var imageView:TransformImageView?
     
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer?
+    
+    private var giftView: GiftView?
     
     required init(frame frameRect: NSRect) {
         textView = TextView()
@@ -664,7 +808,9 @@ class ChatServiceRowView: TableRowView {
                 self.imageView?.set(arguments: imageArguments)
                 self.photoVideoView?.centerX(y:textView.frame.maxY + (item.isBubbled ? 0 : 6))
             }
-            
+            if let view = giftView {
+                view.centerX(y: textView.frame.maxY + (item.isBubbled ? 0 : 6))
+            }
         }
     }
     
@@ -832,6 +978,30 @@ class ChatServiceRowView: TableRowView {
             imageView?.removeFromSuperview()
             imageView = nil
         }
+        
+        
+        if let giftData = item.giftData {
+            let context = item.context
+            let current: GiftView
+            if let view = self.giftView {
+                current = view
+            } else {
+                current = GiftView(frame: NSMakeRect(0, 0, 200, giftData.height))
+                self.giftView = current
+                addSubview(current)
+                
+                current.set(handler: { _ in 
+                    showModal(with: PremiumBoardingController(context: item.context, source: .gift(from: giftData.from, to: giftData.to, months: giftData.months)), for: context.window)
+                }, for: .Click)
+            }
+            
+            current.update(item: item, data: giftData, animated: animated)
+        } else if let view = self.giftView {
+            performSubviewRemoval(view, animated: animated)
+            self.giftView = nil
+        }
+        
+        
         self.needsLayout = true
         updateListeners()
     }
