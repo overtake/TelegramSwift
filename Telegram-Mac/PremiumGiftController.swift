@@ -15,22 +15,23 @@ import TGUIKit
 struct PremiumGiftOption : Equatable {
     
     let option: CachedPremiumGiftOption
+    let options: [CachedPremiumGiftOption]
     let configuration: PremiumPromoConfiguration
     
     var titleString: String {
         return strings().timerMonthsCountable(Int(option.months))
     }
-    var discountString: String {
+    var discountString: Int {
         
-        let optionMonthly = Int64((CGFloat(option.amount) / CGFloat(option.months)))
+        let optionMonthly:Int64 = Int64((CGFloat(option.amount) / CGFloat(option.months)))
         
-        let monthlyDiscount = configuration.monthlyAmount - optionMonthly
+        let highestOptionMonthly:Int64 = options.map { option in
+            return Int64((CGFloat(option.amount) / CGFloat(option.months)))
+        }.max()!
         
-        let discountPercent = ceil(abs(Float(optionMonthly) / Float(configuration.monthlyAmount) * 100.0))
         
-        return "-\(discountPercent)%"
-
-    
+        let discountPercent = Int(ceil((Float(highestOptionMonthly) - Float(optionMonthly)) / Float(highestOptionMonthly) * 100))
+        return discountPercent
     }
     
     var priceString: String {
@@ -55,11 +56,11 @@ private struct State : Equatable {
     
     var values: [PremiumGiftOption] {
         return self.options.map({
-            .init(option: $0, configuration: self.premiumConfiguration)
+            .init(option: $0, options: self.options, configuration: self.premiumConfiguration)
         })
     }
     var value: PremiumGiftOption {
-        return .init(option: self.option, configuration: self.premiumConfiguration)
+        return .init(option: self.option, options: self.options, configuration: self.premiumConfiguration)
     }
 }
 
