@@ -226,6 +226,11 @@ final class AccountContext {
     
     private let preloadGifsDisposable = MetaDisposable()
     let engine: TelegramEngine
+    
+    private let giftStickersValues:Promise<[TelegramMediaFile]> = Promise([])
+    var giftStickers: Signal<[TelegramMediaFile], NoError> {
+        return giftStickersValues.get()
+    }
 
     
     init(sharedContext: SharedAccountContext, window: Window, account: Account, isSupport: Bool = false) {
@@ -250,6 +255,15 @@ final class AccountContext {
         #endif
         
         
+        giftStickersValues.set(engine.stickers.loadedStickerPack(reference: .premiumGifts, forceActualized: false)
+        |> map { pack in
+            switch pack {
+            case let .result(_, items, _):
+                return items.map { $0.file }
+            default:
+                return []
+            }
+        })
         
         let engine = self.engine
         

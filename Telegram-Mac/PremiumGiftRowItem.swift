@@ -95,7 +95,11 @@ private final class PremiumGiftRowView: GeneralContainableRowView {
             
             commonPrice.centerY(x: frame.width - commonPrice.frame.width - 15)
             discount.setFrameOrigin(NSMakePoint(title.frame.minX, frame.height - discount.frame.height - 7))
-            discountText.setFrameOrigin(NSMakePoint(discount.frame.maxX + 8, frame.height - discountText.frame.height - 8))
+            if self.discount.isHidden {
+                discountText.setFrameOrigin(NSMakePoint(title.frame.minX, frame.height - discountText.frame.height - 8))
+            } else {
+                discountText.setFrameOrigin(NSMakePoint(discount.frame.maxX + 8, frame.height - discountText.frame.height - 8))
+            }
 
             selected.frame = bounds
             
@@ -124,7 +128,7 @@ private final class PremiumGiftRowView: GeneralContainableRowView {
             let commonPriceLayout = TextViewLayout(.initialize(string: option.priceString, color: theme.colors.grayText, font: .normal(.title)))
             commonPriceLayout.measure(width: .greatestFiniteMagnitude)
             
-            let discountLayout = TextViewLayout(.initialize(string: option.discountString, color: theme.colors.underSelectedColor, font: .medium(.small)))
+            let discountLayout = TextViewLayout(.initialize(string: "-\(option.discountString)%", color: theme.colors.underSelectedColor, font: .medium(.small)))
             discountLayout.measure(width: .greatestFiniteMagnitude)
 
             
@@ -140,6 +144,8 @@ private final class PremiumGiftRowView: GeneralContainableRowView {
             self.discount.layer?.cornerRadius = .cornerRadius
             self.discount.backgroundColor = theme.colors.premium
 
+            
+            self.discount.isHidden = option.discountString == 0
             
             self.removeAllHandlers()
             self.set(handler: { _ in

@@ -685,16 +685,11 @@ class ChatServiceRowView: TableRowView {
             
             textView.update(data.text)
             
-            let stickerFile: Signal<TelegramMediaFile, NoError> = item.context.engine.stickers.loadedStickerPack(reference: .premiumGifts, forceActualized: false)
-            |> map { pack in
-                switch pack {
-                case let .result(_, items, _):
-                    return items.first(where: {
-                        $0.file.stickerText?.fixed == alt
-                    })?.file ?? items.first?.file
-                default:
-                    return nil
-                }
+            let stickerFile: Signal<TelegramMediaFile, NoError> = item.context.giftStickers
+            |> map { items in
+                return items.first(where: {
+                    $0.stickerText?.fixed == alt
+                }) ?? items.first
             }
             |> filter { $0 != nil }
             |> map { $0! }
