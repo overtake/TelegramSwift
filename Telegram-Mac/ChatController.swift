@@ -2203,6 +2203,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     return
                 }
             }
+            
+            if let cachedData = chatInteraction.presentation.cachedData as? CachedUserData, let peer = chatInteraction.presentation.mainPeer {
+                if !cachedData.voiceMessagesAvailable {
+                    if let view = self?.genericView.inputView.currentActionView {
+                        tooltip(for: view, text: strings().chatSendVoicePrivacyError(peer.compactDisplayTitle))
+                    }
+                    return
+                }
+            }
+            
             if chatInteraction.presentation.recordingState != nil || chatInteraction.presentation.state != .normal {
                 NSSound.beep()
                 return
@@ -4394,6 +4404,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     
 
                     return present.withUpdatedLimitConfiguration(combinedInitialData.limitsConfiguration)
+                        .withUpdatedCachedData(combinedInitialData.cachedData)
                 })
             case .history, .preview:
                 self.chatInteraction.update(animated:false, { present in
@@ -4469,12 +4480,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }
                         }
                     }
-                    return present.withUpdatedLimitConfiguration(combinedInitialData.limitsConfiguration)
+                    return present.withUpdatedLimitConfiguration(combinedInitialData.limitsConfiguration)                        .withUpdatedCachedData(combinedInitialData.cachedData)
+
                 })
             case .scheduled:
                 if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
                     self.chatInteraction.update(animated:false, { present in
                         return present.withUpdatedCurrentSendAsPeerId(cachedData.sendAsPeerId)
+                            .withUpdatedCachedData(cachedData)
                     })
                 }
             case .pinned:
@@ -4686,7 +4699,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                         return present
                     }
-                    return presentation
+                    return presentation.withUpdatedCachedData(peerView?.cachedData)
                 })
             case .scheduled:
                 self.chatInteraction.update(animated: !first.swap(false), {  presentation in
@@ -4699,7 +4712,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if let cachedData = peerView?.cachedData as? CachedChannelData {
                         presentation = presentation.withUpdatedCurrentSendAsPeerId(cachedData.sendAsPeerId)
                     }
-                    return presentation
+                    return presentation.withUpdatedCachedData(peerView?.cachedData)
                 })
             case .pinned:
                 self.chatInteraction.update(animated: !first.swap(false), { presentation in
@@ -4709,7 +4722,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             return peerView.peers[peerView.peerId]
                         }
                         return nil
-                    }.updatedMainPeer(peerView != nil ? peerViewMainPeer(peerView!) : nil)
+                    }.updatedMainPeer(peerView != nil ? peerViewMainPeer(peerView!) : nil).withUpdatedCachedData(peerView?.cachedData)
                 })
             case .replyThread:
                 self.chatInteraction.update(animated: !first.swap(false), { [weak peerView] presentation in
@@ -4749,7 +4762,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 }
                             }
                         }
-                        return present
+                        return present.withUpdatedCachedData(peerView.cachedData)
                     }
                     return presentation
                 })
@@ -6033,7 +6046,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .tooMuchScheduled:
                     text = strings().chatSendMessageErrorTooMuchScheduled
                 case .voiceMessagesForbidden:
-                    text = strings().chatSendMessageVoicePrivacyError
+                    let peer = strongSelf.chatInteraction.presentation.mainPeer
+                    text = strings().chatSendVoicePrivacyError(peer?.compactDisplayTitle ?? "")
                 }
                 confirm(for: context.window, information: text, cancelTitle: "", thridTitle: strings().genericErrorMoreInfo, successHandler: { [weak strongSelf] confirm in
                     guard let strongSelf = strongSelf else {return}

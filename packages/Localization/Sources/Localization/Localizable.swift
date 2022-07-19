@@ -1665,8 +1665,6 @@ public final class L10n {
   public static var chatSendMessageErrorGroupRestricted: String  { return L10n.tr("Localizable", "Chat.SendMessageErrorGroupRestricted") }
   /// Slowmode is enabled.
   public static var chatSendMessageSlowmodeError: String  { return L10n.tr("Localizable", "Chat.SendMessageSlowmodeError") }
-  /// Sorry, you can't send voice messages due to privacy settings.
-  public static var chatSendMessageVoicePrivacyError: String  { return L10n.tr("Localizable", "Chat.SendMessageVoicePrivacyError") }
   /// Share
   public static var chatShareInlineResultActionHeader: String  { return L10n.tr("Localizable", "Chat.ShareInlineResultActionHeader") }
   /// Feed
@@ -2913,6 +2911,10 @@ public final class L10n {
   public static var chatSendJoinRequestTitle: String  { return L10n.tr("Localizable", "Chat.SendJoinRequest.Title") }
   /// Sorry, you can only send only 100 scheduled messages.
   public static var chatSendMessageErrorTooMuchScheduled: String  { return L10n.tr("Localizable", "Chat.SendMessageError.TooMuchScheduled") }
+  /// %@ doesn't accept voice and video messages
+  public static func chatSendVoicePrivacyError(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.SendVoice.PrivacyError", p1)
+  }
   /// You allowed this bot to message you when you logged in on %@
   public static func chatServiceBotPermissionAllowed(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.BotPermissionAllowed", p1)
@@ -3076,6 +3078,34 @@ public final class L10n {
   /// %@ updated group video
   public static func chatServiceGroupUpdatedVideo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.UpdatedVideo", p1)
+  }
+  /// %d
+  public static func chatServicePremiumGiftInfoCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PremiumGift.Info_countable", p1)
+  }
+  /// **Telegram Premium**\nfor %d months
+  public static func chatServicePremiumGiftInfoFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PremiumGift.Info_few", p1)
+  }
+  /// **Telegram Premium**\nfor %d months
+  public static func chatServicePremiumGiftInfoMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PremiumGift.Info_many", p1)
+  }
+  /// **Telegram Premium**\nfor %d month
+  public static func chatServicePremiumGiftInfoOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PremiumGift.Info_one", p1)
+  }
+  /// **Telegram Premium**\nfor %d months
+  public static func chatServicePremiumGiftInfoOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PremiumGift.Info_other", p1)
+  }
+  /// **Telegram Premium**\nfor %d months
+  public static func chatServicePremiumGiftInfoTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PremiumGift.Info_two", p1)
+  }
+  /// **Telegram Premium**\nfor %d months
+  public static func chatServicePremiumGiftInfotZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PremiumGift.Infot_zero", p1)
   }
   /// %1$@ sent you a gift for %2$@
   public static func chatServicePremiumGiftSent(_ p1: String, _ p2: String) -> String {
@@ -7755,6 +7785,18 @@ public final class L10n {
   public static func premiumBoardingPeerTitle(_ p1: String) -> String {
     return L10n.tr("Localizable", "Premium.Boarding.Peer.Title", p1)
   }
+  ///  You now have access to additional features.
+  public static var premiumBoardingPeerGiftInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Peer.Gift.Info") }
+  /// [%1$@](profile) has gifted you a %2$@-month subscription for Telegram Premium
+  public static func premiumBoardingPeerGiftTitle(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Peer.Gift.Title", p1, p2)
+  }
+  /// They now have access to additional features.
+  public static var premiumBoardingPeerGiftYouInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Peer.Gift.You.Info") }
+  /// You gifted [%1$@](profile) a %2$@-month subscription for Telegram Premium
+  public static func premiumBoardingPeerGiftYouTitle(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.Peer.Gift.You.Title", p1, p2)
+  }
   /// Additional animated reactions on messages, available only to the Premium subscribers.
   public static var premiumBoardingReactionsInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Reactions.Info") }
   /// Unique Reactions
@@ -8225,6 +8267,8 @@ public final class L10n {
   public static var privacySettingsUseProxy: String  { return L10n.tr("Localizable", "PrivacySettings.UseProxy") }
   /// Voice Calls
   public static var privacySettingsVoiceCalls: String  { return L10n.tr("Localizable", "PrivacySettings.VoiceCalls") }
+  /// Voice Messages
+  public static var privacySettingsVoiceMessages: String  { return L10n.tr("Localizable", "PrivacySettings.VoiceMessages") }
   /// Add New
   public static var privacySettingsPeerSelectAddNew: String  { return L10n.tr("Localizable", "PrivacySettings.PeerSelect.AddNew") }
   /// Add Users or Groups
@@ -8293,6 +8337,10 @@ public final class L10n {
   public static func privacySettingsControllerUserCountZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PrivacySettingsController.UserCount_zero", p1)
   }
+  /// You can restrict who can send you voice or video messages.
+  public static var privacySettingsControllerVoiceMessagesDescription: String  { return L10n.tr("Localizable", "PrivacySettingsController.VoiceMessagesDescription") }
+  /// WHO CAN SEND VOICE AND VIDEO MESSAGES ME
+  public static var privacySettingsControllerVoiceMessagesHeader: String  { return L10n.tr("Localizable", "PrivacySettingsController.VoiceMessagesHeader") }
   /// When forwarded to other chats, messages you send will not link back to your account.
   public static var privacySettingsControllerForwardsCustomHelp: String  { return L10n.tr("Localizable", "PrivacySettingsController.Forwards.CustomHelp") }
   /// WHO CAN FORWARD MY MESSAGES

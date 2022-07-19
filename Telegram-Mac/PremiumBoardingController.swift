@@ -39,6 +39,7 @@ enum PremiumLogEventsSource : Equatable {
     case premium_stickers
     case premium_emoji
     case profile(PeerId)
+    case gift(from: PeerId, to: PeerId, months: Int32)
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -61,6 +62,8 @@ enum PremiumLogEventsSource : Equatable {
             return "premium_emoji"
         case let .profile(peerId):
             return "profile__\(peerId.id._internalGetInt64Value())"
+        case .gift:
+            return "gift"
         }
     }
     var subsource: String? {
@@ -309,7 +312,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
         let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 13, openInfo: arguments.openInfo)
-        return PremiumBoardingHeaderItem(initialSize, stableId: stableId, isPremium: state.isPremium, peer: state.peer?.peer, premiumText: status, viewType: .legacy)
+        return PremiumBoardingHeaderItem(initialSize, stableId: stableId, context: arguments.context, isPremium: state.isPremium, peer: state.peer?.peer, source: state.source, premiumText: status, viewType: .legacy)
     }))
     index += 1
     
@@ -799,6 +802,12 @@ final class PremiumBoardingController : ModalViewController {
         switch source {
         case let .profile(peerId):
             peer = context.account.postbox.transaction { $0.getPeer(peerId) }
+        case let .gift(from, to, _):
+            if from == context.peerId {
+                peer = context.account.postbox.transaction { $0.getPeer(to) }
+            } else {
+                peer = context.account.postbox.transaction { $0.getPeer(from) }
+            }
         default:
             peer = .single(nil)
         }

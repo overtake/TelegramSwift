@@ -14,13 +14,26 @@ import Postbox
 final class PremiumBoardingHeaderItem : GeneralRowItem {
     fileprivate let titleLayout: TextViewLayout
     fileprivate let infoLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, isPremium: Bool, peer: Peer?, premiumText: NSAttributedString?, viewType: GeneralViewType) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, isPremium: Bool, peer: Peer?, source: PremiumLogEventsSource, premiumText: NSAttributedString?, viewType: GeneralViewType) {
         
         let title: NSAttributedString
         if let peer = peer {
-            title = parseMarkdownIntoAttributedString(strings().premiumBoardingPeerTitle(peer.displayTitle), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.peerAvatarVioletBottom), linkAttribute: { contents in
-                return (NSAttributedString.Key.link.rawValue, contents)
-            }))
+            if case let .gift(from, _, months) = source {
+                let text: String
+                if from == context.peerId {
+                    text = strings().premiumBoardingPeerGiftYouTitle(peer.displayTitle, "\(months)")
+                } else {
+                    text = strings().premiumBoardingPeerGiftTitle(peer.displayTitle, "\(months)")
+                }
+                title = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.peerAvatarVioletBottom), linkAttribute: { contents in
+                    return (NSAttributedString.Key.link.rawValue, contents)
+                }))
+            } else {
+                title = parseMarkdownIntoAttributedString(strings().premiumBoardingPeerTitle(peer.displayTitle), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.peerAvatarVioletBottom), linkAttribute: { contents in
+                    return (NSAttributedString.Key.link.rawValue, contents)
+                }))
+            }
+            
         } else {
             if isPremium {
                 title = .initialize(string: strings().premiumBoardingGotTitle, color: theme.colors.text, font: .medium(.header))
@@ -32,8 +45,20 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
 
         var info = NSMutableAttributedString()
         if let _ = peer {
-            _ = info.append(string: strings().premiumBoardingPeerInfo, color: theme.colors.text, font: .normal(.text))
+            
+            if case let .gift(from, _, _) = source {
+                let text: String
+                if from == context.peerId {
+                    text = strings().premiumBoardingPeerGiftYouInfo
+                } else {
+                    text = strings().premiumBoardingPeerGiftInfo
+                }
+                _ = info.append(string: text, color: theme.colors.text, font: .normal(.text))
+            } else {
+                _ = info.append(string: strings().premiumBoardingPeerInfo, color: theme.colors.text, font: .normal(.text))
+            }
             info.detectBoldColorInString(with: .medium(.text))
+            
         } else {
             if isPremium, let premiumText = premiumText {
                 info = premiumText.mutableCopy() as! NSMutableAttributedString
