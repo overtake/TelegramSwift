@@ -414,6 +414,14 @@ public extension TelegramMediaFile {
         }
         return nil
     }
+    var emojiReference:StickerPackReference? {
+        for attr in attributes {
+            if case let .CustomEmoji(_, _, reference) = attr {
+                return reference
+            }
+        }
+        return nil
+    }
     
     var maskData: StickerMaskCoords? {
         for attr in attributes {

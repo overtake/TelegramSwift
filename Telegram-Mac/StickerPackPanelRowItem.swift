@@ -303,6 +303,19 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
     private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
+        
+        if let file = itemUnderMouse?.1 {
+            let reference = file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)
+            if file.isVideoSticker && !file.isWebm {
+                return (.file(reference, GifPreviewModalView.self), nil)
+            } else if file.isAnimatedSticker || file.isWebm {
+                return (.file(reference, AnimatedStickerPreviewModalView.self), nil)
+            } else if file.isStaticSticker {
+                return (.file(reference, StickerPreviewModalView.self), nil)
+            }
+
+        }
+        
         for subview in self.subviews {
             if let contentView = subview as? ChatMediaContentView {
                 if NSPointInRect(point, subview.frame) {
@@ -347,6 +360,15 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         contentView.set(handler: { [weak self] _ in
             self?.updateUp()
         }, for: .Up)
+        
+        contentView.set(handler: { [weak self] _ in
+            let item = self?.item as? StickerPackPanelRowItem
+            let table = item?.table
+            let window = self?.window as? Window
+            if let item = item, let table = table, let window = window {
+                startModalPreviewHandle(table, window: window, context: item.context)
+            }
+        }, for: .LongMouseDown)
     }
     
     private var currentDownItem: (InlineStickerItemLayer, TelegramMediaFile, Bool)?
