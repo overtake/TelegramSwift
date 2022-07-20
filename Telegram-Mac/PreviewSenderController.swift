@@ -788,7 +788,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             var listHeight = genericView.tableView.listHeight
             if let inputQuery = inputInteraction.state.inputQueryResult {
                 switch inputQuery {
-                case let .emoji(emoji, _):
+                case let .emoji(emoji, _, _):
                     if !emoji.isEmpty {
                         listHeight = listHeight > 0 ? max(40, listHeight) : 0
                     }

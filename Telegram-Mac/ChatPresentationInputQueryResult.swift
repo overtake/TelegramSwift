@@ -16,7 +16,7 @@ enum ChatPresentationInputQueryResult: Equatable {
     case mentions([Peer])
     case commands([PeerCommand])
     case stickers([FoundStickerItem])
-    case emoji([String], Bool)
+    case emoji([String], [TelegramMediaFile], Bool)
     case searchMessages(([Message], SearchMessagesState?, (SearchMessagesState?)-> Void), [Peer], String)
     case contextRequestResult(Peer, ChatContextResultCollection?)
     
@@ -34,9 +34,9 @@ enum ChatPresentationInputQueryResult: Equatable {
             } else {
                 return false
             }
-        case let .emoji(lhsResults, lhsFirstWord):
-            if case let .emoji(rhsResults, rhsFirstWord) = rhs {
-                return lhsResults == rhsResults && lhsFirstWord == rhsFirstWord
+        case let .emoji(lhsResults, lhsAnimated, lhsFirstWord):
+            if case let .emoji(rhsResults, rhsAnimated, rhsFirstWord) = rhs {
+                return lhsResults == rhsResults && lhsFirstWord == rhsFirstWord && lhsAnimated == rhsAnimated
             } else {
                 return false
             }

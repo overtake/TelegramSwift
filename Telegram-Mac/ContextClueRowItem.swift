@@ -9,8 +9,16 @@
 import Cocoa
 import TGUIKit
 import InAppSettings
+import TelegramCore
+import Postbox
+
 class ContextClueRowItem: TableRowItem {
 
+    enum Source : Equatable {
+        case emoji(String)
+        case animated(TelegramMediaFile)
+    }
+    
     private let _stableId:AnyHashable
     let clues:[String]
     var selectedIndex:Int? = nil
@@ -20,16 +28,21 @@ class ContextClueRowItem: TableRowItem {
     }
     fileprivate let context: AccountContext
     fileprivate let canDisablePrediction: Bool
-    fileprivate let callback:((String)->Void)?
-    fileprivate let selected: String?
-    init(_ initialSize: NSSize, stableId:AnyHashable, context: AccountContext, clues: [String], selected: String?, canDisablePrediction: Bool, callback:((String)->Void)? = nil) {
+    fileprivate let callback:((Source)->Void)?
+    fileprivate let selected: Source?
+    let animated: [TelegramMediaFile]
+    init(_ initialSize: NSSize, stableId:AnyHashable, context: AccountContext, clues: [String], animated: [TelegramMediaFile], selected: Source?, canDisablePrediction: Bool, callback:((Source)->Void)? = nil) {
+        self.animated = context.isPremium ? animated : []
         self._stableId = stableId
         self.clues = clues
         self.context = context
         self.callback = callback
         self.selected = selected
         
-        if let selected = selected, let index = clues.firstIndex(of: selected) {
+        
+        let sources:[ContextClueRowItem.Source] = self.animated.map { .animated($0) } + self.clues.map { .emoji($0) }
+
+        if let selected = selected, let index = sources.firstIndex(of: selected) {
             self.selectedIndex = index
         }
         
@@ -48,6 +61,80 @@ class ContextClueRowItem: TableRowItem {
     }
     
 }
+
+private final class AnimatedClueRowItem : TableRowItem {
+    private let _stableId = arc4random()
+    override var stableId: AnyHashable {
+        return _stableId
+    }
+    let clue: TelegramMediaFile
+    let context: AccountContext
+    init(_ initialSize: NSSize, context: AccountContext, clue: TelegramMediaFile) {
+        self.clue = clue
+        self.context = context
+        super.init(initialSize)
+    }
+    
+    
+    override func viewClass() -> AnyClass {
+        return AnimatedClueRowView.self
+    }
+    
+    override var height: CGFloat {
+        return 40
+    }
+    override var width: CGFloat {
+        return 40
+    }
+}
+
+private final class AnimatedClueRowView: HorizontalRowView {
+    private var sticker: InlineStickerItemLayer?
+    private let containerView = View()
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(containerView)
+        containerView.layer?.cornerRadius = .cornerRadius
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    
+    override func set(item: TableRowItem, animated: Bool) {
+        super.set(item: item, animated: animated)
+        
+        guard let item = item as? AnimatedClueRowItem else {
+            return
+        }
+        
+        self.sticker?.removeFromSuperlayer()
+        
+        let size = NSMakeSize(item.height - 15, item.height - 15)
+        
+        let sticker = InlineStickerItemLayer(context: item.context, file: item.clue, size: size)
+        
+        sticker.isPlayable = true
+        self.sticker = sticker
+        
+        containerView.layer?.addSublayer(sticker)
+        containerView.frame = bounds.insetBy(dx: 4, dy: 4)
+
+        sticker.frame = containerView.focus(size)
+    }
+    
+    override func layout() {
+        super.layout()
+        containerView.frame = bounds.insetBy(dx: 4, dy: 4)
+    }
+    
+    override func updateColors() {
+        super.updateColors()
+        containerView.backgroundColor = item?.isSelected == true ? theme.colors.accent : theme.colors.background
+    }
+}
+
 
 private final class ClueRowItem : TableRowItem {
     private let _stableId = arc4random()
@@ -120,7 +207,8 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
             clues.selectedIndex = row
             if byClick, let window = window as? Window {
                 if let callback = clues.callback {
-                    callback(clues.clues[row])
+                    let sources:[ContextClueRowItem.Source] = clues.animated.map { .animated($0) } + clues.clues.map { .emoji($0) }
+                    callback(sources[row])
                 } else {
                     window.sendKeyEvent(.Return, modifierFlags: [])
                 }
@@ -200,6 +288,10 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
         if let item = item as? ContextClueRowItem {
             
             button.isHidden = !item.canDisablePrediction
+            
+            for clue in item.animated {
+                _ = tableView.addItem(item: AnimatedClueRowItem(bounds.size, context: item.context, clue: clue), animation: .none)
+            }
             
             for clue in item.clues {
                 _ = tableView.addItem(item: ClueRowItem(bounds.size, clue: clue), animation: .none)

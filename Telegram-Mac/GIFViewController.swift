@@ -158,9 +158,14 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
             }))
         case let .separator(string, _, _):
             return SeparatorRowItem(initialSize, entry.stableId, string: string)
-        case let .emoji(clues, selected, _, _):
-            return ContextClueRowItem(initialSize, stableId: entry.stableId, context: context, clues: clues, selected: selected, canDisablePrediction: false, callback: { emoji in
-                arguments?.searchBySuggestion(emoji)
+        case let .emoji(clues, animated, selected, _, _):
+            return ContextClueRowItem(initialSize, stableId: entry.stableId, context: context, clues: clues, animated: animated, selected: selected, canDisablePrediction: false, callback: { emoji in
+                switch emoji {
+                case let .emoji(emoji):
+                    arguments?.searchBySuggestion(emoji)
+                default:
+                    break
+                }
             })
         default:
             fatalError()

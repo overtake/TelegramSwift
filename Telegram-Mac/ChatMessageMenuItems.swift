@@ -334,12 +334,12 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             }).first
             
             if reference == nil {
-                reference = (message.associatedMedia.first?.value as? TelegramMediaFile)?.stickerReference
+                reference = (message.associatedMedia.first?.value as? TelegramMediaFile)?.emojiReference
             }
             
             if let reference = reference {
                 thirdBlock.append(ContextMenuItem(strings().chatContextViewEmojiSet, handler: {
-                    showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: .stickers(reference)), for: context.window)
+                    showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: .emoji(reference)), for: context.window)
                 }, itemImage: MenuAnimation.menu_view_sticker_set.value))
             }
         }
