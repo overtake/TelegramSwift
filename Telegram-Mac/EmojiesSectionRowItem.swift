@@ -71,7 +71,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         var mapped: [Item] = []
         var point = NSMakePoint(10, 0)
         
-        let optimized = isPremium && !context.isPremium && !revealed && items.count > 24 ? Array(items.prefix(23)) : items
+        let optimized = (isPremium && !context.isPremium || !installed) && !revealed && items.count > 24 ? Array(items.prefix(23)) : items
         for item in optimized {
             mapped.append(.item(rect: CGRect(origin: point, size: itemSize).insetBy(dx: 2, dy: 2), item: item))
             point.x += itemSize.width
@@ -446,8 +446,8 @@ private final class EmojiesSectionRowView : TableRowView {
                 contentView.addSubview(current)
             }
             current.set(font: .avatar(12), for: .Normal)
-            current.set(color: theme.colors.underSelectedColor, for: .Normal)
-            current.set(background: theme.colors.accent, for: .Normal)
+            current.set(color: theme.chatList.badgeMutedTextColor, for: .Normal)
+            current.set(background: theme.chatList.badgeMutedBackgroundColor, for: .Normal)
             current.set(text: "+\(count)", for: .Normal)
             current.sizeToFit(.zero, NSMakeSize(rect.width - 10, 25), thatFit: true)
             current.autoSizeToFit = false

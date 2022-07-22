@@ -32,7 +32,7 @@ class ContextClueRowItem: TableRowItem {
     fileprivate let selected: Source?
     let animated: [TelegramMediaFile]
     init(_ initialSize: NSSize, stableId:AnyHashable, context: AccountContext, clues: [String], animated: [TelegramMediaFile], selected: Source?, canDisablePrediction: Bool, callback:((Source)->Void)? = nil) {
-        self.animated = context.isPremium ? Array(animated.prefix(30)) : []
+        self.animated = context.isPremium ? Array(animated.prefix(30)) : Array(animated.filter { !$0.isPremiumEmoji }.prefix(30))
         self._stableId = stableId
         self.clues = clues
         self.context = context

@@ -186,7 +186,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                         return !toRemove.contains(value.fixed)
                     }
                     
-                    return { _ in return .emoji(emojies, animated, firstWord) }
+                    return { _ in return .emoji(emojies, selected, firstWord) }
                 })
             }
         }
@@ -644,7 +644,7 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
                     let emojies = emojis.emojies.filter { value in
                         return !toRemove.contains(value.fixed)
                     }
-                    return { _ in return .emoji(emojies, animated, firstWord) }
+                    return { _ in return .emoji(emojies, selected, firstWord) }
                     
                 })
             }
