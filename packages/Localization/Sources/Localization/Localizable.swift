@@ -3104,8 +3104,8 @@ public final class L10n {
     return L10n.tr("Localizable", "Chat.Service.PremiumGift.Info_two", p1)
   }
   /// **Telegram Premium**\nfor %d months
-  public static func chatServicePremiumGiftInfotZero(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "Chat.Service.PremiumGift.Infot_zero", p1)
+  public static func chatServicePremiumGiftInfoZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PremiumGift.Info_zero", p1)
   }
   /// %1$@ sent you a gift for %2$@
   public static func chatServicePremiumGiftSent(_ p1: String, _ p2: String) -> String {
@@ -4527,6 +4527,10 @@ public final class L10n {
   public static var emojiTravelAndPlaces: String  { return L10n.tr("Localizable", "Emoji.TravelAndPlaces") }
   /// Remove
   public static var emojiContextRemove: String  { return L10n.tr("Localizable", "Emoji.Context.Remove") }
+  /// Add %@
+  public static func emojiPackAdd(_ p1: String) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Add", p1)
+  }
   /// %d
   public static func emojiPackAddCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "EmojiPack.Add_countable", p1)
@@ -4557,6 +4561,10 @@ public final class L10n {
   }
   /// Subscribe to Telegram Premium to unlock this emoji. [Read More]()
   public static var emojiPackPremiumAlert: String  { return L10n.tr("Localizable", "EmojiPack.PremiumAlert") }
+  /// Unlock %@
+  public static func emojiPackUnlock(_ p1: String) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Unlock", p1)
+  }
   /// %@ has been added to your emojies.
   public static func emojiPackAddedInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "EmojiPack.Added.Info", p1)
@@ -4567,7 +4575,7 @@ public final class L10n {
   public static func emojiPackRemovedInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "EmojiPack.Removed.Info", p1)
   }
-  /// Emojies Added
+  /// Emojies Removed
   public static var emojiPackRemovedTitle: String  { return L10n.tr("Localizable", "EmojiPack.Removed.Title") }
   /// Appearance
   public static var emptyChatAppearance: String  { return L10n.tr("Localizable", "EmptyChat.Appearance") }

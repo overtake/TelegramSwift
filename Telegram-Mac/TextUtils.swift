@@ -158,11 +158,11 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             break
         }
     }
-    return messageText.replacingOccurrences(of: "\n", with: " ").nsstring.replacingOccurrences(of: "\r", with: " ").nsstring
+    return messageText.nsstring
     
 }
 
-func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:RenderedPeer? = nil, embeddedState:StoredPeerChatInterfaceState? = nil, folder: Bool = false, applyUserName: Bool = false, isPremium: Bool = false) -> NSAttributedString {
+func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:RenderedPeer? = nil, embeddedState:StoredPeerChatInterfaceState? = nil, folder: Bool = false, applyUserName: Bool = false, isPremium: Bool = false, isReplied: Bool = false) -> NSAttributedString {
     
     let interfaceState = embeddedState.flatMap(_internal_decodeStoredChatInterfaceState).flatMap({
         ChatInterfaceState.parse($0, peerId: nil, context: nil)
@@ -176,8 +176,8 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
         let textAttr = NSMutableAttributedString()
         _ = textAttr.append(string: embeddedState.inputState.inputText, color: theme.chatList.grayTextColor, font: .normal(.text))
         
-        InlineStickerItem.apply(to: textAttr, associatedMedia: message?.associatedMedia ?? [:], entities:  embeddedState.inputState.messageTextEntities(), isPremium: isPremium, ignoreSpoiler: true)
-                
+        InlineStickerItem.apply(to: textAttr, associatedMedia: [:], entities:  embeddedState.inputState.messageTextEntities(), isPremium: isPremium, ignoreSpoiler: true)
+
         mutableAttributedText.append(textAttr)
         
         mutableAttributedText.setSelected(color: theme.colors.underSelectedColor, range: mutableAttributedText.range)
@@ -224,7 +224,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             return attr
         }
         
-        var peer = coreMessageMainPeer(message)
+        let peer = coreMessageMainPeer(message)
         
         
         var mediaViewType: MessageTextMediaViewType = .emoji
@@ -277,7 +277,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             
             attributedText.setSelected(color: theme.colors.underSelectedColor, range: attributedText.range)
         } else if message.media.first is TelegramMediaAction {
-            _ = attributedText.append(string: serviceMessageText(message, account:account), color: theme.chatList.grayTextColor, font: .normal(.text))
+            _ = attributedText.append(string: serviceMessageText(message, account:account, isReplied: isReplied), color: theme.chatList.grayTextColor, font: .normal(.text))
             attributedText.setSelected(color: theme.colors.underSelectedColor, range: attributedText.range)
         } else if let media = message.media.first as? TelegramMediaExpiredContent {
             let text:String
@@ -291,7 +291,27 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             attributedText.setSelected(color: theme.colors.underSelectedColor,range: attributedText.range)
         }
         
-        return attributedText
+        var effective: Message = message
+        if !(message.media.first is TelegramMediaAction) {
+            for attribute in message.attributes {
+                if let attribute = attribute as? ReplyMessageAttribute, let message = message.associatedMessages[attribute.messageId] {
+                    if let action = message.media.first as? TelegramMediaAction {
+                        switch action.action {
+                        case .pinnedMessageUpdated:
+                            effective = message
+                        default:
+                            break
+                        }
+                    }
+                }
+            }
+        }
+        
+        let range = attributedText.string.nsstring.range(of: effective.text)
+        if range.location != NSNotFound {
+            InlineStickerItem.apply(to: attributedText, associatedMedia: effective.associatedMedia, entities:  effective.entities, isPremium: isPremium, ignoreSpoiler: true, offset: range.location)
+        } 
+        return attributedText.trimNewLines
 
     }
     return NSAttributedString()

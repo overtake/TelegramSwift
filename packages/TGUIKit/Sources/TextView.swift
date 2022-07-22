@@ -329,7 +329,7 @@ public final class TextViewLayout : Equatable {
     public var selectedRange:TextSelectedRange
     public var additionalSelections:[TextSelectedRange] = []
     public var penFlush:CGFloat
-    public var insets:NSSize = NSZeroSize
+    fileprivate var insets:NSSize = NSZeroSize
     public fileprivate(set) var lines:[TextViewLine] = []
     public fileprivate(set) var isPerfectSized:Bool = true
     public var maximumNumberOfLines:Int32
@@ -393,6 +393,8 @@ public final class TextViewLayout : Equatable {
         self.isBigEmoji = isBigEmoji
         isPerfectSized = true
         
+        self.insets = .zero
+        
         let font: CTFont
         if attributedString.length != 0 {
             if let stringFont = attributedString.attribute(NSAttributedString.Key(kCTFontAttributeName as String), at: 0, effectiveRange: nil) {
@@ -415,6 +417,7 @@ public final class TextViewLayout : Equatable {
         
         var fontLineSpacing:CGFloat = floor(fontLineHeight * 0.12)
 
+        
         
         var maybeTypesetter: CTTypesetter?
         
@@ -556,12 +559,12 @@ public final class TextViewLayout : Equatable {
             var lineHeight = fontLineHeight
             
             let lineString = attributedString.attributedSubstring(from: NSMakeRange(lastLineCharacterIndex, lineCharacterCount))
-            if lineString.string.containsEmoji, !isBigEmoji {
-                lineHeight += floor(fontDescent)
-                if first {
-                    lineOriginY += floor(fontDescent)
-                }
-            }
+//            if lineString.string.containsEmoji, !isBigEmoji {
+//                lineHeight += floor(fontDescent)
+//                if first {
+//                    lineOriginY += floor(fontDescent)
+//                }
+//            }
             
             if maximumNumberOfLines != 0 && lines.count == (Int(maximumNumberOfLines) - 1) && lineCharacterCount > 0 {
                 if first {
@@ -602,6 +605,7 @@ public final class TextViewLayout : Equatable {
                 let lineFrame = CGRect(x: lineCutoutOffset, y: lineOriginY, width: lineWidth, height: lineHeight)
                 layoutSize.height += lineHeight + fontLineSpacing
                 layoutSize.width = max(layoutSize.width, lineWidth + lineAdditionalWidth)
+                
                 
                 attributedString.enumerateAttributes(in: NSMakeRange(lineRange.location, lineRange.length), options: []) { attributes, range, _ in
                     if let _ = attributes[.strikethroughStyle] {
@@ -730,7 +734,7 @@ public final class TextViewLayout : Equatable {
         if lines.count == 1 {
             let line = lines[0]
             if !line.embeddedItems.isEmpty {
-                layoutSize.height += isBigEmoji ? 8 : 2
+                layoutSize.height += isBigEmoji ? 8 : 1
             }
         }
 

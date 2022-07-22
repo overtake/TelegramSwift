@@ -157,12 +157,18 @@ private final class Arguments {
     let sendEmoji:(String)->Void
     let selectEmojiSegment:(EmojiSegment)->Void
     let viewSet:(StickerPackCollectionInfo)->Void
-    init(context: AccountContext, send:@escaping(StickerPackItem)->Void, sendEmoji:@escaping(String)->Void, selectEmojiSegment:@escaping(EmojiSegment)->Void, viewSet:@escaping(StickerPackCollectionInfo)->Void) {
+    let showAllItems:(Int64)->Void
+    let openPremium:()->Void
+    let installPack:(StickerPackCollectionInfo, [StickerPackItem])->Void
+    init(context: AccountContext, send:@escaping(StickerPackItem)->Void, sendEmoji:@escaping(String)->Void, selectEmojiSegment:@escaping(EmojiSegment)->Void, viewSet:@escaping(StickerPackCollectionInfo)->Void, showAllItems:@escaping(Int64)->Void, openPremium:@escaping()->Void, installPack:@escaping(StickerPackCollectionInfo,  [StickerPackItem])->Void) {
         self.context = context
         self.send = send
         self.sendEmoji = sendEmoji
         self.selectEmojiSegment = selectEmojiSegment
         self.viewSet = viewSet
+        self.showAllItems = showAllItems
+        self.openPremium = openPremium
+        self.installPack = installPack
     }
 }
 
@@ -175,10 +181,12 @@ private struct State : Equatable {
     struct Section : Equatable {
         var info: StickerPackCollectionInfo
         var items:[StickerPackItem]
+        var installed: Bool
     }
     var sections:[Section]
     var peer: PeerEquatable?
     var emojiState: EmojiState = .init(selected: nil)
+    var revealed:[Int64: Bool] = [:]
 }
 
 private func _id_section(_ id:Int64) -> InputDataIdentifier {
@@ -228,7 +236,7 @@ private func packEntries(_ state: State, arguments: Arguments) -> [InputDataEntr
         let isPremium = section.items.contains(where: { $0.file.isPremiumEmoji })
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_pack(section.info.id.id), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-            return StickerPackRowItem(initialSize, stableId: stableId, packIndex: 0, isPremium: isPremium, context: arguments.context, info: section.info, topItem: section.items.first)
+            return StickerPackRowItem(initialSize, stableId: stableId, packIndex: 0, isPremium: isPremium, installed: section.installed, context: arguments.context, info: section.info, topItem: section.items.first)
         }))
         index += 1
         
@@ -283,7 +291,7 @@ private func entries(_ state: State, recent: RecentUsedEmoji, arguments: Argumen
         
         if key == .Recent, !recentAnimated.isEmpty {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(recentAnimated), comparable: nil, item: { initialSize, stableId in
-                return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, info: nil, items: recentAnimated, callback: { item in
+                return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: recentAnimated, callback: { item in
                     arguments.send(item)
                 })
             }))
@@ -317,16 +325,19 @@ private func entries(_ state: State, recent: RecentUsedEmoji, arguments: Argumen
         struct Tuple : Equatable {
             let section: State.Section
             let isPremium: Bool
+            let revealed: Bool
         }
         
-        let tuple = Tuple(section: section, isPremium: state.peer?.peer.isPremium ?? false)
+        let tuple = Tuple(section: section, isPremium: state.peer?.peer.isPremium ?? false, revealed: state.revealed[section.info.id.id] != nil)
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_section(section.info.id.id), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-            return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, info: section.info, items: section.items, callback: { item in
+            return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: section.installed, info: section.info, items: section.items, callback: { item in
                 arguments.send(item)
             }, viewSet: { info in
                 arguments.viewSet(info)
-            })
+            }, showAllItems: {
+                arguments.showAllItems(section.info.id.id)
+            }, openPremium: arguments.openPremium, installPack: arguments.installPack)
         }))
         index += 1
     }
@@ -496,6 +507,18 @@ final class AnimatedEmojiesView : View {
         updateSelectionState(animated: true)
         return _segment
     }
+    
+    func scroll(to info: StickerPackCollectionInfo, animated: Bool) {
+        let item = self.packsView.item(stableId: InputDataEntryId.custom(_id_pack(info.id.id)))
+        if let item = item {
+            _ = self.packsView.select(item: item)
+            self.packsView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0))
+            tableView.scroll(to: .top(id: InputDataEntryId.custom(_id_aemoji_block(info.id.id)), innerId: nil, animated: animated, focus: .init(focus: false), inset: 0))
+            
+            updateSelectionState(animated: animated)
+
+        }
+    }
 }
 
 final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesView>, TableViewDelegate {
@@ -520,7 +543,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
     }
     
     private func updatePackReorder(_ sections: [State.Section]) {
-        let resortRange: NSRange = NSMakeRange(3, genericView.packsView.count - 4)
+        let resortRange: NSRange = NSMakeRange(3, genericView.packsView.count - 4 - sections.filter { !$0.installed }.count)
         
         let context = self.context
         
@@ -580,6 +603,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         genericView.packsView.delegate = self
         
         
+        let scrollToOnNextTransaction: Atomic<StickerPackCollectionInfo?> = Atomic(value: nil)
+        
         let context = self.context
         let actionsDisposable = DisposableSet()
         
@@ -615,6 +640,20 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             self?.genericView.scroll(to: segment, animated: true)
         }, viewSet: { info in
             showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .emoji(.name(info.shortName))), for: context.window)
+        }, showAllItems: { id in
+            updateState { current in
+                var current = current
+                current.revealed[id] = true
+                return current
+            }
+        }, openPremium: {
+            showModal(with: PremiumBoardingController(context: context, source: .premium_emoji), for: context.window)
+        }, installPack: { info, items in
+            
+            _ = scrollToOnNextTransaction.swap(info)
+            
+            let signal = context.engine.stickers.addStickerPackInteractively(info: info, items: items) |> deliverOnMainQueue
+            _ = signal.start()
         })
         
         let selectUpdater = { [weak self] in
@@ -679,7 +718,13 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         disposable.set(transition.start(next: { [weak self] values in
             self?.genericView.update(sections: values.sections, packs: values.packs)
             self?.readyOnce()
+            
             selectUpdater()
+
+            if let info = scrollToOnNextTransaction.swap(nil) {
+                self?.genericView.scroll(to: info, animated: values.sections.animated)
+            }
+            
             
             self?.updatePackReorder(values.state.sections)
             
@@ -688,11 +733,11 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         let emojies = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000)
 
         
-        actionsDisposable.add(emojies.start(next: { view in
+        
+        actionsDisposable.add(combineLatest(emojies, context.account.viewTracker.featuredEmojiPacks()).start(next: { view, featured in
             updateState { current in
                 var current = current
                 var sections: [State.Section] = []
-                
                 for (_, info, _) in view.collectionInfos {
                     var files: [StickerPackItem] = []
                     if let info = info as? StickerPackCollectionInfo {
@@ -705,8 +750,14 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                             }
                         }
                         if !files.isEmpty {
-                            sections.append(.init(info: info, items: files))
+                            sections.append(.init(info: info, items: files, installed: true))
                         }
+                    }
+                }
+                for item in featured {
+                    let contains = sections.contains(where: { $0.info.id == item.info.id })
+                    if !contains {
+                        sections.append(.init(info: item.info, items: item.topItems, installed: false))
                     }
                 }
                 

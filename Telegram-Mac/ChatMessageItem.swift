@@ -77,7 +77,7 @@ final class InlineStickerItem : Hashable {
         return true
     }
     
-    static func apply(to attr: NSMutableAttributedString, associatedMedia: [MediaId : Media], entities: [MessageTextEntity], isPremium: Bool, ignoreSpoiler: Bool = false) {
+    static func apply(to attr: NSMutableAttributedString, associatedMedia: [MediaId : Media], entities: [MessageTextEntity], isPremium: Bool, ignoreSpoiler: Bool = false, offset: Int = 0) {
         let copy = attr
     
         
@@ -98,7 +98,10 @@ final class InlineStickerItem : Hashable {
                 continue
             }
             
-            let range = NSRange(location: entity.range.lowerBound, length: entity.range.upperBound - entity.range.lowerBound)
+            let lower = entity.range.lowerBound + offset
+            let upper = entity.range.upperBound + offset
+
+            let range = NSRange(location: lower, length: upper - lower)
             
             
             let intersection = ranges.first(where: { r in
