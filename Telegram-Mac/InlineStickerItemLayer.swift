@@ -100,6 +100,10 @@ private final class MultiTargetContextCache {
         return token
     }
     
+    static func exists(_ animation: LottieAnimation) -> Bool {
+        return cache[animation.key] != nil
+    }
+    
     static func remove(_ token: Int, for key: LottieAnimationEntryKey) {
         let context = self.cache[key]
         if let context = context {
@@ -186,7 +190,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.animation = animation
         if let animation = animation, let isPlayable = self.isPlayable, isPlayable {
             weak var layer: CALayer? = self
-            delayDisposable.set(delaySignal(0.1).start(completed: { [weak self] in
+            delayDisposable.set(delaySignal(MultiTargetContextCache.exists(animation) ? 0 : 0.1).start(completed: { [weak self] in
                 self?.contextToken = (MultiTargetContextCache.create(animation, displayFrame: { image in
                     Queue.mainQueue().async {
                         layer?.contents = image

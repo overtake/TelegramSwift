@@ -255,7 +255,7 @@ private class StickersModalView : View {
             let item: TableRowItem
             switch source {
             case .emoji:
-                item = EmojiesSectionRowItem(frame.size, stableId: 0, context: arguments.context, info: info, items: collectionItems, callback: { _ in })
+                item = EmojiesSectionRowItem(frame.size, stableId: 0, context: arguments.context, revealed: true, installed: true, info: info, items: collectionItems, callback: { _ in })
             case .stickers:
                 item = StickerPackPanelRowItem(frame.size, context: arguments.context, arguments: stickerArguments, files: files, packInfo: .emojiRelated, collectionId: .pack(info.id), canSend: arguments.context.bindings.rootNavigation().controller is ChatController, isPreview: true)
             }

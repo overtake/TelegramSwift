@@ -749,33 +749,20 @@ class ChatListRowItem: TableRowItem {
                 }
             }
         } else {
-            self.messageText = chatListText(account: context.account, for: message, messagesCount: messages.count, embeddedState: embeddedState, folder: false, isPremium: context.isPremium)
+            let messageText = chatListText(account: context.account, for: message, messagesCount: messages.count, embeddedState: embeddedState, folder: false, isPremium: context.isPremium)
+            self.messageText = messageText
             var textCutout: TextViewCutout?
             if !textLeftCutout.isZero {
                 textCutout = TextViewCutout(topLeft: CGSize(width: textLeftCutout, height: 14))
             }
             
-            if let messageText = messageText?.mutableCopy() as? NSMutableAttributedString, !messageText.string.isEmpty {
-                if embeddedState == nil {
-                    InlineStickerItem.apply(to: messageText, associatedMedia: message?.associatedMedia ?? [:], entities: message?.textEntities?.entities ?? [], isPremium: context.isPremium, ignoreSpoiler: true)
-                }
-                
-//                messageText.fixUndefinedEmojies()
-
+            if !messageText.string.isEmpty {
                 self.messageLayout = .init(messageText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2, cutout: textCutout)
                 
                 let selectedText:NSMutableAttributedString = messageText.mutableCopy() as! NSMutableAttributedString
                 if let color = selectedText.attribute(.selectedColor, at: 0, effectiveRange: nil) {
                     selectedText.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedText.range)
                 }
-                
-//                messageText.enumerateAttributes(in: messageText.range, options: .init(rawValue: 0), using: { attrs, range, stop in
-//                    if attrs[.init(rawValue: "Attribute__EmbeddedItem")] != nil {
-//                        selectedText.addAttribute(.foregroundColor, value: NSColor.clear, range: range)
-//                    }
-//                })
-                
-
                 self.messageSelectedLayout = .init(selectedText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2, cutout: textCutout)
             }
         }

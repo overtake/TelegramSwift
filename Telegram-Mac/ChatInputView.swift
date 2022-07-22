@@ -33,13 +33,12 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     var chatInteraction:ChatInteraction
     
-    var accessory:ChatInputAccessory!
+    let accessory:ChatInputAccessory
     
     private var _ts:View!
     
     
     //containers
-    private var accessoryView:View!
     private var contentView:View!
     private var bottomView:NSScrollView = NSScrollView()
     
@@ -79,6 +78,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     private var sendAsView: ChatInputSendAsView?
     init(frame frameRect: NSRect, chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
+        self.accessory = ChatInputAccessory(chatInteraction:chatInteraction)
         super.init(frame: frameRect)
         
         self.animates = true
@@ -87,7 +87,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         _ts.backgroundColor = .border;
         
         
-        accessoryView = View(frame: NSMakeRect(20.0, frameRect.height, 0, 0))
         contentView = View(frame: NSMakeRect(0, 0, NSWidth(frameRect), NSHeight(frameRect)))
         
         contentView.flip = false
@@ -115,9 +114,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         contentView.addSubview(actionsView)
         self.background = theme.colors.background
         
-        accessory = ChatInputAccessory(accessoryView, chatInteraction:chatInteraction)
         
-        self.addSubview(accessoryView)
+        self.addSubview(accessory)
+
         
         self.addSubview(contentView)
         self.addSubview(bottomView)
@@ -212,8 +211,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         bottomView.backgroundColor = theme.colors.background
         bottomView.documentView?.background = theme.colors.background
         replyMarkupModel?.layout()
-        accessory.update(with: chatInteraction.presentation, account: chatInteraction.context.account, animated: false)
-        accessoryView.backgroundColor = theme.colors.background
+        accessory.update(with: chatInteraction.presentation, context: chatInteraction.context, animated: false)
+        accessory.backgroundColor = theme.colors.background
         accessory.container.backgroundColor = theme.colors.background
         textView.setBackgroundColor(theme.colors.background)
                 
@@ -335,7 +334,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         case .normal, .editing:
             self.contentView.isHidden = false
             self.contentView.change(opacity: 1.0, animated: animated)
-            self.accessoryView.change(opacity: 1.0, animated: animated)
+            self.accessory.change(opacity: 1.0, animated: animated)
             break
         case .selecting:
             self.messageActionsPanelView = MessageActionsPanelView(frame: bounds)
@@ -346,7 +345,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             self.addSubview(self.messageActionsPanelView!, positioned: .below, relativeTo: _ts)
             self.contentView.isHidden = true
             self.contentView.change(opacity: 0.0, animated: animated)
-            self.accessoryView.change(opacity: 0.0, animated: animated)
+            self.accessory.change(opacity: 0.0, animated: animated)
             break
         case .block(_):
             break
@@ -385,7 +384,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
 
             self.contentView.isHidden = true
             self.contentView.change(opacity: 0.0, animated: animated)
-            self.accessoryView.change(opacity: 0.0, animated: animated)
+            self.accessory.change(opacity: 0.0, animated: animated)
         case let .channelWithDiscussion(discussionGroupId, leftAction, rightAction):
             self.messageActionsPanelView?.removeFromSuperview()
             self.chatDiscussionView = ChannelDiscussionInputView(frame: bounds)
@@ -394,7 +393,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             self.addSubview(self.chatDiscussionView!, positioned: .below, relativeTo: _ts)
             self.contentView.isHidden = true
             self.contentView.change(opacity: 0.0, animated: animated)
-            self.accessoryView.change(opacity: 0.0, animated: animated)
+            self.accessory.change(opacity: 0.0, animated: animated)
         case let .recording(recorder):
             textView.isHidden = true
             recordingPanelView = ChatInputRecordingView(frame: NSMakeRect(0,0,frame.width,standart), chatInteraction:chatInteraction, recorder:recorder)
@@ -411,7 +410,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             self.addSubview(self.restrictedView!, positioned: .below, relativeTo: _ts)
             self.contentView.isHidden = true
             self.contentView.change(opacity: 0.0, animated: animated)
-            self.accessoryView.change(opacity: 0.0, animated: animated)
+            self.accessory.change(opacity: 0.0, animated: animated)
         }
         
         CATransaction.commit()
@@ -435,7 +434,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     private var updateFirstTime: Bool = true
     func updateAdditions(_ state:ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
-        accessory.update(with: state, account: chatInteraction.context.account, animated: animated)
+        accessory.update(with: state, context: chatInteraction.context, animated: animated)
         
         accessoryDispose.set(accessory.nodeReady.get().start(next: { [weak self] animated in
             self?.updateAccesory(animated: animated)
@@ -547,12 +546,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         
         transition.updateFrame(view: _ts, frame: NSMakeRect(0, size.height - .borderSize, size.width, .borderSize))
             
-        if let view = accessory.view {
-            accessory.measureSize(size.width - 64)
-            transition.updateFrame(view: view, frame: NSMakeRect(15, contentView.frame.maxY, size.width - 39, accessory.size.height))
-            accessory.updateLayout(NSMakeSize(size.width - 39, accessory.size.height), transition: transition)
-        }
-        
+        accessory.measureSize(size.width - 64)
+        transition.updateFrame(view: accessory, frame: NSMakeRect(15, contentView.frame.maxY, size.width - 39, accessory.size.height))
+        accessory.updateLayout(NSMakeSize(size.width - 39, accessory.size.height), transition: transition)
+                
         if let view = messageActionsPanelView {
             transition.updateFrame(view: view, frame: bounds)
         }
@@ -628,8 +625,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             bottomView._change(size: NSMakeSize(frame.width - 40, bottomHeight), animated: animated)
             bottomView._change(pos: NSMakePoint(20, chatInteraction.presentation.isKeyboardShown ? 0 : -bottomHeight), animated: animated)
             
-            accessory.view?.change(opacity: accessory.isVisibility() ? 1.0 : 0.0, animated: animated)
-            accessory.view?.change(pos: NSMakePoint(15, contentHeight + bottomHeight), animated: animated)
+            accessory.change(opacity: accessory.isVisibility() ? 1.0 : 0.0, animated: animated)
+            accessory.change(pos: NSMakePoint(15, contentHeight + bottomHeight), animated: animated)
             
             
             change(size: NSMakeSize(NSWidth(frame), sumHeight), animated: animated)

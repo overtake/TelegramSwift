@@ -15,12 +15,30 @@ import Postbox
 
 final class EmojiesSectionRowItem : GeneralRowItem {
     
-    struct Item : Equatable {
-        let rect: NSRect
-        let item: StickerPackItem
+    enum Item : Equatable {
+        case item(rect: NSRect, item: StickerPackItem)
+        case more(rect: NSRect, count: Int)
+        
+        var rect: NSRect {
+            switch self {
+            case let .item(rect, _):
+                return rect
+            case let .more(rect, _):
+                return rect
+            }
+        }
+        var item: StickerPackItem? {
+            switch self {
+            case let .item(_, item):
+                return item
+            default:
+                return nil
+            }
+        }
     }
     
     let items: [Item]
+    let stickerItems: [StickerPackItem]
     let context: AccountContext
     let callback:(StickerPackItem)->Void
     let itemSize: NSSize
@@ -29,22 +47,44 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     
     let nameLayout: TextViewLayout?
     let isPremium: Bool
+    let revealed: Bool
+    let showAllItems:(()->Void)?
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, info: StickerPackCollectionInfo?, items: [StickerPackItem], callback:@escaping(StickerPackItem)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil) {
+    let installed: Bool
+    
+    let unlockText: (String, Bool)?
+    
+    let openPremium:(()->Void)?
+    let installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)?
+    
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], callback:@escaping(StickerPackItem)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
         self.itemSize = NSMakeSize(41, 34)
         self.info = info
         self.viewSet = viewSet
+        self.installed = installed
+        self.revealed = revealed
+        self.stickerItems = items
+        self.showAllItems = showAllItems
+        self.openPremium = openPremium
+        self.installPack = installPack
         self.isPremium = items.contains(where: { $0.file.isPremiumEmoji }) && stableId != AnyHashable(0)
         var mapped: [Item] = []
         var point = NSMakePoint(10, 0)
-        for item in items {
-            mapped.append(.init(rect: CGRect(origin: point, size: itemSize).insetBy(dx: 2, dy: 2), item: item))
+        
+        let optimized = isPremium && !context.isPremium && !revealed && items.count > 24 ? Array(items.prefix(23)) : items
+        for item in optimized {
+            mapped.append(.item(rect: CGRect(origin: point, size: itemSize).insetBy(dx: 2, dy: 2), item: item))
             point.x += itemSize.width
             if mapped.count % 8 == 0 {
                 point.y += itemSize.height
                 point.x = 10
             }
         }
+        
+        if optimized.count != items.count {
+            mapped.append(.more(rect: CGRect(origin: point, size: itemSize).insetBy(dx: -5, dy: 0), count: items.count - optimized.count))
+        }
+        
         self.items = mapped
         self.context = context
         self.callback = callback
@@ -57,6 +97,19 @@ final class EmojiesSectionRowItem : GeneralRowItem {
             self.nameLayout = nil
         }
         
+        if let info = info {
+            if isPremium && !context.isPremium {
+                self.unlockText = (strings().emojiPackUnlock(info.title), true)
+            } else if !installed {
+                self.unlockText = (strings().emojiPackAdd(info.title), false)
+            } else {
+                self.unlockText = nil
+            }
+        } else {
+            self.unlockText = nil
+        }
+        
+
         
         
         super.init(initialSize, stableId: stableId)
@@ -84,6 +137,10 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         if let _ = nameLayout {
             height += 5
         }
+        if let _ = self.unlockText {
+            height += 40 + 5
+        }
+        
         return height
     }
     
@@ -111,11 +168,87 @@ final class EmojiesSectionRowItem : GeneralRowItem {
 //
         return .single(items)
     }
+    
+    func invokeLockAction() {
+        if let info = info {
+            if isPremium && !context.isPremium {
+                self.openPremium?()
+            } else if !installed {
+                self.installPack?(info, self.stickerItems)
+            }
+        }
+    }
 }
 
 
 
 private final class EmojiesSectionRowView : TableRowView {
+    
+    
+    
+    
+    
+    fileprivate final class UnlockView : Control {
+        private let gradient: PremiumGradientView = PremiumGradientView(frame: .zero)
+        private let shimmer = ShimmerEffectView()
+        private let textView = TextView()
+        private let imageView = LottiePlayerView(frame: NSMakeRect(0, 0, 24, 24))
+        private let container = View()
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(gradient)
+            addSubview(shimmer)
+            shimmer.isStatic = true
+            container.addSubview(textView)
+            container.addSubview(imageView)
+            addSubview(container)
+            scaleOnClick = true
+            
+            textView.userInteractionEnabled = false
+            textView.isSelectable = false
+        }
+        
+        override func layout() {
+            super.layout()
+            gradient.frame = bounds
+            shimmer.frame = bounds
+            container.center()
+            textView.centerY(x: 0)
+            imageView.centerY(x: textView.frame.maxX + 10)
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        func update(name: String, width: CGFloat) -> NSSize {
+            let layout = TextViewLayout(.initialize(string: name, color: NSColor.white, font: .medium(.text)))
+            layout.measure(width: .greatestFiniteMagnitude)
+            textView.update(layout)
+            
+            let lottie = LocalAnimatedSticker.premium_unlock
+            
+            if let data = lottie.data {
+                let colors:[LottieColor] = [.init(keyPath: "", color: NSColor(0xffffff))]
+                imageView.set(LottieAnimation(compressed: data, key: .init(key: .bundle("bundle_\(lottie.rawValue)"), size: NSMakeSize(24, 24), colors: colors), cachePurpose: .temporaryLZ4(.thumb), playPolicy: .loop, maximumFps: 60, colors: colors, runOnQueue: .mainQueue()))
+            }
+            container.setFrameSize(NSMakeSize(layout.layoutSize.width + 10 + imageView.frame.width, max(layout.layoutSize.height, imageView.frame.height)))
+            
+            let size = NSMakeSize(width, 40)
+            
+            shimmer.updateAbsoluteRect(size.bounds, within: size)
+            shimmer.update(backgroundColor: .clear, foregroundColor: .clear, shimmeringColor: NSColor.white.withAlphaComponent(0.3), shapes: [.roundedRect(rect: size.bounds, cornerRadius: size.height / 2)], horizontal: true, size: size)
+
+
+            needsLayout = true
+            
+            return size
+        }
+    }
+    
+
+    fileprivate var unlock: Control?
+
     
     private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
 
@@ -125,6 +258,8 @@ private final class EmojiesSectionRowView : TableRowView {
     
     private var lockView: ImageView?
     private let container = View()
+    
+    private var reveal: TitleButton?
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -183,7 +318,10 @@ private final class EmojiesSectionRowView : TableRowView {
     
     override func layout() {
         super.layout()
-        
+    }
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
         
         var containerSize = NSZeroSize
         if let nameView = self.nameView {
@@ -193,26 +331,30 @@ private final class EmojiesSectionRowView : TableRowView {
             containerSize.width += lockView.frame.width
             containerSize.height = max(nameView.frame.height, lockView.frame.height)
         }
-        container.setFrameSize(containerSize)
+
+        transition.updateFrame(view: container, frame: CGRect(origin: NSMakePoint(20, 0), size: containerSize))
+        
         
         if let lockView = lockView {
-            lockView.centerY(x: 0)
-            nameView?.centerY(x: lockView.frame.maxX)
+            transition.updateFrame(view: lockView, frame: lockView.centerFrameY(x: 0))
+            if let nameView = nameView {
+                transition.updateFrame(view: nameView, frame: nameView.centerFrameY(x: lockView.frame.maxX))
+            }
         } else {
-            nameView?.center()
+            if let nameView = nameView {
+                transition.updateFrame(view: nameView, frame: nameView.centerFrame())
+            }
         }
-        
-        
-        container.setFrameOrigin(NSMakePoint(20, 0))
         
         var contentRect = bounds
         if let nameView = nameView {
             contentRect = contentRect.offsetBy(dx: 0, dy: nameView.frame.height + 5)
         }
-        contentView.frame = contentRect
+        transition.updateFrame(view: contentView, frame: contentRect)
         
-     
-
+        if let unlock = unlock {
+            transition.updateFrame(view: unlock, frame: CGRect(origin: CGPoint(x: 15, y: size.height - unlock.frame.height), size: unlock.frame.size))
+        }
     }
     
     private var itemUnderMouse: (InlineStickerItemLayer, EmojiesSectionRowItem.Item)? {
@@ -240,8 +382,8 @@ private final class EmojiesSectionRowView : TableRowView {
         guard let item = self.item as? EmojiesSectionRowItem else {
             return
         }
-        if let first = currentDownItem {
-            item.callback(first.1.item)
+        if let first = currentDownItem, let current = first.1.item {
+            item.callback(current)
         }
     }
 
@@ -289,7 +431,103 @@ private final class EmojiesSectionRowView : TableRowView {
         }
         
         
-        self.layout()
+        //        if (isPremium && !context.isPremium) || !installed {
+
+     
+        
+        
+        if case let .more(rect, count) = item.items.last {
+            let current: TitleButton
+            if let view = self.reveal {
+                current = view
+            } else {
+                current = TitleButton()
+                self.reveal = current
+                contentView.addSubview(current)
+            }
+            current.set(font: .avatar(12), for: .Normal)
+            current.set(color: theme.colors.underSelectedColor, for: .Normal)
+            current.set(background: theme.colors.accent, for: .Normal)
+            current.set(text: "+\(count)", for: .Normal)
+            current.sizeToFit(.zero, NSMakeSize(rect.width - 10, 25), thatFit: true)
+            current.autoSizeToFit = false
+            current.scaleOnClick = true
+            current.layer?.cornerRadius = current.frame.height / 2
+            current.setFrameOrigin(rect.origin.offsetBy(dx: 2, dy: 4))
+            
+            current.removeAllHandlers()
+            current.set(handler: { [weak item] _ in
+                item?.showAllItems?()
+            }, for: .Click)
+        } else if let view = self.reveal {
+            performSubviewRemoval(view, animated: animated)
+            self.reveal = nil
+        }
+        
+        
+        if let unlockText = item.unlockText {
+            if unlockText.1 {
+                let current: UnlockView
+                if let view = self.unlock as? UnlockView {
+                    current = view
+                } else {
+                    if let view = unlock {
+                        performSubviewRemoval(view, animated: animated)
+                    }
+                    let rect = CGRect(origin: NSMakePoint(15, frame.height - 40), size: NSMakeSize(frame.width - 30, 40))
+                    current = UnlockView(frame: rect)
+                    current.layer?.cornerRadius = 10
+                    self.unlock = current
+                    self.addSubview(current)
+                }
+                let _ = current.update(name: unlockText.0, width: frame.width - 30)
+                
+                current.removeAllHandlers()
+                current.set(handler: { [weak item] _ in
+                    item?.invokeLockAction()
+                }, for: .Click)
+            } else {
+                let current: TitleButton
+                if let view = self.unlock as? TitleButton {
+                    current = view
+                } else {
+                    if let view = unlock {
+                        performSubviewRemoval(view, animated: animated)
+                    }
+                    let rect = CGRect(origin: NSMakePoint(15, frame.height - 40), size: NSMakeSize(frame.width - 30, 40))
+                    current = TitleButton(frame: rect)
+                    current.autohighlight = false
+                    current.scaleOnClick = true
+                    current.layer?.cornerRadius = 10
+                    self.unlock = current
+                    self.addSubview(current)
+                }
+                current.set(background: theme.colors.accent, for: .Normal)
+                current.set(font: .medium(.text), for: .Normal)
+                current.set(color: theme.colors.underSelectedColor, for: .Normal)
+                current.set(text: unlockText.0, for: .Normal)
+                current.sizeToFit(.zero, NSMakeSize(frame.width - 30, 40), thatFit: true)
+                current.removeAllHandlers()
+                current.set(handler: { [weak item] _ in
+                    item?.invokeLockAction()
+                }, for: .Click)
+            }
+            
+        } else if let view = self.unlock {
+            performSubviewRemoval(view, animated: animated)
+            self.unlock = nil
+        }
+        
+        let transition: ContainedViewLayoutTransition
+        if animated {
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        } else {
+            transition = .immediate
+        }
+        self.updateLayout(size: frame.size, transition: transition)
+        
+        
+ 
 
         self.updateInlineStickers(context: item.context, contentView: contentView, items: item.items)
         
@@ -336,25 +574,27 @@ private final class EmojiesSectionRowView : TableRowView {
         var index: Int = 0
 
         for item in items {
-            let id = InlineStickerItemLayer.Key(id: item.item.file.fileId.id, index: index)
-            validIds.append(id)
+            if let current = item.item {
+                let id = InlineStickerItemLayer.Key(id: current.file.fileId.id, index: index)
+                validIds.append(id)
 
-            let rect = item.rect
+                let rect = item.rect
 
-            let view: InlineStickerItemLayer
-            if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
-                view = current
-            } else {
-                self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                view = InlineStickerItemLayer(context: context, file: item.item.file, size: rect.size)
-                self.inlineStickerItemViews[id] = view
-                view.superview = contentView
-                contentView.layer?.addSublayer(view)
+                let view: InlineStickerItemLayer
+                if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
+                    view = current
+                } else {
+                    self.inlineStickerItemViews[id]?.removeFromSuperlayer()
+                    view = InlineStickerItemLayer(context: context, file: current.file, size: rect.size)
+                    self.inlineStickerItemViews[id] = view
+                    view.superview = contentView
+                    contentView.layer?.addSublayer(view)
+                }
+                index += 1
+
+                view.isPlayable = NSIntersectsRect(rect, contentView.visibleRect) && window != nil && window!.isKeyWindow
+                view.frame = rect
             }
-            index += 1
-
-            view.isPlayable = NSIntersectsRect(rect, contentView.visibleRect) && window != nil && window!.isKeyWindow
-            view.frame = rect
         }
 
         var removeKeys: [InlineStickerItemLayer.Key] = []

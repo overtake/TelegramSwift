@@ -33,14 +33,16 @@ class StickerPackRowItem: TableRowItem {
     }
     let packIndex: Int
     let isPremium: Bool
+    let installed: Bool?
     
-    init(_ initialSize:NSSize, stableId: AnyHashable, packIndex: Int, isPremium: Bool, context:AccountContext, info:StickerPackCollectionInfo, topItem:StickerPackItem?) {
+    init(_ initialSize:NSSize, stableId: AnyHashable, packIndex: Int, isPremium: Bool, installed: Bool? = nil, context:AccountContext, info:StickerPackCollectionInfo, topItem:StickerPackItem?) {
         self.context = context
         self.packIndex = packIndex
         self._stableId = stableId
         self.info = info
         self.topItem = topItem
         self.isPremium = isPremium
+        self.installed = installed
         super.init(initialSize)
     }
     
@@ -250,6 +252,10 @@ private final class StickerPackRowView : HorizontalRowView {
             self.layer?.cornerRadius = frameRect.height / 2
         }
         
+        func update(_ image: CGImage) {
+            self.lockedView.image = image
+        }
+        
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
@@ -264,7 +270,7 @@ private final class StickerPackRowView : HorizontalRowView {
 
     
     private var isLocked: Bool = false
-    func set(locked: Bool, animated: Bool) {
+    func set(locked: Bool, unlock: Bool, animated: Bool) {
         self.isLocked = locked
         if isLocked {
             let current: LockView
@@ -278,6 +284,7 @@ private final class StickerPackRowView : HorizontalRowView {
                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
             }
+            current.update(unlock ? theme.icons.premium_lock : theme.icons.premium_plus)
         } else if let view = lockedView {
             performSubviewRemoval(view, animated: animated)
             self.lockedView = nil
@@ -368,7 +375,16 @@ private final class StickerPackRowView : HorizontalRowView {
             current?.superview = self.container
             current?.frame = CGRect(origin: NSMakePoint(4, 4), size: NSMakeSize(28, 28))
             
-            self.set(locked: !item.context.isPremium && item.isPremium, animated: animated)
+            let unlock: Bool
+            if !item.context.isPremium && item.isPremium {
+                unlock = true
+            } else if (item.installed != nil && !item.installed!) {
+                unlock = false
+            } else {
+                unlock = true
+            }
+            
+            self.set(locked: (!item.context.isPremium && item.isPremium) || (item.installed != nil && !item.installed!), unlock: unlock, animated: animated)
 
 
         }

@@ -2507,6 +2507,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 gallery_pip_play: { NSImage(named: "Icon_Pip_Play")!.precomposed(NSColor(0xffffff)) },
                                                 notification_sound_add: { NSImage(named: "Icon_Notification_Add")!.precomposed(palette.accent, flipVertical: true) },
                                                 premium_lock: { generateLockPremium(palette) },
+                                                premium_plus: { NSImage(named: "Icon_Premium_Plus")!.precomposed(NSColor(0xffffff)) },
                                                 premium_account: { generatePremium(false, color: palette.accent) },
                                                 premium_account_active: { generatePremium(false, color: palette.underSelectedColor) },
                                                 premium_account_rev: { generatePremium(true, color: palette.accent) },
