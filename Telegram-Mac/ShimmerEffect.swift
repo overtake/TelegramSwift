@@ -135,7 +135,7 @@ final class ShimmerEffectForegroundView: View {
     }
     
     private func addImageAnimation() {
-        guard let containerSize = self.absoluteLocation?.1, let horizontal = self.currentHorizontal else {
+        guard let containerSize = self.absoluteLocation?.1, let horizontal = self.currentHorizontal, self.shouldBeAnimating else {
             return
         }
         let animation: CAAnimation

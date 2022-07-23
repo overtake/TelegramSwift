@@ -290,7 +290,7 @@ private func fetchCachedVideoAnimatedStickerRepresentation(account: Account, res
     return data |> deliverOn(lottieThreadPool) |> map { resourceData -> (CGImage?, Data?, MediaResourceData) in
         if resourceData.complete {
             if let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
-                let decoder = SoftwareVideoSource(path: resourceData.path, hintVP9: true)
+                let decoder = SoftwareVideoSource(path: resourceData.path, hintVP9: true, unpremultiplyAlpha: true)
                 return (decoder.preview(size: representation.size, backingScale: 2), data, resourceData)
             }
         }
@@ -356,7 +356,7 @@ private func fetchCachedAnimatedStickerRepresentation(account: Account, resource
                 
                 var image: CGImage?
                 if representation.isVideo {
-                    let decoder = SoftwareVideoSource(path: resourceData.path, hintVP9: true)
+                    let decoder = SoftwareVideoSource(path: resourceData.path, hintVP9: true, unpremultiplyAlpha: true)
                     image = decoder.preview(size: representation.size, backingScale: 2)
                 } else {
                     image = convertFromWebP(data)?._cgImage ?? NSImage(data: data)?.cgImage(forProposedRect: nil, context: nil, hints: nil)

@@ -575,7 +575,6 @@ private final class PlayerRenderer {
         var currentFrame: Int32 = 0
         var startFrame: Int32 = min(min(player.startFrame, maxFrames), min(player.endFrame, maxFrames))
         var endFrame: Int32 = min(player.endFrame, maxFrames)
-        let isMetal = animation.metalSupport && animation.supportsMetal
         switch self.animation.playPolicy {
         case let .loopAt(firstStart, range):
             startFrame = range.lowerBound
@@ -1254,7 +1253,12 @@ final class LottieAnimation : Equatable {
     let runOnQueue: Queue
     var onFinish:(()->Void)?
 
-    var triggerOn:(LottiePlayerTriggerFrame, ()->Void, ()->Void)? 
+    var triggerOn:(LottiePlayerTriggerFrame, ()->Void, ()->Void)? {
+        didSet {
+            var bp = 0
+            bp += 1
+        }
+    }
 
     
     init(compressed: Data, key: LottieAnimationEntryKey, type: LottieAnimationType = .lottie, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], soundEffect: LottieSoundEffect? = nil, postbox: Postbox? = nil, runOnQueue: Queue = stateQueue, metalSupport: Bool = false) {
@@ -1369,7 +1373,7 @@ final class LottieAnimation : Equatable {
         case .webm:
             let path = String(data: self.compressed, encoding: .utf8)
             if let path = path {
-                let decoder = SoftwareVideoSource(path: path, hintVP9: true)
+                let decoder = SoftwareVideoSource(path: path, hintVP9: true, unpremultiplyAlpha: true)
                 let fileSupplyment: TRLotFileSupplyment?
                 switch self.cache {
                 case .temporaryLZ4:
@@ -1748,6 +1752,10 @@ class LottiePlayerView : View {
     }
     
     var animation: LottieAnimation?
+    
+    var contextAnimation: LottieAnimation? {
+        return context?.animation
+    }
     
     override var isFlipped: Bool {
         return true

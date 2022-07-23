@@ -114,7 +114,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
        
         var signal = Signal<Void, NoError>.single(Void())
         if accept && !nextForceAccept && self.sticker != nil {
-            signal = signal |> delay(accept ? 0.15 : 0, queue: .mainQueue())
+            signal = signal |> delay(0, queue: .mainQueue())
         }
         if accept && self.sticker != nil {
             nextForceAccept = false

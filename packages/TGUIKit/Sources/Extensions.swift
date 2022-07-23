@@ -98,7 +98,22 @@ public extension NSAttributedString {
         
         return string
     }
-
+    var trimNewLinesToSpace: NSAttributedString {
+        
+        let string:NSMutableAttributedString = self.mutableCopy() as! NSMutableAttributedString
+        
+       
+        var range = string.string.nsstring.rangeOfCharacter(from: NSCharacterSet.newlines)
+        while !string.string.isEmpty, range.location == 0 {
+            string.replaceCharacters(in: NSMakeRange(0, 1), with: " ")
+            range = string.string.nsstring.rangeOfCharacter(from: NSCharacterSet.newlines)
+        }
+        while !string.string.isEmpty, string.string.rangeOfCharacter(from: NSCharacterSet.newlines, options: [], range: string.string.index(string.string.endIndex, offsetBy: -1) ..< string.string.endIndex) != nil {
+            string.replaceCharacters(in: NSMakeRange(string.string.length - 1, 1), with: " ")
+        }
+        
+        return string
+    }
     
     
     var range:NSRange {

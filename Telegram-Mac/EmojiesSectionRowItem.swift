@@ -190,17 +190,12 @@ private final class EmojiesSectionRowView : TableRowView {
     
     fileprivate final class UnlockView : Control {
         private let gradient: PremiumGradientView = PremiumGradientView(frame: .zero)
-        private let shimmer = ShimmerEffectView()
         private let textView = TextView()
-        private let imageView = LottiePlayerView(frame: NSMakeRect(0, 0, 24, 24))
         private let container = View()
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
             addSubview(gradient)
-            addSubview(shimmer)
-            shimmer.isStatic = true
             container.addSubview(textView)
-            container.addSubview(imageView)
             addSubview(container)
             scaleOnClick = true
             
@@ -211,34 +206,25 @@ private final class EmojiesSectionRowView : TableRowView {
         override func layout() {
             super.layout()
             gradient.frame = bounds
-            shimmer.frame = bounds
             container.center()
             textView.centerY(x: 0)
-            imageView.centerY(x: textView.frame.maxX + 10)
         }
         
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
         
-        func update(name: String, width: CGFloat) -> NSSize {
+        func update(name: String, width: CGFloat, context: AccountContext, table: TableView?) -> NSSize {
             let layout = TextViewLayout(.initialize(string: name, color: NSColor.white, font: .medium(.text)))
             layout.measure(width: .greatestFiniteMagnitude)
             textView.update(layout)
             
-            let lottie = LocalAnimatedSticker.premium_unlock
-            
-            if let data = lottie.data {
-                let colors:[LottieColor] = [.init(keyPath: "", color: NSColor(0xffffff))]
-                imageView.set(LottieAnimation(compressed: data, key: .init(key: .bundle("bundle_\(lottie.rawValue)"), size: NSMakeSize(24, 24), colors: colors), cachePurpose: .temporaryLZ4(.thumb), playPolicy: .loop, maximumFps: 60, colors: colors, runOnQueue: .mainQueue()))
-            }
-            container.setFrameSize(NSMakeSize(layout.layoutSize.width + 10 + imageView.frame.width, max(layout.layoutSize.height, imageView.frame.height)))
+                        
+
+            container.setFrameSize(NSMakeSize(layout.layoutSize.width, layout.layoutSize.height))
             
             let size = NSMakeSize(width, 40)
             
-            shimmer.updateAbsoluteRect(size.bounds, within: size)
-            shimmer.update(backgroundColor: .clear, foregroundColor: .clear, shimmeringColor: NSColor.white.withAlphaComponent(0.3), shapes: [.roundedRect(rect: size.bounds, cornerRadius: size.height / 2)], horizontal: true, size: size)
-
 
             needsLayout = true
             
@@ -446,7 +432,7 @@ private final class EmojiesSectionRowView : TableRowView {
                 contentView.addSubview(current)
             }
             current.set(font: .avatar(12), for: .Normal)
-            current.set(color: theme.chatList.badgeMutedTextColor, for: .Normal)
+            current.set(color: theme.colors.background, for: .Normal)
             current.set(background: theme.chatList.badgeMutedBackgroundColor, for: .Normal)
             current.set(text: "+\(count)", for: .Normal)
             current.sizeToFit(.zero, NSMakeSize(rect.width - 10, 25), thatFit: true)
@@ -480,7 +466,7 @@ private final class EmojiesSectionRowView : TableRowView {
                     self.unlock = current
                     self.addSubview(current)
                 }
-                let _ = current.update(name: unlockText.0, width: frame.width - 30)
+                let _ = current.update(name: unlockText.0, width: frame.width - 30, context: item.context, table: item.table)
                 
                 current.removeAllHandlers()
                 current.set(handler: { [weak item] _ in
