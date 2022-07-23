@@ -340,7 +340,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             if let reference = reference {
                 thirdBlock.append(ContextMenuItem(strings().chatContextViewEmojiSet, handler: {
                     showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: .emoji(reference)), for: context.window)
-                }, itemImage: MenuAnimation.menu_view_sticker_set.value))
+                }, itemImage: MenuAnimation.menu_smile.value))
             }
         }
 

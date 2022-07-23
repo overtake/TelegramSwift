@@ -370,7 +370,8 @@ class StickerPackPreviewModalController: ModalViewController {
             let title: String
             let text: String
             if !installed {
-                _ = context.engine.stickers.addStickerPackInteractively(info: info, items: items).start()
+                
+                _ = context.engine.stickers.addStickerPackInteractively(info: info, items: items.compactMap { $0 as? StickerPackItem }).start()
                 switch reference {
                 case .stickers:
                     title = strings().stickerPackAddedTitle
