@@ -476,6 +476,11 @@ final class AnimatedEmojiesView : View {
     }
     
     func selectBestPack() -> EmojiSegment? {
+        
+        guard tableView.count > 1, tableView.visibleRows().location != NSNotFound else {
+            return nil
+        }
+        
         let stableId = tableView.item(at: max(1, tableView.visibleRows().location)).stableId
         var _stableId: AnyHashable?
         var _segment: EmojiSegment?

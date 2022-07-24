@@ -83,6 +83,16 @@ class ChatAccessoryView : Button {
         if let message = model.message {
             updateInlineStickers(context: model.context, view: self.textView, textLayout: message)
         }
+        
+        let transition: ContainedViewLayoutTransition
+        if animated {
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        } else {
+            transition = .immediate
+        }
+        
+        updateLayout(frame.size, transition: transition)
+        
         self.updateListeners()
     }
     
