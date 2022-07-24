@@ -89,7 +89,7 @@ class EditMessageModel: ChatAccessoryModel {
         self.setNeedDisplay()
     }
     private func updateImageIfNeeded() {
-        if let view = self.view, view.frame != NSZeroRect {
+        if let view = self.view {
             let account = context.account
             let message = self.state.message
             var updatedMedia: Media?
@@ -180,6 +180,7 @@ class EditMessageModel: ChatAccessoryModel {
             self.view?.imageView?.removeFromSuperview()
             self.view?.imageView = nil
         }
+        self.view?.updateModel(self, animated: false)
     }
     
     

@@ -109,19 +109,23 @@ private final class AnimatedClueRowView: HorizontalRowView {
             return
         }
         
-        self.sticker?.removeFromSuperlayer()
-        
-        let size = NSMakeSize(item.height - 15, item.height - 15)
-        
-        let sticker = InlineStickerItemLayer(context: item.context, file: item.clue, size: size)
-        
-        sticker.isPlayable = true
-        self.sticker = sticker
-        
-        containerView.layer?.addSublayer(sticker)
-        containerView.frame = bounds.insetBy(dx: 4, dy: 4)
+        if self.sticker?.file != item.clue {
+            self.sticker?.removeFromSuperlayer()
+            
+            let size = NSMakeSize(item.height - 15, item.height - 15)
+            
+            let sticker = InlineStickerItemLayer(context: item.context, file: item.clue, size: size)
+            
+            sticker.isPlayable = true
+            self.sticker = sticker
+            
+            containerView.layer?.addSublayer(sticker)
+            containerView.frame = bounds.insetBy(dx: 4, dy: 4)
 
-        sticker.frame = containerView.focus(size)
+            sticker.frame = containerView.focus(size)
+        }
+        
+      
     }
     
     override func layout() {

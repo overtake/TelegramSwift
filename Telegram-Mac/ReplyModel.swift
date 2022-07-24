@@ -211,6 +211,7 @@ class ReplyModel: ChatAccessoryModel {
             self.view?.imageView?.removeFromSuperview()
             self.view?.imageView = nil
         }
+        self.view?.updateModel(self, animated: false)
     }
     
     func make(with message:Message?, isLoading: Bool = true, display: Bool) -> Void {
