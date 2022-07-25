@@ -19,6 +19,52 @@ enum PaymentProvider : Equatable {
     case smartglocal
 }
 
+
+enum BotCheckoutPaymentMethod: Equatable {
+    case savedCredentials(BotPaymentSavedCredentials)
+    case webToken(BotCheckoutPaymentWebToken)
+    case other(BotPaymentMethod)
+    
+    var title: String {
+        switch self {
+            case let .savedCredentials(credentials):
+                switch credentials {
+                    case let .card(_, title):
+                        return title
+                }
+            case let .webToken(token):
+                return token.title
+            case let .other(method):
+                return method.title
+        }
+    }
+}
+
+
+
+
+
+private func availablePaymentMethods(form: BotPaymentForm, current: BotCheckoutPaymentMethod?) -> [BotCheckoutPaymentMethod] {
+    var methods: [BotCheckoutPaymentMethod] = []
+    for savedCredentials in form.savedCredentials {
+        if !methods.contains(.savedCredentials(savedCredentials)) {
+            methods.append(.savedCredentials(savedCredentials))
+        }
+    }
+    
+    if !form.additionalPaymentMethods.isEmpty {
+        methods.append(contentsOf: form.additionalPaymentMethods.map { .other($0) })
+    }
+    if let current = current {
+        if !methods.contains(current) {
+            methods.insert(current, at: 0)
+        }
+    }
+    return methods
+}
+
+
+
 func parseRequestedPaymentMethod(paymentForm: BotPaymentForm?) -> (String, PaymentsPaymentMethodAdditionalFields, PaymentProvider)? {
         
     if let paymentForm = paymentForm, let nativeProvider = paymentForm.nativeProvider, nativeProvider.name == "stripe" {
@@ -91,26 +137,6 @@ struct BotCheckoutPaymentWebToken: Equatable {
     let title: String
     let data: String
     var saveOnServer: Bool
-}
-
-enum BotCheckoutPaymentMethod: Equatable {
-    case savedCredentials(BotPaymentSavedCredentials)
-    case webToken(BotCheckoutPaymentWebToken)
-    case applePay
-    
-    var title: String {
-        switch self {
-            case let .savedCredentials(credentials):
-                switch credentials {
-                    case let .card(_, title):
-                        return title
-                }
-            case let .webToken(token):
-                return token.title
-            case .applePay:
-                return "Apple Pay"
-        }
-    }
 }
 
 
@@ -445,24 +471,44 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
     }, openPaymentMethod: {
         if let form = stateValue.with({ $0.form }), let value = parseRequestedPaymentMethod(paymentForm: form) {
             let addPayment:()->Void = {
-                showModal(with: PaymentsPaymentMethodController(context: context, fields: value.1, publishableKey: value.0, passwordMissing: form.passwordMissing, isTesting: form.invoice.isTest, provider: value.2, completion: { method in
-                    updateState { current in
-                        var current = current
-                        current.paymentMethod = method
-                        return current
-                    }
-                }), for: context.window)
+                
+                
+                let openNewCard:()->Void = {
+                    showModal(with: PaymentsPaymentMethodController(context: context, fields: value.1, publishableKey: value.0, passwordMissing: form.passwordMissing, isTesting: form.invoice.isTest, provider: value.2, completion: { method in
+                        updateState { current in
+                            var current = current
+                            current.paymentMethod = method
+                            return current
+                        }
+                    }), for: context.window)
+                }
+                
+                let methods = availablePaymentMethods(form: form, current: nil)
+                if methods.isEmpty {
+                    openNewCard()
+                } else {
+                    
+//                    strongSelf.present(BotCheckoutPaymentMethodSheetController(context: strongSelf.context, currentMethod: strongSelf.currentPaymentMethod, methods: methods, applyValue: { method in
+//                        applyPaymentMethod(method)
+//                    }, newCard: {
+//                        openNewCard(nil)
+//                    }, otherMethod: { url in
+//                        openNewCard(url)
+//                    }), ViewControllerPresentationArguments(presentationAnimation: .modalSheet))
+                }
+
+                
+                
             }
             
-            if let savedCredentials = form.savedCredentials {
-                showModal(with: PamentsSelectMethodController(context: context, cards: [savedCredentials], form: form, select: { selected in
+            if !form.savedCredentials.isEmpty {
+                showModal(with: PamentsSelectMethodController(context: context, cards: form.savedCredentials, form: form, select: { selected in
                     updateState { current in
                         var current = current
                         current.paymentMethod = .savedCredentials(selected)
                         return current
                     }
                 }, addNew: addPayment), for: context.window)
-               
             } else {
                 addPayment()
             }
@@ -686,7 +732,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
             if let savedInfo = form.0.savedInfo {
                 current.savedInfo = savedInfo
             }
-            if let savedCredentials = form.0.savedCredentials {
+            if let savedCredentials = form.0.savedCredentials.first {
                 current.paymentMethod = .savedCredentials(savedCredentials)
             }
 

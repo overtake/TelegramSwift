@@ -79,11 +79,13 @@ class EditMessageModel: ChatAccessoryModel {
         self.header = .init(attr, maximumNumberOfLines: 1)
         
         let messageAttr = NSMutableAttributedString()
-        _ = messageAttr.append(string: pullText(from:message) as String, color: message.media.isEmpty ? theme.colors.text : theme.colors.grayText, font: .normal(.text))
+        let text = chatListText(account: context.account, for: message, isPremium: context.isPremium, isReplied: true)
         
-        InlineStickerItem.apply(to: messageAttr, associatedMedia: message.associatedMedia, entities: message.textEntities?.entities ?? [], isPremium: context.isPremium)
+        messageAttr.append(text)
+        messageAttr.addAttribute(.foregroundColor, value: message.media.isEmpty ? theme.colors.text : theme.colors.grayText, range: messageAttr.range)
+        messageAttr.addAttribute(.font, value: NSFont.normal(.text), range: messageAttr.range)
         
-        self.message = .init(messageAttr)
+        self.message = .init(messageAttr, maximumNumberOfLines: 1)
         nodeReady.set(.single(true))
         updateImageIfNeeded()
         self.setNeedDisplay()

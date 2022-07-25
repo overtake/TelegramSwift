@@ -205,7 +205,8 @@ class ChatServiceItem: ChatRowItem {
                     var pinnedId: MessageId?
                     for attribute in message.attributes {
                         if let attribute = attribute as? ReplyMessageAttribute, let message = message.associatedMessages[attribute.messageId] {
-                            replyMessageText = message.restrictedText(context.contentSettings) ?? pullText(from: message) as String
+                            let text = (pullText(from: message) as String).replacingOccurrences(of: "\n", with: " ")
+                            replyMessageText = message.restrictedText(context.contentSettings) ?? text
                             pinnedId = attribute.messageId
                         }
                     }

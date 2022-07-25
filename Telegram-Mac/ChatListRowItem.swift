@@ -749,7 +749,7 @@ class ChatListRowItem: TableRowItem {
                 }
             }
         } else {
-            let messageText = chatListText(account: context.account, for: message, messagesCount: messages.count, embeddedState: embeddedState, folder: false, isPremium: context.isPremium)
+            let messageText = chatListText(account: context.account, for: message, messagesCount: messages.count, embeddedState: embeddedState, folder: false, applyUserName: false, isPremium: context.isPremium)
             self.messageText = messageText
             var textCutout: TextViewCutout?
             if !textLeftCutout.isZero {
