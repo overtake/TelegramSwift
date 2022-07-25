@@ -256,18 +256,18 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             
             if !isReplied {
                 if folder, let peer = peer {
-                    _ = attributedText.append(string: peer.displayTitle + "\n", color: theme.chatList.peerTextColor, font: .normal(.text))
+                    _ = attributedText.append(string: peer.displayTitle + "\r", color: theme.chatList.peerTextColor, font: .normal(.text))
                 }
                 if let author = message.author as? TelegramChannel, let peer = peer, peer.isGroup || peer.isSupergroup {
                     var peerText: String = (!message.flags.contains(.Incoming) ? "\(strings().chatListYou)" : author.displayTitle)
                     
-                    peerText += (folder ? ": " : "\n")
+                    peerText += (folder ? ": " : "\r")
                     _ = attributedText.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
                     _ = attributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))
                 } else if let author = message.author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, applyUserName {
                     var peerText: String = (author.id == account.peerId ? "\(strings().chatListYou)" : author.displayTitle)
                     
-                    peerText += (folder ? ": " : "\n")
+                    peerText += (folder ? ": " : "\r")
                     _ = attributedText.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
                     _ = attributedText.append(string: messageText as String, color: theme.chatList.grayTextColor, font: .normal(.text))
                 } else {
@@ -309,12 +309,16 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
                 }
             }
         }
+        if !applyUserName {
+            let range = attributedText.string.nsstring.range(of: effective.text)
+            if range.location != NSNotFound {
+                InlineStickerItem.apply(to: attributedText, associatedMedia: effective.associatedMedia, entities:  effective.entities, isPremium: isPremium, ignoreSpoiler: true, offset: range.location)
+            }
+            return attributedText.trimNewLinesToSpace
+        } else {
+            return attributedText
+        }
         
-        let range = attributedText.string.nsstring.range(of: effective.text)
-        if range.location != NSNotFound {
-            InlineStickerItem.apply(to: attributedText, associatedMedia: effective.associatedMedia, entities:  effective.entities, isPremium: isPremium, ignoreSpoiler: true, offset: range.location)
-        } 
-        return attributedText.trimNewLinesToSpace
 
     }
     return NSAttributedString()

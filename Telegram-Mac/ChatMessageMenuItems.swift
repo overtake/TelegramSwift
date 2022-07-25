@@ -268,7 +268,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             }, itemImage: MenuAnimation.menu_send_now.value))
             firstBlock.append(ContextMenuItem(strings().chatContextScheduledReschedule, handler: {
                 showModal(with: DateSelectorModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), mode: .schedule(peer.id), selectedAt: { date in
-                    _ = showModalProgress(signal: context.engine.messages.requestEditMessage(messageId: messageId, text: data.message.text, media: .keep, entities: data.message.textEntities, scheduleTime: Int32(min(date.timeIntervalSince1970, Double(scheduleWhenOnlineTimestamp)))), for: context.window).start()
+                    _ = showModalProgress(signal: context.engine.messages.requestEditMessage(messageId: messageId, text: data.message.text, media: .keep, entities: data.message.textEntities, inlineStickers: data.message.associatedMedia, scheduleTime: Int32(min(date.timeIntervalSince1970, Double(scheduleWhenOnlineTimestamp)))), for: context.window).start()
                }), for: context.window)
             }, itemImage: MenuAnimation.menu_schedule_message.value))
         }

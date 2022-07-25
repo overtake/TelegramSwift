@@ -81,6 +81,7 @@ final class SupportAccountContext {
         let value = self.contexts.remove(at: index)
         self.windows.append(value.context.window)
         value.context.window.orderOut(nil)
+        value.context.window.contentView?.removeAllSubviews()
     }
     
     func enumerateAccountContext(_ f:(AccountContext)->Void) {

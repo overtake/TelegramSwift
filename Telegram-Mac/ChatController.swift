@@ -2273,8 +2273,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                            
                         })
                     }
-                    
-                   
                 }
             }
         }
@@ -2389,7 +2387,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             
             if atDate == nil {
-                self.context.account.pendingUpdateMessageManager.add(messageId: state.message.id, text: inputState.inputText, media: state.editMedia, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities()), disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil)
+                self.context.account.pendingUpdateMessageManager.add(messageId: state.message.id, text: inputState.inputText, media: state.editMedia, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities()), inlineStickers: inputState.inlineMedia, disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil)
                 
                 self.chatInteraction.beginEditingMessage(nil)
                 self.chatInteraction.update({
@@ -2405,7 +2403,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
                 self.chatInteraction.update({$0.updatedUrlPreview(nil).updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedLoadingState(state.editMedia == .keep ? .loading : .progress(0.2))})})})
                 
-                self.chatInteraction.editDisposable.set((context.engine.messages.requestEditMessage(messageId: state.message.id, text: inputState.inputText, media: state.editMedia, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities()), disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil, scheduleTime: scheduleTime) |> deliverOnMainQueue).start(next: { [weak self] progress in
+                self.chatInteraction.editDisposable.set((context.engine.messages.requestEditMessage(messageId: state.message.id, text: inputState.inputText, media: state.editMedia, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities()), inlineStickers: inputState.inlineMedia, disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil, scheduleTime: scheduleTime) |> deliverOnMainQueue).start(next: { [weak self] progress in
                     guard let `self` = self else {return}
                     switch progress {
                     case let .progress(progress):

@@ -559,12 +559,12 @@ public final class TextViewLayout : Equatable {
             var lineHeight = fontLineHeight
             
             let lineString = attributedString.attributedSubstring(from: NSMakeRange(lastLineCharacterIndex, lineCharacterCount))
-//            if lineString.string.containsEmoji, !isBigEmoji {
-//                lineHeight += floor(fontDescent)
-//                if first {
-//                    lineOriginY += floor(fontDescent)
-//                }
-//            }
+            if lineString.string.containsEmoji, !isBigEmoji {
+                lineHeight += floor(fontDescent)
+                if first {
+                    lineOriginY += floor(fontDescent)
+                }
+            }
             
             if maximumNumberOfLines != 0 && lines.count == (Int(maximumNumberOfLines) - 1) && lineCharacterCount > 0 {
                 if first {
@@ -734,7 +734,7 @@ public final class TextViewLayout : Equatable {
         if lines.count == 1 {
             let line = lines[0]
             if !line.embeddedItems.isEmpty {
-                layoutSize.height += isBigEmoji ? 8 : 1
+                layoutSize.height += isBigEmoji ? 8 : 2
             }
         }
 

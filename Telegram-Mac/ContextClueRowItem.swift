@@ -287,12 +287,12 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
         button.set(image: theme.icons.disableEmojiPrediction, for: .Normal)
         _ = button.sizeToFit(NSZeroSize, NSMakeSize(40, 40), thatFit: true)
         
-        tableView.beginTableUpdates()
-        tableView.removeAll(redraw: true, animation: .none)
+       
         if let item = item as? ContextClueRowItem {
             
             button.isHidden = !item.canDisablePrediction
-            
+            tableView.beginTableUpdates()
+            tableView.removeAll(redraw: true, animation: .none)
             for clue in item.animated {
                 _ = tableView.addItem(item: AnimatedClueRowItem(bounds.size, context: item.context, clue: clue), animation: .none)
             }
@@ -300,12 +300,12 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
             for clue in item.clues {
                 _ = tableView.addItem(item: ClueRowItem(bounds.size, clue: clue), animation: .none)
             }
+            tableView.endTableUpdates()
             if let selectedIndex = item.selectedIndex {
                 let item = tableView.item(at: selectedIndex)
                 _ = tableView.select(item: item)
             }
         }
-        tableView.endTableUpdates()
         
         if let selectedItem = tableView.selectedItem() {
             tableView.scroll(to: .center(id: selectedItem.stableId, innerId: nil, animated: animated, focus: .init(focus: false), inset: 0))

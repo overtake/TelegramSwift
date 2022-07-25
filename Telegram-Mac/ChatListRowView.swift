@@ -697,7 +697,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                      self.containerView.addSubview(current)
                  }
                  current.update(messageText)
-                 
                  updateInlineStickers(context: item.context, view: current, textLayout: messageText)
                  
              } else if let view = self.messageTextView {
