@@ -103,10 +103,10 @@ public extension NSAttributedString {
         let string:NSMutableAttributedString = self.mutableCopy() as! NSMutableAttributedString
         
        
-        var range = string.string.nsstring.rangeOfCharacter(from: NSCharacterSet.newlines)
+        var range = string.string.nsstring.range(of: "\n")
         while !string.string.isEmpty, range.location != NSNotFound {
             string.replaceCharacters(in: range, with: " ")
-            range = string.string.nsstring.rangeOfCharacter(from: NSCharacterSet.newlines)
+            range = string.string.nsstring.range(of: "\n")
         }
      
         

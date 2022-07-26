@@ -311,7 +311,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
 
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .stickers(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsStickers, icon: theme.icons.settingsStickers, activeIcon: theme.icons.settingsStickersActive, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsStickersAndEmoji, icon: theme.icons.settingsStickers, activeIcon: theme.icons.settingsStickersActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(InstalledStickerPacksController(arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .notifications(_, viewType, status):

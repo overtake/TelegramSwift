@@ -224,15 +224,15 @@ class SlotsMediaContentView: ChatMediaContentView {
             
             
             
-            var spinViews:[LottiePlayerView] = [self.spin1Player, self.spin2Player, self.spin3Player]
+            let spinViews:[LottiePlayerView] = [self.spin1Player, self.spin2Player, self.spin3Player]
             
             for (i, index) in indexes.enumerated() {
                 let view = spinViews[i]
                 let spinData = data[index]
                 if let data = spinData.1 {
                     let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(spinData.2.id), size: size), cachePurpose: .none, playPolicy: spinPolicy, maximumFps: 60)
-                    if sent && view.animation != nil {
-                        view.animation?.triggerOn = (.first, { [weak view] in
+                    if sent && view.contextAnimation != nil {
+                        view.contextAnimation?.triggerOn = (.first, { [weak view] in
                             view?.set(animation)
                         }, {})
                     } else {
