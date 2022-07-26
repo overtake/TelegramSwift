@@ -738,8 +738,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         let emojies = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000)
 
         
-        
-        actionsDisposable.add(combineLatest(emojies, context.account.viewTracker.featuredEmojiPacks()).start(next: { view, featured in
+        actionsDisposable.add(combineLatest(emojies, context.account.viewTracker.featuredEmojiPacks(), context.account.postbox.peerView(id: context.peerId)).start(next: { view, featured, peerView in
             updateState { current in
                 var current = current
                 var sections: [State.Section] = []
@@ -765,21 +764,15 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                         sections.append(.init(info: item.info, items: item.topItems, installed: false))
                     }
                 }
-                
+                if let peer = peerView.peers[peerView.peerId] {
+                    current.peer = .init(peer)
+                }
                 current.sections = sections
                 return current
             }
         }))
         
-        actionsDisposable.add(context.account.postbox.peerView(id: context.peerId).start(next: { view in
-            updateState { current in
-                var current = current
-                if let peer = view.peers[view.peerId] {
-                    current.peer = .init(peer)
-                }
-                return current
-            }
-        }))
+
             
          self.onDeinit = {
              actionsDisposable.dispose()

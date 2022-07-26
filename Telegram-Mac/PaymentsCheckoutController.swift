@@ -444,6 +444,35 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
+    
+    let addPaymentMethod:(String, BotPaymentForm)->Void = { url, paymentForm in
+        showModal(with: PaymentWebInteractionController(context: context, url: url, intent: .addPaymentMethod({ token in
+           
+            let canSave = paymentForm.canSaveCredentials && !paymentForm.passwordMissing
+            if canSave {
+                confirm(for: context.window, information: strings().checkoutInfoSaveInfoHelp, okTitle: strings().modalYes, cancelTitle: strings().modalNotNow, successHandler: { _ in
+                    updateState { current in
+                        var current = current
+                        current.paymentMethod = .webToken(.init(title: token.title, data: token.data, saveOnServer: true))
+                        return current
+                    }
+                }, cancelHandler: {
+                    updateState { current in
+                        var current = current
+                        current.paymentMethod = .webToken(token)
+                        return current
+                    }
+                })
+            } else {
+                updateState { current in
+                    var current = current
+                    current.paymentMethod = .webToken(token)
+                    return current
+                }
+            }
+
+        })), for: context.window)
+    }
 
     let arguments = Arguments(context: context, openForm: { focus in
         let state = stateValue.with({ $0 })
@@ -487,18 +516,12 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
                 if methods.isEmpty {
                     openNewCard()
                 } else {
-                    
-//                    strongSelf.present(BotCheckoutPaymentMethodSheetController(context: strongSelf.context, currentMethod: strongSelf.currentPaymentMethod, methods: methods, applyValue: { method in
-//                        applyPaymentMethod(method)
-//                    }, newCard: {
-//                        openNewCard(nil)
-//                    }, otherMethod: { url in
-//                        openNewCard(url)
-//                    }), ViewControllerPresentationArguments(presentationAnimation: .modalSheet))
+                    showModal(with: PaymentMethodController(context: context, methods: methods, newCard: openNewCard, newByUrl: { url in
+                        if let paymentForm = stateValue.with({ $0.form }) {
+                            addPaymentMethod(url, paymentForm)
+                        }
+                    }), for: context.window)
                 }
-
-                
-                
             }
             
             if !form.savedCredentials.isEmpty {
@@ -514,32 +537,7 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
             }
             
         } else if let paymentForm = stateValue.with({ $0.form }) {
-            showModal(with: PaymentWebInteractionController(context: context, url: paymentForm.url, intent: .addPaymentMethod({ token in
-               
-                let canSave = paymentForm.canSaveCredentials && !paymentForm.passwordMissing
-                if canSave {
-                    confirm(for: context.window, information: strings().checkoutInfoSaveInfoHelp, okTitle: strings().modalYes, cancelTitle: strings().modalNotNow, successHandler: { _ in
-                        updateState { current in
-                            var current = current
-                            current.paymentMethod = .webToken(.init(title: token.title, data: token.data, saveOnServer: true))
-                            return current
-                        }
-                    }, cancelHandler: {
-                        updateState { current in
-                            var current = current
-                            current.paymentMethod = .webToken(token)
-                            return current
-                        }
-                    })
-                } else {
-                    updateState { current in
-                        var current = current
-                        current.paymentMethod = .webToken(token)
-                        return current
-                    }
-                }
-
-            })), for: context.window)
+            addPaymentMethod(paymentForm.url, paymentForm)
         }
     }, pay: { savedCredentialsToken in
         guard let paymentMethod = stateValue.with ({ $0.paymentMethod }) else {
