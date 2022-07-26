@@ -616,6 +616,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow
             }
         }
+        updatePlayerIfNeeded()
     }
     
     

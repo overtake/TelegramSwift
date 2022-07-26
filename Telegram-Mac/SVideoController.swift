@@ -139,7 +139,6 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     
     private func updateIdleTimer() {
         NSCursor.unhide()
-         
         hideOnIdleDisposable.set((Signal<NoValue, NoError>.complete() |> delay(1.0, queue: Queue.mainQueue())).start(completed: { [weak self] in
             guard let `self` = self else {return}
             let hide = !self.genericView.isInMenu
@@ -240,11 +239,11 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             return .rejected
         }, with: self, for: .leftMouseUp, priority: .modal)
         
-        self.updateControls = SwiftSignalKit.Timer(timeout: 2.0, repeat: true, completion: { [weak self] in
-            self?.updateControlVisibility()
-        }, queue: .mainQueue())
-        
-        self.updateControls?.start()
+//        self.updateControls = SwiftSignalKit.Timer(timeout: 2.0, repeat: true, completion: { [weak self] in
+//            self?.updateControlVisibility()
+//        }, queue: .mainQueue())
+//
+//        self.updateControls?.start()
         
     }
     

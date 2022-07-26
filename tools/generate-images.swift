@@ -744,6 +744,7 @@ func initialize() -> [String] {
     array.append("notification_sound_add")
     
     array.append("premium_lock")
+    array.append("premium_lock_gray")
     array.append("premium_plus")
 
     array.append("premium_account")

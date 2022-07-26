@@ -8468,6 +8468,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var premium_lock_gray: CGImage {
+      if let image = cached.with({ $0["premium_lock_gray"] }) {
+          return image
+      } else {
+          let image = _premium_lock_gray()
+          _ = cached.modify { current in 
+              var current = current
+              current["premium_lock_gray"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var premium_plus: CGImage {
       if let image = cached.with({ $0["premium_plus"] }) {
           return image
@@ -9289,6 +9302,7 @@ public final class TelegramIconsTheme {
   private let _gallery_pip_play: ()->CGImage
   private let _notification_sound_add: ()->CGImage
   private let _premium_lock: ()->CGImage
+  private let _premium_lock_gray: ()->CGImage
   private let _premium_plus: ()->CGImage
   private let _premium_account: ()->CGImage
   private let _premium_account_active: ()->CGImage
@@ -9955,6 +9969,7 @@ public final class TelegramIconsTheme {
       gallery_pip_play: @escaping()->CGImage,
       notification_sound_add: @escaping()->CGImage,
       premium_lock: @escaping()->CGImage,
+      premium_lock_gray: @escaping()->CGImage,
       premium_plus: @escaping()->CGImage,
       premium_account: @escaping()->CGImage,
       premium_account_active: @escaping()->CGImage,
@@ -10620,6 +10635,7 @@ public final class TelegramIconsTheme {
       self._gallery_pip_play = gallery_pip_play
       self._notification_sound_add = notification_sound_add
       self._premium_lock = premium_lock
+      self._premium_lock_gray = premium_lock_gray
       self._premium_plus = premium_plus
       self._premium_account = premium_account
       self._premium_account_active = premium_account_active

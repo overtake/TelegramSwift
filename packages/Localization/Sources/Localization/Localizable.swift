@@ -8281,6 +8281,8 @@ public final class L10n {
   public static var privacySettingsPeerSelectAddNew: String  { return L10n.tr("Localizable", "PrivacySettings.PeerSelect.AddNew") }
   /// Add Users or Groups
   public static var privacySettingsPeerSelectAddUserOrGroup: String  { return L10n.tr("Localizable", "PrivacySettings.PeerSelect.AddUserOrGroup") }
+  /// Only of subscribers of [Telegram Premium]() can restrict receiving voice messages.
+  public static var privacySettingsVoicePremiumError: String  { return L10n.tr("Localizable", "PrivacySettings.Voice.PremiumError") }
   /// Add Users
   public static var privacySettingsControllerAddUsers: String  { return L10n.tr("Localizable", "PrivacySettingsController.AddUsers") }
   /// Always Allow

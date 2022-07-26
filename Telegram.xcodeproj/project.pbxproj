@@ -44,6 +44,7 @@
 		271F78CA280972800040EE8F /* Avatar_EmojiList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271F78C9280972800040EE8F /* Avatar_EmojiList.swift */; };
 		271F78CC280985770040EE8F /* Avatar_BgListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271F78CB280985770040EE8F /* Avatar_BgListView.swift */; };
 		271F78CE280AD9520040EE8F /* durgerking.placeholder in Resources */ = {isa = PBXBuildFile; fileRef = 271F78CD280AD9520040EE8F /* durgerking.placeholder */; };
+		271FB882288FD7AE001C25DC /* PaymentMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271FB881288FD7AE001C25DC /* PaymentMethodController.swift */; };
 		27200F1B257C256E00574365 /* DevicesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27200F1A257C256E00574365 /* DevicesContext.swift */; };
 		2725785B259CF987001558E8 /* AnimatedBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2725785A259CF987001558E8 /* AnimatedBadgeView.swift */; };
 		2726BDCF2863258E0044D260 /* ChatAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2726BDCE2863258E0044D260 /* ChatAvatarView.swift */; };
@@ -1388,6 +1389,7 @@
 		271F78C9280972800040EE8F /* Avatar_EmojiList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Avatar_EmojiList.swift; sourceTree = "<group>"; };
 		271F78CB280985770040EE8F /* Avatar_BgListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Avatar_BgListView.swift; sourceTree = "<group>"; };
 		271F78CD280AD9520040EE8F /* durgerking.placeholder */ = {isa = PBXFileReference; lastKnownFileType = file; path = durgerking.placeholder; sourceTree = "<group>"; };
+		271FB881288FD7AE001C25DC /* PaymentMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentMethodController.swift; sourceTree = "<group>"; };
 		27200F1A257C256E00574365 /* DevicesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesContext.swift; sourceTree = "<group>"; };
 		2725785A259CF987001558E8 /* AnimatedBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedBadgeView.swift; sourceTree = "<group>"; };
 		2726BDCE2863258E0044D260 /* ChatAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatAvatarView.swift; sourceTree = "<group>"; };
@@ -2977,6 +2979,7 @@
 				271B783D25ECD94B007144D7 /* PamentsSelectMethodController.swift */,
 				270202BE261A1BF500CFCE6D /* PaymentsTipsRowItem.swift */,
 				27F4F1832846571900A3B4D4 /* PaymentsCheckoutRecurrentRowItem.swift */,
+				271FB881288FD7AE001C25DC /* PaymentMethodController.swift */,
 			);
 			name = payments;
 			sourceTree = "<group>";
@@ -6261,6 +6264,7 @@
 				27A69773273D0ADF00B33415 /* GroupCallSchedule.swift in Sources */,
 				27A69774273D0ADF00B33415 /* GroupCallRecorderRowItem.swift in Sources */,
 				27A69775273D0ADF00B33415 /* GroupCallInviteRowItem.swift in Sources */,
+				271FB882288FD7AE001C25DC /* PaymentMethodController.swift in Sources */,
 				27A69776273D0ADF00B33415 /* GroupCallSpeakingTooltipView.swift in Sources */,
 				27A69777273D0ADF00B33415 /* GroupCallAvatarView.swift in Sources */,
 				27A69778273D0ADF00B33415 /* GroupCallTileRowItem.swift in Sources */,
