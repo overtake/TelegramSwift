@@ -131,6 +131,8 @@ public final class L10n {
   public static var accountSettingsSetUsername: String  { return L10n.tr("Localizable", "AccountSettings.SetUsername") }
   /// Stickers
   public static var accountSettingsStickers: String  { return L10n.tr("Localizable", "AccountSettings.Stickers") }
+  /// Stickers and Emoji
+  public static var accountSettingsStickersAndEmoji: String  { return L10n.tr("Localizable", "AccountSettings.StickersAndEmoji") }
   /// Appearance
   public static var accountSettingsTheme: String  { return L10n.tr("Localizable", "AccountSettings.Theme") }
   /// Username
@@ -4213,6 +4215,8 @@ public final class L10n {
   public static var createChannelsTooMuch: String  { return L10n.tr("Localizable", "Create.ChannelsTooMuch") }
   /// Group Name
   public static var createGroupNameHolder: String  { return L10n.tr("Localizable", "CreateGroup.NameHolder") }
+  /// Artists are welcome to add their own emoji sets using our @stickers bot.
+  public static var customEmojiInfo: String  { return L10n.tr("Localizable", "CustomEmoji.Info") }
   /// Night Mode
   public static var darkModeConfirmNightModeHeader: String  { return L10n.tr("Localizable", "DarkMode.Confirm.NightMode.Header") }
   /// Disable
@@ -5469,6 +5473,8 @@ public final class L10n {
   public static var inputPasswordControllerErrorWrongPassword: String  { return L10n.tr("Localizable", "InputPasswordController.Error.WrongPassword") }
   /// Archived Stickers
   public static var installedStickersArchived: String  { return L10n.tr("Localizable", "InstalledStickers.Archived") }
+  /// Custom Emoji
+  public static var installedStickersCustomEmoji: String  { return L10n.tr("Localizable", "InstalledStickers.CustomEmoji") }
   /// Artists are welcome to add their own sticker sets using our @stickers bot.\n\nTap on a sticker to view and add the whole set.
   public static var installedStickersDescrpiption: String  { return L10n.tr("Localizable", "InstalledStickers.Descrpiption") }
   /// Loop Animated Stickers
@@ -8281,7 +8287,7 @@ public final class L10n {
   public static var privacySettingsPeerSelectAddNew: String  { return L10n.tr("Localizable", "PrivacySettings.PeerSelect.AddNew") }
   /// Add Users or Groups
   public static var privacySettingsPeerSelectAddUserOrGroup: String  { return L10n.tr("Localizable", "PrivacySettings.PeerSelect.AddUserOrGroup") }
-  /// Only of subscribers of [Telegram Premium]() can restrict receiving voice messages.
+  /// Only of subscribers of [Telegram Premium]() can restrict receiving Voice and Video Messages.
   public static var privacySettingsVoicePremiumError: String  { return L10n.tr("Localizable", "PrivacySettings.Voice.PremiumError") }
   /// Add Users
   public static var privacySettingsControllerAddUsers: String  { return L10n.tr("Localizable", "PrivacySettingsController.AddUsers") }
