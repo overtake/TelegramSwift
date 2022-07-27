@@ -97,11 +97,11 @@ final class EmojiesSectionRowItem : GeneralRowItem {
             self.nameLayout = nil
         }
         
-        if let info = info {
+        if let _ = info {
             if isPremium && !context.isPremium {
-                self.unlockText = (strings().emojiPackUnlock(info.title), true)
+                self.unlockText = (strings().emojiPackUnlockCountable(items.count), true)
             } else if !installed {
-                self.unlockText = (strings().emojiPackAdd(info.title), false)
+                self.unlockText = (strings().emojiPackAddCountable(items.count), false)
             } else {
                 self.unlockText = nil
             }
@@ -129,7 +129,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         var height: CGFloat = 0
         
         if let nameLayout = nameLayout {
-            height += nameLayout.layoutSize.height + 5
+            height += nameLayout.layoutSize.height + (unlockText != nil ? 15 : 5)
         }
         
         height += self.itemSize.height * CGFloat(ceil(CGFloat(items.count) / 8.0))
@@ -137,9 +137,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         if let _ = nameLayout {
             height += 5
         }
-        if let _ = self.unlockText {
-            height += 40 + 5
-        }
+
         
         return height
     }
@@ -215,15 +213,12 @@ private final class EmojiesSectionRowView : TableRowView {
         }
         
         func update(name: String, width: CGFloat, context: AccountContext, table: TableView?) -> NSSize {
-            let layout = TextViewLayout(.initialize(string: name, color: NSColor.white, font: .medium(.text)))
+            let layout = TextViewLayout(.initialize(string: name, color: NSColor.white, font: .medium(12)))
             layout.measure(width: .greatestFiniteMagnitude)
             textView.update(layout)
             
-                        
-
             container.setFrameSize(NSMakeSize(layout.layoutSize.width, layout.layoutSize.height))
-            
-            let size = NSMakeSize(width, 40)
+            let size = NSMakeSize(container.frame.width + 20, layout.layoutSize.height + 10)
             
 
             needsLayout = true
@@ -334,12 +329,12 @@ private final class EmojiesSectionRowView : TableRowView {
         
         var contentRect = bounds
         if let nameView = nameView {
-            contentRect = contentRect.offsetBy(dx: 0, dy: nameView.frame.height + 5)
+            contentRect = contentRect.offsetBy(dx: 0, dy: nameView.frame.height + (unlock != nil ? 15 : 5))
         }
         transition.updateFrame(view: contentView, frame: contentRect)
         
         if let unlock = unlock {
-            transition.updateFrame(view: unlock, frame: CGRect(origin: CGPoint(x: 15, y: size.height - unlock.frame.height), size: unlock.frame.size))
+            transition.updateFrame(view: unlock, frame: CGRect(origin: CGPoint(x: size.width - unlock.frame.width - 15, y: 0), size: unlock.frame.size))
         }
     }
     
@@ -381,7 +376,12 @@ private final class EmojiesSectionRowView : TableRowView {
             return
         }
         
-       
+        let transition: ContainedViewLayoutTransition
+        if animated {
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        } else {
+            transition = .immediate
+        }
         
         if !item.context.isPremium && item.isPremium {
             let current: ImageView
@@ -453,46 +453,63 @@ private final class EmojiesSectionRowView : TableRowView {
         
         if let unlockText = item.unlockText {
             if unlockText.1 {
+                let isNew: Bool
                 let current: UnlockView
                 if let view = self.unlock as? UnlockView {
                     current = view
+                    isNew = false
                 } else {
                     if let view = unlock {
                         performSubviewRemoval(view, animated: animated)
                     }
-                    let rect = CGRect(origin: NSMakePoint(15, frame.height - 40), size: NSMakeSize(frame.width - 30, 40))
                     current = UnlockView(frame: rect)
                     current.layer?.cornerRadius = 10
                     self.unlock = current
                     self.addSubview(current)
+                    isNew = true
                 }
-                let _ = current.update(name: unlockText.0, width: frame.width - 30, context: item.context, table: item.table)
-                
+                let size = current.update(name: unlockText.0, width: frame.width - 30, context: item.context, table: item.table)
+                let rect = CGRect(origin: NSMakePoint(frame.width - size.width - 15, 0), size: size)
+                if isNew {
+                    current.frame = rect
+                } else {
+                    transition.updateFrame(view: current, frame: rect)
+                }
                 current.removeAllHandlers()
                 current.set(handler: { [weak item] _ in
                     item?.invokeLockAction()
                 }, for: .Click)
             } else {
                 let current: TitleButton
+                let isNew: Bool
                 if let view = self.unlock as? TitleButton {
                     current = view
+                    isNew = false
                 } else {
                     if let view = unlock {
                         performSubviewRemoval(view, animated: animated)
                     }
-                    let rect = CGRect(origin: NSMakePoint(15, frame.height - 40), size: NSMakeSize(frame.width - 30, 40))
-                    current = TitleButton(frame: rect)
+                    current = TitleButton(frame: .zero)
                     current.autohighlight = false
                     current.scaleOnClick = true
                     current.layer?.cornerRadius = 10
                     self.unlock = current
                     self.addSubview(current)
+                    isNew = true
                 }
                 current.set(background: theme.colors.accent, for: .Normal)
-                current.set(font: .medium(.text), for: .Normal)
+                current.set(font: .medium(12), for: .Normal)
                 current.set(color: theme.colors.underSelectedColor, for: .Normal)
                 current.set(text: unlockText.0, for: .Normal)
-                current.sizeToFit(.zero, NSMakeSize(frame.width - 30, 40), thatFit: true)
+                current.sizeToFit(NSMakeSize(10, 10), .zero, thatFit: false)
+                
+                let rect = CGRect(origin: NSMakePoint(frame.width - current.frame.size.width - 15, 0), size: current.frame.size)
+                if isNew {
+                    current.frame = rect
+                } else {
+                    transition.updateFrame(view: current, frame: rect)
+                }
+                
                 current.removeAllHandlers()
                 current.set(handler: { [weak item] _ in
                     item?.invokeLockAction()
@@ -504,12 +521,10 @@ private final class EmojiesSectionRowView : TableRowView {
             self.unlock = nil
         }
         
-        let transition: ContainedViewLayoutTransition
-        if animated {
-            transition = .animated(duration: 0.2, curve: .easeOut)
-        } else {
-            transition = .immediate
+        if let unlock = unlock {
+            unlock.layer?.cornerRadius = unlock.frame.height / 2
         }
+        
         self.updateLayout(size: frame.size, transition: transition)
         
         

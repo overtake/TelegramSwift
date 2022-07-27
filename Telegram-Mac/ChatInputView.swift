@@ -139,6 +139,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         
         
         textView.textColor = theme.colors.text
+        textView.selectedTextColor = theme.colors.selectText
         textView.linkColor = theme.colors.link
         textView.textFont = .normal(CGFloat(theme.fontSize))
         
@@ -203,6 +204,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         contentView.backgroundColor = theme.colors.background
         textView.background = theme.colors.background
         textView.textColor = theme.colors.text
+        textView.selectedTextColor = theme.colors.selectText
         actionsView.backgroundColor = theme.colors.background
         blockedActionView?.disableActions()
         textView.textFont = .normal(theme.fontSize)

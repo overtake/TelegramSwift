@@ -1001,6 +1001,12 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
     _textView.textColor = _textColor;
     [self textDidChange:nil];
 }
+
+-(void)setSelectTextColor:(NSColor *)selectTextColor {
+    _selectedTextColor = selectTextColor;
+    [self refreshAttributes];
+}
+    
     
 -(void)setTextFont:(NSFont *)textFont {
     _textFont = textFont;
@@ -1031,6 +1037,8 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
     newSize.height = MIN(MAX(newSize.height,_min_height),_max_height);
     
     [self updatePlaceholder:self.animates newSize:newSize];
+    
+    [self refreshAttachments];
 }
     
 -(void)mouseDown:(NSEvent *)theEvent {
@@ -1105,7 +1113,7 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
         }
         if (view != nil) {
             rect.size.height = view.frame.size.height;
-            rect.origin.y -= 1;
+            rect.origin.y -= 2;
             view.frame = rect;
             if(view != nil && view.superview != _textView) {
                 [_textView addSubview:view];
@@ -1488,8 +1496,14 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
         
         
         [self.textView.textStorage addAttribute:NSForegroundColorAttributeName value:self.textColor range:NSMakeRange(0, string.length)];
-        
        
+        if (self.selectedTextColor != nil) {
+            [_textView setSelectedTextAttributes:
+                 [NSDictionary dictionaryWithObjectsAndKeys:
+                  self.selectedTextColor, NSBackgroundColorAttributeName,
+                  nil]];
+        }
+        
         
         NSArray<NSString *> *attributes = @[TGCustomLinkAttributeName, TGSpoilerAttributeName];
         
@@ -1900,7 +1914,7 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
 -(void)setBackgroundColor:(NSColor * __nonnull)color {
     self.scrollView.backgroundColor = color;
     self.textView.backgroundColor = color;
-    _placeholder.backgroundColor = [NSColor redColor];
+    _placeholder.backgroundColor = [NSColor clearColor];
 }
 
 @end

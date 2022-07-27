@@ -4215,7 +4215,7 @@ public final class L10n {
   public static var createChannelsTooMuch: String  { return L10n.tr("Localizable", "Create.ChannelsTooMuch") }
   /// Group Name
   public static var createGroupNameHolder: String  { return L10n.tr("Localizable", "CreateGroup.NameHolder") }
-  /// Artists are welcome to add their own emoji sets using our @stickers bot.
+  /// Artists are welcome to add their own emoji sets using our [@stickers]() bot.
   public static var customEmojiInfo: String  { return L10n.tr("Localizable", "CustomEmoji.Info") }
   /// Night Mode
   public static var darkModeConfirmNightModeHeader: String  { return L10n.tr("Localizable", "DarkMode.Confirm.NightMode.Header") }
@@ -4531,43 +4531,63 @@ public final class L10n {
   public static var emojiTravelAndPlaces: String  { return L10n.tr("Localizable", "Emoji.TravelAndPlaces") }
   /// Remove
   public static var emojiContextRemove: String  { return L10n.tr("Localizable", "Emoji.Context.Remove") }
-  /// Add %@
-  public static func emojiPackAdd(_ p1: String) -> String {
-    return L10n.tr("Localizable", "EmojiPack.Add", p1)
-  }
   /// %d
   public static func emojiPackAddCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "EmojiPack.Add_countable", p1)
   }
-  /// Add %d Emojies
+  /// Add %d
   public static func emojiPackAddFew(_ p1: Int) -> String {
     return L10n.tr("Localizable", "EmojiPack.Add_few", p1)
   }
-  /// Add %d Emojies
+  /// Add %d
   public static func emojiPackAddMany(_ p1: Int) -> String {
     return L10n.tr("Localizable", "EmojiPack.Add_many", p1)
   }
-  /// Add %d Emoji
+  /// Add %d
   public static func emojiPackAddOne(_ p1: Int) -> String {
     return L10n.tr("Localizable", "EmojiPack.Add_one", p1)
   }
-  /// Add %d Emojies
+  /// Add %d
   public static func emojiPackAddOther(_ p1: Int) -> String {
     return L10n.tr("Localizable", "EmojiPack.Add_other", p1)
   }
-  /// Add %d Emojies
+  /// Add %d
   public static func emojiPackAddTwo(_ p1: Int) -> String {
     return L10n.tr("Localizable", "EmojiPack.Add_two", p1)
   }
-  /// Add %d Emojies
+  /// Add %d
   public static func emojiPackAddZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "EmojiPack.Add_zero", p1)
   }
   /// Subscribe to Telegram Premium to unlock this emoji. [Read More]()
   public static var emojiPackPremiumAlert: String  { return L10n.tr("Localizable", "EmojiPack.PremiumAlert") }
-  /// Unlock %@
-  public static func emojiPackUnlock(_ p1: String) -> String {
-    return L10n.tr("Localizable", "EmojiPack.Unlock", p1)
+  /// %d
+  public static func emojiPackUnlockCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Unlock_countable", p1)
+  }
+  /// Unlock %d
+  public static func emojiPackUnlockFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Unlock_few", p1)
+  }
+  /// Unlock %d
+  public static func emojiPackUnlockMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Unlock_many", p1)
+  }
+  /// Unlock %d
+  public static func emojiPackUnlockOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Unlock_one", p1)
+  }
+  /// Unlock %d
+  public static func emojiPackUnlockOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Unlock_other", p1)
+  }
+  /// Unlock %d
+  public static func emojiPackUnlockTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Unlock_two", p1)
+  }
+  /// Unlock %d
+  public static func emojiPackUnlockZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Unlock_zero", p1)
   }
   /// %@ has been added to your emojies.
   public static func emojiPackAddedInfo(_ p1: String) -> String {

@@ -44,7 +44,9 @@ class ChatAccessoryView : Button {
     
     override func layout() {
         super.layout()
-        self.updateLayout(self.frame.size, transition: .immediate)
+        if let model = model {
+            updateModel(model, animated: false)
+        }
     }
     
     

@@ -220,6 +220,10 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
         firstNameTextView.textColor = theme.colors.text
         lastNameTextView.textColor = theme.colors.text
         
+        firstNameTextView.selectedTextColor = theme.colors.selectText
+        lastNameTextView.selectedTextColor = theme.colors.selectText
+
+        
         firstNameTextView.setBackgroundColor(backdorColor)
         lastNameTextView.setBackgroundColor(backdorColor)
         

@@ -229,6 +229,7 @@ fileprivate class PreviewSenderView : Control {
         textView.background = theme.colors.background
         textView.textFont = .normal(.text)
         textView.textColor = theme.colors.text
+        textView.selectedTextColor = theme.colors.selectText
         textView.linkColor = theme.colors.link
         textView.max_height = 180
         
