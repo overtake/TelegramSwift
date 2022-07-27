@@ -30,7 +30,7 @@ struct PremiumGiftOption : Equatable {
         }.max()!
         
         
-        let discountPercent = Int(ceil((Float(highestOptionMonthly) - Float(optionMonthly)) / Float(highestOptionMonthly) * 100))
+        let discountPercent = Int(floor((Float(highestOptionMonthly) - Float(optionMonthly)) / Float(highestOptionMonthly) * 100))
         return discountPercent
     }
     

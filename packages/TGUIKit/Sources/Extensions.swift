@@ -1993,6 +1993,28 @@ public func performSubviewRemoval(_ view: NSView, animated: Bool, duration: Doub
     }
 }
 
+public func performSublayerRemoval(_ view: CALayer, animated: Bool, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut, checkCompletion: Bool = false, scale: Bool = false, scaleTo: CGFloat? = nil, completed:((Bool)->Void)? = nil) {
+    if animated {
+        view.animateAlpha(from: 1, to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak view] finish in
+            completed?(finish)
+            if checkCompletion {
+                if finish {
+                    view?.removeFromSuperlayer()
+                }
+            } else {
+                view?.removeFromSuperlayer()
+            }
+        })
+        if scale {
+            view.animateScaleCenter(from: 1, to: 0.1, duration: duration, removeOnCompletion: false, timingFunction: timingFunction)
+        } else if let scaleTo = scaleTo {
+            view.animateScaleCenter(from: 1, to: scaleTo, duration: duration, removeOnCompletion: false, timingFunction: timingFunction)
+        }
+    } else {
+        view.removeFromSuperlayer()
+    }
+}
+
 public func performSubviewPosRemoval(_ view: NSView, pos: NSPoint, animated: Bool, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeInEaseOut) {
     if animated {
         view.layer?.animatePosition(from: view.frame.origin, to: pos, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak view] _ in
