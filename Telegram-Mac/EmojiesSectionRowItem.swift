@@ -99,7 +99,11 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         
         if let _ = info {
             if isPremium && !context.isPremium {
-                self.unlockText = (strings().emojiPackUnlockCountable(items.count), true)
+                if installed {
+                    self.unlockText = (strings().emojiPackRestoreCountable(items.count), true)
+                } else {
+                    self.unlockText = (strings().emojiPackUnlockCountable(items.count), true)
+                }
             } else if !installed {
                 self.unlockText = (strings().emojiPackAddCountable(items.count), false)
             } else {
@@ -313,7 +317,7 @@ private final class EmojiesSectionRowView : TableRowView {
             containerSize.height = max(nameView.frame.height, lockView.frame.height)
         }
 
-        transition.updateFrame(view: container, frame: CGRect(origin: NSMakePoint(20, 0), size: containerSize))
+        transition.updateFrame(view: container, frame: CGRect(origin: NSMakePoint(20, 5), size: containerSize))
         
         
         if let lockView = lockView {

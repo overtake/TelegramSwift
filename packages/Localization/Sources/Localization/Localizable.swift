@@ -4531,6 +4531,10 @@ public final class L10n {
   public static var emojiTravelAndPlaces: String  { return L10n.tr("Localizable", "Emoji.TravelAndPlaces") }
   /// Remove
   public static var emojiContextRemove: String  { return L10n.tr("Localizable", "Emoji.Context.Remove") }
+  /// ANIMATED EMOJI
+  public static var emojiSearchAnimatedEmoji: String  { return L10n.tr("Localizable", "Emoji.Search.AnimatedEmoji") }
+  /// EMOJI
+  public static var emojiSearchEmoji: String  { return L10n.tr("Localizable", "Emoji.Search.Emoji") }
   /// %d
   public static func emojiPackAddCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "EmojiPack.Add_countable", p1)
@@ -4561,6 +4565,34 @@ public final class L10n {
   }
   /// Subscribe to Telegram Premium to unlock this emoji. [Read More]()
   public static var emojiPackPremiumAlert: String  { return L10n.tr("Localizable", "EmojiPack.PremiumAlert") }
+  /// %d
+  public static func emojiPackRestoreCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Restore_countable", p1)
+  }
+  /// Restore %d
+  public static func emojiPackRestoreFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Restore_few", p1)
+  }
+  /// Restore %d
+  public static func emojiPackRestoreMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Restore_many", p1)
+  }
+  /// Restore %d
+  public static func emojiPackRestoreOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Restore_one", p1)
+  }
+  /// Restore %d
+  public static func emojiPackRestoreOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Restore_other", p1)
+  }
+  /// Restore %d
+  public static func emojiPackRestoreTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Restore_two", p1)
+  }
+  /// Restore %d
+  public static func emojiPackRestoreZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Restore_zero", p1)
+  }
   /// %d
   public static func emojiPackUnlockCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "EmojiPack.Unlock_countable", p1)

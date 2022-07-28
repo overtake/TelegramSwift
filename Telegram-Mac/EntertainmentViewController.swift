@@ -901,6 +901,12 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             }
         }
         
+        self.emoji.makeSearchCommand = { [weak self] command in
+            if self?.emoji.view.superview != nil, let view = self?.emoji.genericView.searchView  {
+                callSearchCmd(command, view)
+            }
+        }
+        
         
         let e_index: Int = 0
         let s_index: Int = mode == .selectAvatar ? 0 : 1
