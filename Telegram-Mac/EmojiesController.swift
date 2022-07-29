@@ -484,7 +484,7 @@ final class AnimatedEmojiesView : View {
         let searchDest = tableView.rectOf(index: 0).minY + (tableView.clipView.destination?.y ?? tableView.documentOffset.y)
                 
         transition.updateFrame(view: searchContainer, frame: NSMakeRect(0, min(max(tabs.frame.maxY - searchDest, 0), tabs.frame.maxY), size.width, 46))
-        transition.updateFrame(view: searchView, frame: searchContainer.focus(NSMakeSize(size.width - 30, 30)))
+        transition.updateFrame(view: searchView, frame: searchContainer.focus(NSMakeSize(size.width - 16, 30)))
         transition.updateFrame(view: searchBorder, frame: NSMakeRect(0, searchContainer.frame.height - .borderSize, size.width, .borderSize))
         
         transition.updateFrame(view: tableView, frame: NSMakeRect(0, tabs.frame.maxY, size.width, size.height - tabs.frame.maxY))
@@ -672,7 +672,6 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         }
         if self.isLoaded() == true {
             self.genericView.updateSearchState(state, animated: true)
-            self.genericView.tableView.scroll(to: .up(true))
         }
     }
     

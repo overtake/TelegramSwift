@@ -535,6 +535,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         let previous:Atomic<[InputContextEntry]> = Atomic(value: [])
         let initialSize = self.atomicSize
         let context = self.context
+        let mode = self.mode
         
         struct SearchGifsState {
             var request: String
@@ -548,7 +549,6 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         
         let searchState:Atomic<SearchGifsState> = Atomic(value: SearchGifsState(request: "", state: .None, values: [], nextOffset: "", tab: .recent))
         
-        let mode = self.mode
         
         let signal = combineLatest(queue: prepareQueue, context.account.postbox.combinedView(keys: [.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)]), self.searchValue.get(), tabsState.get(), loadNext.get()) |> mapToSignal { view, search, selectedTab, _ -> Signal<(TableUpdateTransition, GifTabEntryId), NoError> in
             

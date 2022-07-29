@@ -47,6 +47,7 @@
 		271FB882288FD7AE001C25DC /* PaymentMethodController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271FB881288FD7AE001C25DC /* PaymentMethodController.swift */; };
 		271FB884289014CE001C25DC /* CustomEmojiController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271FB883289014CE001C25DC /* CustomEmojiController.swift */; };
 		271FB8862893EB9A001C25DC /* GifKeyboardController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271FB8852893EB9A001C25DC /* GifKeyboardController.swift */; };
+		271FB88828943A70001C25DC /* GifKeyboardTabRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271FB88728943A70001C25DC /* GifKeyboardTabRowItem.swift */; };
 		27200F1B257C256E00574365 /* DevicesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27200F1A257C256E00574365 /* DevicesContext.swift */; };
 		2725785B259CF987001558E8 /* AnimatedBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2725785A259CF987001558E8 /* AnimatedBadgeView.swift */; };
 		2726BDCF2863258E0044D260 /* ChatAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2726BDCE2863258E0044D260 /* ChatAvatarView.swift */; };
@@ -1394,6 +1395,7 @@
 		271FB881288FD7AE001C25DC /* PaymentMethodController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentMethodController.swift; sourceTree = "<group>"; };
 		271FB883289014CE001C25DC /* CustomEmojiController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomEmojiController.swift; sourceTree = "<group>"; };
 		271FB8852893EB9A001C25DC /* GifKeyboardController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GifKeyboardController.swift; sourceTree = "<group>"; };
+		271FB88728943A70001C25DC /* GifKeyboardTabRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GifKeyboardTabRowItem.swift; sourceTree = "<group>"; };
 		27200F1A257C256E00574365 /* DevicesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesContext.swift; sourceTree = "<group>"; };
 		2725785A259CF987001558E8 /* AnimatedBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedBadgeView.swift; sourceTree = "<group>"; };
 		2726BDCE2863258E0044D260 /* ChatAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatAvatarView.swift; sourceTree = "<group>"; };
@@ -4739,6 +4741,7 @@
 				C2B6A9641E8519FA00A441B7 /* RecentGIFRowItem.swift */,
 				D076A07D248A5F890077BC0A /* GifPanelTabRowItem.swift */,
 				271FB8852893EB9A001C25DC /* GifKeyboardController.swift */,
+				271FB88728943A70001C25DC /* GifKeyboardTabRowItem.swift */,
 			);
 			name = gifs;
 			sourceTree = "<group>";
@@ -6492,6 +6495,7 @@
 				D0A75F2724486B6D001F84A0 /* EditImageCanvasColorPicker.swift in Sources */,
 				27F4F194284F654400A3B4D4 /* TranscribeAudioTextView.swift in Sources */,
 				C232EA0E1E155E9400C4D38C /* PeersListController.swift in Sources */,
+				271FB88828943A70001C25DC /* GifKeyboardTabRowItem.swift in Sources */,
 				C2C415E51FA33D1A00FF36F4 /* InputFormatterPopover.swift in Sources */,
 				9F0AE6C02199CDB500A8B53A /* SVideoView.swift in Sources */,
 				C232EA101E156DE100C4D38C /* ContextCommandRowItem.swift in Sources */,

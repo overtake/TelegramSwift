@@ -648,7 +648,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
 
     private let emoji:EmojiesController
     private let stickers:NStickersViewController
-    private let gifs:GIFViewController
+    private let gifs:GifKeyboardController
     
     private let searchState = ValuePromise<SearchState>(.init(state: .None, request: nil))
     
@@ -656,9 +656,9 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         if self.gifs.view.superview != nil  {
             return self.gifs.genericView.searchView
         }
-//        if self.emoji.view.superview != nil  {
-//            return self.emoji.genericView.searchView
-//        }
+        if self.emoji.view.superview != nil  {
+            return self.emoji.genericView.searchView
+        }
         if self.stickers.view.superview != nil  {
             return self.stickers.genericView.searchView
         }
@@ -738,7 +738,7 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         self.cap = SidebarCapViewController(context)
         self.emoji = EmojiesController(context)
         self.stickers = NStickersViewController(context)
-        self.gifs = GIFViewController(context)
+        self.gifs = GifKeyboardController(context)
 
         self.stickers.mode = mode
         self.gifs.mode = mode

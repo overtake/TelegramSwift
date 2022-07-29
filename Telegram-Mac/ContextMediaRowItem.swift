@@ -111,7 +111,7 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
     
     func previewMediaIfPossible() -> Bool {
         if let item = self.item as? ContextMediaRowItem, let table = item.table, let window = window as? Window {
-            _ = startModalPreviewHandle(table, window: window, context: item.context)
+            startModalPreviewHandle(table, window: window, context: item.context)
         }
         return true
     }
@@ -350,7 +350,7 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                     }
                 }
             } else {
-                var inset:CGFloat = dif
+                var inset:CGFloat = dif + 1
                 for subview in subviews {
                     subview.setFrameOrigin(inset, 0)
                     inset += (dif + subview.frame.width)
