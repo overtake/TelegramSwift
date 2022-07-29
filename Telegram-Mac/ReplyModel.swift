@@ -57,7 +57,7 @@ class ReplyModel: ChatAccessoryModel {
        
     }
     
-    override var view: ChatAccessoryView? {
+    override weak var view:ChatAccessoryView? {
         didSet {
             updateImageIfNeeded()
         }

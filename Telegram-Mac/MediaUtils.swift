@@ -3789,8 +3789,15 @@ public func chatMapSnapshotImage(account: Account, resource: MapSnapshotMediaRes
 func generateEmoji(_ emoji: NSAttributedString) -> Signal<CGImage, NoError> {
     return Signal { subscriber in
         
+        
+        
         let node = TextNode.layoutText(maybeNode: nil, emoji, nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .center)
 
+        
+        if node.0.size == .zero {
+            subscriber.putCompletion()
+            return EmptyDisposable
+        }
         
         let image = generateImage(node.0.size, scale: System.backingScale, rotatedContext: { size, ctx in
             ctx.clear(size.bounds)
