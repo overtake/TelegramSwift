@@ -1419,9 +1419,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                                 }
                             }
                             if !applied {
-                                self.enumerateViews(with: { view in
+                                self.enumerateVisibleViews(with: { view in
                                    (view as? TableStickView)?.updateIsVisible(true, animated: false)
-                                   return true
                                 })
                             }
                             

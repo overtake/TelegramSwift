@@ -56,6 +56,13 @@ class ChatAccessoryView : Button {
             return
         }
         
+        let s = model.message?.layoutSize.width ?? 0
+        if s > size.width {
+            var bp = 0
+            bp += 1
+        }
+        
+        
         let x: CGFloat = model.leftInset + (model.isSideAccessory ? 10 : 0)
 
         let headerRect = CGRect(origin: NSMakePoint(x, (model.isSideAccessory ? 5 : 0) + model.topOffset), size: headerView.frame.size)
@@ -210,7 +217,6 @@ class ChatAccessoryModel: NSObject {
     var presentation: ChatAccessoryPresentation {
         set {
             _presentation = newValue
-            view?.updateModel(self, animated: false)
         }
         get {
             return _presentation ?? ChatAccessoryPresentation(background: theme.colors.background, title: theme.colors.accent, enabledText: theme.colors.text, disabledText: theme.colors.grayText, border: theme.colors.accent)
@@ -236,7 +242,6 @@ class ChatAccessoryModel: NSObject {
         }
         set {
             self.view?.frame = newValue
-            self.view?.updateModel(self, animated: false)
         }
     }
     
