@@ -56,11 +56,6 @@ class ChatAccessoryView : Button {
             return
         }
         
-        let s = model.message?.layoutSize.width ?? 0
-        if s > size.width {
-            var bp = 0
-            bp += 1
-        }
         
         
         let x: CGFloat = model.leftInset + (model.isSideAccessory ? 10 : 0)
