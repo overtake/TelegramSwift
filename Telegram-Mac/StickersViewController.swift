@@ -669,7 +669,7 @@ class NStickersView : View {
         emptySearchContainer.addSubview(emptySearchView)
         tabsContainer.addSubview(selectionView)
         tabsContainer.addSubview(packsView)
-        tabsContainer.addSubview(separator)
+        addSubview(separator)
         addSubview(tabsContainer)
         addSubview(emptySearchContainer)
         
@@ -783,12 +783,12 @@ class NStickersView : View {
         let initial: CGFloat = searchState?.state == .Focus ? -46 : 0
         
         tabsContainer.frame = NSMakeRect(0, initial, frame.width, 46)
-        separator.frame = NSMakeRect(0, tabsContainer.frame.height - .borderSize, tabsContainer.frame.width, .borderSize)
+        separator.frame = NSMakeRect(0, tabsContainer.frame.height, tabsContainer.frame.width, .borderSize)
         packsView.frame = tabsContainer.focus(NSMakeSize(frame.width, 36))
         
         
-        searchContainer.frame = NSMakeRect(0, tabsContainer.frame.maxY, frame.width, 50)
-        searchView.setFrameSize(NSMakeSize(frame.width - 20, 30))
+        searchContainer.frame = NSMakeRect(0, tabsContainer.frame.maxY, frame.width, 46)
+        searchView.setFrameSize(NSMakeSize(frame.width - 10, 30))
         searchView.center()
         
         
@@ -1081,7 +1081,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 let settings = stickerSettings(postbox: context.account.postbox)
                 switch values.1 {
                 case .initial:
-                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.PremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: count)
+                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.CloudAllPremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: count)
                     let featuredView = context.account.viewTracker.featuredStickerPacks()
                     
                     return combineLatest(packsView, featuredView, settings) |> mapToSignal { view, featured, settings in

@@ -17,6 +17,7 @@ public enum LinkType {
     case hashtag
     case command
     case stickerPack
+    case emojiPack
     case inviteLink
     case code
 }

@@ -420,12 +420,16 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     func updateInput(_ state:ChatPresentationInterfaceState, prevState: ChatPresentationInterfaceState, animated:Bool = true, initial: Bool = false) -> Void {
         if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes {
-            self.textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
+            let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
+
+            let item = SimpleUndoItem(attributedString: textView.attributedString(), be: state.effectiveInput.attributedString, wasRange: textView.selectedRange(), be: range)
+            self.textView.addSimpleItem(item)
+
+//            self.textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
         }
-        let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
-        if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length {
-            textView.setSelectedRange(range)
-        }
+//        if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length {
+//            textView.setSelectedRange(range)
+//        }
         if prevState.effectiveInput.inputText.isEmpty {
             self.textView.scrollToCursor()
         }

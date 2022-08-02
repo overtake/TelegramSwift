@@ -6804,6 +6804,45 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var gif_trending_active: CGImage {
+      if let image = cached.with({ $0["gif_trending_active"] }) {
+          return image
+      } else {
+          let image = _gif_trending_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["gif_trending_active"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var gif_recent: CGImage {
+      if let image = cached.with({ $0["gif_recent"] }) {
+          return image
+      } else {
+          let image = _gif_recent()
+          _ = cached.modify { current in 
+              var current = current
+              current["gif_recent"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var gif_recent_active: CGImage {
+      if let image = cached.with({ $0["gif_recent_active"] }) {
+          return image
+      } else {
+          let image = _gif_recent_active()
+          _ = cached.modify { current in 
+              var current = current
+              current["gif_recent_active"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var chat_list_thumb_play: CGImage {
       if let image = cached.with({ $0["chat_list_thumb_play"] }) {
           return image
@@ -9174,6 +9213,9 @@ public final class TelegramIconsTheme {
   private let _chat_like_inside_empty_bubble_outgoing: ()->CGImage
   private let _chat_like_inside_empty_bubble_overlay: ()->CGImage
   private let _gif_trending: ()->CGImage
+  private let _gif_trending_active: ()->CGImage
+  private let _gif_recent: ()->CGImage
+  private let _gif_recent_active: ()->CGImage
   private let _chat_list_thumb_play: ()->CGImage
   private let _call_tooltip_battery_low: ()->CGImage
   private let _call_tooltip_camera_off: ()->CGImage
@@ -9841,6 +9883,9 @@ public final class TelegramIconsTheme {
       chat_like_inside_empty_bubble_outgoing: @escaping()->CGImage,
       chat_like_inside_empty_bubble_overlay: @escaping()->CGImage,
       gif_trending: @escaping()->CGImage,
+      gif_trending_active: @escaping()->CGImage,
+      gif_recent: @escaping()->CGImage,
+      gif_recent_active: @escaping()->CGImage,
       chat_list_thumb_play: @escaping()->CGImage,
       call_tooltip_battery_low: @escaping()->CGImage,
       call_tooltip_camera_off: @escaping()->CGImage,
@@ -10507,6 +10552,9 @@ public final class TelegramIconsTheme {
       self._chat_like_inside_empty_bubble_outgoing = chat_like_inside_empty_bubble_outgoing
       self._chat_like_inside_empty_bubble_overlay = chat_like_inside_empty_bubble_overlay
       self._gif_trending = gif_trending
+      self._gif_trending_active = gif_trending_active
+      self._gif_recent = gif_recent
+      self._gif_recent_active = gif_recent_active
       self._chat_list_thumb_play = chat_list_thumb_play
       self._call_tooltip_battery_low = call_tooltip_battery_low
       self._call_tooltip_camera_off = call_tooltip_camera_off

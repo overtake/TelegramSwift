@@ -346,6 +346,33 @@ final class ChatTextInputState: Codable, Equatable {
         }
         return media
     }
+    
+    func isFirstAnimatedEmoji(_ string: String) -> Bool {
+        for attribute in attributes {
+            switch attribute {
+            case let .animated(range, _, _, _):
+                if range == 0 ..< string.length {
+                    return true
+                }
+            default:
+                break
+            }
+        }
+        return false
+    }
+    func isAnimatedEmoji(at r: NSRange) -> Bool {
+        for attribute in attributes {
+            switch attribute {
+            case let .animated(range, _, _, _):
+                if range.lowerBound == r.lowerBound && range.upperBound == range.upperBound {
+                    return true
+                }
+            default:
+                break
+            }
+        }
+        return false
+    }
 
     init(inputText: String) {
         self.inputText = inputText

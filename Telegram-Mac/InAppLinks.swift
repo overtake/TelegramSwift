@@ -150,8 +150,13 @@ var globalLinkExecutor:TextViewInteractions {
                     } else {
                         return .plain
                     }
-                case .stickerPack:
-                    return .stickerPack
+                case let .stickerPack(_, source, _, _):
+                    switch source {
+                    case .emoji:
+                        return .emojiPack
+                    case .stickers:
+                        return .stickerPack
+                    }
                 case .joinchat:
                     return .inviteLink
                 default:
@@ -268,6 +273,8 @@ func copyContextText(from type: LinkType) -> String {
         return strings().textContextCopyInviteLink
     case .stickerPack:
         return strings().textContextCopyStickerPack
+    case .emojiPack:
+        return strings().textContextCopyEmojiPack
     case .code:
         return strings().textContextCopyCode
     }

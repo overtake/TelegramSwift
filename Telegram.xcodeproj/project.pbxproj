@@ -48,6 +48,7 @@
 		271FB884289014CE001C25DC /* CustomEmojiController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271FB883289014CE001C25DC /* CustomEmojiController.swift */; };
 		271FB8862893EB9A001C25DC /* GifKeyboardController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271FB8852893EB9A001C25DC /* GifKeyboardController.swift */; };
 		271FB88828943A70001C25DC /* GifKeyboardTabRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271FB88728943A70001C25DC /* GifKeyboardTabRowItem.swift */; };
+		271FB88A28984361001C25DC /* InputSwapSuggestionsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271FB88928984361001C25DC /* InputSwapSuggestionsPanel.swift */; };
 		27200F1B257C256E00574365 /* DevicesContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27200F1A257C256E00574365 /* DevicesContext.swift */; };
 		2725785B259CF987001558E8 /* AnimatedBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2725785A259CF987001558E8 /* AnimatedBadgeView.swift */; };
 		2726BDCF2863258E0044D260 /* ChatAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2726BDCE2863258E0044D260 /* ChatAvatarView.swift */; };
@@ -1396,6 +1397,7 @@
 		271FB883289014CE001C25DC /* CustomEmojiController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomEmojiController.swift; sourceTree = "<group>"; };
 		271FB8852893EB9A001C25DC /* GifKeyboardController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GifKeyboardController.swift; sourceTree = "<group>"; };
 		271FB88728943A70001C25DC /* GifKeyboardTabRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GifKeyboardTabRowItem.swift; sourceTree = "<group>"; };
+		271FB88928984361001C25DC /* InputSwapSuggestionsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputSwapSuggestionsPanel.swift; sourceTree = "<group>"; };
 		27200F1A257C256E00574365 /* DevicesContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesContext.swift; sourceTree = "<group>"; };
 		2725785A259CF987001558E8 /* AnimatedBadgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedBadgeView.swift; sourceTree = "<group>"; };
 		2726BDCE2863258E0044D260 /* ChatAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatAvatarView.swift; sourceTree = "<group>"; };
@@ -4674,6 +4676,7 @@
 			children = (
 				C29B5F441DC7DA4B00D13E65 /* MessageActionsPanelView.swift */,
 				C2C415E41FA33D1A00FF36F4 /* InputFormatterPopover.swift */,
+				271FB88928984361001C25DC /* InputSwapSuggestionsPanel.swift */,
 			);
 			name = panels;
 			sourceTree = "<group>";
@@ -6729,6 +6732,7 @@
 				C24BA3BD1E9D30F800E8970B /* DeleteSupergroupMessagesModalController.swift in Sources */,
 				C20232AC1D81D1AE007C9ADE /* ChatMessageView.swift in Sources */,
 				2726BDD52869DCB00044D260 /* InlineStickersContext.swift in Sources */,
+				271FB88A28984361001C25DC /* InputSwapSuggestionsPanel.swift in Sources */,
 				D071E8B5214C1935001B6024 /* TouchBarEmojiItemView.swift in Sources */,
 				C250B0291DB769EE004E9FBE /* WPMediaContentView.swift in Sources */,
 				27F4F17C2845318500A3B4D4 /* ChatInputAnimatedEmojiAttach.swift in Sources */,

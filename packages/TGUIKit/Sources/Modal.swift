@@ -427,6 +427,10 @@ private class ModalContainerView: View {
     fileprivate override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
     }
+    override func cursorUpdate(with event: NSEvent) {
+        super.cursorUpdate(with: event)
+        NSCursor.arrow.set()
+    }
 }
 
 extension Modal : ObservableViewDelegate {

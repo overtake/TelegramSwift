@@ -817,7 +817,7 @@ final class AnimationPlayerContext {
     fileprivate let animation: LottieAnimation
     init(_ animation: LottieAnimation, maxRefreshRate: Int = 60, displayFrame: @escaping(RenderedFrame, LottieRunLoop)->Void, release:@escaping()->Void, updateState: @escaping(LottiePlayerState)->Void) {
         self.animation = animation
-        self.rendererRef = QueueLocalObject.init(queue: animation.runOnQueue, generate: {
+        self.rendererRef = QueueLocalObject(queue: animation.runOnQueue, generate: {
             return PlayerRenderer(animation: animation, displayFrame: displayFrame, release: release, updateState: { state in
                 delay(0.032, closure: {
                     updateState(state)

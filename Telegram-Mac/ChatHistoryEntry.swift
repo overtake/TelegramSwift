@@ -468,10 +468,10 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         if message.media.isEmpty {
             if message.text.length <= 7 {
                 
-                let customRange: [NSRange] = message.textEntities?.entities.compactMap { entity in
-                    if case .CustomEmoji = entity.type {
+                let customRange: [(NSRange, Int64)] = message.textEntities?.entities.compactMap { entity in
+                    if case let .CustomEmoji(_, fileId) = entity.type {
                         let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
-                        return range
+                        return (range, fileId)
                     }
                     return nil
                 } ?? []
@@ -479,8 +479,35 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 
                 let original = message.text.fixed
                 let unmodified = original.emojiUnmodified
+                
+                let fullCustom = customRange.first(where: { $0.0.intersection(NSMakeRange(0, message.text.length)) != nil })
+                
+                if original.isSingleEmoji, let custom = fullCustom {
+                    let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: custom.1)
+
+                    if let file = message.associatedMedia[mediaId] as? TelegramMediaFile {
+                        var file = file
+                        var attributes = file.attributes
+                        attributes.removeAll()
+                        attributes = attributes.map { attribute -> TelegramMediaFileAttribute in
+                            switch attribute {
+                            case let .CustomEmoji(_, alt, packReference):
+                                return .Sticker(displayText: alt, packReference: packReference, maskData: nil)
+                            default:
+                                return attribute
+                            }
+                        }
+                        attributes.append(.FileName(fileName: "telegram-animoji.tgs"))
+                        attributes.append(.Sticker(displayText: original, packReference: nil, maskData: nil))
+                        
+                        file = file.withUpdatedAttributes(attributes)
+                        message = message.withUpdatedMedia([file])
+                            .withUpdatedText(original)
+                    }
+                }
+                
                 if original.isSingleEmoji, let item = animatedEmojiStickers[unmodified] {
-                    if !customRange.contains(where: { $0.intersection(NSMakeRange(0, message.text.length)) != nil }) {
+                    if fullCustom == nil {
                         var file = item.file
                         var attributes = file.attributes
                         attributes.removeAll { attr in

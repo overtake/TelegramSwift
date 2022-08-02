@@ -334,7 +334,7 @@ open class Popover: NSObject {
             let g:NSPoint = NSEvent.mouseLocation
             let w:NSPoint = window.contentView!.convert(window.convertFromScreen(NSMakeRect(g.x, g.y, 1, 1)).origin, from: nil)
             //if w.x > background.frame.minX && background
-            return NSPointInRect(w, background.frame)
+            return NSPointInRect(w, background.frame.insetBy(dx: -20, dy: -20))
         }
         return false
     }

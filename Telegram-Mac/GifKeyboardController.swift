@@ -118,9 +118,9 @@ private func packEntries(_ state: State, arguments: Arguments) -> [InputDataEntr
         let source: GifKeyboardTabRowItem.Source
         switch tab {
         case .recent:
-            source = .icon(theme.icons.stickersTabRecent)
+            source = .icon(tuple.selected ? theme.icons.gif_recent_active : theme.icons.gif_recent)
         case .trending:
-            source = .icon(theme.icons.gif_trending)
+            source = .icon(tuple.selected ? theme.icons.gif_trending_active : theme.icons.gif_trending)
         case let .recommended(file):
             source = .file(file)
         }
@@ -175,7 +175,10 @@ private func entries(_ state: State, arguments: Arguments, mediaArguments: Conte
         }
     }
     
-    
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("bottom"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+        return GeneralRowItem(initialSize, height: 46, stableId: stableId, backgroundColor: .clear)
+    }))
+    index += 1
     
     return entries
 }
@@ -246,7 +249,7 @@ final class GifKeyboardView : View {
         transition.updateFrame(view: searchView, frame: searchContainer.focus(NSMakeSize(size.width - 16, 30)))
         transition.updateFrame(view: searchBorder, frame: NSMakeRect(0, searchContainer.frame.height - .borderSize, size.width, .borderSize))
         
-        transition.updateFrame(view: tableView, frame: NSMakeRect(0, tabs.frame.maxY, size.width, size.height - tabs.frame.maxY))
+        transition.updateFrame(view: tableView, frame: NSMakeRect(0, tabs.frame.maxY, size.width, size.height))
 
 
         let alpha: CGFloat = searchState?.state == .Focus && tableView.documentOffset.y > 0 ? 1 : 0
