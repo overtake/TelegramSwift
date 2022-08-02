@@ -560,7 +560,11 @@ func initialize() -> [String] {
 
     
     array.append("gif_trending")
-    
+    array.append("gif_trending_active")
+
+    array.append("gif_recent")
+    array.append("gif_recent_active")
+
     
     array.append("chat_list_thumb_play")
 

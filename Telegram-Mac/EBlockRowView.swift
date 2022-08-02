@@ -22,19 +22,20 @@ private final class LineLayer : SimpleLayer {
         let index: Int
     }
     
+    private let content = SimpleLayer()
     init(emoji: NSAttributedString) {
         self.emoji = emoji
         super.init()
-        contentsGravity = .center
+        addSublayer(content)
         let signal = generateEmoji(emoji) |> deliverOnMainQueue
         
         let value = cachedEmoji(emoji: emoji.string, scale: System.backingScale)
         
-        self.contents = value
-        
+        content.frame = NSMakeSize(xAdd, yAdd).bounds.focus(NSMakeSize(30, 33))
+        content.contents = value
         if self.contents == nil {
             self.disposable = signal.start(next: { [weak self] image in
-                self?.contents = image
+                self?.content.contents = image
                 cacheEmoji(image, emoji: emoji.string, scale: System.backingScale)
             })
         }

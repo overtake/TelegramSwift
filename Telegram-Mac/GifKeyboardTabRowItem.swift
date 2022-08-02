@@ -151,7 +151,7 @@ private final class GifKeyboardTabRowView: HorizontalRowView {
                 current = layer
             } else {
                 current = SimpleLayer()
-                current.contentsGravity = .center
+                current.contentsGravity = .resizeAspectFill
                 self.imageLayer = current
                 control.layer?.addSublayer(current)
             }
@@ -169,6 +169,7 @@ private final class GifKeyboardTabRowView: HorizontalRowView {
         selectView.center()
         
         updateAnimatableContent()
+        updateListeners()
     }
     
     required init?(coder: NSCoder) {

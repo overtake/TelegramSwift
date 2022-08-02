@@ -304,7 +304,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
                 return nil
             } |> deliverOnMainQueue).start(next: { [weak self] data in
                 if let data = data, let `self` = self {
-                    var playPolicy: LottiePlayPolicy = parameters?.playPolicy ?? (file.isEmojiAnimatedSticker || !self.chatLoopAnimated ? (self.parameters == nil ? .framesCount(1) : .once) : .loop)
+                    var playPolicy: LottiePlayPolicy = parameters?.playPolicy ?? (file.isEmojiAnimatedSticker || !self.chatLoopAnimated ? .loop : .loop)
                     
                     if self.playOnHover == true {
                         playPolicy = .framesCount(0)

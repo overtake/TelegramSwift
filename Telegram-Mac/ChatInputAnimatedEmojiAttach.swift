@@ -27,7 +27,7 @@ final class ChatInputAnimatedEmojiAttach: View {
         let file = attachment.file as? TelegramMediaFile
 
     
-        self.media = .init(context: context, emoji: .init(fileId: fileId, file: file, emoji: attachment.text), size: frame.size)
+        self.media = .init(context: context, emoji: .init(fileId: fileId, file: file, emoji: attachment.text), size: size)
         self.media.isPlayable = true
         self.layer?.addSublayer(media)
         
@@ -37,6 +37,7 @@ final class ChatInputAnimatedEmojiAttach: View {
     override func layout() {
         super.layout()
         self.media.frame = focus(media.frame.size)
+
     }
     
     required init?(coder: NSCoder) {

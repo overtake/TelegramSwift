@@ -479,23 +479,21 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     displayLayout.1.draw(NSMakeRect(item.leftInset + addition, item.margin - 1, displayLayout.0.size.width, displayLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                     
                     
-                    var mutedInset:CGFloat = item.isSecret ? theme.icons.secretImage.backingSize.width + 2 : 0
                     
                     if item.isVerified {
-                        ctx.draw(highlighted ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2 + mutedInset, item.margin, 16, 16))
-                        mutedInset += 17
+                        ctx.draw(highlighted ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin, 16, 16))
+                        addition += 17
                     }
                    
                     
-                    
                     if item.isScam || item.isFake {
-                        ctx.draw(highlighted ? item.badHighlightIcon : item.badIcon, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2 + mutedInset, item.margin + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
-                        mutedInset += item.badIcon.backingSize.width + 3
+                        ctx.draw(highlighted ? item.badHighlightIcon : item.badIcon, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
+                        addition += item.badIcon.backingSize.width + 3
                     }
                     
                     if item.isPremium {
-                        ctx.draw(highlighted ? theme.icons.premium_account_rev_active : theme.icons.premium_account_rev, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2 + mutedInset, item.margin, 16, 16))
-                        mutedInset += 17
+                        ctx.draw(highlighted ? theme.icons.premium_account_rev_active : theme.icons.premium_account_rev, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin, 16, 16))
+                        addition += 17
                     }
                     
                     var messageOffset: CGFloat = 0
@@ -505,7 +503,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     }
                     
                     if item.isMuted {
-                        ctx.draw(highlighted ? theme.icons.dialogMuteImageSelected : theme.icons.dialogMuteImage, in: NSMakeRect(item.leftInset + displayLayout.0.size.width + 4 + mutedInset, item.margin + round((displayLayout.0.size.height - theme.icons.dialogMuteImage.backingSize.height) / 2.0) - 1, theme.icons.dialogMuteImage.backingSize.width, theme.icons.dialogMuteImage.backingSize.height))
+                        ctx.draw(highlighted ? theme.icons.dialogMuteImageSelected : theme.icons.dialogMuteImage, in: NSMakeRect(item.leftInset + displayLayout.0.size.width + 4 + addition, item.margin + round((displayLayout.0.size.height - theme.icons.dialogMuteImage.backingSize.height) / 2.0) - 1, theme.icons.dialogMuteImage.backingSize.width, theme.icons.dialogMuteImage.backingSize.height))
                     }
                     
                    

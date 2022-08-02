@@ -349,7 +349,7 @@ class AnimatedStickerPreviewModalView : View, ModalPreviewControllerView {
                 player.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
             
-            let layout = TextViewLayout(.initialize(string: reference.media.stickerText?.fixed, color: nil, font: .normal(30.0)))
+            let layout = TextViewLayout(.initialize(string: reference.media.stickerText?.fixed ?? reference.media.customEmojiText?.fixed, color: nil, font: .normal(30.0)))
             layout.measure(width: .greatestFiniteMagnitude)
             textView.update(layout)
             textView.centerX()

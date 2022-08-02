@@ -1113,7 +1113,7 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
         }
         if (view != nil) {
             rect.size.height = view.frame.size.height;
-            rect.origin.y -= 2;
+            rect.origin.y -= 1;
             view.frame = rect;
             if(view != nil && view.superview != _textView) {
                 [_textView addSubview:view];
@@ -1915,6 +1915,14 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
     self.scrollView.backgroundColor = color;
     self.textView.backgroundColor = color;
     _placeholder.backgroundColor = [NSColor clearColor];
+}
+
+-(NSRect)highlightRectForRange:(NSRange)aRange whole: (BOOL)whole {
+    return [self.textView highlightRectForRange:aRange whole:whole];
+}
+
+-(NSScrollView *)scroll {
+    return self.scrollView;
 }
 
 @end

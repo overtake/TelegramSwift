@@ -98,6 +98,14 @@ class ChatAccessoryView : Button {
         updateLayout(frame.size, transition: transition)
         
         self.updateListeners()
+        
+        self.updateTheme()
+    }
+    
+    func updateTheme() {
+        if let model = model {
+            self.backgroundColor = model.presentation.background
+        }
     }
     
     override func viewDidMoveToWindow() {
@@ -212,6 +220,7 @@ class ChatAccessoryModel: NSObject {
     var presentation: ChatAccessoryPresentation {
         set {
             _presentation = newValue
+            self.view?.updateTheme()
         }
         get {
             return _presentation ?? ChatAccessoryPresentation(background: theme.colors.background, title: theme.colors.accent, enabledText: theme.colors.text, disabledText: theme.colors.grayText, border: theme.colors.accent)

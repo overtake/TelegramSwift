@@ -62,7 +62,7 @@ class ContextClueRowItem: TableRowItem {
     
 }
 
-private final class AnimatedClueRowItem : TableRowItem {
+final class AnimatedClueRowItem : TableRowItem {
     private let _stableId = arc4random()
     override var stableId: AnyHashable {
         return _stableId
@@ -112,7 +112,7 @@ private final class AnimatedClueRowView: HorizontalRowView {
         if self.sticker?.file != item.clue {
             self.sticker?.removeFromSuperlayer()
             
-            let size = NSMakeSize(item.height - 15, item.height - 15)
+            let size = NSMakeSize(item.height - 10, item.height - 10)
             
             let sticker = InlineStickerItemLayer(context: item.context, file: item.clue, size: size)
             
@@ -126,6 +126,34 @@ private final class AnimatedClueRowView: HorizontalRowView {
         }
         
       
+        updateListeners()
+        
+    }
+    
+    @objc func updateAnimatableContent() -> Void {
+        if let value = self.sticker, let superview = value.superview {
+            value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow
+        }
+    }
+    
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        self.updateListeners()
+        self.updateAnimatableContent()
+    }
+    
+    private func updateListeners() {
+        let center = NotificationCenter.default
+        if let window = window {
+            center.removeObserver(self)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didBecomeKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self)
+        } else {
+            center.removeObserver(self)
+        }
     }
     
     override func layout() {
@@ -148,7 +176,7 @@ private final class ClueRowItem : TableRowItem {
     let layout: TextViewLayout
     
     init(_ initialSize: NSSize, clue: String) {
-        self.layout = TextViewLayout(.initialize(string: clue, color: nil, font: .normal(17)))
+        self.layout = TextViewLayout(.initialize(string: clue, color: nil, font: .normal(24)))
         super.init(initialSize)
         layout.measure(width: .greatestFiniteMagnitude)
     }

@@ -18,11 +18,13 @@ private final class Arguments {
     let openStickerPack: (StickerPackCollectionInfo) -> Void
     let removePack: (ItemCollectionId) -> Void
     let openStickerBot:()->Void
-    init(context: AccountContext, openStickerPack: @escaping (StickerPackCollectionInfo) -> Void, removePack: @escaping (ItemCollectionId) -> Void, openStickerBot:@escaping()->Void) {
+    let toggleSuggest:()->Void
+    init(context: AccountContext, openStickerPack: @escaping (StickerPackCollectionInfo) -> Void, removePack: @escaping (ItemCollectionId) -> Void, openStickerBot:@escaping()->Void, toggleSuggest:@escaping()->Void) {
         self.context = context
         self.openStickerPack = openStickerPack
         self.removePack = removePack
         self.openStickerBot = openStickerBot
+        self.toggleSuggest = toggleSuggest
     }
 }
 
@@ -35,6 +37,7 @@ private struct State : Equatable {
     }
     var editing: ItemListStickerPackItemEditing = .init(editable: true, editing: false)
     var sections:[Section]
+    var suggest: Bool = false
 }
 
 
@@ -43,6 +46,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     var sectionId:Int32 = 0
     var index: Int32 = 0
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("suggest"), data: .init(name: strings().customEmojiSuggest, color: theme.colors.text, type: .switchable(state.suggest), viewType: .singleItem, enabled: true, action: arguments.toggleSuggest)))
+    index += 1
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
@@ -84,7 +94,7 @@ func CustomEmojiController(context: AccountContext) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(sections: [])
+    let initialState = State(sections: [], suggest: FastSettings.suggestSwapEmoji)
     
     let statePromise: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -109,6 +119,13 @@ func CustomEmojiController(context: AccountContext) -> InputDataController {
             context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
         })
         execute(inapp: link)
+    }, toggleSuggest: {
+        updateState { current in
+            var current = current
+            current.suggest = !current.suggest
+            return current
+        }
+        FastSettings.toggleSwapEmoji(stateValue.with { $0.suggest})
     })
     
     let emojies = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000)

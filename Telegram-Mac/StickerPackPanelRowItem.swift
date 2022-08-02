@@ -315,24 +315,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
             }
 
         }
-        
-        for subview in self.subviews {
-            if let contentView = subview as? ChatMediaContentView {
-                if NSPointInRect(point, subview.frame) {
-                    if let file = contentView.media as? TelegramMediaFile {
-                        let reference = file.stickerReference != nil ? FileMediaReference.stickerPack(stickerPack: file.stickerReference!, media: file) : FileMediaReference.standalone(media: file)
-                        if file.isVideoSticker && !file.isWebm {
-                            return (.file(reference, GifPreviewModalView.self), contentView)
-                        } else if file.isAnimatedSticker || file.isWebm {
-                            return (.file(reference, AnimatedStickerPreviewModalView.self), contentView)
-                        } else if file.isStaticSticker {
-                            return (.file(reference, StickerPreviewModalView.self), contentView)
-                        }
-                    }
-                }
-            }
-            
-        }
+
         return nil
     }
     

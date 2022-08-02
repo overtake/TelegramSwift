@@ -403,7 +403,17 @@ public extension CALayer {
         self.add(animation, forKey: "backgroundColor")
     }
     
-
+    func animatePath() {
+        let animation = CABasicAnimation(keyPath: "path")
+        animation.duration = 0.2
+        self.add(animation, forKey: "path")
+    }
+    func animateShadow() {
+        let animation = CABasicAnimation(keyPath: "shadowPath")
+        animation.duration = 0.2
+        self.add(animation, forKey: "shadowPath")
+    }
+    
     
     func animateBorder() ->Void {
         let animation = CABasicAnimation(keyPath: "borderWidth")
@@ -1486,6 +1496,14 @@ public extension NSRange {
     }
     func indexIn(_ index: Int) -> Bool {
         return NSLocationInRange(index, self)
+    }
+    init(string: String, range: Range<String.Index>) {
+        let utf8 = string.utf16
+
+        let location = utf8.distance(from: utf8.startIndex, to: range.lowerBound)
+        let length = utf8.distance(from: range.lowerBound, to: range.upperBound)
+
+        self.init(location: location, length: length)
     }
 }
 

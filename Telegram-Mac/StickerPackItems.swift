@@ -387,6 +387,7 @@ private final class StickerPackRowView : HorizontalRowView {
             self.set(locked: (!item.context.isPremium && item.isPremium) || (item.installed != nil && !item.installed!), unlock: unlock, animated: animated)
 
             self.updateAnimatableContent()
+            self.updateListeners()
         }
         
         

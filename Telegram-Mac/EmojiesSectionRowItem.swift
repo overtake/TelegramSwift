@@ -100,12 +100,12 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         if let _ = info {
             if isPremium && !context.isPremium {
                 if installed {
-                    self.unlockText = (strings().emojiPackRestoreCountable(items.count), true)
+                    self.unlockText = (strings().emojiPackRestore, true)
                 } else {
-                    self.unlockText = (strings().emojiPackUnlockCountable(items.count), true)
+                    self.unlockText = (strings().emojiPackUnlock, true)
                 }
             } else if !installed {
-                self.unlockText = (strings().emojiPackAddCountable(items.count), false)
+                self.unlockText = (strings().emojiPackAdd, false)
             } else {
                 self.unlockText = nil
             }
@@ -184,10 +184,23 @@ final class EmojiesSectionRowItem : GeneralRowItem {
 
 
 
-private final class EmojiesSectionRowView : TableRowView {
+private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewProtocol {
     
     
-    
+    func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
+        
+        if let item = itemUnderMouse?.1, let file = item.item?.file {
+            let reference = FileMediaReference.stickerPack(stickerPack: file.emojiReference!, media: file)
+            if file.isVideoSticker && !file.isWebm {
+                return (.file(reference, GifPreviewModalView.self), nil)
+            } else if file.isAnimatedSticker || file.isWebm {
+                return (.file(reference, AnimatedStickerPreviewModalView.self), nil)
+            } else if file.isStaticSticker {
+                return (.file(reference, StickerPreviewModalView.self), nil)
+            }
+        }
+        return nil
+    }
     
     
     fileprivate final class UnlockView : Control {
@@ -263,7 +276,15 @@ private final class EmojiesSectionRowView : TableRowView {
             self?.updateUp()
         }, for: .Up)
         
-       
+        contentView.set(handler: { [weak self] _ in
+            let item = self?.item as? EmojiesSectionRowItem
+            let table = item?.table
+            let window = self?.window as? Window
+            if let item = item, let table = table, let window = window {
+                startModalPreviewHandle(table, window: window, context: item.context)
+            }
+        }, for: .LongMouseDown)
+        
     }
     
     override var backdorColor: NSColor {
@@ -436,8 +457,8 @@ private final class EmojiesSectionRowView : TableRowView {
                 contentView.addSubview(current)
             }
             current.set(font: .avatar(12), for: .Normal)
-            current.set(color: theme.colors.background, for: .Normal)
-            current.set(background: theme.chatList.badgeMutedBackgroundColor, for: .Normal)
+            current.set(color: theme.colors.accent, for: .Normal)
+            current.set(background: theme.colors.accent.withAlphaComponent(0.1), for: .Normal)
             current.set(text: "+\(count)", for: .Normal)
             current.sizeToFit(.zero, NSMakeSize(rect.width - 10, 25), thatFit: true)
             current.autoSizeToFit = false

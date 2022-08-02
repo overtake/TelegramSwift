@@ -298,6 +298,30 @@ fileprivate class PreviewSenderView : Control {
         layout()
     }
     
+    private var textInputSuggestionsView: InputSwapSuggestionsPanel?
+    
+    func updateTextInputSuggestions(_ files: [TelegramMediaFile], chatInteraction: ChatInteraction, range: NSRange, animated: Bool) {
+        
+        let context = chatInteraction.context
+        
+        if !files.isEmpty {
+            let current: InputSwapSuggestionsPanel
+            let isNew: Bool
+            if let view = self.textInputSuggestionsView {
+                current = view
+                isNew = false
+            } else {
+                current = InputSwapSuggestionsPanel(self.textView, relativeView: self, window: context.window, context: context, chatInteraction: chatInteraction)
+                self.textInputSuggestionsView = current
+                isNew = true
+            }
+            current.apply(files, range: range, animated: animated, isNew: isNew)
+        } else if let view = self.textInputSuggestionsView {
+            view.close(animated: animated)
+            self.textInputSuggestionsView = nil
+        }
+    }
+    
     deinit {
         disposable.dispose()
     }
@@ -325,6 +349,15 @@ fileprivate class PreviewSenderView : Control {
 
         separator.change(pos: NSMakePoint(0, textContainerView.frame.minY), animated: animated)
         CATransaction.commit()
+        
+        let transition: ContainedViewLayoutTransition
+        if animated {
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        } else {
+            transition = .immediate
+        }
+        self.textInputSuggestionsView?.updateRect(transition: transition)
+
         
        // needsLayout = true
     }
@@ -378,6 +411,9 @@ fileprivate class PreviewSenderView : Control {
         separator.frame = NSMakeRect(0, textContainerView.frame.minY, frame.width, .borderSize)
 
         forHelperView.frame = NSMakeRect(0, textContainerView.frame.minY, 0, 0)
+        
+        self.textInputSuggestionsView?.updateRect(transition: .immediate)
+
     }
     
     
@@ -761,6 +797,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     private let pasteDisposable = MetaDisposable()
     
 
+    private let inputSwapDisposable = MetaDisposable()
     private var temporaryInputState: ChatTextInputState?
     private var contextQueryState: (ChatPresentationInputQuery?, Disposable)?
     private let inputContextHelper: InputContextHelper
@@ -1409,6 +1446,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         disposable.dispose()
         editorDisposable.dispose()
         archiverStatusesDisposable.dispose()
+        inputSwapDisposable.dispose()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -1567,6 +1605,32 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     }
     
     private func updateInput(_ state:ChatPresentationInterfaceState, prevState: ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
+        
+        let input = state.effectiveInput
+        let textInputContextState = textInputStateContextQueryRangeAndType(input, includeContext: false)
+        let chatInteraction = self.contextChatInteraction
+        var cleanup = false
+        if let textInputContextState = textInputContextState {
+            if textInputContextState.1.contains(.swapEmoji) {
+                let stringRange = textInputContextState.0
+                let range = NSRange(string: input.inputText, range: stringRange)
+                if !input.isAnimatedEmoji(at: range) {
+                    let query = String(input.inputText[stringRange])
+                    let signal = InputSwapSuggestionsPanelItems(query, peerId: chatInteraction.peerId, context: chatInteraction.context)
+                    |> deliverOnMainQueue
+                    self.inputSwapDisposable.set(signal.start(next: { [weak self] files in
+                        self?.genericView.updateTextInputSuggestions(files, chatInteraction: chatInteraction, range: range, animated: animated)
+                    }))
+                    cleanup = true
+                } else {
+                }
+            }
+        }
+        
+        if cleanup {
+            self.genericView.updateTextInputSuggestions([], chatInteraction: chatInteraction, range: NSMakeRange(0, 0), animated: animated)
+            self.inputSwapDisposable.set(nil)
+        }
         
         let textView = genericView.textView
         

@@ -141,7 +141,7 @@ final class InlineStickerItemLayer : SimpleLayer {
     init(context: AccountContext, emoji: ChatTextCustomEmojiAttribute, size: NSSize) {
         self.context = context
         super.init()
-                
+        self.frame = size.bounds
         self.initialize()
         
         let signal: Signal<TelegramMediaFile?, NoError>
@@ -192,7 +192,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             weak var layer: CALayer? = self
             delayDisposable.set(delaySignal(MultiTargetContextCache.exists(animation) ? 0 : 0.1).start(completed: { [weak self] in
                 self?.contextToken = (MultiTargetContextCache.create(animation, displayFrame: { image in
-                    Queue.mainQueue().async {
+                    DispatchQueue.main.async {
                         layer?.contents = image
                     }
                 }, release: {

@@ -130,6 +130,7 @@ class FastSettings {
     private static let kInAppSoundsType = "kInAppSoundsType"
     private static let kIsMinimisizeType = "kIsMinimisizeType"
     private static let kAutomaticConvertEmojiesType = "kAutomaticConvertEmojiesType2"
+    private static let kSuggestSwapEmoji = "kSuggestSwapEmoji"
     private static let kForceTouchAction = "kForceTouchAction"
     private static let kNeedCollage = "kNeedCollage"
 	private static let kInstantViewScrollBySpace = "kInstantViewScrollBySpace"
@@ -411,6 +412,17 @@ class FastSettings {
     
     static func toggleAutomaticReplaceEmojies(_ enable: Bool) {
         UserDefaults.standard.set(!enable, forKey: kAutomaticConvertEmojiesType)
+        UserDefaults.standard.synchronize()
+    }
+    
+    static var suggestSwapEmoji: Bool {
+        if let value = UserDefaults.standard.value(forKey: kSuggestSwapEmoji) as? Bool {
+            return value
+        }
+        return true
+    }
+    static func toggleSwapEmoji(_ value: Bool) -> Void {
+        UserDefaults.standard.setValue(value, forKey: kSuggestSwapEmoji)
         UserDefaults.standard.synchronize()
     }
     

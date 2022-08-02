@@ -912,7 +912,9 @@ enum UserInfoEntry: PeerInfoEntry {
                 }
             })
         case let .phoneNumber(_, _, value, canCopy, viewType):
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:value.label, copyMenuText: strings().textCopyLabelPhoneNumber, text: value.number, context: arguments.context, viewType: viewType, canCopy: canCopy)
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:value.label, copyMenuText: strings().textCopyLabelPhoneNumber, text: formatPhoneNumber(value.number), context: arguments.context, viewType: viewType, canCopy: canCopy, _copyToClipboard: {
+                arguments.copy("+\(value.number)")
+            })
         case let .userName(_, value, viewType):
             let link = "https://t.me/\(value)"
             return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoUsername, copyMenuText: strings().textCopyLabelUsername, text:"@\(value)", context: arguments.context, viewType: viewType, _copyToClipboard: {
@@ -1070,7 +1072,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                 }
                 
                 if let phoneNumber = user.phone, !phoneNumber.isEmpty {
-                    infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: strings().peerInfoPhone, number: formatPhoneNumber(phoneNumber)), canCopy: true, viewType: .singleItem))
+                    infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: strings().peerInfoPhone, number: phoneNumber), canCopy: true, viewType: .singleItem))
                 } else if view.peerIsContact {
                     infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: strings().peerInfoPhone, number: strings().newContactPhoneHidden), canCopy: false, viewType: .singleItem))
                 }

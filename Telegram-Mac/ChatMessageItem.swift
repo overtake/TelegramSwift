@@ -406,19 +406,22 @@ class ChatMessageItem: ChatRowItem {
 
             let containsBigEmoji: Bool
             if message.media.first == nil, bigEmojiMessage(context.sharedContext, message: message) {
-                
-                switch copy.string.glyphCount {
+                containsBigEmoji = true
+                switch copy.string.length {
                 case 1:
-                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 5.8), range: copy.range)
-                    containsBigEmoji = true
+                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 9.8), range: copy.range)
                 case 2:
-                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 4.8), range: copy.range)
-                    containsBigEmoji = true
+                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 8.8), range: copy.range)
                 case 3:
-                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 3.8), range: copy.range)
-                    containsBigEmoji = true
+                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 7.8), range: copy.range)
+                case 4:
+                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 6.8), range: copy.range)
+                case 5:
+                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 5.8), range: copy.range)
+                case 6:
+                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 4.8), range: copy.range)
                 default:
-                    containsBigEmoji = false
+                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 3.8), range: copy.range)
                 }
             } else {
                 containsBigEmoji = false

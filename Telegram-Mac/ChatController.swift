@@ -204,6 +204,8 @@ class ChatControllerView : View, ChatInputDelegate {
     
     let tableView:TableView
     
+    private var textInputSuggestionsView: InputSwapSuggestionsPanel?
+    
     
     var scroll: ScrollPosition {
         return self.tableView.scrollPosition().current
@@ -560,7 +562,7 @@ class ChatControllerView : View, ChatInputDelegate {
             transition.updateFrame(view: themeSelectorView, frame: NSMakeRect(0, frame.height - themeSelectorView.frame.height, frame.width, themeSelectorView.frame.height))
         }
         
-        
+        self.textInputSuggestionsView?.updateRect(transition: transition)
         
         self.chatInteraction.updateFrame(frame, transition)
     }
@@ -714,6 +716,25 @@ class ChatControllerView : View, ChatInputDelegate {
         return .zero
     }
         
+    func updateTextInputSuggestions(_ files: [TelegramMediaFile], range: NSRange, animated: Bool) {
+        if !files.isEmpty {
+            let current: InputSwapSuggestionsPanel
+            let isNew: Bool
+            if let view = self.textInputSuggestionsView {
+                current = view
+                isNew = false
+            } else {
+                current = InputSwapSuggestionsPanel(self.inputView.textView, relativeView: self, window: chatInteraction.context.window, context: chatInteraction.context, chatInteraction: chatInteraction)
+                self.textInputSuggestionsView = current
+                isNew = true
+            }
+            current.apply(files, range: range, animated: animated, isNew: isNew)
+        } else if let view = self.textInputSuggestionsView {
+            view.close(animated: animated)
+            self.textInputSuggestionsView = nil
+        }
+    }
+    
     func updateMentionsCount(mentionsCount: Int32, reactionsCount: Int32, scrollerCount: Int32, animated: Bool) {
         if mentionsCount > 0 {
             if self.mentions == nil {
@@ -813,7 +834,7 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                         if interaction.mode.isThreadMode {
                             offset = 44 - 6
                         } else {
-                            offset - 6
+                            offset -= 6
                         }
                         scrollToItem = .top(id: entry.stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: offset)
                         break
@@ -1251,6 +1272,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let suggestionsDisposable = MetaDisposable()
     private let sendAsPeersDisposable = MetaDisposable()
     private let startSecretChatDisposable = MetaDisposable()
+    private let inputSwapDisposable = MetaDisposable()
     private let searchState: ValuePromise<SearchMessagesResultState> = ValuePromise(SearchMessagesResultState("", []), ignoreRepeated: true)
     
     private let pollAnswersLoading: ValuePromise<[MessageId : ChatPollStateData]> = ValuePromise([:], ignoreRepeated: true)
@@ -5962,6 +5984,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         peekDisposable.dispose()
         transcribeDisposable.dispose()
         startSecretChatDisposable.dispose()
+        inputSwapDisposable.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false
@@ -6660,7 +6683,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             if value.interfaceState.inputState != oldValue.interfaceState.inputState {
                 chatInteraction.saveState(false, scrollState: immediateScrollState())
-                
             }
             
             if value.interfaceState.forwardMessageIds != oldValue.interfaceState.forwardMessageIds {
@@ -6678,9 +6700,34 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 doneButton?.isHidden = value.selectionState == nil || value.reportMode != nil
                 editButton?.isHidden = value.selectionState != nil || value.reportMode != nil
             }
-            
-            if value.effectiveInput != oldValue.effectiveInput || value.botMenu != oldValue.botMenu || force {
-                if let (updatedContextQueryState, updatedContextQuerySignal) = contextQueryResultStateForChatInterfacePresentationState(chatInteraction.presentation, context: self.context, currentQuery: self.contextQueryState?.0) {
+            let input = value.effectiveInput
+            if input != oldValue.effectiveInput || value.botMenu != oldValue.botMenu || force {
+                
+                let textInputContextState = textInputStateContextQueryRangeAndType(input, includeContext: false)
+                
+                var cleanup = true
+                
+                if let textInputContextState = textInputContextState {
+                    if textInputContextState.1.contains(.swapEmoji) {
+                        let stringRange = textInputContextState.0
+                        let range = NSRange(string: input.inputText, range: stringRange)
+                        if !input.isAnimatedEmoji(at: range) {
+                            let query = String(input.inputText[stringRange])
+                            let signal = InputSwapSuggestionsPanelItems(query, peerId: chatInteraction.peerId, context: chatInteraction.context)
+                            |> deliverOnMainQueue
+                            self.inputSwapDisposable.set(signal.start(next: { [weak self] files in
+                                self?.genericView.updateTextInputSuggestions(files, range: range, animated: animated)
+                            }))
+                            cleanup = false
+                        }
+                    }
+                }
+                if cleanup {
+                    self.genericView.updateTextInputSuggestions([], range: NSMakeRange(0, 0), animated: animated)
+                    self.inputSwapDisposable.set(nil)
+                }
+                
+                if let (updatedContextQueryState, updatedContextQuerySignal) = contextQueryResultStateForChatInterfacePresentationState(value, context: self.context, currentQuery: self.contextQueryState?.0) {
                     self.contextQueryState?.1.dispose()
                     var inScope = true
                     var inScopeResult: ((ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?)?
