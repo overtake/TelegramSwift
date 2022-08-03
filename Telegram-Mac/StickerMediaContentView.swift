@@ -146,6 +146,10 @@ class StickerMediaContentView: ChatMediaContentView {
         super.init(frame:frameRect)
     }
     
+    override var canSpamClicks: Bool {
+        return content?.canSpamClicks ?? super.canSpamClicks
+    }
+    
     private var suggestOpenPremiumPack: Bool = false
     
     override func executeInteraction(_ isControl: Bool) {

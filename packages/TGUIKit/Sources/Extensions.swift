@@ -413,7 +413,11 @@ public extension CALayer {
         animation.duration = 0.2
         self.add(animation, forKey: "shadowPath")
     }
-    
+    func animateFrameFast() {
+        let animation = CABasicAnimation(keyPath: "frame")
+        animation.duration = 0.2
+        self.add(animation, forKey: "frame")
+    }
     
     func animateBorder() ->Void {
         let animation = CABasicAnimation(keyPath: "borderWidth")

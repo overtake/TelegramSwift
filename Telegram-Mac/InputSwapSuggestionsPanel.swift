@@ -233,13 +233,14 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
         path.addArc(tangent1End: CGPoint(x: size.width, y: 0.0), tangent2End: CGPoint(x: size.width - radius, y: 0.0), radius: radius)
         path.addLine(to: CGPoint(x: radius, y: 0.0))
         
-        self.backgroundLayer.frame = CGRect(origin: CGPoint(x: 5, y: 5), size: size)
         
         CATransaction.begin()
+        self.backgroundLayer.frame = CGRect(origin: CGPoint(x: 5, y: 5), size: size)
         self.backgroundLayer.path = path
         self.backgroundLayer.shadowPath = path
         
         if animated {
+            self.backgroundLayer.animateFrameFast()
             self.backgroundLayer.animatePath()
             self.backgroundLayer.animateShadow()
         }

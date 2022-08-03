@@ -173,7 +173,7 @@ final class ChatInteraction : InterfaceObserver  {
     
     var joinGroupCall:(CachedChannelData.ActiveCall, String?)->Void = { _, _ in }
 
-    var runEmojiScreenEffect:(String, MessageId, Bool, Bool)->Void = { _, _, _, _ in }
+    var runEmojiScreenEffect:(String, Message, Bool, Bool)->Void = { _, _, _, _ in }
     var runPremiumScreenEffect:(Message, Bool, Bool)->Void = { _, _, _ in }
     var runReactionEffect:(String, MessageId)->Void = { _, _ in }
 
