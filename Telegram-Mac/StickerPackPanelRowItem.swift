@@ -660,6 +660,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                     }
                 },  for: .Click)
             }
+            addSubview(addButton!)
         }
         
         self.layout()
