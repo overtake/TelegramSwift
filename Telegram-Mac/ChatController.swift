@@ -3286,10 +3286,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 strongSelf.emojiEffects.addPremiumEffect(mirror: mirror, isIncoming: isIncoming, messageId: messageId, viewFrame: context.window.bounds, for: context.window.contentView!)
             }
         }
-        chatInteraction.runEmojiScreenEffect = { [weak self] emoji, messageId, mirror, isIncoming in
+        chatInteraction.runEmojiScreenEffect = { [weak self] emoji, message, mirror, isIncoming in
             guard let strongSelf = self else {
                 return
             }
+            FastSettings.markDiceAsPlayed(message)
+            let messageId = message.id
             if strongSelf.isOnScreen {
                 strongSelf.emojiEffects.addAnimation(emoji.fixed, index: nil, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: NSMakeSize(350, 350), viewFrame: context.window.bounds, for: context.window.contentView!)
             }
@@ -5469,12 +5471,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         if !isLoading {
             var items:[ChatRowItem] = []
+            var animatedEmojiItems:[ChatRowItem] = []
             self.genericView.tableView.enumerateVisibleItems(with: { item in
                 if let item = item as? ChatRowItem, let view = item.view {
                     if view.visibleRect == view.bounds {
-                        if let file = item.message?.media.first as? TelegramMediaFile, !file.noPremium, !context.premiumIsBlocked {
-                            items.append(item)
+                        if let file = item.message?.media.first as? TelegramMediaFile {
+                            if !file.noPremium, !context.premiumIsBlocked, file.isPremiumSticker {
+                                items.append(item)
+                            } else if file.isEmojiAnimatedSticker {
+                                animatedEmojiItems.append(item)
+                            }
                         }
+                        
                     }
                 }
                 return true
@@ -5484,6 +5492,17 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if !FastSettings.diceHasAlreadyPlayed(message) {
                         let mirror = item.renderType == .list || message.isIncoming(item.context.account, item.renderType == .bubble)
                         chatInteraction.runPremiumScreenEffect(message, mirror, false)
+                    }
+                }
+            }
+            for item in animatedEmojiItems {
+                if let message = item.message {
+                    if !FastSettings.diceHasAlreadyPlayed(message) {
+                        let mirror = item.renderType == .list || message.isIncoming(item.context.account, item.renderType == .bubble)
+                        if let emoji = message.file?.stickerText {
+                            chatInteraction.runEmojiScreenEffect(emoji, message, mirror, false)
+                        }
+                        //emoji, messageId, mirror, isIncoming
                     }
                 }
             }

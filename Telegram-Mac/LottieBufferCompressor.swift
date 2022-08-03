@@ -43,7 +43,7 @@ private struct FrameDst : Codable {
     }
 }
 
-private let version = 60
+private let version = 61
 
 final class TRLotData {
     
