@@ -526,13 +526,21 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         if let action = action {
                             switch action {
                             case let .attachBot(botname, _):
-                                if peer.username == botname {
+                                let signal = context.engine.messages.getAttachMenuBot(botId: peer.id)
+                                let openAttach:()->Void = {
                                     let chat = context.bindings.rootNavigation().controller as? ChatController
-                                    if chat?.chatInteraction.peerId == peer.id {
-                                        chat?.chatInteraction.invokeInitialAction(action: action)
-                                        return
-                                    }
+                                    chat?.chatInteraction.invokeInitialAction(action: action)
                                 }
+                                _ = showModalProgress(signal: signal, for: context.window).start(next: { _ in
+                                    openAttach()
+                                }, error: { _ in
+                                    if peer.username == botname {
+                                        openAttach()
+                                    } else {
+                                        callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
+                                    }
+                                })
+                                return
                             default:
                                 break
                             }
