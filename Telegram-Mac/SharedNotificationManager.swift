@@ -465,8 +465,8 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 }
                             case .messages:
                                 text = chatListText(account: account, for: message, applyUserName: true).string
-                                if text.contains("\n") {
-                                    let parts = text.components(separatedBy: "\n")
+                                if text.contains("\r") {
+                                    let parts = text.components(separatedBy: "\r")
                                     text = parts[1]
                                     subText = parts[0]
                                 }
