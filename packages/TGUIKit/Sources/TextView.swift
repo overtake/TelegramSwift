@@ -744,7 +744,7 @@ public final class TextViewLayout : Equatable {
         } else {
             for line in lines {
                 if !line.embeddedItems.isEmpty {
-                    layoutSize.height += isBigEmoji ? 4 : 2
+                    layoutSize.height = isBigEmoji ? 1 : 0
                 }
             }
         }
