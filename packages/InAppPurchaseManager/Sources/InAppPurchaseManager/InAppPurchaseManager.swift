@@ -4,11 +4,42 @@ import SwiftSignalKit
 import StoreKit
 import Postbox
 import TelegramCore
+import CurrencyFormat
+
+private let productIdentifiers = [
+    "org.telegram.telegramPremium.monthly",
+    "org.telegram.telegramPremium.twelveMonths",
+    "org.telegram.telegramPremium.sixMonths",
+    "org.telegram.telegramPremium.threeMonths"
+]
+
+
+
+
+private extension NSDecimalNumber {
+    func round(_ decimals: Int) -> NSDecimalNumber {
+        return self.rounding(accordingToBehavior:
+                            NSDecimalNumberHandler(roundingMode: .down,
+                                   scale: Int16(decimals),
+                                   raiseOnExactness: false,
+                                   raiseOnOverflow: false,
+                                   raiseOnUnderflow: false,
+                                   raiseOnDivideByZero: false))
+    }
+}
+
 
 
 public final class InAppPurchaseManager: NSObject {
     public final class Product : NSObject {
         let skProduct: SKProduct
+        private lazy var numberFormatter: NumberFormatter = {
+            let numberFormatter = NumberFormatter()
+            numberFormatter.numberStyle = .currency
+            numberFormatter.locale = self.skProduct.priceLocale
+            return numberFormatter
+        }()
+
         
         init(skProduct: SKProduct) {
             self.skProduct = skProduct
@@ -18,10 +49,41 @@ public final class InAppPurchaseManager: NSObject {
 //            return skProduct.
 //        }
         
+        public var id: String {
+            return self.skProduct.productIdentifier
+        }
+
+        
+        public var isSubscription: Bool {
+            
+            if #available(macOS 10.14, *) {
+                return self.skProduct.subscriptionGroupIdentifier != nil
+            } else if #available(macOS 10.13.2, *) {
+                return self.skProduct.subscriptionPeriod != nil
+            } else {
+                return self.id.contains(".monthly")
+            }
+        }
+
+        public func pricePerMonth(_ monthsCount: Int) -> String {
+            let price = self.skProduct.price.dividing(by: NSDecimalNumber(value: monthsCount)).round(2)
+            return numberFormatter.string(from: price) ?? ""
+        }
+        
+        public var priceValue: NSDecimalNumber {
+            return self.skProduct.price
+        }
+        
+        public var priceCurrencyAndAmount: (currency: String, amount: Int64) {
+            if let currencyCode = self.numberFormatter.currencyCode,
+                let amount = fractionalToCurrencyAmount(value: self.priceValue.doubleValue, currency: currencyCode) {
+                return (currencyCode, amount)
+            } else {
+                return ("", 0)
+            }
+        }
+        
         public var price: String {
-            let numberFormatter = NumberFormatter()
-            numberFormatter.numberStyle = .currency
-            numberFormatter.locale = self.skProduct.priceLocale
             return numberFormatter.string(from: self.skProduct.price) ?? ""
         }
     }
@@ -84,15 +146,14 @@ public final class InAppPurchaseManager: NSObject {
     }
     
     private func requestProducts() {
-        guard !self.premiumProductId.isEmpty else {
-            return
-        }
-        let productRequest = SKProductsRequest(productIdentifiers: Set([self.premiumProductId]))
+        Logger.shared.log("InAppPurchaseManager", "Requesting products")
+        let productRequest = SKProductsRequest(productIdentifiers: Set(productIdentifiers))
         productRequest.delegate = self
         productRequest.start()
         
         self.productRequest = productRequest
     }
+
     
     public func canMakePayments() -> Bool {
         return SKPaymentQueue.canMakePayments()

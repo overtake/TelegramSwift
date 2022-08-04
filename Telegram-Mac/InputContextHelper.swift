@@ -748,6 +748,10 @@ class InputContextHelper: NSObject {
     private let chatInteraction:ChatInteraction
     private let entries:Atomic<[AppearanceWrapperEntry<InputContextEntry>]?> = Atomic(value:nil)
     private let loadMoreDisposable = MetaDisposable()
+    
+    
+    var didScroll:(()->Void)?
+    
     init(chatInteraction:ChatInteraction, highlightInsteadOfSelect: Bool = false) {
         self.chatInteraction = chatInteraction
         self.context = chatInteraction.context
@@ -770,6 +774,10 @@ class InputContextHelper: NSObject {
         controller.genericView.position = position
         controller.updateLocalizationAndTheme(theme: theme)
         var currentResult = result
+        
+        controller.genericView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] _ in
+            self?.didScroll?()
+        }))
         
         let initialSize = controller.atomicSize
         let previosEntries = self.entries

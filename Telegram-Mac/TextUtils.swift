@@ -12,6 +12,7 @@ import TGCurrencyFormatter
 import Postbox
 import TGUIKit
 import SwiftSignalKit
+import CurrencyFormat
 
 enum MessageTextMediaViewType {
     case emoji

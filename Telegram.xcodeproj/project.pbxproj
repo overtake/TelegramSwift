@@ -101,6 +101,7 @@
 		27361ED4282122C700808241 /* StickerPremiumHolderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27361ED3282122C700808241 /* StickerPremiumHolderView.swift */; };
 		27361ED62821234200808241 /* PremiumReactionsModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27361ED52821234200808241 /* PremiumReactionsModal.swift */; };
 		2737557E27E396AB007DC755 /* PhoneNumberConfirmCodeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2737557D27E396AB007DC755 /* PhoneNumberConfirmCodeController.swift */; };
+		2738A2D4289C41CE00EC1010 /* CurrencyFormat in Frameworks */ = {isa = PBXBuildFile; productRef = 2738A2D3289C41CE00EC1010 /* CurrencyFormat */; };
 		2738CAD6270704A800CDB1BF /* RequestJoinChatModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD5270704A800CDB1BF /* RequestJoinChatModalController.swift */; };
 		2738CAD82707067000CDB1BF /* RequestJoinChatRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */; };
 		2738CADA2707198100CDB1BF /* RequestJoinMemberListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */; };
@@ -198,7 +199,6 @@
 		276885032770D7BE0021C891 /* AddReactionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276885022770D7BE0021C891 /* AddReactionManager.swift */; };
 		276957A92746C07400297991 /* SessionModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276957A82746C07400297991 /* SessionModalController.swift */; };
 		276A6C0F26C5316F00E4FF34 /* StickerPackTrendingItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276A6C0E26C5316F00E4FF34 /* StickerPackTrendingItem.swift */; };
-		276C1EBF261B451500FE41C9 /* Currency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276C1EBE261B451500FE41C9 /* Currency.swift */; };
 		2773A53525F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A53425F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs */; };
 		2773A53A25FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2773A53925FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift */; };
 		2773A53E25FA220C00AB45E9 /* JoinVoiceChatAlertRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2773A53D25FA220B00AB45E9 /* JoinVoiceChatAlertRowItem.swift */; };
@@ -507,9 +507,6 @@
 		27E070F6278D9C120026BFA1 /* menu_poll.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27E070F5278D9C120026BFA1 /* menu_poll.tgs */; };
 		27E070FF27906B8C0026BFA1 /* UniversalSoftwareVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E070FE27906B8B0026BFA1 /* UniversalSoftwareVideoSource.swift */; };
 		27E0710127906B9B0026BFA1 /* SoftwareVideoSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E0710027906B9A0026BFA1 /* SoftwareVideoSource.swift */; };
-		27E5997A261B3F5800228411 /* CurrencyFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E59979261B3F5800228411 /* CurrencyFormatter.swift */; };
-		27E5997D261B3FA800228411 /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E5997C261B3FA800228411 /* String.swift */; };
-		27E59980261B404000228411 /* CurrencyLocale.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27E5997F261B404000228411 /* CurrencyLocale.swift */; };
 		27E5C3BD2739761300C52BA0 /* MurMurHash32 in Frameworks */ = {isa = PBXBuildFile; productRef = 27E5C3BC2739761300C52BA0 /* MurMurHash32 */; };
 		27E6DB0A2689C71E003D6164 /* MetalFunctions.metal in Sources */ = {isa = PBXBuildFile; fileRef = 27E6DB092689C71E003D6164 /* MetalFunctions.metal */; };
 		27E78DEB2743EEF6002D5A23 /* CrashHandler in Frameworks */ = {isa = PBXBuildFile; productRef = 27E78DEA2743EEF6002D5A23 /* CrashHandler */; };
@@ -553,7 +550,6 @@
 		27F4F190284A33C100A3B4D4 /* PremiumBoardingDoubleRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F4F18F284A33C100A3B4D4 /* PremiumBoardingDoubleRowItem.swift */; };
 		27F4F192284E401200A3B4D4 /* menu_gear.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27F4F191284E401200A3B4D4 /* menu_gear.tgs */; };
 		27F4F194284F654400A3B4D4 /* TranscribeAudioTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F4F193284F654400A3B4D4 /* TranscribeAudioTextView.swift */; };
-		27F5F23325E7CACE00E8AC69 /* CurrencyFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23225E7CACE00E8AC69 /* CurrencyFormat.swift */; };
 		27F5F23C25E7CCD700E8AC69 /* PaymentsCheckoutPriceItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23B25E7CCD600E8AC69 /* PaymentsCheckoutPriceItem.swift */; };
 		27F5F23F25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F5F23E25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift */; };
 		27F73766274BE58B005DCC1C /* GalleryRecognition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F73765274BE58B005DCC1C /* GalleryRecognition.swift */; };
@@ -1452,6 +1448,7 @@
 		27361ED3282122C700808241 /* StickerPremiumHolderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerPremiumHolderView.swift; sourceTree = "<group>"; };
 		27361ED52821234200808241 /* PremiumReactionsModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumReactionsModal.swift; sourceTree = "<group>"; };
 		2737557D27E396AB007DC755 /* PhoneNumberConfirmCodeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberConfirmCodeController.swift; sourceTree = "<group>"; };
+		2738A2D2289C416D00EC1010 /* CurrencyFormat */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = CurrencyFormat; path = packages/CurrencyFormat; sourceTree = "<group>"; };
 		2738CAD5270704A800CDB1BF /* RequestJoinChatModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinChatModalController.swift; sourceTree = "<group>"; };
 		2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinChatRowItem.swift; sourceTree = "<group>"; };
 		2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinMemberListController.swift; sourceTree = "<group>"; };
@@ -2462,7 +2459,6 @@
 		C2F6190C1E844DCD007A051B /* TelegramAccountAuxiliaryMethods.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TelegramAccountAuxiliaryMethods.swift; sourceTree = "<group>"; };
 		C2F93A2C1F3C55C500BCD48F /* EmojiToleranceController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmojiToleranceController.swift; sourceTree = "<group>"; };
 		C2F9C4471F9500B4002B2CBF /* TwoStepVerificationUnlockController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwoStepVerificationUnlockController.swift; sourceTree = "<group>"; };
-		C2F9C44B1F95FE58002B2CBF /* Markdown.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Markdown.swift; sourceTree = "<group>"; };
 		C2FB2FAA1EBF73CF0093C8BA /* RecentCallsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RecentCallsViewController.swift; sourceTree = "<group>"; };
 		C2FBC1E61DC631980063A23B /* SPPreviewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SPPreviewController.swift; sourceTree = "<group>"; };
 		C2FD33E81E696A86008D13D4 /* GroupsInCommonViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GroupsInCommonViewController.swift; sourceTree = "<group>"; };
@@ -2702,6 +2698,7 @@
 				D06E38AD24A5F3B700C7D03A /* Metal.framework in Frameworks */,
 				279FD2AD273C1291004F08A1 /* TgVoipWebrtc in Frameworks */,
 				A71DC82B23858312000EEDE2 /* CoreSpotlight.framework in Frameworks */,
+				2738A2D4289C41CE00EC1010 /* CurrencyFormat in Frameworks */,
 				A7ED5DAF236C7CE100040372 /* RLottie.framework in Frameworks */,
 				27B6D05727393A3D00C785C7 /* GraphUI in Frameworks */,
 				27A69796273D253B00B33415 /* rnoise in Frameworks */,
@@ -3316,6 +3313,7 @@
 		27F3B7592739300C00B81F10 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				2738A2D2289C416D00EC1010 /* CurrencyFormat */,
 				27D913082833A1B0007CF40F /* InAppPurchaseManager */,
 				27D912FB28323A50007CF40F /* RangeSet */,
 				2718FF8B27C3CCC700196BC4 /* FetchManager */,
@@ -5018,7 +5016,6 @@
 				C25C13321E8A433700AE26A1 /* TableUtils.swift */,
 				C2B6488D1EB25A5300BA574B /* FetchVideoMediaResource.swift */,
 				C21B24621EDADC8600FC6CDA /* MMMenuItem.swift */,
-				C2F9C44B1F95FE58002B2CBF /* Markdown.swift */,
 				C241026E1FD58EA800DB8625 /* SImageView.swift */,
 				9FA0E5332051A41A001E5649 /* PreUploadManager.swift */,
 				9F52F5192130286E006FC0B5 /* LocationRequest.swift */,
@@ -5750,6 +5747,7 @@
 				27C2B1A527C3CF13004BC87B /* FetchManager */,
 				27D9130628323A74007CF40F /* RangeSet */,
 				27D9130F28353E53007CF40F /* InAppPurchaseManager */,
+				2738A2D3289C41CE00EC1010 /* CurrencyFormat */,
 			);
 			productName = "Telegram-Mac";
 			productReference = D098C7151D7E175A007784E4 /* Telegram.app */;
@@ -6595,7 +6593,6 @@
 				C2B1A1111D9FD0A100ACB1DD /* ChatInterfaceInteraction.swift in Sources */,
 				C2B1A0EF1D9D94CE00ACB1DD /* SeparatorRowItem.swift in Sources */,
 				C29340F11F506C310074991E /* EmptyGroupstickerSearchRowItem.swift in Sources */,
-				27F5F23325E7CACE00E8AC69 /* CurrencyFormat.swift in Sources */,
 				D06C6950253887F600DD9005 /* SlotMachineValue.swift in Sources */,
 				D0906CFC254BFE1D000E6961 /* ModalPreviews.swift in Sources */,
 				C2FD33F21E69CF6D008D13D4 /* ChatUrlPreviewModel.swift in Sources */,
@@ -6638,7 +6635,6 @@
 				C2A506751DF438B900971A93 /* AudioWaveformView.swift in Sources */,
 				D00EECD5252C9192001EB99F /* CameraPreviewRowItem.swift in Sources */,
 				C2271DB51DAE131C001792B6 /* GeneralInteractedRowItem.swift in Sources */,
-				276C1EBF261B451500FE41C9 /* Currency.swift in Sources */,
 				D093474E242DCFC4000ECA88 /* PeerMediaGroupPeersController.swift in Sources */,
 				C25C13331E8A433700AE26A1 /* TableUtils.swift in Sources */,
 				C24949141E5B763F00D7ED5D /* ApplicationContext.swift in Sources */,
@@ -6724,7 +6720,6 @@
 				A7393D462409044C00CE44CA /* ChannelOverviewStatsRowItem.swift in Sources */,
 				2726BDDF286B0BAE0044D260 /* PremiumGiftRowItem.swift in Sources */,
 				27E0710127906B9B0026BFA1 /* SoftwareVideoSource.swift in Sources */,
-				27E5997D261B3FA800228411 /* String.swift in Sources */,
 				27BA045726E4F3E9008FC1A3 /* MessageReadMenuItem.swift in Sources */,
 				27F37A282857A92000AC8B90 /* PremiumDemoPhoneControl.swift in Sources */,
 				27916F1B28771BC90046DB44 /* InlineStickerItemLayer.swift in Sources */,
@@ -6902,7 +6897,6 @@
 				27F5F23C25E7CCD700E8AC69 /* PaymentsCheckoutPriceItem.swift in Sources */,
 				D09D9DF1229C27A700378796 /* AnimatedStickerUtils.swift in Sources */,
 				9F7943B220855DC200FEDB81 /* ProxyListController.swift in Sources */,
-				27E5997A261B3F5800228411 /* CurrencyFormatter.swift in Sources */,
 				27C4089725B0A1F400372302 /* ClosureInviteLinkController.swift in Sources */,
 				273274E626A818AE00E04289 /* WallpaperColorPickerContainerView.swift in Sources */,
 				C296AF8C1D8EA7F3001DBB59 /* ChatFileContentView.swift in Sources */,
@@ -7005,7 +6999,6 @@
 				9F18908D2237B5A400665EF5 /* InputURLFormatterModalController.swift in Sources */,
 				277C208627A284FA0070B3BF /* GroupCallAvatarMenuItem.swift in Sources */,
 				C221ED5C1EA69AA300471C65 /* StorageUsageController.swift in Sources */,
-				27E59980261B404000228411 /* CurrencyLocale.swift in Sources */,
 				D0ABA3F325499C5A00031678 /* MessageStatsController.swift in Sources */,
 				C2FD382E1DCA1FA3009DC28C /* PreviewSenderController.swift in Sources */,
 				C281498A1EA7F44300BB933E /* ListViewIntermediateState.swift in Sources */,
@@ -7489,6 +7482,10 @@
 		2700B221273ADC94003E4018 /* HotKey */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = HotKey;
+		};
+		2738A2D3289C41CE00EC1010 /* CurrencyFormat */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CurrencyFormat;
 		};
 		2745FECA274F947000546B05 /* BuildConfig */ = {
 			isa = XCSwiftPackageProductDependency;

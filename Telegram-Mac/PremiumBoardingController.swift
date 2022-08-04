@@ -12,6 +12,7 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 import InAppPurchaseManager
+import CurrencyFormat
 
 enum PremiumLogEventsSource : Equatable {
     
@@ -842,7 +843,7 @@ final class PremiumBoardingController : ModalViewController {
         
         let products: Signal<[InAppPurchaseManager.Product], NoError>
         #if APP_STORE
-        products = inAppPurchaseManager.availableProducts
+        products = inAppPurchaseManager.availableProducts.filter { $0.isSubscription }
         #else
         products = .single([])
         #endif

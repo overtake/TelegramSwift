@@ -11,10 +11,15 @@ import TelegramCore
 import SwiftSignalKit
 import Postbox
 import TGUIKit
+import InAppPurchaseManager
+import CurrencyFormat
+
+
 
 struct PremiumGiftOption : Equatable {
     
     let option: CachedPremiumGiftOption
+    let storeProduct: InAppPurchaseManager.Product?
     let options: [CachedPremiumGiftOption]
     let configuration: PremiumPromoConfiguration
     
@@ -52,15 +57,17 @@ private struct State : Equatable {
     var options: [CachedPremiumGiftOption]
     var option: CachedPremiumGiftOption
     var premiumConfiguration: PremiumPromoConfiguration
-    
+    var premiumProducts: [InAppPurchaseManager.Product] = []
     
     var values: [PremiumGiftOption] {
-        return self.options.map({
-            .init(option: $0, options: self.options, configuration: self.premiumConfiguration)
+        return self.options.map({ value in
+            let storeProduct = self.premiumProducts.first(where: { $0.id == value.storeProductId })
+            return .init(option: value, storeProduct: storeProduct, options: self.options, configuration: self.premiumConfiguration)
         })
     }
     var value: PremiumGiftOption {
-        return .init(option: self.option, options: self.options, configuration: self.premiumConfiguration)
+        let storeProduct = self.premiumProducts.first(where: { $0.id == self.option.storeProductId })
+        return .init(option: self.option, storeProduct: storeProduct, options: self.options, configuration: self.premiumConfiguration)
     }
 }
 
@@ -455,7 +462,17 @@ final class PremiumGiftController : ModalViewController {
             
         })
         
+        let inAppPurchaseManager = context.inAppPurchaseManager
         
+        let products: Signal<[InAppPurchaseManager.Product], NoError>
+        #if APP_STORE || DEBUG
+        products = inAppPurchaseManager.availableProducts |> map {
+            $0.filter { !$0.isSubscription }
+        }
+        #else
+            products = .single([])
+        #endif
+
         
         
         let signal: Signal<(TableUpdateTransition, State), NoError> = combineLatest(queue: .mainQueue(), appearanceSignal, stateSignal) |> mapToQueue { appearance, state in
@@ -475,10 +492,11 @@ final class PremiumGiftController : ModalViewController {
         
 
         
-        actionsDisposable.add(combineLatest(peer, premiumPromo).start(next: { peer, configuration in
+        actionsDisposable.add(combineLatest(peer, premiumPromo, products).start(next: { peer, configuration, products in
             updateState { current in
                 var current = current
                 current.peer = .init(peer)
+                current.premiumProducts = products
                 current.premiumConfiguration = configuration
                 return current
             }

@@ -10,6 +10,7 @@ import Foundation
 import TGUIKit
 import TelegramCore
 import SwiftSignalKit
+import CurrencyFormat
 
 final class PaymentsTipsRowItem : GeneralRowItem {
     
