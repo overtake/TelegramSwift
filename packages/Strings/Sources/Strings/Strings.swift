@@ -268,11 +268,11 @@ public extension String {
 public extension UnicodeScalar {
     var isEmoji: Bool {
         
-        if #available(macOS 10.12.2, *) {
-            if self.properties.isEmoji {
-                return true
-            }
-        }
+//        if #available(macOS 10.12.2, *) {
+//            if self.properties.isEmoji {
+//                return true
+//            }
+//        }
         
         switch self.value {
         case 0x1F600...0x1F64F, 0x1F300...0x1F5FF, 0x1F680...0x1F6FF, 0x1F1E6...0x1F1FF, 0xE0020...0xE007F, 0xFE00...0xFE0F, 0x1F900...0x1F9FF, 0x1F018...0x1F0F5, 0x1F200...0x1F270, 65024...65039, 9100...9300, 8400...8447, 0x1F004, 0x1F18E, 0x1F191...0x1F19A, 0x1F5E8:
