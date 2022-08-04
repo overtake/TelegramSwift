@@ -11,7 +11,7 @@ import TelegramCore
 import InAppSettings
 import Postbox
 import SwiftSignalKit
-
+import CurrencyFormat
 
 class ChatInvoiceItem: ChatRowItem {
     fileprivate let media:TelegramMediaInvoice

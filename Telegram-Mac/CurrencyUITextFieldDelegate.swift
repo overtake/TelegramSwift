@@ -1,7 +1,7 @@
 
 
 import Cocoa
-
+import CurrencyFormat
 /// Custom text field delegate, that formats user inputs based on a given currency formatter.
 public class CurrencyUITextFieldDelegate: NSObject {
 

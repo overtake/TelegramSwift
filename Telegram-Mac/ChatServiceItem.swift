@@ -13,6 +13,7 @@ import TGCurrencyFormatter
 import Postbox
 import SwiftSignalKit
 import InAppSettings
+import CurrencyFormat
 
 class ChatServiceItem: ChatRowItem {
     

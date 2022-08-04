@@ -1666,6 +1666,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        genericView.inputContextHelper.didScroll = { [weak self] in
+            self?.genericView.updateTextInputSuggestions([], range: NSMakeRange(0, 0), animated: true)
+        }
+        
         genericView.tableView.addScroll(listener: emojiEffects.scrollUpdater)
         
         if FastSettings.legacyReactions {

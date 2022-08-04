@@ -12,6 +12,7 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
+import CurrencyFormat
 
 private final class Arguments {
     let context: AccountContext

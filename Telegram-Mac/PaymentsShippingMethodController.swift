@@ -11,6 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
+import CurrencyFormat
 
 
 private final class Arguments {

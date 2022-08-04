@@ -11,7 +11,7 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
+import CurrencyFormat
 import Postbox
 
 enum PaymentProvider : Equatable {
