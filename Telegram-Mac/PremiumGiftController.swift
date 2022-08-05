@@ -21,17 +21,23 @@ struct PremiumGiftOption : Equatable {
     let option: CachedPremiumGiftOption
     let storeProduct: InAppPurchaseManager.Product?
     let options: [CachedPremiumGiftOption]
+    let storeProducts:[InAppPurchaseManager.Product]
     let configuration: PremiumPromoConfiguration
     
     var titleString: String {
         return strings().timerMonthsCountable(Int(option.months))
     }
+    
+    
     var discountString: Int {
         
-        let optionMonthly:Int64 = Int64((CGFloat(option.amount) / CGFloat(option.months)))
+        let amount = storeProduct?.priceCurrencyAndAmount.amount ?? option.amount
+        
+        let optionMonthly:Int64 = Int64((CGFloat(amount) / CGFloat(option.months)))
         
         let highestOptionMonthly:Int64 = options.map { option in
-            return Int64((CGFloat(option.amount) / CGFloat(option.months)))
+            let store = self.storeProducts.first(where: { $0.id == option.storeProductId })
+            return Int64((CGFloat(store?.priceCurrencyAndAmount.amount ?? option.amount) / CGFloat(option.months)))
         }.max()!
         
         
@@ -40,9 +46,19 @@ struct PremiumGiftOption : Equatable {
     }
     
     var priceString: String {
+        if let storeProduct = storeProduct {
+            return formatCurrencyAmount(storeProduct.priceCurrencyAndAmount.amount, currency: storeProduct.priceCurrencyAndAmount.currency)
+        }
         return formatCurrencyAmount(option.amount, currency: option.currency)
     }
     var priceDiscountString: String {
+        if let storeProduct = storeProduct {
+            
+            let (currency, amount) = storeProduct.priceCurrencyAndAmount
+            let optionMonthly = Int64((CGFloat(amount) / CGFloat(option.months)))
+            return strings().premiumGiftMonth(formatCurrencyAmount(optionMonthly, currency: currency))
+        }
+        
         let optionMonthly = Int64((CGFloat(option.amount) / CGFloat(option.months)))
         return strings().premiumGiftMonth(formatCurrencyAmount(optionMonthly, currency: option.currency))
         
@@ -58,16 +74,28 @@ private struct State : Equatable {
     var option: CachedPremiumGiftOption
     var premiumConfiguration: PremiumPromoConfiguration
     var premiumProducts: [InAppPurchaseManager.Product] = []
-    
+    var canMakePayment: Bool
     var values: [PremiumGiftOption] {
+        
+        #if APP_STORE || DEBUG
+        return self.options.compactMap { value in
+            let storeProduct = self.premiumProducts.first(where: { $0.id == value.storeProductId })
+            if let storeProduct = storeProduct {
+                return .init(option: value, storeProduct: storeProduct, options: self.options, storeProducts: self.premiumProducts, configuration: self.premiumConfiguration)
+            } else {
+                return nil
+            }
+        }
+        #endif
+        
         return self.options.map({ value in
             let storeProduct = self.premiumProducts.first(where: { $0.id == value.storeProductId })
-            return .init(option: value, storeProduct: storeProduct, options: self.options, configuration: self.premiumConfiguration)
+            return .init(option: value, storeProduct: storeProduct, options: self.options, storeProducts: self.premiumProducts, configuration: self.premiumConfiguration)
         })
     }
     var value: PremiumGiftOption {
         let storeProduct = self.premiumProducts.first(where: { $0.id == self.option.storeProductId })
-        return .init(option: self.option, storeProduct: storeProduct, options: self.options, configuration: self.premiumConfiguration)
+        return .init(option: self.option, storeProduct: storeProduct, options: self.options, storeProducts: self.premiumProducts, configuration: self.premiumConfiguration)
     }
 }
 
@@ -169,7 +197,15 @@ private final class PremiumBoardingView : View {
         
         func update(animated: Bool, state: State) -> NSSize {
             
-            let layout = TextViewLayout(.initialize(string: strings().premiumGiftButtonText(state.value.priceString), color: NSColor.white, font: .medium(.text)))
+            
+            let text: String
+            if state.canMakePayment {
+                text = strings().premiumGiftButtonText(state.value.priceString)
+            } else {
+                text = strings().premiumBoardingPaymentNotAvailalbe
+            }
+            
+            let layout = TextViewLayout(.initialize(string: text, color: NSColor.white, font: .medium(.text)))
             layout.measure(width: .greatestFiniteMagnitude)
             textView.update(layout)
                         
@@ -180,6 +216,11 @@ private final class PremiumBoardingView : View {
             let size = NSMakeSize(container.frame.width + 100, 40)
 
             needsLayout = true
+            
+            self.userInteractionEnabled = state.canMakePayment
+            
+            self.alphaValue = state.canMakePayment ? 1.0 : 0.7
+
                         
             return size
         }
@@ -394,7 +435,9 @@ final class PremiumGiftController : ModalViewController {
         super.viewDidLoad()
                 
         let actionsDisposable = DisposableSet()
+        let activationDisposable = MetaDisposable()
         
+        actionsDisposable.add(activationDisposable)
         
         let context = self.context
         let peerId = self.peerId
@@ -402,8 +445,24 @@ final class PremiumGiftController : ModalViewController {
         let close: ()->Void = {
             closeAllModals()
         }
+        
+        let inAppPurchaseManager = context.inAppPurchaseManager
+        
+        let products: Signal<[InAppPurchaseManager.Product], NoError>
+        #if APP_STORE || DEBUG
+        products = inAppPurchaseManager.availableProducts |> map {
+            $0.filter { !$0.isSubscription }
+        }
+        #else
+            products = .single([])
+        #endif
 
-        let initialState = State(peer: nil, options: options, option: options[0], premiumConfiguration: PremiumPromoConfiguration.defaultValue)
+        var canMakePayment: Bool = true
+        #if APP_STORE || DEBUG
+        canMakePayment = inAppPurchaseManager.canMakePayments()
+        #endif
+
+        let initialState = State(peer: nil, options: options, option: options[0], premiumConfiguration: PremiumPromoConfiguration.defaultValue, canMakePayment: canMakePayment)
         
         let statePromise: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -462,18 +521,7 @@ final class PremiumGiftController : ModalViewController {
             
         })
         
-        let inAppPurchaseManager = context.inAppPurchaseManager
-        
-        let products: Signal<[InAppPurchaseManager.Product], NoError>
-        #if APP_STORE || DEBUG
-        products = inAppPurchaseManager.availableProducts |> map {
-            $0.filter { !$0.isSubscription }
-        }
-        #else
-            products = .single([])
-        #endif
-
-        
+       
         
         let signal: Signal<(TableUpdateTransition, State), NoError> = combineLatest(queue: .mainQueue(), appearanceSignal, stateSignal) |> mapToQueue { appearance, state in
             let entries = state.0.entries.map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
@@ -491,6 +539,7 @@ final class PremiumGiftController : ModalViewController {
         |> deliverOnMainQueue
         
 
+  
         
         actionsDisposable.add(combineLatest(peer, premiumPromo, products).start(next: { peer, configuration, products in
             updateState { current in
@@ -498,6 +547,7 @@ final class PremiumGiftController : ModalViewController {
                 current.peer = .init(peer)
                 current.premiumProducts = products
                 current.premiumConfiguration = configuration
+                current.canMakePayment = canMakePayment
                 return current
             }
         }))
@@ -509,8 +559,81 @@ final class PremiumGiftController : ModalViewController {
             self?.readyOnce()
         }))
         
+        let lockModal = PremiumLockModalController()
+
+        
         let buyAppStore: ()->Void = {
             
+            
+            var needToShow = true
+            delay(0.2, closure: {
+                if needToShow {
+                    showModal(with: lockModal, for: context.window)
+                }
+            })
+            
+            let product: PremiumGiftOption = stateValue.with ({ state in
+                return state.value
+            })
+            
+            guard let storeProduct = product.storeProduct else {
+                return
+            }
+            
+            let (currency, amount) = storeProduct.priceCurrencyAndAmount
+
+            let duration = product.option.months
+            
+            let _ = (context.engine.payments.canPurchasePremium(purpose: .gift(peerId: peerId, currency: currency, amount: amount))
+            |> deliverOnMainQueue).start(next: { [weak lockModal] available in
+                if available {
+                    actionsDisposable.add((inAppPurchaseManager.buyProduct(storeProduct, account: context.account, targetPeerId: peerId)
+                    |> deliverOnMainQueue).start(next: { status in
+                        
+                        lockModal?.close()
+                        needToShow = false
+                        
+                        if case .purchased = status {
+                            let activate = showModalProgress(signal: context.engine.payments.sendAppStoreReceipt(receipt: InAppPurchaseManager.getReceiptData() ?? Data(), purpose: .gift(peerId: peerId, currency: currency, amount: amount)), for: context.window)
+                            activationDisposable.set(activate.start(error: { _ in
+                                showModalText(for: context.window, text: strings().errorAnError)
+                                inAppPurchaseManager.finishAllTransactions()
+                            }, completed: {
+                                close()
+                                inAppPurchaseManager.finishAllTransactions()
+                                delay(0.2, closure: {
+                                    PlayConfetti(for: context.window)
+                                    context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+                                    let _ = updatePremiumPromoConfigurationOnce(account: context.account).start()
+                                })
+                            }))
+                        }
+                    }, error: {  error in
+                        let errorText: String
+                        switch error {
+                            case .generic:
+                                errorText = strings().premiumPurchaseErrorUnknown
+                            case .network:
+                                errorText =  strings().premiumPurchaseErrorNetwork
+                            case .notAllowed:
+                                errorText =  strings().premiumPurchaseErrorNotAllowed
+                            case .cantMakePayments:
+                                errorText =  strings().premiumPurchaseErrorCantMakePayments
+                            case .assignFailed:
+                                errorText =  strings().premiumPurchaseErrorUnknown
+                            case .cancelled:
+                                errorText = strings().premiumBoardingAppStoreCancelled
+                        }
+                        lockModal?.close()
+                        showModalText(for: context.window, text: errorText)
+                        inAppPurchaseManager.finishAllTransactions()
+                    }))
+                } else {
+                    lockModal?.close()
+                    needToShow = false
+                }
+            })
+
         }
         let buyNonAppStore: ()->Void = {
             
@@ -528,19 +651,13 @@ final class PremiumGiftController : ModalViewController {
         
         genericView.accept = {
             
-            #if APP_STORE
+            #if APP_STORE || DEBUG
             buyAppStore()
             #else
             buyNonAppStore()
             #endif
             
-//            close()
-//            PlayConfetti(for: context.window)
-//
-//
-//            delay(0.2, closure: {
-//                showModalText(for: context.window, text: "You successfully gifted Telegram Premium")
-//            })
+
         }
     }
     
