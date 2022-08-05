@@ -20,6 +20,7 @@ import InAppSettings
 import ColorPalette
 import ThemeSettings
 import Accelerate
+import TGModernGrowingTextView
 
 extension RenderedChannelParticipant {
     func withUpdatedBannedRights(_ info: ChannelParticipantBannedInfo) -> RenderedChannelParticipant {
@@ -3591,4 +3592,14 @@ func installAttachMenuBot(context: AccountContext, peer: Peer, completion: @esca
             }
         })
     })
+}
+
+
+extension NSAttributedString {
+    static func makeAnimated(_ file: TelegramMediaFile, text: String) -> NSAttributedString {
+        let attach = NSMutableAttributedString()
+        _ = attach.append(string: text)
+        attach.addAttribute(.init(rawValue: TGAnimatedEmojiAttributeName), value: TGTextAttachment(identifier: "\(arc4random())", fileId: file.fileId.id, file: file, text: text), range: NSMakeRange(0, text.length))
+        return attach
+    }
 }

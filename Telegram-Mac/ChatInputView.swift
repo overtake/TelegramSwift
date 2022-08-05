@@ -422,10 +422,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes {
             let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
 
-            let item = SimpleUndoItem(attributedString: textView.attributedString(), be: state.effectiveInput.attributedString, wasRange: textView.selectedRange(), be: range)
-            self.textView.addSimpleItem(item)
-
-//            self.textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
+//            let item = SimpleUndoItem(attributedString: textView.attributedString(), be: state.effectiveInput.attributedString, wasRange: textView.selectedRange(), be: range)
+//            self.textView.addSimpleItem(item)
+//
+            self.textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
         }
 //        if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length {
 //            textView.setSelectedRange(range)

@@ -954,7 +954,8 @@ class InputContextHelper: NSObject {
                     
                 case let .emoji(clues, animated, firstWord):
                     var index:Int32 = 0
-                    if !clues.isEmpty {
+                    let count = clues.count + animated.count
+                    if count > 0 {
                         entries.append(.emoji(clues, animated, nil, firstWord, index))
                         index += 1
                     }

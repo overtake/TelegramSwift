@@ -70,12 +70,22 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
                 let inputText = textInputState.inputText
                 
                 let replacementText = (item.clue.customEmojiText ?? item.clue.stickerText ?? "😀").fixed
-                let range = NSRange(string: inputText, range: stringRange)
+                var range = NSRange(string: inputText, range: stringRange)
                 
                 let attach = NSMutableAttributedString()
-                _ = attach.append(string: replacementText)
-                attach.addAttribute(.init(rawValue: TGAnimatedEmojiAttributeName), value: TGTextAttachment(identifier: "\(arc4random())", fileId: item.clue.fileId.id, file: item.clue, text: replacementText), range: attach.range)
-
+                                
+                attach.append(.makeAnimated(item.clue, text: replacementText))
+                let symbolLength = range.length
+                while range.location > 0 {
+                    let previous = NSMakeRange(max(0, range.location - range.length), symbolLength)
+                    if inputText.nsstring.substring(with: previous) == replacementText {
+                        attach.append(.makeAnimated(item.clue, text: replacementText))
+                        range.location -= previous.length
+                        range.length += previous.length
+                    } else {
+                        break
+                    }
+                }
                 
                 _ = chatInteraction.appendText(attach, selectedRange: range.lowerBound ..< range.upperBound)
             }
@@ -111,7 +121,38 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
         fatalError("init(frame:) has not been implemented")
     }
     
+    enum Entry : Comparable, Identifiable {
+        case animated(TelegramMediaFile, Int)
+        
+        static func <(lhs: Entry, rhs: Entry) -> Bool {
+            return lhs.index < rhs.index
+        }
+        
+        var index: Int {
+            switch self {
+            case .animated(_, let index):
+                return index
+            }
+        }
+        var stableId: AnyHashable {
+            switch self {
+            case .animated(let file, _):
+                return file.fileId.id
+            }
+        }
+        
+        func makeItem(_ size: NSSize, context: AccountContext) -> TableRowItem {
+            switch self {
+            case let .animated(file, _):
+                return AnimatedClueRowItem(size, context: context, clue: file)
+            }
+        }
+    }
+    
+
+    
     private var range: NSRange?
+    private var items:[Entry] = []
     
     func apply(_ items: [TelegramMediaFile], range: NSRange, animated: Bool, isNew: Bool) {
         
@@ -130,13 +171,36 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
         let convert = textView.inputView.convert(rect, to: relativeView)
         
         
-        tableView.beginTableUpdates()
-        tableView.removeAll()
+        var index: Int = 0
+        var entries:[Entry] = []
         
         for clue in items {
-            _ = tableView.addItem(item: AnimatedClueRowItem(bounds.size, context: context, clue: clue), animation: .none)
+            entries.append(.animated(clue, index))
+            index += 1
         }
         
+        let context = self.context
+        
+        tableView.beginTableUpdates()
+        
+        
+        let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.items, rightList: entries)
+        
+        for rdx in deleteIndices.reversed() {
+            tableView.remove(at: rdx, animation: animated ? .effectFade : .none)
+            self.items.remove(at: rdx)
+        }
+        
+        for (idx, item, _) in indicesAndItems {
+            _ = tableView.insert(item: item.makeItem(bounds.size, context: context), at: idx, animation: animated ? .effectFade : .none)
+            self.items.insert(item, at: idx)
+        }
+        for (idx, item, _) in updateIndices {
+            let item =  item
+            tableView.replace(item: item.makeItem(bounds.size, context: context), at: idx, animated: animated)
+            self.items[idx] = item
+        }
+
         tableView.endTableUpdates()
         
         var frame = CGRect(origin: NSMakePoint(convert.midX - size.width / 2, convert.minY - size.height), size: size)

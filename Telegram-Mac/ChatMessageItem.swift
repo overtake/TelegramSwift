@@ -409,19 +409,19 @@ class ChatMessageItem: ChatRowItem {
                 containsBigEmoji = true
                 switch copy.string.length {
                 case 1:
-                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 7.8), range: copy.range)
+                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 8), range: copy.range)
                 case 2:
-                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 6.8), range: copy.range)
+                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 7), range: copy.range)
                 case 3:
-                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 5.8), range: copy.range)
+                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 6), range: copy.range)
                 case 4:
-                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 4.8), range: copy.range)
+                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 5), range: copy.range)
                 case 5:
-                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 3.8), range: copy.range)
+                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 4), range: copy.range)
                 case 6:
-                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 2.8), range: copy.range)
+                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 3), range: copy.range)
                 default:
-                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 1.8), range: copy.range)
+                    copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 2), range: copy.range)
                 }
             } else {
                 containsBigEmoji = false

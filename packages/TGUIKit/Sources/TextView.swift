@@ -504,6 +504,9 @@ public final class TextViewLayout : Equatable {
             
             fontLineSpacing = isBigEmoji ? 0 : floor(fontLineHeight * 0.12)
             
+            if isBigEmoji {
+                lineOriginY += 2
+            }
             
             if attributedString.length > 0, let space = (attributedString.attribute(.preformattedPre, at: min(lastLineCharacterIndex, attributedString.length - 1), effectiveRange: nil) as? NSNumber), mayBlocked {
                 
@@ -741,11 +744,15 @@ public final class TextViewLayout : Equatable {
             if !line.embeddedItems.isEmpty {
                 layoutSize.height += isBigEmoji ? 8 : 2
             }
+            layoutSize.width += 5
         } else {
-            for line in lines {
-                if !line.embeddedItems.isEmpty {
-                    layoutSize.height += isBigEmoji ? 1 : 0
+            if isBigEmoji {
+                for line in lines {
+                    if !line.embeddedItems.isEmpty {
+                        layoutSize.height += 2
+                    }
                 }
+                layoutSize.width += 5
             }
         }
 
@@ -2205,6 +2212,17 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 }
                 subview.isHidden = isHidden
     //            if subview
+            }
+            let sublayers = embeddedContainer.layer?.sublayers ?? []
+            for subview in sublayers {
+                var isHidden = false
+                loop: for rect in rects {
+                    if NSIntersectsRect(subview.frame, rect) {
+                        isHidden = true
+                        break loop
+                    }
+                }
+                subview.opacity = isHidden ? 0 : 1
             }
         }
     }

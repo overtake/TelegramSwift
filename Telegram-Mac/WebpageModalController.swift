@@ -876,6 +876,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         
         switch eventName {
         case "web_app_data_send":
+            self.needCloseConfirmation = false
             if let eventData = body["eventData"] as? String {
                 if let requestData = requestData {
                     switch requestData {
