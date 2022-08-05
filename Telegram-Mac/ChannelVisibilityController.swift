@@ -1064,16 +1064,18 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                             }
                         }
                         
+                        var signals: [Signal<Never, NoError>] = []
+                        
                         if let updatedCopyProtection = state.forwardingEnabled {
-                            toggleCopyProtectionDisposable.set(context.engine.peers.toggleMessageCopyProtection(peerId: peerId, enabled: !updatedCopyProtection).start())
+                            signals.append(context.engine.peers.toggleMessageCopyProtection(peerId: peerId, enabled: updatedCopyProtection) |> ignoreValues)
                         }
                         
                         if let updatedJoinToSend = state.joinToSend {
-                            toggleJoinToSendDisposable.set(context.engine.peers.toggleChannelJoinToSend(peerId: peerId, enabled: updatedJoinToSend == .members).start())
+                            signals.append(context.engine.peers.toggleChannelJoinToSend(peerId: peerId, enabled: updatedJoinToSend == .members) |> `catch` { _ in .complete() })
                         }
                         
                         if let updatedApproveMembers = state.approveMembers {
-                            toggleRequestToJoinDisposable.set(context.engine.peers.toggleChannelJoinRequest(peerId: peerId, enabled: updatedApproveMembers).start())
+                            signals.append(context.engine.peers.toggleChannelJoinRequest(peerId: peerId, enabled: updatedApproveMembers) |> `catch` { _ in .complete() })
                         }
                                         
 
@@ -1133,7 +1135,11 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                                     }
                             }
                             
-                            self?.updateAddressNameDisposable.set(signal.start(next: { updatedPeerId in
+                            let others = combineLatest(signals)
+                            |> castError(ConvertGroupToSupergroupError.self)
+                            |> deliverOnMainQueue
+                            
+                            self?.updateAddressNameDisposable.set(combineLatest(signal, others).start(next: { updatedPeerId, _ in
                                 self?.onComplete.set(.single(updatedPeerId))
                             }, error: { error in
                                 switch error {
@@ -1147,7 +1153,10 @@ class ChannelVisibilityController: EmptyComposeController<Void, PeerId?, TableVi
                                 }
                             }))
                         } else {
-                            self?.onComplete.set(.single(nil))
+                            let others = combineLatest(signals) |> deliverOnMainQueue
+                            self?.updateAddressNameDisposable.set(others.start(completed: { [weak self] in
+                                self?.onComplete.set(.single(nil))
+                            }))
                         }
                     }
                    

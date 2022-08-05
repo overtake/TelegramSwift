@@ -153,7 +153,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         
         self.infoDisposable = signal.start(next: { [weak self] file in
             self?.file = file
-            self?.updateSize(size: size)
+            self?.updateSize(size: size, sync: emoji.file != nil)
         })
     }
     
@@ -162,7 +162,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         super.init()
         self.initialize()
         self.file = file
-        self.updateSize(size: size)
+        self.updateSize(size: size, sync: true)
         
     }
 
@@ -190,16 +190,10 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.animation = animation
         if let animation = animation, let isPlayable = self.isPlayable, isPlayable {
             weak var layer: CALayer? = self
-            var first: Bool = true
             delayDisposable.set(delaySignal(MultiTargetContextCache.exists(animation) ? 0 : 0.1).start(completed: { [weak self] in
                 self?.contextToken = (MultiTargetContextCache.create(animation, displayFrame: { image in
                     DispatchQueue.main.async {
-                        let animate = layer?.contents != nil && first
                         layer?.contents = image
-                        if animate {
-                            layer?.animateContents()
-                        }
-                        first = false
                     }
                 }, release: {
                     
@@ -235,7 +229,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         }
     }
     
-    func updateSize(size: NSSize) {
+    func updateSize(size: NSSize, sync: Bool) {
         if let file = self.file {
             
            
@@ -268,7 +262,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                     return EmptyDisposable
                 } |> runOn(resourcesQueue)
             } else {
-                data = context.account.postbox.mediaBox.resourceData(file.resource, attemptSynchronously: false)
+                data = context.account.postbox.mediaBox.resourceData(file.resource, attemptSynchronously: sync)
             }
             if file.isAnimatedSticker || file.isVideoSticker {
                 self.resourceDisposable.set((data |> map { resourceData -> Data? in
@@ -306,6 +300,11 @@ final class InlineStickerItemLayer : SimpleLayer {
             fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: mediaResource).start())
             
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: aspectSize, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+
+            let fontSize = NSMakeSize(theme.fontSize + 6, theme.fontSize + 6)
+            let fontAspectSize = file.dimensions?.size.aspectFitted(fontSize) ?? fontSize
+
+            let fontArguments = TransformImageArguments(corners: ImageCorners(), imageSize: fontAspectSize, boundingSize: fontSize, intrinsicInsets: NSEdgeInsets())
 
             
             let signal: Signal<ImageDataTransformation, NoError>
@@ -352,19 +351,17 @@ final class InlineStickerItemLayer : SimpleLayer {
             previewDisposable?.dispose()
             
             if result == nil || result?.highQuality == false {
-                let result = signal |> map { data -> TransformImageResult in
+                let result = signal |> map { data -> (TransformImageResult, TransformImageResult) in
                     let context = data.execute(arguments, data.data)
                     let image = context?.generateImage()
-                    return TransformImageResult(image, context?.isHighQuality ?? false)
+                    let fontContext = data.execute(fontArguments, data.data)
+                    let fontImage = fontContext?.generateImage()
+                    return (TransformImageResult(image, context?.isHighQuality ?? false), TransformImageResult(fontImage, fontContext?.isHighQuality ?? false))
                 } |> deliverOnMainQueue
                 
-                previewDisposable = result.start(next: { [weak self] result in
+                previewDisposable = result.start(next: { [weak self] result, fontResult in
                     if self?.playerState != .playing {
-                        let animate = self?.contents != nil
                         self?.contents = result.image
-                        if animate {
-                            self?.animateContents()
-                        }
                     }
                     if let image = result.image {
                         self?.preview = image
@@ -375,6 +372,8 @@ final class InlineStickerItemLayer : SimpleLayer {
                             self?.shimmer = nil
                         }
                     }
+                    
+                    cacheMedia(fontResult, media: file, arguments: fontArguments, scale: System.backingScale)
                     cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
                 })
             } 

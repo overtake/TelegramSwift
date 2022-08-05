@@ -102,6 +102,7 @@
 		27361ED62821234200808241 /* PremiumReactionsModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27361ED52821234200808241 /* PremiumReactionsModal.swift */; };
 		2737557E27E396AB007DC755 /* PhoneNumberConfirmCodeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2737557D27E396AB007DC755 /* PhoneNumberConfirmCodeController.swift */; };
 		2738A2D4289C41CE00EC1010 /* CurrencyFormat in Frameworks */ = {isa = PBXBuildFile; productRef = 2738A2D3289C41CE00EC1010 /* CurrencyFormat */; };
+		2738A2E0289D5DD700EC1010 /* PremiumGiftStarSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738A2DF289D5DD700EC1010 /* PremiumGiftStarSceneView.swift */; };
 		2738CAD6270704A800CDB1BF /* RequestJoinChatModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD5270704A800CDB1BF /* RequestJoinChatModalController.swift */; };
 		2738CAD82707067000CDB1BF /* RequestJoinChatRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */; };
 		2738CADA2707198100CDB1BF /* RequestJoinMemberListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */; };
@@ -1449,6 +1450,7 @@
 		27361ED52821234200808241 /* PremiumReactionsModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumReactionsModal.swift; sourceTree = "<group>"; };
 		2737557D27E396AB007DC755 /* PhoneNumberConfirmCodeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberConfirmCodeController.swift; sourceTree = "<group>"; };
 		2738A2D2289C416D00EC1010 /* CurrencyFormat */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = CurrencyFormat; path = packages/CurrencyFormat; sourceTree = "<group>"; };
+		2738A2DF289D5DD700EC1010 /* PremiumGiftStarSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumGiftStarSceneView.swift; sourceTree = "<group>"; };
 		2738CAD5270704A800CDB1BF /* RequestJoinChatModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinChatModalController.swift; sourceTree = "<group>"; };
 		2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinChatRowItem.swift; sourceTree = "<group>"; };
 		2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinMemberListController.swift; sourceTree = "<group>"; };
@@ -1860,7 +1862,6 @@
 		27F4F18F284A33C100A3B4D4 /* PremiumBoardingDoubleRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumBoardingDoubleRowItem.swift; sourceTree = "<group>"; };
 		27F4F191284E401200A3B4D4 /* menu_gear.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_gear.tgs; sourceTree = "<group>"; };
 		27F4F193284F654400A3B4D4 /* TranscribeAudioTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscribeAudioTextView.swift; sourceTree = "<group>"; };
-		27F5F23225E7CACE00E8AC69 /* CurrencyFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyFormat.swift; sourceTree = "<group>"; };
 		27F5F23B25E7CCD600E8AC69 /* PaymentsCheckoutPriceItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsCheckoutPriceItem.swift; sourceTree = "<group>"; };
 		27F5F23E25E7DD8300E8AC69 /* PaymentsShippingInfoController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaymentsShippingInfoController.swift; sourceTree = "<group>"; };
 		27F73765274BE58B005DCC1C /* GalleryRecognition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryRecognition.swift; sourceTree = "<group>"; };
@@ -2867,6 +2868,7 @@
 				2726BDD8286A3B700044D260 /* PremiumGiftController.swift */,
 				2726BDDA286A45FD0044D260 /* PremiumGiftHeaderItem.swift */,
 				2726BDDE286B0BAE0044D260 /* PremiumGiftRowItem.swift */,
+				2738A2DF289D5DD700EC1010 /* PremiumGiftStarSceneView.swift */,
 			);
 			name = premium;
 			sourceTree = "<group>";
@@ -5029,7 +5031,6 @@
 				A7D2822E236C549B0000A9BF /* SyncCoreExtension.swift */,
 				A7D28236236C5B2C0000A9BF /* PhoneNumberUtils.swift */,
 				D00B318625729F0500D62056 /* DataItem.swift */,
-				27F5F23225E7CACE00E8AC69 /* CurrencyFormat.swift */,
 				27C4F5DD26B3F62E008123EC /* VideoMessageConfig.swift */,
 				2728991826CBC0D100F4D288 /* UNUserNotifications.swift */,
 				27CE375A2760931E007E6F1B /* AppMenuAnimatedImage.swift */,
@@ -6367,6 +6368,7 @@
 				C22EE6191E66ECB200334C38 /* ReportReasonModalController.swift in Sources */,
 				C2B0722E1DFEDE430082939D /* UsernameInputRowItem.swift in Sources */,
 				277C34A8267B5BC100B1CAA7 /* ChatInputMenuView.swift in Sources */,
+				2738A2E0289D5DD700EC1010 /* PremiumGiftStarSceneView.swift in Sources */,
 				C23B3AEB1E338ADC009C162C /* ContextMediaRowItem.swift in Sources */,
 				9F0368012277091800456348 /* LAnimationButton.swift in Sources */,
 				C26505931E0301A5001954DC /* MGalleryPhotoItem.swift in Sources */,

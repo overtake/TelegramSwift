@@ -3034,7 +3034,23 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             let process:()->Void = { [weak self] in
                 if let message = message {
-                    self?.chatInteraction.update({$0.withEditMessage(message)})
+                    self?.chatInteraction.update({ state in
+                        var state = state
+                        state = state.withEditMessage(message)
+                        if !context.isPremium {
+                            state = state.updatedInterfaceState { interfaceState in
+                                var interfaceState = interfaceState
+                                interfaceState = interfaceState.updatedEditState { editState in
+                                    if let editState = editState {
+                                        return editState.withUpdated(state: editState.inputState.withoutAnimatedEmoji)
+                                    }
+                                    return editState
+                                }
+                                return interfaceState
+                            }
+                        }
+                        return state
+                    })
                 } else {
                     self?.chatInteraction.cancelEditing(true)
                 }
@@ -5482,8 +5498,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         if let file = item.message?.media.first as? TelegramMediaFile {
                             if !file.noPremium, !context.premiumIsBlocked, file.isPremiumSticker {
                                 items.append(item)
-                            } else if file.isEmojiAnimatedSticker {
-                                animatedEmojiItems.append(item)
+                            } else if file.isEmojiAnimatedSticker, file.isPremiumEmoji, let message = item.message {
+                                if message.globallyUniqueId != nil || message.flags.contains(.Incoming) {
+                                    animatedEmojiItems.append(item)
+                                }
                             }
                         }
                         

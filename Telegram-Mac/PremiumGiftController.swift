@@ -470,6 +470,21 @@ final class PremiumGiftController : ModalViewController {
             statePromise.set(stateValue.modify (f))
         }
         
+        let gotoProfile:(_ action: ChatInitialAction?)->Void = { action in
+            let chat = context.bindings.rootNavigation().first {
+                $0 is ChatController
+            } as? ChatController
+            if chat?.chatInteraction.peerId == peerId {
+                context.bindings.rootNavigation().back()
+                if let action = action {
+                    chat?.chatInteraction.invokeInitialAction(action: action)
+                }
+            } else {
+                context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId), initialAction: action))
+            }
+        }
+
+        
         let arguments = Arguments(context: context, select: { option in
             updateState { current in
                 var current = current
@@ -484,8 +499,7 @@ final class PremiumGiftController : ModalViewController {
             default:
                 break
             }
-            let controller = ChatController(context: context, chatLocation: .peer(peerId), initialAction: updated)
-            context.bindings.rootNavigation().push(controller)
+            gotoProfile(updated)
             
             close()
         }, buy: { slug in
@@ -603,7 +617,7 @@ final class PremiumGiftController : ModalViewController {
                                 inAppPurchaseManager.finishAllTransactions()
                                 delay(0.2, closure: {
                                     PlayConfetti(for: context.window)
-                                    context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+                                    gotoProfile(nil)
                                     let _ = updatePremiumPromoConfigurationOnce(account: context.account).start()
                                 })
                             }))

@@ -347,6 +347,18 @@ final class ChatTextInputState: Codable, Equatable {
         return media
     }
     
+    var withoutAnimatedEmoji: ChatTextInputState {
+        let attrs = self.attributes.filter { attr in
+            switch attr {
+            case .animated:
+                return false
+            default:
+                return true
+            }
+        }
+        return .init(inputText: self.inputText, selectionRange: self.selectionRange, attributes: attrs)
+    }
+    
     func isFirstAnimatedEmoji(_ string: String) -> Bool {
         for attribute in attributes {
             switch attribute {

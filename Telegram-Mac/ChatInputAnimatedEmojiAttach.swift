@@ -25,7 +25,6 @@ final class ChatInputAnimatedEmojiAttach: View {
         
         let fileId = attachment.fileId as! Int64
         let file = attachment.file as? TelegramMediaFile
-
     
         self.media = .init(context: context, emoji: .init(fileId: fileId, file: file, emoji: attachment.text), size: size)
         self.media.isPlayable = true
