@@ -21,7 +21,12 @@ class ContextClueRowItem: TableRowItem {
     
     private let _stableId:AnyHashable
     let clues:[String]
-    var selectedIndex:Int? = nil
+    var selectedIndex:Int? = nil {
+        didSet {
+            var bp = 0
+            bp += 1
+        }
+    }
 
     override var stableId: AnyHashable {
         return _stableId
@@ -115,7 +120,7 @@ private final class AnimatedClueRowView: HorizontalRowView {
             let size = NSMakeSize(item.height - 10, item.height - 10)
             
             let sticker = InlineStickerItemLayer(context: item.context, file: item.clue, size: size)
-            
+            sticker.superview = self
             sticker.isPlayable = true
             self.sticker = sticker
             
@@ -234,6 +239,42 @@ private final class ClueRowView : HorizontalRowView {
 }
 
 private class ContextClueRowView : TableRowView, TableViewDelegate {
+    
+    enum Entry : Comparable, Identifiable {
+        case common(String, Int)
+        case animated(TelegramMediaFile, Int)
+        
+        static func <(lhs: Entry, rhs: Entry) -> Bool {
+            return lhs.index < rhs.index
+        }
+        
+        var index: Int {
+            switch self {
+            case .common(_, let index):
+                return index
+            case .animated(_, let index):
+                return index
+            }
+        }
+        var stableId: AnyHashable {
+            switch self {
+            case .common(let string, _):
+                return string
+            case .animated(let file, _):
+                return file.fileId.id
+            }
+        }
+        
+        func makeItem(_ size: NSSize, context: AccountContext) -> TableRowItem {
+            switch self {
+            case let .common(clue, _):
+                return ClueRowItem(size, clue: clue)
+            case let .animated(file, _):
+                return AnimatedClueRowItem(size, context: context, clue: file)
+            }
+        }
+    }
+    
     func selectionDidChange(row: Int, item: TableRowItem, byClick: Bool, isNew: Bool) {
         if let clues = self.item as? ContextClueRowItem {
             clues.selectedIndex = row
@@ -307,6 +348,8 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
         super.updateColors()
     }
     
+    private var items:[Entry] = []
+    
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
         
@@ -319,16 +362,44 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
         if let item = item as? ContextClueRowItem {
             
             button.isHidden = !item.canDisablePrediction
-            tableView.beginTableUpdates()
-            tableView.removeAll(redraw: true, animation: .none)
+            
+            var index: Int = 0
+            var items:[Entry] = []
+            
             for clue in item.animated {
-                _ = tableView.addItem(item: AnimatedClueRowItem(bounds.size, context: item.context, clue: clue), animation: .none)
+                items.append(.animated(clue, index))
+                index += 1
+            }
+            for clue in item.clues {
+                items.append(.common(clue, index))
+                index += 1
             }
             
-            for clue in item.clues {
-                _ = tableView.addItem(item: ClueRowItem(bounds.size, clue: clue), animation: .none)
+            let context = item.context
+            
+            
+            tableView.beginTableUpdates()
+            
+            
+            let (deleteIndices, indicesAndItems, updateIndices) = mergeListsStableWithUpdates(leftList: self.items, rightList: items)
+            
+            for rdx in deleteIndices.reversed() {
+                tableView.remove(at: rdx, animation: animated ? .effectFade : .none)
+                self.items.remove(at: rdx)
             }
+            
+            for (idx, item, _) in indicesAndItems {
+                _ = tableView.insert(item: item.makeItem(bounds.size, context: context), at: idx, animation: animated ? .effectFade : .none)
+                self.items.insert(item, at: idx)
+            }
+            for (idx, item, _) in updateIndices {
+                let item =  item
+                tableView.replace(item: item.makeItem(bounds.size, context: context), at: idx, animated: animated)
+                self.items[idx] = item
+            }
+  
             tableView.endTableUpdates()
+            
             if let selectedIndex = item.selectedIndex {
                 let item = tableView.item(at: selectedIndex)
                 _ = tableView.select(item: item)
