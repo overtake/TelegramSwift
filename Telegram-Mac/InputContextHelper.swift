@@ -544,7 +544,9 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             if let selectedIndex = selectedItem.selectedIndex {
                 var index = selectedIndex
                 index += 1
-                selectedItem.selectedIndex = max(min(index, selectedItem.clues.count - 1), 0)
+                
+                let count = selectedItem.clues.count + selectedItem.animated.count
+                selectedItem.selectedIndex = max(min(index, count - 1), 0)
                 selectedItem.redraw(animated: true)
             }
             
@@ -558,7 +560,8 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             if let selectedIndex = selectedItem.selectedIndex {
                 var index = selectedIndex
                 index -= 1
-                selectedItem.selectedIndex = max(min(index, selectedItem.clues.count - 1), 0)
+                let count = selectedItem.clues.count + selectedItem.animated.count
+                selectedItem.selectedIndex = max(min(index, count - 1), 0)
                 selectedItem.redraw(animated: true)
             }
             return selectedItem.selectedIndex != nil ? .invoked : .rejected
@@ -613,12 +616,13 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         }
         if let selectedItem = genericView.selectedItem() as? ContextClueRowItem {
             var index: Int
+            let count = selectedItem.clues.count + selectedItem.animated.count
             if let start = start {
                 index = start + (bottom ? -1 : 1)
             } else {
-                index = bottom ? selectedItem.clues.count - 1 : 0
+                index = bottom ? count - 1 : 0
             }
-            index = min(max(index, 0), selectedItem.clues.count - 1)
+            index = min(max(index, 0), count - 1)
             selectedItem.selectedIndex = index
             selectedItem.redraw(animated: true)
         }

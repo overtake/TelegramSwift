@@ -190,10 +190,16 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.animation = animation
         if let animation = animation, let isPlayable = self.isPlayable, isPlayable {
             weak var layer: CALayer? = self
+            var first: Bool = true
             delayDisposable.set(delaySignal(MultiTargetContextCache.exists(animation) ? 0 : 0.1).start(completed: { [weak self] in
                 self?.contextToken = (MultiTargetContextCache.create(animation, displayFrame: { image in
                     DispatchQueue.main.async {
+                        let animate = layer?.contents != nil && first
                         layer?.contents = image
+                        if animate {
+                            layer?.animateContents()
+                        }
+                        first = false
                     }
                 }, release: {
                     
@@ -220,8 +226,12 @@ final class InlineStickerItemLayer : SimpleLayer {
             self.contents = preview
         }
         if state == .playing {
-            self.shimmer?.removeFromSuperlayer()
-            self.shimmer = nil
+            if let shimmer = shimmer {
+                shimmer.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak shimmer] _ in
+                    shimmer?.removeFromSuperlayer()
+                })
+                self.shimmer = nil
+            }
         }
     }
     
@@ -331,8 +341,12 @@ final class InlineStickerItemLayer : SimpleLayer {
                 current.update(backgroundColor: nil, foregroundColor: NSColor(rgb: 0x748391, alpha: 0.2), shimmeringColor: NSColor(rgb: 0x748391, alpha: 0.35), data: data, size: aspectSize)
                 current.updateAbsoluteRect(size.bounds, within: aspectSize)
             } else {
-                self.shimmer?.removeFromSuperlayer()
-                self.shimmer = nil
+                if let shimmer = shimmer {
+                    shimmer.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak shimmer] _ in
+                        shimmer?.removeFromSuperlayer()
+                    })
+                    self.shimmer = nil
+                }
             }
             
             previewDisposable?.dispose()
@@ -346,12 +360,20 @@ final class InlineStickerItemLayer : SimpleLayer {
                 
                 previewDisposable = result.start(next: { [weak self] result in
                     if self?.playerState != .playing {
+                        let animate = self?.contents != nil
                         self?.contents = result.image
+                        if animate {
+                            self?.animateContents()
+                        }
                     }
                     if let image = result.image {
                         self?.preview = image
-                        self?.shimmer?.removeFromSuperlayer()
-                        self?.shimmer = nil
+                        if let shimmer = self?.shimmer {
+                            shimmer.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak shimmer] _ in
+                                shimmer?.removeFromSuperlayer()
+                            })
+                            self?.shimmer = nil
+                        }
                     }
                     cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
                 })
