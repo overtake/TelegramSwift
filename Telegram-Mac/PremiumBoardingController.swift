@@ -974,19 +974,29 @@ final class PremiumBoardingController : ModalViewController {
                                 delay(0.2, closure: {
                                     PlayConfetti(for: context.window)
                                     showModalText(for: context.window, text: strings().premiumBoardingAppStoreSuccess)
+                                    let _ = updatePremiumPromoConfigurationOnce(account: context.account).start()
                                 })
                             }))
                         }
                     }, error: { [weak lockModal] error in
-        
-                        lockModal?.close()
-                        showModalText(for: context.window, text: strings().premiumBoardingAppStoreCancelled)
-        
+                        let errorText: String
                         switch error {
-                        case let .generic(transaction):
-                            addAppLogEvent(postbox: context.account.postbox, type: PremiumLogEvents.promo_screen_fail.value)
-                            inAppPurchaseManager.finishAllTransactions()
+                            case .generic:
+                                errorText = strings().premiumPurchaseErrorUnknown
+                            case .network:
+                                errorText =  strings().premiumPurchaseErrorNetwork
+                            case .notAllowed:
+                                errorText =  strings().premiumPurchaseErrorNotAllowed
+                            case .cantMakePayments:
+                                errorText =  strings().premiumPurchaseErrorCantMakePayments
+                            case .assignFailed:
+                                errorText =  strings().premiumPurchaseErrorUnknown
+                            case .cancelled:
+                                errorText = strings().premiumBoardingAppStoreCancelled
                         }
+                        lockModal?.close()
+                        showModalText(for: context.window, text: errorText)
+                        inAppPurchaseManager.finishAllTransactions()
                     }))
                 } else {
                     lockModal?.close()

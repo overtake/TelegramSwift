@@ -7947,6 +7947,8 @@ public final class L10n {
   }
   /// You already have Telegram Premium.
   public static var premiumOffsetAlreadyHave: String  { return L10n.tr("Localizable", "Premium.Offset.AlreadyHave") }
+  /// In-app purchases are not allowed on this device.
+  public static var premiumPurchaseErrorCantMakePayments: String  { return L10n.tr("Localizable", "Premium.Purchase.ErrorCantMakePayments") }
   /// Please check your internet connection and try again.
   public static var premiumPurchaseErrorNetwork: String  { return L10n.tr("Localizable", "Premium.Purchase.ErrorNetwork") }
   /// The device is not not allowed to make the payment.
