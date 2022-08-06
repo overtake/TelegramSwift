@@ -833,9 +833,10 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                     if case .UnreadEntry = entry.appearance.entry {
                         if interaction.mode.isThreadMode {
                             offset = 44 - 6
-                        } else {
-                            offset -= 6
                         }
+//                        else {
+//                            offset -= 6
+//                        }
                         scrollToItem = .top(id: entry.stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: offset)
                         break
                     }
