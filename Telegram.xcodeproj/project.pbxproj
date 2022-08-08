@@ -103,6 +103,8 @@
 		2737557E27E396AB007DC755 /* PhoneNumberConfirmCodeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2737557D27E396AB007DC755 /* PhoneNumberConfirmCodeController.swift */; };
 		2738A2D4289C41CE00EC1010 /* CurrencyFormat in Frameworks */ = {isa = PBXBuildFile; productRef = 2738A2D3289C41CE00EC1010 /* CurrencyFormat */; };
 		2738A2E0289D5DD700EC1010 /* PremiumGiftStarSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738A2DF289D5DD700EC1010 /* PremiumGiftStarSceneView.swift */; };
+		2738A2E228A124F700EC1010 /* gift.scn in Resources */ = {isa = PBXBuildFile; fileRef = 2738A2E128A124F700EC1010 /* gift.scn */; };
+		2738A2E428A1373A00EC1010 /* PremiumStatusController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738A2E328A1373A00EC1010 /* PremiumStatusController.swift */; };
 		2738CAD6270704A800CDB1BF /* RequestJoinChatModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD5270704A800CDB1BF /* RequestJoinChatModalController.swift */; };
 		2738CAD82707067000CDB1BF /* RequestJoinChatRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */; };
 		2738CADA2707198100CDB1BF /* RequestJoinMemberListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */; };
@@ -1451,6 +1453,8 @@
 		2737557D27E396AB007DC755 /* PhoneNumberConfirmCodeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberConfirmCodeController.swift; sourceTree = "<group>"; };
 		2738A2D2289C416D00EC1010 /* CurrencyFormat */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = CurrencyFormat; path = packages/CurrencyFormat; sourceTree = "<group>"; };
 		2738A2DF289D5DD700EC1010 /* PremiumGiftStarSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumGiftStarSceneView.swift; sourceTree = "<group>"; };
+		2738A2E128A124F700EC1010 /* gift.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = gift.scn; sourceTree = "<group>"; };
+		2738A2E328A1373A00EC1010 /* PremiumStatusController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumStatusController.swift; sourceTree = "<group>"; };
 		2738CAD5270704A800CDB1BF /* RequestJoinChatModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinChatModalController.swift; sourceTree = "<group>"; };
 		2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinChatRowItem.swift; sourceTree = "<group>"; };
 		2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinMemberListController.swift; sourceTree = "<group>"; };
@@ -2785,6 +2789,7 @@
 				27ABFD1D2858BAE9006C3301 /* swirl.scn */,
 				27ABFD292858C6F5006C3301 /* lightspeed.scn */,
 				27ABFD2E2858C838006C3301 /* badge.scn */,
+				2738A2E128A124F700EC1010 /* gift.scn */,
 				27ABFD2F2858C838006C3301 /* badgestar.png */,
 				27ABFD282858C6F5006C3301 /* lightstreak.png */,
 				27D9131A283BC0E7007CF40F /* flecks.jpg */,
@@ -2869,6 +2874,7 @@
 				2726BDDA286A45FD0044D260 /* PremiumGiftHeaderItem.swift */,
 				2726BDDE286B0BAE0044D260 /* PremiumGiftRowItem.swift */,
 				2738A2DF289D5DD700EC1010 /* PremiumGiftStarSceneView.swift */,
+				2738A2E328A1373A00EC1010 /* PremiumStatusController.swift */,
 			);
 			name = premium;
 			sourceTree = "<group>";
@@ -5905,6 +5911,7 @@
 				27D91320283BC0EB007CF40F /* texture.jpg in Resources */,
 				27672EC326F8D65800297DB4 /* 111.m4a in Resources */,
 				2764A5AE25DFBDE700F9A20D /* police.tgs in Resources */,
+				2738A2E228A124F700EC1010 /* gift.scn in Resources */,
 				D0D1391B2521FBD5005FCF35 /* discussion.tgs in Resources */,
 				D0A75F2C2449B689001F84A0 /* dart_idle.tgs in Resources */,
 				27D91322283BC0EB007CF40F /* particles.png in Resources */,
@@ -6866,6 +6873,7 @@
 				2726BDD9286A3B700044D260 /* PremiumGiftController.swift in Sources */,
 				D0D3CE6C23D465FA00864F3C /* PollResultStickItem.swift in Sources */,
 				C2057FAA1EBC6A3C000423DC /* ChatCallRowItem.swift in Sources */,
+				2738A2E428A1373A00EC1010 /* PremiumStatusController.swift in Sources */,
 				C253E23A1DE4D3DB0022A29F /* ChatInterfaceInputContext.swift in Sources */,
 				C24D9FC41E24FFF3002CD3F3 /* PasscodeLockController.swift in Sources */,
 				9F10CE942061C8C8002DD61A /* InputDataControllerEntries.swift in Sources */,
