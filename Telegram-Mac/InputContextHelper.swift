@@ -488,11 +488,12 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 chatInteraction.updateInput(with: commandText)
 
             } else if let selectedItem = selectedItem as? ContextClueRowItem {
-                let clue: String?
+                let clue: ContextClueRowItem.Source?
+                let items = selectedItem.sources
                 if let index = selectedItem.selectedIndex {
-                    clue = selectedItem.clues[index]
+                    clue = items[index]
                 } else {
-                    clue = selectedItem.clues.first
+                    clue = items.first
                 }
                 if let clue = clue {
                     let textInputState = chatInteraction.presentation.effectiveInput
@@ -500,10 +501,16 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                         let inputText = textInputState.inputText
                         
                         let distance = inputText.distance(from: range.lowerBound, to: range.upperBound)
-                        let replacementText = clue
-                        
                         let atLength = range.lowerBound > inputText.startIndex && inputText[inputText.index(before: range.lowerBound)] == ":" ? 1 : 0
-                        _ = chatInteraction.appendText(replacementText, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
+                        
+                        switch clue {
+                        case let .emoji(emoji):
+                            _ = chatInteraction.appendText(emoji, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
+                        case let .animated(file):
+                            let text = (file.customEmojiText ?? file.stickerText ?? "😀").fixed
+                            _ = chatInteraction.appendText(.makeAnimated(file, text: text), selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
+                        }
+                        
                     }
                 }
                 return .invoked
