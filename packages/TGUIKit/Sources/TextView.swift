@@ -350,7 +350,7 @@ public final class TextViewLayout : Equatable {
     fileprivate var hexColorsRect: [(NSRect, NSColor, String)] = []
     fileprivate var toolTipRects:[NSRect] = []
     private let disableTooltips: Bool
-    fileprivate var isBigEmoji: Bool = false
+    public fileprivate(set) var isBigEmoji: Bool = false
     fileprivate let spoilers:[Spoiler]
     private let onSpoilerReveal: ()->Void
     public private(set) var embeddedItems: [EmbeddedItem] = []
@@ -744,17 +744,17 @@ public final class TextViewLayout : Equatable {
             if !line.embeddedItems.isEmpty {
                 layoutSize.height += isBigEmoji ? 8 : 2
             }
-            if isBigEmoji {
-                layoutSize.width += 5
-            }
+//            if isBigEmoji {
+//                layoutSize.width += 5
+//            }
         } else {
             if isBigEmoji {
                 for line in lines {
                     if !line.embeddedItems.isEmpty {
-                        layoutSize.height += 2
+                     //   layoutSize.height += 2
                     }
                 }
-                layoutSize.width += 5
+             //   layoutSize.width += 5
             }
         }
 

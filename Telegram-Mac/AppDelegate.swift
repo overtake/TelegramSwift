@@ -424,6 +424,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         self.supportAccountContextValue?.enumerateApplicationContext(f)
     }
     
+    private var terminated = false
+    
     private func launchApp(accountManager: AccountManager<TelegramAccountManagerTypes>, encryptionParameters: ValueBoxEncryptionParameters, appEncryption: AppEncryptionParameters) {
         
         
@@ -441,9 +443,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         
         self.window.closeInterceptor = {
-            
-            self.currentContext?.bindings.rootNavigation().gotoEmpty(false)
-            
+            if !self.terminated {
+                self.currentContext?.bindings.rootNavigation().gotoEmpty(false)
+            }
             return false
         }
         
@@ -1295,6 +1297,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
     func applicationWillTerminate(_ notification: Notification) {
+        self.terminated = true
         deinitCrashHandler(containerUrl)
         
         #if !APP_STORE

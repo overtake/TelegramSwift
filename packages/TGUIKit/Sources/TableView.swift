@@ -1165,7 +1165,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
     }
     
-    func optionalItem(at:Int) -> TableRowItem? {
+    public func optionalItem(at:Int) -> TableRowItem? {
         return at < count && at >= 0 ? self.item(at: at) : nil
     }
     

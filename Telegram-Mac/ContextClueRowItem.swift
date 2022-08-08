@@ -36,6 +36,12 @@ class ContextClueRowItem: TableRowItem {
     fileprivate let callback:((Source)->Void)?
     fileprivate let selected: Source?
     let animated: [TelegramMediaFile]
+    
+    
+    var sources: [ContextClueRowItem.Source] {
+        return self.animated.map { .animated($0) } + self.clues.map { .emoji($0) }
+    }
+    
     init(_ initialSize: NSSize, stableId:AnyHashable, context: AccountContext, clues: [String], animated: [TelegramMediaFile], selected: Source?, canDisablePrediction: Bool, callback:((Source)->Void)? = nil) {
         self.animated = context.isPremium ? Array(animated.prefix(30)) : Array(animated.filter { !$0.isPremiumEmoji }.prefix(30))
         self._stableId = stableId
@@ -401,8 +407,10 @@ private class ContextClueRowView : TableRowView, TableViewDelegate {
             tableView.endTableUpdates()
             
             if let selectedIndex = item.selectedIndex {
-                let item = tableView.item(at: selectedIndex)
-                _ = tableView.select(item: item)
+                let item = tableView.optionalItem(at: selectedIndex)
+                if let item = item {
+                    _ = tableView.select(item: item)
+                }
             }
         }
         
