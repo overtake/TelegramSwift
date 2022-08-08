@@ -125,6 +125,7 @@ private enum StickerPacksIndex : Hashable, Comparable {
     case saved(Int)
     case featured(Int, Bool)
     case emojiRelated(Int)
+    case whitespace(Int)
     var packIndex:ItemCollectionViewEntryIndex {
         switch self {
         case let .sticker(index):
@@ -133,6 +134,8 @@ private enum StickerPacksIndex : Hashable, Comparable {
             return ItemCollectionViewEntryIndex.lowerBound(collectionIndex: Int32(index), collectionId: ItemCollectionId(namespace: 0, id: 0))
         case let .speficicPack(id):
             return ItemCollectionViewEntryIndex.lowerBound(collectionIndex: 2, collectionId: id)
+        case .whitespace:
+            return ItemCollectionViewEntryIndex.lowerBound(collectionIndex: 0, collectionId: ItemCollectionId(namespace: 0, id: 0))
         }
     }
     
@@ -152,6 +155,8 @@ private enum StickerPacksIndex : Hashable, Comparable {
             return .featured(hasUnred: hasUnread)
         case .emojiRelated:
             return .emojiRelated
+        case let .whitespace(index):
+            return .whitespace(Int32(index))
         }
     }
     
@@ -175,6 +180,8 @@ private enum StickerPacksIndex : Hashable, Comparable {
             return 3
         case .sticker:
             return 4
+        case .whitespace(_):
+            return -2
         }
     }
     
@@ -294,6 +301,7 @@ enum StickerPackCollectionId : Hashable {
     case saved
     case inlineFeatured(hasUnred: Bool)
     case emojiRelated
+    case whitespace(Int32)
     var itemCollectionId:ItemCollectionId? {
         switch self {
         case let .pack(collectionId):
@@ -309,6 +317,7 @@ enum StickerPackCollectionId : Hashable {
 
 
 private enum StickerPackEntry : TableItemListNodeEntry {
+    case whitespace(Int32, CGFloat)
     case pack(index: StickerPacksIndex, files:[TelegramMediaFile], packInfo: StickerPackInfo, collectionId: StickerPackCollectionId)
     case trending(index: StickerPacksIndex, featured: [FeaturedStickerPackItem], collectionId: StickerPackCollectionId)
     
@@ -318,7 +327,13 @@ private enum StickerPackEntry : TableItemListNodeEntry {
     
     static func == (lhs: StickerPackEntry, rhs: StickerPackEntry) -> Bool {
         switch lhs {
-        case let .pack(index, lhsFiles, packInfo, collectionId):
+        case let .whitespace(index, value):
+            if case .whitespace(index, value) = rhs {
+                return true
+            } else {
+                return false
+            }
+         case let .pack(index, lhsFiles, packInfo, collectionId):
             if case .pack(index, let rhsFiles, packInfo, collectionId) = rhs {
                 if lhsFiles.count != rhsFiles.count {
                     return false
@@ -357,6 +372,8 @@ private enum StickerPackEntry : TableItemListNodeEntry {
             return index
         case let .trending(index, _, _):
             return index
+        case let .whitespace(index, _):
+            return .whitespace(Int(index))
         }
     }
     
@@ -366,11 +383,15 @@ private enum StickerPackEntry : TableItemListNodeEntry {
             return collectionId
         case let .trending(_, _, collectionId):
             return collectionId
+        case let .whitespace(index, _):
+            return .whitespace(index)
         }
     }
     
     func item(_ arguments: StickerPanelArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
+        case let .whitespace(_, value):
+            return GeneralRowItem.init(initialSize, height: value, stableId: stableId)
         case let .pack(_, files, packInfo, collectionId):
             return StickerPackPanelRowItem(initialSize, context: arguments.context, arguments: arguments, files: files, packInfo: packInfo, collectionId: collectionId, canSend: true)
         case let .trending(_, items, collectionId):
@@ -381,14 +402,23 @@ private enum StickerPackEntry : TableItemListNodeEntry {
 
 private func stickersEntries(view: ItemCollectionsView?, context: AccountContext, featured:[FeaturedStickerPackItem], settings: StickerSettings, searchData: StickerPacksSearchData?, specificPack:Tuple2<PeerSpecificStickerPackData, Peer>?, mode: EntertainmentViewController.Mode) -> [StickerPackEntry] {
     var entries:[StickerPackEntry] = []
+    var index: Int32 = 0
+
+    
+    entries.append(.whitespace(index, 46))
+    index += 1
     
     if let view = view {
         var available: [ItemCollectionViewEntry] = view.entries
-        var index: Int32 = 0
+        
+       
         
         var ids:[MediaId : MediaId] = [:]
         
         if view.lower == nil {
+            
+          
+            
             if !view.orderedItemListsViews[1].items.isEmpty {
                 var files:[TelegramMediaFile] = []
                 for item in view.orderedItemListsViews[1].items {
@@ -655,7 +685,7 @@ class NStickersView : View {
     private let separator:View = View()
     fileprivate let tabsContainer: View = View()
     private let selectionView: View = View(frame: NSMakeRect(0, 0, 36, 36))
-
+    private let searchBorder = View()
 
     
     required init(frame frameRect: NSRect) {
@@ -665,11 +695,12 @@ class NStickersView : View {
         
         searchContainer.addSubview(searchView)
         addSubview(searchContainer)
+        searchContainer.addSubview(searchBorder)
         
         emptySearchContainer.addSubview(emptySearchView)
         tabsContainer.addSubview(selectionView)
         tabsContainer.addSubview(packsView)
-        addSubview(separator)
+        tabsContainer.addSubview(separator)
         addSubview(tabsContainer)
         addSubview(emptySearchContainer)
         
@@ -685,7 +716,18 @@ class NStickersView : View {
         self.packsView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
             self?.updateSelectionState(animated: false)
         }))
+        
+        tableView.scrollerInsets = .init(left: 0, right: 0, top: 46, bottom: 0)
+        
+        self.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
+            self?.updateScrollerSearch()
+        }))
     }
+    
+    private func updateScrollerSearch() {
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
     
     func updateRestricion(_ peer: Peer?) {
         if let peer = peer, let text = permissionText(from: peer, for: .banSendStickers) {
@@ -720,28 +762,25 @@ class NStickersView : View {
     
     func updateSearchState(_ searchState: SearchState, animated: Bool) {
         self.searchState = searchState
-        switch searchState.state {
-        case .Focus:
-            tabsContainer.change(pos: NSMakePoint(0, -tabsContainer.frame.height), animated: animated)
-            searchContainer.change(pos: NSMakePoint(0, tabsContainer.frame.maxY), animated: animated)
-        case .None:
-            tabsContainer.change(pos: NSMakePoint(0, 0), animated: animated)
-            searchContainer.change(pos: NSMakePoint(0, tabsContainer.frame.maxY), animated: animated)
-        }
-        tableView.change(size: NSMakeSize(frame.width, frame.height - searchContainer.frame.maxY), animated: animated)
-        tableView.change(pos: NSMakePoint(0, searchContainer.frame.maxY), animated: animated)
 
+        let transition: ContainedViewLayoutTransition
+        if animated {
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        } else {
+            transition = .immediate
+        }
+        self.updateLayout(size: frame.size, transition: transition)
     }
     
     func updateSelectionState(animated: Bool) {
         
         var animated = animated
         var item = packsView.selectedItem()
-        if item == nil, let value = packsView.firstItem {
+        if item == nil, let value = packsView.item(stableId: AnyHashable(StickerPackCollectionId.saved)) {
             item = value
             animated = false
         }
-        
+                
         guard let item = item, let view = item.view else {
             return
         }
@@ -773,33 +812,47 @@ class NStickersView : View {
         self.emptySearchView.image = theme.icons.stickersEmptySearch
         self.emptySearchView.sizeToFit()
         self.emptySearchContainer.backgroundColor = theme.colors.background
+        self.searchContainer.backgroundColor = theme.colors.background
+        self.tabsContainer.backgroundColor = theme.colors.background
+        self.searchBorder.backgroundColor = theme.colors.border
         self.searchView.updateLocalizationAndTheme(theme: theme)
     }
     
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        let initial: CGFloat = searchState?.state == .Focus ? -46 : 0
+        
+        transition.updateFrame(view: tabsContainer, frame: NSMakeRect(0, initial, size.width, 46))
+        transition.updateFrame(view: separator, frame: NSMakeRect(0, tabsContainer.frame.height - .borderSize, tabsContainer.frame.width, .borderSize))
+        transition.updateFrame(view: packsView, frame: tabsContainer.focus(NSMakeSize(size.width, 36)))
+
+        
+        let searchDest = tableView.rectOf(index: 0).minY + (tableView.clipView.destination?.y ?? tableView.documentOffset.y)
+                
+        transition.updateFrame(view: searchContainer, frame: NSMakeRect(0, min(max(tabsContainer.frame.maxY - searchDest, 0), tabsContainer.frame.maxY), size.width, 46))
+        transition.updateFrame(view: searchBorder, frame: NSMakeRect(0, searchContainer.frame.height - .borderSize, size.width, .borderSize))
+
+        transition.updateFrame(view: searchView, frame: searchContainer.focus(NSMakeSize(size.width - 10, 30)))
+
+        transition.updateFrame(view: tableView, frame: NSMakeRect(0, tabsContainer.frame.maxY, size.width, size.height))
+
+        if let restrictedView = restrictedView {
+            transition.updateFrame(view: restrictedView, frame: size.bounds)
+        }
+                
+        transition.updateFrame(view: emptySearchContainer, frame: size.bounds)
+        
+        let alpha: CGFloat = searchState?.state == .Focus && tableView.documentOffset.y > 0 ? 1 : 0
+        transition.updateAlpha(view: searchBorder, alpha: alpha)
+
+        
+        self.updateSelectionState(animated: false)
+
+    }
     
     override func layout() {
         super.layout()
 
-        let initial: CGFloat = searchState?.state == .Focus ? -46 : 0
-        
-        tabsContainer.frame = NSMakeRect(0, initial, frame.width, 46)
-        separator.frame = NSMakeRect(0, tabsContainer.frame.height, tabsContainer.frame.width, .borderSize)
-        packsView.frame = tabsContainer.focus(NSMakeSize(frame.width, 36))
-        
-        
-        searchContainer.frame = NSMakeRect(0, tabsContainer.frame.maxY, frame.width, 46)
-        searchView.setFrameSize(NSMakeSize(frame.width - 10, 30))
-        searchView.center()
-        
-        
-        tableView.frame = NSMakeRect(0, searchContainer.frame.maxY, frame.width, frame.height - searchContainer.frame.maxY)
-        restrictedView?.setFrameSize(frame.size)
-        
-        emptySearchContainer.frame = tableView.frame
-        emptySearchView.center()
-        
-        
-        self.updateSelectionState(animated: false)
+        self.updateLayout(size: self.frame.size, transition: .immediate)
     }
     
     
@@ -919,7 +972,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     index = .premium(1)
                 case let .specificPack(id):
                     index = .speficicPack(id)
-                case .emojiRelated:
+                case .emojiRelated, .whitespace:
                     break
                 }
                 if let index = index {
@@ -948,6 +1001,11 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         self.shouldSendActivity(false)
     }
     
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        self.genericView.updateSelectionState(animated: false)
+    }
     override func viewDidLoad() {
         super.viewDidLoad()
         let context = self.context

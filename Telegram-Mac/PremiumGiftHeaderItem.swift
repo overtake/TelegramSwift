@@ -62,6 +62,7 @@ private final class PremiumGiftHeaderView: TableRowView {
     private let avatar = ChatAvatarView(frame: NSMakeSize(100, 100).bounds)
     private let textView = TextView()
     private let titleView = TextView()
+    private let scene: PremiumGiftStarSceneView = PremiumGiftStarSceneView(frame: NSMakeRect(0, 0, 200, 200))
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(textView)
@@ -74,6 +75,9 @@ private final class PremiumGiftHeaderView: TableRowView {
         titleView.isSelectable = false
         
         avatar.setFrameSize(NSMakeSize(100, 100))
+        addSubview(scene)
+        
+        scene.updateLayout(size: scene.frame.size, transition: .immediate)
         addSubview(avatar)
     }
     
@@ -86,6 +90,7 @@ private final class PremiumGiftHeaderView: TableRowView {
         avatar.centerX(y: 0)
         titleView.centerX(y: avatar.frame.maxY + 20)
         textView.centerX(y: titleView.frame.maxY + 10)
+        scene.centerX(y: -50)
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {

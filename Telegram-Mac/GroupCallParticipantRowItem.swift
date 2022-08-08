@@ -17,6 +17,7 @@ import AppKit
 private let fakeIcon = generateFakeIconReversed(foregroundColor: GroupCallTheme.customTheme.redColor, backgroundColor: GroupCallTheme.customTheme.backgroundColor)
 private let scamIcon = generateScamIconReversed(foregroundColor: GroupCallTheme.customTheme.redColor, backgroundColor: GroupCallTheme.customTheme.backgroundColor)
 private let verifyIcon = NSImage(named: "Icon_VerifyDialog")!.precomposed(GroupCallTheme.customTheme.accentColor)
+private let premiumIcon = NSImage(named: "Icon_Peer_Premium")!.precomposed(GroupCallTheme.customTheme.accentColor)
 
 final class GroupCallParticipantRowItem : GeneralRowItem {
     let data: PeerGroupCallData
@@ -172,8 +173,7 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         let isScam: Bool = peer.isScam
         let isFake: Bool = peer.isFake
         let verified: Bool = peer.isVerified
-        
-        
+        let isPremium: Bool = peer.isPremium
 
         if isScam {
             return (scamIcon, .zero)
@@ -181,6 +181,8 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
             return (fakeIcon, .zero)
         } else if verified {
             return (verifyIcon, NSMakeSize(-4, -4))
+        } else if isPremium {
+            return (premiumIcon, NSMakeSize(-4, -4))
         } else {
             return nil
         }
