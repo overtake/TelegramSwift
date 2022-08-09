@@ -6926,9 +6926,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
             }
         }
-        if isLoaded() {
-            self.updateFrame(self.frame, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
-        }
     }
     
     

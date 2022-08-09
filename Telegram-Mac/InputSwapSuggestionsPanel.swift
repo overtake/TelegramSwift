@@ -77,7 +77,7 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
                 attach.append(.makeAnimated(item.clue, text: replacementText))
                 let symbolLength = range.length
                 while range.location > 0 {
-                    let previous = NSMakeRange(max(0, range.location - range.length), symbolLength)
+                    let previous = NSMakeRange(max(0, range.location), symbolLength)
                     let isAnimated = textInputState.isAnimatedEmoji(at: previous)
                     if inputText.nsstring.substring(with: previous) == replacementText, !isAnimated {
                         attach.append(.makeAnimated(item.clue, text: replacementText))
