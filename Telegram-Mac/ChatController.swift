@@ -465,7 +465,7 @@ class ChatControllerView : View, ChatInputDelegate {
     
     private var previousHeight:CGFloat = 50
     func inputChanged(height: CGFloat, animated: Bool) {
-        updateFrame(self.frame, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+        updateFrame(self.frame, transition: animated && window != nil ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
     }
     
     required init?(coder: NSCoder) {
@@ -495,6 +495,13 @@ class ChatControllerView : View, ChatInputDelegate {
     
     func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
     
+        
+        if transition.isAnimated {
+            NSLog("\(window)")
+            var bp = 0
+            bp += 1
+        }
+        
         if let view = inputContextHelper.accessoryView {
             transition.updateFrame(view: view, frame: NSMakeRect(0, frame.height - inputView.frame.height - view.frame.height, frame.width, view.frame.height))
         }
@@ -6924,6 +6931,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     tempImportersContextDisposable.set(nil)
                 }
             }
+        }
+        if isLoaded() {
+            self.updateFrame(self.frame, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
         }
     }
     

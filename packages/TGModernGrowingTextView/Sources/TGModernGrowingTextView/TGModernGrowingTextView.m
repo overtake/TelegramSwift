@@ -1220,7 +1220,7 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
     
     newSize.height = MIN(MAX(newSize.height,_min_height),_max_height);
     
-    BOOL animated = self.animates && ![self.window inLiveResize];
+    BOOL animated = self.animates && ![self.window inLiveResize] && self.window != nil;
     
     
     if(_last_height != newSize.height) {
