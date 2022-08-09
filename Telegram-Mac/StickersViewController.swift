@@ -1170,8 +1170,10 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                     }
                 case let .navigate(index):
                     var firstTime = true
-                    return context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.CloudAllPremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: index.packIndex, count: count)
-                        |> mapToSignal { view in
+                    let featuredView = context.account.viewTracker.featuredStickerPacks()
+                    let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.CloudAllPremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: index.packIndex, count: count)
+                    return combineLatest(packsView, featuredView)
+                        |> mapToSignal { view, featured in
                             return specificPackData |> map { specificPack in
                                 let update: StickerPacksUpdate
                                 if firstTime {
@@ -1180,7 +1182,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                                 } else {
                                     update = .generic(animated: false, scrollToTop: false)
                                 }
-                                return StickerPacksUpdateData(view: view, update: update, specificPack: specificPack, hasUnread: false, featured: [], mode: mode)
+                                return StickerPacksUpdateData(view: view, update: update, specificPack: specificPack, hasUnread: false, featured: featured, mode: mode)
                             }
                     } 
                 case .loadFeaturedMore:

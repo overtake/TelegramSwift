@@ -117,9 +117,9 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                         }
                     }
                     
-                    sorted = sorted.filter { value in
-                        return !toRemove.contains(value)
-                    }
+//                    sorted = sorted.filter { value in
+//                        return !toRemove.contains(value)
+//                    }
                     
                     selected = selected.sorted(by: { lhs, rhs in
                         let lhsIndex = emojies.animated.firstIndex(of: lhs.fileId) ?? Int.max
@@ -148,9 +148,9 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                         }
                     }
                     
-                    sorted = sorted.filter { value in
-                        return !toRemove.contains(value)
-                    }
+//                    sorted = sorted.filter { value in
+//                        return !toRemove.contains(value)
+//                    }
                     
                     selected = selected.sorted(by: { lhs, rhs in
                         let lhsIndex = emojies.animated.firstIndex(of: lhs.fileId) ?? Int.max
@@ -578,9 +578,9 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
                         }
                     }
                     
-                    sorted = sorted.filter { value in
-                        return !toRemove.contains(value)
-                    }
+//                    sorted = sorted.filter { value in
+//                        return !toRemove.contains(value)
+//                    }
                     
                     selected = selected.sorted(by: { lhs, rhs in
                         let lhsIndex = emojies.animated.firstIndex(of: lhs.fileId) ?? Int.max
@@ -609,9 +609,9 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
                         }
                     }
                     
-                    sorted = sorted.filter { value in
-                        return !toRemove.contains(value)
-                    }
+//                    sorted = sorted.filter { value in
+//                        return !toRemove.contains(value)
+//                    }
                     
                     selected = selected.sorted(by: { lhs, rhs in
                         let lhsIndex = emojies.animated.firstIndex(of: lhs.fileId) ?? Int.max
