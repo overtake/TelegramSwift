@@ -456,7 +456,7 @@ private func chatListFilterEntries(state: ChatListFiltersListState, includePeers
                 }
                 
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_include(peer.id), equatable: InputDataEquatable(E(viewType: viewType, peer: PeerEquatable(peer))), comparable: nil, item: { initialSize, stableId in
-                    return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
+                    return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                         arguments.openInfo(peer.id)
                     }, contextMenuItems: {
                         return .single([ContextMenuItem(strings().chatListFilterIncludeRemoveChat, handler: {
@@ -532,7 +532,7 @@ private func chatListFilterEntries(state: ChatListFiltersListState, includePeers
                 }
                 
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_exclude(peer.id), equatable: InputDataEquatable(E(viewType: viewType, peer: PeerEquatable(peer))), comparable: nil, item: { initialSize, stableId in
-                    return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
+                    return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                         arguments.openInfo(peer.id)
                     }, contextMenuItems: {
                         return .single([ContextMenuItem.init(strings().chatListFilterExcludeRemoveChat, handler: {

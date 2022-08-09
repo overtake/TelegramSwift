@@ -569,6 +569,12 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         self.updateAnimatableContent()
     }
     
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        self.updateListeners()
+        self.updateAnimatableContent()
+    }
+    
     private func updateListeners() {
         let center = NotificationCenter.default
         if let window = window {
@@ -611,7 +617,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     view = current
                 } else {
                     self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                    view = InlineStickerItemLayer(context: context, file: current.file, size: rect.size)
+                    view = InlineStickerItemLayer(account: context.account, file: current.file, size: rect.size)
                     self.inlineStickerItemViews[id] = view
                     view.superview = contentView
                     contentView.layer?.addSublayer(view)

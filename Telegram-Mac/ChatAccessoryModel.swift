@@ -111,6 +111,12 @@ class ChatAccessoryView : Button {
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         self.updateListeners()
+        self.updateAnimatableContent()
+    }
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        self.updateListeners()
+        self.updateAnimatableContent()
     }
     
     
@@ -141,7 +147,7 @@ class ChatAccessoryView : Button {
                     view = current
                 } else {
                     self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                    view = InlineStickerItemLayer(context: context, emoji: emoji, size: rect.size)
+                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size)
                     self.inlineStickerItemViews[id] = view
                     view.superview = textView
                     textView.addEmbeddedLayer(view)

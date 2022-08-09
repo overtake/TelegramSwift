@@ -780,7 +780,8 @@ final class GroupCallUIController : ViewController {
                 
         let peerId = self.data.call.peerId
         let account = self.data.call.account
-                
+        let context = self.data.call.accountContext
+
         let videoSources = ValuePromise<GroupCallUIState.VideoSources>(.init())
         let videoSourcesValue: Atomic<GroupCallUIState.VideoSources> = Atomic(value: .init())
         let updateVideoSources:(@escaping(GroupCallUIState.VideoSources)->GroupCallUIState.VideoSources)->Void = { f in
@@ -827,7 +828,7 @@ final class GroupCallUIController : ViewController {
             guard let `self` = self else {
                 return
             }
-            self.navigationController?.push(GroupCallSettingsController(sharedContext: sharedContext, account: account, callState: callState.get(), call: self.data.call))
+            self.navigationController?.push(GroupCallSettingsController(sharedContext: sharedContext, context: context, callState: callState.get(), call: self.data.call))
         }, invite: { [weak self] peerId in
             let invite = self?.data.call.invitePeer(peerId)
             

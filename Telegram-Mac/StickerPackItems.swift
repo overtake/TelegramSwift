@@ -315,6 +315,12 @@ private final class StickerPackRowView : HorizontalRowView {
         self.updateAnimatableContent()
     }
     
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        self.updateListeners()
+        self.updateAnimatableContent()
+    }
+    
     private func updateListeners() {
         let center = NotificationCenter.default
         if let window = window {
@@ -365,7 +371,7 @@ private final class StickerPackRowView : HorizontalRowView {
                 self.inlineSticker?.removeFromSuperlayer()
                 self.inlineSticker = nil
                 if let file = file {
-                    current = InlineStickerItemLayer(context: item.context, file: file, size: NSMakeSize(28, 28))
+                    current = InlineStickerItemLayer(account: item.context.account, file: file, size: NSMakeSize(28, 28))
                     self.container.layer?.addSublayer(current!)
                     self.inlineSticker = current
                 } else {

@@ -973,7 +973,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     view = current
                 } else {
                     self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                    view = InlineStickerItemLayer(context: context, emoji: emoji, size: rect.size)
+                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size)
                     self.inlineStickerItemViews[id] = view
                     view.superview = textView
                     textView.addEmbeddedLayer(view)

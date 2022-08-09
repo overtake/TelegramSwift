@@ -45,6 +45,7 @@ final class InlineStickersContext {
             
             if self.dataContexts[fileId] == nil {
                 let signal = self.engine.stickers.resolveInlineStickers(fileIds: [fileId])
+                |> deliverOnMainQueue
                 
                 disposable = signal.start(next: { file in
                     context.data = file[fileId]

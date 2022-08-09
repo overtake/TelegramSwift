@@ -117,7 +117,7 @@ private func inactiveEntries(state: InactiveChannelsState, arguments: InactiveCh
             let equatable = _Equatable(channel: channel, viewType: viewType)
             
             entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("_id_peer_\(channel.peer.id.toInt64())"), equatable: InputDataEquatable(equatable), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: channel.peer, account: arguments.context.account, stableId: stableId, enabled: true, height: 50, photoSize: NSMakeSize(36, 36), status: localizedInactiveDate(channel.lastActivityDate), inset: NSEdgeInsets(left: 30, right: 30), interactionType: .selectable(arguments.select), viewType: viewType)
+                return ShortPeerRowItem(initialSize, peer: channel.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: true, height: 50, photoSize: NSMakeSize(36, 36), status: localizedInactiveDate(channel.lastActivityDate), inset: NSEdgeInsets(left: 30, right: 30), interactionType: .selectable(arguments.select), viewType: viewType)
             }))
             index += 1
         }

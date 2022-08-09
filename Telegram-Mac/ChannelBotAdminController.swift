@@ -177,7 +177,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: .init(state.admin), comparable: nil, item: { initialSize, stableId in
         let string:String = strings().presenceBot
         let color:NSColor = theme.colors.grayText
-        return ShortPeerRowItem(initialSize, peer: state.admin.peer, account: arguments.context.account, stableId: stableId, enabled: true, height: 60, photoSize: NSMakeSize(40, 40), statusStyle: ControlStyle(font: .normal(.title), foregroundColor: color), status: string, inset: NSEdgeInsets(left: 30, right: 30), viewType: .singleItem, action: {})
+        return ShortPeerRowItem(initialSize, peer: state.admin.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: true, height: 60, photoSize: NSMakeSize(40, 40), statusStyle: ControlStyle(font: .normal(.title), foregroundColor: color), status: string, inset: NSEdgeInsets(left: 30, right: 30), viewType: .singleItem, action: {})
     }))
     index += 1
     

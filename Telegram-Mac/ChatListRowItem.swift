@@ -836,20 +836,14 @@ class ChatListRowItem: TableRowItem {
             dateSize = dateLayout.0.size.width
         }
         var offset: CGFloat = 0
-        if isScam || isFake {
-            offset += badIcon.backingSize.width + 4
+        if isScam || isFake || isVerified || isPremium {
+            offset += 20
         }
         if isMuted {
             offset += theme.icons.dialogMuteImage.backingSize.width + 4
         }
-        if isVerified {
-            offset += 20
-        }
         if isSecret {
             offset += 10
-        }
-        if self.isPremium {
-            offset += 20
         }
         return max(300, size.width) - 50 - margin * 4 - dateSize - (isOutMessage ? isRead ? 14 : 8 : 0) - offset
     }

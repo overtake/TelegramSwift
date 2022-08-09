@@ -275,7 +275,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .setStatus(_, viewType, peer):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Update Status", icon: theme.icons.settingsGeneral, activeIcon: theme.icons.settingsGeneralActive, type: .next, viewType: viewType, action: arguments.setStatus, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .accountRecord(_, viewType, info):
-            return ShortPeerRowItem(initialSize, peer: info.peer, account: info.account, height: 42, photoSize: NSMakeSize(28, 28), titleStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text, highlightColor: theme.colors.underSelectedColor), borderType: [.Right], inset: NSEdgeInsets(left: 12, right: 12), viewType: viewType, action: {
+            return ShortPeerRowItem(initialSize, peer: info.peer, account: info.account, context: nil, height: 42, photoSize: NSMakeSize(28, 28), titleStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text, highlightColor: theme.colors.underSelectedColor), borderType: [.Right], inset: NSEdgeInsets(left: 12, right: 12), viewType: viewType, action: {
                 arguments.context.sharedContext.switchToAccount(id: info.account.id, action: nil)
             }, contextMenuItems: {
                 
