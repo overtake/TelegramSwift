@@ -620,8 +620,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         if chatInteraction.presentation.isKeyboardShown {
             sumHeight += bottomHeight
         }
-        
-        
+                
         if previousHeight != sumHeight {
             previousHeight = sumHeight
             let bottomInset = chatInteraction.presentation.isKeyboardShown ? bottomHeight : 0
