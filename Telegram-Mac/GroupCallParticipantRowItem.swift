@@ -180,9 +180,9 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         } else if isFake {
             return (fakeIcon, .zero)
         } else if verified {
-            return (verifyIcon, NSMakeSize(-4, -4))
+            return (verifyIcon, .zero)
         } else if isPremium {
-            return (premiumIcon, NSMakeSize(-4, -4))
+            return (premiumIcon, .zero)
         } else {
             return nil
         }

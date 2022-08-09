@@ -12,7 +12,7 @@ import TGUIKit
 
 class GeneralInteractedRowView: GeneralRowView {
         
-    private let containerView: GeneralRowContainerView = GeneralRowContainerView(frame: NSZeroRect)
+    let containerView: GeneralRowContainerView = GeneralRowContainerView(frame: NSZeroRect)
     private(set) var switchView:SwitchView?
     private(set) var progressView: ProgressIndicator?
     private(set) var textView:TextView?
