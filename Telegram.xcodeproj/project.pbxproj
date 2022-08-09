@@ -105,6 +105,7 @@
 		2738A2E0289D5DD700EC1010 /* PremiumGiftStarSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738A2DF289D5DD700EC1010 /* PremiumGiftStarSceneView.swift */; };
 		2738A2E228A124F700EC1010 /* gift.scn in Resources */ = {isa = PBXBuildFile; fileRef = 2738A2E128A124F700EC1010 /* gift.scn */; };
 		2738A2E428A1373A00EC1010 /* PremiumStatusController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738A2E328A1373A00EC1010 /* PremiumStatusController.swift */; };
+		2738A2E628A2711900EC1010 /* PremiumStatusControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738A2E528A2711900EC1010 /* PremiumStatusControl.swift */; };
 		2738CAD6270704A800CDB1BF /* RequestJoinChatModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD5270704A800CDB1BF /* RequestJoinChatModalController.swift */; };
 		2738CAD82707067000CDB1BF /* RequestJoinChatRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */; };
 		2738CADA2707198100CDB1BF /* RequestJoinMemberListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */; };
@@ -1455,6 +1456,7 @@
 		2738A2DF289D5DD700EC1010 /* PremiumGiftStarSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumGiftStarSceneView.swift; sourceTree = "<group>"; };
 		2738A2E128A124F700EC1010 /* gift.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = gift.scn; sourceTree = "<group>"; };
 		2738A2E328A1373A00EC1010 /* PremiumStatusController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumStatusController.swift; sourceTree = "<group>"; };
+		2738A2E528A2711900EC1010 /* PremiumStatusControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumStatusControl.swift; sourceTree = "<group>"; };
 		2738CAD5270704A800CDB1BF /* RequestJoinChatModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinChatModalController.swift; sourceTree = "<group>"; };
 		2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinChatRowItem.swift; sourceTree = "<group>"; };
 		2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinMemberListController.swift; sourceTree = "<group>"; };
@@ -2875,6 +2877,7 @@
 				2726BDDE286B0BAE0044D260 /* PremiumGiftRowItem.swift */,
 				2738A2DF289D5DD700EC1010 /* PremiumGiftStarSceneView.swift */,
 				2738A2E328A1373A00EC1010 /* PremiumStatusController.swift */,
+				2738A2E528A2711900EC1010 /* PremiumStatusControl.swift */,
 			);
 			name = premium;
 			sourceTree = "<group>";
@@ -6487,6 +6490,7 @@
 				C250BA8F1E6E1CDC0057CD96 /* ChatMessageThrottledProcessingManager.swift in Sources */,
 				271B783E25ECD94C007144D7 /* PamentsSelectMethodController.swift in Sources */,
 				2760E55926970672001C59F8 /* WidgetButton.swift in Sources */,
+				2738A2E628A2711900EC1010 /* PremiumStatusControl.swift in Sources */,
 				9F3D5F8622085B2000CB0CAA /* UpdaterNotifySettings.swift in Sources */,
 				A7E83214255E992D0095A167 /* WaveView.swift in Sources */,
 				D0BEB998216BD8A70055B718 /* EditImageControls.swift in Sources */,
