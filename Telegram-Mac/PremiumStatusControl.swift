@@ -11,10 +11,14 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
+import QuartzCore
 
 final class PremiumStatusControl : View {
+    private var imageLayer: SimpleLayer?
+    private var animateLayer: InlineStickerItemLayer?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        self.backgroundColor = .random
     }
     
     required init?(coder: NSCoder) {
