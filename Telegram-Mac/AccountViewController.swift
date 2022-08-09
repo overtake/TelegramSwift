@@ -53,7 +53,8 @@ fileprivate final class AccountInfoArguments {
     let openUpdateApp:() -> Void
     let openPremium:()->Void
     let addAccount:([AccountWithInfo])->Void
-    init(context: AccountContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void) {
+    let setStatus:()->Void
+    init(context: AccountContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping()->Void) {
         self.context = context
         self.presentController = presentController
         self.openFaq = openFaq
@@ -61,6 +62,7 @@ fileprivate final class AccountInfoArguments {
         self.openUpdateApp = openUpdateApp
         self.openPremium = openPremium
         self.addAccount = addAccount
+        self.setStatus = setStatus
     }
 }
 
@@ -141,6 +143,7 @@ private final class AnyUpdateStateEquatable  : Equatable {
 
 private enum AccountInfoEntry : TableItemListNodeEntry {
     case info(index:Int, viewType: GeneralViewType, PeerEquatable)
+    case setStatus(index:Int, viewType: GeneralViewType, PeerEquatable)
     case accountRecord(index: Int, viewType: GeneralViewType, info: AccountWithInfo)
     case addAccount(index: Int, [AccountWithInfo], viewType: GeneralViewType)
     case proxy(index: Int, viewType: GeneralViewType, status: String?)
@@ -166,42 +169,44 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         switch self {
         case .info:
             return .index(0)
+        case .setStatus:
+            return .index(1)
         case let .accountRecord(_, _, info):
             return .account(info)
         case .addAccount:
-            return .index(1)
-        case .general:
             return .index(2)
-        case .proxy:
+        case .general:
             return .index(3)
-        case .notifications:
+        case .proxy:
             return .index(4)
-        case .dataAndStorage:
+        case .notifications:
             return .index(5)
-        case .activeSessions:
+        case .dataAndStorage:
             return .index(6)
-        case .privacy:
+        case .activeSessions:
             return .index(7)
-        case .language:
+        case .privacy:
             return .index(8)
-        case .stickers:
+        case .language:
             return .index(9)
-        case .filters:
+        case .stickers:
             return .index(10)
-        case .update:
+        case .filters:
             return .index(11)
-        case .appearance:
+        case .update:
             return .index(12)
-        case .passport:
+        case .appearance:
             return .index(13)
-        case .premium:
+        case .passport:
             return .index(14)
-        case .faq:
+        case .premium:
             return .index(15)
-        case .ask:
+        case .faq:
             return .index(16)
-        case .about:
+        case .ask:
             return .index(17)
+        case .about:
+            return .index(18)
         case let .whiteSpace(index, _):
             return .index(1000 + index)
         }
@@ -210,6 +215,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
     var index:Int {
         switch self {
         case let .info(index, _, _):
+            return index
+        case let .setStatus(index, _, _):
             return index
         case let .accountRecord(index, _, _):
             return index
@@ -265,6 +272,8 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                     arguments.presentController(controller, first.swap(false))
                 })
             })
+        case let .setStatus(_, viewType, peer):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Update Status", icon: theme.icons.settingsGeneral, activeIcon: theme.icons.settingsGeneralActive, type: .next, viewType: viewType, action: arguments.setStatus, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .accountRecord(_, viewType, info):
             return ShortPeerRowItem(initialSize, peer: info.peer, account: info.account, height: 42, photoSize: NSMakeSize(28, 28), titleStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text, highlightColor: theme.colors.underSelectedColor), borderType: [.Right], inset: NSEdgeInsets(left: 12, right: 12), viewType: viewType, action: {
                 arguments.context.sharedContext.switchToAccount(id: info.account.id, action: nil)
@@ -411,10 +420,20 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
         index += 1
         entries.append(.info(index: index, viewType: .singleItem, PeerEquatable(peer)))
         index += 1
+        
+//        entries.append(.whiteSpace(index: index, height: 20))
+//        index += 1
+        #if DEBUG
+        entries.append(.setStatus(index: index, viewType: .singleItem, PeerEquatable(peer)))
+        index += 1
+        #endif
+       
     }
     
     entries.append(.whiteSpace(index: index, height: 20))
     index += 1
+    
+   
     
     if !context.isSupport {
         for account in accounts {
@@ -714,6 +733,10 @@ class LayoutAccountController : TableViewController {
             } else {
                 context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
             }
+        }, setStatus: { [weak self] in
+            if let view = self?.genericView.item(stableId: AccountInfoEntryId.index(1))?.view as? GeneralInteractedRowView {
+                showPopover(for: view.containerView, with: PremiumStatusController(context), edge: NSRectEdge.maxY, inset: NSMakePoint(0, -50))
+            }
         })
         
         self.arguments = arguments
@@ -753,38 +776,38 @@ class LayoutAccountController : TableViewController {
     override func navigationWillChangeController() {
         if let navigation = navigation as? ExMajorNavigationController {
             if navigation.controller is DataAndStorageViewController {
-                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(5))) {
+                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(6))) {
                     _ = genericView.select(item: item)
                 }
             } else if navigation.controller is PrivacyAndSecurityViewController {
-                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(7))) {
-                    _ = genericView.select(item: item)
-                }
-            } else if navigation.controller is LanguageViewController {
                 if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(8))) {
                     _ = genericView.select(item: item)
                 }
-            } else if navigation.controller is InstalledStickerPacksController {
+            } else if navigation.controller is LanguageViewController {
                 if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(9))) {
+                    _ = genericView.select(item: item)
+                }
+            } else if navigation.controller is InstalledStickerPacksController {
+                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(10))) {
                     _ = genericView.select(item: item)
                 }
                 
             } else if navigation.controller is GeneralSettingsViewController {
-                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(2))) {
+                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(3))) {
                     _ = genericView.select(item: item)
                 }
             }  else if navigation.controller is RecentSessionsController {
-                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(6))) {
+                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(7))) {
                     _ = genericView.select(item: item)
                 }
             } else if navigation.controller is PassportController {
-                if let item = genericView.item(stableId: AccountInfoEntryId.index(Int(13))) {
+                if let item = genericView.item(stableId: AccountInfoEntryId.index(Int(14))) {
                     _ = genericView.select(item: item)
                 }
             } else if let controller = navigation.controller as? InputDataController {
                 switch true {
                 case controller.identifier == "proxy":
-                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(3))) {
+                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(4))) {
                         _ = genericView.select(item: item)
                     }
                 case controller.identifier == "account":
@@ -792,23 +815,23 @@ class LayoutAccountController : TableViewController {
                         _ = genericView.select(item: item)
                     }
                 case controller.identifier == "passport":
-                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(13))) {
+                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(14))) {
                         _ = genericView.select(item: item)
                     }
                 case controller.identifier == "app_update":
-                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(11))) {
+                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(12))) {
                         _ = genericView.select(item: item)
                     }
                 case controller.identifier == "filters":
-                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(10))) {
+                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(11))) {
                         _ = genericView.select(item: item)
                     }
                 case controller.identifier == "notification-settings":
-                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(4))) {
+                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(5))) {
                         _ = genericView.select(item: item)
                     }
                 case controller.identifier == "app_appearance":
-                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(12))) {
+                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(13))) {
                         _ = genericView.select(item: item)
                     }
                 default:

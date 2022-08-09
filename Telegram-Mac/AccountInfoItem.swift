@@ -315,7 +315,7 @@ private class AccountInfoView : GeneralContainableRowView {
             additionImage.setFrameOrigin(titleView.frame.maxX + 5, 0)
         }
         
-        actionView.centerY(x: containerView.frame.width - actionView.frame.width - 10)
+        actionView.centerY(x: containerView.frame.width - actionView.frame.width - 15)
         photoVideoView?.frame = avatarView.frame
     }
     
