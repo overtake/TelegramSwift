@@ -265,6 +265,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private let containerView: ChatListDraggingContainerView = ChatListDraggingContainerView(frame: NSZeroRect)
     private var expandView: ChatListExpandView?
     
+    private var statusControl: PremiumStatusControl?
+    
     
     private var currentTextLeftCutout: CGFloat = 0.0
     private var currentMediaPreviewSpecs: [(message: Message, media: Media, size: CGSize)] = []
@@ -478,23 +480,26 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     }
                     displayLayout.1.draw(NSMakeRect(item.leftInset + addition, item.margin - 1, displayLayout.0.size.width, displayLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                     
-                    
-                    
-                    if item.isVerified {
-                        ctx.draw(highlighted ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin, 16, 16))
-                        addition += 17
-                    }
-                   
-                    
-                    if item.isScam || item.isFake {
-                        ctx.draw(highlighted ? item.badHighlightIcon : item.badIcon, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
-                        addition += item.badIcon.backingSize.width + 3
+                    if let statusControl = statusControl {
+                        addition += statusControl.frame.width + 1
                     }
                     
-                    if item.isPremium {
-                        ctx.draw(highlighted ? theme.icons.premium_account_rev_active : theme.icons.premium_account_rev, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin, 16, 16))
-                        addition += 17
-                    }
+                    
+//                    if item.isVerified {
+//                        ctx.draw(highlighted ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin, 16, 16))
+//                        addition += 17
+//                    }
+//
+//
+//                    if item.isScam || item.isFake {
+//                        ctx.draw(highlighted ? item.badHighlightIcon : item.badIcon, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
+//                        addition += item.badIcon.backingSize.width + 3
+//                    }
+//
+//                    if item.isPremium {
+//                        ctx.draw(highlighted ? theme.icons.premium_account_rev_active : theme.icons.premium_account_rev, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin, 16, 16))
+//                        addition += 17
+//                    }
                     
                     var messageOffset: CGFloat = 0
                     if let chatNameLayout = item.ctxChatNameLayout, !hiddenMessage {
@@ -635,7 +640,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     view = current
                 } else {
                     self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                    view = InlineStickerItemLayer(context: context, emoji: emoji, size: rect.size)
+                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size)
                     self.inlineStickerItemViews[id] = view
                     view.superview = textView
                     textView.addEmbeddedLayer(view)
@@ -683,6 +688,21 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         
                 
          if let item = item as? ChatListRowItem {
+             
+             if let peer = item.peer {
+                 let highlighted = item.isSelected && item.context.layout != .single
+                 let control = PremiumStatusControl.control(peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: highlighted, cached: self.statusControl, animated: animated)
+                 if let control = control {
+                     self.statusControl = control
+                     self.containerView.addSubview(control)
+                 } else if let view = self.statusControl {
+                     performSubviewRemoval(view, animated: animated)
+                     self.statusControl = nil
+                 }
+             } else if let view = self.statusControl {
+                 performSubviewRemoval(view, animated: animated)
+                 self.statusControl = nil
+             }
              
              if let messageText = item.ctxMessageText, !hiddenMessage {
                  let current: TextView
@@ -1783,6 +1803,14 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 var offset: CGFloat = 0
                 if let chatName = item.ctxChatNameLayout {
                     offset += chatName.0.size.height + 1
+                }
+                
+                if let statusControl = statusControl {
+                    var addition:CGFloat = 0
+                    if item.isSecret {
+                        addition += theme.icons.secretImage.backingSize.height
+                    }
+                    statusControl.setFrameOrigin(NSMakePoint(addition + item.leftInset + displayLayout.0.size.width + 2, displayLayout.0.size.height - 8))
                 }
                 
                 var mediaPreviewOffset = NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 2 + offset)

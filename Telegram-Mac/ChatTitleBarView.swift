@@ -327,6 +327,8 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     private var lastestUsersController: ViewController?
     private let fetchPeerAvatar = DisposableSet()
     
+    private var statusControl: PremiumStatusControl?
+    
     private var videoAvatarView: VideoAvatarContainer?
     
     var connectionStatus:ConnectionStatus = .online(proxyAddress: nil) {
@@ -698,6 +700,10 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         
         closeButton.centerY()
         
+        if let statusControl = statusControl, let titleRect = titleRect {
+            statusControl.setFrameOrigin(NSMakePoint(titleRect.maxX + 2, titleRect.minY + 1))
+        }
+        
         reportPlaceholder?.frame = bounds
         
     }
@@ -801,25 +807,31 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                     avatarControl.setPeer(account: chatInteraction.context.account, peer: peer)
                 }
             }
-            
+            var statusControl: PremiumStatusControl? = nil
             if peerView.peers[peerView.peerId] is TelegramSecretChat {
                 titleImage = (theme.icons.chatSecretTitle, .left(topInset: 0))
                 callButton.set(image: theme.icons.chatCall, for: .Normal)
                 callButton.set(image: theme.icons.chatCallActive, for: .Highlight)
             } else if let peer = peerViewMainPeer(peerView), chatInteraction.mode == .history {
-                if peer.isVerified {
-                    titleImage = (theme.icons.verifiedImage, .right(topInset: 0))
-                } else if peer.isScam {
-                    titleImage = (theme.icons.scam, .right(topInset: 0))
-                } else if peer.isFake {
-                    titleImage = (theme.icons.fake, .right(topInset: 0))
-                } else if peer.isPremium, peer.id != chatInteraction.context.peerId {
-                    titleImage = (theme.icons.premium_account_rev, .right(topInset: 0))
-                } else if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings, notificationSettings.isMuted {
-                    titleImage = (theme.icons.dialogMuteImage, .right(topInset: 3))
-                } else {
-                    titleImage = nil
-                }
+                titleImage = nil
+                
+                let context = chatInteraction.context
+                
+                statusControl = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: false)
+                
+//                if peer.isVerified {
+//                    titleImage = (theme.icons.verifiedImage, .right(topInset: 0))
+//                } else if peer.isScam {
+//                    titleImage = (theme.icons.scam, .right(topInset: 0))
+//                } else if peer.isFake {
+//                    titleImage = (theme.icons.fake, .right(topInset: 0))
+//                } else if peer.isPremium, peer.id != chatInteraction.context.peerId {
+//                    titleImage = (theme.icons.premium_account_rev, .right(topInset: 0))
+//                } else if let notificationSettings = peerView.notificationSettings as? TelegramPeerNotificationSettings, notificationSettings.isMuted {
+//                    titleImage = (theme.icons.dialogMuteImage, .right(topInset: 3))
+//                } else {
+//                    titleImage = nil
+//                }
                 
                 if peer.isGroup || peer.isSupergroup || peer.isChannel {
                     callButton.set(image: theme.icons.chat_voice_chat, for: .Normal)
@@ -831,6 +843,15 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             } else {
                 titleImage = nil
             }
+            
+            if let statusControl = statusControl {
+                self.statusControl = statusControl
+                self.addSubview(statusControl)
+            } else if let view = self.statusControl {
+                performSubviewRemoval(view, animated: false)
+                self.statusControl = nil
+            }
+            
             callButton.sizeToFit()
 
             updateTitle(force, presentation: chatInteraction.presentation)

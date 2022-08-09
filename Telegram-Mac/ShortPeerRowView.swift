@@ -27,12 +27,14 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
     private var photoOuter: View?
      #if !SHARE
     private var activities: ChatActivitiesModel?
+    private var statusControl: PremiumStatusControl?
     #endif
     private let rightSeparatorView:View = View()
     private let separator:View = View()
 
     private var hiddenStatus: Bool = true
     private var badgeNode: View? = nil
+    
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -159,15 +161,6 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                         
                         title.1.draw(NSMakeRect(item.textInset, tY, title.0.size.width, title.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                         
-                        if item.peer.isVerified && item.highlightVerified {
-                            ctx.draw(isRowSelected ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(item.textInset + title.0.size.width + 2, tY + 1, 14, 14))
-                        } else if item.peer.isScam && item.highlightVerified {
-                            ctx.draw(isRowSelected ? theme.icons.scamActive : theme.icons.scam, in: NSMakeRect(item.textInset + title.0.size.width + 5, tY + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
-                        } else if item.peer.isFake && item.highlightVerified {
-                            ctx.draw(isRowSelected ? theme.icons.fakeActive : theme.icons.fake, in: NSMakeRect(item.textInset + title.0.size.width + 5, tY + 1, theme.icons.fake.backingSize.width, theme.icons.fake.backingSize.height))
-                        } else if item.peer.isPremium && item.highlightVerified {
-                            ctx.draw(isRowSelected ? theme.icons.premium_account_small_rev_active : theme.icons.premium_account_small_rev, in: NSMakeRect(item.textInset + title.0.size.width + 2, tY + (item.status == nil ? 2 : 2), theme.icons.premium_account_small_rev.backingSize.width, theme.icons.premium_account_small_rev.backingSize.height))
-                        }
                     }
                 case .modern:
                     if backingScaleFactor == 1.0 {
@@ -192,17 +185,6 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                         }
                         
                         title.1.draw(NSMakeRect(item.textInset, tY, title.0.size.width, title.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
-                        
-                        if item.peer.isVerified && item.highlightVerified {
-                            ctx.draw(isRowSelected ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(item.textInset + title.0.size.width + 2, tY + 1, 14, 14))
-                        } else if item.peer.isScam && item.highlightVerified {
-                            ctx.draw(isRowSelected ? theme.icons.scamActive : theme.icons.scam, in: NSMakeRect(item.textInset + title.0.size.width + 5, tY + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
-                        } else if item.peer.isFake && item.highlightVerified {
-                            ctx.draw(isRowSelected ? theme.icons.fakeActive : theme.icons.fake, in: NSMakeRect(item.textInset + title.0.size.width + 5, tY + 1, theme.icons.fake.backingSize.width, theme.icons.fake.backingSize.height))
-                        } else if item.peer.isPremium && item.highlightVerified {
-                            ctx.draw(isRowSelected ? theme.icons.premium_account_small_rev_active : theme.icons.premium_account_small_rev, in: NSMakeRect(item.textInset + title.0.size.width + 2, tY + (item.status == nil ? 2 : 1), theme.icons.premium_account_small_rev.backingSize.width, theme.icons.premium_account_small_rev.backingSize.height))
-                         }
-                        
                     }
                 }
             }
@@ -336,15 +318,27 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 
                 separator.frame = NSMakeRect(container.frame.minX + item.textInset, containerView.frame.height - .borderSize, container.frame.width - item.textInset, .borderSize)
                 
-                #if !SHARE
-                if let view = activities?.view {
-                    view.setFrameOrigin(item.textInset - 2, floorToScreenPixels(backingScaleFactor, frame.height / 2 + 1))
-                }
-                #endif
-                
                 container.needsDisplay = true
                 
             }
+            
+            #if !SHARE
+            if let view = activities?.view {
+                view.setFrameOrigin(item.textInset - 2, floorToScreenPixels(backingScaleFactor, frame.height / 2 + 1))
+            }
+            if let statusControl = self.statusControl, let title = item.title {
+                var tY = NSMinY(focus(title.0.size))
+                
+                if let status = (isRowSelected ? item.statusSelected : item.status) {
+                    let t = title.0.size.height + status.0.size.height + 1.0
+                    tY = (self.frame.height - t) / 2.0
+                }
+
+                statusControl.setFrameOrigin(NSMakePoint(item.textInset + title.0.size.width + 2, tY + 1))
+
+            }
+            #endif
+
             
             if let photoOuter = photoOuter {
                 photoOuter.frame = self.image.frame.insetBy(dx: -3, dy: -3)
@@ -492,6 +486,21 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         
         guard let item = item as? ShortPeerRowItem else {return}
         
+        #if !SHARE
+        if item.highlightVerified {
+            let control = PremiumStatusControl.control(item.peer, account: item.account, inlinePacksContext: item.context?.inlinePacksContext, isSelected: isRowSelected, cached: self.statusControl, animated: animated)
+            if let control = control {
+                self.statusControl = control
+                self.container.addSubview(control)
+            } else if let view = self.statusControl {
+                performSubviewRemoval(view, animated: animated)
+                self.statusControl = nil
+            }
+        } else if let view = self.statusControl {
+            performSubviewRemoval(view, animated: animated)
+            self.statusControl = nil
+        }
+        #endif
         
         switch previousType {
         case let .selectable(interaction):

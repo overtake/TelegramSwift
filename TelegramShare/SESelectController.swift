@@ -433,13 +433,13 @@ func ==(lhs:SelectablePeersEntry, rhs:SelectablePeersEntry) -> Bool {
 
 
 
-fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeersEntry], account:Account, initialSize:NSSize, animated:Bool, selectInteraction:SelectPeerInteraction) -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> {
+fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeersEntry], context: AccountContext, initialSize:NSSize, animated:Bool, selectInteraction:SelectPeerInteraction) -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> {
     
     return Signal {subscriber in
         let (deleted,inserted,updated) = proccessEntries(from, right: to, { entry -> TableRowItem in
             switch entry {
             case let .plain(peer, _):
-                return  ShortPeerRowItem(initialSize, peer: peer, account:account, height:40, photoSize:NSMakeSize(30,30), isLookSavedMessage: true, inset:NSEdgeInsets(left: 10, right:10), interactionType:.selectable(selectInteraction))
+                return ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, height:40, photoSize:NSMakeSize(30,30), isLookSavedMessage: true, inset:NSEdgeInsets(left: 10, right:10), interactionType:.selectable(selectInteraction))
             case .emptySearch:
                 return SearchEmptyRowItem(initialSize, stableId: SelectablePeersEntryStableId.emptySearch)
             }
@@ -561,7 +561,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                         }
                         entries.sort(by: <)
                         
-                        return prepareEntries(from: previous.swap(entries), to: entries, account: account, initialSize: initialSize, animated: true, selectInteraction:selectInteraction)
+                        return prepareEntries(from: previous.swap(entries), to: entries, context: context, initialSize: initialSize, animated: true, selectInteraction:selectInteraction)
                     }
                     return .never()
                 }
@@ -621,7 +621,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                         
                     }
                     entries.sort(by: <)
-                    return prepareEntries(from: previous.swap(entries), to: entries, account: account, initialSize: initialSize, animated: true, selectInteraction:selectInteraction)
+                    return prepareEntries(from: previous.swap(entries), to: entries, context: context, initialSize: initialSize, animated: true, selectInteraction:selectInteraction)
                 }
                 
             }

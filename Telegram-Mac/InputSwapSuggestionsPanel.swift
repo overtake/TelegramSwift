@@ -236,6 +236,7 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
         guard let textView = textView, let relativeView = relativeView, let range = self.range else {
             return
         }
+        
         let size = self.frame.size
         let rect = textView.highlightRect(for: range, whole: false)
         let convert = textView.inputView.convert(rect, to: relativeView)

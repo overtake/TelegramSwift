@@ -120,7 +120,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         var id: Int64
         var index: Int
     }
-    private let context: AccountContext
+    private let account: Account
     private var infoDisposable: Disposable?
     
     weak var superview: NSView?
@@ -138,8 +138,8 @@ final class InlineStickerItemLayer : SimpleLayer {
     
     private var shimmer: ShimmerLayer?
     
-    init(context: AccountContext, emoji: ChatTextCustomEmojiAttribute, size: NSSize) {
-        self.context = context
+    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize) {
+        self.account = account
         super.init()
         self.frame = size.bounds
         self.initialize()
@@ -148,7 +148,12 @@ final class InlineStickerItemLayer : SimpleLayer {
         if let file = emoji.file {
             signal = .single(file)
         } else {
-            signal = context.inlinePacksContext.load(fileId: emoji.fileId) |> deliverOnMainQueue
+            if let inlinePacksContext = inlinePacksContext {
+                signal = inlinePacksContext.load(fileId: emoji.fileId) |> deliverOnMainQueue
+            } else {
+                signal = TelegramEngine(account: account).stickers.resolveInlineStickers(fileIds: [emoji.fileId])
+                |> map { $0.values.first }
+            }
         }
         
         self.infoDisposable = signal.start(next: { [weak self] file in
@@ -157,8 +162,8 @@ final class InlineStickerItemLayer : SimpleLayer {
         })
     }
     
-    init(context: AccountContext, file: TelegramMediaFile, size: NSSize) {
-        self.context = context
+    init(account: Account, file: TelegramMediaFile, size: NSSize) {
+        self.account = account
         super.init()
         self.initialize()
         self.file = file
@@ -262,7 +267,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                     return EmptyDisposable
                 } |> runOn(resourcesQueue)
             } else {
-                data = context.account.postbox.mediaBox.resourceData(file.resource, attemptSynchronously: sync)
+                data = account.postbox.mediaBox.resourceData(file.resource, attemptSynchronously: sync)
             }
             if file.isAnimatedSticker || file.isVideoSticker {
                 self.resourceDisposable.set((data |> map { resourceData -> Data? in
@@ -297,7 +302,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                 self.resourceDisposable.set(nil)
             }
             
-            fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: mediaResource).start())
+            fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: mediaResource).start())
             
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: aspectSize, boundingSize: size, intrinsicInsets: NSEdgeInsets())
 
@@ -311,9 +316,9 @@ final class InlineStickerItemLayer : SimpleLayer {
                 
             switch file.mimeType {
             case "image/webp":
-                signal = chatMessageSticker(postbox: context.account.postbox, file: reference, small: aspectSize.width <= 5, scale: System.backingScale, fetched: true)
+                signal = chatMessageSticker(postbox: account.postbox, file: reference, small: aspectSize.width <= 5, scale: System.backingScale, fetched: true)
             default:
-                signal = chatMessageAnimatedSticker(postbox: context.account.postbox, file: reference, small: size.width <= 5, scale: System.backingScale, size: aspectSize, fetched: true, thumbAtFrame: 0, isVideo: file.fileName == "webm-preview" || file.isVideoSticker)
+                signal = chatMessageAnimatedSticker(postbox: account.postbox, file: reference, small: size.width <= 5, scale: System.backingScale, size: aspectSize, fetched: true, thumbAtFrame: 0, isVideo: file.fileName == "webm-preview" || file.isVideoSticker)
             }
             
             var result: TransformImageResult?

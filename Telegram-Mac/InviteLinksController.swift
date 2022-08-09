@@ -603,7 +603,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
             let viewType = bestGeneralViewType(creators, for: i)
 
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_creator(creator.peer.peerId), equatable: InputDataEquatable(creator), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: creator.peer.peer!, account: arguments.context.account, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), status: strings().manageLinksTitleCountCountable(Int(creator.count)), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
+                return ShortPeerRowItem(initialSize, peer: creator.peer.peer!, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), status: strings().manageLinksTitleCountCountable(Int(creator.count)), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                     arguments.openAdminLinks(creator)
                 })
             }))

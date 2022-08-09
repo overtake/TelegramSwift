@@ -532,30 +532,16 @@ class PeerInfoHeadItem: GeneralRowItem {
         let success = super.makeSize(width, oldWidth: oldWidth)
         
         self.items = editing ? [] : actionItems(item: self, width: blockWidth, theme: theme)
-        let textWidth = blockWidth - viewType.innerInset.right - viewType.innerInset.left - (stateImage?.backingSize.width ?? 0) - 10
+        var textWidth = blockWidth - viewType.innerInset.right - viewType.innerInset.left - 10
+        if let peer = peer, let controlSize = PremiumStatusControl.controlSize(peer, true) {
+            textWidth -= (controlSize.width + 5)
+        }
         nameLayout.measure(width: textWidth)
         statusLayout.measure(width: textWidth)
 
         return success
     }
-    
-    var stateImage: CGImage? {
-        let image: CGImage?
-        if isScam {
-            image = theme.icons.chatScam
-        } else if isVerified {
-            image = theme.icons.peerInfoVerifyProfile
-        } else if isFake {
-            image = theme.icons.chatFake
-        } else if isPremium {
-            image = theme.icons.premium_account
-        } else if isMuted {
-            image = theme.icons.dialogMuteImage
-        } else {
-            image = nil
-        }
-        return image
-    }
+
     
     var stateText: String? {
         if isScam {
@@ -570,23 +556,18 @@ class PeerInfoHeadItem: GeneralRowItem {
         return nil
     }
     
-    fileprivate var iconSize: NSSize {        
-        if let image = stateImage {
-            return NSMakeSize(image.backingSize.width + 5, image.backingSize.height)
-        }
-        return .zero
-    }
+
     
     fileprivate var nameSize: NSSize {
         var stateHeight: CGFloat = 0
-        if let image = stateImage {
-            stateHeight = max(image.backingSize.height, nameLayout.layoutSize.height)
+        if let peer = peer, let size = PremiumStatusControl.controlSize(peer, true) {
+            stateHeight = max(size.height, nameLayout.layoutSize.height)
         } else {
             stateHeight = nameLayout.layoutSize.height
         }
         var width = nameLayout.layoutSize.width
-        if let image = stateImage {
-            width += image.backingSize.width + 5
+        if let peer = peer, let size = PremiumStatusControl.controlSize(peer, true)  {
+            width += size.width + 5
         }
         return NSMakeSize(width, stateHeight)
     }
@@ -706,7 +687,7 @@ private final class PeerInfoPhotoEditableView : Control {
 
 private final class NameContainer : View {
     let nameView = TextView()
-    var stateImage: ImageButton?
+    var statusControl: PremiumStatusControl?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(nameView)
@@ -715,54 +696,46 @@ private final class NameContainer : View {
     func update(_ item: PeerInfoHeadItem, animated: Bool) {
         self.nameView.update(item.nameLayout)
         let context = item.context
-        if let image = item.stateImage  {
-            if stateImage == nil {
-                stateImage = ImageButton()
-                addSubview(stateImage!)
+        
+        if let peer = item.peer {
+            let control = PremiumStatusControl.control(peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, isBig: true, cached: self.statusControl, animated: animated)
+            if let control = control {
+                self.statusControl = control
+                self.addSubview(control)
+            } else if let view = self.statusControl {
+                performSubviewRemoval(view, animated: animated)
+                self.statusControl = nil
             }
-            guard let stateImage = self.stateImage else {
-                return
-            }
-            stateImage.autohighlight = false
-            stateImage.set(image: image, for: .Normal)
-            stateImage.sizeToFit()
-            stateImage.removeAllHandlers()
-
-            if let stateText = item.stateText {
-                stateImage.scaleOnClick = true
-                stateImage.set(handler: { control in
-                    let attr = parseMarkdownIntoAttributedString(stateText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: .white), bold: MarkdownAttributeSet(font: .bold(.text), textColor: .white), link: MarkdownAttributeSet(font: .normal(.text), textColor: nightAccentPalette.link), linkAttribute: { contents in
-                        return (NSAttributedString.Key.link.rawValue, contents)
-                    }))
-                    if let peerId = item.peer?.id, !context.premiumIsBlocked {
-                        let interactions = TextViewInteractions(processURL: { content in
-                            if let content = content as? String {
-                                if content == "premium" {
-                                    showModal(with: PremiumBoardingController(context: context, source: .profile(peerId)), for: context.window)
-                                }
-                            }
-                        })
-                        tooltip(for: control, text: "", attributedText: attr, interactions: interactions)
-                    }
-                    
-                    
-                }, for: .Click)
-            } else {
-                stateImage.scaleOnClick = false
-            }
-            
-        } else {
-            if let stateImage = stateImage {
-                self.stateImage = nil
-                if animated {
-                    stateImage.layer?.animateAlpha(from: 1, to: 0, duration: 0.3, removeOnCompletion: false, completion: { [weak stateImage] _ in
-                        stateImage?.removeFromSuperview()
-                    })
-                    stateImage.layer?.animateScaleSpring(from: 1, to: 0.1, duration: 0.3, removeOnCompletion: false, bounce: false)
-                }
-            }
+        } else if let view = self.statusControl {
+            performSubviewRemoval(view, animated: animated)
+            self.statusControl = nil
         }
+        
+        if let stateText = item.stateText, let control = statusControl {
+            control.userInteractionEnabled = true
+            control.scaleOnClick = true
+            control.set(handler: { control in
+                let attr = parseMarkdownIntoAttributedString(stateText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: .white), bold: MarkdownAttributeSet(font: .bold(.text), textColor: .white), link: MarkdownAttributeSet(font: .normal(.text), textColor: nightAccentPalette.link), linkAttribute: { contents in
+                    return (NSAttributedString.Key.link.rawValue, contents)
+                }))
+                if let peerId = item.peer?.id, !context.premiumIsBlocked {
+                    let interactions = TextViewInteractions(processURL: { content in
+                        if let content = content as? String {
+                            if content == "premium" {
+                                showModal(with: PremiumBoardingController(context: context, source: .profile(peerId)), for: context.window)
+                            }
+                        }
+                    })
+                    tooltip(for: control, text: "", attributedText: attr, interactions: interactions)
+                }
                 
+                
+            }, for: .Click)
+        } else {
+            statusControl?.scaleOnClick = false
+            statusControl?.userInteractionEnabled = false
+        }
+             
         needsLayout = true
     }
     
@@ -770,7 +743,9 @@ private final class NameContainer : View {
         super.layout()
         
         nameView.centerY(x: 0)
-        stateImage?.centerY(x: nameView.frame.maxX + 5, addition: -1)
+        if let control = statusControl {
+            control.centerY(x: nameView.frame.maxX + 5, addition: 0)
+        }
     }
     
     required init?(coder: NSCoder) {
