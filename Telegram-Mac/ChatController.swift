@@ -496,12 +496,6 @@ class ChatControllerView : View, ChatInputDelegate {
     func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
     
         
-        if transition.isAnimated {
-            NSLog("\(window)")
-            var bp = 0
-            bp += 1
-        }
-        
         if let view = inputContextHelper.accessoryView {
             transition.updateFrame(view: view, frame: NSMakeRect(0, frame.height - inputView.frame.height - view.frame.height, frame.width, view.frame.height))
         }
