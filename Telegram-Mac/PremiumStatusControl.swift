@@ -27,11 +27,14 @@ final class PremiumStatusControl : Control {
     
     
     func set(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, isSelected: Bool, isBig: Bool, animated: Bool) {
+        
+        
+        
         if let size = PremiumStatusControl.controlSize(peer, isBig) {
             setFrameSize(size)
         }
 
-        if peer.isFake || peer.isScam || peer.isVerified {
+        if peer.isFake || peer.isScam || peer.isVerified || (peer.isPremium && peer.emojiStatus == nil)  {
             if let animateLayer = animateLayer {
                 performSublayerRemoval(animateLayer, animated: animated)
                 self.animateLayer = nil
@@ -51,6 +54,12 @@ final class PremiumStatusControl : Control {
                 image = isSelected ? theme.icons.scamActive : theme.icons.scam
             } else if peer.isFake {
                 image = isSelected ? theme.icons.fakeActive : theme.icons.fake
+            } else if peer.isPremium {
+                if isBig {
+                    image = isSelected ? theme.icons.premium_account_active : theme.icons.premium_account
+                } else {
+                    image = isSelected ? theme.icons.premium_account_small_active : theme.icons.premium_account_small
+                }
             } else {
                 image = nil
             }
@@ -60,20 +69,29 @@ final class PremiumStatusControl : Control {
             } else {
                 current.contents = nil
             }
-        } else {
+        } else if let status = peer.emojiStatus {
             if let imageLayer = imageLayer {
-                performSublayerRemoval(imageLayer, animated: animated)
+                performSublayerRemoval(imageLayer, animated: animated, scale: true)
                 self.imageLayer = nil
             }
-            let fileId: Int64 = 5375289576833162290
+            let fileId: Int64 = status.fileId
             let current: InlineStickerItemLayer
             if let layer = self.animateLayer, layer.file?.fileId.id == fileId {
                 current = layer
             } else {
+                if let animateLayer = animateLayer {
+                    performSublayerRemoval(animateLayer, animated: animated, scale: true)
+                    self.animateLayer = nil
+                }
                 current = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: frame.size)
                 current.superview = self
                 self.animateLayer = current
                 self.layer?.addSublayer(current)
+                
+                if animated {
+                    current.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    current.animateScale(from: 0.1, to: 1, duration: 0.2)
+                }
             }
         }
         self.updateAnimatableContent()
@@ -83,7 +101,15 @@ final class PremiumStatusControl : Control {
     
     @objc func updateAnimatableContent() -> Void {
         if let layer = self.animateLayer, let superview = layer.superview {
-            layer.isPlayable = NSIntersectsRect(layer.frame, superview.visibleRect) && window != nil && window!.isKeyWindow
+            var isKeyWindow: Bool = false
+            if let window = window {
+                if !window.canBecomeKey {
+                    isKeyWindow = true
+                } else {
+                    isKeyWindow = window.isKeyWindow
+                }
+            }
+            layer.isPlayable = NSIntersectsRect(layer.frame, superview.visibleRect) && isKeyWindow
         }
     }
     
@@ -117,9 +143,9 @@ final class PremiumStatusControl : Control {
         }
     }
     
-    static func control(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, isSelected: Bool, isBig: Bool = false, cached: PremiumStatusControl?, animated: Bool) -> PremiumStatusControl? {
+    static func control(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, isSelected: Bool, isBig: Bool = false, cached: PremiumStatusControl?, animated: Bool, force: Bool = false) -> PremiumStatusControl? {
         var current: PremiumStatusControl? = nil
-        if peer.id != account.peerId || inlinePacksContext == nil {
+        if peer.id != account.peerId || (inlinePacksContext == nil || force) {
             if peer.isVerified || peer.isScam || peer.isFake || peer.isPremium {
                 current = cached ?? PremiumStatusControl(frame: .zero)
             }

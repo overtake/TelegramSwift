@@ -912,7 +912,7 @@ struct LottieAnimationEntryKey : Hashable {
         hasher.combine(size.width)
         hasher.combine(size.height)
         hasher.combine(backingScale)
-        hasher.combine(key.hashValue)
+        hasher.combine(key)
         if let fitzModifier = fitzModifier {
             hasher.combine(fitzModifier)
         }
@@ -927,6 +927,19 @@ struct LottieAnimationEntryKey : Hashable {
 enum LottieAnimationKey : Hashable {
     case media(MediaId?)
     case bundle(String)
+    
+    func hash(into hasher: inout Hasher) {
+        switch self {
+        case let .bundle(value):
+            hasher.combine("bundle")
+            hasher.combine(value)
+        case let .media(mediaId):
+            hasher.combine("media")
+            if let mediaId = mediaId {
+                hasher.combine(mediaId)
+            }
+        }
+    }
 }
 
 enum LottiePlayPolicy : Equatable {

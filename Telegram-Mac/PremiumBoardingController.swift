@@ -317,6 +317,20 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }))
     index += 1
     
+    let periods: [PremiumPeriod] = [.init(period: .month, price: 0), .init(period: .year, price: 100000)]
+    
+    if !periods.isEmpty, !state.isPremium {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_id_periods"), equatable: InputDataEquatable(periods), comparable: nil, item: { initialSize, stableId in
+            return PremiumSelectPeriodRowItem(initialSize, stableId: stableId, context: arguments.context, periods: periods, selectedPeriod: periods[0], viewType: .singleItem, callback: { period in
+                
+            })
+        }))
+        index += 1
+        
+        entries.append(.sectionId(sectionId, type: .customModern(15)))
+        sectionId += 1
+    }
+    
     for (i, value) in state.values.enumerated() {
         let viewType = bestGeneralViewType(state.values, for: i)
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init(value.rawValue), equatable: InputDataEquatable(value), comparable: nil, item: { initialSize, stableId in

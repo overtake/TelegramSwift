@@ -29,22 +29,12 @@ class AccountInfoItem: GeneralRowItem {
 
     private let peerPhotosDisposable = MetaDisposable()
     
-    var addition: CGImage? {
-        if peer.isScam {
-            return isSelected ? theme.icons.scamActive : theme.icons.scam
-        } else if peer.isFake {
-            return isSelected ? theme.icons.fakeActive : theme.icons.fake
-        } else if peer.isPremium {
-            return isSelected ? theme.icons.premium_account_active : theme.icons.premium_account
-        } else if peer.isVerified {
-            return isSelected ? theme.icons.verifiedImageSelected : theme.icons.verifiedImage
-        }
-        return nil
-    }
+    let setStatus:(Control)->Void
     
-    init(_ initialSize:NSSize, stableId:AnyHashable, viewType: GeneralViewType, inset: NSEdgeInsets = NSEdgeInsets(left: 30, right: 30), context: AccountContext, peer: TelegramUser, action: @escaping()->Void) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, viewType: GeneralViewType, inset: NSEdgeInsets = NSEdgeInsets(left: 30, right: 30), context: AccountContext, peer: TelegramUser, action: @escaping()->Void, setStatus: @escaping(Control)->Void) {
         self.context = context
         self.peer = peer
+        self.setStatus = setStatus
         
         let attr = NSMutableAttributedString()
         
@@ -89,8 +79,11 @@ class AccountInfoItem: GeneralRowItem {
         let success = super.makeSize(width, oldWidth: oldWidth)
         textLayout.measure(width: width - 140)
         activeTextlayout.measure(width: width - 140)
-        self.titleLayout.measure(width: width - 140 - (addition != nil ? 35 : 0))
-        self.titleActiveLayout.measure(width: width - 140 - (addition != nil ? 35 : 0))
+        
+        let hasControl = PremiumStatusControl.hasControl(peer)
+        
+        self.titleLayout.measure(width: width - 140 - (hasControl ? 35 : 0))
+        self.titleActiveLayout.measure(width: width - 140 - (hasControl ? 35 : 0))
         return success
     }
     
@@ -113,7 +106,7 @@ private class AccountInfoView : GeneralContainableRowView {
 
     private let container = View()
     
-    private var additionImage: ImageView?
+    private var statusControl: PremiumStatusControl?
     
     required init(frame frameRect: NSRect) {
         avatarView = AvatarControl(font: .avatar(22.0))
@@ -199,6 +192,7 @@ private class AccountInfoView : GeneralContainableRowView {
     
     deinit {
         removeNotificationListeners()
+        playStatusDisposable.dispose()
     }
 
 
@@ -207,32 +201,104 @@ private class AccountInfoView : GeneralContainableRowView {
     }
     
     private var videoRepresentation: TelegramMediaImage.VideoRepresentation?
+    private let playStatusDisposable = MetaDisposable()
     
+    private func playStatusEffect(_ status: PeerEmojiStatus, context: AccountContext) -> Void {
+        
+        let animationSize = NSMakeSize(90, 90)
+        
+        let reaction: Signal<AvailableReactions.Reaction?, NoError> = context.inlinePacksContext.load(fileId: status.fileId) |> mapToSignal { file in
+            return context.reactions.stateValue |> take(1) |> map { value in
+                let found = value?.reactions.first(where: {
+                    $0.value.fixed == file?.customEmojiText?.fixed
+                })
+                return found
+            }
+        }
+        let signal: Signal<LottieAnimation?, NoError> = reaction
+        |> filter { $0 != nil}
+        |> map {
+            $0!
+        } |> mapToSignal { reaction -> Signal<MediaResourceData, NoError> in
+            if let file = reaction.aroundAnimation {
+                return context.account.postbox.mediaBox.resourceData(file.resource)
+                |> filter { $0.complete }
+                |> take(1)
+            } else {
+                return .complete()
+            }
+        } |> map { data in
+            if let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
+                return LottieAnimation(compressed: data, key: .init(key: .bundle("_status_effect_new_\(status.fileId)"), size: animationSize, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd)
+            } else {
+                return nil
+            }
+        } |> deliverOnMainQueue
+        
+        playStatusDisposable.set(signal.start(next: { [weak self] animation in
+            if let animation = animation {
+                self?.playAnimation(animation)
+            }
+        }))
+    }
+    
+    private func playAnimation(_ animation: LottieAnimation) {
+        guard let control = statusControl else {
+            return
+        }
+        let player = LottiePlayerView(frame: animation.size.bounds)
+        
+        player.isEventLess = true
+        
+        animation.triggerOn = (LottiePlayerTriggerFrame.last, { [weak player] in
+            player?.removeFromSuperview()
+        }, {})
+        
+        player.set(animation)
+        
+        let controlRect = container.convert(control.frame, to: item?.table?.contentView)
+        
+        let rect = CGRect(origin: CGPoint(x: controlRect.midX - player.frame.width / 2, y: controlRect.midY - player.frame.height / 2), size: player.frame.size)
+        
+        player.frame = rect
+        
+        item?.table?.contentView.addSubview(player)
+        
+    }
     
     override func set(item: TableRowItem, animated: Bool) {
+        let previous = self.item as? AccountInfoItem
+        
+        
         super.set(item: item)
         
         if let item = item as? AccountInfoItem {
             
-            if let addition = item.addition {
-                let current: ImageView
-                if let view = self.additionImage {
-                    current = view
-                } else {
-                    current = ImageView()
-                    container.addSubview(current)
-                    self.additionImage = current
-                    
-                    if animated {
-                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                    }
-                }
-                current.image = addition
-                current.sizeToFit()
-            } else if let view = self.additionImage {
+            
+            let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: item.isSelected, isBig: true, cached: self.statusControl, animated: animated, force: true)
+            if let control = control {
+                self.statusControl = control
+                self.container.addSubview(control)
+            } else if let view = self.statusControl {
                 performSubviewRemoval(view, animated: animated)
-                self.additionImage = nil
+                self.statusControl = nil
             }
+            
+            if previous?.peer.emojiStatus != item.peer.emojiStatus, let status = item.peer.emojiStatus {
+                self.playStatusEffect(status, context: item.context)
+            }
+            
+            if let control = statusControl, item.peer.isPremium {
+                control.removeAllHandlers()
+                control.userInteractionEnabled = true
+                control.set(handler: { [weak item] control in
+                    item?.setStatus(control)
+                }, for: .Click)
+            } else if let control = statusControl {
+                control.removeAllHandlers()
+                control.userInteractionEnabled = false
+            }
+        
             
             titleView.update(isSelect ? item.titleActiveLayout : item.titleLayout)
             
@@ -304,15 +370,15 @@ private class AccountInfoView : GeneralContainableRowView {
         avatarView.centerY(x:16)
         
         
-        container.setFrameSize(NSMakeSize(max(titleView.frame.width, textView.frame.width + (additionImage != nil ? 35 : 0)), titleView.frame.height + textView.frame.height + 2))
+        container.setFrameSize(NSMakeSize(max(titleView.frame.width, textView.frame.width + (statusControl != nil ? 35 : 0)), titleView.frame.height + textView.frame.height + 2))
         
         titleView.setFrameOrigin(0, 0)
         textView.setFrameOrigin(0, titleView.frame.maxY + 2)
         
         container.centerY(x: avatarView.frame.maxX + 25)
         
-        if let additionImage = additionImage {
-            additionImage.setFrameOrigin(titleView.frame.maxX + 5, 0)
+        if let statusControl = statusControl {
+            statusControl.setFrameOrigin(titleView.frame.maxX + 3, 0)
         }
         
         actionView.centerY(x: containerView.frame.width - actionView.frame.width - 15)

@@ -3512,6 +3512,12 @@ extension Peer {
             return false
         }
     }
+    var emojiStatus: PeerEmojiStatus? {
+        if let peer = self as? TelegramUser {
+            return peer.emojiStatus
+        }
+        return nil
+    }
     
 }
 
