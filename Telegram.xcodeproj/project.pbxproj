@@ -106,6 +106,7 @@
 		2738A2E228A124F700EC1010 /* gift.scn in Resources */ = {isa = PBXBuildFile; fileRef = 2738A2E128A124F700EC1010 /* gift.scn */; };
 		2738A2E428A1373A00EC1010 /* PremiumStatusController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738A2E328A1373A00EC1010 /* PremiumStatusController.swift */; };
 		2738A2E628A2711900EC1010 /* PremiumStatusControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738A2E528A2711900EC1010 /* PremiumStatusControl.swift */; };
+		2738A2E828A40CFB00EC1010 /* PremiumSelectPeriodRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738A2E728A40CFB00EC1010 /* PremiumSelectPeriodRowItem.swift */; };
 		2738CAD6270704A800CDB1BF /* RequestJoinChatModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD5270704A800CDB1BF /* RequestJoinChatModalController.swift */; };
 		2738CAD82707067000CDB1BF /* RequestJoinChatRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */; };
 		2738CADA2707198100CDB1BF /* RequestJoinMemberListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */; };
@@ -1457,6 +1458,7 @@
 		2738A2E128A124F700EC1010 /* gift.scn */ = {isa = PBXFileReference; lastKnownFileType = file.bplist; path = gift.scn; sourceTree = "<group>"; };
 		2738A2E328A1373A00EC1010 /* PremiumStatusController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumStatusController.swift; sourceTree = "<group>"; };
 		2738A2E528A2711900EC1010 /* PremiumStatusControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumStatusControl.swift; sourceTree = "<group>"; };
+		2738A2E728A40CFB00EC1010 /* PremiumSelectPeriodRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumSelectPeriodRowItem.swift; sourceTree = "<group>"; };
 		2738CAD5270704A800CDB1BF /* RequestJoinChatModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinChatModalController.swift; sourceTree = "<group>"; };
 		2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinChatRowItem.swift; sourceTree = "<group>"; };
 		2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinMemberListController.swift; sourceTree = "<group>"; };
@@ -3111,6 +3113,7 @@
 				27ABFD322858DF9E006C3301 /* PremiumStickersDemoView.swift */,
 				2703404F28212EE700D0156C /* ReactionCarouselView.swift */,
 				27841869285A05840010E0F1 /* StickersCarouselView.swift */,
+				2738A2E728A40CFB00EC1010 /* PremiumSelectPeriodRowItem.swift */,
 			);
 			name = features;
 			sourceTree = "<group>";
@@ -6513,6 +6516,7 @@
 				C2C415E51FA33D1A00FF36F4 /* InputFormatterPopover.swift in Sources */,
 				9F0AE6C02199CDB500A8B53A /* SVideoView.swift in Sources */,
 				C232EA101E156DE100C4D38C /* ContextCommandRowItem.swift in Sources */,
+				2738A2E828A40CFB00EC1010 /* PremiumSelectPeriodRowItem.swift in Sources */,
 				D0BEB99A216D10920055B718 /* MediaPreviewEditControl.swift in Sources */,
 				9FDA713420E65D49001ED8ED /* PeerMediaPlayerAnimationView.swift in Sources */,
 				271FB8862893EB9A001C25DC /* GifKeyboardController.swift in Sources */,

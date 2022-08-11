@@ -13,6 +13,122 @@ import TelegramCore
 import InAppSettings
 import Postbox
 
+//private final class WarpView: View {
+//    private final class WarpPartView: View {
+//        let cloneView: PortalView
+//        
+//        init?(contentView: PortalSourceView) {
+//            guard let cloneView = PortalView(matchPosition: false) else {
+//                return nil
+//            }
+//            self.cloneView = cloneView
+//            
+//            super.init(frame: CGRect())
+//            
+//            self.layer.anchorPoint = CGPoint(x: 0.5, y: 0.0)
+//            
+//            self.clipsToBounds = true
+//            self.addSubview(cloneView.view)
+//            contentView.addPortal(view: cloneView)
+//        }
+//        
+//        required init?(coder: NSCoder) {
+//            fatalError("init(coder:) has not been implemented")
+//        }
+//        
+//        func update(containerSize: CGSize, rect: CGRect, transition: Transition) {
+//            transition.setFrame(view: self.cloneView.view, frame: CGRect(origin: CGPoint(x: -rect.minX, y: -rect.minY), size: CGSize(width: containerSize.width, height: containerSize.height)))
+//        }
+//    }
+//    
+//    let contentView: PortalSourceView
+//    
+//    private let clippingView: UIView
+//    private let overlayView: UIView
+//    
+//    private var warpViews: [WarpPartView] = []
+//    
+//    override init(frame: CGRect) {
+//        self.contentView = PortalSourceView()
+//        self.clippingView = UIView()
+//        self.overlayView = UIView()
+//        
+//        super.init(frame: frame)
+//        
+//        self.clippingView.addSubview(self.contentView)
+//        
+//        self.clippingView.clipsToBounds = false
+//        self.addSubview(self.clippingView)
+//        
+//        self.addSubview(self.overlayView)
+//        
+//        for _ in 0 ..< 8 {
+//            if let warpView = WarpPartView(contentView: self.contentView) {
+//                self.warpViews.append(warpView)
+//                self.addSubview(warpView)
+//            }
+//        }
+//    }
+//    
+//    required init?(coder: NSCoder) {
+//        fatalError("init(coder:) has not been implemented")
+//    }
+//    
+//    func update(size: CGSize, topInset: CGFloat, warpHeight: CGFloat, theme: PresentationTheme, transition: Transition) {
+//        transition.setFrame(view: self.contentView, frame: CGRect(origin: CGPoint(), size: size))
+//        
+//        let frame = CGRect(origin: CGPoint(x: 0.0, y: -topInset), size: CGSize(width: size.width, height: size.height + topInset - warpHeight))
+//        transition.setPosition(view: self.clippingView, position: frame.center)
+//        transition.setBounds(view: self.clippingView, bounds: CGRect(origin: CGPoint(x: 0.0, y: -topInset + (topInset - warpHeight) * 0.5), size: size))
+//        
+//        let allItemsHeight = warpHeight * 0.5
+//        for i in 0 ..< self.warpViews.count {
+//            let itemHeight = warpHeight / CGFloat(self.warpViews.count)
+//            let itemFraction = CGFloat(i + 1) / CGFloat(self.warpViews.count)
+//            let _ = itemHeight
+//            
+//            let da = CGFloat.pi * 0.5 / CGFloat(self.warpViews.count)
+//            let alpha = CGFloat.pi * 0.5 - itemFraction * CGFloat.pi * 0.5
+//            let endPoint = CGPoint(x: cos(alpha), y: sin(alpha))
+//            let prevAngle = alpha + da
+//            let prevPt = CGPoint(x: cos(prevAngle), y: sin(prevAngle))
+//            var angle: CGFloat
+//            angle = -atan2(endPoint.y - prevPt.y, endPoint.x - prevPt.x)
+//            
+//            let itemLengthVector = CGPoint(x: endPoint.x - prevPt.x, y: endPoint.y - prevPt.y)
+//            let itemLength = sqrt(itemLengthVector.x * itemLengthVector.x + itemLengthVector.y * itemLengthVector.y) * warpHeight * 0.5
+//            let _ = itemLength
+//            
+//            var transform: CATransform3D
+//            transform = CATransform3DIdentity
+//            transform.m34 = 1.0 / 240.0
+//            
+//            transform = CATransform3DTranslate(transform, 0.0, prevPt.x * allItemsHeight, (1.0 - prevPt.y) * allItemsHeight)
+//            transform = CATransform3DRotate(transform, angle, 1.0, 0.0, 0.0)
+//            
+//            //self.warpViews[i].backgroundColor = UIColor(red: 0.0, green: 0.0, blue: CGFloat(i) / CGFloat(self.warpViews.count - 1), alpha: 1.0)
+//            //self.warpViews[i].backgroundColor = UIColor(white: 0.0, alpha: 0.5)
+//            //self.warpViews[i].backgroundColor = theme.list.plainBackgroundColor
+//            
+//            let positionY = size.height - allItemsHeight + 4.0 + /*warpHeight * cos(alpha)*/ CGFloat(i) * itemLength
+//            let rect = CGRect(origin: CGPoint(x: 0.0, y: positionY), size: CGSize(width: size.width, height: itemLength))
+//            transition.setPosition(view: self.warpViews[i], position: CGPoint(x: rect.midX, y: size.height - allItemsHeight + 4.0))
+//            transition.setBounds(view: self.warpViews[i], bounds: CGRect(origin: CGPoint(), size: CGSize(width: size.width, height: itemLength)))
+//            transition.setTransform(view: self.warpViews[i], transform: transform)
+//            self.warpViews[i].update(containerSize: size, rect: rect, transition: transition)
+//        }
+//        
+//        self.overlayView.backgroundColor = theme.list.plainBackgroundColor
+//        transition.setFrame(view: self.overlayView, frame: CGRect(origin: CGPoint(x: 0.0, y: size.height - allItemsHeight + 4.0), size: CGSize(width: size.width, height: allItemsHeight)))
+//    }
+//    
+//    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+//        return self.contentView.hitTest(point, with: event)
+//    }
+//}
+
+
+
 
 enum EmojiSegment : Int64, Comparable  {
     case RecentAnimated = 100
@@ -794,7 +910,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         }
         
         let arguments = Arguments(context: context, mode: self.mode, send: { [weak self] item in
-            if !context.isPremium && item.file.isPremiumEmoji {
+            if !context.isPremium && item.file.isPremiumEmoji, context.peerId != self?.chatInteraction?.peerId {
                 showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
                     showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
                 })

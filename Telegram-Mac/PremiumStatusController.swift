@@ -16,9 +16,10 @@ final class PremiumStatusController : TelegramViewController {
     
     private let emojis: EmojiesController
     
-
-    override init(_ context: AccountContext) {
+    let callback: (TelegramMediaFile)->Void
+    init(_ context: AccountContext, callback: @escaping(TelegramMediaFile)->Void) {
         self.emojis = .init(context, mode: .status)
+        self.callback = callback
         super.init(context)
         bar = .init(height: 0)
         _frameRect = NSMakeRect(0, 0, 350, 300)
@@ -29,5 +30,16 @@ final class PremiumStatusController : TelegramViewController {
         emojis._frameRect = self.bounds
         self.view.addSubview(emojis.view)
         self.ready.set(self.emojis.ready.get())
+        
+        let chatInteraction = ChatInteraction(chatLocation: .peer(context.peerId), context: context)
+        
+        let interactions = EntertainmentInteractions(.emoji, peerId: context.peerId)
+        
+        interactions.sendAnimatedEmoji = { [weak self] item in
+            self?.callback(item.file)
+            self?.closePopover()
+        }
+        
+        emojis.update(with: interactions, chatInteraction: chatInteraction)
     }
 }

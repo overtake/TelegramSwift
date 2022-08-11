@@ -249,6 +249,9 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
         layer?.disableActions()
         layer?.backgroundColor = backgroundColor.cgColor
+        if #available(macOS 10.15, *) {
+            self.layer?.cornerCurve = .continuous
+        }
        // self.layer?.delegate = self
       //  self.layer?.isOpaque = false
        // self.autoresizesSubviews = false
@@ -261,6 +264,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         assertOnMainThread()
         acceptsTouchEvents = true
         self.wantsLayer = true
+        
         self.autoresizesSubviews = false
         layer?.disableActions()
         layer?.backgroundColor = backgroundColor.cgColor
@@ -268,6 +272,9 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
       //  self.layer?.isOpaque = false
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
       //  self.layer?.drawsAsynchronously = System.drawAsync
+        if #available(macOS 10.15, *) {
+            self.layer?.cornerCurve = .continuous
+        }
     }
     
 //    open override var wantsDefaultClipping: Bool {

@@ -3039,7 +3039,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     self?.chatInteraction.update({ state in
                         var state = state
                         state = state.withEditMessage(message)
-                        if !context.isPremium {
+                        if !context.isPremium && context.peerId != peerId {
                             state = state.updatedInterfaceState { interfaceState in
                                 var interfaceState = interfaceState
                                 interfaceState = interfaceState.updatedEditState { editState in

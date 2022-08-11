@@ -185,7 +185,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
             
             let item = ReactionPeerMenu(title: title, handler: {
                 chatInteraction?.openInfo(peer.0.id, false, nil, nil)
-            }, peerId: peer.0.id, context: context, reaction: reaction)
+            }, peer: peer.0, context: context, reaction: reaction)
             let signal:Signal<(CGImage?, Bool), NoError>
             signal = peerAvatarImage(account: context.account, photo: .peer(peer.0, peer.0.smallProfileImage, peer.0.displayLetters, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
             _ = signal.start(next: { [weak item] image, _ in
@@ -539,19 +539,19 @@ final class ReactionPeerMenu : ContextMenuItem {
     
     private let context: AccountContext
     private let reaction: TelegramMediaFile?
-    private let peerId: PeerId
-    init(title: String, handler:@escaping()->Void, peerId: PeerId, context: AccountContext, reaction: TelegramMediaFile?) {
+    private let peer: Peer
+    init(title: String, handler:@escaping()->Void, peer: Peer, context: AccountContext, reaction: TelegramMediaFile?) {
         self.reaction = reaction
-        self.peerId = peerId
+        self.peer = peer
         self.context = context
         super.init(title, handler: handler)
     }
     override var id: Int64 {
-        return peerId.toInt64()
+        return peer.id.toInt64()
     }
     
     override func rowItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {
-        return ReactionPeerMenuItem(item: self, interaction: interaction, presentation: presentation, context: context, reaction: self.reaction)
+        return ReactionPeerMenuItem(item: self, peer: peer, interaction: interaction, presentation: presentation, context: context, reaction: self.reaction)
     }
     
     required init(coder decoder: NSCoder) {
@@ -562,9 +562,11 @@ final class ReactionPeerMenu : ContextMenuItem {
 private final class ReactionPeerMenuItem : AppMenuRowItem {
     fileprivate let context: AccountContext
     fileprivate let reaction: TelegramMediaFile?
-    init(item: ContextMenuItem, interaction: AppMenuBasicItem.Interaction, presentation: AppMenu.Presentation, context: AccountContext, reaction: TelegramMediaFile?) {
+    fileprivate let peer: Peer
+    init(item: ContextMenuItem, peer: Peer, interaction: AppMenuBasicItem.Interaction, presentation: AppMenu.Presentation, context: AccountContext, reaction: TelegramMediaFile?) {
         self.context = context
         self.reaction = reaction
+        self.peer = peer
         super.init(.zero, item: item, interaction: interaction, presentation: presentation)
         if item.image == nil {
             let image = generateImage(NSMakeSize(imageSize, imageSize), rotatedContext: { size, ctx in
@@ -581,6 +583,9 @@ private final class ReactionPeerMenuItem : AppMenuRowItem {
         if let _ = reaction {
             size.width += 16 + 2 + self.innerInset
         }
+        if let s = PremiumStatusControl.controlSize(peer, false) {
+            size.width += s.width + 2
+        }
         return size
     }
     
@@ -591,6 +596,7 @@ private final class ReactionPeerMenuItem : AppMenuRowItem {
 
 private final class ReactionPeerMenuItemView : AppMenuRowView {
     private let imageView = TransformImageView(frame: NSMakeRect(0, 0, 16, 16))
+    private var statusControl: PremiumStatusControl?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(imageView)
@@ -602,7 +608,18 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
     
     override func layout() {
         super.layout()
+        
+        guard let item = item as? ReactionPeerMenuItem else {
+            return
+        }
+        
+        if let statusControl = statusControl {
+            statusControl.centerY(x: self.textX + item.text.layoutSize.width + 2)
+            imageView.centerY(x: self.rightX - imageView.frame.width)
+        }
+        
         imageView.centerY(x: self.rightX - imageView.frame.width)
+
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {
@@ -610,6 +627,15 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
         
         guard let item = item as? ReactionPeerMenuItem else {
             return
+        }
+        
+        let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: animated, force: true)
+        if let control = control {
+            self.statusControl = control
+            self.addSubview(control)
+        } else if let view = self.statusControl {
+            performSubviewRemoval(view, animated: animated)
+            self.statusControl = nil
         }
                 
         self.imageView.isHidden = item.reaction == nil

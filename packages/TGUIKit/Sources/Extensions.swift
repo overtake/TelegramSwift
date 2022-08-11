@@ -2028,9 +2028,9 @@ public func performSublayerRemoval(_ view: CALayer, animated: Bool, duration: Do
             }
         })
         if scale {
-            view.animateScaleCenter(from: 1, to: 0.1, duration: duration, removeOnCompletion: false, timingFunction: timingFunction)
+            view.animateScale(from: 1, to: 0.1, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
         } else if let scaleTo = scaleTo {
-            view.animateScaleCenter(from: 1, to: scaleTo, duration: duration, removeOnCompletion: false, timingFunction: timingFunction)
+            view.animateScale(from: 1, to: scaleTo, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
         }
     } else {
         view.removeFromSuperlayer()

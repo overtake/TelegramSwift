@@ -274,7 +274,7 @@ final class ChatReactionsLayout {
                 let title = peer.displayTitle.prefixWithDots(25)
                 let item = ReactionPeerMenu(title: title, handler: {
                     weakSelf?.openInfo(peer.id)
-                }, peerId: peer.id, context: context, reaction: nil)
+                }, peer: peer, context: context, reaction: nil)
                 
                 let signal:Signal<(CGImage?, Bool), NoError>
                 signal = peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue

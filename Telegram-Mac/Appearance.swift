@@ -2516,7 +2516,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 premium_account_active: { generatePremium(false, color: palette.underSelectedColor) },
                                                 premium_account_rev: { generatePremium(true, color: palette.accent) },
                                                 premium_account_rev_active: { generatePremium(true, color: palette.underSelectedColor, small: false) },
-                                                premium_account_small: { generatePremium(false, color: palette.accent) },
+                                                premium_account_small: { generatePremium(false, color: palette.accent, small: true) },
                                                 premium_account_small_active: { generatePremium(false, color: palette.underSelectedColor, small: true) },
                                                 premium_account_small_rev: { generatePremium(true, color: palette.accent, small: true) },
                                                 premium_account_small_rev_active: { generatePremium(true, color: palette.underSelectedColor, small: true) },
