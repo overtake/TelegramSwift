@@ -794,7 +794,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         }
         
         let arguments = Arguments(context: context, mode: self.mode, send: { [weak self] item in
-            if !context.isPremium && item.file.isPremiumEmoji {
+            if !context.isPremium && item.file.isPremiumEmoji, context.peerId != self?.chatInteraction?.peerId {
                 showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
                     showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
                 })
