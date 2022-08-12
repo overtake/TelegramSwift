@@ -182,7 +182,7 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
         case let .contextResult(results,result,index):
             return ContextListRowItem(initialSize, results, result, index, context, chatInteraction)
         case let .contextMediaResult(results,result,index):
-            return ContextMediaRowItem(initialSize, result, index, context, ContextMediaArguments(sendResult: { result, view in
+            return ContextMediaRowItem(initialSize, result, index, context, ContextMediaArguments(sendResult: { _, result, view in
                 if let results = results {
                     if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
                         showSlowModeTimeoutTooltip(slowMode, for: view)
