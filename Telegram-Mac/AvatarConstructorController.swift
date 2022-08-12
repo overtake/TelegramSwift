@@ -1069,6 +1069,8 @@ final class AvatarConstructorController : ModalViewController {
             return current
         }
         
+        
+        
         let emojies = context.engine.stickers.loadedStickerPack(reference: .animatedEmoji, forceActualized: false)
                 
         let stickers = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: 1)

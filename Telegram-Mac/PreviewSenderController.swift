@@ -229,6 +229,7 @@ fileprivate class PreviewSenderView : Control {
         textView.background = theme.colors.background
         textView.textFont = .normal(.text)
         textView.textColor = theme.colors.text
+        textView.selectedTextColor = theme.colors.selectText
         textView.linkColor = theme.colors.link
         textView.max_height = 180
         
@@ -297,6 +298,30 @@ fileprivate class PreviewSenderView : Control {
         layout()
     }
     
+    private var textInputSuggestionsView: InputSwapSuggestionsPanel?
+    
+    func updateTextInputSuggestions(_ files: [TelegramMediaFile], chatInteraction: ChatInteraction, range: NSRange, animated: Bool) {
+        
+        let context = chatInteraction.context
+        
+        if !files.isEmpty {
+            let current: InputSwapSuggestionsPanel
+            let isNew: Bool
+            if let view = self.textInputSuggestionsView {
+                current = view
+                isNew = false
+            } else {
+                current = InputSwapSuggestionsPanel(self.textView, relativeView: self, window: context.window, context: context, chatInteraction: chatInteraction)
+                self.textInputSuggestionsView = current
+                isNew = true
+            }
+            current.apply(files, range: range, animated: animated, isNew: isNew)
+        } else if let view = self.textInputSuggestionsView {
+            view.close(animated: animated)
+            self.textInputSuggestionsView = nil
+        }
+    }
+    
     deinit {
         disposable.dispose()
     }
@@ -324,6 +349,15 @@ fileprivate class PreviewSenderView : Control {
 
         separator.change(pos: NSMakePoint(0, textContainerView.frame.minY), animated: animated)
         CATransaction.commit()
+        
+        let transition: ContainedViewLayoutTransition
+        if animated {
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        } else {
+            transition = .immediate
+        }
+        self.textInputSuggestionsView?.updateRect(transition: transition)
+
         
        // needsLayout = true
     }
@@ -377,6 +411,9 @@ fileprivate class PreviewSenderView : Control {
         separator.frame = NSMakeRect(0, textContainerView.frame.minY, frame.width, .borderSize)
 
         forHelperView.frame = NSMakeRect(0, textContainerView.frame.minY, 0, 0)
+        
+        self.textInputSuggestionsView?.updateRect(transition: .immediate)
+
     }
     
     
@@ -754,12 +791,13 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     private let context:AccountContext
     let chatInteraction:ChatInteraction
     private let disposable = MetaDisposable()
-    private let emoji: EmojiViewController
+    private let emoji: EmojiesController
     private var cachedMedia:[PreviewSendingState: (media: [Media], items: [TableRowItem])] = [:]
     private var sent: Bool = false
     private let pasteDisposable = MetaDisposable()
     
 
+    private let inputSwapDisposable = MetaDisposable()
     private var temporaryInputState: ChatTextInputState?
     private var contextQueryState: (ChatPresentationInputQuery?, Disposable)?
     private let inputContextHelper: InputContextHelper
@@ -788,7 +826,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             var listHeight = genericView.tableView.listHeight
             if let inputQuery = inputInteraction.state.inputQueryResult {
                 switch inputQuery {
-                case let .emoji(emoji, _):
+                case let .emoji(emoji, _, _):
                     if !emoji.isEmpty {
                         listHeight = listHeight > 0 ? max(40, listHeight) : 0
                     }
@@ -917,6 +955,15 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        let context = self.context
+        let initialSize = self.atomicSize
+
+        
+        genericView.textView.installGetAttach({ attachment in
+            let view = ChatInputAnimatedEmojiAttach(frame: NSMakeRect(0, 0, 19, 19))
+            view.set(attachment, size: NSMakeSize(19, 19), context: context)
+            return view
+        })
         
         genericView.draggingView.controller = self
         genericView.controller = self
@@ -941,13 +988,11 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             self?.genericView.textView.appendText(emoji)
         }
         
-        emoji.update(with: interactions)
+        emoji.update(with: interactions, chatInteraction: contextChatInteraction)
         
         let actionsDisposable = DisposableSet()
         self.disposable.set(actionsDisposable)
         
-        let context = self.context
-        let initialSize = self.atomicSize
         
         let initialState = PreviewState(urls: [], medias: [], currentState: .init(state: .media, isCollage: FastSettings.isNeedCollage), editedData: [:])
         
@@ -1401,6 +1446,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         disposable.dispose()
         editorDisposable.dispose()
         archiverStatusesDisposable.dispose()
+        inputSwapDisposable.dispose()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -1446,7 +1492,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         let context = chatInteraction.context
         self.asMedia = asMedia
         self.context = context
-        self.emoji = EmojiViewController(context)
+        self.emoji = EmojiesController(context)
         
        
 
@@ -1560,6 +1606,32 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     
     private func updateInput(_ state:ChatPresentationInterfaceState, prevState: ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
         
+        let input = state.effectiveInput
+        let textInputContextState = textInputStateContextQueryRangeAndType(input, includeContext: false)
+        let chatInteraction = self.contextChatInteraction
+        var cleanup = false
+        if let textInputContextState = textInputContextState {
+            if textInputContextState.1.contains(.swapEmoji) {
+                let stringRange = textInputContextState.0
+                let range = NSRange(string: input.inputText, range: stringRange)
+                if !input.isAnimatedEmoji(at: range) {
+                    let query = String(input.inputText[stringRange])
+                    let signal = InputSwapSuggestionsPanelItems(query, peerId: chatInteraction.peerId, context: chatInteraction.context)
+                    |> deliverOnMainQueue
+                    self.inputSwapDisposable.set(signal.start(next: { [weak self] files in
+                        self?.genericView.updateTextInputSuggestions(files, chatInteraction: chatInteraction, range: range, animated: animated)
+                    }))
+                    cleanup = true
+                } else {
+                }
+            }
+        }
+        
+        if cleanup {
+            self.genericView.updateTextInputSuggestions([], chatInteraction: chatInteraction, range: NSMakeRange(0, 0), animated: animated)
+            self.inputSwapDisposable.set(nil)
+        }
+        
         let textView = genericView.textView
         
         if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes  {
@@ -1668,7 +1740,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     
     func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
         
-        let result = InputPasteboardParser.canProccessPasteboard(pasteboard)
+        let result = InputPasteboardParser.canProccessPasteboard(pasteboard, context: context)
         
     
         let pasteRtf:()->Void = { [weak self] in
@@ -1698,7 +1770,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         }
         
         if !result {
-            self.pasteDisposable.set(InputPasteboardParser.getPasteboardUrls(pasteboard).start(next: { [weak self] urls in
+            self.pasteDisposable.set(InputPasteboardParser.getPasteboardUrls(pasteboard, context: context).start(next: { [weak self] urls in
                 self?.insertAdditionUrls?(urls)
                 
                 if urls.isEmpty {

@@ -4,11 +4,42 @@ import SwiftSignalKit
 import StoreKit
 import Postbox
 import TelegramCore
+import CurrencyFormat
+
+private let productIdentifiers = [
+    "org.telegram.telegramPremium.monthly",
+    "org.telegram.telegramPremium.twelveMonths",
+    "org.telegram.telegramPremium.sixMonths",
+    "org.telegram.telegramPremium.threeMonths"
+]
+
+
+
+
+private extension NSDecimalNumber {
+    func round(_ decimals: Int) -> NSDecimalNumber {
+        return self.rounding(accordingToBehavior:
+                            NSDecimalNumberHandler(roundingMode: .down,
+                                   scale: Int16(decimals),
+                                   raiseOnExactness: false,
+                                   raiseOnOverflow: false,
+                                   raiseOnUnderflow: false,
+                                   raiseOnDivideByZero: false))
+    }
+}
+
 
 
 public final class InAppPurchaseManager: NSObject {
     public final class Product : NSObject {
         let skProduct: SKProduct
+        private lazy var numberFormatter: NumberFormatter = {
+            let numberFormatter = NumberFormatter()
+            numberFormatter.numberStyle = .currency
+            numberFormatter.locale = self.skProduct.priceLocale
+            return numberFormatter
+        }()
+
         
         init(skProduct: SKProduct) {
             self.skProduct = skProduct
@@ -18,43 +49,83 @@ public final class InAppPurchaseManager: NSObject {
 //            return skProduct.
 //        }
         
+        public var id: String {
+            return self.skProduct.productIdentifier
+        }
+
+        
+        public var isSubscription: Bool {
+            
+            if #available(macOS 10.14, *) {
+                return self.skProduct.subscriptionGroupIdentifier != nil
+            } else if #available(macOS 10.13.2, *) {
+                return self.skProduct.subscriptionPeriod != nil
+            } else {
+                return self.id.contains(".monthly")
+            }
+        }
+
+        public func pricePerMonth(_ monthsCount: Int) -> String {
+            let price = self.skProduct.price.dividing(by: NSDecimalNumber(value: monthsCount)).round(2)
+            return numberFormatter.string(from: price) ?? ""
+        }
+        
+        public var priceValue: NSDecimalNumber {
+            return self.skProduct.price
+        }
+        
+        public var priceCurrencyAndAmount: (currency: String, amount: Int64) {
+            if let currencyCode = self.numberFormatter.currencyCode,
+                let amount = fractionalToCurrencyAmount(value: self.priceValue.doubleValue, currency: currencyCode) {
+                return (currencyCode, amount)
+            } else {
+                return ("", 0)
+            }
+        }
+        
         public var price: String {
-            let numberFormatter = NumberFormatter()
-            numberFormatter.numberStyle = .currency
-            numberFormatter.locale = self.skProduct.priceLocale
             return numberFormatter.string(from: self.skProduct.price) ?? ""
         }
     }
     
     public enum PurchaseState {
-        case purchased(transactionId: SKPaymentTransaction)
+        case purchased(transactionId: String)
     }
     
     public enum PurchaseError {
-        case generic(SKPaymentTransaction?)
+        case generic
+        case cancelled
+        case network
+        case notAllowed
+        case cantMakePayments
+        case assignFailed
     }
+
     
     private final class PaymentTransactionContext {
         var state: TransactionState?
         var subscriber: ((TransactionState) -> Void)?
-        
-        init(subscriber: ((TransactionState) -> Void)? = nil) {
+        var targetPeerId: PeerId?
+        init(targetPeerId: PeerId?, subscriber: ((TransactionState) -> Void)? = nil) {
+            self.targetPeerId = targetPeerId
             self.subscriber = subscriber
         }
     }
     
     private enum TransactionState {
-        case purchased(transactionId: SKPaymentTransaction?)
-        case restored(transactionId: SKPaymentTransaction?)
-        case purchasing(transactionId: SKPaymentTransaction?)
-        case failed(transactionId: SKPaymentTransaction?)
+        case purchased(transactionId: String?)
+        case restored(transactionId: String?)
+        case purchasing
+        case failed(error: SKError?)
+        case assignFailed
         case deferred
     }
+
     
     public enum RestoreState {
-           case succeed
-           case failed
-       }
+        case succeed
+        case failed
+    }
 
     
     private let premiumProductId: String
@@ -84,15 +155,14 @@ public final class InAppPurchaseManager: NSObject {
     }
     
     private func requestProducts() {
-        guard !self.premiumProductId.isEmpty else {
-            return
-        }
-        let productRequest = SKProductsRequest(productIdentifiers: Set([self.premiumProductId]))
+        Logger.shared.log("InAppPurchaseManager", "Requesting products")
+        let productRequest = SKProductsRequest(productIdentifiers: Set(productIdentifiers))
         productRequest.delegate = self
         productRequest.start()
         
         self.productRequest = productRequest
     }
+
     
     public func canMakePayments() -> Bool {
         return SKPaymentQueue.canMakePayments()
@@ -124,9 +194,21 @@ public final class InAppPurchaseManager: NSObject {
     }
 
     
-    public func buyProduct(_ product: Product, account: Account) -> Signal<PurchaseState, PurchaseError> {
-        let payment = SKMutablePayment(product: product.skProduct)
+    public func buyProduct(_ product: Product, account: Account, targetPeerId: PeerId? = nil) -> Signal<PurchaseState, PurchaseError> {
+        if !self.canMakePayments() {
+            return .fail(.cantMakePayments)
+        }
         
+        if !product.isSubscription && targetPeerId == nil {
+            return .fail(.cantMakePayments)
+        }
+        
+        let accountPeerId = "\(account.peerId.toInt64())"
+        
+        Logger.shared.log("InAppPurchaseManager", "Buying: account \(accountPeerId), product \(product.skProduct.productIdentifier), price \(product.price)")
+        
+        let payment = SKMutablePayment(product: product.skProduct)
+        payment.applicationUsername = accountPeerId
         SKPaymentQueue.default().add(payment)
         
         let productIdentifier = payment.productIdentifier
@@ -134,28 +216,39 @@ public final class InAppPurchaseManager: NSObject {
             let disposable = MetaDisposable()
             
             self.stateQueue.async {
-                
-                let paymentContext: PaymentTransactionContext? = self.paymentContexts[productIdentifier] ?? PaymentTransactionContext(subscriber: nil)
-                
-                paymentContext?.subscriber = { state in
+                let paymentContext = PaymentTransactionContext(targetPeerId: targetPeerId, subscriber: { state in
                     switch state {
                         case let .purchased(transactionId), let .restored(transactionId):
                             if let transactionId = transactionId {
                                 subscriber.putNext(.purchased(transactionId: transactionId))
                                 subscriber.putCompletion()
                             } else {
-                                subscriber.putError(.generic(nil))
+                                subscriber.putError(.generic)
                             }
-                        case let .failed(transaction):
-                            subscriber.putError(.generic(transaction))
+                        case let .failed(error):
+                            if let error = error {
+                                let mappedError: PurchaseError
+                                switch error.code {
+                                    case .paymentCancelled:
+                                        mappedError = .cancelled
+                                    case .cloudServiceNetworkConnectionFailed, .cloudServicePermissionDenied:
+                                        mappedError = .network
+                                    case .paymentNotAllowed, .clientInvalid:
+                                        mappedError = .notAllowed
+                                    default:
+                                        mappedError = .generic
+                                }
+                                subscriber.putError(mappedError)
+                            } else {
+                                subscriber.putError(.generic)
+                            }
+                        case .assignFailed:
+                            subscriber.putError(.assignFailed)
                         case .deferred, .purchasing:
                             break
                     }
-                }
-                if let state = paymentContext?.state {
-                    paymentContext?.subscriber?(state)
-                }
-                self.paymentContexts[productIdentifier] = paymentContext!
+                })
+                self.paymentContexts[productIdentifier] = paymentContext
                 
                 disposable.set(ActionDisposable { [weak paymentContext] in
                     self.stateQueue.async {
@@ -170,6 +263,7 @@ public final class InAppPurchaseManager: NSObject {
         }
         return signal
     }
+
 }
 
 extension InAppPurchaseManager: SKProductsRequestDelegate {
@@ -203,13 +297,13 @@ extension InAppPurchaseManager: SKPaymentTransactionObserver {
                 let transactionState: TransactionState?
                 switch transaction.transactionState {
                     case .purchased:
-                        transactionState = .purchased(transactionId: transaction)
+                        transactionState = .purchased(transactionId: transaction.transactionIdentifier)
                     case .restored:
-                        transactionState = .restored(transactionId: transaction)
+                        transactionState = .restored(transactionId: transaction.transactionIdentifier)
                     case .failed:
-                        transactionState = .failed(transactionId: transaction)
+                        transactionState = .failed(error: transaction.error as? SKError)
                     case .purchasing:
-                        transactionState = .purchasing(transactionId: transaction)
+                        transactionState = .purchasing
                     case .deferred:
                         transactionState = .deferred
                     default:
@@ -219,10 +313,6 @@ extension InAppPurchaseManager: SKPaymentTransactionObserver {
                     if let context = self.paymentContexts[productIdentifier] {
                         context.state = transactionState
                         context.subscriber?(transactionState)
-                    } else {
-                        let context = PaymentTransactionContext(subscriber: nil)
-                        context.state = transactionState
-                        self.paymentContexts[productIdentifier] = context
                     }
                 }
             }

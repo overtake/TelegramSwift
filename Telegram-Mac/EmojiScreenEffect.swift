@@ -157,7 +157,7 @@ final class EmojiScreenEffect {
             let signal: Signal<LottieAnimation?, NoError> = context.diceCache.animationEffect(for: emoji.emojiUnmodified)
             |> map { value -> LottieAnimation? in
                 if let random = value.randomElement(), let data = random.1 {
-                    return LottieAnimation(compressed: data, key: .init(key: .bundle("_effect_\(emoji)"), size: animationSize, backingScale: Int(System.backingScale), mirror: mirror), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd)
+                    return LottieAnimation(compressed: data, key: .init(key: .bundle("_effect_\(emoji)_\(random.2.fileId)"), size: animationSize, backingScale: Int(System.backingScale), mirror: mirror), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd)
                 } else {
                     return nil
                 }

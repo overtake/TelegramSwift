@@ -166,17 +166,19 @@ class ChatListRowItem: TableRowItem {
     private var displayLayout:(TextNodeLayout, TextNode)?
     private var chatNameLayout:(TextNodeLayout, TextNode)?
 
-    private var messageLayout:(TextNodeLayout, TextNode)?
+    private var messageLayout:TextViewLayout?
+    private var messageSelectedLayout:TextViewLayout?
+    
+    
+    
+    
     private var displaySelectedLayout:(TextNodeLayout, TextNode)?
-    private var messageSelectedLayout:(TextNodeLayout, TextNode)?
     private var dateLayout:(TextNodeLayout, TextNode)?
     private var dateSelectedLayout:(TextNodeLayout, TextNode)?
     private var chatNameSelectedLayout:(TextNodeLayout, TextNode)?
 
     private var displayNode:TextNode = TextNode()
-    private var messageNode:TextNode = TextNode()
     private var displaySelectedNode:TextNode = TextNode()
-    private var messageSelectedNode:TextNode = TextNode()
     private var chatNameSelectedNode:TextNode = TextNode()
     private var chatNameNode:TextNode = TextNode()
 
@@ -200,8 +202,6 @@ class ChatListRowItem: TableRowItem {
     private var additionalBadgeSelectedNode:BadgeNode? = nil
 
     
-    private var typingLayout:(TextNodeLayout, TextNode)?
-    private var typingSelectedLayout:(TextNodeLayout, TextNode)?
     
     private let clearHistoryDisposable = MetaDisposable()
     private let deleteChatDisposable = MetaDisposable()
@@ -397,26 +397,8 @@ class ChatListRowItem: TableRowItem {
         }
         
         self.titleText = titleText
-        if peers.count == 1 {
-            self.messageText = chatListText(account: context.account, for: message, messagesCount: messages.count, folder: true)
-        } else {
-            let textString = NSMutableAttributedString(string: "")
-            var isFirst = true
-            for peer in peers {
-                if let chatMainPeer = peer.peer.chatMainPeer {
-                    let peerTitle = chatMainPeer.compactDisplayTitle
-                    if !peerTitle.isEmpty {
-                        if isFirst {
-                            isFirst = false
-                        } else {
-                            textString.append(.initialize(string: ", ", color: theme.chatList.textColor, font: .normal(.text)))
-                        }
-                        textString.append(.initialize(string: peerTitle, color: peer.isUnread ? theme.chatList.textColor : theme.chatList.grayTextColor, font: .normal(.text)))
-                    }
-                }
-            }
-            self.messageText = textString
-        }
+        
+        
         hasDraft = false
         
     
@@ -468,6 +450,36 @@ class ChatListRowItem: TableRowItem {
         //theme.chatList.badgeBackgroundColor
         
         
+        if peers.count == 1 {
+            self.messageText = chatListText(account: context.account, for: message, messagesCount: messages.count, folder: true)
+    
+        } else {
+            let textString = NSMutableAttributedString(string: "")
+            var isFirst = true
+            for peer in peers {
+                if let chatMainPeer = peer.peer.chatMainPeer {
+                    let peerTitle = chatMainPeer.compactDisplayTitle
+                    if !peerTitle.isEmpty {
+                        if isFirst {
+                            isFirst = false
+                        } else {
+                            textString.append(.initialize(string: ", ", color: theme.chatList.textColor, font: .normal(.text)))
+                        }
+                        textString.append(.initialize(string: peerTitle, color: peer.isUnread ? theme.chatList.textColor : theme.chatList.grayTextColor, font: .normal(.text)))
+                    }
+                }
+            }
+            self.messageText = textString
+        }
+        if let messageText = messageText?.mutableCopy() as? NSMutableAttributedString, !messageText.string
+            .isEmpty {
+            self.messageLayout = .init(messageText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2)
+            let selectedText:NSMutableAttributedString = messageText.mutableCopy() as! NSMutableAttributedString
+            if let color = selectedText.attribute(.selectedColor, at: 0, effectiveRange: nil) {
+                selectedText.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedText.range)
+            self.messageSelectedLayout = .init(selectedText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2)
+            }
+        }
 
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
@@ -722,6 +734,39 @@ class ChatListRowItem: TableRowItem {
             presenceManager?.reset(presence: presence, timeDifference: Int32(context.timeDifference))
         }
         
+        if case let .ad(promo) = pinnedType, message == nil {
+            if let promo = promo as? PromoChatListItem {
+                switch promo.kind {
+                case let .psa(_, message):
+                    if let message = message {
+                        let attr = NSMutableAttributedString()
+                        _ = attr.append(string: message, color: theme.colors.grayText, font: .normal(.text))
+                        attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
+                        self.messageText = attr
+                    }
+                default:
+                    break
+                }
+            }
+        } else {
+            let messageText = chatListText(account: context.account, for: message, messagesCount: messages.count, embeddedState: embeddedState, folder: false, applyUserName: false, isPremium: context.isPremium)
+            self.messageText = messageText
+            var textCutout: TextViewCutout?
+            if !textLeftCutout.isZero {
+                textCutout = TextViewCutout(topLeft: CGSize(width: textLeftCutout, height: 14))
+            }
+            
+            if !messageText.string.isEmpty {
+                self.messageLayout = .init(messageText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2, cutout: textCutout)
+                
+                let selectedText:NSMutableAttributedString = messageText.mutableCopy() as! NSMutableAttributedString
+                if let color = selectedText.attribute(.selectedColor, at: 0, effectiveRange: nil) {
+                    selectedText.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedText.range)
+                }
+                self.messageSelectedLayout = .init(selectedText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2, cutout: textCutout)
+            }
+        }
+        
         _ = makeSize(initialSize.width, oldWidth: 0)
         
         
@@ -769,17 +814,7 @@ class ChatListRowItem: TableRowItem {
             return false
         }
     }
-    
-//    var contentDimensions: NSSize? {
-//        var dimensions: CGSize?
-//        if let contentImageMedia = contentImageMedia as? TelegramMediaImage {
-//            dimensions = largestRepresentationForPhoto(contentImageMedia)?.dimensions.size
-//        } else if let contentImageMedia = contentImageMedia as? TelegramMediaFile {
-//            dimensions = contentImageMedia.dimensions?.size
-//        }
-//        return dimensions
-//    }
-    
+
     var isAd: Bool {
         switch pinnedType {
         case .ad:
@@ -831,38 +866,6 @@ class ChatListRowItem: TableRowItem {
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         let result = super.makeSize(width, oldWidth: oldWidth)
         
-        if self.groupId == .root {
-            var text: NSAttributedString?
-            if case let .ad(promo) = pinnedType, message == nil {
-                if let promo = promo as? PromoChatListItem {
-                    switch promo.kind {
-                    case let .psa(_, message):
-                        if let message = message {
-                            let attr = NSMutableAttributedString()
-                            _ = attr.append(string: message, color: theme.colors.grayText, font: .normal(.text))
-                            attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
-                            text = attr
-                        }
-                    default:
-                        break
-                    }
-                }
-            }
-            if text == nil {
-                var messageText = chatListText(account: context.account, for: message, messagesCount: self.messages.count, renderedPeer: renderedPeer, embeddedState: embeddedState)
-                if let query = highlightText, let copy = messageText.mutableCopy() as? NSMutableAttributedString, let range = rangeOfSearch(query, in: copy.string) {
-                    if copy.range.contains(range.min) && copy.range.contains(range.max - 1), copy.range != range {
-                        copy.addAttribute(.foregroundColor, value: theme.colors.text, range: range)
-                        copy.addAttribute(.font, value: NSFont.medium(.text), range: range)
-                        messageText = copy
-                    }
-                }
-                text = messageText
-            }
-            self.messageText = text!
-        }
-        
-       
         
         if displayLayout == nil || !displayLayout!.0.isPerfectSized || self.oldWidth > width {
             displayLayout = TextNode.layoutText(maybeNode: displayNode,  titleText, nil, 1, .end, NSMakeSize(titleWidth, size.height), nil, false, .left)
@@ -879,19 +882,11 @@ class ChatListRowItem: TableRowItem {
         if chatNameSelectedLayout == nil || !chatNameSelectedLayout!.0.isPerfectSized || self.oldWidth > width, let chatTitleAttributed = chatTitleAttributed {
             chatNameSelectedLayout = TextNode.layoutText(maybeNode: chatNameSelectedNode, chatTitleAttributed, nil, 1, .end, NSMakeSize(titleWidth, size.height), nil, true, .left)
         }
-        
-        var textCutout: TextNodeCutout?
-        if !textLeftCutout.isZero {
-            textCutout = TextNodeCutout(position: .TopLeft, size: CGSize(width: textLeftCutout, height: 14))
-        }
+    
+        messageLayout?.measure(width: messageWidth)
+        messageSelectedLayout?.measure(width: messageWidth)
 
-        
-        if messageLayout == nil || !messageLayout!.0.isPerfectSized || self.oldWidth > width {
-            messageLayout = TextNode.layoutText(maybeNode: messageNode,  messageText, nil, chatTitleAttributed != nil ? 1 : 2, .end, NSMakeSize(messageWidth, size.height), textCutout, false, .left, 1)
-        }
-        if messageSelectedLayout == nil || !messageSelectedLayout!.0.isPerfectSized || self.oldWidth > width {
-            messageSelectedLayout = TextNode.layoutText(maybeNode: messageSelectedNode,  messageText, nil, chatTitleAttributed != nil ? 1 : 2, .end, NSMakeSize(messageWidth, size.height), textCutout, true, .left, 1)
-        }
+   
         return result
     }
     
@@ -977,13 +972,26 @@ class ChatListRowItem: TableRowItem {
             _ = (context.engine.peers.toggleItemPinned(location: location, itemId: chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
                 switch result {
                 case .limitExceeded:
-                    if case .filter = filter {
-                        showPremiumLimit(context: context, type: .pinInFolders(.group(filter.id)))
+                    
+                    if context.isPremium {
+                        confirm(for: context.window, information: strings().chatListContextPinErrorNew2, okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().chatListContextPinErrorNewSetupFolders, successHandler: { result in
+                            switch result {
+                            case .thrid:
+                                context.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
+                            default:
+                                break
+                            }
+                        })
+
                     } else {
-                        if case .group = associatedGroupId {
-                            showPremiumLimit(context: context, type: .pinInArchive)
+                        if case .filter = filter {
+                            showPremiumLimit(context: context, type: .pinInFolders(.group(filter.id)))
                         } else {
-                            showPremiumLimit(context: context, type: .pin)
+                            if case .group = associatedGroupId {
+                                showPremiumLimit(context: context, type: .pinInArchive)
+                            } else {
+                                showPremiumLimit(context: context, type: .pin)
+                            }
                         }
                     }
                 default:
@@ -1378,18 +1386,17 @@ class ChatListRowItem: TableRowItem {
         return chatNameLayout
     }
     
-    var ctxMessageLayout:(TextNodeLayout, TextNode)? {
-        if isSelected && context.layout != .single {
-            if let typingSelectedLayout = typingSelectedLayout {
-                return typingSelectedLayout
+    
+    var ctxMessageText:TextViewLayout? {
+        if self.activities.isEmpty {
+            if isSelected && context.layout != .single {
+                return messageSelectedLayout
             }
-            return messageSelectedLayout
+            return messageLayout
         }
-        if let typingLayout = typingLayout {
-            return typingLayout
-        }
-        return messageLayout
+        return nil
     }
+    
     var ctxDateLayout:(TextNodeLayout, TextNode)? {
         if isSelected && context.layout != .single {
             return dateSelectedLayout

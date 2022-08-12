@@ -123,6 +123,10 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
       //  thumbView.fetchControls = fetchControls
     }
     
+    override var backdorColor: NSColor {
+        return theme.colors.background
+    }
+    
     override func mouseUp(with event: NSEvent) {
         guard let item = item as? PeerMediaMusicRowItem else {
             super.mouseUp(with: event)

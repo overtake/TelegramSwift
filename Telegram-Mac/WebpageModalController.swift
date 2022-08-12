@@ -499,6 +499,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     private var installedBots:[PeerId] = []
     private var chatInteraction: ChatInteraction?
     
+    private var needCloseConfirmation = false
+    
     fileprivate let loadingProgressPromise = Promise<CGFloat?>(nil)
     
     private var clickCount: Int = 0
@@ -588,7 +590,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 return .rejected
             }
             strongSelf.clickCount += 1
-            delay(5, closure: { [weak strongSelf] in
+            delay(10, closure: { [weak strongSelf] in
                 strongSelf?.clickCount = 0
             })
             return .rejected
@@ -874,6 +876,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         
         switch eventName {
         case "web_app_data_send":
+            self.needCloseConfirmation = false
             if let eventData = body["eventData"] as? String {
                 if let requestData = requestData {
                     switch requestData {
@@ -910,6 +913,43 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             break
         case "web_app_close":
             self.close()
+        case "web_app_setup_closing_behavior":
+            if let json = json, let need_confirmation = json["need_confirmation"] as? Bool {
+                self.needCloseConfirmation = need_confirmation
+            } else {
+                self.needCloseConfirmation = false
+            }
+        case "web_app_open_popup":
+            if let json = json {
+                let alert:NSAlert = NSAlert()
+                alert.alertStyle = .informational
+                alert.messageText = (json["title"] as? String) ?? appName
+                alert.informativeText = (json["message"] as? String) ?? ""
+                alert.window.appearance = theme.appearance
+                let buttons = json["buttons"] as? Array<[NSString : Any]>
+                if let buttons = buttons {
+                    for button in buttons {
+                        if (button["type"] as? String) == "default" {
+                            alert.addButton(withTitle: button["text"] as? String ?? "")
+                        } else if (button["type"] as? String) == "ok" {
+                            alert.addButton(withTitle: strings().alertOK)
+                        } else if (button["type"]  as? String) == "cancel" {
+                            alert.addButton(withTitle: strings().alertCancel)
+                        } else if (button["type"]  as? String) == "destructive" {
+                            alert.addButton(withTitle: button["text"] as? String ?? "")
+                        }
+                    }
+                }
+                
+                if !alert.buttons.isEmpty {
+                    alert.beginSheetModal(for: context.window, completionHandler: { [weak self] response in
+                        let index = response.rawValue - 1000
+                        if let id = buttons?[index]["id"] as? String {
+                            self?.poupDidClose(id)
+                        }
+                    })
+                }
+            }
         case "web_app_open_link":
             if clickCount > 0 {
                 if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
@@ -960,7 +1000,6 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             if let json = json, let colorKey = json["color_key"] as? String, ["bg_color", "secondary_bg_color"].contains(colorKey) {
                 self._headerColorKey = colorKey
             }
-
         default:
             break
         }
@@ -978,7 +1017,9 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         }
     }
     
-
+    private func poupDidClose(_ id: String) {
+        self.sendEvent(name: "popup_closed", data: "{\"id\":\"\(id)}\"")
+    }
     
     func sendEvent(name: String, data: String?) {
         let script = "window.TelegramGameProxy.receiveEvent(\"\(name)\", \(data ?? "null"))"
@@ -1085,6 +1126,20 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             }
         }
         self.close()
+    }
+    
+    private func closeAnyway() {
+        super.close()
+    }
+    
+    override func close(animationType: ModalAnimationCloseBehaviour = .common) {
+        if needCloseConfirmation {
+            confirm(for: context.window, information: strings().webpageConfirmClose, okTitle: strings().webpageConfirmOk, successHandler: { [weak self] _ in
+                self?.closeAnyway()
+            })
+        } else {
+            super.close(animationType: animationType)
+        }
     }
 
     private func reloadPage() {

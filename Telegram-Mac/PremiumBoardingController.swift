@@ -12,6 +12,7 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 import InAppPurchaseManager
+import CurrencyFormat
 
 enum PremiumLogEventsSource : Equatable {
     
@@ -37,7 +38,9 @@ enum PremiumLogEventsSource : Equatable {
     case more_upload
     case unique_reactions
     case premium_stickers
+    case premium_emoji
     case profile(PeerId)
+    case gift(from: PeerId, to: PeerId, months: Int32)
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -49,15 +52,19 @@ enum PremiumLogEventsSource : Equatable {
         case .settings:
             return "settings"
         case let .double_limits(sub):
-            return "double_limits__\(sub)"
+            return "double_limits__\(sub.rawValue)"
         case .more_upload:
             return "more_upload"
         case .unique_reactions:
             return "unique_reactions"
         case .premium_stickers:
             return "premium_stickers"
+        case .premium_emoji:
+            return "premium_emoji"
         case let .profile(peerId):
             return "profile__\(peerId.id._internalGetInt64Value())"
+        case .gift:
+            return "gift"
         }
     }
     var subsource: String? {
@@ -136,46 +143,37 @@ enum PremiumValue : String {
     case no_ads
     case unique_reactions
     case premium_stickers
+    case animated_emoji
     case advanced_chat_management
     case profile_badge
     case animated_userpics
     
-    var gradient: [NSColor] {
-        switch self {
-        case .double_limits:
-            return [NSColor(rgb: 0xF17D2F)]
-        case .more_upload:
-            return [NSColor(rgb: 0xE9574A)]
-        case .faster_download:
-            return [NSColor(rgb: 0xD84C7D)]
-        case .voice_to_text:
-            return [NSColor(rgb: 0xc14998)]
-        case .no_ads:
-            return [NSColor(rgb: 0xC258B7)]
-        case .unique_reactions:
-            return [NSColor(rgb: 0xA868FC)]
-        case .premium_stickers:
-            return [NSColor(rgb: 0x9279FF)]
-        case .advanced_chat_management:
-            return [NSColor(rgb: 0x7561eb)]
-        case .profile_badge:
-            return [NSColor(rgb: 0x758EFF)]
-        case .animated_userpics:
-            return [NSColor(rgb: 0x59A4FF)]
-        }
+    func gradient(_ index: Int) -> [NSColor] {
+        let colors:[NSColor] = [NSColor(rgb: 0xF17D2F),
+                                NSColor(rgb: 0xE9574A),
+                                NSColor(rgb: 0xD84C7D),
+                                NSColor(rgb: 0xc14998),
+                                NSColor(rgb: 0xC258B7),
+                                NSColor(rgb: 0xA868FC),
+                                NSColor(rgb: 0x9279FF),
+                                NSColor(rgb: 0x846EF6),
+                                NSColor(rgb: 0x7561eb),
+                                NSColor(rgb: 0x758EFF),
+                                NSColor(rgb: 0x59A4FF)]
+        return [colors[index]]
     }
     
-    var icon: CGImage {
+    func icon(_ index: Int) -> CGImage {
         let image = self.image
         let size = image.backingSize
         let img = generateImage(size, contextGenerator: { size, ctx in
             ctx.clear(size.bounds)
             ctx.clip(to: size.bounds, mask: image)
             
-            let colors = gradient.compactMap { $0.cgColor } as NSArray
+            let colors = gradient(index).compactMap { $0.cgColor } as NSArray
 
-            if gradient.count == 1 {
-                ctx.setFillColor(gradient[0].cgColor)
+            if gradient(index).count == 1 {
+                ctx.setFillColor(gradient(index)[0].cgColor)
                 ctx.fill(size.bounds)
             } else {
                 let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
@@ -220,6 +218,8 @@ enum PremiumValue : String {
             return NSImage(named: "Icon_Premium_Boarding_Reactions")!.precomposed(theme.colors.accent)
         case .premium_stickers:
             return NSImage(named: "Icon_Premium_Boarding_Stickers")!.precomposed(theme.colors.accent)
+        case .animated_emoji:
+            return NSImage(named: "Icon_Premium_Boarding_Emoji")!.precomposed(theme.colors.accent)
         case .advanced_chat_management:
             return NSImage(named: "Icon_Premium_Boarding_Chats")!.precomposed(theme.colors.accent)
         case .profile_badge:
@@ -245,6 +245,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingReactionsTitle
         case .premium_stickers:
             return strings().premiumBoardingStickersTitle
+        case .animated_emoji:
+            return strings().premiumBoardingEmojiTitle
         case .advanced_chat_management:
             return strings().premiumBoardingChatsTitle
         case .profile_badge:
@@ -269,6 +271,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingReactionsInfo
         case .premium_stickers:
             return strings().premiumBoardingStickersInfo
+        case .animated_emoji:
+            return strings().premiumBoardingEmojiInfo
         case .advanced_chat_management:
             return strings().premiumBoardingChatsInfo
         case .profile_badge:
@@ -282,7 +286,7 @@ enum PremiumValue : String {
 
 
 private struct State : Equatable {
-    var values:[PremiumValue] = [.double_limits, .more_upload, .faster_download, .voice_to_text, .no_ads, .unique_reactions, .premium_stickers, .advanced_chat_management, .profile_badge, .animated_userpics]
+    var values:[PremiumValue] = [.double_limits, .more_upload, .faster_download, .voice_to_text, .no_ads, .unique_reactions, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics]
     let source: PremiumLogEventsSource
     
     var premiumProduct: InAppPurchaseManager.Product?
@@ -309,14 +313,14 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
         let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 13, openInfo: arguments.openInfo)
-        return PremiumBoardingHeaderItem(initialSize, stableId: stableId, isPremium: state.isPremium, peer: state.peer?.peer, premiumText: status, viewType: .legacy)
+        return PremiumBoardingHeaderItem(initialSize, stableId: stableId, context: arguments.context, isPremium: state.isPremium, peer: state.peer?.peer, source: state.source, premiumText: status, viewType: .legacy)
     }))
     index += 1
     
     for (i, value) in state.values.enumerated() {
         let viewType = bestGeneralViewType(state.values, for: i)
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init(value.rawValue), equatable: InputDataEquatable(value), comparable: nil, item: { initialSize, stableId in
-            return PremiumBoardingRowItem(initialSize, stableId: stableId, viewType: viewType, value: value, limits: arguments.context.premiumLimits, isLast: false, callback: arguments.openFeature)
+            return PremiumBoardingRowItem(initialSize, stableId: stableId, viewType: viewType, index: i, value: value, limits: arguments.context.premiumLimits, isLast: false, callback: arguments.openFeature)
         }))
         index += 1
     }
@@ -799,6 +803,12 @@ final class PremiumBoardingController : ModalViewController {
         switch source {
         case let .profile(peerId):
             peer = context.account.postbox.transaction { $0.getPeer(peerId) }
+        case let .gift(from, to, _):
+            if from == context.peerId {
+                peer = context.account.postbox.transaction { $0.getPeer(to) }
+            } else {
+                peer = context.account.postbox.transaction { $0.getPeer(from) }
+            }
         default:
             peer = .single(nil)
         }
@@ -833,7 +843,7 @@ final class PremiumBoardingController : ModalViewController {
         
         let products: Signal<[InAppPurchaseManager.Product], NoError>
         #if APP_STORE
-        products = inAppPurchaseManager.availableProducts
+        products = inAppPurchaseManager.availableProducts.filter { $0.isSubscription }
         #else
         products = .single([])
         #endif
@@ -944,7 +954,7 @@ final class PremiumBoardingController : ModalViewController {
             })
             
             
-            let _ = (context.engine.payments.canPurchasePremium()
+            let _ = (context.engine.payments.canPurchasePremium(purpose: .subscription)
             |> deliverOnMainQueue).start(next: { [weak lockModal] available in
                 if available {
                     paymentDisposable.set((inAppPurchaseManager.buyProduct(premiumProduct, account: context.account)
@@ -954,7 +964,7 @@ final class PremiumBoardingController : ModalViewController {
                         needToShow = false
         
                         if case let .purchased(transaction) = status {
-                            let activate = showModalProgress(signal: context.engine.payments.sendAppStoreReceipt(receipt: InAppPurchaseManager.getReceiptData() ?? Data(), restore: false), for: context.window)
+                            let activate = showModalProgress(signal: context.engine.payments.sendAppStoreReceipt(receipt: InAppPurchaseManager.getReceiptData() ?? Data(), purpose: .subscription), for: context.window)
                             activationDisposable.set(activate.start(error: { _ in
                                 showModalText(for: context.window, text: strings().errorAnError)
                                 inAppPurchaseManager.finishAllTransactions()
@@ -964,19 +974,29 @@ final class PremiumBoardingController : ModalViewController {
                                 delay(0.2, closure: {
                                     PlayConfetti(for: context.window)
                                     showModalText(for: context.window, text: strings().premiumBoardingAppStoreSuccess)
+                                    let _ = updatePremiumPromoConfigurationOnce(account: context.account).start()
                                 })
                             }))
                         }
                     }, error: { [weak lockModal] error in
-        
-                        lockModal?.close()
-                        showModalText(for: context.window, text: strings().premiumBoardingAppStoreCancelled)
-        
+                        let errorText: String
                         switch error {
-                        case let .generic(transaction):
-                            addAppLogEvent(postbox: context.account.postbox, type: PremiumLogEvents.promo_screen_fail.value)
-                            inAppPurchaseManager.finishAllTransactions()
+                            case .generic:
+                                errorText = strings().premiumPurchaseErrorUnknown
+                            case .network:
+                                errorText =  strings().premiumPurchaseErrorNetwork
+                            case .notAllowed:
+                                errorText =  strings().premiumPurchaseErrorNotAllowed
+                            case .cantMakePayments:
+                                errorText =  strings().premiumPurchaseErrorCantMakePayments
+                            case .assignFailed:
+                                errorText =  strings().premiumPurchaseErrorUnknown
+                            case .cancelled:
+                                errorText = strings().premiumBoardingAppStoreCancelled
                         }
+                        lockModal?.close()
+                        showModalText(for: context.window, text: errorText)
+                        inAppPurchaseManager.finishAllTransactions()
                     }))
                 } else {
                     lockModal?.close()
@@ -1021,7 +1041,7 @@ final class PremiumBoardingController : ModalViewController {
     func restore() {
         if let receiptData = InAppPurchaseManager.getReceiptData() {
             let context = self.context
-            _ = showModalProgress(signal: context.engine.payments.sendAppStoreReceipt(receipt: receiptData, restore: true), for: context.window).start(error: { _ in
+            _ = showModalProgress(signal: context.engine.payments.sendAppStoreReceipt(receipt: receiptData, purpose: .restore), for: context.window).start(error: { _ in
                 showModalText(for: context.window, text: strings().premiumRestoreErrorUnknown)
             }, completed: {
                 showModalText(for: context.window, text: strings().premiumRestoreSuccess)

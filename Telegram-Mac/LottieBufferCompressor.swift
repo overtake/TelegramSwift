@@ -16,6 +16,8 @@ import ApiCredentials
 
 private let enableDifference = true
 
+private let maxFrameBufferSizeCache = 7200
+
 private enum WriteResult {
     case success
     case failed
@@ -41,7 +43,7 @@ private struct FrameDst : Codable {
     }
 }
 
-
+private let version = 62
 
 final class TRLotData {
     
@@ -53,6 +55,7 @@ final class TRLotData {
     private let dataPath: String
     var isFinished: Bool = false {
         didSet {
+            assert(queue.isCurrent())
             let cpy = map
             for (key, value) in cpy {
                 map[key] = .init(offset: value.offset, length: value.length, finished: isFinished)
@@ -160,13 +163,13 @@ final class TRLotData {
 
         let path = TRLotData.directory + animation.cacheKey
         
-        return path + "-v48-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-map"
+        return path + "-v\(version)-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-map"
     }
     
     static func dataPath(_ animation: LottieAnimation, bufferSize: Int) -> String {
         let path = TRLotData.directory + animation.cacheKey
         
-        return path + "-v48-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-data"
+        return path + "-v\(version)-lzfse-bs\(bufferSize)-lt\(animation.liveTime)-data"
     }
     
     init(_ animation: LottieAnimation, bufferSize: Int, queue: Queue) {
@@ -244,6 +247,8 @@ final class TRLotFileSupplyment {
     }
 
     func markFinished() {
+        var bp = 0
+        bp += 1
         queue.async {
             self.data.isFinished = true
         }
@@ -256,8 +261,11 @@ final class TRLotFileSupplyment {
         return isFinished
     }
     
+
+    
     func addFrame(_ previous: RenderedFrame?, _ current: RenderedFrame) {
         queue.async {
+            
             if !self.data.hasAlreadyFrame(Int(current.frame)) {
                 let address = current.data!.assumingMemoryBound(to: UInt8.self)
                 
@@ -299,41 +307,44 @@ final class TRLotFileSupplyment {
         }
     }
 
+
     func readFrame(previous: RenderedFrame?, frame: Int) -> UnsafeRawPointer? {
         var rendered: UnsafeRawPointer? = nil
         queue.sync {
-            switch self.data.readFrame(frame: frame) {
-            case let .success(data):
-                let address = malloc(bufferSize)!.assumingMemoryBound(to: UInt8.self)
-                
-                
-                rendered = data.withUnsafeBytes { dataBytes -> UnsafeRawPointer in
+            
+            if self.data.isFinished {
+                switch self.data.readFrame(frame: frame) {
+                case let .success(data):
+                    let address = malloc(bufferSize)!.assumingMemoryBound(to: UInt8.self)
+                                    
+                    rendered = data.withUnsafeBytes { dataBytes -> UnsafeRawPointer in
 
-                    let unsafeBufferPointer = dataBytes.bindMemory(to: UInt8.self)
-                    let unsafePointer = unsafeBufferPointer.baseAddress!
+                        let unsafeBufferPointer = dataBytes.bindMemory(to: UInt8.self)
+                        let unsafePointer = unsafeBufferPointer.baseAddress!
 
-                    let _ = compression_decode_buffer(address, bufferSize, unsafePointer, data.count, nil, COMPRESSION_LZ4)
+                        let _ = compression_decode_buffer(address, bufferSize, unsafePointer, data.count, nil, COMPRESSION_LZ4)
 
-                    if let previous = previous, enableDifference {
+                        if let previous = previous, enableDifference {
 
-                        let previousBytes = previous.data!.assumingMemoryBound(to: UInt64.self)
+                            let previousBytes = previous.data!.assumingMemoryBound(to: UInt64.self)
 
-                        let uint64Bs = self.bufferSize / 8
+                            let uint64Bs = self.bufferSize / 8
 
-                        address.withMemoryRebound(to: UInt64.self, capacity: uint64Bs, { address in
-                            var i = 0
-                            while i < uint64Bs {
-                                address[i] = previousBytes[i] ^ address[i]
-                                i &+= 1
-                            }
-                        })
+                            address.withMemoryRebound(to: UInt64.self, capacity: uint64Bs, { address in
+                                var i = 0
+                                while i < uint64Bs {
+                                    address[i] = previousBytes[i] ^ address[i]
+                                    i &+= 1
+                                }
+                            })
 
+                        }
+                        return UnsafeRawPointer(address)
                     }
-                    return UnsafeRawPointer(address)
+                    
+                default:
+                    rendered = nil
                 }
-                
-            default:
-                rendered = nil
             }
         }
         

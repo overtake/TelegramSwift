@@ -361,15 +361,15 @@ struct ChatSearchInteractions {
 private class ChatSponsoredModel: ChatAccessoryModel {
     
 
-    init(title: String, text: String) {
-        super.init()
+    init(context: AccountContext, title: String, text: String) {
+        super.init(context: context)
         update(title: title, text: text)
     }
     
     func update(title: String, text: String) {
         //strings().chatProxySponsoredCapTitle
-        self.headerAttr = .initialize(string: title, color: theme.colors.link, font: .medium(.text))
-        self.messageAttr = .initialize(string: text, color: theme.colors.text, font: .normal(.text))
+        self.header = .init(.initialize(string: title, color: theme.colors.link, font: .medium(.text)), maximumNumberOfLines: 1)
+        self.message = .init(.initialize(string: text, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1)
         nodeReady.set(.single(true))
         self.setNeedDisplay()
     }
@@ -472,7 +472,7 @@ private final class ChatSponsoredView : Control, ChatHeaderProtocol {
             self.kind = nil
         }
         if let kind = kind {
-            node = ChatSponsoredModel(title: kind.title, text: kind.text)
+            node = ChatSponsoredModel(context: self.chatInteraction.context, title: kind.title, text: kind.text)
             node?.view = container
         }
 
@@ -649,17 +649,19 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
             current.autohighlight = false
             current.scaleOnClick = true
             
-            current.set(handler: { [weak self] _ in
-                self?.chatInteraction.processBotKeyboard(with: message).proccess(button, { _ in
-                    
-                })
-            }, for: .Click)
+            
             
             if animated {
                 current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
             self.inlineButton = current
         }
+        current.removeAllHandlers()
+        current.set(handler: { [weak self] _ in
+            self?.chatInteraction.processBotKeyboard(with: message).proccess(button, { _ in
+                
+            })
+        }, for: .Click)
         
         addSubview(current)
 

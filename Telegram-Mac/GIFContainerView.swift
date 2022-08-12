@@ -52,7 +52,7 @@ class GIFContainerView: Control {
         player.setVideoLayerGravity(.resizeAspectFill)
         set(handler: { [weak self] control in
             if let `self` = self, let window = self.window as? Window, let table = self.tableView, let context = self.context {
-                _ = startModalPreviewHandle(table, window: window, context: context)
+                startModalPreviewHandle(table, window: window, context: context)
             }
         }, for: .LongMouseDown)
         

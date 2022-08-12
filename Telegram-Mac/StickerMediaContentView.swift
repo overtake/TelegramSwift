@@ -135,7 +135,7 @@ class StickerMediaContentView: ChatMediaContentView {
     }
     
     override func mouseInside() -> Bool {
-        return content?.mouseInside() ?? mouseInside()
+        return content?.mouseInside() ?? super.mouseInside()
     }
     
     override func previewMediaIfPossible() -> Bool {
@@ -144,6 +144,10 @@ class StickerMediaContentView: ChatMediaContentView {
     
     required init(frame frameRect: NSRect) {
         super.init(frame:frameRect)
+    }
+    
+    override var canSpamClicks: Bool {
+        return content?.canSpamClicks ?? super.canSpamClicks
     }
     
     private var suggestOpenPremiumPack: Bool = false
@@ -162,7 +166,7 @@ class StickerMediaContentView: ChatMediaContentView {
                 }
                 
                 showModalText(for: context.window, text: strings().stickerPremiumClickInfo, title: title, callback: { _ in
-                    showModal(with:StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for:window)
+                    showModal(with:StickerPackPreviewModalController(context, peerId: peerId, reference: .stickers(reference)), for:window)
                 })
                 suggestOpenPremiumPack = false
             } else {
@@ -180,7 +184,7 @@ class StickerMediaContentView: ChatMediaContentView {
             }
             
             if !media.isEmojiAnimatedSticker, let reference = media.stickerReference {
-                showModal(with:StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for:window)
+                showModal(with:StickerPackPreviewModalController(context, peerId: peerId, reference: .stickers(reference)), for:window)
             } else if let sticker = media.stickerText, !sticker.isEmpty {
                 self.playIfNeeded(true)
                 parameters?.runEmojiScreenEffect(sticker)

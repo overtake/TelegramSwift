@@ -55,21 +55,21 @@
     return self->player->frameRate();
 }
 
--(CGImageRef)renderFrame:(int)frame width:(size_t)w height:(size_t)h {
+-(CGImageRef)renderFrame:(int)frame width:(size_t)w height:(size_t)h bytesPerRow:(size_t)bytesPerRow {
     
     auto animationBuffer = std::unique_ptr<uint32_t[]>(new uint32_t[w * h]);
-    rlottie::Surface surface(animationBuffer.get(), w, h, w * 4);
+    rlottie::Surface surface(animationBuffer.get(), w, h, bytesPerRow);
     player->renderSync(frame, surface);
 
-    NSMutableData *data = [[NSMutableData alloc] initWithLength:w * h * 4];
-    memset((uint8_t *)data.bytes + w * h * 4, 255, w * h);
+    NSMutableData *data = [[NSMutableData alloc] initWithLength:bytesPerRow * h];
+    memset((uint8_t *)data.bytes + bytesPerRow * h, 255, w * h);
 
     vImage_Buffer inputBuffer;
     inputBuffer.width = w;
     inputBuffer.height = h;
-    inputBuffer.rowBytes = w * 4;
+    inputBuffer.rowBytes = bytesPerRow;
     inputBuffer.data = (uint8_t *)data.bytes;
-    memcpy(inputBuffer.data, (void *)animationBuffer.get(), w * h * 4);
+    memcpy(inputBuffer.data, (void *)animationBuffer.get(), bytesPerRow * h);
 
     const uint8_t map[4] = { 3, 2, 1, 0 };
    // vImagePermuteChannels_ARGB8888(&inputBuffer, &inputBuffer, map, kvImageNoFlags);
@@ -80,7 +80,7 @@
         colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceDisplayP3);
 
     CGDataProviderRef dataProvider = CGDataProviderCreateWithCFData((__bridge CFDataRef)data);
-    CGImageRef image = CGImageCreate(w, h, 8, 32, w * 4, colorSpace, kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst, dataProvider, NULL, false, kCGRenderingIntentDefault);
+    CGImageRef image = CGImageCreate(w, h, 8, 32, bytesPerRow, colorSpace, kCGBitmapByteOrder32Little | kCGImageAlphaPremultipliedFirst, dataProvider, NULL, false, kCGRenderingIntentDefault);
     CFRelease(dataProvider);
     CFRelease(colorSpace);
     animationBuffer.reset();
@@ -214,8 +214,8 @@
     return data;
 }
 
-- (void)renderFrameWithIndex:(int32_t)index into:(uint8_t * _Nonnull)buffer width:(int32_t)width height:(int32_t)height {
-    rlottie::Surface surface((uint32_t *)buffer, width, height, width * 4);
+- (void)renderFrameWithIndex:(int32_t)index into:(uint8_t * _Nonnull)buffer width:(int32_t)width height:(int32_t)height bytesPerRow:(int32_t)bytesPerRow {
+    rlottie::Surface surface((uint32_t *)buffer, width, height, bytesPerRow);
     player->renderSync(index, surface);
 }
     

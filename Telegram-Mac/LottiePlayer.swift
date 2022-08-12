@@ -7,6 +7,7 @@ import TelegramCore
 import GZIP
 import libwebp
 import Accelerate
+import QuartzCore
 
 final class RenderAtomic<T> {
     private var lock: pthread_mutex_t
@@ -50,7 +51,7 @@ final class RenderAtomic<T> {
 }
 
 
-let lottieThreadPool: ThreadPool = ThreadPool(threadCount: 5, threadPriority: 0.5)
+let lottieThreadPool: ThreadPool = ThreadPool(threadCount: 5, threadPriority: 1.0)
 private let stateQueue = Queue()
 
 
@@ -71,6 +72,7 @@ protocol RenderedFrame {
     var key: LottieAnimationEntryKey { get }
     var frame: Int32 { get }
     var mirror: Bool { get }
+    var bytesPerRow: Int { get }
 }
 
 final class RenderedWebpFrame : RenderedFrame, Equatable {
@@ -87,6 +89,12 @@ final class RenderedWebpFrame : RenderedFrame, Equatable {
         self.frame = frame
         self.webpData = webpData
     }
+    
+    var bytesPerRow: Int {
+        let s:(w: Int, h: Int) = (w: Int(size.width) * backingScale, h: Int(size.height) * backingScale)
+        return DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: s.w)
+    }
+    
     var image: CGImage? {
         return webpData.image?._cgImage
     }
@@ -102,8 +110,146 @@ final class RenderedWebpFrame : RenderedFrame, Equatable {
     static func == (lhs: RenderedWebpFrame, rhs: RenderedWebpFrame) -> Bool {
         return lhs.key == rhs.key
     }
-    
 }
+
+private let loops = RenderFpsLoops()
+
+private struct RenderFpsToken : Hashable {
+    
+    struct LoopToken : Hashable {
+        let duration: Double
+        let queue: Queue
+        static func ==(lhs: LoopToken, rhs: LoopToken) -> Bool {
+            return lhs.duration == rhs.duration && lhs.queue === rhs.queue
+        }
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(duration)
+        }
+    }
+    
+    func deinstall() {
+        loops.remove(token: self)
+    }
+    func install(_ callback:@escaping()->Void) {
+        loops.add(token: self, callback: callback)
+    }
+    
+    private let index: Int
+    let value: LoopToken
+    
+    
+    init(duration: Double, queue: Queue, index: Int) {
+        self.value = .init(duration: duration, queue: queue)
+        self.index = index
+    }
+    
+
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(self.value)
+        hasher.combine(self.index)
+    }
+}
+
+private final class RenderFpsLoops {
+    private let loops:Atomic<[RenderFpsToken.LoopToken: RenderFpsLoop]> = Atomic(value: [:])
+    private var index: Int = 0
+    init() {
+        
+    }
+    
+    func getIndex() -> Int {
+        self.index += 1
+        return index
+    }
+    
+    func add(token: RenderFpsToken, callback:@escaping()->Void) {
+        let current: RenderFpsLoop
+        if let value = self.loops.with({ $0[token.value] }) {
+            current = value
+        } else {
+            current = RenderFpsLoop(duration: token.value.duration, queue: token.value.queue)
+            _ = self.loops.modify { value in
+                var value = value
+                value[token.value] = current
+                return value
+            }
+        }
+        current.add(token, callback: callback)
+    }
+    func remove(token: RenderFpsToken) {
+        _ = self.loops.modify { loops in
+            var loops = loops
+            let loop = loops[token.value]
+            if let loop = loop {
+                let isEmpty = loop.remove(token)
+                if isEmpty {
+                    loops.removeValue(forKey: token.value)
+                }
+            }
+            return loops
+        }
+    }
+}
+
+
+private struct RenderFpsCallback {
+    let callback:()->Void
+    init(callback: @escaping()->Void) {
+        self.callback = callback
+    }
+}
+private final class RenderFpsLoop {
+    
+    private class Values {
+        var values: [RenderFpsToken: RenderFpsCallback] = [:]
+    }
+    
+    private let duration: Double
+    private var timer: SwiftSignalKit.Timer?
+    private let values:QueueLocalObject<Values>
+    private let queue: Queue
+    init(duration: Double, queue: Queue) {
+        
+        
+        self.duration = duration
+        self.queue = queue
+        self.values = .init(queue: queue, generate: {
+            return .init()
+        })
+        
+        self.timer = .init(timeout: duration, repeat: true, completion: { [weak self] in
+            self?.loop()
+        }, queue: queue)
+        
+        self.timer?.start()
+    }
+    
+    private func loop() {
+        
+                
+        self.values.with { current in
+            let values = current.values
+            for (_, c) in values {
+                c.callback()
+            }
+        }
+    }
+    
+    func remove(_ token: RenderFpsToken) -> Bool {
+        return self.values.syncWith { current in
+            current.values.removeValue(forKey: token)
+            return current.values.isEmpty
+        }
+    }
+    
+    func add(_ token: RenderFpsToken, callback: @escaping()->Void) {
+        self.values.with { current in
+            current.values[token] = .init(callback: callback)
+        }
+    }
+}
+
 
 final class RenderedWebmFrame : RenderedFrame, Equatable {
     
@@ -121,11 +267,17 @@ final class RenderedWebmFrame : RenderedFrame, Equatable {
         self._data = data
         self.fps = fps
     }
+    
+    var bytesPerRow: Int {
+        let s:(w: Int, h: Int) = (w: Int(size.width) * backingScale, h: Int(size.height) * backingScale)
+        return DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: s.w)
+    }
+    
     var image: CGImage? {
+        
         if let data = data {
             let s:(w: Int, h: Int) = (w: Int(size.width) * backingScale, h: Int(size.height) * backingScale)
             
-            let bytesPerRow = Int(s.w) * 4
             let bytes = data.assumingMemoryBound(to: UInt8.self)
 
             let mutableBytes = UnsafeMutableRawPointer(mutating: bytes)
@@ -135,7 +287,8 @@ final class RenderedWebmFrame : RenderedFrame, Equatable {
                 vImageHorizontalReflect_ARGB8888(&buffer, &buffer, vImage_Flags(kvImageDoNotTile))
             }
             
-            return generateImagePixel(size, scale: CGFloat(backingScale), pixelGenerator: { (_, pixelData) in
+            
+            return generateImagePixel(size, scale: CGFloat(backingScale), pixelGenerator: { (_, pixelData, bytesPerRow) in
                 memcpy(pixelData, mutableBytes, bufferSize)
             })
         }
@@ -145,7 +298,10 @@ final class RenderedWebmFrame : RenderedFrame, Equatable {
         return 1.0 / Double(self.fps)
     }
     var bufferSize: Int {
-        return Int(size.width * CGFloat(backingScale) * size.height * CGFloat(backingScale) * 4)
+        let s:(w: Int, h: Int) = (w: Int(size.width) * backingScale, h: Int(size.height) * backingScale)
+        let bytesPerRow = DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: s.w)
+
+        return s.h * bytesPerRow
     }
     var data: UnsafeRawPointer? {
         return _data
@@ -182,7 +338,14 @@ final class RenderedLottieFrame : RenderedFrame, Equatable {
         return lhs.frame == rhs.frame
     }
     var bufferSize: Int {
-        return Int(size.width * CGFloat(backingScale) * size.height * CGFloat(backingScale) * 4)
+        let s:(w: Int, h: Int) = (w: Int(size.width) * backingScale, h: Int(size.height) * backingScale)
+        return s.h * bytesPerRow
+    }
+    
+    var bytesPerRow: Int {
+        let s:(w: Int, h: Int) = (w: Int(size.width) * backingScale, h: Int(size.height) * backingScale)
+        let bytesPerRow = DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: s.w)
+        return bytesPerRow
     }
     var mirror: Bool {
         return key.mirror
@@ -192,19 +355,22 @@ final class RenderedLottieFrame : RenderedFrame, Equatable {
     }
     var image: CGImage? {
         if let data = data {
-            let s:(w: Int, h: Int) = (w: Int(size.width) * backingScale, h: Int(size.height) * backingScale)
+           
             
-            let bytesPerRow = Int(s.w) * 4
-            let bytes = data.assumingMemoryBound(to: UInt8.self)
+            return generateImagePixel(size, scale: CGFloat(backingScale), pixelGenerator: { (_, pixelData, bytesPerRow) in
+                
+                let s:(w: Int, h: Int) = (w: Int(size.width) * backingScale, h: Int(size.height) * backingScale)
+                
+                let bytes = data.assumingMemoryBound(to: UInt8.self)
 
-            let mutableBytes = UnsafeMutableRawPointer(mutating: bytes)
-            var buffer = vImage_Buffer(data: mutableBytes, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: bytesPerRow)
-                       
-            if self.key.mirror {
-                vImageHorizontalReflect_ARGB8888(&buffer, &buffer, vImage_Flags(kvImageDoNotTile))
-            }
-            
-            return generateImagePixel(size, scale: CGFloat(backingScale), pixelGenerator: { (_, pixelData) in
+                let mutableBytes = UnsafeMutableRawPointer(mutating: bytes)
+                var buffer = vImage_Buffer(data: mutableBytes, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: bytesPerRow)
+                
+                           
+                if self.key.mirror {
+                    vImageHorizontalReflect_ARGB8888(&buffer, &buffer, vImage_Flags(kvImageDoNotTile))
+                }
+                
                 memcpy(pixelData, mutableBytes, bufferSize)
             })
         }
@@ -275,7 +441,8 @@ private final class RendererState  {
     }
     
     func renderFrame(at frame: Int32) -> RenderedFrame? {
-        return container?.render(at: frame, frames: frames, previousFrame: previousFrame)
+        let rendered = container?.render(at: frame, frames: frames, previousFrame: previousFrame)
+        return rendered
     }
     
     deinit {
@@ -325,7 +492,7 @@ private final class PlayerRenderer {
     private var layer: Atomic<RenderContainer?> = Atomic(value: nil)
     private let updateState:(LottiePlayerState)->Void
     private let displayFrame: (RenderedFrame, LottieRunLoop)->Void
-    private var timer: SwiftSignalKit.Timer?
+    private var renderToken: RenderFpsToken?
     private let release:()->Void
     private var maxRefreshRate: Int = 60
     init(animation: LottieAnimation, displayFrame: @escaping(RenderedFrame, LottieRunLoop)->Void, release:@escaping()->Void, updateState:@escaping(LottiePlayerState)->Void) {
@@ -338,7 +505,7 @@ private final class PlayerRenderer {
     
     private var onDispose: (()->Void)?
     deinit {
-        self.timer?.invalidate()
+        self.renderToken?.deinstall()
         self.onDispose?()
         _ = self.layer.swap(nil)
         self.release()
@@ -394,14 +561,6 @@ private final class PlayerRenderer {
     }
     private func play(_ player: RenderContainer) {
         
-        switch self.animation.playPolicy {
-        case let.framesCount(count):
-            if count == 0 {
-                return
-            }
-        default:
-            break
-        }
         
         self.finished = false
         
@@ -528,7 +687,7 @@ private final class PlayerRenderer {
                             renderer.finished = true
                             cancelled = true
                             updateState(.stoped)
-                            renderer.timer?.invalidate()
+                            renderer.renderToken?.deinstall()
                             framesTask?.cancel()
                             let onFinish = renderer.animation.onFinish ?? {}
                             DispatchQueue.main.async(execute: onFinish)
@@ -542,7 +701,8 @@ private final class PlayerRenderer {
                                 finish()
                             }
                         case .onceEnd, .toEnd:
-                            if let state = currentState(stateValue), state.endFrame - current.frame <= 2  {
+                            let end = fps == 60 ? 1 : 2
+                            if let state = currentState(stateValue), state.endFrame - current.frame <= end  {
                                 finish()
                             }
                         case .toStart:
@@ -563,11 +723,14 @@ private final class PlayerRenderer {
                     if !renderer.finished {
                         let duration = current?.duration ?? (1.0 / TimeInterval(fps))
                         if duration > 0, (renderer.totalFrames ?? 0) > 1 {
-                            renderer.timer = SwiftSignalKit.Timer(timeout: duration, repeat: false, completion: {
-                                renderNext?()
-                            }, queue: runOnQueue)
-                            
-                            renderer.timer?.start()
+                            let token = RenderFpsToken(duration: duration, queue: runOnQueue, index: loops.getIndex())
+                            if renderer.renderToken != token {
+                                renderer.renderToken?.deinstall()
+                                token.install {
+                                    renderNext?()
+                                }
+                                renderer.renderToken = token
+                            }
                         }
                         
                     }
@@ -599,6 +762,7 @@ private final class PlayerRenderer {
                     
                     var currentFrame = stateValue.currentFrame
                     let frame = stateValue.renderFrame(at: currentFrame)
+                    
                     if mainFps >= fps {
                         if currentFrame % Int32(round(Float(mainFps) / Float(fps))) != 0 {
                             currentFrame += 1
@@ -610,7 +774,6 @@ private final class PlayerRenderer {
                         stateValue.addFrame(frame)
                     } else {
                         if stateValue.startFrame != currentFrame {
-                            NSLog("finish at: \(currentFrame)")
                             stateValue.updateCurrentFrame(stateValue.startFrame)
                             stateValue.loopComplete()
                         } else {
@@ -649,12 +812,12 @@ private final class PlayerRenderer {
     
 }
 
-private final class PlayerContext {
+final class AnimationPlayerContext {
     private let rendererRef: QueueLocalObject<PlayerRenderer>
     fileprivate let animation: LottieAnimation
     init(_ animation: LottieAnimation, maxRefreshRate: Int = 60, displayFrame: @escaping(RenderedFrame, LottieRunLoop)->Void, release:@escaping()->Void, updateState: @escaping(LottiePlayerState)->Void) {
         self.animation = animation
-        self.rendererRef = QueueLocalObject.init(queue: animation.runOnQueue, generate: {
+        self.rendererRef = QueueLocalObject(queue: animation.runOnQueue, generate: {
             return PlayerRenderer(animation: animation, displayFrame: displayFrame, release: release, updateState: { state in
                 delay(0.032, closure: {
                     updateState(state)
@@ -749,7 +912,7 @@ struct LottieAnimationEntryKey : Hashable {
         hasher.combine(size.width)
         hasher.combine(size.height)
         hasher.combine(backingScale)
-        hasher.combine(key.hashValue)
+        hasher.combine(key)
         if let fitzModifier = fitzModifier {
             hasher.combine(fitzModifier)
         }
@@ -764,6 +927,20 @@ struct LottieAnimationEntryKey : Hashable {
 enum LottieAnimationKey : Hashable {
     case media(MediaId?)
     case bundle(String)
+    
+    func hash(into hasher: inout Hasher) {
+        switch self {
+        case let .bundle(value):
+            hasher.combine("bundle")
+            hasher.combine(value)
+        case let .media(mediaId):
+            hasher.combine("media")
+            if let mediaId = mediaId {
+                hasher.combine(mediaId)
+            }
+        }
+    }
+
 }
 
 enum LottiePlayPolicy : Equatable {
@@ -899,8 +1076,9 @@ private final class WebmRenderer : RenderContainer {
     func render(at frameIndex: Int32, frames: [RenderedFrame], previousFrame: RenderedFrame?) -> RenderedFrame? {
         
         let s:(w: Int, h: Int) = (w: Int(animation.size.width) * animation.backingScale, h: Int(animation.size.height) * animation.backingScale)
-        let bufferSize = s.w * s.h * 4
-        
+        let bytesPerRow = DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: s.w)
+
+        let bufferSize = s.h * bytesPerRow
         
         if let fileSupplyment = fileSupplyment {
             let previous = frameIndex == startFrame ? nil : frames.last ?? previousFrame
@@ -922,20 +1100,20 @@ private final class WebmRenderer : RenderContainer {
         }
         
         self.index += 1
-        
-        let destBytesPerRow = Int(animation.size.width) * animation.backingScale * 4
+                
+        let destBytesPerRow = bytesPerRow
 
         let memoryData = malloc(bufferSize)!
         let bytes = memoryData.assumingMemoryBound(to: UInt8.self)
         
         let imageBuffer = CMSampleBufferGetImageBuffer(frame.sampleBuffer)
         CVPixelBufferLockBaseAddress(imageBuffer!, CVPixelBufferLockFlags(rawValue: 0))
-        let bytesPerRow = CVPixelBufferGetBytesPerRow(imageBuffer!)
+        let sourceBytesPerRow = CVPixelBufferGetBytesPerRow(imageBuffer!)
         let width = CVPixelBufferGetWidth(imageBuffer!)
         let height = CVPixelBufferGetHeight(imageBuffer!)
         let srcData = CVPixelBufferGetBaseAddress(imageBuffer!)
         
-        var sourceBuffer = vImage_Buffer(data: srcData, height: vImagePixelCount(height), width: vImagePixelCount(width), rowBytes: bytesPerRow)
+        var sourceBuffer = vImage_Buffer(data: srcData, height: vImagePixelCount(height), width: vImagePixelCount(width), rowBytes: sourceBytesPerRow)
         var destBuffer = vImage_Buffer(data: bytes, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: destBytesPerRow)
                    
         let _ = vImageScale_ARGB8888(&sourceBuffer, &destBuffer, nil, vImage_Flags(kvImageDoNotTile))
@@ -1021,10 +1199,12 @@ private final class LottieRenderer : RenderContainer {
             return nil
         }
         if data == nil {
-            let bufferSize = s.w * s.h * 4
+            let bytesPerRow = DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: s.w)
+            let bufferSize = s.h * bytesPerRow
             let memoryData = malloc(bufferSize)!
             let frameData = memoryData.assumingMemoryBound(to: UInt8.self)
-            bridge.renderFrame(with: frame, into: frameData, width: Int32(s.w), height: Int32(s.h))
+            
+            bridge.renderFrame(with: frame, into: frameData, width: Int32(s.w), height: Int32(s.h), bytesPerRow: Int32(bytesPerRow))
             data = UnsafeRawPointer(frameData)
         }
         
@@ -1087,7 +1267,12 @@ final class LottieAnimation : Equatable {
     let runOnQueue: Queue
     var onFinish:(()->Void)?
 
-    var triggerOn:(LottiePlayerTriggerFrame, ()->Void, ()->Void)? 
+    var triggerOn:(LottiePlayerTriggerFrame, ()->Void, ()->Void)? {
+        didSet {
+            var bp = 0
+            bp += 1
+        }
+    }
 
     
     init(compressed: Data, key: LottieAnimationEntryKey, type: LottieAnimationType = .lottie, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], soundEffect: LottieSoundEffect? = nil, postbox: Postbox? = nil, runOnQueue: Queue = stateQueue, metalSupport: Bool = false) {
@@ -1116,16 +1301,16 @@ final class LottieAnimation : Equatable {
     }
     
     func withUpdatedBackingScale(_ scale: Int) -> LottieAnimation {
-        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedBackingScale(scale), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: self.colors, postbox: self.postbox, runOnQueue: self.runOnQueue, metalSupport: self.metalSupport)
+        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedBackingScale(scale), type: self.type, cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: self.colors, postbox: self.postbox, runOnQueue: self.runOnQueue, metalSupport: self.metalSupport)
     }
     func withUpdatedColors(_ colors: [LottieColor]) -> LottieAnimation {
-        return LottieAnimation(compressed: self.compressed, key: self.key, cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue, metalSupport: self.metalSupport)
+        return LottieAnimation(compressed: self.compressed, key: self.key, type: self.type, cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue, metalSupport: self.metalSupport)
     }
     func withUpdatedPolicy(_ playPolicy: LottiePlayPolicy) -> LottieAnimation {
-        return LottieAnimation(compressed: self.compressed, key: self.key, cachePurpose: self.cache, playPolicy: playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue, metalSupport: self.metalSupport)
+        return LottieAnimation(compressed: self.compressed, key: self.key, type: self.type, cachePurpose: self.cache, playPolicy: playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue, metalSupport: self.metalSupport)
     }
     func withUpdatedSize(_ size: CGSize) -> LottieAnimation {
-        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedSize(size), cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue, metalSupport: self.metalSupport)
+        return LottieAnimation(compressed: self.compressed, key: self.key.withUpdatedSize(size), type: self.type, cachePurpose: self.cache, playPolicy: self.playPolicy, maximumFps: self.maximumFps, colors: colors, postbox: self.postbox, runOnQueue: self.runOnQueue, metalSupport: self.metalSupport)
     }
     
     var cacheKey: String {
@@ -1145,8 +1330,11 @@ final class LottieAnimation : Equatable {
         }
     }
     
-    fileprivate var bufferSize: Int {
-        return Int(size.width * CGFloat(backingScale) * size.height * CGFloat(backingScale) * 4)
+    var bufferSize: Int {
+        let s:(w: Int, h: Int) = (w: Int(size.width) * backingScale, h: Int(size.height) * backingScale)
+        let bytesPerRow = DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: s.w)
+
+        return s.h * bytesPerRow
     }
     
     
@@ -1199,7 +1387,7 @@ final class LottieAnimation : Equatable {
         case .webm:
             let path = String(data: self.compressed, encoding: .utf8)
             if let path = path {
-                let decoder = SoftwareVideoSource(path: path, hintVP9: true)
+                let decoder = SoftwareVideoSource(path: path, hintVP9: true, unpremultiplyAlpha: true)
                 let fileSupplyment: TRLotFileSupplyment?
                 switch self.cache {
                 case .temporaryLZ4:
@@ -1546,7 +1734,7 @@ private final class LottieFallbackView: NSView {
 }
 
 class LottiePlayerView : View {
-    private var context: PlayerContext?
+    private var context: AnimationPlayerContext?
     private var _ignoreCachedContext: Bool = false
     private let _currentState: Atomic<LottiePlayerState> = Atomic(value: .initializing)
     var currentState: LottiePlayerState {
@@ -1577,7 +1765,9 @@ class LottiePlayerView : View {
         }
     }
     
-    var animation: LottieAnimation? {
+    var animation: LottieAnimation?
+    
+    var contextAnimation: LottieAnimation? {
         return context?.animation
     }
     
@@ -1593,6 +1783,11 @@ class LottiePlayerView : View {
     func update(size: NSSize, transition: ContainedViewLayoutTransition) {
         for subview in subviews {
             transition.updateFrame(view: subview, frame: size.bounds)
+        }
+        if let sublayers = layer?.sublayers {
+            for sublayer in sublayers {
+                transition.updateFrame(layer: sublayer, frame: size.bounds)
+            }
         }
     }
     
@@ -1656,14 +1851,30 @@ class LottiePlayerView : View {
         context?.setColors(colors)
     }
     
+    
+    
     func set(_ animation: LottieAnimation?, reset: Bool = false, saveContext: Bool = false, animated: Bool = false) {
         assertOnMainThread()
         _ignoreCachedContext = false
         
+        self.animation = animation
+        
         if animation == nil {
             self.temporary = nil
         }
-        if let animation = animation {
+        
+        var accept: Bool = true
+        switch animation?.playPolicy {
+        case let.framesCount(count):
+            accept = count != 0
+        default:
+            break
+        }
+        
+        if let animation = animation, accept {
+            
+            
+            
             self.stateValue.set(self._currentState.modify { _ in .initializing })
             if self.context?.animation != animation || reset {
                 if !animation.runOnQueue.isCurrent() && animation.supportsMetal {
@@ -1680,14 +1891,14 @@ class LottiePlayerView : View {
                     let layer = Unmanaged.passRetained(metal)
                     
                     
-                    var cachedContext:Unmanaged<PlayerContext>?
+                    var cachedContext:Unmanaged<AnimationPlayerContext>?
                     if let context = self.context, saveContext {
                         cachedContext = Unmanaged.passRetained(context)
                     }  else  {
                         cachedContext = nil
                     }
                     
-                    self.context = PlayerContext(animation, maxRefreshRate: holder.context.refreshRate, displayFrame: { frame, runLoop in
+                    self.context = AnimationPlayerContext(animation, maxRefreshRate: holder.context.refreshRate, displayFrame: { frame, runLoop in
                         layer.takeUnretainedValue().render(frame: frame, runLoop: runLoop)
                     }, release: {
                         delay(0.032, closure: {
@@ -1710,31 +1921,29 @@ class LottiePlayerView : View {
                         self.stateValue.set(self._currentState.modify { _ in state } )
                     })
                 } else {
-                    let fallback = LottieFallbackView()
-                    fallback.wantsLayer = true
+                    let fallback = SimpleLayer()
                     fallback.frame = CGRect(origin: CGPoint(), size: self.frame.size)
-                    fallback.layer?.contentsGravity = .resize
-                    self.addSubview(fallback)
+                    fallback.contentsGravity = .resize
+                    self.layer?.addSublayer(fallback)
                     if animated {
-                        fallback.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        fallback.animateAlpha(from: 0, to: 1, duration: 0.2)
                     }
                     let layer = Unmanaged.passRetained(fallback)
                     
-                    self.context = PlayerContext(animation, displayFrame: { frame, _ in
-                        
+                    self.context = AnimationPlayerContext(animation, displayFrame: { frame, _ in
                         let image = frame.image
                         Queue.mainQueue().async {
-                            layer.takeUnretainedValue().layer?.contents = image
+                            layer.takeUnretainedValue().contents = image
                         }
                     }, release: {
                         delay(0.032, closure: {
                             let view = layer.takeRetainedValue()
                             if animated {
-                                view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
-                                    view?.removeFromSuperview()
+                                view.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
+                                    view?.removeFromSuperlayer()
                                 })
                             } else {
-                                view.removeFromSuperview()
+                                view.removeFromSuperlayer()
                             }
                         })
                     }, updateState: { [weak self] state in

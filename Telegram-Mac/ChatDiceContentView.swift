@@ -243,6 +243,7 @@ class ChatDiceContentView: ChatMediaContentView {
         self.diceState = diceState
         
         
+        
         let data: Signal<(Data?, TelegramMediaFile), NoError> = context.diceCache.interactiveSymbolData(baseSymbol: baseSymbol, synchronous: approximateSynchronousValue) |> mapToSignal { values in
             for value in values {
                 if value.0 == sideSymbol {
@@ -303,7 +304,7 @@ class ChatDiceContentView: ChatMediaContentView {
                 }
                 switch diceState.play {
                 case let .end(animated):
-                    if let previous = self.playerView.animation, animated {
+                    if let previous = self.playerView.contextAnimation, animated {
                         switch self.playerView.currentState {
                         case .playing:
                             previous.triggerOn = (.last, { [weak self] in

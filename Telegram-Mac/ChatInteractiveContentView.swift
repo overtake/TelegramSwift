@@ -305,10 +305,14 @@ class ChatInteractiveContentView: ChatMediaContentView {
             }
             text = size
         case .Local:
-            if let status = mediaPlayerStatus, status.generationTimestamp > 0, status.duration > 0 {
-                text = String.durationTransformed(elapsed: Int(status.duration - (status.timestamp + (CACurrentMediaTime() - status.generationTimestamp))))
+            if file.isVideo && file.isAnimated {
+                text = "GIF"
             } else {
-                text = String.durationTransformed(elapsed: file.videoDuration)
+                if let status = mediaPlayerStatus, status.generationTimestamp > 0, status.duration > 0 {
+                    text = String.durationTransformed(elapsed: Int(status.duration - (status.timestamp + (CACurrentMediaTime() - status.generationTimestamp))))
+                } else {
+                    text = String.durationTransformed(elapsed: file.videoDuration)
+                }
             }
         }
         

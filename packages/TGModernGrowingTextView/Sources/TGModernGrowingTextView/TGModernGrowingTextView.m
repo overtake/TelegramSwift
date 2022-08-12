@@ -190,7 +190,6 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
     CGContextSetAllowsFontSmoothing(context,!isRetina);
     
     
-    [super drawRect:dirtyRect];
     
     NSRange range = NSMakeRange(0, self.attributedString.length);
     
@@ -206,17 +205,20 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
         }
     }];
     
+    
     for (int i = 0; i < ranges.count; i++) {
         NSRange range = [[ranges objectAtIndex:i] rangeValue];
         for (int j = 0; j < range.length; j++) {
             NSRect rect = [self highlightRectForRange:NSMakeRange(range.location + j, 1) whole:false];
+            CGContextClearRect(context, rect);
             CGContextSetFillColorWithColor(context, [[_weakTextView.textColor colorWithAlphaComponent:0.15] CGColor]);
             CGContextFillRect(context, rect);
         }
 
     }
     
-   
+    [super drawRect:dirtyRect];
+
     
 }
 
@@ -999,6 +1001,12 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
     _textView.textColor = _textColor;
     [self textDidChange:nil];
 }
+
+-(void)setSelectTextColor:(NSColor *)selectTextColor {
+    _selectedTextColor = selectTextColor;
+    [self refreshAttributes];
+}
+    
     
 -(void)setTextFont:(NSFont *)textFont {
     _textFont = textFont;
@@ -1029,6 +1037,8 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
     newSize.height = MIN(MAX(newSize.height,_min_height),_max_height);
     
     [self updatePlaceholder:self.animates newSize:newSize];
+    
+    [self refreshAttachments];
 }
     
 -(void)mouseDown:(NSEvent *)theEvent {
@@ -1066,7 +1076,7 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
     
 - (void)drawRect:(NSRect)dirtyRect {
     [super drawRect:dirtyRect];
-    [self refreshAttachments];
+    [self refreshAttributes];
 }
 
 
@@ -1074,8 +1084,10 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
     NSMutableArray<NSValue *> *ranges = [NSMutableArray array];
     NSMutableArray<TGTextAttachment *> *attachments = [NSMutableArray array];
 
+    
+    NSRange range = NSMakeRange(0, self.textView.attributedString.length);
         
-    [self.textView.attributedString enumerateAttributesInRange:NSMakeRange(0, self.textView.attributedString.length) options:0 usingBlock:^(NSDictionary<NSAttributedStringKey,id> * _Nonnull attrs, NSRange range, BOOL * _Nonnull stop) {
+    [self.textView.attributedString enumerateAttributesInRange:range options:0 usingBlock:^(NSDictionary<NSAttributedStringKey,id> * _Nonnull attrs, NSRange range, BOOL * _Nonnull stop) {
         
         [attrs enumerateKeysAndObjectsUsingBlock:^(NSAttributedStringKey  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
             if ([key isEqualToString:TGAnimatedEmojiAttributeName]) {
@@ -1100,13 +1112,16 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
         if (view == nil) {
             view = _getAttachView(attachment);
         }
-        rect.size.height = view.frame.size.height;
-        view.frame = rect;
-        if(view != nil && view.superview != _textView) {
-            [_textView addSubview:view];
+        if (view != nil) {
+            rect.size.height = view.frame.size.height;
+            rect.origin.y -= 1;
+            view.frame = rect;
+            if(view != nil && view.superview != _textView) {
+                [_textView addSubview:view];
+            }
+            [validIds addObject:attachment.identifier];
+            [_attachments setObject:view forKey:attachment.identifier];
         }
-        [validIds addObject:attachment.identifier];
-        [_attachments setObject:view forKey:attachment.identifier];
     }
     
     NSMutableArray<NSString *> *toRemove = [NSMutableArray array];
@@ -1121,6 +1136,19 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
         [view removeFromSuperview];
         [_attachments removeObjectForKey:toRemove[i]];
     }
+    
+        
+    [self.textView.attributedString enumerateAttribute:TGAnimatedEmojiAttributeName inRange:range options:0 usingBlock:^(__unused id value, NSRange range, __unused BOOL *stop) {
+        if ([value isKindOfClass:[TGTextAttachment class]]) {
+            [ranges addObject:[NSValue valueWithRange:range]];
+        }
+    }];
+    
+    for (int i = 0; i < ranges.count; i++) {
+        NSRange range = [[ranges objectAtIndex:i] rangeValue];
+        [self.textView.textStorage addAttribute:NSForegroundColorAttributeName value:[NSColor clearColor] range:range];
+    }
+    
 }
     
 -(void)installGetAttachView:(NSView* _Nullable (^)(TGTextAttachment * _Nonnull))getAttachView {
@@ -1192,7 +1220,7 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
     
     newSize.height = MIN(MAX(newSize.height,_min_height),_max_height);
     
-    BOOL animated = self.animates && ![self.window inLiveResize];
+    BOOL animated = self.animates && ![self.window inLiveResize] && self.window != nil;
     
     
     if(_last_height != newSize.height) {
@@ -1207,7 +1235,6 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
         
         [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
         
-        newSize.width = [_delegate textViewSize: self].width;
         
         NSSize layoutSize = NSMakeSize(roundf(newSize.width), roundf(newSize.height));
         
@@ -1470,23 +1497,16 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
         
         
         [self.textView.textStorage addAttribute:NSForegroundColorAttributeName value:self.textColor range:NSMakeRange(0, string.length)];
-        
-        
-        NSMutableArray<NSValue *> *ranges = [NSMutableArray array];
-        
-        [self.textView.attributedString enumerateAttribute:TGAnimatedEmojiAttributeName inRange:NSMakeRange(0, string.length) options:0 usingBlock:^(__unused id value, NSRange range, __unused BOOL *stop) {
-            if ([value isKindOfClass:[TGTextAttachment class]]) {
-                [ranges addObject:[NSValue valueWithRange:range]];
-            }
-        }];
-        
-        for (int i = 0; i < ranges.count; i++) {
-            NSRange range = [[ranges objectAtIndex:i] rangeValue];
-            [self.textView.textStorage addAttribute:NSForegroundColorAttributeName value:[NSColor clearColor] range:range];
+       
+        if (self.selectedTextColor != nil) {
+            [_textView setSelectedTextAttributes:
+                 [NSDictionary dictionaryWithObjectsAndKeys:
+                  self.selectedTextColor, NSBackgroundColorAttributeName,
+                  nil]];
         }
         
         
-        NSArray<NSString *> *attributes = @[TGCustomLinkAttributeName, TGSpoilerAttributeName, TGAnimatedEmojiAttributeName];
+        NSArray<NSString *> *attributes = @[TGCustomLinkAttributeName, TGSpoilerAttributeName];
         
         for (int i = 0; i < attributes.count; i++) {
             NSString *attributeName = attributes[i];
@@ -1702,9 +1722,7 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
     [string enumerateAttribute:NSFontAttributeName inRange:NSMakeRange(0, string.length) options:0 usingBlock:^(NSFont *value, NSRange range, BOOL * _Nonnull stop) {
         [attr addAttribute:NSFontAttributeName value:[[NSFontManager sharedFontManager] convertFont:value toSize:_textFont.pointSize] range:range];
     }];
-    
         
-    
     NSRange selectedRange = _textView.selectedRange;
     if (selectedRange.location == self.textView.string.length) {
         selectedRange = NSMakeRange(attr.length, 0);
@@ -1718,6 +1736,8 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
     self.animates = o;
    
     [self setSelectedRange:NSMakeRange(MIN(selectedRange.location, string.length), 0)];
+    
+    [self refreshAttachments];
     
 }
     
@@ -1895,7 +1915,15 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
 -(void)setBackgroundColor:(NSColor * __nonnull)color {
     self.scrollView.backgroundColor = color;
     self.textView.backgroundColor = color;
-    _placeholder.backgroundColor = [NSColor redColor];
+    _placeholder.backgroundColor = [NSColor clearColor];
+}
+
+-(NSRect)highlightRectForRange:(NSRange)aRange whole: (BOOL)whole {
+    return [self.textView highlightRectForRange:aRange whole:whole];
+}
+
+-(NSScrollView *)scroll {
+    return self.scrollView;
 }
 
 @end

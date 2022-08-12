@@ -25,7 +25,6 @@ enum EntertainmentState : Int32 {
     case emoji = 0
     case stickers = 1
     case gifs = 2
-    case animatedEmojies = 3
 }
 
 enum RecordingStateSettings : Int32 {
@@ -131,6 +130,7 @@ class FastSettings {
     private static let kInAppSoundsType = "kInAppSoundsType"
     private static let kIsMinimisizeType = "kIsMinimisizeType"
     private static let kAutomaticConvertEmojiesType = "kAutomaticConvertEmojiesType2"
+    private static let kSuggestSwapEmoji = "kSuggestSwapEmoji"
     private static let kForceTouchAction = "kForceTouchAction"
     private static let kNeedCollage = "kNeedCollage"
 	private static let kInstantViewScrollBySpace = "kInstantViewScrollBySpace"
@@ -415,6 +415,17 @@ class FastSettings {
         UserDefaults.standard.synchronize()
     }
     
+    static var suggestSwapEmoji: Bool {
+        if let value = UserDefaults.standard.value(forKey: kSuggestSwapEmoji) as? Bool {
+            return value
+        }
+        return true
+    }
+    static func toggleSwapEmoji(_ value: Bool) -> Void {
+        UserDefaults.standard.setValue(value, forKey: kSuggestSwapEmoji)
+        UserDefaults.standard.synchronize()
+    }
+    
     static var isPossibleReplaceEmojies: Bool {
         return !UserDefaults.standard.bool(forKey: kAutomaticConvertEmojiesType)
     }
@@ -680,11 +691,24 @@ func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox, saveAnyway: Bo
 //
 }
 
+extension String {
+    var fixedFileName: String {
+        var string = self.replacingOccurrences(of: "/", with: "_")
+        
+        var range = string.nsstring.range(of: ".")
+        while range.location == 0 {
+            string = string.nsstring.replacingCharacters(in: range, with: "_")
+            range = string.nsstring.range(of: ".")
+        }
+        return string
+    }
+}
+
 func downloadFilePath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<(String, String)?, NoError> {
     return combineLatest(postbox.mediaBox.resourceData(file.resource) |> take(1), automaticDownloadSettings(postbox: postbox) |> take(1)) |> mapToSignal { data, settings -> Signal< (String, String)?, NoError> in
         if data.complete {
             var ext:String = ""
-            let fileName = file.fileName ?? data.path.nsstring.lastPathComponent
+            let fileName = (file.fileName ?? data.path.nsstring.lastPathComponent).fixedFileName
             ext = fileName.nsstring.pathExtension
             if !ext.isEmpty {
                 return .single((data.path, "\(settings.downloadFolder)/\(fileName.nsstring.deletingPathExtension).\(ext)"))

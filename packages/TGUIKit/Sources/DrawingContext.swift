@@ -10,35 +10,15 @@ import Cocoa
 
 
 public func generateImage(_ size: CGSize, contextGenerator: (CGSize, CGContext) -> Void, opaque: Bool = false, scale: CGFloat = 2.0) -> CGImage? {
-    let scaledSize = CGSize(width: size.width * scale, height: size.height * scale)
-    let bytesPerRow = (4 * Int(scaledSize.width) + 15) & (~15)
-    let length = bytesPerRow * Int(scaledSize.height)
-    let bytes = malloc(length)!.assumingMemoryBound(to: Int8.self)
-    
-    guard let provider = CGDataProvider(dataInfo: bytes, data: bytes, size: length, releaseData: { bytes, _, _ in
-        free(bytes)
-    })
-        else {
-            return nil
+    if size.width.isZero || size.height.isZero {
+        return nil
     }
-    
-    let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo.byteOrder32Little.rawValue | (opaque ? CGImageAlphaInfo.noneSkipFirst.rawValue : CGImageAlphaInfo.premultipliedFirst.rawValue))
-    
-    guard let context = CGContext(data: bytes, width: Int(scaledSize.width), height: Int(scaledSize.height), bitsPerComponent: 8, bytesPerRow: bytesPerRow, space: deviceColorSpace, bitmapInfo: bitmapInfo.rawValue)
-        else {
-            return nil
+    let context = DrawingContext(size: size, scale: scale ?? 0.0, clear: false)
+    context.withContext { c in
+        contextGenerator(context.size, c)
     }
-    
-    context.scaleBy(x: scale, y: scale)
-    
-    contextGenerator(size, context)
-    
-    guard let image = CGImage(width: Int(scaledSize.width), height: Int(scaledSize.height), bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: bytesPerRow, space: deviceColorSpace, bitmapInfo: bitmapInfo, provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)
-        else {
-            return nil
-    }
-    
-    return image
+    return context.generateImage()
+
 }
 
 public func generateImageMask(_ size: CGSize, contextGenerator: (CGSize, CGContext) -> Void, scale: CGFloat = 2.0) -> CGImage? {
@@ -74,38 +54,14 @@ public func generateImageMask(_ size: CGSize, contextGenerator: (CGSize, CGConte
 }
 
 public func generateImage(_ size: CGSize, opaque: Bool = false, scale: CGFloat? = 2.0, rotatedContext: (CGSize, CGContext) -> Void) -> CGImage? {
-    let selectedScale = scale ?? System.backingScale
-    let scaledSize = CGSize(width: size.width * selectedScale, height: size.height * selectedScale)
-    let bytesPerRow = (4 * Int(scaledSize.width) + 15) & (~15)
-    let length = bytesPerRow * Int(scaledSize.height)
-    let bytes = malloc(length)!.assumingMemoryBound(to: Int8.self)
-    
-    guard let provider = CGDataProvider(dataInfo: bytes, data: bytes, size: length, releaseData: { bytes, _, _ in
-        free(bytes)
-    })
-        else {
-            return nil
-    }
-    
-    let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo.byteOrder32Little.rawValue | (opaque ? CGImageAlphaInfo.noneSkipFirst.rawValue : CGImageAlphaInfo.premultipliedFirst.rawValue))
-    
-    guard let context = CGContext(data: bytes, width: Int(scaledSize.width), height: Int(scaledSize.height), bitsPerComponent: 8, bytesPerRow: bytesPerRow, space: deviceColorSpace, bitmapInfo: bitmapInfo.rawValue) else {
+    if size.width.isZero || size.height.isZero {
         return nil
     }
-    
-    context.scaleBy(x: selectedScale, y: selectedScale)
-    context.translateBy(x: size.width / 2.0, y: size.height / 2.0)
-    context.scaleBy(x: 1.0, y: -1.0)
-    context.translateBy(x: -size.width / 2.0, y: -size.height / 2.0)
-    
-    rotatedContext(size, context)
-    
-    guard let image = CGImage(width: Int(scaledSize.width), height: Int(scaledSize.height), bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: bytesPerRow, space: deviceColorSpace, bitmapInfo: bitmapInfo, provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)
-        else {
-            return nil
-    }
-    
-    return image
+    let context = DrawingContext(size: size, scale: scale ?? 0.0, clear: false)
+    context.withFlippedContext(isHighQuality: true, horizontal: false, vertical: true, { ctx in
+        rotatedContext(size, ctx)
+    })
+    return context.generateImage()
 }
 
 
@@ -124,28 +80,13 @@ public let deviceColorSpace: CGColorSpace = {
 
 
 
-public func generateImagePixel(_ size: CGSize, scale: CGFloat, pixelGenerator: (CGSize, UnsafeMutablePointer<UInt8>) -> Void) -> CGImage? {
-    let scaledSize = CGSize(width: size.width * scale, height: size.height * scale)
-    let bytesPerRow = 4 * Int(scaledSize.width)
-    let length = bytesPerRow * Int(scaledSize.height)
-    let bytes = malloc(length)!.assumingMemoryBound(to: UInt8.self)
-    guard let provider = CGDataProvider(dataInfo: bytes, data: bytes, size: length, releaseData: { bytes, _, _ in
-        free(bytes)
-    })
-        else {
-            return nil
-    }
-    
-    pixelGenerator(scaledSize, bytes)
-    
-    let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue)
-    
-    guard let image = CGImage(width: Int(scaledSize.width), height: Int(scaledSize.height), bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: bytesPerRow, space: deviceColorSpace, bitmapInfo: bitmapInfo, provider: provider, decode: nil, shouldInterpolate: false, intent: .defaultIntent)
-        else {
-            return nil
-    }
-    
-    return image
+
+
+public func generateImagePixel(_ size: CGSize, scale: CGFloat, pixelGenerator: (CGSize, UnsafeMutablePointer<UInt8>, Int) -> Void) -> CGImage? {
+    let context = DrawingContext(size: size, scale: scale, clear: false)
+    pixelGenerator(CGSize(width: size.width * scale, height: size.height * scale), context.bytes.assumingMemoryBound(to: UInt8.self), context.bytesPerRow)
+    return context.generateImage()
+
 }
 
 
@@ -154,6 +95,82 @@ public enum DrawingContextBltMode {
 }
 private var allocCounter: Int = 0
 private var deallocCounter: Int = 0
+
+
+private extension NSImage {
+    convenience init(size: CGSize, actions: (CGContext) -> Void) {
+        self.init(size: size)
+        lockFocusFlipped(false)
+        actions(NSGraphicsContext.current!.cgContext)
+        unlockFocus()
+    }
+}
+
+public func getSharedDevideGraphicsContextSettings(context: CGContext?) -> DeviceGraphicsContextSettings {
+    struct OpaqueSettings {
+        let rowAlignment: Int
+        let bitsPerPixel: Int
+        let bitsPerComponent: Int
+        let opaqueBitmapInfo: CGBitmapInfo
+        let colorSpace: CGColorSpace
+
+        public init(context: CGContext?) {
+            
+            let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue)
+
+            self.rowAlignment = context?.bytesPerRow ?? 32 /// Int(System.backingScale)
+            self.bitsPerPixel = context?.bitsPerPixel ?? 32// / Int(System.backingScale)
+            self.bitsPerComponent = context?.bitsPerComponent ?? 8// / Int(System.backingScale)
+            self.opaqueBitmapInfo = context?.bitmapInfo ?? bitmapInfo
+            self.colorSpace = deviceColorSpace
+
+//            assert(self.rowAlignment == 32)
+//            assert(self.bitsPerPixel == 32)
+//            assert(self.bitsPerComponent == 8)
+        }
+    }
+    
+
+    let opaqueSettings: OpaqueSettings = .init(context: context)
+    
+
+    return DeviceGraphicsContextSettings(
+        rowAlignment: opaqueSettings.rowAlignment,
+        bitsPerPixel: opaqueSettings.bitsPerPixel,
+        bitsPerComponent: opaqueSettings.bitsPerComponent,
+        opaqueBitmapInfo: opaqueSettings.opaqueBitmapInfo,
+        colorSpace: opaqueSettings.colorSpace
+    )
+}
+
+public struct DeviceGraphicsContextSettings : Equatable {
+    private static var installed: DeviceGraphicsContextSettings?
+    
+    public static func install(_ context: CGContext) {
+        installed = getSharedDevideGraphicsContextSettings(context: context)
+    }
+    
+    public static var shared: DeviceGraphicsContextSettings {
+        if let installed = installed {
+            return installed
+        } else {
+            return getSharedDevideGraphicsContextSettings(context: nil)
+        }
+    }
+
+    public let rowAlignment: Int
+    public let bitsPerPixel: Int
+    public let bitsPerComponent: Int
+    public let opaqueBitmapInfo: CGBitmapInfo
+    public let colorSpace: CGColorSpace
+
+    public func bytesPerRow(forWidth width: Int) -> Int {
+        let baseValue = self.bitsPerPixel * width / 8
+        return (baseValue + 31) & ~0x1F
+    }
+}
+
+
 
 public class DrawingContext {
     public let size: CGSize
@@ -164,75 +181,72 @@ public class DrawingContext {
     public let length: Int
     
     public let bytes: UnsafeMutableRawPointer
-    private let checkDealloc: Bool
     let provider: CGDataProvider?
     
-    private var _context: CGContext?
+    private let context: CGContext
     public private(set) var isHighQuality: Bool = true
     
     public func withContext(isHighQuality: Bool = true, _ f: (CGContext) -> ()) {
         
         self.isHighQuality = isHighQuality
-        if self._context == nil {
-            if let c = CGContext(data: bytes, width: Int(scaledSize.width), height: Int(scaledSize.height), bitsPerComponent: 8, bytesPerRow: bytesPerRow, space: deviceColorSpace, bitmapInfo: self.bitmapInfo.rawValue) {
-                c.scaleBy(x: scale, y: scale)
-                self._context = c
-            }
-        }
         
-        if let _context = self._context {
-            f(_context)
-        }
+        f(self.context)
     }
     
     deinit {
-        if checkDealloc {
-            deallocCounter += 1
-            NSLog("deallocated: \(deallocCounter)")
-        }
     }
     
     public func withFlippedContext(isHighQuality: Bool = true, horizontal: Bool = false, vertical: Bool = false, _ f: (CGContext) -> ()) {
         self.isHighQuality = isHighQuality
         
-        if self._context == nil {
-            if let c = CGContext(data: bytes, width: Int(scaledSize.width), height: Int(scaledSize.height), bitsPerComponent: 8, bytesPerRow: bytesPerRow, space: deviceColorSpace, bitmapInfo: self.bitmapInfo.rawValue) {
-                c.scaleBy(x: scale, y: scale)
-                self._context = c
-            }
-        }
+        let _context = self.context
         
-        if let _context = self._context {
-            _context.translateBy(x: self.size.width / 2.0, y: self.size.height / 2.0)
-            _context.scaleBy(x: horizontal ? -1.0 : 1.0, y: vertical ? -1.0 : 1.0)
-            _context.translateBy(x: -self.size.width / 2.0, y: -self.size.height / 2.0)
-            
-            f(_context)
-            
-            _context.translateBy(x: self.size.width / 2.0, y: self.size.height / 2.0)
-            _context.scaleBy(x: horizontal ? -1.0 : 1.0, y: vertical ? -1.0 : 1.0)
-            _context.translateBy(x: -self.size.width / 2.0, y: -self.size.height / 2.0)
-        }
+        _context.translateBy(x: self.size.width / 2.0, y: self.size.height / 2.0)
+        _context.scaleBy(x: horizontal ? -1.0 : 1.0, y: vertical ? -1.0 : 1.0)
+        _context.translateBy(x: -self.size.width / 2.0, y: -self.size.height / 2.0)
+        
+        f(_context)
+        
+        _context.translateBy(x: self.size.width / 2.0, y: self.size.height / 2.0)
+        _context.scaleBy(x: horizontal ? -1.0 : 1.0, y: vertical ? -1.0 : 1.0)
+        _context.translateBy(x: -self.size.width / 2.0, y: -self.size.height / 2.0)
     }
     
-    public init(size: CGSize, scale: CGFloat, clear: Bool = false, checkDealloc: Bool = false) {
+    public init(size: CGSize, scale: CGFloat, clear: Bool = false) {
         self.size = NSMakeSize(max(size.width, 1), max(size.height, 1))
-        self.scale = scale
-        self.checkDealloc = checkDealloc
-        self.scaledSize = CGSize(width: size.width * scale, height: size.height * scale)
         
-        
-        if checkDealloc {
-            allocCounter += 1
-            NSLog("allocCounter: \(allocCounter)")
+        let actualScale: CGFloat
+        if scale.isZero {
+            actualScale = System.backingScale
+        } else {
+            actualScale = scale
         }
+
         
-        self.bytesPerRow = (4 * Int(scaledSize.width) + 15) & (~15)
-        self.length = bytesPerRow * Int(scaledSize.height)
+        self.scale = scale
+        self.scaledSize = CGSize(width: size.width * actualScale, height: size.height * actualScale)
         
-        self.bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue)
-        
+        self.bytesPerRow = DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: Int(scaledSize.width))
+        self.length = self.bytesPerRow * Int(scaledSize.height)
+
+        self.bitmapInfo = DeviceGraphicsContextSettings.shared.opaqueBitmapInfo
+
         self.bytes = malloc(length)!
+        
+        self.context = CGContext(
+                  data: self.bytes,
+                   width: Int(self.scaledSize.width),
+                   height: Int(self.scaledSize.height),
+                   bitsPerComponent: DeviceGraphicsContextSettings.shared.bitsPerComponent,
+                   bytesPerRow: self.bytesPerRow,
+                   space: DeviceGraphicsContextSettings.shared.colorSpace,
+                   bitmapInfo: self.bitmapInfo.rawValue,
+                   releaseCallback: nil,
+                   releaseInfo: nil
+               )!
+               self.context.scaleBy(x: actualScale, y: actualScale)
+
+        
         if clear {
             memset(self.bytes, 0, self.length)
         }
@@ -242,7 +256,17 @@ public class DrawingContext {
     }
     
     public func generateImage() -> CGImage? {
-        if let image = CGImage(width: Int(scaledSize.width), height: Int(scaledSize.height), bitsPerComponent: 8, bitsPerPixel: 32, bytesPerRow: bytesPerRow, space: deviceColorSpace, bitmapInfo: bitmapInfo, provider: provider!, decode: nil, shouldInterpolate: false, intent: .defaultIntent) {
+        if let image = CGImage(width: Int(scaledSize.width),
+                               height: Int(scaledSize.height),
+                               bitsPerComponent: self.context.bitsPerComponent,
+                               bitsPerPixel: self.context.bitsPerPixel,
+                               bytesPerRow: self.context.bytesPerRow,
+                               space: DeviceGraphicsContextSettings.shared.colorSpace,
+                               bitmapInfo: self.context.bitmapInfo,
+                               provider: provider!,
+                               decode: nil,
+                               shouldInterpolate: true,
+                               intent: .defaultIntent) {
             return image
         } else {
             return nil

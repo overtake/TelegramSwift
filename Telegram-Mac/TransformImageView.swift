@@ -114,11 +114,9 @@ open class TransformImageView: NSView {
         }
         
         let result = combine |> map { data, arguments -> TransformImageResult in
-            autoreleasepool {
-                let context = data.execute(arguments, data.data)
-                let image = context?.generateImage()
-                return TransformImageResult(image, context?.isHighQuality ?? false)
-            }
+            let context = data.execute(arguments, data.data)
+            let image = context?.generateImage()
+            return TransformImageResult(image, context?.isHighQuality ?? false)
         } |> deliverOnMainQueue
         
         self.disposable.set(result.start(next: { [weak self] result in

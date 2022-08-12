@@ -12,7 +12,7 @@ import TelegramCore
 
 class EBlockItem: TableRowItem {
 
-    var _stableId:Int64 = Int64(arc4random())
+    private let _stableId:AnyHashable
     override var stableId: AnyHashable {
         return _stableId
     }
@@ -27,8 +27,9 @@ class EBlockItem: TableRowItem {
     var selectHandler:(String)->Void = {_ in}
     let segment: EmojiSegment
     
-    public init(_ initialSize:NSSize, attrLines:[[NSAttributedString]], segment: EmojiSegment, account: Account, selectHandler:@escaping(String)->Void) {
+    public init(_ initialSize:NSSize, stableId: AnyHashable, attrLines:[[NSAttributedString]], segment: EmojiSegment, account: Account, selectHandler:@escaping(String)->Void) {
         self.lineAttr = attrLines
+        self._stableId = stableId
         self.account = account
         self.segment = segment
         self.selectHandler = selectHandler

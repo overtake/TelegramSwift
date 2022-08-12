@@ -100,7 +100,7 @@ final class SoftwareVideoLayerFrameManager {
         
         self.dataDisposable.set((firstReady |> deliverOn(applyQueue)).start(next: { [weak self] path in
             if let strongSelf = self {
-                let _ = strongSelf.source.swap(SoftwareVideoSource(path: path, hintVP9: strongSelf.hintVP9))
+                let _ = strongSelf.source.swap(SoftwareVideoSource(path: path, hintVP9: strongSelf.hintVP9, unpremultiplyAlpha: true))
             }
         }))
     }

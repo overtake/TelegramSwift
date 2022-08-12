@@ -17,6 +17,7 @@ public enum LinkType {
     case hashtag
     case command
     case stickerPack
+    case emojiPack
     case inviteLink
     case code
 }
@@ -329,7 +330,7 @@ public final class TextViewLayout : Equatable {
     public var selectedRange:TextSelectedRange
     public var additionalSelections:[TextSelectedRange] = []
     public var penFlush:CGFloat
-    public var insets:NSSize = NSZeroSize
+    fileprivate var insets:NSSize = NSZeroSize
     public fileprivate(set) var lines:[TextViewLine] = []
     public fileprivate(set) var isPerfectSized:Bool = true
     public var maximumNumberOfLines:Int32
@@ -349,7 +350,7 @@ public final class TextViewLayout : Equatable {
     fileprivate var hexColorsRect: [(NSRect, NSColor, String)] = []
     fileprivate var toolTipRects:[NSRect] = []
     private let disableTooltips: Bool
-    fileprivate var isBigEmoji: Bool = false
+    public fileprivate(set) var isBigEmoji: Bool = false
     fileprivate let spoilers:[Spoiler]
     private let onSpoilerReveal: ()->Void
     public private(set) var embeddedItems: [EmbeddedItem] = []
@@ -393,6 +394,8 @@ public final class TextViewLayout : Equatable {
         self.isBigEmoji = isBigEmoji
         isPerfectSized = true
         
+        self.insets = .zero
+        
         let font: CTFont
         if attributedString.length != 0 {
             if let stringFont = attributedString.attribute(NSAttributedString.Key(kCTFontAttributeName as String), at: 0, effectiveRange: nil) {
@@ -415,6 +418,7 @@ public final class TextViewLayout : Equatable {
         
         var fontLineSpacing:CGFloat = floor(fontLineHeight * 0.12)
 
+        
         
         var maybeTypesetter: CTTypesetter?
         
@@ -481,8 +485,10 @@ public final class TextViewLayout : Equatable {
                 if !rawRightOffset.isEqual(to: secondaryRightOffset) {
                     rightOffset = ceil(secondaryRightOffset)
                 }
-                
-                embeddedItems.append(TextViewEmbeddedItem(range: NSMakeRange(startIndex, endIndex - startIndex + 1), frame: CGRect(x: min(leftOffset, rightOffset), y: descent - (ascent + descent), width: abs(rightOffset - leftOffset) + rightInset, height: ascent + descent), item: item))
+                                        
+                if rightOffset > leftOffset, abs(rightOffset - leftOffset) < 100 {
+                    embeddedItems.append(TextViewEmbeddedItem(range: NSMakeRange(startIndex, endIndex - startIndex), frame: CGRect(x: floor(min(leftOffset, rightOffset)), y: floor(descent - (ascent + descent)), width: floor(abs(rightOffset - leftOffset) + rightInset), height: floor(ascent + descent)), item: item))
+                }
             }
             
 
@@ -498,6 +504,9 @@ public final class TextViewLayout : Equatable {
             
             fontLineSpacing = isBigEmoji ? 0 : floor(fontLineHeight * 0.12)
             
+            if isBigEmoji {
+                lineOriginY += 2
+            }
             
             if attributedString.length > 0, let space = (attributedString.attribute(.preformattedPre, at: min(lastLineCharacterIndex, attributedString.length - 1), effectiveRange: nil) as? NSNumber), mayBlocked {
                 
@@ -548,20 +557,24 @@ public final class TextViewLayout : Equatable {
             
             
             let lineCharacterCount = CTTypesetterSuggestLineBreak(typesetter, lastLineCharacterIndex, Double(lineConstrainedWidth - breakInset))
-            let lineRange = CFRange(location: lastLineCharacterIndex, length: lineCharacterCount)
+            var lineRange = CFRange(location: lastLineCharacterIndex, length: lineCharacterCount)
 
             
             var lineHeight = fontLineHeight
             
             let lineString = attributedString.attributedSubstring(from: NSMakeRange(lastLineCharacterIndex, lineCharacterCount))
+            
             if lineString.string.containsEmoji, !isBigEmoji {
-                lineHeight += floor(fontDescent)
                 if first {
+                    lineHeight += floor(fontDescent)
                     lineOriginY += floor(fontDescent)
                 }
             }
             
+            
             if maximumNumberOfLines != 0 && lines.count == (Int(maximumNumberOfLines) - 1) && lineCharacterCount > 0 {
+                
+                
                 if first {
                     first = false
                 } else {
@@ -579,7 +592,7 @@ public final class TextViewLayout : Equatable {
                 } else {
                     var truncationTokenAttributes: [NSAttributedString.Key : Any] = [:]
                     truncationTokenAttributes[NSAttributedString.Key(kCTFontAttributeName as String)] = font
-                    truncationTokenAttributes[NSAttributedString.Key(kCTForegroundColorFromContextAttributeName as String)] = true as NSNumber
+                    truncationTokenAttributes[NSAttributedString.Key(kCTForegroundColorAttributeName as String)] = attributedString.attribute(.foregroundColor, at: min(lastLineCharacterIndex, attributedString.length - 1), effectiveRange: nil) as? NSColor ?? NSColor.black
                     let tokenString = "\u{2026}"
                     let truncatedTokenString = NSAttributedString(string: tokenString, attributes: truncationTokenAttributes)
                     let truncationToken = CTLineCreateWithAttributedString(truncatedTokenString)
@@ -594,12 +607,13 @@ public final class TextViewLayout : Equatable {
                     coreTextLine = CTLineCreateTruncatedLine(originalLine, Double(lineConstrainedWidth), truncationType, truncationToken) ?? truncationToken
                     isPerfectSized = false
                 }
-                
+                lineRange = CTLineGetStringRange(coreTextLine)
                 
                 let lineWidth = ceil(CGFloat(CTLineGetTypographicBounds(coreTextLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(coreTextLine)))
                 let lineFrame = CGRect(x: lineCutoutOffset, y: lineOriginY, width: lineWidth, height: lineHeight)
                 layoutSize.height += lineHeight + fontLineSpacing
                 layoutSize.width = max(layoutSize.width, lineWidth + lineAdditionalWidth)
+                
                 
                 attributedString.enumerateAttributes(in: NSMakeRange(lineRange.location, lineRange.length), options: []) { attributes, range, _ in
                     if let _ = attributes[.strikethroughStyle] {
@@ -608,7 +622,7 @@ public final class TextViewLayout : Equatable {
                         let upperX = ceil(CTLineGetOffsetForStringIndex(coreTextLine, range.location + range.length, nil))
                         let x = lowerX < upperX ? lowerX : upperX
                         strikethroughs.append(TextViewStrikethrough(color: color, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
-                    } else if let embeddedItem = (attributes[NSAttributedString.Key(rawValue: "TelegramEmbeddedItem")] as? AnyHashable ?? attributes[NSAttributedString.Key(rawValue: "Attribute__EmbeddedItem")] as? AnyHashable) {
+                    } else if let embeddedItem = attributes[NSAttributedString.Key(rawValue: "Attribute__EmbeddedItem")] as? AnyHashable {
                         var ascent: CGFloat = 0.0
                         var descent: CGFloat = 0.0
                         CTLineGetTypographicBounds(coreTextLine, &ascent, &descent, nil)
@@ -626,8 +640,7 @@ public final class TextViewLayout : Equatable {
                         isRTL = true
                     }
                 }
-                
-                lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush, isBlocked: isWasPreformatted, isRTL: isRTL, strikethrough: strikethroughs))
+                lines.append(TextViewLine(line: coreTextLine, frame: lineFrame, range: NSMakeRange(lineRange.location, lineRange.length), penFlush: self.penFlush, isBlocked: isWasPreformatted, isRTL: isRTL, strikethrough: strikethroughs, embeddedItems: embeddedItems))
                 
                 break
             } else {
@@ -663,11 +676,11 @@ public final class TextViewLayout : Equatable {
                             let upperX = ceil(CTLineGetOffsetForStringIndex(coreTextLine, range.location + range.length, nil))
                             let x = lowerX < upperX ? lowerX : upperX
                             strikethroughs.append(TextViewStrikethrough(color: color, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
-                        } else if let embeddedItem = (attributes[NSAttributedString.Key(rawValue: "TelegramEmbeddedItem")] as? AnyHashable ?? attributes[NSAttributedString.Key(rawValue: "Attribute__EmbeddedItem")] as? AnyHashable) {
+                        } else if let embeddedItem = attributes[NSAttributedString.Key(rawValue: "Attribute__EmbeddedItem")] as? AnyHashable {
                             var ascent: CGFloat = 0.0
                             var descent: CGFloat = 0.0
                             CTLineGetTypographicBounds(coreTextLine, &ascent, &descent, nil)
-                            
+                                                        
                             addEmbeddedItem(item: embeddedItem, line: coreTextLine, ascent: ascent, descent: descent, startIndex: range.location, endIndex: range.location + range.length)
                         }
 
@@ -726,6 +739,22 @@ public final class TextViewLayout : Equatable {
                 embeddedItems.append(EmbeddedItem(range: embeddedItem.range, rect: embeddedItem.frame.offsetBy(dx: line.frame.minX, dy: line.frame.minY), value: embeddedItem.item))
             }
         }
+        if lines.count == 1 {
+            let line = lines[0]
+            if !line.embeddedItems.isEmpty {
+                layoutSize.height += isBigEmoji ? 8 : 2
+            }
+//            if isBigEmoji {
+//                layoutSize.width += 5
+//            }
+        } else {
+            if isBigEmoji, let line = lines.last {
+                if !line.embeddedItems.isEmpty {
+                    layoutSize.height += 4
+                }
+             //   layoutSize.width += 5
+            }
+        }
 
         self.embeddedItems = embeddedItems
         
@@ -765,7 +794,7 @@ public final class TextViewLayout : Equatable {
             self.blockImage.0 = NSMakePoint(0, 0)
             
             layoutSize.width += 20
-            lines[0] = TextViewLine(line: lines[0].line, frame: lines[0].frame.offsetBy(dx: 0, dy: 2), range: lines[0].range, penFlush: self.penFlush)
+            lines[0] = TextViewLine(line: lines[0].line, frame: lines[0].frame.offsetBy(dx: 0, dy: 2), range: lines[0].range, penFlush: self.penFlush, strikethrough: lines[0].strikethrough, embeddedItems: lines[0].embeddedItems)
             layoutSize.height = rects.last!.maxY
         }
         
@@ -1555,8 +1584,6 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             
             
             
-            let textMatrix = ctx.textMatrix
-            let textPosition = ctx.textPosition
             let startPosition = focus(layout.layoutSize).origin
             
             
@@ -1590,26 +1617,40 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                     additionY -= 4
                 }
                                 
-                ctx.textPosition = CGPoint(x: penOffset, y: startPosition.y + line.frame.minY + additionY)
+                ctx.textPosition = CGPoint(x: penOffset + line.frame.minX, y: startPosition.y + line.frame.minY + additionY)
+                
                 
                 let glyphRuns = CTLineGetGlyphRuns(line.line) as NSArray
                 if glyphRuns.count != 0 {
                     for run in glyphRuns {
                         let run = run as! CTRun
                         let glyphCount = CTRunGetGlyphCount(run)
-                        CTRunDraw(run, ctx, CFRangeMake(0, glyphCount))
+                        let range = CTRunGetStringRange(run)
+                                                
+                        let under = line.embeddedItems.contains(where: { value in
+                            return value.range == NSMakeRange(range.location, range.length)
+                        })
+                        
+                        if !under {
+                            CTRunDraw(run, ctx, CFRangeMake(0, glyphCount))
+                        }
                     }
                 }
                 for strikethrough in line.strikethrough {
                     ctx.setFillColor(strikethrough.color.cgColor)
                     ctx.fill(NSMakeRect(strikethrough.frame.minX, line.frame.minY - line.frame.height / 2 + 2, strikethrough.frame.width, .borderSize))
                 }
+                
+//                for embeddedItem in line.embeddedItems {
+//                    ctx.clear(embeddedItem.frame.offsetBy(dx: ctx.textPosition.x, dy: ctx.textPosition.y).insetBy(dx: -1.5, dy: -1.5))
+//                }
 
                 // spoiler was here
             }
             for spoiler in layout.spoilerRects(!inAnimation) {
                 ctx.clear(spoiler)
             }
+            
         }
     }
     
@@ -1752,17 +1793,6 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     public func update(_ layout:TextViewLayout?, origin:NSPoint? = nil) -> Void {
         self.textLayout = layout
         
-        /*
-         
-         inkView = .init(textView: nil)
-         addSubview(inkView!)
-         let rect = NSMakeRect(0, 0, 50, 50)
-         
-         inkView?.frame = rect
-                 
-         inkView?.update(size: NSMakeSize(50, 50), color: .random, textColor: .random, rects: [rect], wordRects: [rect])
-
-         */
         
         self.updateInks(layout)
         
@@ -2081,6 +2111,10 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         embeddedContainer.addSubview(view)
     }
     
+    public func addEmbeddedLayer(_ layer: CALayer) {
+        embeddedContainer.layer?.addSublayer(layer)
+    }
+    
     public override func layout() {
         super.layout()
         self.visualEffect?.frame = bounds
@@ -2178,6 +2212,17 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 }
                 subview.isHidden = isHidden
     //            if subview
+            }
+            let sublayers = embeddedContainer.layer?.sublayers ?? []
+            for subview in sublayers {
+                var isHidden = false
+                loop: for rect in rects {
+                    if NSIntersectsRect(subview.frame, rect) {
+                        isHidden = true
+                        break loop
+                    }
+                }
+                subview.opacity = isHidden ? 0 : 1
             }
         }
     }

@@ -33,7 +33,7 @@ private final class ThemeCachedItem {
     }
 }
 
-private let cache:NSCache<NSString, ThemeCachedItem> = NSCache()
+private let cache:NSCache<NSNumber, ThemeCachedItem> = NSCache()
 
 private final class HorizontalThemeItem : GeneralRowItem {
     fileprivate let themeType: ThemeSource
@@ -120,8 +120,8 @@ private final class HorizontalThemeView : HorizontalRowView {
         }
         
         overlay.removeAllHandlers()
-        
-        var cachedData: InstallThemeSource? = cache.object(forKey: PhotoCacheKeyEntry.theme(item.themeType, item.theme.bubbled, .general).stringValue)?.source
+        let key = PhotoCacheKeyEntry.theme(item.themeType, item.theme.bubbled, .general)
+        var cachedData: InstallThemeSource? = cache.object(forKey: .init(value: key.hashValue))?.source
         
         overlay.set(handler: { [weak item] _ in
             if let cachedData = cachedData {
@@ -164,7 +164,8 @@ private final class HorizontalThemeView : HorizontalRowView {
             self?.imageView.setSignal(signal: .single(image), clearInstantly: true, animate: animated)
             self?.progressIndicator.isHidden = true
             cacheThemeThumb(image, source: item.themeType, bubbled: item.theme.bubbled)
-            cache.setObject(ThemeCachedItem(source: data), forKey: PhotoCacheKeyEntry.theme(item.themeType, item.theme.bubbled, .general).stringValue)
+            let key = PhotoCacheKeyEntry.theme(item.themeType, item.theme.bubbled, .general)
+            cache.setObject(ThemeCachedItem(source: data), forKey: .init(value: key.hashValue))
             cachedData = data
         }))
         

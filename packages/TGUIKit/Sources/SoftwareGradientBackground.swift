@@ -79,8 +79,8 @@ public func adjustSaturationInContext(context: DrawingContext, saturation: CGFlo
 }
 
 private func generateGradient(size: CGSize, colors: [NSColor], positions: [CGPoint], adjustSaturation: CGFloat = 1.0) -> CGImage {
-    let width = Int(size.width)
-    let height = Int(size.height)
+    let width = Int(max(1, size.width))
+    let height = Int(max(1, size.height))
 
 
     

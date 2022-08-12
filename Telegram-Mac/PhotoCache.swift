@@ -55,57 +55,102 @@ enum PhotoCacheKeyEntry : Hashable {
     case platformTheme(TelegramThemeSettings, TransformImageArguments, CGFloat, LayoutPositionFlags?)
     case messageId(stableId: Int64, TransformImageArguments, CGFloat, LayoutPositionFlags)
     case theme(ThemeSource, Bool, AppearanceThumbSource)
-
+    case emoji(String, CGFloat)
     func hash(into hasher: inout Hasher) {
-        hasher.combine(self.stringValue)
-    }
-    
-    var stringValue: NSString {
+        
         switch self {
         case let .avatar(peerId, rep, size, scale):
-            return "avatar-\(peerId.toInt64())-\(rep.resource.id.hashValue)-\(size.width)-\(size.height)-\(scale)".nsstring
+            hasher.combine("avatar")
+            hasher.combine(rep.resource.id.hashValue)
+            hasher.combine(peerId.toInt64())
+            hasher.combine(size.width)
+            hasher.combine(size.height)
+            hasher.combine(scale)
         case let .emptyAvatar(peerId, letters, color, size, scale):
-            return "emptyAvatar-\(peerId.toInt64())-\(letters)-\(color.hexString)-\(size.width)-\(size.height)-\(scale)".nsstring
+            hasher.combine("emptyAvatar")
+            hasher.combine(peerId.toInt64())
+            hasher.combine(color.hashValue)
+            hasher.combine(letters)
+            hasher.combine(size.width)
+            hasher.combine(size.height)
+            hasher.combine(scale)
         case let .media(media, transform, scale, layout):
-            var addition: String = ""
+            hasher.combine("media")
+            
             if let media = media as? TelegramMediaMap {
-                addition = "\(media.longitude)-\(media.latitude)"
+                hasher.combine(media.longitude)
+                hasher.combine(media.latitude)
             }
+            
             if let media = media as? TelegramMediaFile {
-                addition += "\(media.resource.id.stringRepresentation)-\(String(describing: media.resource.size))"
+                hasher.combine(media.resource.id.hashValue)
+                if let size = media.resource.size {
+                    hasher.combine(size)
+                }
                 #if !SHARE
                 if let fitz = media.animatedEmojiFitzModifier {
-                    addition += "fitz-\(fitz.rawValue)"
+                    hasher.combine(fitz.rawValue)
                 }
                 #endif
             }
-            return "media-\(String(describing: media.id?.id))-\(transform)-\(scale)-\(String(describing: layout?.rawValue))-\(addition)".nsstring
+            if let media = media.id {
+                hasher.combine(media.id)
+            }
+            hasher.combine(transform)
+            if let layout = layout {
+                hasher.combine(layout.rawValue)
+            }
+            hasher.combine(scale)
         case let .slot(slot, transform, scale):
-            return "slot-\(slot.left.hashValue)\(slot.center.hashValue)\(slot.right.hashValue)-\(transform)-\(scale)".nsstring
+            hasher.combine("slot")
+            hasher.combine(slot)
+            hasher.combine(transform)
+            hasher.combine(scale)
         case let .messageId(stableId, transform, scale, layout):
-            return "messageId-\(stableId)-\(transform)-\(scale)-\(layout.rawValue)".nsstring
+            hasher.combine("messageId")
+            hasher.combine(stableId)
+            hasher.combine(transform)
+            hasher.combine(scale)
+            hasher.combine(layout.rawValue)
         case let .theme(source, bubbled, thumbSource):
+            hasher.combine(bubbled)
+            
             switch source {
             case let .local(palette, cloud):
+                hasher.combine("theme-local")
                 if let settings = cloud?.effectiveSettings(for: palette) {
                     #if !SHARE
-                    return "theme-local-\(palette.name)-bubbled\(bubbled ? 1 : 0)-\(settings.desc)-\(thumbSource.rawValue)".nsstring
-                    #else
-                    return ""
+                    hasher.combine(palette.name)
+                    hasher.combine(settings.desc)
+                    hasher.combine(thumbSource.rawValue)
                     #endif
-                }   else {
-                    return "theme-local-\(palette.name)-bubbled\(bubbled ? 1 : 0)-\(palette.accent.argb)-\(thumbSource.rawValue)".nsstring
+                } else {
+                    hasher.combine(palette.name)
+                    hasher.combine(palette.accent.argb)
+                    hasher.combine(thumbSource.rawValue)
                 }
             case let .cloud(cloud):
-                return "theme-remote-\(cloud.id)\(String(describing: cloud.file?.id))-bubbled\(bubbled ? 1 : 0)-\(thumbSource.rawValue)".nsstring
+                hasher.combine("theme-local")
+                hasher.combine(cloud.id)
+                if let file = cloud.file {
+                    hasher.combine(file.fileId.id)
+                }
+                hasher.combine(thumbSource.rawValue)
             }
         case let .platformTheme(settings, arguments, scale, layout):
+            hasher.combine("platformTheme")
             #if !SHARE
-            return "theme-\(settings.desc)-\(arguments)-\(scale)-\(String(describing: layout?.rawValue))".nsstring
-            #else
-            return ""
+            hasher.combine(settings.desc)
+            hasher.combine(scale)
+            hasher.combine(arguments)
+            if let layout = layout {
+                hasher.combine(layout.rawValue)
+            }
             #endif
-            
+        case let .emoji(emoji, scale):
+            hasher.combine("emoji")
+            hasher.combine(emoji)
+            hasher.combine(scale)
         }
     }
     
@@ -182,6 +227,12 @@ enum PhotoCacheKeyEntry : Hashable {
             } else {
                 return false
             }
+        case let .emoji(emoji, scale):
+            if case .emoji(emoji, scale) = rhs {
+                return true
+            } else {
+                return false
+            }
         }
     }
 }
@@ -191,7 +242,7 @@ enum PhotoCacheKeyEntry : Hashable {
 private class PhotoCache {
     let memoryLimit:Int
     let maxCount:Int = 50
-    private var values:NSCache<NSString, PhotoCachedRecord> = NSCache()
+    private var values:NSCache<NSNumber, PhotoCachedRecord> = NSCache()
     
     init(_ memoryLimit:Int = 15) {
         self.memoryLimit = memoryLimit
@@ -199,7 +250,7 @@ private class PhotoCache {
     }
     
     fileprivate func cacheImage(_ image:CGImage, for key:PhotoCacheKeyEntry) {
-        self.values.setObject(PhotoCachedRecord(image: image, size: Int(image.backingSize.width * image.backingSize.height * 4)), forKey: key.stringValue)
+        self.values.setObject(PhotoCachedRecord(image: image, size: Int(image.backingSize.width * image.backingSize.height * 4)), forKey: .init(value: key.hashValue))
     }
     
     private func freeMemoryIfNeeded() {
@@ -207,12 +258,12 @@ private class PhotoCache {
     
     func cachedImage(for key:PhotoCacheKeyEntry) -> CGImage? {
         var image:CGImage? = nil
-        image = self.values.object(forKey: key.stringValue)?.image
+        image = self.values.object(forKey: .init(value: key.hashValue))?.image
         return image
     }
     
     func removeRecord(for key:PhotoCacheKeyEntry) {
-        self.values.removeObject(forKey: key.stringValue)
+        self.values.removeObject(forKey: .init(value: key.hashValue))
     }
     
     func clearAll() {
@@ -226,7 +277,7 @@ private let photosCache = PhotoCache(50)
 private let photoThumbsCache = PhotoCache(50)
 private let themeThums = PhotoCache(100)
 
-private let stickersCache = PhotoCache(500)
+private let stickersCache = PhotoCache(1000)
 
 
 func clearImageCache() -> Signal<Void, NoError> {
@@ -339,12 +390,21 @@ func cacheSlot(_ result: TransformImageResult, value: SlotMachineValue, argument
     }
 }
 
+func cacheEmoji(_ image: CGImage, emoji: String, scale: CGFloat) -> Void {
+    stickersCache.cacheImage(image, for: .emoji(emoji, scale))
+}
+func cachedEmoji(emoji: String, scale: CGFloat) -> CGImage? {
+    return stickersCache.cachedImage(for: .emoji(emoji, scale))
+}
+
 func cacheMedia(_ result: TransformImageResult, media: TelegramThemeSettings, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Void {
     if let image = result.image {
         let entry:PhotoCacheKeyEntry = .platformTheme(media, arguments, scale, positionFlags)
         photosCache.cacheImage(image, for: entry)
     }
 }
+
+
 
 func cacheMedia(_ result: TransformImageResult, messageId: Int64, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Void {
     
