@@ -239,11 +239,11 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             return .rejected
         }, with: self, for: .leftMouseUp, priority: .modal)
         
-        self.updateControls = SwiftSignalKit.Timer(timeout: 0.1, repeat: true, completion: { [weak self] in
-            self?.updateControlVisibility()
-        }, queue: .mainQueue())
-        
-        self.updateControls?.start()
+//        self.updateControls = SwiftSignalKit.Timer(timeout: 2.0, repeat: true, completion: { [weak self] in
+//            self?.updateControlVisibility()
+//        }, queue: .mainQueue())
+//
+//        self.updateControls?.start()
         
     }
     

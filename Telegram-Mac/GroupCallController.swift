@@ -819,7 +819,7 @@ final class GroupCallUIController : ViewController {
                 modernConfirm(for: window, account: account, peerId: nil, header: strings().voiceChatEndTitle, information: strings().voiceChatEndText, okTitle: strings().voiceChatEndOK, thridTitle: strings().voiceChatEndThird, thridAutoOn: false, successHandler: {
                     [weak self] result in
                     _ = self?.data.call.sharedContext.endGroupCall(terminate: result == .thrid).start()
-                })
+                }, appearance: darkPalette.appearance)
             } else {
                 _ = self.data.call.sharedContext.endGroupCall(terminate: false).start()
             }
@@ -912,7 +912,7 @@ final class GroupCallUIController : ViewController {
                                 f(true)
                             }, cancelHandler: {
                                 f(false)
-                            })
+                            }, appearance: darkPalette.appearance)
                         } else {
                             f(true)
                         }
@@ -1099,7 +1099,7 @@ final class GroupCallUIController : ViewController {
                         if let window = window {
                             showModalText(for: window, text: strings().voiceChatToastStop)
                         }
-                    })
+                    }, appearance: darkPalette.appearance)
                 } else {
                     showModalText(for: window, text: strings().voiceChatAlertRecording)
                 }

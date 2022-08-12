@@ -98,7 +98,20 @@ public extension NSAttributedString {
         
         return string
     }
-
+    var trimNewLinesToSpace: NSAttributedString {
+        
+        let string:NSMutableAttributedString = self.mutableCopy() as! NSMutableAttributedString
+        
+       
+        var range = string.string.nsstring.range(of: "\n")
+        while !string.string.isEmpty, range.location != NSNotFound {
+            string.replaceCharacters(in: range, with: " ")
+            range = string.string.nsstring.range(of: "\n")
+        }
+     
+        
+        return string
+    }
     
     
     var range:NSRange {
@@ -261,6 +274,9 @@ public extension NSPasteboard.PasteboardType {
     static var kUrl:NSPasteboard.PasteboardType {
         return NSPasteboard.PasteboardType(kUTTypeURL as String)
     }
+    static var kInApp:NSPasteboard.PasteboardType {
+        return NSPasteboard.PasteboardType("TelegramTextPboardType" as String)
+    }
     static var kFilenames:NSPasteboard.PasteboardType {
         return NSPasteboard.PasteboardType("NSFilenamesPboardType")
     }
@@ -342,13 +358,13 @@ public extension NSMutableAttributedString {
     }
     
     func fixEmojiesFont(_ fontSize: CGFloat) {
-        let nsString = self.string.nsstring
-        for i in 0 ..< min(nsString.length, 300) {
-            let sub = nsString.substring(with: NSMakeRange(i, 1))
-            if sub.containsOnlyEmoji, let font = NSFont(name: "AppleColorEmoji", size: fontSize) {
-                self.addAttribute(.font, value: font, range: NSMakeRange(i, 1))
-            }
-        }
+//        let nsString = self.string.nsstring
+//        for i in 0 ..< min(nsString.length, 300) {
+//            let sub = nsString.substring(with: NSMakeRange(i, 1))
+//            if sub.containsOnlyEmoji, let font = NSFont(name: "AppleColorEmoji", size: fontSize) {
+//                self.addAttribute(.font, value: font, range: NSMakeRange(i, 1))
+//            }
+//        }
     }
     
     func add(link:Any, for range:NSRange, color: NSColor = presentation.colors.link)  {
@@ -387,7 +403,21 @@ public extension CALayer {
         self.add(animation, forKey: "backgroundColor")
     }
     
-
+    func animatePath() {
+        let animation = CABasicAnimation(keyPath: "path")
+        animation.duration = 0.2
+        self.add(animation, forKey: "path")
+    }
+    func animateShadow() {
+        let animation = CABasicAnimation(keyPath: "shadowPath")
+        animation.duration = 0.2
+        self.add(animation, forKey: "shadowPath")
+    }
+    func animateFrameFast() {
+        let animation = CABasicAnimation(keyPath: "frame")
+        animation.duration = 0.2
+        self.add(animation, forKey: "frame")
+    }
     
     func animateBorder() ->Void {
         let animation = CABasicAnimation(keyPath: "borderWidth")
@@ -399,6 +429,11 @@ public extension CALayer {
         let animation = CABasicAnimation(keyPath: "borderColor")
         animation.duration = 0.2
         self.add(animation, forKey: "borderColor")
+    }
+    func animateCornerRadius() ->Void {
+        let animation = CABasicAnimation(keyPath: "cornerRadius")
+        animation.duration = 0.2
+        self.add(animation, forKey: "cornerRadius")
     }
     
     func animateContents() ->Void {
@@ -1466,6 +1501,14 @@ public extension NSRange {
     func indexIn(_ index: Int) -> Bool {
         return NSLocationInRange(index, self)
     }
+    init(string: String, range: Range<String.Index>) {
+        let utf8 = string.utf16
+
+        let location = utf8.distance(from: utf8.startIndex, to: range.lowerBound)
+        let length = utf8.distance(from: range.lowerBound, to: range.upperBound)
+
+        self.init(location: location, length: length)
+    }
 }
 
 public extension NSBezierPath {
@@ -1969,6 +2012,28 @@ public func performSubviewRemoval(_ view: NSView, animated: Bool, duration: Doub
         }
     } else {
         view.removeFromSuperview()
+    }
+}
+
+public func performSublayerRemoval(_ view: CALayer, animated: Bool, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut, checkCompletion: Bool = false, scale: Bool = false, scaleTo: CGFloat? = nil, completed:((Bool)->Void)? = nil) {
+    if animated {
+        view.animateAlpha(from: 1, to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak view] finish in
+            completed?(finish)
+            if checkCompletion {
+                if finish {
+                    view?.removeFromSuperlayer()
+                }
+            } else {
+                view?.removeFromSuperlayer()
+            }
+        })
+        if scale {
+            view.animateScaleCenter(from: 1, to: 0.1, duration: duration, removeOnCompletion: false, timingFunction: timingFunction)
+        } else if let scaleTo = scaleTo {
+            view.animateScaleCenter(from: 1, to: scaleTo, duration: duration, removeOnCompletion: false, timingFunction: timingFunction)
+        }
+    } else {
+        view.removeFromSuperlayer()
     }
 }
 

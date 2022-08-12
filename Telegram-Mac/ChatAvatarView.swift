@@ -28,9 +28,9 @@ final class ChatAvatarView : Control {
         addSubview(avatar)
     }
     
-    func setPeer(context: AccountContext, peer: Peer, message: Message? = nil, size: NSSize? = nil) {
+    func setPeer(context: AccountContext, peer: Peer, message: Message? = nil, size: NSSize? = nil, force: Bool = false) {
         self.avatar.setPeer(account: context.account, peer: peer, message: message, size: size)
-        if peer.isPremium {
+        if peer.isPremium || force {
             let signal = peerPhotos(context: context, peerId: peer.id) |> deliverOnMainQueue
             disposable.set(signal.start(next: { [weak self] photos in
                 self?.updatePhotos(photos, context: context, peer: peer)
@@ -134,7 +134,7 @@ final class ChatAvatarView : Control {
         NotificationCenter.default.removeObserver(self)
     }
     deinit {
-        removeNotificationListeners()
+        NotificationCenter.default.removeObserver(self)
     }
     
     required init?(coder: NSCoder) {

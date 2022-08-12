@@ -527,7 +527,7 @@ open class ViewController : NSObject {
     }
     
     open var isOnScreen: Bool {
-        return self.navigationController?.controller == self
+        return self.navigationController?.controller == self && !hasModals()
     }
     
     open func executeReturn() -> Void {

@@ -12,7 +12,7 @@ import TGUIKit
 
 class GeneralInteractedRowView: GeneralRowView {
         
-    private let containerView: GeneralRowContainerView = GeneralRowContainerView(frame: NSZeroRect)
+    let containerView: GeneralRowContainerView = GeneralRowContainerView(frame: NSZeroRect)
     private(set) var switchView:SwitchView?
     private(set) var progressView: ProgressIndicator?
     private(set) var textView:TextView?
@@ -21,6 +21,7 @@ class GeneralInteractedRowView: GeneralRowView {
     
     private var badgeView: View?
     
+    private var rightIconView: ImageView?
     
     override func set(item:TableRowItem, animated:Bool = false) {
         
@@ -146,7 +147,21 @@ class GeneralInteractedRowView: GeneralRowView {
                 self.progressView = nil
             }
 
-
+            if let rightIcon = item.rightIcon {
+                let current: ImageView
+                if let view = rightIconView {
+                    current = view
+                } else {
+                    current = ImageView()
+                    self.rightIconView = current
+                    containerView.addSubview(current)
+                }
+                current.image = rightIcon
+                current.sizeToFit()
+            } else if let view = rightIconView {
+                performSubviewRemoval(view, animated: animated)
+                self.rightIconView = nil
+            }
         }
         super.set(item: item, animated: animated)
         
@@ -452,7 +467,7 @@ class GeneralInteractedRowView: GeneralRowView {
                 if let descriptionView = self.descriptionView {
                     descriptionView.setFrameOrigin(innerInsets.left + textXAdditional, containerView.frame.height - descriptionView.frame.height - innerInsets.bottom)
                 }
-                let nextInset = nextView.isHidden ? 0 : nextView.frame.width + 6
+                var nextInset = nextView.isHidden ? 0 : nextView.frame.width + 6
                 
                 if let switchView = switchView {
                     switchView.centerY(x: containerView.frame.width - innerInsets.right - switchView.frame.width - nextInset, addition: -1)
@@ -469,6 +484,9 @@ class GeneralInteractedRowView: GeneralRowView {
                         textView.setFrameOrigin(textView.frame.minX, textView.frame.minY - 1)
                     }
                 }
+                if let textView = textView {
+                    nextInset += textView.frame.width + 10
+                }
                 nextView.centerY(x: containerView.frame.width - innerInsets.right - nextView.frame.width, addition: -1)
                 if let progressView = progressView {
                     progressView.centerY(x: containerView.frame.width - innerInsets.right - progressView.frame.width, addition: -1)
@@ -476,6 +494,10 @@ class GeneralInteractedRowView: GeneralRowView {
                 
                 if let badgeView = badgeView {
                     badgeView.centerY(x: containerView.frame.width - innerInsets.right - badgeView.frame.width - nextInset, addition: -1)
+                }
+                
+                if let imageView = self.rightIconView {
+                    imageView.centerY(x: containerView.frame.width - imageView.frame.width - nextInset - 10)
                 }
             }
         }

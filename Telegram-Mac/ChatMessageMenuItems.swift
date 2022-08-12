@@ -268,7 +268,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             }, itemImage: MenuAnimation.menu_send_now.value))
             firstBlock.append(ContextMenuItem(strings().chatContextScheduledReschedule, handler: {
                 showModal(with: DateSelectorModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), mode: .schedule(peer.id), selectedAt: { date in
-                    _ = showModalProgress(signal: context.engine.messages.requestEditMessage(messageId: messageId, text: data.message.text, media: .keep, entities: data.message.textEntities, scheduleTime: Int32(min(date.timeIntervalSince1970, Double(scheduleWhenOnlineTimestamp)))), for: context.window).start()
+                    _ = showModalProgress(signal: context.engine.messages.requestEditMessage(messageId: messageId, text: data.message.text, media: .keep, entities: data.message.textEntities, inlineStickers: data.message.associatedMedia, scheduleTime: Int32(min(date.timeIntervalSince1970, Double(scheduleWhenOnlineTimestamp)))), for: context.window).start()
                }), for: context.window)
             }, itemImage: MenuAnimation.menu_schedule_message.value))
         }
@@ -323,6 +323,27 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 }, itemImage: MenuAnimation.menu_view_replies.value))
             }
         }
+        
+        if let attr = message.textEntities {
+            var reference:StickerPackReference? = attr.entities.compactMap({ value in
+                if case let .CustomEmoji(reference, _) = value.type {
+                    return reference
+                } else {
+                    return nil
+                }
+            }).first
+            
+            if reference == nil {
+                reference = (message.associatedMedia.first?.value as? TelegramMediaFile)?.emojiReference
+            }
+            
+            if let reference = reference {
+                thirdBlock.append(ContextMenuItem(strings().chatContextViewEmojiSet, handler: {
+                    showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: .emoji(reference)), for: context.window)
+                }, itemImage: MenuAnimation.menu_smile.value))
+            }
+        }
+
         
         if !data.message.isCopyProtected() {
             if let textLayout = data.textLayout?.0 {
@@ -597,7 +618,8 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 }
             }
         }
-
+        
+     
         
         if let resourceData = data.resourceData, !protected, !isService {
             if let file = data.file {
@@ -626,7 +648,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     
                     if let reference = file.stickerReference {
                         thirdBlock.append(ContextMenuItem(strings().contextViewStickerSet, handler: {
-                            showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for: context.window)
+                            showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: .stickers(reference)), for: context.window)
                         }, itemImage: MenuAnimation.menu_view_sticker_set.value))
                     }
                     

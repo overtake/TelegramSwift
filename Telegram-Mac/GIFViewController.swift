@@ -106,7 +106,7 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
    let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right, { entry -> TableRowItem in
         switch entry {
         case let .contextMediaResult(collection, row, index):
-            return ContextMediaRowItem(initialSize, row, index, context, ContextMediaArguments(sendResult: { result, view in
+            return ContextMediaRowItem(initialSize, row, index, context, ContextMediaArguments(sendResult: { _, result, view in
                 if let collection = collection {
                     arguments?.sendInlineResult(collection, result, view)
                 } else {
@@ -158,9 +158,14 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
             }))
         case let .separator(string, _, _):
             return SeparatorRowItem(initialSize, entry.stableId, string: string)
-        case let .emoji(clues, selected, _, _):
-            return ContextClueRowItem(initialSize, stableId: entry.stableId, context: context, clues: clues, selected: selected, canDisablePrediction: false, callback: { emoji in
-                arguments?.searchBySuggestion(emoji)
+        case let .emoji(clues, animated, selected, _, _):
+            return ContextClueRowItem(initialSize, stableId: entry.stableId, context: context, clues: clues, animated: animated, selected: selected, canDisablePrediction: false, callback: { emoji in
+                switch emoji {
+                case let .emoji(emoji):
+                    arguments?.searchBySuggestion(emoji)
+                default:
+                    break
+                }
             })
         default:
             fatalError()
@@ -530,6 +535,7 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         let previous:Atomic<[InputContextEntry]> = Atomic(value: [])
         let initialSize = self.atomicSize
         let context = self.context
+        let mode = self.mode
         
         struct SearchGifsState {
             var request: String
@@ -543,7 +549,6 @@ class GIFViewController: TelegramGenericViewController<TableContainer>, Notifabl
         
         let searchState:Atomic<SearchGifsState> = Atomic(value: SearchGifsState(request: "", state: .None, values: [], nextOffset: "", tab: .recent))
         
-        let mode = self.mode
         
         let signal = combineLatest(queue: prepareQueue, context.account.postbox.combinedView(keys: [.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)]), self.searchValue.get(), tabsState.get(), loadNext.get()) |> mapToSignal { view, search, selectedTab, _ -> Signal<(TableUpdateTransition, GifTabEntryId), NoError> in
             

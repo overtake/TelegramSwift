@@ -16,14 +16,12 @@ class ForwardPanelModel: ChatAccessoryModel {
     
     
     
-    private let account:Account
     private let forwardMessages:[Message]
     private let hideNames: Bool
-    init(forwardMessages:[Message], hideNames: Bool, account:Account) {
-        self.account = account
+    init(forwardMessages:[Message], hideNames: Bool, context: AccountContext) {
         self.forwardMessages = forwardMessages
         self.hideNames = hideNames
-        super.init()
+        super.init(context: context)
         self.make()
     }
     deinit {
@@ -51,7 +49,7 @@ class ForwardPanelModel: ChatAccessoryModel {
         
         
         for message in forwardMessages {
-            if let author = message.chatPeer(account.peerId) {
+            if let author = message.chatPeer(context.peerId) {
                 if !used.contains(author.id) {
                     used.insert(author.id)
                     if author.isChannel {
@@ -66,24 +64,24 @@ class ForwardPanelModel: ChatAccessoryModel {
         //hideNames ? strings().chatInputForwardHidden :  names.joined(separator: ", ")
         
         let text = hideNames ? strings().chatAccessoryHiddenCountable(forwardMessages.count) : strings().chatAccessoryForwardCountable(forwardMessages.count)
-        self.headerAttr = NSAttributedString.initialize(string: text, color: theme.colors.accent, font: .medium(.text))
+        self.header = .init(.initialize(string: text, color: theme.colors.accent, font: .medium(.text)), maximumNumberOfLines: 1)
         if forwardMessages.count == 1, !forwardMessages[0].text.isEmpty, forwardMessages[0].media.isEmpty {
             let text: String
-            let messageText = chatListText(account: account, for: forwardMessages[0]).string
-            if forwardMessages[0].effectiveAuthor?.id == account.peerId {
+            let messageText = chatListText(account: context.account, for: forwardMessages[0]).string
+            if forwardMessages[0].effectiveAuthor?.id == context.peerId {
                 text = "\(strings().chatAccessoryForwardYou): \(messageText)"
             } else if let author = forwardMessages[0].effectiveAuthor {
                 text = "\(author.displayTitle): \(messageText)"
             } else {
                 text = messageText
             }
-            self.messageAttr = NSAttributedString.initialize(string: text, color: theme.colors.grayText, font: .normal(.text))
+            self.message = .init(.initialize(string: text, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
         } else {
             let authors = uniquePeers(from: forwardMessages.compactMap { $0.effectiveAuthor })
             let messageText = authors.map { $0.compactDisplayTitle }.joined(separator: ", ")
             let text = "\(strings().chatAccessoryForwardFrom): \(messageText)"
 
-            self.messageAttr = NSAttributedString.initialize(string: text, color: theme.colors.grayText, font: .normal(.text))
+            self.message = .init(.initialize(string: text, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
         }
 
         nodeReady.set(.single(true))

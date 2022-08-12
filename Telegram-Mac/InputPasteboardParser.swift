@@ -16,7 +16,7 @@ import TGUIKit
 class InputPasteboardParser: NSObject {
 
     
-     public class func getPasteboardUrls(_ pasteboard: NSPasteboard) -> Signal<[URL], NoError> {
+    public class func getPasteboardUrls(_ pasteboard: NSPasteboard, context: AccountContext) -> Signal<[URL], NoError> {
         let items = pasteboard.pasteboardItems
         
         if let items = items, !items.isEmpty {
@@ -57,10 +57,10 @@ class InputPasteboardParser: NSObject {
             
             
             files = files.filter { path -> Bool in
-                if let size = fs(path.path) {
-                    return size <= 2000 * 1024 * 1024
+                if let size = fileSize(path.path) {
+                    let exceed = fileSizeLimitExceed(context: context, fileSize: size)
+                    return exceed
                 }
-                
                 return false
             }
             
@@ -76,7 +76,7 @@ class InputPasteboardParser: NSObject {
         return .single([])
     }
     
-    public class func canProccessPasteboard(_ pasteboard:NSPasteboard) -> Bool {
+    public class func canProccessPasteboard(_ pasteboard:NSPasteboard, context: AccountContext) -> Bool {
         let items = pasteboard.pasteboardItems
         
         if let items = items, !items.isEmpty {
@@ -107,9 +107,9 @@ class InputPasteboardParser: NSObject {
             
             files = files.filter { path -> Bool in
                 if let size = fileSize(path.path) {
-                    return size <= 2000 * 1024 * 1024
+                    let exceed = fileSizeLimitExceed(context: context, fileSize: size)
+                    return exceed
                 }
-                
                 return false
             }
             

@@ -61,11 +61,14 @@ public class TGClipView: NSClipView,CALayerDelegate {
     public var decelerationRate:CGFloat = 0.8
     
     
-    var isScrolling: Bool {
+    public var isScrolling: Bool {
         if let displayLink = displayLink {
             return CVDisplayLinkIsRunning(displayLink)
         }
         return false
+    }
+    public var destination: NSPoint? {
+        return self.destinationOrigin
     }
 
     override init(frame frameRect: NSRect) {
@@ -76,7 +79,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
         self.layerContentsRedrawPolicy = .never
       //  self.layer?.drawsAsynchronously = System.drawAsync
         //self.layer?.delegate = self
-        createDisplayLink()
+//        createDisplayLink()
 
     }
     
@@ -134,6 +137,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
     }
     
     private func createDisplayLink() {
+        if displayLink != nil {
+            return
+        }
         CVDisplayLinkCreateWithActiveCGDisplays(&displayLink)
         guard let displayLink = displayLink else {
             return
@@ -160,11 +166,11 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     
     func beginScroll() -> Void {
+        createDisplayLink()
         if let displayLink = displayLink {
             if (CVDisplayLinkIsRunning(displayLink)) {
                 return
             }
-            
             CVDisplayLinkStart(displayLink)
         }
         
@@ -189,7 +195,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
             }
             CVDisplayLinkStop(displayLink);
         }
-        
+        self.displayLink = nil
     }
 //    
 //    func easeInOutQuad (percentComplete: CGFloat, elapsedTimeMs: CGFloat, startValue: CGFloat, endValue: CGFloat, totalDuration: CGFloat) -> CGFloat {
@@ -257,22 +263,22 @@ public class TGClipView: NSClipView,CALayerDelegate {
     }
     
     override public func viewWillMove(toWindow newWindow: NSWindow?) {
-        if let w = newWindow {
-            
-            NotificationCenter.default.addObserver(self, selector: #selector(updateCVDisplay), name: NSWindow.didChangeScreenNotification, object: w)
-            
-        } else {
-            NotificationCenter.default.removeObserver(self, name: NSWindow.didChangeScreenNotification, object: self.window)
-        }
+//        if let w = newWindow {
+//
+//            NotificationCenter.default.addObserver(self, selector: #selector(updateCVDisplay), name: NSWindow.didChangeScreenNotification, object: w)
+//
+//        } else {
+//            NotificationCenter.default.removeObserver(self, name: NSWindow.didChangeScreenNotification, object: self.window)
+//        }
         
         super.viewWillMove(toWindow: newWindow)
     }
     
-    @objc func updateCVDisplay(_ notification:NSNotification? = nil) -> Void {
-        if let displayLink = displayLink, let _ = NSScreen.main {
-            CVDisplayLinkSetCurrentCGDisplay(displayLink, CGMainDisplayID());
-        }
-    }
+//    @objc func updateCVDisplay(_ notification:NSNotification? = nil) -> Void {
+//        if let displayLink = displayLink, let _ = NSScreen.main {
+//            CVDisplayLinkSetCurrentCGDisplay(displayLink, CGMainDisplayID());
+//        }
+//    }
     
     
     func scrollRectToVisible(_ rect: NSRect, animated: Bool) -> Bool {

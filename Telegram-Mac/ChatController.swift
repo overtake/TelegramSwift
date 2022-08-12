@@ -204,6 +204,8 @@ class ChatControllerView : View, ChatInputDelegate {
     
     let tableView:TableView
     
+    private var textInputSuggestionsView: InputSwapSuggestionsPanel?
+    
     
     var scroll: ScrollPosition {
         return self.tableView.scrollPosition().current
@@ -463,7 +465,7 @@ class ChatControllerView : View, ChatInputDelegate {
     
     private var previousHeight:CGFloat = 50
     func inputChanged(height: CGFloat, animated: Bool) {
-        updateFrame(self.frame, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+        updateFrame(self.frame, transition: animated && window != nil ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
     }
     
     required init?(coder: NSCoder) {
@@ -493,6 +495,7 @@ class ChatControllerView : View, ChatInputDelegate {
     
     func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
     
+        
         if let view = inputContextHelper.accessoryView {
             transition.updateFrame(view: view, frame: NSMakeRect(0, frame.height - inputView.frame.height - view.frame.height, frame.width, view.frame.height))
         }
@@ -560,7 +563,7 @@ class ChatControllerView : View, ChatInputDelegate {
             transition.updateFrame(view: themeSelectorView, frame: NSMakeRect(0, frame.height - themeSelectorView.frame.height, frame.width, themeSelectorView.frame.height))
         }
         
-        
+        self.textInputSuggestionsView?.updateRect(transition: transition)
         
         self.chatInteraction.updateFrame(frame, transition)
     }
@@ -714,6 +717,25 @@ class ChatControllerView : View, ChatInputDelegate {
         return .zero
     }
         
+    func updateTextInputSuggestions(_ files: [TelegramMediaFile], range: NSRange, animated: Bool) {
+        if !files.isEmpty {
+            let current: InputSwapSuggestionsPanel
+            let isNew: Bool
+            if let view = self.textInputSuggestionsView {
+                current = view
+                isNew = false
+            } else {
+                current = InputSwapSuggestionsPanel(self.inputView.textView, relativeView: self, window: chatInteraction.context.window, context: chatInteraction.context, chatInteraction: chatInteraction)
+                self.textInputSuggestionsView = current
+                isNew = true
+            }
+            current.apply(files, range: range, animated: animated, isNew: isNew)
+        } else if let view = self.textInputSuggestionsView {
+            view.close(animated: animated)
+            self.textInputSuggestionsView = nil
+        }
+    }
+    
     func updateMentionsCount(mentionsCount: Int32, reactionsCount: Int32, scrollerCount: Int32, animated: Bool) {
         if mentionsCount > 0 {
             if self.mentions == nil {
@@ -812,9 +834,10 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
                     if case .UnreadEntry = entry.appearance.entry {
                         if interaction.mode.isThreadMode {
                             offset = 44 - 6
-                        } else {
-                            offset - 6
                         }
+//                        else {
+//                            offset -= 6
+//                        }
                         scrollToItem = .top(id: entry.stableId, innerId: nil, animated: false, focus: .init(focus: false), inset: offset)
                         break
                     }
@@ -1251,6 +1274,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let suggestionsDisposable = MetaDisposable()
     private let sendAsPeersDisposable = MetaDisposable()
     private let startSecretChatDisposable = MetaDisposable()
+    private let inputSwapDisposable = MetaDisposable()
     private let searchState: ValuePromise<SearchMessagesResultState> = ValuePromise(SearchMessagesResultState("", []), ignoreRepeated: true)
     
     private let pollAnswersLoading: ValuePromise<[MessageId : ChatPollStateData]> = ValuePromise([:], ignoreRepeated: true)
@@ -1379,13 +1403,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     }
 
     func scrollUpOrToUnread() {
-        if let mentions = self.genericView.mentions {
-            mentions.send(event: .Click)
-        } else if let reactions = self.genericView.reactions {
-            reactions.send(event: .Click)
-        } else {
-            self.scrollup()
-        }
+        self.scrollup()
     }
     
     override func scrollup(force: Bool = false) -> Void {
@@ -1649,6 +1667,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        genericView.inputContextHelper.didScroll = { [weak self] in
+            self?.genericView.updateTextInputSuggestions([], range: NSMakeRange(0, 0), animated: true)
+        }
         
         genericView.tableView.addScroll(listener: emojiEffects.scrollUpdater)
         
@@ -2197,6 +2219,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.startRecording = { [weak self] hold, view in
             guard let chatInteraction = self?.chatInteraction else {return}
+            if hasModals(context.window) || hasPopover(context.window) {
+                return
+            }
             if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
                 if let last = slowMode.sendingIds.last {
                     chatInteraction.focusMessageId(nil, last, .CenterEmpty)
@@ -2206,6 +2231,16 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     return
                 }
             }
+            
+            if let cachedData = chatInteraction.presentation.cachedData as? CachedUserData, let peer = chatInteraction.presentation.mainPeer {
+                if !cachedData.voiceMessagesAvailable {
+                    if let view = self?.genericView.inputView.currentActionView {
+                        tooltip(for: view, text: strings().chatSendVoicePrivacyError(peer.compactDisplayTitle))
+                    }
+                    return
+                }
+            }
+            
             if chatInteraction.presentation.recordingState != nil || chatInteraction.presentation.state != .normal {
                 NSSound.beep()
                 return
@@ -2266,8 +2301,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                            
                         })
                     }
-                    
-                   
                 }
             }
         }
@@ -2382,7 +2415,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             
             if atDate == nil {
-                self.context.account.pendingUpdateMessageManager.add(messageId: state.message.id, text: inputState.inputText, media: state.editMedia, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities()), disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil)
+                self.context.account.pendingUpdateMessageManager.add(messageId: state.message.id, text: inputState.inputText, media: state.editMedia, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities()), inlineStickers: inputState.inlineMedia, disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil)
                 
                 self.chatInteraction.beginEditingMessage(nil)
                 self.chatInteraction.update({
@@ -2398,7 +2431,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
                 self.chatInteraction.update({$0.updatedUrlPreview(nil).updatedInterfaceState({$0.updatedEditState({$0?.withUpdatedLoadingState(state.editMedia == .keep ? .loading : .progress(0.2))})})})
                 
-                self.chatInteraction.editDisposable.set((context.engine.messages.requestEditMessage(messageId: state.message.id, text: inputState.inputText, media: state.editMedia, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities()), disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil, scheduleTime: scheduleTime) |> deliverOnMainQueue).start(next: { [weak self] progress in
+                self.chatInteraction.editDisposable.set((context.engine.messages.requestEditMessage(messageId: state.message.id, text: inputState.inputText, media: state.editMedia, entities: TextEntitiesMessageAttribute(entities: inputState.messageTextEntities()), inlineStickers: inputState.inlineMedia, disableUrlPreview: presentation.interfaceState.composeDisableUrlPreview != nil, scheduleTime: scheduleTime) |> deliverOnMainQueue).start(next: { [weak self] progress in
                     guard let `self` = self else {return}
                     switch progress {
                     case let .progress(progress):
@@ -3003,7 +3036,23 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             let process:()->Void = { [weak self] in
                 if let message = message {
-                    self?.chatInteraction.update({$0.withEditMessage(message)})
+                    self?.chatInteraction.update({ state in
+                        var state = state
+                        state = state.withEditMessage(message)
+                        if !context.isPremium && context.peerId != peerId {
+                            state = state.updatedInterfaceState { interfaceState in
+                                var interfaceState = interfaceState
+                                interfaceState = interfaceState.updatedEditState { editState in
+                                    if let editState = editState {
+                                        return editState.withUpdated(state: editState.inputState.withoutAnimatedEmoji)
+                                    }
+                                    return editState
+                                }
+                                return interfaceState
+                            }
+                        }
+                        return state
+                    })
                 } else {
                     self?.chatInteraction.cancelEditing(true)
                 }
@@ -3259,10 +3308,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 strongSelf.emojiEffects.addPremiumEffect(mirror: mirror, isIncoming: isIncoming, messageId: messageId, viewFrame: context.window.bounds, for: context.window.contentView!)
             }
         }
-        chatInteraction.runEmojiScreenEffect = { [weak self] emoji, messageId, mirror, isIncoming in
+        chatInteraction.runEmojiScreenEffect = { [weak self] emoji, message, mirror, isIncoming in
             guard let strongSelf = self else {
                 return
             }
+            FastSettings.markDiceAsPlayed(message)
+            let messageId = message.id
             if strongSelf.isOnScreen {
                 strongSelf.emojiEffects.addAnimation(emoji.fixed, index: nil, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: NSMakeSize(350, 350), viewFrame: context.window.bounds, for: context.window.contentView!)
             }
@@ -3622,7 +3673,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
                 strongSelf.shareContactDisposable.set((context.account.viewTracker.peerView(context.account.peerId) |> take(1)).start(next: { [weak strongSelf] peerView in
                     if let strongSelf = strongSelf, let peer = peerViewMainPeer(peerView) as? TelegramUser {
-                        _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil)), replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil), context: context, peerId: strongSelf.chatInteraction.peerId).start()
+                        _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil)), replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil), context: context, peerId: strongSelf.chatInteraction.peerId).start()
                     }
                 }))
             }
@@ -4397,6 +4448,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     
 
                     return present.withUpdatedLimitConfiguration(combinedInitialData.limitsConfiguration)
+                        .withUpdatedCachedData(combinedInitialData.cachedData)
                 })
             case .history, .preview:
                 self.chatInteraction.update(animated:false, { present in
@@ -4472,12 +4524,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }
                         }
                     }
-                    return present.withUpdatedLimitConfiguration(combinedInitialData.limitsConfiguration)
+                    return present.withUpdatedLimitConfiguration(combinedInitialData.limitsConfiguration)                        .withUpdatedCachedData(combinedInitialData.cachedData)
+
                 })
             case .scheduled:
                 if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
                     self.chatInteraction.update(animated:false, { present in
                         return present.withUpdatedCurrentSendAsPeerId(cachedData.sendAsPeerId)
+                            .withUpdatedCachedData(cachedData)
                     })
                 }
             case .pinned:
@@ -4689,7 +4743,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                         return present
                     }
-                    return presentation
+                    return presentation.withUpdatedCachedData(peerView?.cachedData)
                 })
             case .scheduled:
                 self.chatInteraction.update(animated: !first.swap(false), {  presentation in
@@ -4702,7 +4756,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if let cachedData = peerView?.cachedData as? CachedChannelData {
                         presentation = presentation.withUpdatedCurrentSendAsPeerId(cachedData.sendAsPeerId)
                     }
-                    return presentation
+                    return presentation.withUpdatedCachedData(peerView?.cachedData)
                 })
             case .pinned:
                 self.chatInteraction.update(animated: !first.swap(false), { presentation in
@@ -4712,7 +4766,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             return peerView.peers[peerView.peerId]
                         }
                         return nil
-                    }.updatedMainPeer(peerView != nil ? peerViewMainPeer(peerView!) : nil)
+                    }.updatedMainPeer(peerView != nil ? peerViewMainPeer(peerView!) : nil).withUpdatedCachedData(peerView?.cachedData)
                 })
             case .replyThread:
                 self.chatInteraction.update(animated: !first.swap(false), { [weak peerView] presentation in
@@ -4752,7 +4806,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 }
                             }
                         }
-                        return present
+                        return present.withUpdatedCachedData(peerView.cachedData)
                     }
                     return presentation
                 })
@@ -5439,12 +5493,20 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         if !isLoading {
             var items:[ChatRowItem] = []
+            var animatedEmojiItems:[ChatRowItem] = []
             self.genericView.tableView.enumerateVisibleItems(with: { item in
                 if let item = item as? ChatRowItem, let view = item.view {
                     if view.visibleRect == view.bounds {
-                        if let file = item.message?.media.first as? TelegramMediaFile, !file.noPremium, !context.premiumIsBlocked {
-                            items.append(item)
+                        if let file = item.message?.media.first as? TelegramMediaFile {
+                            if !file.noPremium, !context.premiumIsBlocked, file.isPremiumSticker {
+                                items.append(item)
+                            } else if file.isEmojiAnimatedSticker, file.isPremiumEmoji, let message = item.message {
+                                if message.globallyUniqueId != nil || message.flags.contains(.Incoming) {
+                                    animatedEmojiItems.append(item)
+                                }
+                            }
                         }
+                        
                     }
                 }
                 return true
@@ -5454,6 +5516,17 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if !FastSettings.diceHasAlreadyPlayed(message) {
                         let mirror = item.renderType == .list || message.isIncoming(item.context.account, item.renderType == .bubble)
                         chatInteraction.runPremiumScreenEffect(message, mirror, false)
+                    }
+                }
+            }
+            for item in animatedEmojiItems {
+                if let message = item.message {
+                    if !FastSettings.diceHasAlreadyPlayed(message) {
+                        let mirror = item.renderType == .list || message.isIncoming(item.context.account, item.renderType == .bubble)
+                        if let emoji = message.file?.stickerText {
+                            chatInteraction.runEmojiScreenEffect(emoji, message, mirror, false)
+                        }
+                        //emoji, messageId, mirror, isIncoming
                     }
                 }
             }
@@ -5954,6 +6027,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         peekDisposable.dispose()
         transcribeDisposable.dispose()
         startSecretChatDisposable.dispose()
+        inputSwapDisposable.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false
@@ -6035,6 +6109,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     text = strings().chatSendMessageSlowmodeError
                 case .tooMuchScheduled:
                     text = strings().chatSendMessageErrorTooMuchScheduled
+                case .voiceMessagesForbidden:
+                    let peer = strongSelf.chatInteraction.presentation.mainPeer
+                    text = strings().chatSendVoicePrivacyError(peer?.compactDisplayTitle ?? "")
                 }
                 confirm(for: context.window, information: text, cancelTitle: "", thridTitle: strings().genericErrorMoreInfo, successHandler: { [weak strongSelf] confirm in
                     guard let strongSelf = strongSelf else {return}
@@ -6649,7 +6726,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             if value.interfaceState.inputState != oldValue.interfaceState.inputState {
                 chatInteraction.saveState(false, scrollState: immediateScrollState())
-                
             }
             
             if value.interfaceState.forwardMessageIds != oldValue.interfaceState.forwardMessageIds {
@@ -6667,9 +6743,34 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 doneButton?.isHidden = value.selectionState == nil || value.reportMode != nil
                 editButton?.isHidden = value.selectionState != nil || value.reportMode != nil
             }
-            
-            if value.effectiveInput != oldValue.effectiveInput || value.botMenu != oldValue.botMenu || force {
-                if let (updatedContextQueryState, updatedContextQuerySignal) = contextQueryResultStateForChatInterfacePresentationState(chatInteraction.presentation, context: self.context, currentQuery: self.contextQueryState?.0) {
+            let input = value.effectiveInput
+            if input != oldValue.effectiveInput || value.botMenu != oldValue.botMenu || force {
+                
+                let textInputContextState = textInputStateContextQueryRangeAndType(input, includeContext: false)
+                
+                var cleanup = true
+                
+                if let textInputContextState = textInputContextState {
+                    if textInputContextState.1.contains(.swapEmoji) {
+                        let stringRange = textInputContextState.0
+                        let range = NSRange(string: input.inputText, range: stringRange)
+                        if !input.isAnimatedEmoji(at: range) {
+                            let query = String(input.inputText[stringRange])
+                            let signal = InputSwapSuggestionsPanelItems(query, peerId: chatInteraction.peerId, context: chatInteraction.context)
+                            |> deliverOnMainQueue
+                            self.inputSwapDisposable.set(signal.start(next: { [weak self] files in
+                                self?.genericView.updateTextInputSuggestions(files, range: range, animated: animated)
+                            }))
+                            cleanup = false
+                        }
+                    }
+                }
+                if cleanup {
+                    self.genericView.updateTextInputSuggestions([], range: NSMakeRange(0, 0), animated: animated)
+                    self.inputSwapDisposable.set(nil)
+                }
+                
+                if let (updatedContextQueryState, updatedContextQuerySignal) = contextQueryResultStateForChatInterfacePresentationState(value, context: self.context, currentQuery: self.contextQueryState?.0) {
                     self.contextQueryState?.1.dispose()
                     var inScope = true
                     var inScopeResult: ((ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult?)?
@@ -6916,10 +7017,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 var items:[DragItem] = []
                 
                 let list = list.filter { path -> Bool in
-                    if let size = fs(path) {
-                        return size <= 2000 * 1024 * 1024
+                    if let size = fileSize(path) {
+                        let exceed = fileSizeLimitExceed(context: context, fileSize: size)
+                        return exceed
                     }
-
                     return false
                 }
                 

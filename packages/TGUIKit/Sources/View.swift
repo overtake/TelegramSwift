@@ -254,6 +254,10 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
        // self.autoresizesSubviews = false
        // self.layerContentsRedrawPolicy = .onSetNeedsDisplay
        // self.layer?.drawsAsynchronously = System.drawAsync
+        if #available(macOS 10.15, *) {
+            self.layer?.cornerCurve = .continuous
+        }
+
     }
     
     override required public init(frame frameRect: NSRect) {
@@ -268,6 +272,10 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
       //  self.layer?.isOpaque = false
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
       //  self.layer?.drawsAsynchronously = System.drawAsync
+        if #available(macOS 10.15, *) {
+            self.layer?.cornerCurve = .continuous
+        }
+
     }
     
 //    open override var wantsDefaultClipping: Bool {

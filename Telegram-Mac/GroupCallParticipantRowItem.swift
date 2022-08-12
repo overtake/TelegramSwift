@@ -17,6 +17,7 @@ import AppKit
 private let fakeIcon = generateFakeIconReversed(foregroundColor: GroupCallTheme.customTheme.redColor, backgroundColor: GroupCallTheme.customTheme.backgroundColor)
 private let scamIcon = generateScamIconReversed(foregroundColor: GroupCallTheme.customTheme.redColor, backgroundColor: GroupCallTheme.customTheme.backgroundColor)
 private let verifyIcon = NSImage(named: "Icon_VerifyDialog")!.precomposed(GroupCallTheme.customTheme.accentColor)
+private let premiumIcon = NSImage(named: "Icon_Peer_Premium")!.precomposed(GroupCallTheme.customTheme.accentColor)
 
 final class GroupCallParticipantRowItem : GeneralRowItem {
     let data: PeerGroupCallData
@@ -172,15 +173,16 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         let isScam: Bool = peer.isScam
         let isFake: Bool = peer.isFake
         let verified: Bool = peer.isVerified
-        
-        
+        let isPremium: Bool = peer.isPremium
 
         if isScam {
             return (scamIcon, .zero)
         } else if isFake {
             return (fakeIcon, .zero)
         } else if verified {
-            return (verifyIcon, NSMakeSize(-4, -4))
+            return (verifyIcon, .zero)
+        } else if isPremium {
+            return (premiumIcon, .zero)
         } else {
             return nil
         }
@@ -216,11 +218,11 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
         }
         
         if isVertical {
-            titleLayout.measure(width: GroupCallTheme.smallTableWidth - 16 - 10)
+            titleLayout.measure(width: GroupCallTheme.smallTableWidth - 16 - 10 - (supplementIcon != nil ? 16 : 0))
         } else {
             let width = (data.isFullscreen && data.videoMode) ? GroupCallTheme.tileTableWidth - 20 : width - 20
             
-            titleLayout.measure(width: width - itemInset.left - itemInset.left - itemInset.right - (data.videoMode ? 0 : 28) - itemInset.right)
+            titleLayout.measure(width: width - itemInset.left - itemInset.left - itemInset.right - (data.videoMode ? 0 : 28) - itemInset.right - (supplementIcon != nil ? 16 : 0))
             statusLayout.measure(width: width - itemInset.left - itemInset.left - itemInset.right - (data.videoMode ? 0 : 28) - itemInset.right - inset)
         }
         

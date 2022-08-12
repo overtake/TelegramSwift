@@ -20,6 +20,7 @@ enum SelectivePrivacySettingsKind {
     case profilePhoto
     case forwards
     case phoneNumber
+    case voiceMessages
 }
 
 private enum SelectivePrivacySettingType {
@@ -315,6 +316,11 @@ private func selectivePrivacySettingsControllerEntries(kind: SelectivePrivacySet
         settingInfoText = strings().privacySettingsControllerPhoneCallDescription
         disableForText = strings().privacySettingsControllerNeverAllow
         enableForText = strings().privacySettingsControllerAlwaysAllow
+    case .voiceMessages:
+        settingTitle = strings().privacySettingsControllerVoiceMessagesHeader
+        settingInfoText = strings().privacySettingsControllerVoiceMessagesDescription
+        disableForText = strings().privacySettingsControllerNeverAllow
+        enableForText = strings().privacySettingsControllerAlwaysAllow
     case .profilePhoto:
         settingTitle = strings().privacySettingsControllerProfilePhotoWhoCanSeeMyPhoto
         settingInfoText = strings().privacySettingsControllerProfilePhotoCustomHelp
@@ -519,6 +525,9 @@ class SelectivePrivacySettingsController: TableViewController {
                 title = strings().privacySettingsControllerAlwaysAllow
             case .phoneNumber:
                 title = strings().privacySettingsControllerAlwaysShareWith
+            case .voiceMessages:
+                title = strings().privacySettingsControllerAlwaysAllow
+
             }
             var peerIds:[PeerId: SelectivePrivacyPeer] = [:]
             updateState { state in
@@ -552,6 +561,8 @@ class SelectivePrivacySettingsController: TableViewController {
             case .groupInvitations:
                 title = strings().privacySettingsControllerNeverAllow
             case .voiceCalls:
+                title = strings().privacySettingsControllerNeverAllow
+            case .voiceMessages:
                 title = strings().privacySettingsControllerNeverAllow
             case .profilePhoto:
                 title = strings().privacySettingsControllerNeverShareWith
@@ -640,6 +651,8 @@ class SelectivePrivacySettingsController: TableViewController {
                     type = .forwards
                 case .phoneNumber:
                     type = .phoneNumber
+                case .voiceMessages:
+                    type = .voiceMessages
                 }
                 
                 var updatePhoneDiscoverySignal: Signal<Void, NoError> = Signal.complete()
@@ -678,6 +691,8 @@ class SelectivePrivacySettingsController: TableViewController {
                     title = strings().privacySettingsForwards
                 case .phoneNumber:
                     title = strings().privacySettingsPhoneNumber
+                case .voiceMessages:
+                    title = strings().privacySettingsVoiceMessages
                 }
 
                 self?.setCenterTitle(title)

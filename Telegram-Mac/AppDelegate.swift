@@ -92,6 +92,22 @@ final class SharedApplicationContext {
     }
 }
 
+private final class CtxInstallLayer : SimpleLayer {
+    override init() {
+        super.init()
+        frame = NSMakeRect(0, 0, 1, 1)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func draw(in ctx: CGContext) {
+        DeviceGraphicsContextSettings.install(ctx)
+        self.removeFromSuperlayer()
+    }
+}
+
 
 @NSApplicationMain
 class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterDelegate, NSWindowDelegate {
@@ -172,7 +188,11 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         return contextValue?.context
     }
     
+    private var ctxLayer: CtxInstallLayer?
+    
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        
+      
         
         
         appDelegate = self
@@ -199,6 +219,14 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         window.contentView = v
         window.contentView?.autoresizingMask = [.width, .height]
         window.contentView?.autoresizesSubviews = true
+        
+        
+        let ctxLayer = CtxInstallLayer()
+        self.ctxLayer = ctxLayer
+        window.contentView?.layer?.addSublayer(ctxLayer)
+        
+        ctxLayer.setNeedsDisplay()
+        ctxLayer.display()
         
         let crashed = isCrashedLastTime(containerUrl.path)
         deinitCrashHandler(containerUrl.path)
@@ -396,6 +424,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         self.supportAccountContextValue?.enumerateApplicationContext(f)
     }
     
+    private var terminated = false
+    
     private func launchApp(accountManager: AccountManager<TelegramAccountManagerTypes>, encryptionParameters: ValueBoxEncryptionParameters, appEncryption: AppEncryptionParameters) {
         
         
@@ -413,9 +443,9 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         
         self.window.closeInterceptor = {
-            
-            self.currentContext?.bindings.rootNavigation().gotoEmpty(false)
-            
+            if !self.terminated {
+                self.currentContext?.bindings.rootNavigation().gotoEmpty(false)
+            }
             return false
         }
         
@@ -1267,6 +1297,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
     func applicationWillTerminate(_ notification: Notification) {
+        self.terminated = true
         deinitCrashHandler(containerUrl)
         
         #if !APP_STORE

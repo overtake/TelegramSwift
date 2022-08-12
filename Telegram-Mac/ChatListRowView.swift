@@ -40,8 +40,9 @@ private class ChatListDraggingContainerView : View {
                 let list = sender.draggingPasteboard.propertyList(forType: .kFilenames) as? [String]
                 if let item = item, let list = list {
                     let list = list.filter { path -> Bool in
-                        if let size = fs(path) {
-                            return size <= 2000 * 1024 * 1024
+                        if let size = fileSize(path) {
+                            let exceed = fileSizeLimitExceed(context: item.context, fileSize: size)
+                            return exceed
                         }
                         return false
                     }
@@ -232,8 +233,10 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     private let revealRightView: View = View()
     private var titleText:TextNode = TextNode()
-    private var messageText:TextNode = TextNode()
+    private var messageTextView:TextView? = nil
     
+    private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
+
         
     private var badgeView:View?
     private var additionalBadgeView:View?
@@ -248,7 +251,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer? 
 
-    private var hiddemMessage:Bool = false
+    private var hiddenMessage:Bool = false {
+        didSet {
+            if hiddenMessage != oldValue, let item = self.item {
+                self.set(item: item, animated: false)
+            }
+        }
+    }
     private let peerInputActivitiesDisposable:MetaDisposable = MetaDisposable()
     private var removeControl:ImageButton? = nil
     private var animatedView: RowAnimateView?
@@ -304,7 +313,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     activitiesModel?.clean()
                     activitiesModel?.view?.removeFromSuperview()
                     activitiesModel = nil
-                    self.hiddemMessage = false
+                    self.hiddenMessage = false
                     containerView.needsDisplay = true
                 } else if activitiesModel == nil {
                     activitiesModel = ChatActivitiesModel()
@@ -329,7 +338,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         if let item = self?.item as? ChatListRowItem, let displayLayout = item.ctxDisplayLayout {
                             self?.activitiesModel?.view?.setFrameOrigin(item.leftInset, displayLayout.0.size.height + item.margin + 3)
                         }
-                        self?.hiddemMessage = show
+                        self?.hiddenMessage = show
                         self?.containerView.needsDisplay = true
                     })
                 }
@@ -340,7 +349,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 activitiesModel?.clean()
                 activitiesModel?.view?.removeFromSuperview()
                 activitiesModel = nil
-                hiddemMessage = false
+                hiddenMessage = false
             }
         }
     }
@@ -419,6 +428,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     override func draw(_ layer: CALayer, in ctx: CGContext) {
 
         super.draw(layer, in: ctx)
+
+                
+       // NSLog("\(ctx.bytesPerRow), \(ctx.bitsPerComponent), \(ctx.bitsPerPixel), \(ctx.bitmapInfo), \(ctx.colorSpace)")
         
 //
          if let item = self.item as? ChatListRowItem {
@@ -467,36 +479,31 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     displayLayout.1.draw(NSMakeRect(item.leftInset + addition, item.margin - 1, displayLayout.0.size.width, displayLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                     
                     
-                    var mutedInset:CGFloat = item.isSecret ? theme.icons.secretImage.backingSize.width + 2 : 0
                     
                     if item.isVerified {
-                        ctx.draw(highlighted ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2 + mutedInset, item.margin, 16, 16))
-                        mutedInset += 17
+                        ctx.draw(highlighted ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin, 16, 16))
+                        addition += 17
                     }
                    
                     
-                    
                     if item.isScam || item.isFake {
-                        ctx.draw(highlighted ? item.badHighlightIcon : item.badIcon, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2 + mutedInset, item.margin + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
-                        mutedInset += item.badIcon.backingSize.width + 3
+                        ctx.draw(highlighted ? item.badHighlightIcon : item.badIcon, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
+                        addition += item.badIcon.backingSize.width + 3
                     }
                     
                     if item.isPremium {
-                        ctx.draw(highlighted ? theme.icons.premium_account_rev_active : theme.icons.premium_account_rev, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2 + mutedInset, item.margin, 16, 16))
-                        mutedInset += 17
+                        ctx.draw(highlighted ? theme.icons.premium_account_rev_active : theme.icons.premium_account_rev, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin, 16, 16))
+                        addition += 17
                     }
                     
                     var messageOffset: CGFloat = 0
-                    if let chatNameLayout = item.ctxChatNameLayout, !hiddemMessage {
+                    if let chatNameLayout = item.ctxChatNameLayout, !hiddenMessage {
                         chatNameLayout.1.draw(NSMakeRect(item.leftInset, displayLayout.0.size.height + item.margin + 2, chatNameLayout.0.size.width, chatNameLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                         messageOffset += chatNameLayout.0.size.height + 2
                     }
-                    if let messageLayout = item.ctxMessageLayout, !hiddemMessage {
-                        messageLayout.1.draw(NSMakeRect(item.leftInset, displayLayout.0.size.height + item.margin + 1 + messageOffset, messageLayout.0.size.width, messageLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
-                    }
                     
                     if item.isMuted {
-                        ctx.draw(highlighted ? theme.icons.dialogMuteImageSelected : theme.icons.dialogMuteImage, in: NSMakeRect(item.leftInset + displayLayout.0.size.width + 4 + mutedInset, item.margin + round((displayLayout.0.size.height - theme.icons.dialogMuteImage.backingSize.height) / 2.0) - 1, theme.icons.dialogMuteImage.backingSize.width, theme.icons.dialogMuteImage.backingSize.height))
+                        ctx.draw(highlighted ? theme.icons.dialogMuteImageSelected : theme.icons.dialogMuteImage, in: NSMakeRect(item.leftInset + displayLayout.0.size.width + 4 + addition, item.margin + round((displayLayout.0.size.height - theme.icons.dialogMuteImage.backingSize.height) / 2.0) - 1, theme.icons.dialogMuteImage.backingSize.width, theme.icons.dialogMuteImage.backingSize.height))
                     }
                     
                    
@@ -586,6 +593,73 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         expandView?.backgroundColor = theme.colors.grayBackground
     }
     
+    
+    private func updateListeners() {
+        let center = NotificationCenter.default
+        if let window = window {
+            center.removeObserver(self)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didBecomeKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self)
+        } else {
+            center.removeObserver(self)
+        }
+    }
+    
+    @objc func updateAnimatableContent() -> Void {
+        for (_, value) in inlineStickerItemViews {
+            if let superview = value.superview {
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow
+            }
+        }
+        updatePlayerIfNeeded()
+    }
+    
+    
+    func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
+        var validIds: [InlineStickerItemLayer.Key] = []
+        var index: Int = textView.hashValue
+
+        for item in textLayout.embeddedItems {
+            if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
+                
+                let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index)
+                validIds.append(id)
+                
+                let rect = item.rect.insetBy(dx: -1.5, dy: -1.5)
+                
+                let view: InlineStickerItemLayer
+                if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
+                    view = current
+                } else {
+                    self.inlineStickerItemViews[id]?.removeFromSuperlayer()
+                    view = InlineStickerItemLayer(context: context, emoji: emoji, size: rect.size)
+                    self.inlineStickerItemViews[id] = view
+                    view.superview = textView
+                    textView.addEmbeddedLayer(view)
+                }
+                index += 1
+                
+                view.isPlayable = NSIntersectsRect(rect, textView.visibleRect) && window != nil && window!.isKeyWindow
+                view.frame = rect
+            }
+        }
+        
+        var removeKeys: [InlineStickerItemLayer.Key] = []
+        for (key, itemLayer) in self.inlineStickerItemViews {
+            if !validIds.contains(key) {
+                removeKeys.append(key)
+                itemLayer.removeFromSuperlayer()
+            }
+        }
+        for key in removeKeys {
+            self.inlineStickerItemViews.removeValue(forKey: key)
+        }
+    }
+
+    
     private var videoRepresentation: TelegramMediaImage.VideoRepresentation?
 
     override func set(item:TableRowItem, animated:Bool = false) {
@@ -609,6 +683,26 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         
                 
          if let item = item as? ChatListRowItem {
+             
+             if let messageText = item.ctxMessageText, !hiddenMessage {
+                 let current: TextView
+                 if let view = self.messageTextView {
+                     current = view
+                 } else {
+                     current = TextView()
+                     current.userInteractionEnabled = false
+                     current.isSelectable = false
+                     self.messageTextView = current
+                     self.containerView.addSubview(current)
+                 }
+                 current.update(messageText)
+                 updateInlineStickers(context: item.context, view: current, textLayout: messageText)
+                 
+             } else if let view = self.messageTextView {
+                 self.messageTextView = nil
+                 performSubviewRemoval(view, animated: false)
+             }
+             
              
              if !item.photos.isEmpty {
                  
@@ -1644,16 +1738,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         updatePlayerIfNeeded()
     }
     
-    func updateListeners() {
-        if let window = window {
-            NotificationCenter.default.removeObserver(self)
-            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSWindow.didBecomeKeyNotification, object: window)
-            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSWindow.didResignKeyNotification, object: window)
-            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSView.boundsDidChangeNotification, object: item?.table?.clipView)
-        } else {
-            removeNotificationListeners()
-        }
-    }
+
     
     func removeNotificationListeners() {
         NotificationCenter.default.removeObserver(self)
@@ -1710,7 +1795,14 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     mediaPreviewOffset.x += mediaSize.width + contentImageSpacing
                 }
 
+                var messageOffset: CGFloat = 0
+                if let chatNameLayout = item.ctxChatNameLayout {
+                    messageOffset += chatNameLayout.0.size.height + 2
+                }
+                messageTextView?.setFrameOrigin(NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 1 + messageOffset))
             }
+            
+            
         }
     }
     

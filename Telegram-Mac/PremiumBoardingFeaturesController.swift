@@ -132,6 +132,14 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(premium_stickers)
         
+        let animated_emoji = PremiumFeatureSlideView(frame: slideView.bounds)
+        animated_emoji.setup(context: context, type: .animated_emoji, decoration: .swirlStars, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.animated_emoji.rawValue], position: .bottom)
+            return view
+        })
+        slideView.addSlide(animated_emoji)
+        
         let advanced_chat_management = PremiumFeatureSlideView(frame: slideView.bounds)
         advanced_chat_management.setup(context: context, type: .advanced_chat_management, decoration: .swirlStars, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
@@ -169,12 +177,14 @@ final class PremiumBoardingFeaturesView: View {
             slideView.displaySlide(at: 4, animated: false)
         case .premium_stickers:
             slideView.displaySlide(at: 5, animated: false)
-        case .advanced_chat_management:
+        case .animated_emoji:
             slideView.displaySlide(at: 6, animated: false)
-        case .profile_badge:
+        case .advanced_chat_management:
             slideView.displaySlide(at: 7, animated: false)
-        case .animated_userpics:
+        case .profile_badge:
             slideView.displaySlide(at: 8, animated: false)
+        case .animated_userpics:
+            slideView.displaySlide(at: 9, animated: false)
         default:
             break
         }

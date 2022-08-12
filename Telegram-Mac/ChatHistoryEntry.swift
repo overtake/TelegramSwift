@@ -467,36 +467,75 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         
         if message.media.isEmpty {
             if message.text.length <= 7 {
+                
+                let customRange: [(NSRange, Int64)] = message.textEntities?.entities.compactMap { entity in
+                    if case let .CustomEmoji(_, fileId) = entity.type {
+                        let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
+                        return (range, fileId)
+                    }
+                    return nil
+                } ?? []
+                
+                
                 let original = message.text.fixed
                 let unmodified = original.emojiUnmodified
-                if original.isSingleEmoji, let item = animatedEmojiStickers[unmodified] {
-                    var file = item.file
-                    var attributes = file.attributes
-                    attributes.removeAll { attr in
-                        if case .FileName = attr {
-                            return true
-                        } else {
-                            return false
+                
+                let fullCustom = customRange.first(where: { $0.0.intersection(NSMakeRange(0, message.text.length)) != nil })
+                
+                if original.isSingleEmoji, let custom = fullCustom {
+                    let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: custom.1)
+
+                    if let file = message.associatedMedia[mediaId] as? TelegramMediaFile {
+                        var file = file
+                        var attributes = file.attributes
+                        attributes.removeAll()
+                        attributes = attributes.map { attribute -> TelegramMediaFileAttribute in
+                            switch attribute {
+                            case let .CustomEmoji(_, alt, packReference):
+                                return .Sticker(displayText: alt, packReference: packReference, maskData: nil)
+                            default:
+                                return attribute
+                            }
                         }
-                    }
-                    attributes = attributes.map { attribute -> TelegramMediaFileAttribute in
-                        switch attribute {
-                        case let .Sticker(_, packReference, maskData):
-                            return .Sticker(displayText: original, packReference: packReference, maskData: maskData)
-                        default:
-                            return attribute
-                        }
-                    }
-                    var disableStickers: Bool = false
-                    if let peer = coreMessageMainPeer(message) as? TelegramChannel {
-                        if permissionText(from: peer, for: [.banSendGifs, .banSendStickers]) != nil {
-                            disableStickers = true
-                        }
-                    }
-                    if !disableStickers {
                         attributes.append(.FileName(fileName: "telegram-animoji.tgs"))
+                        attributes.append(.Sticker(displayText: original, packReference: nil, maskData: nil))
+                        
                         file = file.withUpdatedAttributes(attributes)
                         message = message.withUpdatedMedia([file])
+                            .withUpdatedText(original)
+                    }
+                }
+                
+                if original.isSingleEmoji, let item = animatedEmojiStickers[unmodified] {
+                    if fullCustom == nil {
+                        var file = item.file
+                        var attributes = file.attributes
+                        attributes.removeAll { attr in
+                            if case .FileName = attr {
+                                return true
+                            } else {
+                                return false
+                            }
+                        }
+                        attributes = attributes.map { attribute -> TelegramMediaFileAttribute in
+                            switch attribute {
+                            case let .Sticker(_, packReference, maskData):
+                                return .Sticker(displayText: original, packReference: packReference, maskData: maskData)
+                            default:
+                                return attribute
+                            }
+                        }
+                        var disableStickers: Bool = false
+                        if let peer = coreMessageMainPeer(message) as? TelegramChannel {
+                            if permissionText(from: peer, for: [.banSendGifs, .banSendStickers]) != nil {
+                                disableStickers = true
+                            }
+                        }
+                        if !disableStickers {
+                            attributes.append(.FileName(fileName: "telegram-animoji.tgs"))
+                            file = file.withUpdatedAttributes(attributes)
+                            message = message.withUpdatedMedia([file])
+                        }
                     }
                 }
             }
@@ -906,7 +945,8 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 media: message.media,
                 peers: message.peers,
                 associatedMessages: message.associatedMessages,
-                associatedMessageIds: message.associatedMessageIds
+                associatedMessageIds: message.associatedMessageIds,
+                associatedMedia: [:]
             )
             nextAdMessageId += 1
             

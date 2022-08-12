@@ -14,14 +14,12 @@ import SwiftSignalKit
 import Postbox
 class EditMessageModel: ChatAccessoryModel {
     
-    private var account:Account
     private(set) var state:ChatEditState
     private let fetchDisposable = MetaDisposable()
     private var previousMedia: Media?
-    init(state:ChatEditState, account:Account) {
-        self.account = account
+    init(state:ChatEditState, context: AccountContext) {
         self.state = state
-        super.init()
+        super.init(context: context)
         make(with: state.message)
     }
     
@@ -78,14 +76,23 @@ class EditMessageModel: ChatAccessoryModel {
         let attr = NSMutableAttributedString()
         _ = attr.append(string: strings().chatInputAccessoryEditMessage, color: theme.colors.accent, font: .medium(.text))
 
-        self.headerAttr = attr
-        self.messageAttr = .initialize(string: pullText(from:message) as String, color: message.media.isEmpty ? theme.colors.text : theme.colors.grayText, font: .normal(.text))
+        self.header = .init(attr, maximumNumberOfLines: 1)
+        
+        let messageAttr = NSMutableAttributedString()
+        let text = chatListText(account: context.account, for: message, isPremium: context.isPremium, isReplied: true)
+        
+        messageAttr.append(text)
+        messageAttr.addAttribute(.foregroundColor, value: message.media.isEmpty ? theme.colors.text : theme.colors.grayText, range: messageAttr.range)
+        messageAttr.addAttribute(.font, value: NSFont.normal(.text), range: messageAttr.range)
+        
+        self.message = .init(messageAttr, maximumNumberOfLines: 1)
         nodeReady.set(.single(true))
         updateImageIfNeeded()
         self.setNeedDisplay()
     }
     private func updateImageIfNeeded() {
-        if let view = self.view, view.frame != NSZeroRect {
+        if let view = self.view {
+            let account = context.account
             let message = self.state.message
             var updatedMedia: Media?
             var imageDimensions: CGSize?
@@ -135,13 +142,13 @@ class EditMessageModel: ChatAccessoryModel {
                 var updateImageSignal: Signal<ImageDataTransformation, NoError>?
                 if mediaUpdated {
                     if let image = updatedMedia as? TelegramMediaImage {
-                        updateImageSignal = chatMessagePhotoThumbnail(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: image), scale: view.backingScaleFactor)
+                        updateImageSignal = chatMessagePhotoThumbnail(account: account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: image), scale: view.backingScaleFactor)
                     } else if let file = updatedMedia as? TelegramMediaFile {
                         if file.isVideo {
-                            updateImageSignal = chatMessageVideoThumbnail(account: self.account, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: view.backingScaleFactor)
+                            updateImageSignal = chatMessageVideoThumbnail(account: account, fileReference: FileMediaReference.message(message: MessageReference(message), media: file), scale: view.backingScaleFactor)
                         } else if let iconImageRepresentation = smallestImageRepresentation(file.previewRepresentations) {
                             let tmpImage = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
-                            updateImageSignal = chatWebpageSnippetPhoto(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: tmpImage), scale: view.backingScaleFactor, small: true)
+                            updateImageSignal = chatWebpageSnippetPhoto(account: account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: tmpImage), scale: view.backingScaleFactor, small: true)
                         }
                     }
                 }
@@ -155,7 +162,7 @@ class EditMessageModel: ChatAccessoryModel {
                             }
                         })
                         if let media = media as? TelegramMediaImage, !media.isLocalResource {
-                            self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: self.account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media)).start())
+                            self.fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: account, imageReference: ImageMediaReference.message(message: MessageReference(message), media: media)).start())
                         }
                     }
                     view.imageView?.set(arguments: arguments)
@@ -175,6 +182,7 @@ class EditMessageModel: ChatAccessoryModel {
             self.view?.imageView?.removeFromSuperview()
             self.view?.imageView = nil
         }
+        self.view?.updateModel(self, animated: false)
     }
     
     

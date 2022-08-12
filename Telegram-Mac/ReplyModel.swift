@@ -14,7 +14,6 @@ import SwiftSignalKit
 import Postbox
 class ReplyModel: ChatAccessoryModel {
 
-    private let context:AccountContext
     private(set) var replyMessage:Message?
     private var disposable:MetaDisposable = MetaDisposable()
     private let isPinned:Bool
@@ -27,13 +26,12 @@ class ReplyModel: ChatAccessoryModel {
     private let customHeader: String?
     init(replyMessageId:MessageId, context: AccountContext, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, customHeader: String? = nil, drawLine: Bool = true, makesizeCallback: (()->Void)? = nil, dismissReply: (()->Void)? = nil) {
         self.isPinned = isPinned
-        self.context = context
         self.makesizeCallback = makesizeCallback
         self.autodownload = autodownload
         self.replyMessage = replyMessage
         self.headerAsName = headerAsName
         self.customHeader = customHeader
-        super.init(presentation: presentation, drawLine: drawLine)
+        super.init(context: context, presentation: presentation, drawLine: drawLine)
         
       
         let messageViewSignal: Signal<Message?, NoError> = context.account.postbox.messageView(replyMessageId)
@@ -59,7 +57,7 @@ class ReplyModel: ChatAccessoryModel {
        
     }
     
-    override var view: ChatAccessoryView? {
+    override weak var view:ChatAccessoryView? {
         didSet {
             updateImageIfNeeded()
         }
@@ -213,6 +211,7 @@ class ReplyModel: ChatAccessoryModel {
             self.view?.imageView?.removeFromSuperview()
             self.view?.imageView = nil
         }
+        self.view?.updateModel(self, animated: false)
     }
     
     func make(with message:Message?, isLoading: Bool = true, display: Bool) -> Void {
@@ -238,20 +237,22 @@ class ReplyModel: ChatAccessoryModel {
             }
             
             
-            
-            var text = message.restrictedText(context.contentSettings) ?? pullText(from:message, mediaViewType: .text) as String
-            if text.isEmpty {
-                text = serviceMessageText(message, account: context.account, isReplied: true)
-            }
+            let text = chatListText(account: context.account, for: message, isPremium: context.isPremium, isReplied: true)
             if let header = customHeader {
-                self.headerAttr = .initialize(string: header, color: presentation.title, font: .medium(.text))
+                self.header = .init(.initialize(string: header, color: presentation.title, font: .medium(.text)), maximumNumberOfLines: 1)
             } else {
-                self.headerAttr = .initialize(string: !isPinned || headerAsName ? title : strings().chatHeaderPinnedMessage, color: presentation.title, font: .medium(.text))
+                self.header = .init(.initialize(string: !isPinned || headerAsName ? title : strings().chatHeaderPinnedMessage, color: presentation.title, font: .medium(.text)), maximumNumberOfLines: 1)
             }
-            self.messageAttr = .initialize(string: text, color: message.media.isEmpty || message.media.first is TelegramMediaWebpage ? presentation.enabledText : presentation.disabledText, font: .normal(.text))
+            let attr = NSMutableAttributedString()
+            attr.append(text)
+            attr.addAttribute(.foregroundColor, value: message.media.isEmpty || message.media.first is TelegramMediaWebpage ? presentation.enabledText : presentation.disabledText, range: attr.range)
+            attr.addAttribute(.font, value: NSFont.normal(.text), range: attr.range)
+            
+            attr.fixUndefinedEmojies()
+            self.message = .init(attr, maximumNumberOfLines: 1)
         } else {
-            self.headerAttr = nil
-            self.messageAttr = .initialize(string: isLoading ? strings().messagesReplyLoadingLoading : strings().messagesDeletedMessage, color: presentation.disabledText, font: .normal(.text))
+            self.header = nil
+            self.message = .init(.initialize(string: isLoading ? strings().messagesReplyLoadingLoading : strings().messagesDeletedMessage, color: presentation.disabledText, font: .normal(.text)), maximumNumberOfLines: 1)
             display = true
         }
         

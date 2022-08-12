@@ -55,7 +55,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     private var forwardAccessory: ChatBubbleAccessoryForward? = nil
     private var viaAccessory: ChatBubbleViaAccessory? = nil
     
-    private var inlineStickerItemViews: [InlineStickerItemView.Key: InlineStickerItemView] = [:]
+    private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
     
     let bubbleView = ChatMessageBubbleBackdrop()
     
@@ -924,42 +924,72 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
-    private func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
-        var nextIndexById: [MediaId: Int] = [:]
-        var validIds: [InlineStickerItemView.Key] = []
-        
+    
+    
+    private func updateListeners() {
+        let center = NotificationCenter.default
+        if let window = window {
+            center.removeObserver(self)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didBecomeKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self)
+        } else {
+            center.removeObserver(self)
+        }
+    }
+    
+    
+    @objc func updateAnimatableContent() -> Void {
+        for (_, value) in inlineStickerItemViews {
+            if let superview = value.superview {
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow
+            }
+        }
+    }
+    
+    
+    func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
+        var validIds: [InlineStickerItemLayer.Key] = []
+        var index: Int = textView.hashValue
+
         for item in textLayout.embeddedItems {
-            if let stickerItem = item.value as? InlineStickerItem {
-                let index: Int
-                if let currentNext = nextIndexById[stickerItem.file.fileId] {
-                    index = currentNext
-                } else {
-                    index = 0
-                }
-                nextIndexById[stickerItem.file.fileId] = index + 1
-                let id = InlineStickerItemView.Key(id: stickerItem.file.fileId, index: index)
+            if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
+                
+                let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index)
                 validIds.append(id)
                 
-                let rect = CGRect(origin: item.rect.offsetBy(dx: textLayout.insets.width, dy: textLayout.insets.height + 0.0).center, size: CGSize()).insetBy(dx: -12.0, dy: -12.0)
                 
-                let view: InlineStickerItemView
-                if let current = self.inlineStickerItemViews[id] {
-                    view = current
+                let rect: NSRect
+                if textLayout.isBigEmoji {
+                    rect = item.rect
                 } else {
-                    view = InlineStickerItemView(context: context, file: stickerItem.file, size: item.rect.size)
-                    self.inlineStickerItemViews[id] = view
-                    textView.addEmbeddedView(view)
+                    rect = item.rect.insetBy(dx: -1.5, dy: -1.5)
                 }
                 
+                let view: InlineStickerItemLayer
+                if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
+                    view = current
+                } else {
+                    self.inlineStickerItemViews[id]?.removeFromSuperlayer()
+                    view = InlineStickerItemLayer(context: context, emoji: emoji, size: rect.size)
+                    self.inlineStickerItemViews[id] = view
+                    view.superview = textView
+                    textView.addEmbeddedLayer(view)
+                }
+                index += 1
+                
+                view.isPlayable = NSIntersectsRect(rect, textView.visibleRect) && window != nil && window!.isKeyWindow
                 view.frame = rect
             }
         }
         
-        var removeKeys: [InlineStickerItemView.Key] = []
+        var removeKeys: [InlineStickerItemLayer.Key] = []
         for (key, itemLayer) in self.inlineStickerItemViews {
             if !validIds.contains(key) {
                 removeKeys.append(key)
-                itemLayer.removeFromSuperview()
+                itemLayer.removeFromSuperlayer()
             }
         }
         for key in removeKeys {
@@ -1001,11 +1031,11 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             }
            
         } else if item.isBubbled {
-            if let item = item as? ChatMessageItem {
-                if item.containsBigEmoji {
-                    frame.origin.y += rightFrame(item).height
-                } 
-            }
+//            if let item = item as? ChatMessageItem {
+//                if item.containsBigEmoji {
+//                    frame.origin.y += rightFrame(item).height
+//                }
+//            }
         } else if let replyMarkup = item.replyMarkupModel {
             frame.origin.y += replyMarkup.size.height + item.defaultContentInnerInset
         }
@@ -1511,6 +1541,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         self.needsDisplay = true
         self.rowView.needsDisplay = true
         self.needsLayout = true
+        
 
     }
 
@@ -1688,6 +1719,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             item.chatInteraction.remove(observer: self)
         }
         contentView.removeAllSubviews()
+        NotificationCenter.default.removeObserver(self)
     }
     
     override func convertWindowPointToContent(_ point: NSPoint) -> NSPoint {
@@ -1703,6 +1735,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 item.chatInteraction.add(observer: self)
             }
         }
+        self.updateListeners()
+        self.updateAnimatableContent()
+
     }
     
     

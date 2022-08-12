@@ -1305,7 +1305,7 @@ class ChatListController : PeersListController {
             _ = prefs.start(next: { [weak self] filters in
                 if filters.isEmpty {
                     self?._openChat(index)
-                } else if filters.list.count >= index {
+                } else if filters.list.count > index {
                     self?.updateFilter {
                         $0.withUpdatedFilter(filters.list[index])
                     }
