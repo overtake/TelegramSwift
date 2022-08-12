@@ -93,16 +93,16 @@ open class TextButtonBarView: BarView {
             switch alignment {
             case .Center:
                 _isFitted = button.sizeToFit(NSZeroSize,NSMakeSize(maxWidth, frame.height), thatFit: false)
-                width += button.frame.width + 16
+                width += button.frame.width + 10
             //button.center()
             case .Left:
                 _isFitted = button.sizeToFit(NSZeroSize,NSMakeSize(maxWidth, frame.height))
                  width += button.frame.width
             case .Right:
                 _isFitted = button.sizeToFit(NSZeroSize,NSMakeSize(maxWidth - 20, frame.height), thatFit: false)
-                width += max(button.frame.width + 16, minWidth)
+                width += max(button.frame.width + 10, minWidth)
                 let f = focus(button.frame.size)
-                button.setFrameOrigin(NSMakePoint(frame.width - button.frame.width - 16, f.minY))
+                button.setFrameOrigin(NSMakePoint(frame.width - button.frame.width - 10, f.minY))
             }
             return width
         }
