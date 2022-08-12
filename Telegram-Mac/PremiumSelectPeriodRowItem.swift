@@ -17,6 +17,17 @@ struct PremiumPeriod : Equatable {
     }
     var period: Period
     var price: Int64
+    var currency: String
+    
+    var titleString: String {
+        return "text"
+    }
+    var priceString: String {
+        return "test"
+    }
+    var discountString: Int {
+        return 20
+    }
     
 }
 
@@ -111,31 +122,28 @@ private final class PremiumSelectPeriodRowView: GeneralContainableRowView {
             self.borderView.isHidden = isLast
             
             
-//
-//            let titleLayout = TextViewLayout(.initialize(string: option.titleString, color: theme.colors.text, font: .normal(.title)))
-//            titleLayout.measure(width: .greatestFiniteMagnitude)
-//
-//            let commonPriceLayout = TextViewLayout(.initialize(string: option.priceString, color: theme.colors.grayText, font: .normal(.title)))
-//            commonPriceLayout.measure(width: .greatestFiniteMagnitude)
-//
-//            let discountLayout = TextViewLayout(.initialize(string: "-\(option.discountString)%", color: theme.colors.underSelectedColor, font: .medium(.small)))
-//            discountLayout.measure(width: .greatestFiniteMagnitude)
-//
-//
-//            let discountPriceLayout = TextViewLayout(.initialize(string: option.priceDiscountString, color: theme.colors.grayText, font: .normal(.small)))
-//            discountPriceLayout.measure(width: .greatestFiniteMagnitude)
-//
-//            self.title.update(titleLayout)
-//            self.commonPrice.update(commonPriceLayout)
-//            self.discountText.update(discountPriceLayout)
-//
-//            self.discount.update(discountLayout)
-//            self.discount.setFrameSize(discountLayout.layoutSize.width + 8, discountLayout.layoutSize.height + 4)
-//            self.discount.layer?.cornerRadius = .cornerRadius
-//            self.discount.backgroundColor = theme.colors.premium
-//
-//
-//            self.discount.isHidden = option.discountString == 0
+
+            let titleLayout = TextViewLayout(.initialize(string: option.titleString, color: theme.colors.text, font: .normal(.title)))
+            titleLayout.measure(width: .greatestFiniteMagnitude)
+
+            let commonPriceLayout = TextViewLayout(.initialize(string: option.priceString, color: theme.colors.grayText, font: .normal(.title)))
+            commonPriceLayout.measure(width: .greatestFiniteMagnitude)
+
+            let discountLayout = TextViewLayout(.initialize(string: "-\(option.discountString)%", color: theme.colors.underSelectedColor, font: .medium(.small)))
+            discountLayout.measure(width: .greatestFiniteMagnitude)
+
+
+
+            self.title.update(titleLayout)
+            self.commonPrice.update(commonPriceLayout)
+
+            self.discount.update(discountLayout)
+            self.discount.setFrameSize(discountLayout.layoutSize.width + 8, discountLayout.layoutSize.height + 4)
+            self.discount.layer?.cornerRadius = .cornerRadius
+            self.discount.backgroundColor = theme.colors.premium
+
+
+            self.discount.isHidden = option.discountString == 0
             
             self.removeAllHandlers()
             self.set(handler: { _ in
