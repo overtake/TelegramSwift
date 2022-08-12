@@ -423,10 +423,6 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
         
 //        entries.append(.whiteSpace(index: index, height: 20))
 //        index += 1
-        #if DEBUG
-        entries.append(.setStatus(index: index, viewType: .singleItem, PeerEquatable(peer)))
-        index += 1
-        #endif
        
     }
     
