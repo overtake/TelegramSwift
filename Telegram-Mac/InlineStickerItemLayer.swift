@@ -264,7 +264,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             } else {
                 data = context.account.postbox.mediaBox.resourceData(file.resource, attemptSynchronously: sync)
             }
-            if file.isAnimatedSticker || file.isVideoSticker {
+            if file.isAnimatedSticker || file.isVideoSticker || (file.isCustomEmoji && (file.isSticker || file.isVideo)) {
                 self.resourceDisposable.set((data |> map { resourceData -> Data? in
                     if resourceData.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
                         if file.isWebm {
@@ -278,7 +278,10 @@ final class InlineStickerItemLayer : SimpleLayer {
                     if let data = data {
                         let playPolicy: LottiePlayPolicy = .loop
                         let maximumFps: Int = 30
-                        let cache: ASCachePurpose = .temporaryLZ4(.effect)
+                        var cache: ASCachePurpose = .temporaryLZ4(.effect)
+                        if file.isVideo && file.isCustomEmoji {
+                            cache = .none
+                        }
                         let type: LottieAnimationType
                         if file.isWebm {
                             type = .webm

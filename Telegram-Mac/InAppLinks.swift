@@ -179,8 +179,9 @@ var globalLinkExecutor:TextViewInteractions {
             }
             let modified: NSMutableAttributedString = string.mutableCopy() as! NSMutableAttributedString
             
+            var replaceRanges:[(NSRange, String)] = []
             
-            string.enumerateAttributes(in: string.range, options: [], using: { attr, range, _ in
+            string.enumerateAttributes(in: string.range, options: [.reverse], using: { attr, range, _ in
                 if let appLink = attr[NSAttributedString.Key.link] as? inAppLink {
                     switch appLink {
                     case .code, .hashtag, .callback:
@@ -199,6 +200,7 @@ var globalLinkExecutor:TextViewInteractions {
                 }
                 if let sticker = attr[.init("Attribute__EmbeddedItem")] as? InlineStickerItem, case let .attribute(emoji) = sticker.source {
                     modified.addAttribute(.init(TGAnimatedEmojiAttributeName), value: emoji.attachment, range: range)
+                    replaceRanges.append((range, emoji.attachment.text))
                 }
                 if attr[.foregroundColor] != nil {
                     modified.removeAttribute(.foregroundColor, range: range)
@@ -212,6 +214,10 @@ var globalLinkExecutor:TextViewInteractions {
                     modified.removeAttribute(.paragraphStyle, range: range)
                 }
             })
+            
+            for range in replaceRanges.sorted(by: { $0.0.lowerBound > $1.0.lowerBound }) {
+                modified.replaceCharacters(in: range.0, with: range.1)
+            }
             
             let input = ChatTextInputState(inputText: modified.string, selectionRange: 0 ..< modified.string.length, attributes: chatTextAttributes(from: modified))
             
