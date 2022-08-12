@@ -965,7 +965,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 if textLayout.isBigEmoji {
                     rect = item.rect
                 } else {
-                    rect = item.rect.insetBy(dx: -1.5, dy: -1.5)
+                    rect = item.rect.insetBy(dx: -1, dy: -1)
                 }
                 
                 let view: InlineStickerItemLayer
@@ -1031,11 +1031,11 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             }
            
         } else if item.isBubbled {
-            if let item = item as? ChatMessageItem {
-                if item.containsBigEmoji {
-                    frame.origin.y += rightFrame(item).height
-                } 
-            }
+//            if let item = item as? ChatMessageItem {
+//                if item.containsBigEmoji {
+//                    frame.origin.y += rightFrame(item).height
+//                }
+//            }
         } else if let replyMarkup = item.replyMarkupModel {
             frame.origin.y += replyMarkup.size.height + item.defaultContentInnerInset
         }

@@ -11,8 +11,7 @@ import TGUIKit
 import SwiftSignalKit
 import Postbox
 import TelegramCore
-
-
+import Cocoa
 
 
 private struct State : Equatable {
@@ -164,12 +163,19 @@ private func entries(_ state: State, arguments: Arguments, mediaArguments: Conte
     if let value = value {
         
         let values = value.map { $0.row }
+        let collections = value.map { $0.collection }
         
         let items = makeMediaEnties(values, isSavedGifs: true, initialSize: NSMakeSize(350, 100))
         
-        for entry in items {
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_gif(entry), equatable: nil, comparable: nil, item: { initialSize, stableId in
-                return ContextMediaRowItem(initialSize, entry, arc4random64(), arguments.context, mediaArguments)
+        for (i, entry) in items.enumerated() {
+            struct Tuple : Equatable {
+                let row: InputMediaContextRow
+                let collection: ChatContextResultCollection?
+            }
+            let tuple: Tuple = Tuple(row: entry, collection: collections[i])
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_gif(entry), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
+                return ContextMediaRowItem(initialSize, tuple.row, arc4random64(), arguments.context, mediaArguments, collection: tuple.collection)
             }))
             index += 1
         }
@@ -460,10 +466,12 @@ final class GifKeyboardController : TelegramGenericViewController<GifKeyboardVie
             }
         })
         
-        let mediaArguments: ContextMediaArguments = .init(sendResult: { result, view in
+        let mediaArguments: ContextMediaArguments = .init(sendResult: { collection, result, view in
             switch result {
             case let .internalReference(values):
-                if let file = values.file {
+                if let collection = collection {
+                    arguments.sendInlineResult(collection, result, view)
+                }else if let file = values.file {
                     arguments.sendAppFile(file, view, false, false)
                 }
             default:

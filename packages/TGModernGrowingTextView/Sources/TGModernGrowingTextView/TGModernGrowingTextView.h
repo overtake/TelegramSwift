@@ -133,6 +133,6 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar);
 
 -(void)setBackgroundColor:(NSColor * __nonnull)color;
 -(NSRect)highlightRectForRange:(NSRange)aRange whole: (BOOL)whole;
--(void)installGetAttachView:(NSView* _Nullable (^_Nonnull)(TGTextAttachment * _Nonnull))getAttachView;
+-(void)installGetAttachView:(NSView* _Nullable (^_Nonnull)(TGTextAttachment * _Nonnull, NSSize size))getAttachView;
 
 @end

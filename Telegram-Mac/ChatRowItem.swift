@@ -539,11 +539,11 @@ class ChatRowItem: TableRowItem {
             left += leftContentInset
         }
         
-        if let item = self as? ChatMessageItem, item.containsBigEmoji {
-            if commentsBubbleDataOverlay != nil || isSharable || hasSource {
-                top += 20
-            }
-        }
+//        if let item = self as? ChatMessageItem, item.containsBigEmoji {
+//            if commentsBubbleDataOverlay != nil || isSharable || hasSource {
+//                top += 20
+//            }
+//        }
         
         return NSMakePoint(left, top)
     }
@@ -2415,6 +2415,9 @@ class ChatRowItem: TableRowItem {
 
         if unsupported {
             return rightSize.height
+        }
+        if isBigEmoji {
+            return nil
         }
         
         if let lastLine = lastLineContentWidth {
