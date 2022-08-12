@@ -2648,7 +2648,7 @@ class ChatRowItem: TableRowItem {
             
             let width = ContextAddReactionsListView.width(for: available)
             
-            let rect = NSMakeRect(0, 0, width + 20, 40)
+            let rect = NSMakeRect(0, 0, width + 30, 50)
             
             let panel = Window(contentRect: rect, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
             panel._canBecomeMain = false

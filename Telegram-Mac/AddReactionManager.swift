@@ -20,8 +20,8 @@ final class ContextAddReactionsListView : View  {
     
     private final class ReactionView : Control {
                 
-        private let player = LottiePlayerView(frame: NSMakeRect(0, 0, 20, 20))
-        private let imageView = TransformImageView(frame: NSMakeRect(0, 0, 20, 20))
+        private let player = LottiePlayerView(frame: NSMakeRect(0, 0, 30, 30))
+        private let imageView = TransformImageView(frame: NSMakeRect(0, 0, 30, 30))
         private let disposable = MetaDisposable()
         private let appearDisposable = MetaDisposable()
         let reaction: AvailableReactions.Reaction
@@ -260,13 +260,13 @@ final class ContextAddReactionsListView : View  {
                 
         scrollView.background = .clear
         scrollView.documentView = documentView
-        let size = NSMakeSize(30, 30)
+        let size = ContextAddReactionsListView.size
         var x: CGFloat = 0
         
         
         
         for reaction in list {
-            let reaction = ReactionView(frame: NSMakeRect(x, 0, size.width, size.height), context: context, reaction: reaction, add: add)
+            let reaction = ReactionView(frame: NSMakeRect(x, 5, size.width, size.height), context: context, reaction: reaction, add: add)
             documentView.addSubview(reaction)
             x += size.width
         }
@@ -278,6 +278,10 @@ final class ContextAddReactionsListView : View  {
             let view = view as? ReactionView
             view?.playAppearAnimation()
         }
+    }
+    
+    static var size: CGSize {
+        return .init(width: 37, height: 30)
     }
     
     func rect(for reaction: AvailableReactions.Reaction) -> NSRect {
@@ -343,7 +347,7 @@ final class ContextAddReactionsListView : View  {
     }
     
     static func width(for list: [AvailableReactions.Reaction]) -> CGFloat {
-        return  CGFloat(list.count) * 30
+        return CGFloat(list.count) * self.size.width
     }
     
     
@@ -361,7 +365,7 @@ final class ContextAddReactionsListView : View  {
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         transition.updateFrame(view: self.scrollView, frame: size.bounds)
-        transition.updateFrame(view: self.documentView, frame: NSMakeSize(CGFloat(list.count) * 30, size.height).bounds)
+        transition.updateFrame(view: self.documentView, frame: NSMakeSize(ContextAddReactionsListView.width(for: self.list), size.height).bounds)
         
         transition.updateFrame(view: self.topGradient, frame: NSMakeRect(0, 0, 10, frame.height))
         transition.updateFrame(view: self.bottomGradient, frame: NSMakeRect(frame.width - 10, 0, 10, frame.height))
