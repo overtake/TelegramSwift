@@ -465,7 +465,7 @@ private func stickersEntries(view: ItemCollectionsView?, context: AccountContext
                 }
             }
             
-            if !view.orderedItemListsViews[2].items.isEmpty {
+            if !view.orderedItemListsViews[2].items.isEmpty, context.isPremium {
                 var files:[TelegramMediaFile] = []
                 for item in view.orderedItemListsViews[2].items {
                     if let entry = item.contents.get(RecentMediaItem.self) {
@@ -600,7 +600,7 @@ private func packEntries(view: ItemCollectionsView?, context: AccountContext, sp
         if !view.orderedItemListsViews[0].items.isEmpty {
             entries.append(.recent)
         }
-        if !view.orderedItemListsViews[2].items.isEmpty {
+        if !view.orderedItemListsViews[2].items.isEmpty, context.isPremium {
             if context.isPremium || !context.premiumIsBlocked {
                 entries.append(.premium)
             }
