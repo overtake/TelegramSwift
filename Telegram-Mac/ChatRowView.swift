@@ -965,7 +965,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 if textLayout.isBigEmoji {
                     rect = item.rect
                 } else {
-                    rect = item.rect.insetBy(dx: -1.5, dy: -1.5)
+                    rect = item.rect.insetBy(dx: -1, dy: -1)
                 }
                 
                 let view: InlineStickerItemLayer

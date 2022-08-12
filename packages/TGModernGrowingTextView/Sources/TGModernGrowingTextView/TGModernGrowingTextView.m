@@ -1110,11 +1110,14 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
         NSRect rect = [self.textView highlightRectForRange:range whole:NO];
         NSView* view = [self.attachments valueForKey:attachment.identifier];
         if (view == nil) {
-            view = _getAttachView(attachment);
+            view = _getAttachView(attachment, rect.size);
         }
         if (view != nil) {
             rect.size.height = view.frame.size.height;
+            rect.size.width = view.frame.size.width;
             rect.origin.y -= 1;
+            rect.origin.y = floor(rect.origin.y);
+            rect.origin.x = floor(rect.origin.x);
             view.frame = rect;
             if(view != nil && view.superview != _textView) {
                 [_textView addSubview:view];
@@ -1151,7 +1154,7 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
     
 }
     
--(void)installGetAttachView:(NSView* _Nullable (^)(TGTextAttachment * _Nonnull))getAttachView {
+-(void)installGetAttachView:(NSView* _Nullable (^)(TGTextAttachment * _Nonnull, NSSize size))getAttachView {
     _getAttachView = getAttachView;
 }
     

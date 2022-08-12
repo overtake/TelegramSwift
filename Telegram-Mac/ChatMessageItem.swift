@@ -116,7 +116,7 @@ final class InlineStickerItem : Hashable {
                 
                 updatedAttributes[NSAttributedString.Key("Attribute__EmbeddedItem")] = InlineStickerItem(source: .attribute(.init(fileId: fileId, file: associatedMedia[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] as? TelegramMediaFile, emoji: text)))
                 
-                let insertString = NSAttributedString(string: text, attributes: updatedAttributes)
+                let insertString = NSAttributedString(string: "🤡", attributes: updatedAttributes)
                 copy.replaceCharacters(in: range, with: insertString)
             }
         }
