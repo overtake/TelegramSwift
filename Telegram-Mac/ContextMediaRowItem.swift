@@ -14,12 +14,12 @@ import SwiftSignalKit
 import Postbox
 
 final class ContextMediaArguments {
-    let sendResult: (ChatContextResult, NSView) -> Void
+    let sendResult: (ChatContextResultCollection?, ChatContextResult, NSView) -> Void
     let menuItems: (TelegramMediaFile, NSView) -> Signal<[ContextMenuItem], NoError>
     let openMessage: (Message) -> Void
     let messageMenuItems: (Message, NSView) -> Signal<[ContextMenuItem], NoError>
 
-    init(sendResult: @escaping(ChatContextResult, NSView) -> Void = { _, _ in }, menuItems: @escaping(TelegramMediaFile, NSView) -> Signal<[ContextMenuItem], NoError> = { _, _ in return .single([]) }, openMessage: @escaping(Message) -> Void = { _ in }, messageMenuItems:@escaping (Message, NSView) -> Signal<[ContextMenuItem], NoError> = { _, _ in return .single([]) }) {
+    init(sendResult: @escaping(ChatContextResultCollection?, ChatContextResult, NSView) -> Void = { _, _, _ in }, menuItems: @escaping(TelegramMediaFile, NSView) -> Signal<[ContextMenuItem], NoError> = { _, _ in return .single([]) }, openMessage: @escaping(Message) -> Void = { _ in }, messageMenuItems:@escaping (Message, NSView) -> Signal<[ContextMenuItem], NoError> = { _, _ in return .single([]) }) {
         self.sendResult = sendResult
         self.menuItems = menuItems
         self.openMessage = openMessage
@@ -34,15 +34,17 @@ class ContextMediaRowItem: TableRowItem {
     private let _index:Int64
     let context: AccountContext
     let arguments: ContextMediaArguments
+    let collection: ChatContextResultCollection?
     override var stableId: AnyHashable {
         return Int64(_index)
     }
     
-    init(_ initialSize: NSSize, _ result:InputMediaContextRow, _ index:Int64, _ context: AccountContext, _ arguments: ContextMediaArguments) {
+    init(_ initialSize: NSSize, _ result:InputMediaContextRow, _ index:Int64, _ context: AccountContext, _ arguments: ContextMediaArguments, collection: ChatContextResultCollection? = nil) {
         self.result = result
         self.arguments = arguments
         self._index = index
         self.context = context
+        self.collection = collection
         dif = 0
         super.init(initialSize)
     }
@@ -327,7 +329,7 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                 if !item.result.messages.isEmpty {
                     item.arguments.openMessage(item.result.messages[index])
                 } else {
-                    item.arguments.sendResult(item.result.results[index], self.subviews[index])
+                    item.arguments.sendResult(item.collection, item.result.results[index], self.subviews[index])
                 }
             }
         }

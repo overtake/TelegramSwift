@@ -106,7 +106,7 @@ private func prepareEntries(left:[InputContextEntry], right:[InputContextEntry],
    let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right, { entry -> TableRowItem in
         switch entry {
         case let .contextMediaResult(collection, row, index):
-            return ContextMediaRowItem(initialSize, row, index, context, ContextMediaArguments(sendResult: { result, view in
+            return ContextMediaRowItem(initialSize, row, index, context, ContextMediaArguments(sendResult: { _, result, view in
                 if let collection = collection {
                     arguments?.sendInlineResult(collection, result, view)
                 } else {
