@@ -304,7 +304,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: aspectSize, boundingSize: size, intrinsicInsets: NSEdgeInsets())
 
-            let fontSize = NSMakeSize(theme.fontSize + 6, theme.fontSize + 6)
+            let fontSize = NSMakeSize(theme.fontSize + 8, theme.fontSize + 5)
             let fontAspectSize = file.dimensions?.size.aspectFitted(fontSize) ?? fontSize
 
             let fontArguments = TransformImageArguments(corners: ImageCorners(), imageSize: fontAspectSize, boundingSize: fontSize, intrinsicInsets: NSEdgeInsets())
