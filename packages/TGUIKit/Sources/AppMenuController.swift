@@ -158,7 +158,7 @@ final class MenuView: View, TableViewDelegate {
     
     func makeSize(presentation: AppMenu.Presentation, screen: NSScreen, maxHeight: CGFloat? = nil, appearMode: AppMenu.AppearMode) {
         
-        var max: CGFloat = 0
+        var max: CGFloat = 180
         tableView.enumerateItems(with: { item in
             if let item = item as? AppMenuBasicItem {
                 if max < item.effectiveSize.width {
@@ -823,7 +823,7 @@ final class AppMenuController : NSObject  {
         if let window = menu.topWindow {
             
             let width = window.frame.width
-            let rect = NSMakeRect(rect.minX + 10, rect.maxY - 18, width, window.frame.height)
+            let rect = NSMakeRect(rect.minX - round((width - rect.width) / 2), rect.maxY - 18, width, window.frame.height)
             window.setFrame(rect, display: true)
             window.makeKeyAndOrderFront(nil)
             
