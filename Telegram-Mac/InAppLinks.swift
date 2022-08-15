@@ -189,6 +189,7 @@ var globalLinkExecutor:TextViewInteractions {
                     default:
                         if appLink.link != modified.string.nsstring.substring(with: range) {
                             modified.addAttribute(NSAttributedString.Key.link, value: appLink.link, range: range)
+                            modified.addAttribute(.init(TGCustomLinkAttributeName), value: TGInputTextTag(uniqueId: arc4random64(), attachment: appLink.link, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link)), range: range)
                         }
                     }
                     
