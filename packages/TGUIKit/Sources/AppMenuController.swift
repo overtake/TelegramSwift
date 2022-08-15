@@ -822,8 +822,7 @@ final class AppMenuController : NSObject  {
         
         if let window = menu.topWindow {
             
-            let width = min(window.frame.width, rect.width - 20)
-            
+            let width = window.frame.width
             let rect = NSMakeRect(rect.minX + 10, rect.maxY - 18, width, window.frame.height)
             window.setFrame(rect, display: true)
             window.makeKeyAndOrderFront(nil)
