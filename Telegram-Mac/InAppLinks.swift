@@ -87,7 +87,7 @@ enum ChatInitialAction : Equatable {
     case closeAfter(Int32)
     case selectToReport(reason: ReportReasonValue)
     case joinVoiceChat(_ joinHash: String?)
-    case attachBot(_ bot: String, _ payload: String?)
+    case attachBot(_ bot: String, _ payload: String?, _ choose:[String]?)
     case openMedia(_ timemark: Int32?)
     var selectionNeeded: Bool {
         switch self {
@@ -531,22 +531,52 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     if peer.isBot {
                         if let action = action {
                             switch action {
-                            case let .attachBot(botname, _):
-                                let signal = context.engine.messages.getAttachMenuBot(botId: peer.id)
-                                let openAttach:()->Void = {
-                                    let chat = context.bindings.rootNavigation().controller as? ChatController
-                                    chat?.chatInteraction.invokeInitialAction(action: action)
-                                }
-                                _ = showModalProgress(signal: signal, for: context.window).start(next: { _ in
-                                    openAttach()
-                                }, error: { _ in
-                                    if peer.username == botname {
-                                        openAttach()
-                                    } else {
-                                        callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
+                            case let .attachBot(botname, _, choose):
+                                
+                                let invoke:(Peer)->Void = { peer in
+                                    let signal = context.engine.messages.getAttachMenuBot(botId: peer.id)
+                                    let openAttach:()->Void = {
+                                        let chat = context.bindings.rootNavigation().controller as? ChatController
+                                        chat?.chatInteraction.invokeInitialAction(action: action)
                                     }
-                                })
-                                return
+                                    _ = showModalProgress(signal: signal, for: context.window).start(next: { _ in
+                                        openAttach()
+                                    }, error: { _ in
+                                        if peer.username == botname {
+                                            openAttach()
+                                        } else {
+                                            callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
+                                        }
+                                    })
+                                    return
+                                }
+                                if let choose = choose, !choose.isEmpty {
+                                    var settings:SelectPeerSettings = .init()
+                                    if choose.contains("users") {
+                                        settings.insert(.contacts)
+                                        settings.insert(.excludeBots)
+                                    }
+                                    if choose.contains("bots") {
+                                        settings.remove(.excludeBots)
+                                    }
+                                    if choose.contains("groups") {
+                                        settings.insert(.groups)
+                                    }
+                                    if choose.contains("channels") {
+                                        settings.insert(.channels)
+                                    }
+                                    
+                                    _ = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectChat, limit: 1).start(next: { peerIds in
+                                        if let peerId = peerIds.first {
+                                            let signal = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
+                                            _ = signal.start(next: { peer in
+                                                invoke(peer)
+                                            })
+                                        }
+                                    })
+                                } else {
+                                    invoke(peer)
+                                }
                             default:
                                 break
                             }
@@ -1086,6 +1116,7 @@ private let keyURLproxy = "proxy";
 private let keyURLLivestream = "livestream";
 private let keyURLRef = "ref";
 private let keyURLSlug = "slug";
+private let keyURLChoose = "choose";
 
 private let keyURLHash = "hash";
 
@@ -1282,7 +1313,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             action = .joinVoiceChat(value)
                             break loop;
                         case keyURLAttach:
-                            action = .attachBot(value, nil)
+                            let choose = vars[keyURLChoose]?.split(separator: "+").compactMap { String($0) }
+                            action = .attachBot(value, nil, choose)
                             break loop
                         default:
                             break
@@ -1317,7 +1349,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         let (vars, empty) = urlVars(with: string)
 
                         if vars[keyURLStartattach] != nil || empty.contains(keyURLStartattach) {
-                            action = .attachBot(vars[keyURLAttach] ?? username, vars[keyURLStartattach])
+                            let choose = vars[keyURLChoose]?.split(separator: "+").compactMap { String($0) }
+                            action = .attachBot(vars[keyURLAttach] ?? username, vars[keyURLStartattach], choose)
                         } else if components.contains(keyURLLivestream) {
                             action = .joinVoiceChat(nil)
                         }
@@ -1430,7 +1463,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 action = .joinVoiceChat(value)
                                 break loop
                             case keyURLAttach:
-                                action = .attachBot(value, vars[keyURLStartattach])
+                                let choose = vars[keyURLChoose]?.split(separator: "+").compactMap { String($0) }
+                                action = .attachBot(value, vars[keyURLStartattach], choose)
                                 break loop
                             default:
                                 break
@@ -1439,7 +1473,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         if action == nil && emptyVars.contains(keyURLVoiceChat) {
                             action = .joinVoiceChat(nil)
                         } else if action == nil, vars[keyURLStartattach] != nil || vars[keyURLAttach] != nil {
-                            action = .attachBot(vars[keyURLAttach] ?? username, vars[keyURLStartattach])
+                            let choose = vars[keyURLChoose]?.split(separator: "+").compactMap { String($0) }
+                            action = .attachBot(vars[keyURLAttach] ?? username, vars[keyURLStartattach], choose)
                         }
                         if username == legacyPassportUsername {
                             return inApp(for: external.replacingOccurrences(of: "tg://resolve", with: "tg://passport").nsstring, context: context, peerId: peerId, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy, confirm: confirm)
