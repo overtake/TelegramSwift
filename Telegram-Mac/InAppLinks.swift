@@ -549,13 +549,14 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                             callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
                                         }
                                     })
-                                    return
+                                    callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
                                 }
                                 if let choose = choose, !choose.isEmpty {
                                     var settings:SelectPeerSettings = .init()
+                                    settings.insert(.excludeBots)
                                     if choose.contains("users") {
                                         settings.insert(.contacts)
-                                        settings.insert(.excludeBots)
+                                        settings.insert(.remote)
                                     }
                                     if choose.contains("bots") {
                                         settings.remove(.excludeBots)
@@ -567,7 +568,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                         settings.insert(.channels)
                                     }
                                     
-                                    _ = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectChat, limit: 1).start(next: { peerIds in
+                                    _ = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectChat, limit: 1, behavior: SelectChatsBehavior(settings: settings, checkInvite: false, excludePeerIds: [], limit: 1)).start(next: { peerIds in
                                         if let peerId = peerIds.first {
                                             let signal = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
                                             _ = signal.start(next: { peer in
@@ -579,11 +580,14 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                     invoke(peer)
                                 }
                             default:
-                                break
+                                callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
                             }
+                        } else {
+                            callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
                         }
+                    } else {
+                        callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
                     }
-                    callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
                 } else {
                     alert(for: context.window, info: strings().alertUserDoesntExists)
                 }
@@ -605,7 +609,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 }
             }
             
-            let result = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectGroupOrChannel, behavior: payload.isEmpty ? SelectGroupOrChannelBehavior(limit: 1) : SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
+            let result = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectGroupOrChannel, behavior: SelectChatsBehavior(settings: payload.isEmpty ? [.groups, .channels] : [.groups], checkInvite: true, limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
                 return .single(true)
             })
             |> filter { $0.first != nil }
