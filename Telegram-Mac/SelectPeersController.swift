@@ -461,8 +461,9 @@ public struct SelectPeerSettings: OptionSet {
     
     public static let remote = SelectPeerSettings(rawValue: 1 << 1)
     public static let contacts = SelectPeerSettings(rawValue: 1 << 2)
-    public static let groups = SelectPeerSettings(rawValue: 1 <<  3)
-    public static let excludeBots = SelectPeerSettings(rawValue: 1 <<  4)
+    public static let groups = SelectPeerSettings(rawValue: 1 << 3)
+    public static let excludeBots = SelectPeerSettings(rawValue: 1 << 4)
+    public static let channels = SelectPeerSettings(rawValue: 1 << 5)
 }
 
 class SelectPeersBehavior {
@@ -1097,8 +1098,8 @@ fileprivate class SelectContactsBehavior : SelectPeersBehavior {
                         if settings.contains(.excludeBots) {
                             values.0 = values.0.filter {!$0.isBot}
                         }
-                        values.0 = values.0.filter {!$0.isChannel && (settings.contains(.groups) || (!$0.isSupergroup && !$0.isGroup))}
-                        values.1 = values.1.filter {!$0.isChannel && (settings.contains(.groups) || (!$0.isSupergroup && !$0.isGroup))}
+                        values.0 = values.0.filter {(!$0.isChannel || settings.contains(.channels)) && (settings.contains(.groups) || (!$0.isSupergroup && !$0.isGroup))}
+                        values.1 = values.1.filter {(!$0.isChannel || settings.contains(.channels)) && (settings.contains(.groups) || (!$0.isSupergroup && !$0.isGroup))}
                         let local = values.0
                         let global = values.1
                         
