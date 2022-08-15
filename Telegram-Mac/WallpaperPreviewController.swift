@@ -221,8 +221,8 @@ private final class WallpaperPreviewView: View {
         super.init(frame: frameRect)
         backgroundView.useSharedAnimationPhase = false
         addSubview(backgroundView)
-        documentView.removeFromSuperview()
-        addSubview(documentView)
+//        documentView.removeFromSuperview()
+        addSubview(tableView)
         checkboxContainer.addSubview(blurCheckbox)
         checkboxContainer.addSubview(patternCheckbox)
         checkboxContainer.addSubview(colorCheckbox)
@@ -264,6 +264,10 @@ private final class WallpaperPreviewView: View {
                 
         tableView.backgroundColor = .clear
         tableView.layer?.backgroundColor = .clear
+//
+        tableView.getBackgroundColor = {
+            .clear
+        }
         
         addTableItems(context)
         
@@ -408,11 +412,11 @@ private final class WallpaperPreviewView: View {
         
         switch wallpaper {
         case .color:
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 50, stableId: 0, backgroundColor: .clear))
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 60, stableId: 0, backgroundColor: .clear))
         case .file(_, _, _, _):
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 50, stableId: 0, backgroundColor: .clear))
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 60, stableId: 0, backgroundColor: .clear))
         default:
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 50, stableId: 0, backgroundColor: .clear))
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 60, stableId: 0, backgroundColor: .clear))
         }
         
         let chatInteraction = ChatInteraction(chatLocation: .peer(PeerId(0)), context: context, disableSelectAbility: true)

@@ -33,7 +33,7 @@ public final class Reactions {
         }))
     }
     
-    public func react(_ messageId: MessageId, value: String?, checkPrem: Bool = false) {
+    public func react(_ messageId: MessageId, value: MessageReaction.Reaction?, checkPrem: Bool = false) {
         _ = _isInteractive.swap(messageId)
         
         if let reaction = self.available?.reactions.first(where: { $0.value == value}) {
@@ -46,7 +46,7 @@ public final class Reactions {
         reactable.set(updateMessageReactionsInteractively(account: self.engine.account, messageId: messageId, reaction: value, isLarge: false).start(), forKey: messageId)
     }
     
-    public func updateQuick(_ value: String) {
+    public func updateQuick(_ value: MessageReaction.Reaction) {
         _ = self.engine.stickers.updateQuickReaction(reaction: value).start()
     }
     

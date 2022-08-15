@@ -33,7 +33,7 @@ final class ContextAddReactionsListView : View  {
         private let premium: LockView?
 
         
-        required init(frame frameRect: NSRect, context: AccountContext, reaction: AvailableReactions.Reaction, add: @escaping(String, Bool)->Void) {
+        required init(frame frameRect: NSRect, context: AccountContext, reaction: AvailableReactions.Reaction, add: @escaping(MessageReaction.Reaction, Bool)->Void) {
             self.reaction = reaction
             self.context = context
             if reaction.isPremium, !context.isPremium {
@@ -202,7 +202,7 @@ final class ContextAddReactionsListView : View  {
     private let backgroundView = View()
     private let visualEffect = NSVisualEffectView(frame: .zero)
     private let radiusLayer: Bool
-    required init(frame frameRect: NSRect, context: AccountContext, list: [AvailableReactions.Reaction], add:@escaping(String, Bool)->Void, radiusLayer: Bool = true) {
+    required init(frame frameRect: NSRect, context: AccountContext, list: [AvailableReactions.Reaction], add:@escaping(MessageReaction.Reaction, Bool)->Void, radiusLayer: Bool = true) {
         self.list = list
         self.radiusLayer = radiusLayer
         super.init(frame: frameRect)
@@ -438,7 +438,7 @@ final class AddReactionManager : NSObject, Notifable {
             
             private let premium: LockView?
             
-            required init(frame frameRect: NSRect, context: AccountContext, reaction: AvailableReactions.Reaction, add: @escaping(String)->Void) {
+            required init(frame frameRect: NSRect, context: AccountContext, reaction: AvailableReactions.Reaction, add: @escaping(MessageReaction.Reaction)->Void) {
                 self.reaction = reaction
                 if reaction.isPremium, !context.isPremium {
                     self.premium = LockView()
@@ -579,7 +579,7 @@ final class AddReactionManager : NSObject, Notifable {
         private let topGradient = ShadowView()
         private let bottomGradient = ShadowView()
 
-        required init(frame frameRect: NSRect, context: AccountContext, isReversed: Bool, list: [AvailableReactions.Reaction], add:@escaping(String)->Void) {
+        required init(frame frameRect: NSRect, context: AccountContext, isReversed: Bool, list: [AvailableReactions.Reaction], add:@escaping(MessageReaction.Reaction)->Void) {
             self.list = list
             self.isReversed = isReversed
             super.init(frame: frameRect)
@@ -667,10 +667,10 @@ final class AddReactionManager : NSObject, Notifable {
         private let context: AccountContext
         private let disposable = MetaDisposable()
         private var listView: ListView?
-        private let add:(String)->Void
+        private let add:(MessageReaction.Reaction)->Void
         var isReversed: Bool = false
         var isRemoving: Bool = false
-        required init(frame frameRect: NSRect, isBubbled: Bool, context: AccountContext, reactions: [AvailableReactions.Reaction], add:@escaping(String)->Void) {
+        required init(frame frameRect: NSRect, isBubbled: Bool, context: AccountContext, reactions: [AvailableReactions.Reaction], add:@escaping(MessageReaction.Reaction)->Void) {
             self.isBubbled = isBubbled
             self.reactions = reactions
             self.context = context

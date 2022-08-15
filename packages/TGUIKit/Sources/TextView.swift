@@ -756,11 +756,7 @@ public final class TextViewLayout : Equatable {
             }
         }
         
-        for line in lines {
-            if let first = line.embeddedItems.first, first.range.location == line.range.location {
-                line.frame
-            }
-        }
+
 
         self.embeddedItems = embeddedItems
         

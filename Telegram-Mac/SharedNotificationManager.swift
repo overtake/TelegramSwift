@@ -282,7 +282,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
     
     enum Source {
         case messages([Message], PeerGroupId)
-        case reaction(Message, Peer, String, Int32)
+        case reaction(Message, Peer, MessageReaction.Reaction, Int32)
         
         var messages:[Message] {
             switch self {
@@ -459,9 +459,9 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 let msg = pullText(from: message) as String
                                 title = message.peers[message.id.peerId]?.displayTitle ?? ""
                                 if message.id.peerId.namespace == Namespaces.Peer.CloudUser {
-                                    text = strings().notificationContactReacted(value.fixed, msg)
+                                    text = strings().notificationContactReacted(value.string.fixed, msg)
                                 } else {
-                                    text = strings().notificationGroupReacted(peer.displayTitle, value, msg)
+                                    text = strings().notificationGroupReacted(peer.displayTitle, value.string.fixed, msg)
                                 }
                             case .messages:
                                 text = chatListText(account: account, for: message, applyUserName: true).string

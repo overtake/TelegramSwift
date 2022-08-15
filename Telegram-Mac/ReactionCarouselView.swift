@@ -26,7 +26,7 @@ private final class ReactionView : Control {
     private var currentKey: String?
     
     
-    required init(frame frameRect: NSRect, context: AccountContext, reaction: AvailableReactions.Reaction, add: @escaping(String)->Void) {
+    required init(frame frameRect: NSRect, context: AccountContext, reaction: AvailableReactions.Reaction, add: @escaping(MessageReaction.Reaction)->Void) {
         self.reaction = reaction
         self.context = context
         super.init(frame: frameRect)
@@ -151,8 +151,8 @@ final class ReactionCarouselView: View {
         private let player: LottiePlayerView
         private let animation: LottieAnimation
         let animationSize: NSSize
-        let value: String
-        init(animation: LottieAnimation, value: String, animationSize: NSSize, frameRect: NSRect) {
+        let value: MessageReaction.Reaction
+        init(animation: LottieAnimation, value: MessageReaction.Reaction, animationSize: NSSize, frameRect: NSRect) {
             self.animation = animation
             self.value = value
             self.player = LottiePlayerView(frame: .init(origin: .zero, size: animationSize))
@@ -345,7 +345,7 @@ final class ReactionCarouselView: View {
         needsLayout = true
     }
     
-    private func add(effect value: String, file: TelegramMediaFile) {
+    private func add(effect value: MessageReaction.Reaction, file: TelegramMediaFile) {
         
         let animationSize = NSMakeSize(200, 200)
         
@@ -367,7 +367,7 @@ final class ReactionCarouselView: View {
         
     }
     
-    private func playEffect(_ animation: LottieAnimation?, value: String) {
+    private func playEffect(_ animation: LottieAnimation?, value: MessageReaction.Reaction) {
         if let animation = animation {
             
             var getView:(()->NSView?)? = nil

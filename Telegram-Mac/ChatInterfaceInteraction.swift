@@ -175,7 +175,7 @@ final class ChatInteraction : InterfaceObserver  {
 
     var runEmojiScreenEffect:(String, Message, Bool, Bool)->Void = { _, _, _, _ in }
     var runPremiumScreenEffect:(Message, Bool, Bool)->Void = { _, _, _ in }
-    var runReactionEffect:(String, MessageId)->Void = { _, _ in }
+    var runReactionEffect:(MessageReaction.Reaction, MessageId)->Void = { _, _ in }
 
     var toggleSendAs: (PeerId)->Void = { _ in }
     var getCachedData:()->CachedPeerData? = { return nil }

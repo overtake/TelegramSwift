@@ -90,6 +90,11 @@ class ContextSearchMessageItem: GeneralRowItem {
         }
         _ = messageTitle.append(string: text, color: theme.colors.text, font: .normal(.text))
         
+        let r = messageTitle.string.lowercased().nsstring.range(of: searchText.lowercased())
+        if r.location != NSNotFound, r.location > 50 {
+            messageTitle.replaceCharacters(in: NSMakeRange(0, r.location - 30), with: "...")
+        }
+
         
         self.messageLayout = TextViewLayout(messageTitle, maximumNumberOfLines: 1, truncationType: .end, strokeLinks: true)
         let selectRange = messageTitle.string.lowercased().nsstring.range(of: searchText.lowercased())
