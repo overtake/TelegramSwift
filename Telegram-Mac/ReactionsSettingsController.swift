@@ -15,10 +15,10 @@ import Postbox
 
 private final class Arguments {
     let context: AccountContext
-    let toggleReaction:([String])->Void
-    let toggleValueReaction:(String)->Void
-    let updateQuick:(String)->Void
-    init(context: AccountContext, toggleReaction:@escaping([String])->Void, updateQuick:@escaping(String)->Void, toggleValueReaction: @escaping(String)->Void) {
+    let toggleReaction:([MessageReaction.Reaction])->Void
+    let toggleValueReaction:(MessageReaction.Reaction)->Void
+    let updateQuick:(MessageReaction.Reaction)->Void
+    init(context: AccountContext, toggleReaction:@escaping([MessageReaction.Reaction])->Void, updateQuick:@escaping(MessageReaction.Reaction)->Void, toggleValueReaction: @escaping(MessageReaction.Reaction)->Void) {
         self.context = context
         self.toggleReaction = toggleReaction
         self.updateQuick = updateQuick
@@ -28,10 +28,10 @@ private final class Arguments {
 
 private struct State : Equatable {
     let mode: ReactionSettingsMode
-    var quick: String?
-    var reactions: [String]
+    var quick: MessageReaction.Reaction?
+    var reactions: [MessageReaction.Reaction]
     var availableReactions: AvailableReactions?
-    var thumbs:[String: CGImage] = [:]
+    var thumbs:[MessageReaction.Reaction: CGImage] = [:]
 }
 
 private let _id_allow: InputDataIdentifier = InputDataIdentifier("_id_allow")
@@ -80,7 +80,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             case .chat:
                  type = .switchable(state.reactions.contains(reaction.value))
             }
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init(reaction.value), data: .init(name: reaction.title, color: theme.colors.text, icon: state.thumbs[reaction.value], type: type, viewType: bestGeneralViewType(available.enabled, for: i), action: {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("_id_\(reaction.value.hashValue)"), data: .init(name: reaction.title, color: theme.colors.text, icon: state.thumbs[reaction.value], type: type, viewType: bestGeneralViewType(available.enabled, for: i), action: {
                 switch state.mode {
                 case .quick:
                     arguments.updateQuick(reaction.value)
@@ -128,7 +128,7 @@ enum ReactionSettingsMode : Equatable {
     }
 }
 
-func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowedReactions: [String]?, availableReactions: AvailableReactions?, mode: ReactionSettingsMode) -> InputDataController {
+func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowedReactions: [MessageReaction.Reaction]?, availableReactions: AvailableReactions?, mode: ReactionSettingsMode) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
     let update = MetaDisposable()

@@ -207,39 +207,39 @@ private class AccountInfoView : GeneralContainableRowView {
         
         let animationSize = NSMakeSize(90, 90)
         
-        let reaction: Signal<AvailableReactions.Reaction?, NoError> = context.inlinePacksContext.load(fileId: status.fileId) |> mapToSignal { file in
-            return context.reactions.stateValue |> take(1) |> map { value in
-                let found = value?.reactions.first(where: {
-                    $0.value.fixed == file?.customEmojiText?.fixed
-                })
-                return found
-            }
-        }
-        let signal: Signal<LottieAnimation?, NoError> = reaction
-        |> filter { $0 != nil}
-        |> map {
-            $0!
-        } |> mapToSignal { reaction -> Signal<MediaResourceData, NoError> in
-            if let file = reaction.aroundAnimation {
-                return context.account.postbox.mediaBox.resourceData(file.resource)
-                |> filter { $0.complete }
-                |> take(1)
-            } else {
-                return .complete()
-            }
-        } |> map { data in
-            if let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
-                return LottieAnimation(compressed: data, key: .init(key: .bundle("_status_effect_new_\(status.fileId)"), size: animationSize, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd)
-            } else {
-                return nil
-            }
-        } |> deliverOnMainQueue
-        
-        playStatusDisposable.set(signal.start(next: { [weak self] animation in
-            if let animation = animation {
-                self?.playAnimation(animation)
-            }
-        }))
+//        let reaction: Signal<AvailableReactions.Reaction?, NoError> = context.inlinePacksContext.load(fileId: status.fileId) |> mapToSignal { file in
+//            return context.reactions.stateValue |> take(1) |> map { value in
+//                let found = value?.reactions.first(where: {
+//                    $0.value.fixed == file?.customEmojiText?.fixed
+//                })
+//                return found
+//            }
+//        }
+//        let signal: Signal<LottieAnimation?, NoError> = reaction
+//        |> filter { $0 != nil}
+//        |> map {
+//            $0!
+//        } |> mapToSignal { reaction -> Signal<MediaResourceData, NoError> in
+//            if let file = reaction.aroundAnimation {
+//                return context.account.postbox.mediaBox.resourceData(file.resource)
+//                |> filter { $0.complete }
+//                |> take(1)
+//            } else {
+//                return .complete()
+//            }
+//        } |> map { data in
+//            if let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
+//                return LottieAnimation(compressed: data, key: .init(key: .bundle("_status_effect_new_\(status.fileId)"), size: animationSize, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd)
+//            } else {
+//                return nil
+//            }
+//        } |> deliverOnMainQueue
+//        
+//        playStatusDisposable.set(signal.start(next: { [weak self] animation in
+//            if let animation = animation {
+//                self?.playAnimation(animation)
+//            }
+//        }))
     }
     
     private func playAnimation(_ animation: LottieAnimation) {

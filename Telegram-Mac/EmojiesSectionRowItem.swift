@@ -189,8 +189,8 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         
-        if let item = itemUnderMouse?.1, let file = item.item?.file {
-            let reference = FileMediaReference.stickerPack(stickerPack: file.emojiReference!, media: file)
+        if let item = itemUnderMouse?.1, let file = item.item?.file, let emojiReference = file.emojiReference {
+            let reference = FileMediaReference.stickerPack(stickerPack: emojiReference, media: file)
             if file.isVideoSticker && !file.isWebm {
                 return (.file(reference, GifPreviewModalView.self), nil)
             } else if file.isAnimatedSticker || file.isWebm {

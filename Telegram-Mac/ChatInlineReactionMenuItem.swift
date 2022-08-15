@@ -13,9 +13,9 @@ import TelegramCore
 class ChatInlineReactionMenuItem : ContextMenuItem {
     
     private let context: AccountContext
-    private let _handler:(String, Bool) -> Void
+    private let _handler:(MessageReaction.Reaction, Bool) -> Void
     private let reactions: [AvailableReactions.Reaction]
-    init(context: AccountContext, reactions: [AvailableReactions.Reaction], handler: @escaping(String, Bool) -> Void) {
+    init(context: AccountContext, reactions: [AvailableReactions.Reaction], handler: @escaping(MessageReaction.Reaction, Bool) -> Void) {
         self.context = context
         self._handler = handler
         self.reactions = reactions
@@ -34,9 +34,9 @@ class ChatInlineReactionMenuItem : ContextMenuItem {
 
 private final class ChatInlineReactionMenuRowItem : AppMenuRowItem {
     fileprivate let context: AccountContext
-    fileprivate let _handler:(String, Bool) -> Void
+    fileprivate let _handler:(MessageReaction.Reaction, Bool) -> Void
     fileprivate let reactions: [AvailableReactions.Reaction]
-    init(_ initialSize: NSSize, item: ContextMenuItem, interaction: AppMenuBasicItem.Interaction, presentation: AppMenu.Presentation, context: AccountContext, handler: @escaping(String, Bool) -> Void, reactions: [AvailableReactions.Reaction]) {
+    init(_ initialSize: NSSize, item: ContextMenuItem, interaction: AppMenuBasicItem.Interaction, presentation: AppMenu.Presentation, context: AccountContext, handler: @escaping(MessageReaction.Reaction, Bool) -> Void, reactions: [AvailableReactions.Reaction]) {
         
         self.context = context
         self._handler = handler

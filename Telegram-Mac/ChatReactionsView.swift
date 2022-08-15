@@ -15,6 +15,25 @@ import Reactions
 import AppKit
 import SwiftSignalKit
 
+extension MessageReaction.Reaction {
+    var isEmpty: Bool {
+        switch self {
+        case let .builtin(value):
+            return value.isEmpty
+        default:
+            return false
+        }
+    }
+    var string: String {
+        switch self {
+        case let .builtin(value):
+            return value
+        default:
+            return ""
+        }
+    }
+}
+
 final class ChatReactionsLayout {
     
     struct Theme : Equatable {
@@ -126,11 +145,11 @@ final class ChatReactionsLayout {
         let mode: ChatReactionsLayout.Mode
         let disposable: MetaDisposable = MetaDisposable()
         let delayDisposable = MetaDisposable()
-        let action:(String, Bool)->Void
+        let action:(MessageReaction.Reaction, Bool)->Void
         let context: AccountContext
         let message: Message
         let openInfo: (PeerId)->Void
-        let runEffect:(String)->Void
+        let runEffect:(MessageReaction.Reaction)->Void
         let canViewList: Bool
         let list: [AvailableReactions.Reaction]
         let avatars:[Avatar]
@@ -150,11 +169,11 @@ final class ChatReactionsLayout {
         static func <(lhs: Reaction, rhs: Reaction) -> Bool {
             return lhs.index < rhs.index
         }
-        var stableId: String {
+        var stableId: MessageReaction.Reaction {
             return self.value.value
         }
         
-        init(value: MessageReaction, recentPeers:[Peer], list: [AvailableReactions.Reaction], canViewList: Bool, message: Message, context: AccountContext, mode: ChatReactionsLayout.Mode, index: Int, available: AvailableReactions.Reaction, presentation: Theme, action:@escaping(String, Bool)->Void, openInfo: @escaping (PeerId)->Void, runEffect:@escaping(String)->Void) {
+        init(value: MessageReaction, recentPeers:[Peer], list: [AvailableReactions.Reaction], canViewList: Bool, message: Message, context: AccountContext, mode: ChatReactionsLayout.Mode, index: Int, available: AvailableReactions.Reaction, presentation: Theme, action:@escaping(MessageReaction.Reaction, Bool)->Void, openInfo: @escaping (PeerId)->Void, runEffect:@escaping(MessageReaction.Reaction)->Void) {
             self.value = value
             self.index = index
             self.message = message
@@ -315,7 +334,7 @@ final class ChatReactionsLayout {
     let mode: Mode
     
     
-    init(context: AccountContext, message: Message, available: AvailableReactions?, peerAllowed: [String], engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, openInfo:@escaping(PeerId)->Void, runEffect: @escaping(String)->Void) {
+    init(context: AccountContext, message: Message, available: AvailableReactions?, peerAllowed: [MessageReaction.Reaction], engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, openInfo:@escaping(PeerId)->Void, runEffect: @escaping(MessageReaction.Reaction)->Void) {
         
         let mode: Mode = message.id.peerId.namespace == Namespaces.Peer.CloudUser ? .short : .full
         self.message = message
@@ -336,7 +355,7 @@ final class ChatReactionsLayout {
         
         let reactions = message.effectiveReactions(context.peerId)!
         
-        var indexes:[String: Int] = [:]
+        var indexes:[MessageReaction.Reaction: Int] = [:]
         if let available = available {
             var index: Int = 0
             for value in available.reactions {
@@ -367,7 +386,7 @@ final class ChatReactionsLayout {
             if let value = context.appConfiguration.data?["reactions_uniq_max"] as? Double {
                 let uniqueLimit = Int(value)
                 if sorted.count < uniqueLimit {
-                    sorted.append(.init(value: "", count: -1, isSelected: false))
+                    sorted.append(.init(value: .builtin(""), count: -1, isSelected: false))
                 }
             }
         }
@@ -1027,7 +1046,7 @@ final class ChatReactionsView : View {
         super.init(frame: frameRect)
     }
     
-    func getView(_ value: String) -> ReactionViewImpl? {
+    func getView(_ value: MessageReaction.Reaction) -> ReactionViewImpl? {
         guard let currentLayout = currentLayout else {
             return nil
         }
@@ -1049,7 +1068,7 @@ final class ChatReactionsView : View {
         
     }
     
-    func getReactionView(_ value: String) -> NSView? {
+    func getReactionView(_ value: MessageReaction.Reaction) -> NSView? {
         guard let currentLayout = currentLayout else {
             return nil
         }

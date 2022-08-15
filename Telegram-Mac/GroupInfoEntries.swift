@@ -235,7 +235,7 @@ final class GroupInfoArguments : PeerInfoArguments {
             self?.openInviteLinks()
         }))
     }
-    func openReactions(allowedReactions: [String]?, availableReactions: AvailableReactions?) {
+    func openReactions(allowedReactions: [MessageReaction.Reaction]?, availableReactions: AvailableReactions?) {
         pushViewController(ReactionsSettingsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions, mode: .chat(isGroup: true)))
     }
     
@@ -1023,7 +1023,7 @@ enum GroupInfoEntry: PeerInfoEntry {
     case inviteLinks(section:Int, count: Int32, viewType: GeneralViewType)
     case requests(section:Int, count: Int32, viewType: GeneralViewType)
     case linkedChannel(section:Int, channel: Peer, subscribers: Int32?, viewType: GeneralViewType)
-    case reactions(section:Int, text: String, allowedReactions: [String]?, availableReactions: AvailableReactions?, viewType: GeneralViewType)
+    case reactions(section:Int, text: String, allowedReactions: [MessageReaction.Reaction]?, availableReactions: AvailableReactions?, viewType: GeneralViewType)
     case groupDescriptionSetup(section:Int, text: String, viewType: GeneralViewType)
     case groupAboutDescription(section:Int, viewType: GeneralViewType)
     case groupStickerset(section:Int, packName: String, viewType: GeneralViewType)

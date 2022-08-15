@@ -24,7 +24,7 @@ final class EmojiScreenEffect {
     struct Key : Hashable {
         enum Mode : Equatable, Hashable {
             case effect(Bool)
-            case reaction(String)
+            case reaction(MessageReaction.Reaction)
         }
         let animationKey: LottieAnimationKey
         let messageId: MessageId
@@ -46,7 +46,8 @@ final class EmojiScreenEffect {
         let view: WeakReference<EmojiAnimationEffectView>
         let index: Int
         let messageId: MessageId
-        let emoji: String
+        let emoji: String?
+        let reaction: MessageReaction.Reaction?
         let mirror: Bool
         let key: Key
     }
@@ -166,7 +167,7 @@ final class EmojiScreenEffect {
             
             dataDisposable.set(signal.start(next: { [weak self, weak parentView] animation in
                 if let animation = animation, let parentView = parentView {
-                    self?.initAnimation(animation, mode: .effect(false), emoji: emoji, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
+                    self?.initAnimation(animation, mode: .effect(false), emoji: emoji, reaction: nil, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
                 }
             }), forKey: messageId)
         } else {
@@ -200,7 +201,7 @@ final class EmojiScreenEffect {
 
             dataDisposable.set(signal.start(next: { [weak self, weak parentView] values in
                 if let animation = values?.0, let emoji = values?.1, let parentView = parentView {
-                    self?.initAnimation(animation, mode: .effect(true), emoji: emoji, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
+                    self?.initAnimation(animation, mode: .effect(true), emoji: emoji, reaction: nil, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
                 }
             }), forKey: messageId)
         } else {
@@ -208,7 +209,7 @@ final class EmojiScreenEffect {
         }
     }
     
-    func addReactionAnimation(_ value: String, index: Int?, messageId: MessageId, animationSize: NSSize, viewFrame: NSRect, for parentView: NSView) {
+    func addReactionAnimation(_ value: MessageReaction.Reaction, index: Int?, messageId: MessageId, animationSize: NSSize, viewFrame: NSRect, for parentView: NSView) {
         
         let context = self.context
         
@@ -238,7 +239,7 @@ final class EmojiScreenEffect {
         
         reactionDataDisposable.set(signal.start(next: { [weak self, weak parentView] animation in
             if let animation = animation, let parentView = parentView {
-                self?.initAnimation(animation, mode: .reaction(value), emoji: value, mirror: false, isIncoming: false, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
+                self?.initAnimation(animation, mode: .reaction(value), emoji: nil, reaction: value, mirror: false, isIncoming: false, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
             }
         }), forKey: messageId)
        
@@ -262,7 +263,7 @@ final class EmojiScreenEffect {
         }
     }
     
-    private func initAnimation(_ animation: LottieAnimation, mode: EmojiScreenEffect.Key.Mode, emoji: String, mirror: Bool, isIncoming: Bool, messageId: MessageId, animationSize: NSSize, viewFrame: NSRect, parentView: NSView) {
+    private func initAnimation(_ animation: LottieAnimation, mode: EmojiScreenEffect.Key.Mode, emoji: String?, reaction: MessageReaction.Reaction?, mirror: Bool, isIncoming: Bool, messageId: MessageId, animationSize: NSSize, viewFrame: NSRect, parentView: NSView) {
         
         
         let mediaView = (takeTableItem(messageId)?.view as? ChatMediaView)?.contentNode as? MediaAnimatedStickerView
@@ -278,7 +279,7 @@ final class EmojiScreenEffect {
 
         parentView.addSubview(view)
         
-        let value: Value = .init(view: .init(value: view), index: 1, messageId: messageId, emoji: emoji, mirror: mirror, key: key)
+        let value: Value = .init(view: .init(value: view), index: 1, messageId: messageId, emoji: emoji, reaction: reaction, mirror: mirror, key: key)
         animations[key] = value
         
         updateScroll(transition: .immediate)
@@ -305,8 +306,8 @@ final class EmojiScreenEffect {
         
         var exists:Set<MessageId> = Set()
         for value in enqueuedToEnjoy {
-            if !exists.contains(value.key.messageId) {
-                context.account.updateLocalInputActivity(peerId: PeerActivitySpace(peerId: value.key.messageId.peerId, category: .global), activity: .seeingEmojiInteraction(emoticon: value.emoji), isPresent: true)
+            if !exists.contains(value.key.messageId), let emoji = value.emoji {
+                context.account.updateLocalInputActivity(peerId: PeerActivitySpace(peerId: value.key.messageId.peerId, category: .global), activity: .seeingEmojiInteraction(emoticon: emoji), isPresent: true)
                 exists.insert(value.key.messageId)
             }
         }
@@ -337,7 +338,9 @@ final class EmojiScreenEffect {
                 .init(index: current.index, timeOffset: Float((current.key.timestamp - value.key.timestamp)))
             }.sorted(by: { $0.timeOffset < $1.timeOffset })
             
-            context.account.updateLocalInputActivity(peerId: PeerActivitySpace(peerId: msgId.peerId, category: .global), activity: .interactingWithEmoji(emoticon: value.emoji, messageId: msgId, interaction: EmojiInteraction(animations: animations)), isPresent: true)
+            if let emoji = value.emoji {
+                context.account.updateLocalInputActivity(peerId: PeerActivitySpace(peerId: msgId.peerId, category: .global), activity: .interactingWithEmoji(emoticon: emoji, messageId: msgId, interaction: EmojiInteraction(animations: animations)), isPresent: true)
+            }
         }
     }
     

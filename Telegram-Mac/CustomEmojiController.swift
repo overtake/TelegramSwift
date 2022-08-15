@@ -168,7 +168,7 @@ func CustomEmojiController(context: AccountContext) -> InputDataController {
     }
     
     controller.afterTransaction = { controller in
-        let resortRange = NSMakeRange(1, controller.tableView.count - 3)
+        let resortRange = NSMakeRange(3, controller.tableView.count - 5)
         if resortRange.length > 0 {
             
             let sections = stateValue.with { $0.sections }

@@ -61,12 +61,12 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
             }
         }
         
-        var peers:[(Peer, String?)] {
+        var peers:[(Peer, MessageReaction.Reaction?)] {
             switch self {
             case let .stats(read, reactions):
                 let readPeers = read ?? []
                 let reactionPeers = reactions?.items.map { ($0.peer._asPeer(), $0.reaction) } ?? []
-                let read:[(Peer, String?)] = readPeers.map { ($0, nil) }.filter({ value in
+                let read:[(Peer, MessageReaction.Reaction?)] = readPeers.map { ($0, nil) }.filter({ value in
                     return !reactionPeers.contains(where: {
                         $0.0.id == value.0.id
                     })
@@ -176,11 +176,11 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         let message = self.message
         let context = self.context
         let availableReactions = self.availableReactions
-        let makeItem:(_ peer: (Peer, String?)) -> ContextMenuItem = { [weak chatInteraction] peer in
+        let makeItem:(_ peer: (Peer, MessageReaction.Reaction?)) -> ContextMenuItem = { [weak chatInteraction] peer in
             let title = peer.0.displayTitle.prefixWithDots(25)
             
             let reaction = availableReactions?.reactions.first(where: {
-                $0.value.fixed == peer.1?.fixed
+                $0.value == peer.1
             })?.staticIcon
             
             let item = ReactionPeerMenu(title: title, handler: {

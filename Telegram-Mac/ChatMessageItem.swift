@@ -429,7 +429,6 @@ class ChatMessageItem: ChatRowItem {
             
             self.containsBigEmoji = containsBigEmoji
              
-             InlineStickerItem.apply(to: copy, associatedMedia: message.associatedMedia, entities: message.textEntities?.entities ?? [], isPremium: context.isPremium)
             
             if message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
                 copy.detectLinks(type: [.Links, .Mentions, .Hashtags, .Commands], context: context, color: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), openInfo: chatInteraction.openInfo, hashtag: { _ in }, command: { _ in }, applyProxy: chatInteraction.applyProxy)
@@ -457,7 +456,8 @@ class ChatMessageItem: ChatRowItem {
                      }
                  }
              }
-             
+             InlineStickerItem.apply(to: copy, associatedMedia: message.associatedMedia, entities: message.textEntities?.entities ?? [], isPremium: context.isPremium)
+
              copy.fixUndefinedEmojies()
 
              

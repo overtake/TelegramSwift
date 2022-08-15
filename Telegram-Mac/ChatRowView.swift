@@ -1363,7 +1363,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     enum ScreenEffectMode {
         case effect
-        case reaction(String)
+        case reaction(MessageReaction.Reaction)
     }
     func getScreenEffectView(_ mode: ScreenEffectMode) -> NSView? {
         switch mode {
