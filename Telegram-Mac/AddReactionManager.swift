@@ -167,6 +167,10 @@ final class ContextAddReactionsListView : View  {
             if let premium = premium {
                 premium.layer?.animateScaleSpring(from: 0.7, to: 1, duration: 0.3, bounce: true)
             }
+            guard self.visibleRect != .zero else {
+                return
+            }
+            
                         
             let signal = context.account.postbox.mediaBox.resourceData(reaction.appearAnimation.resource, attemptSynchronously: true)
             |> filter {
