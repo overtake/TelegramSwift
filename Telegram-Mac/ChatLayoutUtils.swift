@@ -63,10 +63,15 @@ class ChatLayoutUtils: NSObject {
                     size = dimensions.aspectFitted(size)
                 }
             } else if file.isStaticSticker && !webpIsFile {
-                if contentSize == NSZeroSize {
-                    return NSMakeSize(208, 208)
+                
+                var sz = NSMakeSize(208, 208)
+                if file.fileName == "telegram-animoji.tgs" {
+                    sz = NSMakeSize(112, 112)
                 }
-                size = contentSize.aspectFitted(NSMakeSize(208, 208))
+                if contentSize == NSZeroSize {
+                    return sz
+                }
+                size = contentSize.aspectFitted(sz)
                 size = NSMakeSize(max(size.width, 40), max(size.height, 40))
             } else if file.isInstantVideo {
                 size = NSMakeSize(280, 280)
