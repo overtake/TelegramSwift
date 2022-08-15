@@ -109,7 +109,7 @@ private final class ChatInlineReactionMenuRowView : AppMenuBasicItemView {
             let reactionsView = ContextAddReactionsListView(frame: NSMakeRect(0, 0, width, 30), context: item.context, list: list, add: { [weak item] value, checkPrem in
                 item?._handler(value, checkPrem)
                 AppMenu.closeAll()
-            }, radiusLayer: false)
+            }, radiusLayer: nil)
             self.reactions = reactionsView
             addSubview(reactionsView)
         }

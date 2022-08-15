@@ -201,8 +201,8 @@ final class ContextAddReactionsListView : View  {
 
     private let backgroundView = View()
     private let visualEffect = NSVisualEffectView(frame: .zero)
-    private let radiusLayer: Bool
-    required init(frame frameRect: NSRect, context: AccountContext, list: [AvailableReactions.Reaction], add:@escaping(MessageReaction.Reaction, Bool)->Void, radiusLayer: Bool = true) {
+    private let radiusLayer: CGFloat?
+    required init(frame frameRect: NSRect, context: AccountContext, list: [AvailableReactions.Reaction], add:@escaping(MessageReaction.Reaction, Bool)->Void, radiusLayer: CGFloat? = 15) {
         self.list = list
         self.radiusLayer = radiusLayer
         super.init(frame: frameRect)
@@ -214,7 +214,7 @@ final class ContextAddReactionsListView : View  {
         
         
         
-        if radiusLayer {
+        if let radiusLayer = radiusLayer {
             
             let shadow = NSShadow()
             shadow.shadowBlurRadius = 2
@@ -222,12 +222,12 @@ final class ContextAddReactionsListView : View  {
             shadow.shadowOffset = NSMakeSize(0, 0)
             self.shadow = shadow
             
-            self.layer?.cornerRadius = 15
-            visualEffect.layer?.cornerRadius = 15
-            backgroundView.layer?.cornerRadius = 15
+            self.layer?.cornerRadius = radiusLayer
+            visualEffect.layer?.cornerRadius = radiusLayer
+            backgroundView.layer?.cornerRadius = radiusLayer
             
-            scrollView.layer?.cornerRadius = 15
-            documentView.layer?.cornerRadius = 15
+            scrollView.layer?.cornerRadius = radiusLayer
+            documentView.layer?.cornerRadius = radiusLayer
             
             
             bottomGradient.shadowBackground = theme.colors.background.withAlphaComponent(0.6)
@@ -241,10 +241,10 @@ final class ContextAddReactionsListView : View  {
         
         visualEffect.material = theme.colors.isDark ? .dark : .mediumLight
 
-        if #available(macOS 11.0, *), radiusLayer {
+        if #available(macOS 11.0, *), radiusLayer != nil {
             self.addSubview(visualEffect)
             backgroundView.backgroundColor = theme.colors.background.withAlphaComponent(0.7)
-        } else if !radiusLayer {
+        } else if radiusLayer == nil {
             backgroundView.backgroundColor = .clear
         } else {
             backgroundView.backgroundColor = theme.colors.background
@@ -313,7 +313,7 @@ final class ContextAddReactionsListView : View  {
         }
         self.previousRange = range
         
-        if self.radiusLayer {
+        if self.radiusLayer != nil {
             for view in documentView.subviews {
                 var fr = CATransform3DIdentity
                 if view.visibleRect.size != view.frame.size {
@@ -346,8 +346,8 @@ final class ContextAddReactionsListView : View  {
         updateLayout(size: frame.size, transition: .immediate)
     }
     
-    static func width(for list: [AvailableReactions.Reaction]) -> CGFloat {
-        return CGFloat(list.count) * self.size.width
+    static func width(for list: [AvailableReactions.Reaction], maxCount: Int = .max) -> CGFloat {
+        return CGFloat(min(list.count, maxCount)) * self.size.width
     }
     
     
@@ -367,8 +367,8 @@ final class ContextAddReactionsListView : View  {
         transition.updateFrame(view: self.scrollView, frame: size.bounds)
         transition.updateFrame(view: self.documentView, frame: NSMakeSize(ContextAddReactionsListView.width(for: self.list), size.height).bounds)
         
-        transition.updateFrame(view: self.topGradient, frame: NSMakeRect(0, 0, 10, frame.height))
-        transition.updateFrame(view: self.bottomGradient, frame: NSMakeRect(frame.width - 10, 0, 10, frame.height))
+        transition.updateFrame(view: self.topGradient, frame: NSMakeRect(0, 0, 10, size.height))
+        transition.updateFrame(view: self.bottomGradient, frame: NSMakeRect(frame.width - 10, 0, 10, size.height))
         
         transition.updateFrame(view: visualEffect, frame: size.bounds)
         transition.updateFrame(view: backgroundView, frame: size.bounds)

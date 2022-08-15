@@ -2646,7 +2646,7 @@ class ChatRowItem: TableRowItem {
                 }
             })
             
-            let width = ContextAddReactionsListView.width(for: available)
+            let width = ContextAddReactionsListView.width(for: available, maxCount: 6)
             
             let rect = NSMakeRect(0, 0, width + 30, 50)
             
@@ -2664,11 +2664,9 @@ class ChatRowItem: TableRowItem {
             let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem in
                 let isSelected = message.reactionsAttribute?.reactions.contains(where: { $0.value == value && $0.isSelected }) == true
                 context.reactions.react(message.id, value: isSelected ? nil : value, checkPrem: checkPrem)
-            })
+            }, radiusLayer: rect.height / 2 - 5)
             
             
-            
-            view.layer?.cornerRadius = 15
             panel.contentView?.addSubview(view)
             panel.contentView?.wantsLayer = true
             view.autoresizingMask = [.width, .height]
