@@ -464,6 +464,7 @@ public struct SelectPeerSettings: OptionSet {
     public static let groups = SelectPeerSettings(rawValue: 1 << 3)
     public static let excludeBots = SelectPeerSettings(rawValue: 1 << 4)
     public static let channels = SelectPeerSettings(rawValue: 1 << 5)
+    public static let bots = SelectPeerSettings(rawValue: 1 << 6)
 }
 
 class SelectPeersBehavior {
@@ -859,13 +860,18 @@ final class SelectChatsBehavior: SelectPeersBehavior {
                             return !checkInvite || value.peer.canInviteUsers
                         }
                     }
-                    if value.peer.isUser {
+                    if value.peer.isUser && !value.peer.isBot {
                         if settings.contains(.contacts) {
                             return true
                         }
                     }
                     if value.peer.isChannel {
                         if settings.contains(.channels) {
+                            return true
+                        }
+                    }
+                    if value.peer.isBot {
+                        if settings.contains(.bots) {
                             return true
                         }
                     }
