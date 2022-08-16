@@ -14,6 +14,34 @@ import TelegramCore
 import Cocoa
 
 
+
+enum GifTabEntryId : Hashable {
+    case recent
+    case trending
+    case recommended(String)
+}
+
+struct GIFKeyboardConfiguration : Equatable {
+    static var defaultValue: GIFKeyboardConfiguration {
+        return GIFKeyboardConfiguration(emojis: [])
+    }
+    
+    let emojis: [String]
+    
+    fileprivate init(emojis: [String]) {
+        self.emojis = emojis.map { $0.fixed }
+    }
+    
+    static func with(appConfiguration: AppConfiguration) -> GIFKeyboardConfiguration {
+        if let data = appConfiguration.data, let value = data["gif_search_emojies"] as? [String] {
+            return GIFKeyboardConfiguration(emojis: value.map { $0.fixed })
+        } else {
+            return .defaultValue
+        }
+    }
+    
+}
+
 private struct State : Equatable {
 
     

@@ -8377,6 +8377,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var reactions_show_more: CGImage {
+      if let image = cached.with({ $0["reactions_show_more"] }) {
+          return image
+      } else {
+          let image = _reactions_show_more()
+          _ = cached.modify { current in 
+              var current = current
+              current["reactions_show_more"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var chat_reactions_badge: CGImage {
       if let image = cached.with({ $0["chat_reactions_badge"] }) {
           return image
@@ -9334,6 +9347,7 @@ public final class TelegramIconsTheme {
   private let _reactions_badge_active: ()->CGImage
   private let _reactions_badge_archive: ()->CGImage
   private let _reactions_badge_archive_active: ()->CGImage
+  private let _reactions_show_more: ()->CGImage
   private let _chat_reactions_badge: ()->CGImage
   private let _chat_reactions_badge_active: ()->CGImage
   private let _gallery_pip_close: ()->CGImage
@@ -10004,6 +10018,7 @@ public final class TelegramIconsTheme {
       reactions_badge_active: @escaping()->CGImage,
       reactions_badge_archive: @escaping()->CGImage,
       reactions_badge_archive_active: @escaping()->CGImage,
+      reactions_show_more: @escaping()->CGImage,
       chat_reactions_badge: @escaping()->CGImage,
       chat_reactions_badge_active: @escaping()->CGImage,
       gallery_pip_close: @escaping()->CGImage,
@@ -10673,6 +10688,7 @@ public final class TelegramIconsTheme {
       self._reactions_badge_active = reactions_badge_active
       self._reactions_badge_archive = reactions_badge_archive
       self._reactions_badge_archive_active = reactions_badge_archive_active
+      self._reactions_show_more = reactions_show_more
       self._chat_reactions_badge = chat_reactions_badge
       self._chat_reactions_badge_active = chat_reactions_badge_active
       self._gallery_pip_close = gallery_pip_close

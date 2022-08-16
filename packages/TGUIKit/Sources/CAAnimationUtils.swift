@@ -290,6 +290,72 @@ public extension CALayer {
         self.add(animation, forKey: "transform")
     }
     
+    func animateScaleSpringFromX(anchor: NSPoint, from: CGFloat, to: CGFloat, duration: Double, initialVelocity: CGFloat = 0.0, removeOnCompletion: Bool = true, additive: Bool = false, bounce: Bool = true, completion: ((Bool) -> Void)? = nil) {
+        let animation = bounce ? makeSpringBounceAnimation("transform.scale.x", initialVelocity) : makeSpringAnimation("transform.scale.x")
+        
+        var fr = CATransform3DIdentity
+        fr = CATransform3DTranslate(fr, anchor.x, anchor.y, 0)
+        fr = CATransform3DScale(fr, from, 1, 1)
+        fr = CATransform3DTranslate(fr, -anchor.x, -anchor.y, 0)
+        
+        animation.fromValue = NSValue(caTransform3D: fr)
+        animation.toValue = to
+        animation.isRemovedOnCompletion = removeOnCompletion
+        animation.fillMode = .forwards
+        if let completion = completion {
+            animation.delegate = CALayerAnimationDelegate(completion: completion)
+        }
+        
+        let speed: Float = 1.0
+        
+        
+        animation.speed = speed * Float(animation.duration / duration)
+        animation.isAdditive = additive
+        
+        var tr = CATransform3DIdentity
+        tr = CATransform3DTranslate(tr, anchor.x, anchor.y, 0)
+        tr = CATransform3DScale(tr, to, 1, 1)
+        tr = CATransform3DTranslate(tr, -anchor.x, -anchor.y, 0)
+        animation.toValue = NSValue(caTransform3D: tr)
+
+        
+        self.add(animation, forKey: "transform.scale.x")
+    }
+
+    func animateScaleSpringFromY(anchor: NSPoint, from: CGFloat, to: CGFloat, duration: Double, initialVelocity: CGFloat = 0.0, removeOnCompletion: Bool = true, additive: Bool = false, bounce: Bool = true, completion: ((Bool) -> Void)? = nil) {
+        let animation = bounce ? makeSpringBounceAnimation("transform.scale.y", initialVelocity) : makeSpringAnimation("transform.scale.y")
+        
+        var fr = CATransform3DIdentity
+        fr = CATransform3DTranslate(fr, anchor.x, anchor.y, 0)
+        fr = CATransform3DScale(fr, 1, from, 1)
+        fr = CATransform3DTranslate(fr, -anchor.x, -anchor.y, 0)
+        
+        animation.fromValue = NSValue(caTransform3D: fr)
+        animation.toValue = to
+        animation.isRemovedOnCompletion = removeOnCompletion
+        animation.fillMode = .forwards
+        if let completion = completion {
+            animation.delegate = CALayerAnimationDelegate(completion: completion)
+        }
+        
+        let speed: Float = 1.0
+        
+        
+        animation.speed = speed * Float(animation.duration / duration)
+        animation.isAdditive = additive
+        
+        var tr = CATransform3DIdentity
+        tr = CATransform3DTranslate(tr, anchor.x, anchor.y, 0)
+        tr = CATransform3DScale(tr, 1, to, 1)
+        tr = CATransform3DTranslate(tr, -anchor.x, -anchor.y, 0)
+        animation.toValue = NSValue(caTransform3D: tr)
+
+        
+        self.add(animation, forKey: "transform.scale.y")
+    }
+
+    
+    
     func animateScaleAnchor(anchor: NSPoint, from: CGFloat, to: CGFloat, duration: Double, timingFunction: CAMediaTimingFunctionName = .easeInEaseOut, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
         let animation = CABasicAnimation(keyPath: "transform")
         animation.timingFunction = CAMediaTimingFunction(name: timingFunction)

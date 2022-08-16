@@ -90,8 +90,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         self.callback = callback
         
         if stableId != AnyHashable(0), let info = info {
-            let layout = TextViewLayout(.initialize(string: info.title.uppercased(), color: theme.colors.grayText, font: .normal(12)), alwaysStaticItems: true)
-            layout.measure(width: 300)
+            let layout = TextViewLayout(.initialize(string: info.title.uppercased(), color: theme.colors.grayText, font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
             self.nameLayout = layout
         } else {
             self.nameLayout = nil
@@ -117,6 +116,8 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         
         
         super.init(initialSize, stableId: stableId)
+        
+        _ = makeSize(initialSize.width)
     }
     
     override func viewClass() -> AnyClass {
@@ -125,7 +126,9 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
-                
+        
+        nameLayout?.measure(width: unlockText != nil ? 200 : 300)
+
         return true
     }
     
@@ -596,7 +599,15 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
     @objc func updateAnimatableContent() -> Void {
         for (_, value) in inlineStickerItemViews {
             if let superview = value.superview {
-                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow
+                var isKeyWindow: Bool = false
+                if let window = window {
+                    if !window.canBecomeKey {
+                        isKeyWindow = true
+                    } else {
+                        isKeyWindow = window.isKeyWindow
+                    }
+                }
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
             }
         }
     }
@@ -623,8 +634,15 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     contentView.layer?.addSublayer(view)
                 }
                 index += 1
-
-                view.isPlayable = NSIntersectsRect(rect, contentView.visibleRect) && window != nil && window!.isKeyWindow
+                var isKeyWindow: Bool = false
+                if let window = window {
+                    if !window.canBecomeKey {
+                        isKeyWindow = true
+                    } else {
+                        isKeyWindow = window.isKeyWindow
+                    }
+                }
+                view.isPlayable = NSIntersectsRect(rect, contentView.visibleRect) && isKeyWindow
                 view.frame = rect
             }
         }

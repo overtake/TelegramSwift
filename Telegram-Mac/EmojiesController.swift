@@ -308,6 +308,7 @@ private struct State : Equatable {
     var emojiState: EmojiState = .init(selected: nil)
     var revealed:[Int64: Bool] = [:]
     var search: [String]? = nil
+    var reactions: AvailableReactions?
 }
 
 private func _id_section(_ id:Int64) -> InputDataIdentifier {
@@ -380,10 +381,18 @@ private func entries(_ state: State, recent: RecentUsedEmoji, arguments: Argumen
 //    entries.append(.sectionId(sectionId, type: .custom(10)))
 //    sectionId += 1
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-        return GeneralRowItem(initialSize, height: 46, stableId: stableId, backgroundColor: .clear)
-    }))
-    index += 1
+    if arguments.mode != .reactions {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+            return GeneralRowItem(initialSize, height: 46, stableId: stableId, backgroundColor: .clear)
+        }))
+        index += 1
+    } else {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+            return GeneralRowItem(initialSize, height: 10, stableId: stableId, backgroundColor: .clear)
+        }))
+        index += 1
+    }
+    
     
 //    entries.append(.sectionId(sectionId, type: .custom(46)))
 //    sectionId += 1
@@ -475,8 +484,19 @@ private func entries(_ state: State, recent: RecentUsedEmoji, arguments: Argumen
     } else {
         for key in seglist {
             
+            if key == .Recent, arguments.mode == .reactions, let reactions = state.reactions {
+                let reactions:[StickerPackItem] = reactions.reactions.compactMap { value in
+                    return .init(index: .init(index: 0, id: 0), file: value.selectAnimation, indexKeys: [])
+                }
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(reactions), comparable: nil, item: { initialSize, stableId in
+                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: reactions, callback: { item in
+                        arguments.send(item)
+                    })
+                }))
+                index += 1
+            }
             
-            if key == .Recent, !recentAnimated.isEmpty {
+            if key == .Recent, !recentAnimated.isEmpty, arguments.mode != .reactions {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(recentAnimated), comparable: nil, item: { initialSize, stableId in
                     return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: recentAnimated, callback: { item in
                         arguments.send(item)
@@ -505,7 +525,7 @@ private func entries(_ state: State, recent: RecentUsedEmoji, arguments: Argumen
         for section in state.sections {
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_aemoji_block(section.info.id.id), equatable: InputDataEquatable(section.info), comparable: nil, item: { initialSize, stableId in
-                return GeneralRowItem(initialSize, height: 10, stableId: stableId)
+                return GeneralRowItem(initialSize, height: 10, stableId: stableId, backgroundColor: .clear)
             }))
             index += 1
             
@@ -533,8 +553,11 @@ private func entries(_ state: State, recent: RecentUsedEmoji, arguments: Argumen
     
     
   
-    entries.append(.sectionId(sectionId, type: .custom(10)))
-    sectionId += 1
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("bottom_section"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+        return GeneralRowItem(initialSize, height: 10, stableId: stableId, backgroundColor: .clear)
+    }))
+    index += 1
+    
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("bottom"), equatable: nil, comparable: nil, item: { initialSize, stableId in
         return GeneralRowItem(initialSize, height: 46, stableId: stableId, backgroundColor: .clear)
@@ -559,12 +582,17 @@ final class AnimatedEmojiesView : View {
     let searchView = SearchView(frame: .zero)
     private let searchContainer = View()
     private let searchBorder = View()
+    
+    private var mode: EmojiesController.Mode = .emoji
 
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
         self.packsView.getBackgroundColor = {
+            .clear
+        }
+        self.tableView.getBackgroundColor = {
             .clear
         }
         addSubview(self.tableView)
@@ -586,7 +614,6 @@ final class AnimatedEmojiesView : View {
             self?.updateScrollerSearch()
         }))
         
-        tableView.scrollerInsets = .init(left: 0, right: 0, top: 46, bottom: 0)
         
         self.layout()
     }
@@ -628,8 +655,9 @@ final class AnimatedEmojiesView : View {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        borderView.backgroundColor = theme.colors.border
-        tabs.backgroundColor = theme.colors.background
+        self.backgroundColor = .clear
+        borderView.backgroundColor = mode == .reactions ? theme.colors.grayIcon.withAlphaComponent(0.1) : theme.colors.border
+        tabs.backgroundColor = mode != .reactions ? theme.colors.background : .clear
         searchContainer.backgroundColor = theme.colors.background
         searchBorder.backgroundColor = theme.colors.border
         self.searchView.updateLocalizationAndTheme(theme: theme)
@@ -652,11 +680,16 @@ final class AnimatedEmojiesView : View {
         self.updateLayout(self.frame.size, transition: transition)
     }
     
-    func update(sections: TableUpdateTransition, packs: TableUpdateTransition) {
+    func update(sections: TableUpdateTransition, packs: TableUpdateTransition, mode: EmojiesController.Mode) {
+        self.mode = mode
         self.tableView.merge(with: sections)
         self.packsView.merge(with: packs)
         
+        searchContainer.isHidden = mode == .reactions
+        tableView.scrollerInsets = mode == .reactions ? .init() : .init(left: 0, right: 0, top: 46, bottom: 0)
+
         updateSelectionState(animated: packs.animated)
+        updateLocalizationAndTheme(theme: theme)
     }
     
     func updateSelectionState(animated: Bool) {
@@ -807,6 +840,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
     enum Mode {
         case emoji
         case status
+        case reactions
     }
     private let mode: Mode
     
@@ -895,6 +929,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         let scrollToOnNextTransaction: Atomic<StickerPackCollectionInfo?> = Atomic(value: nil)
         
         let context = self.context
+        let mode = self.mode
         let actionsDisposable = DisposableSet()
         
         let initialState = State(sections: [])
@@ -1014,8 +1049,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         } |> deliverOnMainQueue
         
         disposable.set(transition.start(next: { [weak self] values in
-            self?.genericView.update(sections: values.sections, packs: values.packs)
-            self?.readyOnce()
+            self?.genericView.update(sections: values.sections, packs: values.packs, mode: mode)
             
             selectUpdater()
 
@@ -1024,7 +1058,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             }
             
             self?.updatePackReorder(values.state.sections)
-            
+            self?.readyOnce()
         }))
         
         let updateSearchCommand:()->Void = { [weak self] in
@@ -1035,7 +1069,9 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         let emojies = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000)
 
         
-        actionsDisposable.add(combineLatest(emojies, context.account.viewTracker.featuredEmojiPacks(), context.account.postbox.peerView(id: context.peerId), search).start(next: { view, featured, peerView, search in
+        let reactions = context.reactions.stateValue
+        
+        actionsDisposable.add(combineLatest(emojies, context.account.viewTracker.featuredEmojiPacks(), context.account.postbox.peerView(id: context.peerId), search, reactions).start(next: { view, featured, peerView, search, reactions in
             updateState { current in
                 var current = current
                 var sections: [State.Section] = []
@@ -1066,6 +1102,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 }
                 current.sections = sections
                 current.search = search
+                current.reactions = reactions
                 return current
             }
             DispatchQueue.main.async {

@@ -869,7 +869,9 @@ final class PremiumBoardingController : ModalViewController {
         
         let products: Signal<[InAppPurchaseManager.Product], NoError>
         #if APP_STORE
-        products = inAppPurchaseManager.availableProducts.filter { $0.isSubscription }
+        products = inAppPurchaseManager.availableProducts |> map {
+            $0.filter { $0.isSubscription }
+        }
         #else
         products = .single([])
         #endif

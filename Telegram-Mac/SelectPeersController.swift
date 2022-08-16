@@ -464,6 +464,7 @@ public struct SelectPeerSettings: OptionSet {
     public static let groups = SelectPeerSettings(rawValue: 1 << 3)
     public static let excludeBots = SelectPeerSettings(rawValue: 1 << 4)
     public static let channels = SelectPeerSettings(rawValue: 1 << 5)
+    public static let bots = SelectPeerSettings(rawValue: 1 << 6)
 }
 
 class SelectPeersBehavior {
@@ -781,22 +782,31 @@ private func channelMembersEntries(_ participants:[RenderedChannelParticipant], 
 
 
 final class SelectChatsBehavior: SelectPeersBehavior {
+    
+    let checkInvite: Bool
+    init(settings: SelectPeerSettings, checkInvite: Bool, excludePeerIds: [PeerId] = [], limit: Int32 = INT32_MAX, customTheme: @escaping () -> GeneralRowItem.Theme = { GeneralRowItem.Theme() }) {
+        self.checkInvite = checkInvite
+        super.init(settings: settings, excludePeerIds: excludePeerIds, limit: limit, customTheme: customTheme)
+    }
+    
     override func start(context: AccountContext, search: Signal<SearchState, NoError>, linkInvation: ((Int)->Void)? = nil) -> Signal<([SelectPeerEntry], Bool), NoError> {
         
         let previousSearch = Atomic<String?>(value: nil)
         let account = context.account
+        let settings = self.settings
+        let checkInvite = self.checkInvite
         return search |> distinctUntilChanged |> mapToSignal { search -> Signal<([SelectPeerEntry], Bool), NoError> in
             
             if search.request.isEmpty {
                 
-                return account.viewTracker.tailChatListView(groupId: .root, count: 200) |> deliverOn(prepareQueue) |> mapToQueue {  value -> Signal<([SelectPeerEntry], Bool), NoError> in
+                return account.viewTracker.tailChatListView(groupId: .root, count: 300) |> deliverOn(prepareQueue) |> mapToQueue {  value -> Signal<([SelectPeerEntry], Bool), NoError> in
                     var entries:[Peer] = []
                     
 
                     for entry in value.0.entries.reversed() {
                         switch entry {
                         case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _):
-                            if let peer = renderedPeer.chatMainPeer, peer.canSendMessage(false), peer.canInviteUsers, peer.isSupergroup || peer.isGroup {
+                            if let peer = renderedPeer.chatMainPeer {
                                 entries.append(peer)
                             }
                         default:
@@ -813,7 +823,7 @@ final class SelectChatsBehavior: SelectPeersBehavior {
                         var common:[SelectPeerEntry] = []
                         var index:Int32 = 0
                         for value in entries {
-                            common.append(.peer(SelectPeerValue(peer: value, presence: nil, subscribers: nil), index, true))
+                            common.append(.peer(SelectPeerValue(peer: value, presence: nil, subscribers: nil, ignoreStatus: true), index, true))
                             index += 1
                         }
                         return .single((common, updatedSearch))
@@ -821,7 +831,7 @@ final class SelectChatsBehavior: SelectPeersBehavior {
                 }
             } else {
                 return account.postbox.searchPeers(query: search.request.lowercased()) |> map {
-                    return $0.compactMap({$0.chatMainPeer}).filter {($0.isSupergroup || $0.isGroup) && $0.canInviteUsers}
+                    return $0.compactMap({$0.chatMainPeer})
                 } |> deliverOn(prepareQueue) |> map { entries -> ([SelectPeerEntry], Bool) in
                     var common:[SelectPeerEntry] = []
                     
@@ -833,15 +843,43 @@ final class SelectChatsBehavior: SelectPeersBehavior {
                     } else {
                         var index:Int32 = 0
                         for peer in entries {
-                            common.append(.peer(SelectPeerValue(peer: peer, presence: nil, subscribers: nil), index, true))
+                            common.append(.peer(SelectPeerValue(peer: peer, presence: nil, subscribers: nil, ignoreStatus: true), index, true))
                             index += 1
                         }
-                        
                     }
                     return (common, updatedSearch)
                 }
             }
             
+        } |> map { value in
+            return (value.0.filter { value in
+                switch value {
+                case let .peer(value, _, _):
+                    if value.peer.isGroup || value.peer.isSupergroup || value.peer.isGigagroup {
+                        if settings.contains(.groups) {
+                            return !checkInvite || value.peer.canInviteUsers
+                        }
+                    }
+                    if value.peer.isUser && !value.peer.isBot {
+                        if settings.contains(.contacts) {
+                            return true
+                        }
+                    }
+                    if value.peer.isChannel {
+                        if settings.contains(.channels) {
+                            return true
+                        }
+                    }
+                    if value.peer.isBot {
+                        if settings.contains(.bots) {
+                            return true
+                        }
+                    }
+                    return false
+                default:
+                    return true
+                }
+            }, value.1)
         }
 
     }
@@ -1098,8 +1136,9 @@ fileprivate class SelectContactsBehavior : SelectPeersBehavior {
                         if settings.contains(.excludeBots) {
                             values.0 = values.0.filter {!$0.isBot}
                         }
-                        values.0 = values.0.filter {(!$0.isChannel || settings.contains(.channels)) && (settings.contains(.groups) || (!$0.isSupergroup && !$0.isGroup))}
-                        values.1 = values.1.filter {(!$0.isChannel || settings.contains(.channels)) && (settings.contains(.groups) || (!$0.isSupergroup && !$0.isGroup))}
+                        values.0 = values.0.filter {(!$0.isChannel || settings.contains(.channels)) && (settings.contains(.groups) || (!$0.isSupergroup && !$0.isGroup))}.filter { !$0.isDeleted }
+                        values.1 = values.1.filter {(!$0.isChannel || settings.contains(.channels)) && (settings.contains(.groups) || (!$0.isSupergroup && !$0.isGroup))}.filter { !$0.isDeleted }
+                        
                         let local = values.0
                         let global = values.1
                         
