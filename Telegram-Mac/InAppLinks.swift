@@ -549,17 +549,15 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                             callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
                                         }
                                     })
-                                    callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
                                 }
                                 if let choose = choose, !choose.isEmpty {
                                     var settings:SelectPeerSettings = .init()
-                                    settings.insert(.excludeBots)
                                     if choose.contains("users") {
                                         settings.insert(.contacts)
                                         settings.insert(.remote)
                                     }
                                     if choose.contains("bots") {
-                                        settings.remove(.excludeBots)
+                                        settings.insert(.bots)
                                     }
                                     if choose.contains("groups") {
                                         settings.insert(.groups)
