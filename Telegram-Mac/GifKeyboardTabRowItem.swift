@@ -108,7 +108,15 @@ private final class GifKeyboardTabRowView: HorizontalRowView {
 
     @objc func updateAnimatableContent() -> Void {
         if let value = self.animationLayer, let superview = value.superview {
-            value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow
+            var isKeyWindow: Bool = false
+            if let window = window {
+                if !window.canBecomeKey {
+                    isKeyWindow = true
+                } else {
+                    isKeyWindow = window.isKeyWindow
+                }
+            }
+            value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
         }
     }
     

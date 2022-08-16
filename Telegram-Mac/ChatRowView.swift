@@ -944,7 +944,15 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     @objc func updateAnimatableContent() -> Void {
         for (_, value) in inlineStickerItemViews {
             if let superview = value.superview {
-                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow
+                var isKeyWindow: Bool = false
+                if let window = window {
+                    if !window.canBecomeKey {
+                        isKeyWindow = true
+                    } else {
+                        isKeyWindow = window.isKeyWindow
+                    }
+                }
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
             }
         }
     }
@@ -979,8 +987,15 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     textView.addEmbeddedLayer(view)
                 }
                 index += 1
-                
-                view.isPlayable = NSIntersectsRect(rect, textView.visibleRect) && window != nil && window!.isKeyWindow
+                var isKeyWindow: Bool = false
+                if let window = window {
+                    if !window.canBecomeKey {
+                        isKeyWindow = true
+                    } else {
+                        isKeyWindow = window.isKeyWindow
+                    }
+                }
+                view.isPlayable = NSIntersectsRect(rect, textView.visibleRect) && isKeyWindow
                 view.frame = rect
             }
         }
@@ -1039,7 +1054,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         } else if let replyMarkup = item.replyMarkupModel {
             frame.origin.y += replyMarkup.size.height + item.defaultContentInnerInset
         }
-        if reactionsLayout.presentation.isOutOfBounds, !item.isIncoming {
+        if reactionsLayout.presentation.isOutOfBounds, !item.isIncoming, !item.isBigEmoji {
             frame.origin.x = contentFrame.maxX - reactionsLayout.size.width
         }
         return frame

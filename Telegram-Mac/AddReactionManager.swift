@@ -20,8 +20,8 @@ final class ContextAddReactionsListView : View  {
     
     private final class ReactionView : Control {
                 
-        private let player = LottiePlayerView(frame: NSMakeRect(0, 0, 30, 30))
-        private let imageView = TransformImageView(frame: NSMakeRect(0, 0, 30, 30))
+        private let player: LottiePlayerView
+        private let imageView: TransformImageView
         private let disposable = MetaDisposable()
         private let appearDisposable = MetaDisposable()
         let reaction: AvailableReactions.Reaction
@@ -34,6 +34,8 @@ final class ContextAddReactionsListView : View  {
 
         
         required init(frame frameRect: NSRect, context: AccountContext, reaction: AvailableReactions.Reaction, add: @escaping(MessageReaction.Reaction, Bool)->Void) {
+            self.player = LottiePlayerView(frame: NSMakeRect(0, 0, 30, 30))
+            self.imageView = TransformImageView(frame: NSMakeRect(0, 0, 30, 30))
             self.reaction = reaction
             self.context = context
             if reaction.isPremium, !context.isPremium {
@@ -196,6 +198,28 @@ final class ContextAddReactionsListView : View  {
         }
     }
     
+    class ShowMore : Control {
+        private let imageView = ImageView()
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            self.backgroundColor = !theme.colors.isDark ? NSColor.black.withAlphaComponent(0.1) : NSColor.white.withAlphaComponent(0.1)
+            self.scaleOnClick = true
+            self.layer?.cornerRadius = frameRect.height / 2
+            addSubview(self.imageView)
+            self.imageView.image = theme.icons.reactions_show_more
+            self.imageView.sizeToFit()
+        }
+        
+        override func layout() {
+            super.layout()
+            imageView.center()
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
+    
     private let scrollView = HorizontalScrollView()
     private let documentView = View()
     private let list: [AvailableReactions.Reaction]
@@ -206,8 +230,12 @@ final class ContextAddReactionsListView : View  {
     private let backgroundView = View()
     private let visualEffect = NSVisualEffectView(frame: .zero)
     private let radiusLayer: CGFloat?
-    required init(frame frameRect: NSRect, context: AccountContext, list: [AvailableReactions.Reaction], add:@escaping(MessageReaction.Reaction, Bool)->Void, radiusLayer: CGFloat? = 15) {
+    
+    private let showMore = ShowMore(frame: NSMakeRect(0, 0, 30, 30))
+    private let revealReactions:(NSView)->Void
+    required init(frame frameRect: NSRect, context: AccountContext, list: [AvailableReactions.Reaction], add:@escaping(MessageReaction.Reaction, Bool)->Void, radiusLayer: CGFloat? = 15, revealReactions:@escaping(NSView)->Void) {
         self.list = list
+        self.revealReactions = revealReactions
         self.radiusLayer = radiusLayer
         super.init(frame: frameRect)
         
@@ -216,7 +244,11 @@ final class ContextAddReactionsListView : View  {
         self.visualEffect.blendingMode = .behindWindow
         
         
-        
+        showMore.set(handler: { [weak self] _ in
+            if let view = self?.window?.contentView?.subviews.first {
+                revealReactions(view)
+            }
+        }, for: .Click)
         
         if let radiusLayer = radiusLayer {
             
@@ -256,7 +288,7 @@ final class ContextAddReactionsListView : View  {
         
         addSubview(backgroundView)
         addSubview(scrollView)
-     
+        addSubview(showMore)
         
         NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: scrollView.clipView, queue: OperationQueue.main, using: { [weak self] notification  in
             self?.updateScroll()
@@ -270,10 +302,14 @@ final class ContextAddReactionsListView : View  {
         
         
         for reaction in list {
-            let reaction = ReactionView(frame: NSMakeRect(x, 5, size.width, size.height), context: context, reaction: reaction, add: add)
+            let itemSize = size.bounds
+            let reaction = ReactionView(frame: NSMakeRect(x, 5, itemSize.width, itemSize.height), context: context, reaction: reaction, add: add)
             documentView.addSubview(reaction)
             x += size.width
         }
+        
+        
+        
         updateLayout(size: frame.size, transition: .immediate)
         
        
@@ -351,7 +387,11 @@ final class ContextAddReactionsListView : View  {
     }
     
     static func width(for list: [AvailableReactions.Reaction], maxCount: Int = .max) -> CGFloat {
-        return CGFloat(min(list.count, maxCount)) * self.size.width
+        var width = CGFloat(min(list.count, maxCount)) * self.size.width
+        if maxCount != .max {
+            width += self.size.width - 7
+        }
+        return width
     }
     
     
@@ -376,6 +416,8 @@ final class ContextAddReactionsListView : View  {
         
         transition.updateFrame(view: visualEffect, frame: size.bounds)
         transition.updateFrame(view: backgroundView, frame: size.bounds)
+        
+        transition.updateFrame(view: showMore, frame: NSMakeRect(size.width - showMore.frame.width - 5, 5, showMore.frame.width, showMore.frame.height))
     }
 }
 

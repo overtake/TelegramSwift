@@ -2417,7 +2417,7 @@ class ChatRowItem: TableRowItem {
             return rightSize.height
         }
         if isBigEmoji {
-            return nil
+            return rightSize.height
         }
         
         if let lastLine = lastLineContentWidth {
@@ -2645,6 +2645,7 @@ class ChatRowItem: TableRowItem {
                     return false
                 }
             })
+            available = Array(available.prefix(6))
             
             let width = ContextAddReactionsListView.width(for: available, maxCount: 6)
             
@@ -2664,7 +2665,10 @@ class ChatRowItem: TableRowItem {
             let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem in
                 let isSelected = message.reactionsAttribute?.reactions.contains(where: { $0.value == value && $0.isSelected }) == true
                 context.reactions.react(message.id, value: isSelected ? nil : value, checkPrem: checkPrem)
-            }, radiusLayer: rect.height / 2 - 5)
+            }, radiusLayer: rect.height / 2 - 5, revealReactions: { view in
+                let window = ReactionsWindowController(context, message: message)
+                window.show(view)
+            })
             
             
             panel.contentView?.addSubview(view)

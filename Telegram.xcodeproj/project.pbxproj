@@ -107,6 +107,7 @@
 		2738A2E428A1373A00EC1010 /* PremiumStatusController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738A2E328A1373A00EC1010 /* PremiumStatusController.swift */; };
 		2738A2E628A2711900EC1010 /* PremiumStatusControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738A2E528A2711900EC1010 /* PremiumStatusControl.swift */; };
 		2738A2E828A40CFB00EC1010 /* PremiumSelectPeriodRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738A2E728A40CFB00EC1010 /* PremiumSelectPeriodRowItem.swift */; };
+		2738A31528ABADB300EC1010 /* ReactionsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738A31428ABADB300EC1010 /* ReactionsWindowController.swift */; };
 		2738CAD6270704A800CDB1BF /* RequestJoinChatModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD5270704A800CDB1BF /* RequestJoinChatModalController.swift */; };
 		2738CAD82707067000CDB1BF /* RequestJoinChatRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */; };
 		2738CADA2707198100CDB1BF /* RequestJoinMemberListController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */; };
@@ -849,7 +850,6 @@
 		C2271DD21DAF6DF5001792B6 /* EmptyChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DD11DAF6DF5001792B6 /* EmptyChatViewController.swift */; };
 		C2271DD71DAF80D5001792B6 /* PeerMediaController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DD61DAF80D5001792B6 /* PeerMediaController.swift */; };
 		C2271F2B1DB3BEB60045E719 /* GlobalHandlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F2A1DB3BEB60045E719 /* GlobalHandlers.swift */; };
-		C2271F3C1DB4D0630045E719 /* GIFViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F3B1DB4D0630045E719 /* GIFViewController.swift */; };
 		C2271F471DB4FC130045E719 /* EStickItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F461DB4FC130045E719 /* EStickItem.swift */; };
 		C2271F491DB4FC220045E719 /* EStickView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F481DB4FC220045E719 /* EStickView.swift */; };
 		C2271F541D9D420B00424F7B /* ContactsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271F531D9D420B00424F7B /* ContactsController.swift */; };
@@ -1457,6 +1457,7 @@
 		2738A2E328A1373A00EC1010 /* PremiumStatusController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumStatusController.swift; sourceTree = "<group>"; };
 		2738A2E528A2711900EC1010 /* PremiumStatusControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumStatusControl.swift; sourceTree = "<group>"; };
 		2738A2E728A40CFB00EC1010 /* PremiumSelectPeriodRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumSelectPeriodRowItem.swift; sourceTree = "<group>"; };
+		2738A31428ABADB300EC1010 /* ReactionsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReactionsWindowController.swift; sourceTree = "<group>"; };
 		2738CAD5270704A800CDB1BF /* RequestJoinChatModalController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinChatModalController.swift; sourceTree = "<group>"; };
 		2738CAD72707067000CDB1BF /* RequestJoinChatRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinChatRowItem.swift; sourceTree = "<group>"; };
 		2738CAD92707198100CDB1BF /* RequestJoinMemberListController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestJoinMemberListController.swift; sourceTree = "<group>"; };
@@ -2174,7 +2175,6 @@
 		C2271DD11DAF6DF5001792B6 /* EmptyChatViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EmptyChatViewController.swift; sourceTree = "<group>"; };
 		C2271DD61DAF80D5001792B6 /* PeerMediaController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerMediaController.swift; sourceTree = "<group>"; };
 		C2271F2A1DB3BEB60045E719 /* GlobalHandlers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GlobalHandlers.swift; sourceTree = "<group>"; };
-		C2271F3B1DB4D0630045E719 /* GIFViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GIFViewController.swift; sourceTree = "<group>"; };
 		C2271F461DB4FC130045E719 /* EStickItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EStickItem.swift; sourceTree = "<group>"; };
 		C2271F481DB4FC220045E719 /* EStickView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EStickView.swift; sourceTree = "<group>"; };
 		C2271F531D9D420B00424F7B /* ContactsController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContactsController.swift; sourceTree = "<group>"; };
@@ -2878,6 +2878,14 @@
 				2738A2E528A2711900EC1010 /* PremiumStatusControl.swift */,
 			);
 			name = premium;
+			sourceTree = "<group>";
+		};
+		2738A31328ABADA400EC1010 /* reactions */ = {
+			isa = PBXGroup;
+			children = (
+				2738A31428ABADB300EC1010 /* ReactionsWindowController.swift */,
+			);
+			name = reactions;
 			sourceTree = "<group>";
 		};
 		2738CAD42707047E00CDB1BF /* request-join */ = {
@@ -4715,6 +4723,7 @@
 		C2844AD51DA90775009308DC /* entertainment */ = {
 			isa = PBXGroup;
 			children = (
+				2738A31328ABADA400EC1010 /* reactions */,
 				27F4F1762844D90F00A3B4D4 /* animated-emojies */,
 				D070DB7F22D36359008A0BBE /* modern-stickers */,
 				C2F93A2B1F3C550A00BCD48F /* tolerance */,
@@ -4748,7 +4757,6 @@
 		C2844ADA1DA907F7009308DC /* gifs */ = {
 			isa = PBXGroup;
 			children = (
-				C2271F3B1DB4D0630045E719 /* GIFViewController.swift */,
 				C2B6A9641E8519FA00A441B7 /* RecentGIFRowItem.swift */,
 				D076A07D248A5F890077BC0A /* GifPanelTabRowItem.swift */,
 				271FB8852893EB9A001C25DC /* GifKeyboardController.swift */,
@@ -6879,7 +6887,6 @@
 				C26A37EE1E5DE48F006977AC /* ChannelBlocklistViewController.swift in Sources */,
 				C205DB981EE71127003711DF /* ChannelAdminController.swift in Sources */,
 				C22674381DC125C1000BA9ED /* PeerMediaCollectionInterfaceState.swift in Sources */,
-				C2271F3C1DB4D0630045E719 /* GIFViewController.swift in Sources */,
 				271F78C62806FCBD0040EE8F /* AvatarConstructorController.swift in Sources */,
 				277DFE6627843F5100F78396 /* TranslateTableRowItem.swift in Sources */,
 				C2777B6A1DD211E5008B69DD /* PeerPresenceStatusManager.swift in Sources */,
@@ -6970,6 +6977,7 @@
 				C221ED541EA684BE00471C65 /* DataAndStorageViewController.swift in Sources */,
 				27ABFD172857B9F7006C3301 /* PremiumFeatureSlideView.swift in Sources */,
 				9F3EAB3B20A5A1EC003FE7E3 /* NetworkUsageStatsController.swift in Sources */,
+				2738A31528ABADB300EC1010 /* ReactionsWindowController.swift in Sources */,
 				9FBE0EE1201FBEFC0060FD1C /* DownloadSettingsViewController.swift in Sources */,
 				9F52F51A2130286E006FC0B5 /* LocationRequest.swift in Sources */,
 				27361ED62821234200808241 /* PremiumReactionsModal.swift in Sources */,

@@ -733,6 +733,7 @@ func initialize() -> [String] {
     array.append("reactions_badge_archive")
     array.append("reactions_badge_archive_active")
 
+    array.append("reactions_show_more")
     
     array.append("chat_reactions_badge")
     array.append("chat_reactions_badge_active")

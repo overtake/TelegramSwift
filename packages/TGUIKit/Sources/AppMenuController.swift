@@ -561,10 +561,12 @@ final class AppMenuController : NSObject  {
     
     private var isClosed = false
     func close() {
+        
+        let duration: Double = 0.2
         if !isClosed {
             for (_, panel) in self.windows {
                 var panel: Window? = panel
-                panel?.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { _ in
+                panel?.view.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { _ in
                     panel?.orderOut(nil)
                     panel = nil
                 })
@@ -576,13 +578,13 @@ final class AppMenuController : NSObject  {
             self.parent?.copyhandler = self.previousCopyHandler
 
             if let window = self.menu.topWindow, let view = window.contentView {
-                view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view, weak window] _ in
+                view.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak view, weak window] _ in
                     view?.removeFromSuperview()
                     window?.orderOut(nil)
                 })
             }
             if let window = self.topBubbleWindow, let view = window.contentView {
-                view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view, weak window] _ in
+                view.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak view, weak window] _ in
                     view?.removeFromSuperview()
                     window?.orderOut(nil)
                 })
@@ -939,5 +941,6 @@ final class AppMenuController : NSObject  {
     
     deinit {
         self.delayDisposable.dispose()
+        self.keyDisposable?.dispose()
     }
 }
