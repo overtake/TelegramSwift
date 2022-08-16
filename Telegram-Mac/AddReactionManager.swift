@@ -245,7 +245,7 @@ final class ContextAddReactionsListView : View  {
         
         
         showMore.set(handler: { [weak self] _ in
-            if let view = self?.window?.contentView?.subviews.first {
+            if let view = self?.documentView {
                 revealReactions(view)
             }
         }, for: .Click)
