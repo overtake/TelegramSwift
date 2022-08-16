@@ -129,11 +129,13 @@ class GeneralInteractedRowItem: GeneralRowItem {
     }
     
     
+    override var instantlyResize: Bool {
+        return true
+    }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         let result = super.makeSize(width, oldWidth: oldWidth)
-        
-        
+                
         nameLayout = TextNode.layoutText(maybeNode: nil,  NSAttributedString.initialize(string: name, color: enabled ? nameStyle.foregroundColor : theme.colors.grayText, font: nameStyle.font), nil, 1, .end, NSMakeSize(nameWidth, .greatestFiniteMagnitude), nil, isSelected, .left)
         nameLayoutSelected = TextNode.layoutText(maybeNode: nil,  NSAttributedString.initialize(string: name, color: theme.colors.underSelectedColor, font: nameStyle.font), nil, 1, .end, NSMakeSize(nameWidth, .greatestFiniteMagnitude), nil, isSelected, .left)
         descLayout?.measure(width: nameWidth)

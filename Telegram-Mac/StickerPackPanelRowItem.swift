@@ -252,11 +252,8 @@ class StickerPackPanelRowItem: TableRowItem {
                             guard let `self` = self else {
                                 return
                             }
-                            let contentView = (self.view as? StickerPackPanelRowView)?.subviews.compactMap { $0 as? ChatMediaContentView}.first(where: { view -> Bool in
-                                return view.media?.isEqual(to: file) ?? false
-                            })
-                            
-                            if let contentView = contentView {
+     
+                            if let contentView = self.view {
                                 self.arguments.sendMedia(file, contentView, true, false)
                             }
                         }, itemImage: MenuAnimation.menu_mute.value))
@@ -265,11 +262,8 @@ class StickerPackPanelRowItem: TableRowItem {
                             guard let `self` = self else {
                                 return
                             }
-                            let contentView = (self.view as? StickerPackPanelRowView)?.subviews.compactMap { $0 as? ChatMediaContentView}.first(where: { view -> Bool in
-                                return view.media?.isEqual(to: file) ?? false
-                            })
                             
-                            if let contentView = contentView {
+                            if let contentView = self.view {
                                 self.arguments.sendMedia(file, contentView, false, true)
                             }
                         }, itemImage: MenuAnimation.menu_schedule_message.value))
