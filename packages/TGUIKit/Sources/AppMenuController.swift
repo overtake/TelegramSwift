@@ -579,6 +579,7 @@ final class AppMenuController : NSObject  {
 
             if let window = self.menu.topWindow, let view = window.contentView {
                 view.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak view, weak window] _ in
+                    
                     view?.removeFromSuperview()
                     window?.orderOut(nil)
                 })
