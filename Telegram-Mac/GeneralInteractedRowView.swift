@@ -463,6 +463,8 @@ class GeneralInteractedRowView: GeneralRowView {
                 }
             case let .modern(_, innerInsets):
                 self.containerView.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, (frame.width - item.blockWidth) / 2), insets.top, item.blockWidth, frame.height - insets.bottom - insets.top)
+                
+                
                 self.containerView.setCorners(self.isResorting ? GeneralViewItemCorners.all : item.viewType.corners)
                 if let descriptionView = self.descriptionView {
                     descriptionView.setFrameOrigin(innerInsets.left + textXAdditional, containerView.frame.height - descriptionView.frame.height - innerInsets.bottom)

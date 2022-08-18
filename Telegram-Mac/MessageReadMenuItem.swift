@@ -179,9 +179,27 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         let makeItem:(_ peer: (Peer, MessageReaction.Reaction?)) -> ContextMenuItem = { [weak chatInteraction] peer in
             let title = peer.0.displayTitle.prefixWithDots(25)
             
-            let reaction = availableReactions?.reactions.first(where: {
-                $0.value == peer.1
-            })?.staticIcon
+            let reaction: ReactionPeerMenu.Source?
+            
+            if let value = peer.1 {
+                let file = availableReactions?.reactions.first(where: {
+                    $0.value == value
+                })?.staticIcon
+                if let file = file {
+                    reaction = .builtin(file)
+                } else {
+                    switch value {
+                    case let .custom(fileId):
+                        let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
+                        reaction = .custom(fileId, message.associatedMedia[mediaId] as? TelegramMediaFile)
+                    default:
+                        reaction = nil
+                    }
+                }
+            } else {
+                reaction = nil
+            }
+            
             
             let item = ReactionPeerMenu(title: title, handler: {
                 chatInteraction?.openInfo(peer.0.id, false, nil, nil)
@@ -536,11 +554,14 @@ final class MessageReadMenuItem : ContextMenuItem {
 
 
 final class ReactionPeerMenu : ContextMenuItem {
-    
+    enum Source : Equatable {
+        case builtin(TelegramMediaFile)
+        case custom(Int64, TelegramMediaFile?)
+    }
     private let context: AccountContext
-    private let reaction: TelegramMediaFile?
+    private let reaction: Source?
     private let peer: Peer
-    init(title: String, handler:@escaping()->Void, peer: Peer, context: AccountContext, reaction: TelegramMediaFile?) {
+    init(title: String, handler:@escaping()->Void, peer: Peer, context: AccountContext, reaction: Source?) {
         self.reaction = reaction
         self.peer = peer
         self.context = context
@@ -560,10 +581,12 @@ final class ReactionPeerMenu : ContextMenuItem {
 }
 
 private final class ReactionPeerMenuItem : AppMenuRowItem {
+    
+    
     fileprivate let context: AccountContext
-    fileprivate let reaction: TelegramMediaFile?
+    fileprivate let reaction: ReactionPeerMenu.Source?
     fileprivate let peer: Peer
-    init(item: ContextMenuItem, peer: Peer, interaction: AppMenuBasicItem.Interaction, presentation: AppMenu.Presentation, context: AccountContext, reaction: TelegramMediaFile?) {
+    init(item: ContextMenuItem, peer: Peer, interaction: AppMenuBasicItem.Interaction, presentation: AppMenu.Presentation, context: AccountContext, reaction: ReactionPeerMenu.Source?) {
         self.context = context
         self.reaction = reaction
         self.peer = peer
@@ -595,7 +618,7 @@ private final class ReactionPeerMenuItem : AppMenuRowItem {
 }
 
 private final class ReactionPeerMenuItemView : AppMenuRowView {
-    private let imageView = TransformImageView(frame: NSMakeRect(0, 0, 16, 16))
+    private let imageView = AnimationLayerContainer(frame: NSMakeRect(0, 0, 16, 16))
     private var statusControl: PremiumStatusControl?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -623,6 +646,7 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {
+        let previous = self.item as? ReactionPeerMenuItem
         super.set(item: item, animated: animated)
         
         guard let item = item as? ReactionPeerMenuItem else {
@@ -643,18 +667,19 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
         let reactionSize = NSMakeSize(16, 16)
         
         if let reaction = item.reaction {
-            let arguments = TransformImageArguments(corners: .init(), imageSize: reactionSize, boundingSize: reactionSize, intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
             
-            self.imageView.setSignal(signal: cachedMedia(media: reaction, arguments: arguments, scale: System.backingScale, positionFlags: nil), clearInstantly: true)
-
-            if !self.imageView.isFullyLoaded {
-                self.imageView.setSignal(chatMessageSticker(postbox: item.context.account.postbox, file: .standalone(media: reaction), small: false, scale: System.backingScale), cacheImage: { result in
-                    cacheMedia(result, media: reaction, arguments: arguments, scale: System.backingScale)
-                })
+            
+            if previous?.reaction != item.reaction {
+                let layer: InlineStickerItemLayer
+                switch reaction {
+                case let .custom(fileId, file):
+                    layer = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: reactionSize)
+                case let .builtin(file):
+                    layer = .init(account: item.context.account, file: file, size: reactionSize)
+                }
+                self.imageView.updateLayer(layer, animated: animated)
             }
-
-            self.imageView.set(arguments: arguments)
-
+            
         }
         needsLayout = true
     }

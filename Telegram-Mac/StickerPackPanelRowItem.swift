@@ -252,8 +252,8 @@ class StickerPackPanelRowItem: TableRowItem {
                             guard let `self` = self else {
                                 return
                             }
-                            let contentView = self.view
-                            if let contentView = contentView {
+     
+                            if let contentView = self.view {
                                 self.arguments.sendMedia(file, contentView, true, false)
                             }
                         }, itemImage: MenuAnimation.menu_mute.value))
@@ -262,8 +262,8 @@ class StickerPackPanelRowItem: TableRowItem {
                             guard let `self` = self else {
                                 return
                             }
-                            let contentView = self.view
-                            if let contentView = contentView {
+                            
+                            if let contentView = self.view {
                                 self.arguments.sendMedia(file, contentView, false, true)
                             }
                         }, itemImage: MenuAnimation.menu_schedule_message.value))
@@ -396,7 +396,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
 
     }
     
-    var itemUnderMouse: (InlineStickerItemLayer, TelegramMediaFile)? {
+    private var itemUnderMouse: (InlineStickerItemLayer, TelegramMediaFile)? {
         guard let window = self.window, let item = self.item as? StickerPackPanelRowItem else {
             return nil
         }
@@ -496,15 +496,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
     @objc func updateAnimatableContent() -> Void {
         for (_, value) in inlineStickerItemViews {
             if let superview = value.superview {
-                var isKeyWindow: Bool = false
-                if let window = window {
-                    if !window.canBecomeKey {
-                        isKeyWindow = true
-                    } else {
-                        isKeyWindow = window.isKeyWindow
-                    }
-                }
-                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow
             }
         }
     }
@@ -553,15 +545,8 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                 contentView.layer?.addSublayer(view)
             }
             index += 1
-            var isKeyWindow: Bool = false
-            if let window = window {
-                if !window.canBecomeKey {
-                    isKeyWindow = true
-                } else {
-                    isKeyWindow = window.isKeyWindow
-                }
-            }
-            view.isPlayable = NSIntersectsRect(rect, contentView.visibleRect) && isKeyWindow
+
+            view.isPlayable = NSIntersectsRect(rect, contentView.visibleRect) && window != nil && window!.isKeyWindow
             view.frame = rect
         }
 
@@ -581,12 +566,6 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
     
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        self.updateListeners()
-        self.updateAnimatableContent()
-    }
-    
-    override func viewDidMoveToSuperview() {
-        super.viewDidMoveToSuperview()
         self.updateListeners()
         self.updateAnimatableContent()
     }

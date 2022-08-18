@@ -134,6 +134,38 @@ final class ChatReactionsLayout {
             let peer: Peer
             let index: Int
         }
+        
+        enum Source : Equatable {
+            case builtin(AvailableReactions.Reaction)
+            case custom(Int64, TelegramMediaFile?, TelegramMediaFile?)
+            
+            var effect: TelegramMediaFile? {
+                switch self {
+                case let .builtin(reaction):
+                    return reaction.centerAnimation
+                case let .custom(_, _, effect):
+                    return effect
+                }
+            }
+            var file: TelegramMediaFile? {
+                switch self {
+                case .builtin:
+                    return nil
+                case let .custom(_, file, _):
+                    return file
+                }
+            }
+        }
+        
+        func getInlineLayer() -> InlineStickerItemLayer {
+            switch source {
+            case let .builtin(reaction):
+                return .init(account: context.account, file: reaction.staticIcon, size: presentation.reactionSize)
+            case let .custom(fileId, file, _):
+                return .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: presentation.reactionSize)
+            }
+        }
+        
 
         
         let value: MessageReaction
@@ -141,7 +173,9 @@ final class ChatReactionsLayout {
         let presentation: Theme
         let index: Int
         let minimumSize: NSSize
-        let available: AvailableReactions.Reaction
+        
+        let source: Source
+        
         let mode: ChatReactionsLayout.Mode
         let disposable: MetaDisposable = MetaDisposable()
         let delayDisposable = MetaDisposable()
@@ -151,7 +185,6 @@ final class ChatReactionsLayout {
         let openInfo: (PeerId)->Void
         let runEffect:(MessageReaction.Reaction)->Void
         let canViewList: Bool
-        let list: [AvailableReactions.Reaction]
         let avatars:[Avatar]
         var rect: CGRect = .zero
         
@@ -160,11 +193,10 @@ final class ChatReactionsLayout {
             lhs.presentation == rhs.presentation &&
             lhs.index == rhs.index &&
             lhs.minimumSize == rhs.minimumSize &&
-            lhs.available == rhs.available &&
+            lhs.source == rhs.source &&
             lhs.mode == rhs.mode &&
             lhs.rect == rhs.rect &&
-            lhs.canViewList == rhs.canViewList &&
-            lhs.list == rhs.list
+            lhs.canViewList == rhs.canViewList
         }
         static func <(lhs: Reaction, rhs: Reaction) -> Bool {
             return lhs.index < rhs.index
@@ -173,18 +205,17 @@ final class ChatReactionsLayout {
             return self.value.value
         }
         
-        init(value: MessageReaction, recentPeers:[Peer], list: [AvailableReactions.Reaction], canViewList: Bool, message: Message, context: AccountContext, mode: ChatReactionsLayout.Mode, index: Int, available: AvailableReactions.Reaction, presentation: Theme, action:@escaping(MessageReaction.Reaction, Bool)->Void, openInfo: @escaping (PeerId)->Void, runEffect:@escaping(MessageReaction.Reaction)->Void) {
+        init(value: MessageReaction, recentPeers:[Peer], canViewList: Bool, message: Message, context: AccountContext, mode: ChatReactionsLayout.Mode, index: Int, source: Source, presentation: Theme, action:@escaping(MessageReaction.Reaction, Bool)->Void, openInfo: @escaping (PeerId)->Void, runEffect:@escaping(MessageReaction.Reaction)->Void) {
             self.value = value
             self.index = index
             self.message = message
             self.canViewList = canViewList
             self.action = action
+            self.source = source
             self.context = context
             self.presentation = presentation
-            self.available = available
             self.mode = mode
             self.openInfo = openInfo
-            self.list = list
             self.runEffect = runEffect
             switch mode {
             case .full:
@@ -336,7 +367,10 @@ final class ChatReactionsLayout {
     
     init(context: AccountContext, message: Message, available: AvailableReactions?, peerAllowed: [MessageReaction.Reaction], engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, openInfo:@escaping(PeerId)->Void, runEffect: @escaping(MessageReaction.Reaction)->Void) {
         
-        let mode: Mode = message.id.peerId.namespace == Namespaces.Peer.CloudUser ? .short : .full
+        var mode: Mode = message.id.peerId.namespace == Namespaces.Peer.CloudUser ? .short : .full
+        if context.isPremium, mode == .short, message.peers[message.id.peerId]?.isPremium == true {
+            mode = .full
+        }
         self.message = message
         self.context = context
         self.renderType = renderType
@@ -378,32 +412,27 @@ final class ChatReactionsLayout {
             }
         })
         
-        let list = (available?.reactions ?? []).filter({ value in
-            return !sorted.contains(where: { $0.value == value.value }) && peerAllowed.contains(value.value)
-        })
-        
-        if mode == .full, !sorted.isEmpty, !list.isEmpty, !sorted.contains(where: { $0.isSelected }) {
-            if let value = context.appConfiguration.data?["reactions_uniq_max"] as? Double {
-                let uniqueLimit = Int(value)
-                if sorted.count < uniqueLimit {
-                    sorted.append(.init(value: .builtin(""), count: -1, isSelected: false))
-                }
-            }
-        }
-        
-        for available in list {
-            _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .standalone(resource: available.staticIcon.resource)).start()
-        }
         
         self.reactions = sorted.compactMap { reaction in
-            if let current = available?.reactions.first(where: { $0.value == reaction.value || reaction.value.isEmpty }) {
-                
+            let source: Reaction.Source?
+            switch reaction.value {
+            case let .custom(fileId):
+                let mediaId = MediaId.init(namespace: Namespaces.Media.CloudFile, id: fileId)
+                source = .custom(fileId, message.associatedMedia[mediaId] as? TelegramMediaFile, nil)
+            case .builtin:
+                if let current = available?.reactions.first(where: { $0.value == reaction.value || reaction.value.isEmpty }) {
+                    source = .builtin(current)
+                } else {
+                    source = nil
+                }
+            }
+            
+            if let source = source {
                 var recentPeers:[Peer] = reactions.recentPeers.filter { recent in
                     return recent.value == reaction.value
                 }.compactMap {
                     message.peers[$0.peerId]
                 }
-                
                 if let peer = message.peers[message.id.peerId] {
                     if !peer.isGroup && !peer.isSupergroup {
                         recentPeers = []
@@ -415,14 +444,12 @@ final class ChatReactionsLayout {
                         recentPeers = []
                     }
                 }
-                
-                
-                return .init(value: reaction, recentPeers: recentPeers, list: list, canViewList: reactions.canViewList, message: message, context: context, mode: mode, index: getIndex(), available: current, presentation: presentation, action: { value, checkPrem in
+                return .init(value: reaction, recentPeers: recentPeers, canViewList: reactions.canViewList, message: message, context: context, mode: mode, index: getIndex(), source: source, presentation: presentation, action: { value, checkPrem in
                     let reaction = sorted.first(where: { $0.value == value})
                     if let reaction = reaction {
-                        engine.react(message.id, value: reaction.isSelected ? nil : reaction.value, checkPrem: checkPrem)
+                        engine.react(message.id, value: reaction.isSelected ? nil : reaction.value, file: source.file, checkPrem: checkPrem)
                     } else {
-                        engine.react(message.id, value: value, checkPrem: checkPrem)
+                        engine.react(message.id, value: value, file: source.file, checkPrem: checkPrem)
                     }
                 }, openInfo: openInfo, runEffect: runEffect)
             } else {
@@ -525,12 +552,87 @@ protocol ReactionViewImpl {
     func playEffect()
 }
 
+class AnimationLayerContainer : View {
+    fileprivate var imageLayer: InlineStickerItemLayer?
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+    }
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func updateLayer(_ imageLayer: InlineStickerItemLayer, animated: Bool) {
+        if let layer = self.imageLayer {
+            performSublayerRemoval(layer, animated: animated)
+        }
+        imageLayer.superview = self
+        self.layer?.addSublayer(imageLayer)
+        if animated && self.imageLayer != nil {
+            imageLayer.animateAlpha(from: 0, to: 1, duration: 0.2)
+        }
+        self.imageLayer = imageLayer
+        updateAnimatableContent()
+        updateListeners()
+        needsLayout = true
+    }
+    
+    override func layout() {
+        super.layout()
+        if let imageLayer = self.imageLayer {
+            imageLayer.frame = focus(imageLayer.frame.size)
+        }
+    }
+    
+    
+    @objc func updateAnimatableContent() -> Void {
+        if let value = self.imageLayer, let superview = value.superview {
+            var isKeyWindow: Bool = false
+            if let window = window {
+                if !window.canBecomeKey {
+                    isKeyWindow = true
+                } else {
+                    isKeyWindow = window.isKeyWindow
+                }
+            }
+            value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
+        }
+    }
+    
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        self.updateListeners()
+        self.updateAnimatableContent()
+    }
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        self.updateListeners()
+        self.updateAnimatableContent()
+    }
+    
+    private func updateListeners() {
+        let center = NotificationCenter.default
+        if let window = window {
+            center.removeObserver(self)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didBecomeKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self)
+        } else {
+            center.removeObserver(self)
+        }
+    }
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+}
+
 final class ChatReactionsView : View {
     
     
     final class ReactionView: Control, ReactionViewImpl {
         fileprivate private(set) var reaction: ChatReactionsLayout.Reaction?
-        fileprivate let imageView: TransformImageView = TransformImageView()
+        fileprivate let imageView: AnimationLayerContainer = AnimationLayerContainer(frame: .zero)
         private var textView: DynamicCounterTextView?
         private let avatarsContainer = View(frame: NSMakeRect(0, 0, 16 * 3, 16))
         private var avatars:[AvatarContentView] = []
@@ -574,10 +676,10 @@ final class ChatReactionsView : View {
         func playEffect() {
             let size = NSMakeSize(imageView.frame.width * 2, imageView.frame.height * 2)
             
-            guard let reaction = reaction, let file = reaction.available.centerAnimation else {
+            guard let reaction = reaction, let file = reaction.source.effect else {
                 return
             }
-            
+
             let signal: Signal<LottieAnimation?, NoError> = reaction.context.account.postbox.mediaBox.resourceData(file.resource)
             |> filter { $0.complete }
             |> map { value -> Data? in
@@ -593,7 +695,7 @@ final class ChatReactionsView : View {
             |> map { data in
                 return LottieAnimation(compressed: data, key: .init(key: .bundle("_effect_\(reaction.value.value)"), size: size), cachePurpose: .none, playPolicy: .once, metalSupport: false)
             } |> deliverOnMainQueue
-            
+
             self.effectDisposable.set(signal.start(next: { [weak self] animation in
                 if let animation = animation {
                     self?.runAnimationEffect(animation)
@@ -625,6 +727,7 @@ final class ChatReactionsView : View {
         }
         
         func update(with reaction: ChatReactionsLayout.Reaction, account: Account, animated: Bool) {
+            let layerUpdated = reaction.source != self.reaction?.source
             let selectedUpdated = self.reaction?.value.isSelected != reaction.value.isSelected
             let reactionUpdated = self.reaction?.value.value != reaction.value.value
             self.reaction = reaction
@@ -742,28 +845,32 @@ final class ChatReactionsView : View {
                 self.layer?.animateBackground()
             }
             
-            let file = reaction.available.centerAnimation ?? reaction.available.staticIcon
-            var reactionSize: NSSize = reaction.presentation.reactionSize
-            
-            
-            if reaction.available.centerAnimation != nil {
-                reactionSize = NSMakeSize(reaction.presentation.reactionSize.width * 2, reaction.presentation.reactionSize.height * 2)
-            }
-            let arguments = TransformImageArguments(corners: .init(), imageSize: reactionSize, boundingSize: reaction.presentation.reactionSize, intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
-            
-            self.imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: System.backingScale, positionFlags: nil), clearInstantly: true)
-
-            if !self.imageView.isFullyLoaded {
-                imageView.setSignal(chatMessageSticker(postbox: account.postbox, file: .standalone(media: file), small: false, scale: System.backingScale), cacheImage: { result in
-                    cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
-                })
+            if layerUpdated {
+                self.imageView.updateLayer(reaction.getInlineLayer(), animated: animated)
             }
             
+//            let file = reaction.available.centerAnimation ?? reaction.available.staticIcon
+//            var reactionSize: NSSize = reaction.presentation.reactionSize
+//
+//
+//            if reaction.available.centerAnimation != nil {
+//                reactionSize = NSMakeSize(reaction.presentation.reactionSize.width * 2, reaction.presentation.reactionSize.height * 2)
+//            }
+//            let arguments = TransformImageArguments(corners: .init(), imageSize: reactionSize, boundingSize: reaction.presentation.reactionSize, intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
+//
+//            self.imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: System.backingScale, positionFlags: nil), clearInstantly: true)
+//
+//            if !self.imageView.isFullyLoaded {
+//                imageView.setSignal(chatMessageSticker(postbox: account.postbox, file: .standalone(media: file), small: false, scale: System.backingScale), cacheImage: { result in
+//                    cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
+//                })
+//            }
+//
             if !first, reactionUpdated, animated {
                 self.imageView.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
             }
 
-            imageView.set(arguments: arguments)
+//            imageView.set(arguments: arguments)
             if first {
                 updateLayout(size: reaction.rect.size, transition: .immediate)
                 first = false
@@ -812,111 +919,45 @@ final class ChatReactionsView : View {
         }
     }
     
-    final class AddReactionView: Control, ReactionViewImpl {
-        fileprivate private(set) var reaction: ChatReactionsLayout.Reaction?
-        fileprivate let imageView: ImageView = ImageView()
-        
-        required init(frame frameRect: NSRect) {
-            super.init(frame: frameRect)
-            
-            addSubview(imageView)
-            scaleOnClick = true
-            
- 
-            
-            self.contextMenu = { [weak self] in
-                guard let reaction = self?.reaction else {
-                    return nil
-                }
-                let menu = ContextMenu()
-                menu.addItem(ChatInlineReactionMenuItem(context: reaction.context, reactions: reaction.list, handler: reaction.action))
-                return menu
-            }
-            
-                        
-        }
-        
-        func playEffect() {
-            
-        }
-        
-        private var first: Bool = true
-        
-        func update(with reaction: ChatReactionsLayout.Reaction, account: Account, animated: Bool) {
-            self.reaction = reaction
-            self.backgroundColor = reaction.presentation.bgColor
-            layer?.cornerRadius = reaction.minimumSize.height / 2
-            
-            imageView.image = NSImage.init(named: "Icon_Message_AddReaction")?.precomposed(reaction.presentation.textColor)
-            imageView.sizeToFit()
-            
-            if first {
-                first = false
-                self.updateLayout(size: self.frame.size, transition: .immediate)
-            }
-            
-        }
-        
-        deinit {
-           
-        }
-        
-        func isOwner(of reaction: ChatReactionsLayout.Reaction) -> Bool {
-            return self.reaction?.value.value == reaction.value.value
-        }
-        
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-        
-        func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition) {
-            guard let reaction = reaction else {
-                return
-            }
-
-            let presentation = reaction.presentation
-
-            transition.updateFrame(view: self.imageView, frame: focus(imageView.frame.size))
-        }
-        override func layout() {
-            super.layout()
-            updateLayout(size: frame.size, transition: .immediate)
-        }
-    }
-
     
     final class ShortReactionView: Control, ReactionViewImpl {
+        
         fileprivate private(set) var reaction: ChatReactionsLayout.Reaction?
-        fileprivate let imageView: TransformImageView = TransformImageView()
+        fileprivate let imageView = AnimationLayerContainer(frame: .zero)
         private var textView: DynamicCounterTextView?
         private var first = true
         private var effetView: LottiePlayerView?
         private let effectDisposable = MetaDisposable()
+        
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
-            userInteractionEnabled = false
-            addSubview(imageView)
+            self.userInteractionEnabled = false
+            self.addSubview(imageView)
         }
         
-        
         func update(with reaction: ChatReactionsLayout.Reaction, account: Account, animated: Bool) {
+            let updated = self.reaction?.source != reaction.source
             self.reaction = reaction
             
-            let file = reaction.available.centerAnimation ?? reaction.available.staticIcon
-            
-            var reactionSize: NSSize = reaction.presentation.reactionSize
-            
-            if reaction.available.centerAnimation != nil {
-                reactionSize = NSMakeSize(reaction.presentation.reactionSize.width * 2, reaction.presentation.reactionSize.height * 2)
+            if updated {
+                self.imageView.updateLayer(reaction.getInlineLayer(), animated: animated)
             }
-            let arguments = TransformImageArguments(corners: .init(), imageSize: reactionSize, boundingSize: reaction.presentation.reactionSize, intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
-            self.imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: System.backingScale, positionFlags: nil), clearInstantly: true)
-            if !self.imageView.isFullyLoaded {
-                imageView.setSignal(chatMessageSticker(postbox: account.postbox, file: .standalone(media: file), small: false, scale: System.backingScale), cacheImage: { result in
-                    cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
-                })
-            }
-            imageView.set(arguments: arguments)
+            
+//            let file = reaction.available.centerAnimation ?? reaction.available.staticIcon
+//
+//            var reactionSize: NSSize = reaction.presentation.reactionSize
+//
+//            if reaction.available.centerAnimation != nil {
+//                reactionSize = NSMakeSize(reaction.presentation.reactionSize.width * 2, reaction.presentation.reactionSize.height * 2)
+//            }
+//            let arguments = TransformImageArguments(corners: .init(), imageSize: reactionSize, boundingSize: reaction.presentation.reactionSize, intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
+//            self.imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: System.backingScale, positionFlags: nil), clearInstantly: true)
+//            if !self.imageView.isFullyLoaded {
+//                imageView.setSignal(chatMessageSticker(postbox: account.postbox, file: .standalone(media: file), small: false, scale: System.backingScale), cacheImage: { result in
+//                    cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
+//                })
+//            }
+//            imageView.set(arguments: arguments)
             
             if let text = reaction.text {
                 let current: DynamicCounterTextView
@@ -948,11 +989,11 @@ final class ChatReactionsView : View {
         
         func playEffect() {
             let size = NSMakeSize(imageView.frame.width * 2, imageView.frame.height * 2)
-            
-            guard let reaction = reaction, let file = reaction.available.centerAnimation else {
+
+            guard let reaction = reaction, let file = reaction.source.effect else {
                 return
             }
-            
+
             let signal: Signal<LottieAnimation?, NoError> = reaction.context.account.postbox.mediaBox.resourceData(file.resource)
             |> filter { $0.complete }
             |> map { value -> Data? in
@@ -968,7 +1009,7 @@ final class ChatReactionsView : View {
             |> map { data in
                 return LottieAnimation(compressed: data, key: .init(key: .bundle("_effect_\(reaction.value.value)"), size: size), cachePurpose: .none, playPolicy: .once, metalSupport: false)
             } |> deliverOnMainQueue
-            
+
             self.effectDisposable.set(signal.start(next: { [weak self] animation in
                 if let animation = animation {
                     self?.runAnimationEffect(animation)
@@ -985,13 +1026,13 @@ final class ChatReactionsView : View {
             let player = LottiePlayerView(frame: rect)
 
             player.set(animation, reset: true)
-            
+
             self.effetView = player
-            
+
             addSubview(player)
-            
+
             self.imageView._change(opacity: 0, animated: false)
-            
+
             animation.triggerOn = (LottiePlayerTriggerFrame.last, { [weak self, weak player] in
                 self?.imageView._change(opacity: 1, animated: false)
                 if let player = player {
@@ -1126,18 +1167,10 @@ final class ChatReactionsView : View {
             let getView: (NSView?)->NSView = { prev in
                 switch layout.mode {
                 case .full:
-                    if item.value.value.isEmpty {
-                        if let prev = prev as? AddReactionView {
-                            return prev
-                        } else {
-                            return AddReactionView(frame: item.rect)
-                        }
+                    if let prev = prev as? ReactionView {
+                        return prev
                     } else {
-                        if let prev = prev as? ReactionView {
-                            return prev
-                        } else {
-                            return ReactionView(frame: item.rect)
-                        }
+                        return ReactionView(frame: item.rect)
                     }
                 case .short:
                     if let prev = prev as? ShortReactionView {

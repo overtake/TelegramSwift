@@ -2207,7 +2207,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             for subview in embeddedContainer.subviews {
                 var isHidden = false
                 loop: for rect in rects {
-                    if NSIntersectsRect(subview.frame, rect) {
+                    if NSIntersectsRect(NSMakeRect(subview.frame.midX, subview.frame.midY, 1, 1), rect) {
                         isHidden = true
                         break loop
                     }
@@ -2219,7 +2219,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             for subview in sublayers {
                 var isHidden = false
                 loop: for rect in rects {
-                    if NSIntersectsRect(subview.frame, rect) {
+                    if NSIntersectsRect(NSMakeRect(subview.frame.midX, subview.frame.midY, 1, 1), rect) {
                         isHidden = true
                         break loop
                     }

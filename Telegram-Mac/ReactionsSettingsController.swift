@@ -18,19 +18,29 @@ private final class Arguments {
     let toggleReaction:([MessageReaction.Reaction])->Void
     let toggleValueReaction:(MessageReaction.Reaction)->Void
     let updateQuick:(MessageReaction.Reaction)->Void
-    init(context: AccountContext, toggleReaction:@escaping([MessageReaction.Reaction])->Void, updateQuick:@escaping(MessageReaction.Reaction)->Void, toggleValueReaction: @escaping(MessageReaction.Reaction)->Void) {
+    let toggleChatReactions:(State.ChatReactions)->Void
+    init(context: AccountContext, toggleReaction:@escaping([MessageReaction.Reaction])->Void, updateQuick:@escaping(MessageReaction.Reaction)->Void, toggleValueReaction: @escaping(MessageReaction.Reaction)->Void, toggleChatReactions:@escaping(State.ChatReactions)->Void) {
         self.context = context
         self.toggleReaction = toggleReaction
         self.updateQuick = updateQuick
         self.toggleValueReaction = toggleValueReaction
+        self.toggleChatReactions = toggleChatReactions
     }
 }
 
 private struct State : Equatable {
+    
+    enum ChatReactions : Equatable {
+        case all
+        case some
+        case none
+    }
+    
     let mode: ReactionSettingsMode
     var quick: MessageReaction.Reaction?
     var reactions: [MessageReaction.Reaction]
     var availableReactions: AvailableReactions?
+    var chatReactions: ChatReactions = .all
     var thumbs:[MessageReaction.Reaction: CGImage] = [:]
 }
 
@@ -52,43 +62,69 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             return !value.isPremium || arguments.context.isPremium
         }.map { $0.value } ?? []
         
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_allow, data: .init(name: strings().reactionSettingsAllow, color: theme.colors.text, type: .switchable(!state.reactions.isEmpty), viewType: .singleItem, action: {
-            arguments.toggleReaction(state.reactions.isEmpty ? all : [])
-        })))
-        index += 1
+        
+        if !state.mode.isGroup {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_allow, data: .init(name: strings().reactionSettingsAllow, color: theme.colors.text, type: .switchable(!state.reactions.isEmpty), viewType: .singleItem, action: {
+                arguments.toggleReaction(state.reactions.isEmpty ? all : [])
+            })))
+            index += 1
+        } else {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("all"), data: .init(name: strings().reactionSettingsGroupAll, color: theme.colors.text, type: .selectable(state.chatReactions == .all), viewType: .firstItem, action: {
+                arguments.toggleChatReactions(.all)
+            })))
+            index += 1
+            
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("some"), data: .init(name: strings().reactionSettingsGroupSome, color: theme.colors.text, type: .selectable(state.chatReactions == .some), viewType: .innerItem, action: {
+                arguments.toggleChatReactions(.some)
+            })))
+            index += 1
+            
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("no"), data: .init(name: strings().reactionSettingsGroupNone, color: theme.colors.text, type: .selectable(state.chatReactions == .none), viewType: .lastItem, action: {
+                arguments.toggleChatReactions(.none)
+            })))
+            index += 1
+        }
+        
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.mode.isGroup ? strings().reactionSettingsAllowGroupInfo : strings().reactionSettingsAllowChannelInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
+        
     default:
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().reactionSettingsQuickInfo), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
     }
     
     if let available = state.availableReactions {
-        for (i, reaction) in available.enabled.enumerated() {
-            let type: GeneralInteractedType
-            switch state.mode {
-            case .quick:
-                if state.quick != nil {
-                    type = .selectable(state.quick == reaction.value)
-                } else {
-                    type = .selectable(i == 0)
-                }
-            case .chat:
-                 type = .switchable(state.reactions.contains(reaction.value))
-            }
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("_id_\(reaction.value.hashValue)"), data: .init(name: reaction.title, color: theme.colors.text, icon: state.thumbs[reaction.value], type: type, viewType: bestGeneralViewType(available.enabled, for: i), action: {
+        var accept = true
+        if state.mode.isGroup, state.chatReactions != .some {
+            accept = false
+        }
+        if accept {
+            for (i, reaction) in available.enabled.enumerated() {
+                let type: GeneralInteractedType
                 switch state.mode {
                 case .quick:
-                    arguments.updateQuick(reaction.value)
+                    if state.quick != nil {
+                        type = .selectable(state.quick == reaction.value)
+                    } else {
+                        type = .selectable(i == 0)
+                    }
                 case .chat:
-                    arguments.toggleValueReaction(reaction.value)
+                     type = .switchable(state.reactions.contains(reaction.value))
                 }
-            })))
-            index += 1
+                entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("_id_\(reaction.value.hashValue)"), data: .init(name: reaction.title, color: theme.colors.text, icon: state.thumbs[reaction.value], type: type, viewType: bestGeneralViewType(available.enabled, for: i), action: {
+                    switch state.mode {
+                    case .quick:
+                        arguments.updateQuick(reaction.value)
+                    case .chat:
+                        arguments.toggleValueReaction(reaction.value)
+                    }
+                })))
+                index += 1
+            }
         }
     }
     
@@ -201,6 +237,12 @@ func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowe
                 list.append(value)
             }
             current.reactions = list
+            return current
+        }
+    }, toggleChatReactions: { value in
+        updateState { current in
+            var current = current
+            current.chatReactions = value
             return current
         }
     })

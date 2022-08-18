@@ -2649,7 +2649,7 @@ class ChatRowItem: TableRowItem {
             
             let width = ContextAddReactionsListView.width(for: available, maxCount: 6)
             
-            let rect = NSMakeRect(0, 0, width + 30, 50)
+            let rect = NSMakeRect(0, 0, width + 20, 40 + 20)
             
             let panel = Window(contentRect: rect, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
             panel._canBecomeMain = false
@@ -2665,7 +2665,7 @@ class ChatRowItem: TableRowItem {
             let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem in
                 let isSelected = message.reactionsAttribute?.reactions.contains(where: { $0.value == value && $0.isSelected }) == true
                 context.reactions.react(message.id, value: isSelected ? nil : value, checkPrem: checkPrem)
-            }, radiusLayer: rect.height / 2 - 5, revealReactions: { view in
+            }, radiusLayer: nil, revealReactions: { view in
                 let window = ReactionsWindowController(context, message: message)
                 window.show(view)
             })

@@ -8531,6 +8531,12 @@ public final class L10n {
   public static var reactionSettingsAllowGroupInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Allow.Group.Info") }
   /// AVAILABLE REACTIONS
   public static var reactionSettingsAvailableInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Available.Info") }
+  /// All Reactions
+  public static var reactionSettingsGroupAll: String  { return L10n.tr("Localizable", "Reaction.Settings.Group.All") }
+  /// No Reactions
+  public static var reactionSettingsGroupNone: String  { return L10n.tr("Localizable", "Reaction.Settings.Group.None") }
+  /// Some Reactions
+  public static var reactionSettingsGroupSome: String  { return L10n.tr("Localizable", "Reaction.Settings.Group.Some") }
   /// Reaction button will be shown when you hover near message
   public static var reactionSettingsLegacyInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Legacy.Info") }
   /// QUICK REACTION.

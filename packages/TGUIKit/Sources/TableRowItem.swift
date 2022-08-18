@@ -54,6 +54,9 @@ open class TableRowItem: NSObject {
     public var oldWidth:CGFloat = 0
     
     open var width:CGFloat  {
+        if Thread.isMainThread {
+            return table?.frame.width ?? oldWidth
+        }
         return oldWidth
     }
     

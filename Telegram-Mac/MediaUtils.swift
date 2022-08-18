@@ -826,8 +826,6 @@ private func chatMessageStickerDatas(postbox: Postbox, file: FileMediaReference,
                             }
                         }).start(next: { next in
                             subscriber.putNext(next)
-                        }, error: { error in
-                            subscriber.putError(error)
                         }, completed: {
                             subscriber.putCompletion()
                         })

@@ -159,7 +159,11 @@ final class PremiumStatusControl : Control {
     }
     static func controlSize(_ peer: Peer, _ isBig: Bool) -> NSSize? {
         if hasControl(peer) {
-            return isBig ? NSMakeSize(20, 20) : NSMakeSize(16, 16)
+            var addition: NSSize = .zero
+            if peer.isScam || peer.isFake {
+                addition.width += 20
+            }
+            return isBig ? NSMakeSize(20 + addition.width, 20 + addition.height) : NSMakeSize(16 + addition.width, 16 + addition.height)
         } else {
             return nil
         }

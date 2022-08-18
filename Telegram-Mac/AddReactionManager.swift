@@ -233,11 +233,19 @@ final class ContextAddReactionsListView : View  {
     
     private let showMore = ShowMore(frame: NSMakeRect(0, 0, 30, 30))
     private let revealReactions:(NSView)->Void
+    
+    private let maskLayer = SimpleShapeLayer()
+    private let backgroundColorView = View()
+    private let shadowLayer = SimpleShapeLayer()
     required init(frame frameRect: NSRect, context: AccountContext, list: [AvailableReactions.Reaction], add:@escaping(MessageReaction.Reaction, Bool)->Void, radiusLayer: CGFloat? = 15, revealReactions:@escaping(NSView)->Void) {
         self.list = list
         self.revealReactions = revealReactions
         self.radiusLayer = radiusLayer
         super.init(frame: frameRect)
+        
+//        self.backgroundColor = .random
+        
+        backgroundView.layer?.mask = maskLayer
         
         self.visualEffect.state = .active
         self.visualEffect.wantsLayer = true
@@ -250,41 +258,36 @@ final class ContextAddReactionsListView : View  {
             }
         }, for: .Click)
         
-        if let radiusLayer = radiusLayer {
-            
-            let shadow = NSShadow()
-            shadow.shadowBlurRadius = 2
-            shadow.shadowColor = NSColor.black.withAlphaComponent(0.2)
-            shadow.shadowOffset = NSMakeSize(0, 0)
-            self.shadow = shadow
-            
-            self.layer?.cornerRadius = radiusLayer
-            visualEffect.layer?.cornerRadius = radiusLayer
-            backgroundView.layer?.cornerRadius = radiusLayer
-            
-            scrollView.layer?.cornerRadius = radiusLayer
-            documentView.layer?.cornerRadius = radiusLayer
-            
-            
-            bottomGradient.shadowBackground = theme.colors.background.withAlphaComponent(0.6)
-            bottomGradient.direction = .horizontal(true)
-            topGradient.shadowBackground = theme.colors.background.withAlphaComponent(0.6)
-            topGradient.direction = .horizontal(false)
-            
-            scrollView.addSubview(topGradient)
-            scrollView.addSubview(bottomGradient)
-        }
+        shadowLayer.shadowColor = NSColor.black.cgColor
+        shadowLayer.shadowOffset = CGSize(width: 0.0, height: 0)
+        shadowLayer.shadowRadius = 4
+        shadowLayer.shadowOpacity = 0.2
+        shadowLayer.fillColor = NSColor.clear.cgColor
+        self.layer?.addSublayer(shadowLayer)
+
+        bottomGradient.shadowBackground = theme.colors.background.withAlphaComponent(0.6)
+        bottomGradient.direction = .horizontal(true)
+        topGradient.shadowBackground = theme.colors.background.withAlphaComponent(0.6)
+        topGradient.direction = .horizontal(false)
+        
+       
         
         visualEffect.material = theme.colors.isDark ? .dark : .mediumLight
 
-        if #available(macOS 11.0, *), radiusLayer != nil {
-            self.addSubview(visualEffect)
-            backgroundView.backgroundColor = theme.colors.background.withAlphaComponent(0.7)
-        } else if radiusLayer == nil {
-            backgroundView.backgroundColor = .clear
+        
+        if #available(macOS 11.0, *) {
+            backgroundColorView.backgroundColor = theme.colors.background.withAlphaComponent(0.7)
         } else {
-            backgroundView.backgroundColor = theme.colors.background
+            backgroundColorView.backgroundColor = theme.colors.background
         }
+        if #available(macOS 11.0, *) {
+            backgroundView.addSubview(visualEffect)
+        }
+        backgroundView.addSubview(backgroundColorView)
+
+        
+        backgroundView.addSubview(topGradient)
+        backgroundView.addSubview(bottomGradient)
         
         addSubview(backgroundView)
         addSubview(scrollView)
@@ -389,7 +392,7 @@ final class ContextAddReactionsListView : View  {
     static func width(for list: [AvailableReactions.Reaction], maxCount: Int = .max) -> CGFloat {
         var width = CGFloat(min(list.count, maxCount)) * self.size.width
         if maxCount != .max {
-            width += self.size.width - 7
+            width += self.size.width
         }
         return width
     }
@@ -408,16 +411,47 @@ final class ContextAddReactionsListView : View  {
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        transition.updateFrame(view: self.scrollView, frame: size.bounds)
-        transition.updateFrame(view: self.documentView, frame: NSMakeSize(ContextAddReactionsListView.width(for: self.list), size.height).bounds)
         
-        transition.updateFrame(view: self.topGradient, frame: NSMakeRect(0, 0, 10, size.height))
-        transition.updateFrame(view: self.bottomGradient, frame: NSMakeRect(frame.width - 10, 0, 10, size.height))
+        var rect = size.bounds.insetBy(dx: 10, dy: 10)
+        rect.origin.y -= 5
+        
+        
+        transition.updateFrame(view: self.scrollView, frame: rect)
+        transition.updateFrame(view: self.documentView, frame: NSMakeSize(ContextAddReactionsListView.width(for: self.list), rect.height).bounds)
+        
+//        transition.updateFrame(view: self.topGradient, frame: NSMakeRect(0, 0, 10, size.height))
+//        transition.updateFrame(view: self.bottomGradient, frame: NSMakeRect(frame.width - 10, 0, 10, size.height))
         
         transition.updateFrame(view: visualEffect, frame: size.bounds)
         transition.updateFrame(view: backgroundView, frame: size.bounds)
+        transition.updateFrame(view: backgroundColorView, frame: size.bounds)
         
-        transition.updateFrame(view: showMore, frame: NSMakeRect(size.width - showMore.frame.width - 5, 5, showMore.frame.width, showMore.frame.height))
+        transition.updateFrame(view: showMore, frame: NSMakeRect(rect.maxX - showMore.frame.width - 5, rect.minY + 5, showMore.frame.width, showMore.frame.height))
+        
+//        transition.updateFrame(layer: maskLayer, frame: rect.size.bounds)
+        transition.updateFrame(layer: shadowLayer, frame: size.bounds)
+
+        maskLayer.path = getMaskPath(rect: rect)
+        
+        shadowLayer.path = getMaskPath(rect: rect)
+        shadowLayer.shadowPath = getMaskPath(rect: rect)
+
+        
+        if transition.isAnimated {
+            maskLayer.animatePath()
+        }
+    }
+    
+    private func getMaskPath(rect: CGRect) -> CGPath {
+        
+        let mutablePath = CGMutablePath()
+        mutablePath.addRoundedRect(in: rect, cornerWidth: rect.height / 2, cornerHeight: rect.height / 2)
+        
+        let bubbleRect = NSMakeRect(rect.width - 40, rect.maxY - 10, 20, 20)
+
+        mutablePath.addRoundedRect(in: bubbleRect, cornerWidth: bubbleRect.width / 2, cornerHeight: bubbleRect.width / 2)
+
+        return mutablePath
     }
 }
 
