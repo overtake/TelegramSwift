@@ -226,12 +226,21 @@ open class Popover: NSObject {
                     
                     strongSelf.isShown = true
                     
-                    if let _ = strongSelf.overlay {
+                    if let _ = strongSelf.overlay, let window = strongSelf.window {
                         if strongSelf.animates {
                             
                             var once:Bool = false
                             
-                            strongSelf.background.layer?.animateAlpha(from: 0, to: 1, duration: 0.1, completion: { [weak controller] (comple) in
+                            let point = window.mouseLocationOutsideOfEventStream
+                            
+                            var anchor = strongSelf.background.convert(point, from: nil)
+                            
+                            if strongSelf.background.flip {
+                                anchor.y += strongSelf.background.frame.height
+                            }
+                            strongSelf.background.layer?.animateScaleSpringFrom(anchor: anchor, from: 0.1, to: 1.0, duration: 0.4, bounce: false)
+                            
+                            strongSelf.background.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, completion: { [weak controller] (comple) in
                                 if let strongSelf = self, !once {
                                     once = true
                                     controller?.viewDidAppear(strongSelf.animates)

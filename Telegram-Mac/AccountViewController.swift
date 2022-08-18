@@ -90,8 +90,8 @@ class AccountViewController: NavigationViewController {
     
     override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
-        layoutController._frameRect = bounds
-        layoutController.frame = NSMakeRect(0, layoutController.bar.height, bounds.width, bounds.height - layoutController.bar.height)
+        layoutController._frameRect = size.bounds
+        layoutController.frame = NSMakeRect(0, layoutController.bar.height, size.width, size.height - layoutController.bar.height)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -738,7 +738,7 @@ class LayoutAccountController : TableViewController {
                 _ = context.engine.accountData.setEmojiStatus(file: file).start()
             }
             
-            showPopover(for: control, with: PremiumStatusController(context, callback: callback), edge: NSRectEdge.maxY, inset: NSMakePoint(-20, -30))
+            showPopover(for: control, with: PremiumStatusController(context, callback: callback), edge: NSRectEdge.maxY, inset: NSMakePoint(-80, -35))
         })
         
         self.arguments = arguments

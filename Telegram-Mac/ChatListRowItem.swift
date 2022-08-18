@@ -836,8 +836,8 @@ class ChatListRowItem: TableRowItem {
             dateSize = dateLayout.0.size.width
         }
         var offset: CGFloat = 0
-        if isScam || isFake || isVerified || isPremium {
-            offset += 20
+        if let peer = peer, let controlSize = PremiumStatusControl.controlSize(peer, false) {
+            offset += controlSize.width
         }
         if isMuted {
             offset += theme.icons.dialogMuteImage.backingSize.width + 4

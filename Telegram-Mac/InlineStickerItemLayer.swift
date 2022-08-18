@@ -307,12 +307,12 @@ final class InlineStickerItemLayer : SimpleLayer {
             
             fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: mediaResource).start())
             
-            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: aspectSize, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: aspectSize, boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: nil)
 
             let fontSize = NSMakeSize(theme.fontSize + 8, theme.fontSize + 5)
             let fontAspectSize = file.dimensions?.size.aspectFitted(fontSize) ?? fontSize
 
-            let fontArguments = TransformImageArguments(corners: ImageCorners(), imageSize: fontAspectSize, boundingSize: fontSize, intrinsicInsets: NSEdgeInsets())
+            let fontArguments = TransformImageArguments(corners: ImageCorners(), imageSize: fontAspectSize, boundingSize: fontSize, intrinsicInsets: NSEdgeInsets(), emptyColor: nil)
 
             
             let signal: Signal<ImageDataTransformation, NoError>
@@ -321,7 +321,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             case "image/webp":
                 signal = chatMessageSticker(postbox: account.postbox, file: reference, small: aspectSize.width <= 5, scale: System.backingScale, fetched: true)
             default:
-                signal = chatMessageAnimatedSticker(postbox: account.postbox, file: reference, small: size.width <= 5, scale: System.backingScale, size: aspectSize, fetched: true, thumbAtFrame: 0, isVideo: file.fileName == "webm-preview" || file.isVideoSticker)
+                signal = chatMessageAnimatedSticker(postbox: account.postbox, file: reference, small: aspectSize.width <= 5, scale: System.backingScale, size: aspectSize, fetched: true, thumbAtFrame: 0, isVideo: file.fileName == "webm-preview" || file.isVideoSticker)
             }
             
             var result: TransformImageResult?

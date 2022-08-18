@@ -126,7 +126,7 @@ final class ReactionsWindowController : NSObject {
                 value = .custom(sticker.file.fileId.id)
             }
             let isSelected = message.reactionsAttribute?.reactions.contains(where: { $0.value == value && $0.isSelected }) == true
-            context.reactions.react(message.id, value: isSelected ? nil : value, checkPrem: false)
+            context.reactions.react(message.id, value: isSelected ? nil : value, file: sticker.file, checkPrem: false)
             self?.close(animated: true)
             
         }
@@ -162,6 +162,13 @@ final class ReactionsWindowController : NSObject {
         self.panel = panel
         
         let anchor = NSMakePoint(view.frame.width / 2, view.frame.height - (46 + 10))
+        
+        
+//
+//        view.layer?.animateBounds(from: .zero, to: view.bounds, duration: 2.0)
+//
+//        view.layer?.animatePosition(from: initialView.frame.origin, to: view.frame.origin, duration: 2.0)
+
         view.layer?.animateScaleSpringFrom(anchor: anchor, from: initialView.frame.width / view.frame.width, to: 1, duration: 0.3, bounce: false)
         view.layer?.animateAlpha(from: 0, to: 1, duration: 0.3)
 

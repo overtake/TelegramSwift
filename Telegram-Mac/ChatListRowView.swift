@@ -641,7 +641,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index)
                 validIds.append(id)
                 
-                let rect = item.rect.insetBy(dx: -1, dy: -1)
+                let rect = item.rect.insetBy(dx: -2, dy: -2)
                 
                 let view: InlineStickerItemLayer
                 if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
