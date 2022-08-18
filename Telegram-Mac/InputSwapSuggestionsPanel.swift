@@ -77,7 +77,7 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
 //                attach.append(.makeAnimated(item.clue, text: replacementText))
                 let symbolLength = range.length
                 var acceptedLast: Bool = false
-                while range.location > 0 {
+                while range.location >= 0 {
                     let previous = NSMakeRange(max(0, range.location), symbolLength)
                     let isAnimated = textInputState.isAnimatedEmoji(at: previous)
                     if inputText.nsstring.substring(with: previous) == replacementText, !isAnimated {
@@ -86,12 +86,12 @@ final class InputSwapSuggestionsPanel : View, TableViewDelegate {
                         range.length += previous.length
                         acceptedLast = true
                     } else {
-                        if acceptedLast {
-                            range.location += previous.length
-                            range.length -= previous.length
-                        }
                         break
                     }
+                }
+                if acceptedLast {
+                    range.location += symbolLength
+                    range.length -= symbolLength
                 }
                 
                 _ = chatInteraction.appendText(attach, selectedRange: range.lowerBound ..< range.upperBound)
