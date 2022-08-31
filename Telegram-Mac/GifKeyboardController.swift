@@ -253,7 +253,7 @@ final class GifKeyboardView : View {
             self?.updateScrollerSearch()
         }))
         
-        tableView.scrollerInsets = .init(left: 0, right: 0, top: 46, bottom: 0)
+        tableView.scrollerInsets = .init(left: 0, right: 0, top: 46, bottom: 50)
         
         self.layout()
     }

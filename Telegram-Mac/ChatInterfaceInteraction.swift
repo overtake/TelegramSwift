@@ -181,6 +181,8 @@ final class ChatInteraction : InterfaceObserver  {
     var getCachedData:()->CachedPeerData? = { return nil }
     
     var showDeleterSetup:(Control)->Void = { _ in }
+    
+    var showEmojiUseTooltip:()->Void = { }
 
     var openPendingRequests:()->Void = { }
     var dismissPendingRequests:([PeerId])->Void = { _ in }

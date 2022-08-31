@@ -12,10 +12,12 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 import QuartzCore
+import AppKit
 
 final class PremiumStatusControl : Control {
     private var imageLayer: SimpleLayer?
     private var animateLayer: InlineStickerItemLayer?
+    private var statusSelected: Bool? = nil
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         userInteractionEnabled = false
@@ -26,13 +28,15 @@ final class PremiumStatusControl : Control {
     }
     
     
-    func set(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, isSelected: Bool, isBig: Bool, animated: Bool) {
+    func set(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, color: NSColor?, isSelected: Bool, isBig: Bool, animated: Bool) {
+        
         
         
         
         if let size = PremiumStatusControl.controlSize(peer, isBig) {
             setFrameSize(size)
         }
+        self.layer?.opacity = color != nil ? 0.4 : 1
 
         if peer.isFake || peer.isScam || peer.isVerified || (peer.isPremium && peer.emojiStatus == nil)  {
             if let animateLayer = animateLayer {
@@ -58,7 +62,34 @@ final class PremiumStatusControl : Control {
                 if isBig {
                     image = isSelected ? theme.icons.premium_account_active : theme.icons.premium_account
                 } else {
-                    image = isSelected ? theme.icons.premium_account_small_active : theme.icons.premium_account_small
+                    if let color = color, !isSelected {
+                        let images = [
+                            theme.icons.chat_premium_status_red,
+                            theme.icons.chat_premium_status_orange,
+                            theme.icons.chat_premium_status_violet,
+                            theme.icons.chat_premium_status_green,
+                            theme.icons.chat_premium_status_cyan,
+                            theme.icons.chat_premium_status_light_blue,
+                            theme.icons.chat_premium_status_blue
+                        ]
+                        let colors = [
+                            theme.colors.groupPeerNameRed,
+                            theme.colors.groupPeerNameOrange,
+                            theme.colors.groupPeerNameViolet,
+                            theme.colors.groupPeerNameGreen,
+                            theme.colors.groupPeerNameCyan,
+                            theme.colors.groupPeerNameLightBlue,
+                            theme.colors.groupPeerNameBlue
+                        ]
+                        if let index = colors.firstIndex(where: { $0 == color }) {
+                            image = images[index]
+                        } else {
+                            image = theme.icons.chat_premium_status_blue
+                        }
+                        
+                    } else {
+                        image = isSelected ? theme.icons.premium_account_small_active : theme.icons.premium_account_small
+                    }
                 }
             } else {
                 image = nil
@@ -76,14 +107,35 @@ final class PremiumStatusControl : Control {
             }
             let fileId: Int64 = status.fileId
             let current: InlineStickerItemLayer
-            if let layer = self.animateLayer, layer.file?.fileId.id == fileId {
+            if let layer = self.animateLayer, layer.file?.fileId.id == fileId, statusSelected == isSelected {
                 current = layer
             } else {
+                let animated = animated && statusSelected == isSelected
+                var previousStopped: Bool = false
+                if self.animateLayer?.file?.fileId.id == fileId {
+                    previousStopped = self.animateLayer?.stopped ?? false
+                }
                 if let animateLayer = animateLayer {
                     performSublayerRemoval(animateLayer, animated: animated, scale: true)
                     self.animateLayer = nil
                 }
-                current = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: frame.size)
+                current = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: frame.size, playPolicy: isBig ? .loop : .playCount(2), checkStatus: true, getColors: { [weak self] file in
+                    
+                    var colors: [LottieColor] = []
+
+                    if file.emojiReference?.id == defaultStatusesPackId(nil) {
+                        if isSelected {
+                            colors.append(.init(keyPath: "", color: theme.colors.underSelectedColor))
+                        } else {
+                            colors.append(.init(keyPath: "", color: color ?? theme.colors.accent))
+                        }
+                    } else {
+                        self?.layer?.opacity = 1.0
+                    }
+                    
+                    return colors
+                })
+                current.stopped = previousStopped
                 current.superview = self
                 self.animateLayer = current
                 self.layer?.addSublayer(current)
@@ -94,6 +146,9 @@ final class PremiumStatusControl : Control {
                 }
             }
         }
+        
+        self.statusSelected = isSelected
+        
         self.updateAnimatableContent()
         self.updateListeners()
     }
@@ -143,14 +198,12 @@ final class PremiumStatusControl : Control {
         }
     }
     
-    static func control(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, isSelected: Bool, isBig: Bool = false, cached: PremiumStatusControl?, animated: Bool, force: Bool = false) -> PremiumStatusControl? {
+    static func control(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, isSelected: Bool, isBig: Bool = false, color: NSColor? = nil, cached: PremiumStatusControl?, animated: Bool) -> PremiumStatusControl? {
         var current: PremiumStatusControl? = nil
-        if peer.id != account.peerId || (inlinePacksContext == nil || force) {
-            if peer.isVerified || peer.isScam || peer.isFake || peer.isPremium {
-                current = cached ?? PremiumStatusControl(frame: .zero)
-            }
+        if peer.isVerified || peer.isScam || peer.isFake || peer.isPremium {
+            current = cached ?? PremiumStatusControl(frame: .zero)
         }
-        current?.set(peer, account: account, inlinePacksContext: inlinePacksContext, isSelected: isSelected, isBig: isBig, animated: animated)
+        current?.set(peer, account: account, inlinePacksContext: inlinePacksContext, color: color, isSelected: isSelected, isBig: isBig, animated: animated)
         return current
     }
     

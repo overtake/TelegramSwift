@@ -353,7 +353,7 @@ class ChatDiceContentView: ChatMediaContentView {
                         self.playerView.isHidden = false
                         self.thumbView.isHidden = true
                     }
-                case .stoped:
+                case .stoped, .finished:
                     switch diceState.play {
                     case let .end(animated):
                         if animated {

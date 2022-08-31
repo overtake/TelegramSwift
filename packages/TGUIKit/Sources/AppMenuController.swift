@@ -334,7 +334,6 @@ final class AppMenuController : NSObject  {
     private weak var parentView: NSView?
     private let delayDisposable = MetaDisposable()
     
-    private var topBubbleWindow: Window?
     
     init(_ menu: ContextMenu, presentation: AppMenu.Presentation, holder: AppMenu, betterInside: Bool, appearMode: AppMenu.AppearMode, parentView: NSView?) {
         self.menu = menu
@@ -580,12 +579,6 @@ final class AppMenuController : NSObject  {
             if let window = self.menu.topWindow, let view = window.contentView {
                 view.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak view, weak window] _ in
                     
-                    view?.removeFromSuperview()
-                    window?.orderOut(nil)
-                })
-            }
-            if let window = self.topBubbleWindow, let view = window.contentView {
-                view.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak view, weak window] _ in
                     view?.removeFromSuperview()
                     window?.orderOut(nil)
                 })
@@ -840,7 +833,7 @@ final class AppMenuController : NSObject  {
             window.set(mouseHandler: { [weak self] event in
                 self?.closeAll()
                 return .rejected
-            }, with: self, for: .leftMouseUp)
+            }, with: self, for: .leftMouseUp, priority: .supreme)
             
 //            let topBubble = Window(contentRect: .zero, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
 //            topBubble._canBecomeMain = false

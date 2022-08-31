@@ -95,6 +95,8 @@ public final class L10n {
   public static var accountSettingsAskQuestion: String  { return L10n.tr("Localizable", "AccountSettings.AskQuestion") }
   /// Bio
   public static var accountSettingsBio: String  { return L10n.tr("Localizable", "AccountSettings.Bio") }
+  /// Change Status
+  public static var accountSettingsChangeStatus: String  { return L10n.tr("Localizable", "AccountSettings.ChangeStatus") }
   /// English
   public static var accountSettingsCurrentLanguage: String  { return L10n.tr("Localizable", "AccountSettings.CurrentLanguage") }
   /// Data and Storage
@@ -135,6 +137,8 @@ public final class L10n {
   public static var accountSettingsStickersAndEmoji: String  { return L10n.tr("Localizable", "AccountSettings.StickersAndEmoji") }
   /// Appearance
   public static var accountSettingsTheme: String  { return L10n.tr("Localizable", "AccountSettings.Theme") }
+  /// Update Status
+  public static var accountSettingsUpdateStatus: String  { return L10n.tr("Localizable", "AccountSettings.UpdateStatus") }
   /// Username
   public static var accountSettingsUsername: String  { return L10n.tr("Localizable", "AccountSettings.Username") }
   /// Gram Wallet
@@ -1054,6 +1058,10 @@ public final class L10n {
   /// %1$@ disabled reactions
   public static func channelAdminLogReactionsDisabled(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.AdminLog.ReactionsDisabled", p1)
+  }
+  /// %1$@ enabled all reactions
+  public static func channelAdminLogReactionsEnabled(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.AdminLog.ReactionsEnabled", p1)
   }
   /// %1$@ revoked invite link %2$@
   public static func channelAdminLogRevokedInviteLink(_ p1: String, _ p2: String) -> String {
@@ -2063,6 +2071,22 @@ public final class L10n {
   public static var chatContextUnarchive: String  { return L10n.tr("Localizable", "Chat.Context.Unarchive") }
   /// View Emoji Set
   public static var chatContextViewEmojiSet: String  { return L10n.tr("Localizable", "Chat.Context.ViewEmojiSet") }
+  /// %d
+  public static func chatContextViewEmojiSetNewCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.ViewEmojiSetNew_countable", p1)
+  }
+  /// View Emoji Sets
+  public static var chatContextViewEmojiSetNewFew: String  { return L10n.tr("Localizable", "Chat.Context.ViewEmojiSetNew_few") }
+  /// View Emoji Sets
+  public static var chatContextViewEmojiSetNewMany: String  { return L10n.tr("Localizable", "Chat.Context.ViewEmojiSetNew_many") }
+  /// View Emoji Set
+  public static var chatContextViewEmojiSetNewOne: String  { return L10n.tr("Localizable", "Chat.Context.ViewEmojiSetNew_one") }
+  /// View Emoji Sets
+  public static var chatContextViewEmojiSetNewOther: String  { return L10n.tr("Localizable", "Chat.Context.ViewEmojiSetNew_other") }
+  /// View Emoji Sets
+  public static var chatContextViewEmojiSetNewTwo: String  { return L10n.tr("Localizable", "Chat.Context.ViewEmojiSetNew_two") }
+  /// View Emoji Set
+  public static var chatContextViewEmojiSetNewZero: String  { return L10n.tr("Localizable", "Chat.Context.ViewEmojiSetNew_zero") }
   /// View Statistics
   public static var chatContextViewStatistics: String  { return L10n.tr("Localizable", "Chat.Context.ViewStatistics") }
   /// Cancel
@@ -2113,6 +2137,34 @@ public final class L10n {
   public static var chatContextGifAdded: String  { return L10n.tr("Localizable", "Chat.Context.Gif.Added") }
   /// GIF Removed
   public static var chatContextGifRemoved: String  { return L10n.tr("Localizable", "Chat.Context.Gif.Removed") }
+  /// %d
+  public static func chatContextMessageContainsEmojiCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.Message.ContainsEmoji_countable", p1)
+  }
+  /// This message contains\nemoji from [%d packs]()
+  public static func chatContextMessageContainsEmojiFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.Message.ContainsEmoji_few", p1)
+  }
+  /// This message contains\nemoji from [%d packs]()
+  public static func chatContextMessageContainsEmojiMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.Message.ContainsEmoji_many", p1)
+  }
+  /// This message contains\nemoji from [%d pack]()
+  public static func chatContextMessageContainsEmojiOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.Message.ContainsEmoji_one", p1)
+  }
+  /// This message contains\nemoji from [%d packs]()
+  public static func chatContextMessageContainsEmojiOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.Message.ContainsEmoji_other", p1)
+  }
+  /// This message contains\nemoji from [%d packs]()
+  public static func chatContextMessageContainsEmojiTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.Message.ContainsEmoji_two", p1)
+  }
+  /// This message contains\nemoji from [%d packs]()
+  public static func chatContextMessageContainsEmojiZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Context.Message.ContainsEmoji_zero", p1)
+  }
   /// Set As Quick
   public static var chatContextReactionQuick: String  { return L10n.tr("Localizable", "Chat.Context.Reaction.Quick") }
   /// Save for Notifications
@@ -3549,6 +3601,8 @@ public final class L10n {
   public static var chatListContextUnpin: String  { return L10n.tr("Localizable", "ChatList.Context.Unpin") }
   /// Set Up Folders
   public static var chatListContextPinErrorNewSetupFolders: String  { return L10n.tr("Localizable", "ChatList.Context.PinErrorNew.SetupFolders") }
+  /// Loading
+  public static var chatListEmptyLoading: String  { return L10n.tr("Localizable", "ChatList.Empty.Loading") }
   /// Add Chats
   public static var chatListFilterAddChats: String  { return L10n.tr("Localizable", "ChatList.Filter.AddChats") }
   /// Add to folder...
@@ -4219,6 +4273,8 @@ public final class L10n {
   public static var customEmojiInfo: String  { return L10n.tr("Localizable", "CustomEmoji.Info") }
   /// Suggest Animated Emoji
   public static var customEmojiSuggest: String  { return L10n.tr("Localizable", "CustomEmoji.Suggest") }
+  /// Subscribe to Telegram Premium to unlock this reaction. [Read More]()
+  public static var customReactionPremiumAlert: String  { return L10n.tr("Localizable", "CustomReaction.PremiumAlert") }
   /// Night Mode
   public static var darkModeConfirmNightModeHeader: String  { return L10n.tr("Localizable", "DarkMode.Confirm.NightMode.Header") }
   /// Disable
@@ -4567,6 +4623,38 @@ public final class L10n {
   public static func emojiPackAddZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "EmojiPack.Add_zero", p1)
   }
+  /// ADDED
+  public static var emojiPackAdded: String  { return L10n.tr("Localizable", "EmojiPack.Added") }
+  /// %d
+  public static func emojiPackCountsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Counts_countable", p1)
+  }
+  /// %d Emoji
+  public static func emojiPackCountsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Counts_few", p1)
+  }
+  /// %d Emoji
+  public static func emojiPackCountsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Counts_many", p1)
+  }
+  /// %d Emoji
+  public static func emojiPackCountsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Counts_one", p1)
+  }
+  /// %d Emoji
+  public static func emojiPackCountsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Counts_other", p1)
+  }
+  /// %d Emoji
+  public static func emojiPackCountsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Counts_two", p1)
+  }
+  /// %d Emoji
+  public static func emojiPackCountsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Counts_zero", p1)
+  }
+  /// Hover mouse here to choose more emoji
+  public static var emojiPackMoreEmoji: String  { return L10n.tr("Localizable", "EmojiPack.MoreEmoji") }
   /// Subscribe to Telegram Premium to unlock this emoji. [Read More]()
   public static var emojiPackPremiumAlert: String  { return L10n.tr("Localizable", "EmojiPack.PremiumAlert") }
   /// RESTORE
@@ -4585,6 +4673,34 @@ public final class L10n {
   }
   /// Emojies Removed
   public static var emojiPackRemovedTitle: String  { return L10n.tr("Localizable", "EmojiPack.Removed.Title") }
+  /// %d
+  public static func emojiPackSetsAddCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Sets.Add_countable", p1)
+  }
+  /// Add %d Emoji Pack
+  public static func emojiPackSetsAddFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Sets.Add_few", p1)
+  }
+  /// Add %d Emoji Pack
+  public static func emojiPackSetsAddMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Sets.Add_many", p1)
+  }
+  /// Add %d Emoji Pack
+  public static func emojiPackSetsAddOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Sets.Add_one", p1)
+  }
+  /// Add %d Emoji Pack
+  public static func emojiPackSetsAddOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Sets.Add_other", p1)
+  }
+  /// Add %d Emoji Pack
+  public static func emojiPackSetsAddTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Sets.Add_two", p1)
+  }
+  /// Add %d Emoji Pack
+  public static func emojiPackSetsAddZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "EmojiPack.Sets.Add_zero", p1)
+  }
   /// Appearance
   public static var emptyChatAppearance: String  { return L10n.tr("Localizable", "EmptyChat.Appearance") }
   /// Suggest Stickers By Emoji
@@ -7175,6 +7291,8 @@ public final class L10n {
   public static var peerInfoRemovedUsers: String  { return L10n.tr("Localizable", "PeerInfo.RemovedUsers") }
   /// Report
   public static var peerInfoReport: String  { return L10n.tr("Localizable", "PeerInfo.Report") }
+  /// Block and Report
+  public static var peerInfoReportReaction: String  { return L10n.tr("Localizable", "PeerInfo.ReportReaction") }
   /// Restart Bot
   public static var peerInfoRestartBot: String  { return L10n.tr("Localizable", "PeerInfo.RestartBot") }
   /// scam
@@ -7389,6 +7507,8 @@ public final class L10n {
   }
   /// Select Messages
   public static var peerInfoReportSelectMessages: String  { return L10n.tr("Localizable", "PeerInfo.Report.SelectMessages") }
+  /// Thank you for your report
+  public static var peerInfoReportReactionSuccess: String  { return L10n.tr("Localizable", "PeerInfo.ReportReaction.Success") }
   /// Append names of the admins to the messages they post.
   public static var peerInfoSignMessagesDesc: String  { return L10n.tr("Localizable", "PeerInfo.SignMessages.Desc") }
   /// Verified Account
@@ -8543,6 +8663,8 @@ public final class L10n {
   public static var reactionSettingsQuickInfo: String  { return L10n.tr("Localizable", "Reaction.Settings.Quick.Info") }
   /// Quick Reaction
   public static var reactionSettingsQuickTitle: String  { return L10n.tr("Localizable", "Reaction.Settings.Quick.Title") }
+  /// Recently Used
+  public static var reactionsRecentlyUsed: String  { return L10n.tr("Localizable", "Reactions.RecentlyUsed") }
   /// Unlock addtional reactions by subscribing to Telegram Premium
   public static var reactionsPreviewPremium: String  { return L10n.tr("Localizable", "Reactions.Preview.Premium") }
   /// Unlock Premium Reactions
@@ -9885,22 +10007,50 @@ public final class L10n {
   public static func stickerPackAdd1Zero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "StickerPack.Add1_zero", p1)
   }
-  /// Discover More
-  public static var stickerPackShowMore: String  { return L10n.tr("Localizable", "StickerPack.ShowMore") }
+  /// Emoji
+  public static var stickerPackEmoji: String  { return L10n.tr("Localizable", "StickerPack.Emoji") }
+  /// Stickers
+  public static var stickerPackStickers: String  { return L10n.tr("Localizable", "StickerPack.Stickers") }
   /// %@ has been added to your stickers.
   public static func stickerPackAddedInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "StickerPack.Added.Info", p1)
   }
   /// Stickers Added
   public static var stickerPackAddedTitle: String  { return L10n.tr("Localizable", "StickerPack.Added.Title") }
-  /// Featured Packs
-  public static var stickerPackFeaturedTitle: String  { return L10n.tr("Localizable", "StickerPack.Featured.Title") }
   /// %@ is no longer in your stickers.
   public static func stickerPackRemovedInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "StickerPack.Removed.Info", p1)
   }
   /// Stickers Removed
   public static var stickerPackRemovedTitle: String  { return L10n.tr("Localizable", "StickerPack.Removed.Title") }
+  /// %d
+  public static func stickerPackSetsAdd1Countable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StickerPack.Sets.Add1_countable", p1)
+  }
+  /// Add %d Stickers Pack
+  public static func stickerPackSetsAdd1Few(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StickerPack.Sets.Add1_few", p1)
+  }
+  /// Add %d Stickers Pack
+  public static func stickerPackSetsAdd1Many(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StickerPack.Sets.Add1_many", p1)
+  }
+  /// Add %d Sticker Pack
+  public static func stickerPackSetsAdd1One(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StickerPack.Sets.Add1_one", p1)
+  }
+  /// Add %d Stickers Pack
+  public static func stickerPackSetsAdd1Other(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StickerPack.Sets.Add1_other", p1)
+  }
+  /// Add %d Stickers Pack
+  public static func stickerPackSetsAdd1Two(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StickerPack.Sets.Add1_two", p1)
+  }
+  /// Add %d Stickers Pack
+  public static func stickerPackSetsAdd1Zero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StickerPack.Sets.Add1_zero", p1)
+  }
   /// Sorry, this sticker set doesn't seem to exist.
   public static var stickerSetDontExist: String  { return L10n.tr("Localizable", "StickerSet.DontExist") }
   /// Remove

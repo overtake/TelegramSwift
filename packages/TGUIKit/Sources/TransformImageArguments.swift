@@ -99,6 +99,7 @@ public enum TransformImageResizeMode : Hashable {
 
 public enum TransformImageEmptyColor : Equatable, Hashable {
     case color(NSColor)
+    case fill(NSColor)
     case gradient(colors: [NSColor], intensity: CGFloat, rotation: Int32?)
 }
 

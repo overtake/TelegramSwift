@@ -166,7 +166,7 @@ class StickerMediaContentView: ChatMediaContentView {
                 }
                 
                 showModalText(for: context.window, text: strings().stickerPremiumClickInfo, title: title, callback: { _ in
-                    showModal(with:StickerPackPreviewModalController(context, peerId: peerId, reference: .stickers(reference)), for:window)
+                    showModal(with:StickerPackPreviewModalController(context, peerId: peerId, references: [.stickers(reference)]), for:window)
                 })
                 suggestOpenPremiumPack = false
             } else {
@@ -184,7 +184,7 @@ class StickerMediaContentView: ChatMediaContentView {
             }
             
             if !media.isEmojiAnimatedSticker, let reference = media.stickerReference {
-                showModal(with:StickerPackPreviewModalController(context, peerId: peerId, reference: .stickers(reference)), for:window)
+                showModal(with:StickerPackPreviewModalController(context, peerId: peerId, references: [.stickers(reference)]), for:window)
             } else if let sticker = media.stickerText, !sticker.isEmpty {
                 self.playIfNeeded(true)
                 parameters?.runEmojiScreenEffect(sticker)

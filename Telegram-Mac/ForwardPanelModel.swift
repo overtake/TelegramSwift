@@ -66,18 +66,18 @@ class ForwardPanelModel: ChatAccessoryModel {
         let text = hideNames ? strings().chatAccessoryHiddenCountable(forwardMessages.count) : strings().chatAccessoryForwardCountable(forwardMessages.count)
         self.header = .init(.initialize(string: text, color: theme.colors.accent, font: .medium(.text)), maximumNumberOfLines: 1)
         if forwardMessages.count == 1, !forwardMessages[0].text.isEmpty, forwardMessages[0].media.isEmpty {
-            let text: String
-            let messageText = chatListText(account: context.account, for: forwardMessages[0]).string
-            if forwardMessages[0].effectiveAuthor?.id == context.peerId {
-                text = "\(strings().chatAccessoryForwardYou): \(messageText)"
-            } else if let author = forwardMessages[0].effectiveAuthor {
-                text = "\(author.displayTitle): \(messageText)"
-            } else {
-                text = messageText
+            let messageText = chatListText(account: context.account, for: forwardMessages[0], isPremium: context.isPremium, isReplied: true).mutableCopy() as! NSMutableAttributedString
+            
+            let author = forwardMessages[0].forwardInfo?.author ?? forwardMessages[0].effectiveAuthor
+            
+            if author?.id == context.peerId {
+                messageText.insert(.initialize(string: "\(strings().chatAccessoryForwardYou): ", color: theme.colors.grayText, font: .normal(.text)), at: 0)
+            } else if let author = author {
+                messageText.insert(.initialize(string: "\(author.displayTitle): ", color: theme.colors.grayText, font: .normal(.text)), at: 0)
             }
-            self.message = .init(.initialize(string: text, color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
+            self.message = .init(messageText, maximumNumberOfLines: 1)
         } else {
-            let authors = uniquePeers(from: forwardMessages.compactMap { $0.effectiveAuthor })
+            let authors = uniquePeers(from: forwardMessages.compactMap { $0.forwardInfo?.author ?? $0.effectiveAuthor })
             let messageText = authors.map { $0.compactDisplayTitle }.joined(separator: ", ")
             let text = "\(strings().chatAccessoryForwardFrom): \(messageText)"
 

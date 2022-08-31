@@ -240,7 +240,7 @@ class ChannelInfoArguments : PeerInfoArguments {
             self?.openInviteLinks()
         }))
     }
-    func openReactions(allowedReactions: [MessageReaction.Reaction]?, availableReactions: AvailableReactions?) {
+    func openReactions(allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?) {
         pushViewController(ReactionsSettingsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions, mode: .chat(isGroup: false)))
     }
 
@@ -621,7 +621,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case link(sectionId: ChannelInfoSection, addressName:String, viewType: GeneralViewType)
     case inviteLinks(section: ChannelInfoSection, count: Int32, viewType: GeneralViewType)
     case requests(section: ChannelInfoSection, count: Int32, viewType: GeneralViewType)
-    case reactions(section: ChannelInfoSection, text: String, allowedReactions: [MessageReaction.Reaction]?, availableReactions: AvailableReactions?, viewType: GeneralViewType)
+    case reactions(section: ChannelInfoSection, text: String, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?, viewType: GeneralViewType)
     case discussion(sectionId: ChannelInfoSection, group: Peer?, participantsCount: Int32?, viewType: GeneralViewType)
     case discussionDesc(sectionId: ChannelInfoSection, viewType: GeneralViewType)
     case aboutInput(sectionId: ChannelInfoSection, description:String, viewType: GeneralViewType)
@@ -1147,22 +1147,26 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                 }
                 if channel.groupAccess.canEditGroupInfo {
                     let cachedData = view.cachedData as? CachedChannelData
-                    let allCount = cachedData?.allowedReactions?.count ?? availableReactions?.enabled.count ?? 0
-                    
+                                        
                     let text: String
-                    if let availableReactions = availableReactions {
-                        if allCount == availableReactions.enabled.count {
+                    if let allowed = cachedData?.allowedReactions.knownValue, let availableReactions = availableReactions {
+                        switch allowed {
+                        case .all:
                             text = strings().peerInfoReactionsAll
-                        } else if allCount == 0 {
+                        case let .limited(count):
+                            if count.count != availableReactions.enabled.count {
+                                text = strings().peerInfoReactionsPart("\(count.count)", "\(availableReactions.enabled.count)")
+                            } else {
+                                text = strings().peerInfoReactionsAll
+                            }
+                        case .empty:
                             text = strings().peerInfoReactionsDisabled
-                        } else {
-                            text = strings().peerInfoReactionsPart("\(allCount)", "\(availableReactions.enabled.count)")
                         }
                     } else {
                         text = strings().peerInfoReactionsAll
                     }
                     
-                    block.append(.reactions(section: .type, text: text, allowedReactions: cachedData?.allowedReactions, availableReactions: availableReactions, viewType: .singleItem))
+                    block.append(.reactions(section: .type, text: text, allowedReactions: cachedData?.allowedReactions.knownValue, availableReactions: availableReactions, viewType: .singleItem))
                     
                     block.append(.discussion(sectionId: .type, group: group, participantsCount: nil, viewType: .singleItem))
                 }

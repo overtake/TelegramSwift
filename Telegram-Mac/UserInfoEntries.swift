@@ -232,6 +232,15 @@ class UserInfoArguments : PeerInfoArguments {
         self.peerChat(self.peerId)
     }
     
+    func reportReaction(_ messageId: MessageId) {
+        let block: Signal<Never, NoError> = context.blockedPeersContext.add(peerId: peerId) |> `catch` { _ in .complete() }
+        let report = context.engine.peers.reportPeerReaction(authorId: self.peerId, messageId: messageId) |> ignoreValues
+        let context = self.context
+        _ = showModalProgress(signal: combineLatest(block, report), for: context.window).start(completed: {
+            showModalText(for: context.window, text: strings().peerInfoReportReactionSuccess)
+        })
+    }
+    
     func call(_ isVideo: Bool) {
         let context = self.context
         let peer = context.account.postbox.peerView(id: peerId) |> take(1) |> map {
@@ -434,6 +443,7 @@ enum UserInfoEntry: PeerInfoEntry {
     case scam(sectionId:Int, title: String, text: String, viewType: GeneralViewType)
     case phoneNumber(sectionId:Int, index: Int, value: PhoneNumberWithLabel, canCopy: Bool, viewType: GeneralViewType)
     case userName(sectionId:Int, value: String, viewType: GeneralViewType)
+    case reportReaction(sectionId: Int, value: MessageId, viewType: GeneralViewType)
     case sendMessage(sectionId:Int, viewType: GeneralViewType)
     case shareContact(sectionId:Int, viewType: GeneralViewType)
     case shareMyInfo(sectionId:Int, viewType: GeneralViewType)
@@ -464,7 +474,8 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .bio(sectionId, text, peer, _): return .bio(sectionId: sectionId, text: text, peer, viewType: viewType)
         case let .scam(sectionId, title, text, _): return .scam(sectionId: sectionId, title: title, text: text, viewType: viewType)
         case let .phoneNumber(sectionId, index, value, canCopy, _): return .phoneNumber(sectionId: sectionId, index: index, value: value, canCopy: canCopy, viewType: viewType)
-        case let .userName(sectionId, value: String, _): return .userName(sectionId: sectionId, value: String, viewType: viewType)
+        case let .userName(sectionId, value, _): return .userName(sectionId: sectionId, value: value, viewType: viewType)
+        case let .reportReaction(sectionId, value, _): return .reportReaction(sectionId: sectionId, value: value, viewType: viewType)
         case let .sendMessage(sectionId, _): return .sendMessage(sectionId: sectionId, viewType: viewType)
         case let .shareContact(sectionId, _): return .shareContact(sectionId: sectionId, viewType: viewType)
         case let .shareMyInfo(sectionId, _): return .shareMyInfo(sectionId: sectionId, viewType: viewType)
@@ -592,6 +603,13 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .userName(sectionId, value, viewType):
             switch entry {
             case .userName(sectionId, value, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .reportReaction(sectionId, value, viewType):
+            switch entry {
+            case .reportReaction(sectionId, value, viewType):
                 return true
             default:
                 return false
@@ -794,12 +812,14 @@ enum UserInfoEntry: PeerInfoEntry {
             return 122
         case .block:
             return 123
-        case .deleteChat:
+        case .reportReaction:
             return 124
-        case .deleteContact:
+        case .deleteChat:
             return 125
-        case .media:
+        case .deleteContact:
             return 126
+        case .media:
+            return 127
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -820,6 +840,8 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .phoneNumber(sectionId, _, _, _, _):
             return (sectionId * 1000) + stableIndex
         case let .userName(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .reportReaction(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .scam(sectionId, _, _, _):
             return (sectionId * 1000) + stableIndex
@@ -920,6 +942,10 @@ enum UserInfoEntry: PeerInfoEntry {
             return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoUsername, copyMenuText: strings().textCopyLabelUsername, text:"@\(value)", context: arguments.context, viewType: viewType, _copyToClipboard: {
                 arguments.copy(link)
             })
+        case let .reportReaction(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReportReaction, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
+                arguments.reportReaction(value)
+            })
         case let .scam(_, title, text, viewType):
             return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: title, copyMenuText: strings().textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
         case let .sendMessage(_, viewType):
@@ -1007,7 +1033,7 @@ enum UserInfoEntry: PeerInfoEntry {
 
 
 
-func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData: PeerMediaTabsData) -> [PeerInfoEntry] {
+func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData: PeerMediaTabsData, source: PeerInfoController.Source) -> [PeerInfoEntry] {
     
     let arguments = arguments as! UserInfoArguments
     let state = arguments.state as! UserInfoState
@@ -1091,7 +1117,19 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                 if !user.isBot {
                     if !view.peerIsContact {
                         if let cachedData = view.cachedData as? CachedUserData {
-                            infoBlock.append(.block(sectionId: sectionId, peer: peer, blocked: cachedData.isBlocked, isBot: peer.isBot, viewType: .singleItem))
+                            var addBlock = true
+                            switch source {
+                            case let .reaction(messageId):
+                                if !cachedData.isBlocked {
+                                    infoBlock.append(.reportReaction(sectionId: sectionId, value: messageId, viewType: .singleItem))
+                                    addBlock = false
+                                }
+                            default:
+                                break
+                            }
+                            if addBlock {
+                                infoBlock.append(.block(sectionId: sectionId, peer: peer, blocked: cachedData.isBlocked, isBot: peer.isBot, viewType: .singleItem))
+                            }
                         }
                     }
                 } else if let botInfo = user.botInfo, botInfo.flags.contains(.worksWithGroups) {

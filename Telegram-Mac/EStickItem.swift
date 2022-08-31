@@ -20,10 +20,11 @@ class EStickItem: TableRowItem {
     private let _stableId: AnyHashable
     
     let layout:(TextNodeLayout, TextNode)
-    
-    init(_ initialSize:NSSize, stableId: AnyHashable, segmentName:String) {
+    fileprivate let clearCallback:(()->Void)?
+    init(_ initialSize:NSSize, stableId: AnyHashable, segmentName:String, clearCallback:(()->Void)? = nil) {
         self._stableId = stableId
-        layout = TextNode.layoutText(maybeNode: nil,  NSAttributedString.initialize(string: segmentName.uppercased(), color: theme.colors.grayText, font: .medium(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
+        self.clearCallback = clearCallback
+        layout = TextNode.layoutText(maybeNode: nil,  .initialize(string: segmentName.uppercased(), color: theme.colors.grayText, font: .medium(.short)), nil, 1, .end, NSMakeSize(.greatestFiniteMagnitude, .greatestFiniteMagnitude), nil, false, .left)
         super.init(initialSize)
     }
     
@@ -34,7 +35,7 @@ class EStickItem: TableRowItem {
 
 
 private class EStickView: TableStickView {
-    
+    private var button: ImageButton?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         layerContentsRedrawPolicy = .onSetNeedsDisplay
@@ -45,12 +46,47 @@ private class EStickView: TableStickView {
     }
     
     override var backdorColor: NSColor {
-        return theme.colors.background
+        return .clear
+    }
+    
+    override func layout() {
+        super.layout()
+        if let view = self.button {
+            view.centerY(x: frame.width - view.frame.width - 20)
+        }
     }
 
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
+        
+        guard let item = item as? EStickItem else {
+            return
+        }
+        
+        if let callback = item.clearCallback {
+            let current: ImageButton
+            if let view = self.button {
+                current = view
+            } else {
+                current = ImageButton()
+                current.autohighlight = false
+                current.scaleOnClick = true
+                current.set(image: theme.icons.recentDismiss, for: .Normal)
+                current.sizeToFit()
+                addSubview(current)
+                self.button = current
+            }
+            current.removeAllHandlers()
+            current.set(handler: { _ in
+                callback()
+            }, for: .Click)
+        } else if let view = self.button {
+            performSubviewRemoval(view, animated: animated)
+            self.button = nil
+        }
+        
         needsDisplay = true
+        needsLayout = true
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {

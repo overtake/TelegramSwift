@@ -407,7 +407,7 @@ class ChatMessageItem: ChatRowItem {
             let containsBigEmoji: Bool
             if message.media.first == nil, bigEmojiMessage(context.sharedContext, message: message) {
                 containsBigEmoji = true
-                switch copy.string.length {
+                switch copy.string.count {
                 case 1:
                     copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 8), range: copy.range)
                 case 2:
@@ -625,7 +625,11 @@ class ChatMessageItem: ChatRowItem {
                 copyToClipboard(text)
             }
             interactions.topWindow = { [weak self] in
-                return self?.menuAdditionView
+                if let strongSelf = self {
+                    return strongSelf.menuAdditionView
+                } else {
+                    return .single(nil)
+                }
             }
             interactions.menuItems = { [weak self] type in
                 if let strongSelf = self, let message = strongSelf.message {

@@ -454,7 +454,7 @@ class ChatMediaItem: ChatRowItem {
                 context.bindings.rootNavigation().controller.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
             }
             interactions.topWindow = { [weak self] in
-                return self?.menuAdditionView
+                return self?.menuAdditionView ?? .single(nil)
             }
             for textLayout in self.captionLayouts.map ({ $0.layout }) {
                 textLayout.interactions = interactions

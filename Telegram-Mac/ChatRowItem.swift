@@ -816,12 +816,6 @@ class ChatRowItem: TableRowItem {
     private let _isScam: Bool
     private let _isFake: Bool
     
-    var isScam: Bool {
-        return _isScam && self.authorText != nil
-    }
-    var isFake: Bool {
-        return _isFake && self.authorText != nil
-    }
     private(set) var isForwardScam: Bool
     private(set) var isForwardFake: Bool
 
@@ -1336,11 +1330,11 @@ class ChatRowItem: TableRowItem {
                 return nil
             }
             let reactions = message.effectiveReactions(context.peerId)
-            
+            let context = self.context
             let chatInteraction = self.chatInteraction
             if let reactions = reactions, !reactions.reactions.isEmpty, let available = context.reactions.available {
-                let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: available, peerAllowed: chatInteraction.presentation.allowedReactions ?? [], engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)), openInfo: { [weak chatInteraction] peerId in
-                    chatInteraction?.openInfo(peerId, false, nil, nil)
+                let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: available, peerAllowed: chatInteraction.presentation.allowedReactions, engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)), openInfo: { peerId in
+                    context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId, source: .reaction(message.id)))
                 }, runEffect: { [weak chatInteraction] value in
                     chatInteraction?.runReactionEffect(value, message.id)
                 })
@@ -2301,41 +2295,61 @@ class ChatRowItem: TableRowItem {
     var maxTitleWidth: CGFloat {
         let nameWidth:CGFloat
         if hasBubble {
-            nameWidth = (authorText?.layoutSize.width ?? 0) + additionBad + (adminBadge?.layoutSize.width ?? 0)
+            nameWidth = (authorText?.layoutSize.width ?? 0) + statusSize + (adminBadge?.layoutSize.width ?? 0)
         } else {
             nameWidth = 0
         }
 
-        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + additionForwardBad + (isPsa ? 30 : 0) : 0
+        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + forwardStatusSize + (isPsa ? 30 : 0) : 0
         
         let replyWidth = min(hasBubble ? (replyModel?.size.width ?? 0) : 0, 200)
         
         return max(max(nameWidth, forwardWidth), replyWidth)//min(max(max(nameWidth, forwardWidth), replyWidth), contentSize.width)
     }
     
-    var additionBad: CGFloat {
-        return (isScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (isFake ? theme.icons.chatFake.backingSize.width + 3 : 0)
-    }
-    var additionForwardBad: CGFloat {
-        return (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (isForwardFake ? theme.icons.chatFake.backingSize.width + 3 : 0)
+    var hasStatus: Bool {
+        if let peer = self.peer, let message = self.message, PremiumStatusControl.hasControl(peer) {
+            if authorText != nil, let peer = message.peers[message.id.peerId] {
+                if peer.isGroup || peer.isSupergroup || peer.isGigagroup {
+                    return true
+                }
+            }
+        }
+        return false
     }
     
-    var badIcon: CGImage {
-        return isScam ? theme.icons.chatScam : theme.icons.chatFake
+    var statusSize: CGFloat {
+        if let peer = self.peer, hasStatus, let controlSize = PremiumStatusControl.controlSize(peer, false) {
+            return controlSize.width
+        }
+        return 0
     }
-    var forwardBadIcon: CGImage {
-        return isForwardScam ? theme.icons.chatScam : theme.icons.chatFake
+    var forwardStatusSize: CGFloat {
+        if let peer = self.peer, false, let controlSize = PremiumStatusControl.controlSize(peer, false) {
+            return controlSize.width
+        }
+        return 0
     }
+    
+    func status(_ cached: PremiumStatusControl?, animated: Bool) -> PremiumStatusControl? {
+        if let peer = peer, let attr = authorText?.attributedString, !attr.string.isEmpty, hasStatus {
+            if let color = attr.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor {
+                return PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, isSelected: false, color: color, cached: cached, animated: animated)
+            }
+        }
+        return nil
+    }
+
     
     var bubbleFrame: NSRect {
         let nameWidth:CGFloat
         if hasBubble {
-            nameWidth = (authorText?.layoutSize.width ?? 0) + additionBad + (adminBadge?.layoutSize.width ?? 0)
+            nameWidth = (authorText?.layoutSize.width ?? 0) + statusSize + (adminBadge?.layoutSize.width ?? 0)
         } else {
             nameWidth = 0
         }
         
-        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + additionForwardBad + (isPsa ? 30 : 0) : 0
+        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + forwardStatusSize + (isPsa ? 30 : 0) : 0
         let replyWidth: CGFloat = hasBubble ? (replyModel?.size.width ?? 0) : 0
 
         var rect = NSMakeRect(defLeftInset, 2, contentSize.width, height - 4)
@@ -2581,102 +2595,268 @@ class ChatRowItem: TableRowItem {
     func reactAction() -> Bool {
         if canReact {
             
+            
+            
             let context = self.context
-
-            var available:[AvailableReactions.Reaction] = []
-            let allowed = chatInteraction.presentation.allowedReactions
-            if let reactions = self.entry.additionalData.reactions {
-                available = reactions.enabled.filter { value in
-                    return !value.isPremium || context.isPremium
-                }.filter {
-                    allowed == nil || allowed!.contains($0.value)
-                }
+            let value = context.reactionSettings.quickReaction
+            let message = self.message
+            
+            guard let message = message else {
+                return false
             }
             
-            guard !available.isEmpty, let messageId = self.message?.id else {
-                return false
+            var reaction: MessageReaction.Reaction?
+            
+            let messageId = message.id
+            let builtin = self.entry.additionalData.reactions
+            let allowed = chatInteraction.presentation.allowedReactions
+            if let allowed = allowed {
+                switch allowed {
+                case .all:
+                    switch value {
+                    case .builtin:
+                        reaction = value
+                    case .custom:
+                        reaction = context.isPremium ? value : builtin?.enabled.first?.value
+                    }
+                case let .limited(array):
+                    if array.contains(value) {
+                        reaction = value
+                    } else {
+                        reaction = builtin?.enabled.first(where: {
+                            array.contains($0.value)
+                        })?.value
+                    }
+                case .empty:
+                    break
+                }
+            } else {
+                switch value {
+                case .custom:
+                    reaction = context.isPremium ? value : builtin?.enabled.first?.value
+                case .builtin:
+                    reaction = value
+                }
             }
-            if let index = available.firstIndex(where: { $0.value == context.reactionSettings.quickReaction }) {
-                available.move(at: index, to: 0)
-            }
-            if let value = available.first?.value {
-                let isSelected = message?.reactionsAttribute?.reactions.contains(where: { $0.value == value && $0.isSelected }) == true
-                context.reactions.react(messageId, value: isSelected ? nil : value)
-                return false
+            if let reaction = reaction {
+                context.reactions.react(messageId, values: message.newReactions(with: reaction.toUpdate()))
             }
         }
         return false
     }
     
-    override var menuAdditionView: Window? {
-        if FastSettings.legacyReactions {
-            return nil
-        }
+    override var menuAdditionView: Signal<Window?, NoError> {
         if canReact {
             
             let context = self.context
 
-            
-            var available:[AvailableReactions.Reaction] = []
-            let allowed = chatInteraction.presentation.allowedReactions
-            if let reactions = self.entry.additionalData.reactions {
-                available = reactions.enabled.filter {
-                    allowed == nil || allowed!.contains($0.value)
-                }
+            guard let message = self.message, let peer = chatInteraction.presentation.mainPeer else {
+                return .single(nil)
             }
             
-            guard !available.isEmpty, let message = self.message else {
-                return nil
-            }
-            
-            
-            if let index = available.firstIndex(where: { $0.value == context.reactionSettings.quickReaction }) {
-                available.move(at: index, to: 0)
-            }
-            var needRemove: Bool = false
-            available.removeAll(where: { value in
-                if value.isPremium, !context.isPremium {
-                    if needRemove {
-                        return true
-                    }
-                    needRemove = true
-                    return context.premiumIsBlocked
+            let builtin = context.reactions.stateValue
+            let peerAllowed: Signal<PeerAllowedReactions?, NoError> = context.account.postbox.peerView(id: self.chatInteraction.peerId)
+            |> map { $0.cachedData }
+            |> map { cachedData in
+                if let cachedData = cachedData as? CachedGroupData {
+                    return cachedData.allowedReactions.knownValue
+                } else if let cachedData = cachedData as? CachedChannelData {
+                    return cachedData.allowedReactions.knownValue
                 } else {
-                    return false
+                    return nil
                 }
-            })
-            available = Array(available.prefix(6))
+            }
+            |> take(1)
             
-            let width = ContextAddReactionsListView.width(for: available, maxCount: 6)
+            var orderedItemListCollectionIds: [Int32] = []
             
-            let rect = NSMakeRect(0, 0, width + 20, 40 + 20)
-            
-            let panel = Window(contentRect: rect, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
-            panel._canBecomeMain = false
-            panel._canBecomeKey = false
-            panel.level = .popUpMenu
-            panel.backgroundColor = .clear
-            panel.isOpaque = false
-            panel.hasShadow = false
-            
-            
+            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudRecentReactions)
+            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudTopReactions)
+     
+            let reactions:Signal<[RecentReactionItem], NoError> = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: orderedItemListCollectionIds, namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000) |> map { view in
+                
+                var recentReactionsView: OrderedItemListView?
+                var topReactionsView: OrderedItemListView?
+                for orderedView in view.orderedItemListsViews {
+                    if orderedView.collectionId == Namespaces.OrderedItemList.CloudRecentReactions {
+                        recentReactionsView = orderedView
+                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudTopReactions {
+                        topReactionsView = orderedView
+                    }
+                }
+                var recentReactionsItems:[RecentReactionItem] = []
+                var topReactionsItems:[RecentReactionItem] = []
 
+                if let recentReactionsView = recentReactionsView {
+                    for item in recentReactionsView.items {
+                        guard let item = item.contents.get(RecentReactionItem.self) else {
+                            continue
+                        }
+                        recentReactionsItems.append(item)
+                    }
+                }
+                if let topReactionsView = topReactionsView {
+                    for item in topReactionsView.items {
+                        guard let item = item.contents.get(RecentReactionItem.self) else {
+                            continue
+                        }
+                        topReactionsItems.append(item)
+                    }
+                }
+                return topReactionsItems.filter { value in
+                    if context.isPremium {
+                        return true
+                    } else {
+                        if case .custom = value.content {
+                            return false
+                        } else {
+                            return true
+                        }
+                    }
+                }
+            }
             
-            let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem in
-                let isSelected = message.reactionsAttribute?.reactions.contains(where: { $0.value == value && $0.isSelected }) == true
-                context.reactions.react(message.id, value: isSelected ? nil : value, checkPrem: checkPrem)
-            }, radiusLayer: nil, revealReactions: { view in
-                let window = ReactionsWindowController(context, message: message)
-                window.show(view)
-            })
             
-            
-            panel.contentView?.addSubview(view)
-            panel.contentView?.wantsLayer = true
-            view.autoresizingMask = [.width, .height]
-            return panel
+            let signal = combineLatest(queue: .mainQueue(), builtin, peerAllowed, reactions)
+            |> take(1)
+
+            return signal |> map { builtin, peerAllowed, reactions in
+                let enabled = builtin?.enabled ?? []
+
+                var available:[ContextReaction] = []
+                
+                let allowed = peerAllowed
+                
+                var accessToAll: Bool
+
+                
+                if let peerAllowed = peerAllowed {
+                    switch peerAllowed {
+                    case .all:
+                        accessToAll = true
+                    case .limited, .empty:
+                        accessToAll = false
+                    }
+                } else if peer.isChannel {
+                    accessToAll = false
+                } else {
+                    accessToAll = true
+                }
+                
+                if !accessToAll {
+                    if let reactions = builtin {
+                        available = reactions.enabled.filter { value in
+                            if let allowed = allowed {
+                                switch allowed {
+                                case .all:
+                                    return true
+                                case let .limited(array):
+                                    return array.contains(value.value)
+                                case .empty:
+                                    return false
+                                }
+                            } else {
+                                return true
+                            }
+                        }.map {
+                            .builtin(value: $0.value, staticFile: $0.staticIcon, selectFile: $0.selectAnimation, appearFile: $0.appearAnimation)
+                        }
+                    }
+                } else {
+                    available = reactions.compactMap { value in
+                        switch value.content {
+                        case let .builtin(emoji):
+                            if let generic = enabled.first(where: { $0.value.string == emoji }) {
+                                return .builtin(value: generic.value, staticFile: generic.staticIcon, selectFile: generic.selectAnimation, appearFile: generic.appearAnimation)
+                            } else {
+                                return nil
+                            }
+                        case let .custom(file):
+                            return .custom(value: .custom(file.fileId.id), fileId: file.fileId.id, file)
+                        }
+                    }
+                }
+                
+                var uniqueLimit: Int = .max
+                if let value = context.appConfiguration.data?["reactions_uniq_max"] as? Double {
+                    uniqueLimit = Int(value)
+                }
+                            
+                if let reactions = message.reactionsAttribute, reactions.reactions.count >= uniqueLimit {
+                    available = reactions.reactions.compactMap { reaction in
+                        switch reaction.value {
+                        case let .custom(fileId):
+                            if accessToAll {
+                                let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
+                                return .custom(value: reaction.value, fileId: fileId, message.associatedMedia[mediaId] as? TelegramMediaFile)
+                            } else {
+                                return nil
+                            }
+                        case .builtin:
+                            if let generic = enabled.first(where: { $0.value == reaction.value }) {
+                                return .builtin(value: generic.value, staticFile: generic.staticIcon, selectFile: generic.selectAnimation, appearFile: generic.appearAnimation)
+                            } else {
+                                return nil
+                            }
+                        }
+                    }
+                    accessToAll = false
+                }
+                
+                
+//                if let index = available.firstIndex(where: { $0.value == context.reactionSettings.quickReaction }) {
+//                    available.move(at: index, to: 0)
+//                }
+                
+                guard !available.isEmpty else {
+                    return nil
+                }
+                
+                if accessToAll {
+                    available = Array(available.prefix(6))
+                }
+                
+                
+                let width = ContextAddReactionsListView.width(for: available.count, maxCount: 6, allowToAll: accessToAll)
+                
+                
+                let rect = NSMakeRect(0, 0, width + 20 + (accessToAll ? 0 : 20), 40 + 20)
+                
+                
+                let panel = Window(contentRect: rect, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
+                panel._canBecomeMain = false
+                panel._canBecomeKey = false
+                panel.level = .popUpMenu
+                panel.backgroundColor = .clear
+                panel.isOpaque = false
+                panel.hasShadow = false
+                
+
+                let reveal:((NSView)->Void)?
+                
+                
+                if accessToAll {
+                    reveal = { view in
+                        let window = ReactionsWindowController(context, message: message)
+                        window.show(view)
+                    }
+                } else {
+                    reveal = nil
+                }
+                
+                
+                let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem in
+                    context.reactions.react(message.id, values: message.newReactions(with: value.toUpdate()), storeAsRecentlyUsed: true)
+                }, radiusLayer: nil, revealReactions: reveal)
+                
+                
+                panel.contentView?.addSubview(view)
+                panel.contentView?.wantsLayer = true
+                view.autoresizingMask = [.width, .height]
+                return panel
+            }
         }
-        return nil
+        return .single(nil)
     }
     
     override var instantlyResize: Bool {

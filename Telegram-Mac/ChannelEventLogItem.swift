@@ -743,10 +743,13 @@ class ServiceEventLogItem: TableRowItem {
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let .changeAvailableReactions(_, updatedValue):
                 var text: String = ""
-                if !updatedValue.isEmpty {
-                    let emojiString = updatedValue.map { $0.fixed }.joined(separator: ", ")
+                switch updatedValue {
+                case .all:
+                    text = strings().channelAdminLogReactionsEnabled(peer.displayTitle)
+                case .limited(let array):
+                    let emojiString = array.map { $0.string.fixed }.joined(separator: ", ")
                     text = strings().channelAdminLogAllowedReactionsUpdated(peer.displayTitle, emojiString)
-                } else {
+                case .empty:
                     text = strings().channelAdminLogReactionsDisabled(peer.displayTitle)
                 }
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)

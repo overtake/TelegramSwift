@@ -158,7 +158,7 @@ public extension CALayer {
         }
 
     
-    func animate(from: AnyObject, to: AnyObject, keyPath: String, timingFunction: CAMediaTimingFunctionName, duration: Double, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil, forKey: String? = nil) {
+    func animate(from: AnyObject, to: AnyObject, keyPath: String, timingFunction: CAMediaTimingFunctionName, duration: Double, delay: Double = 0, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil, forKey: String? = nil) {
         if timingFunction == CAMediaTimingFunctionName.spring {
             let animation = makeSpringAnimation(keyPath)
             animation.fromValue = from
@@ -177,7 +177,10 @@ public extension CALayer {
             
             animation.speed = speed * Float(animation.duration / duration)
             animation.isAdditive = additive
-            
+            if !delay.isZero {
+                animation.beginTime = CACurrentMediaTime() + delay * NSView.animationDurationFactor()
+                animation.fillMode = .both
+            }
             self.add(animation, forKey: keyPath)
         } else {
             let k = Float(1.0)
@@ -195,6 +198,10 @@ public extension CALayer {
             animation.fillMode = .forwards
             animation.speed = speed
             animation.isAdditive = additive
+            if !delay.isZero {
+                animation.beginTime = CACurrentMediaTime() + delay * NSView.animationDurationFactor()
+                animation.fillMode = .both
+            }
             if let completion = completion {
                 animation.delegate = CALayerAnimationDelegate(completion: completion)
             }
@@ -226,7 +233,7 @@ public extension CALayer {
         self.add(animation, forKey: key)
     }
     
-    func animateScaleSpring(from: CGFloat, to: CGFloat, duration: Double, initialVelocity: CGFloat = 0.0, removeOnCompletion: Bool = true, additive: Bool = false, bounce: Bool = true, completion: ((Bool) -> Void)? = nil) {
+    func animateScaleSpring(from: CGFloat, to: CGFloat, duration: Double, delay: Double = 0, initialVelocity: CGFloat = 0.0, removeOnCompletion: Bool = true, additive: Bool = false, bounce: Bool = true, completion: ((Bool) -> Void)? = nil) {
         let animation = bounce ? makeSpringBounceAnimation("transform", initialVelocity) : makeSpringAnimation("transform")
         
         var fr = CATransform3DIdentity
@@ -244,6 +251,10 @@ public extension CALayer {
         
         let speed: Float = 1.0
         
+        if !delay.isZero {
+            animation.beginTime = CACurrentMediaTime() + delay * NSView.animationDurationFactor()
+            animation.fillMode = .both
+        }
         
         animation.speed = speed * Float(animation.duration / duration)
         animation.isAdditive = additive
@@ -617,8 +628,8 @@ public extension CALayer {
         self.add(animation, forKey: keyPath)
     }
     
-    func animateScale(from: CGFloat, to: CGFloat, duration: Double, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeInEaseOut, removeOnCompletion: Bool = true, completion: ((Bool) -> Void)? = nil) {
-        self.animate(from: NSNumber(value: Float(from)), to: NSNumber(value: Float(to)), keyPath: "transform.scale", timingFunction: timingFunction, duration: duration, removeOnCompletion: removeOnCompletion, completion: completion)
+    func animateScale(from: CGFloat, to: CGFloat, duration: Double, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeInEaseOut, delay: Double = 0, removeOnCompletion: Bool = true, completion: ((Bool) -> Void)? = nil) {
+        self.animate(from: NSNumber(value: Float(from)), to: NSNumber(value: Float(to)), keyPath: "transform.scale", timingFunction: timingFunction, duration: duration, delay: delay, removeOnCompletion: removeOnCompletion, completion: completion)
     }
     
     func animateScaleX(from: CGFloat, to: CGFloat, duration: Double, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeInEaseOut, removeOnCompletion: Bool = true, completion: ((Bool) -> Void)? = nil) {
