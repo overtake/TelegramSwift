@@ -73,6 +73,9 @@ class StickerPackRowItem: TableRowItem {
         return .single(items)
     }
     
+    func animateAppearance(delay: Double, duration: Double, ignoreCount: Int) {
+        (self.view as? StickerPackRowView)?.animateAppearance(delay: delay, duration: duration, ignoreCount: ignoreCount)
+    }
     
     override func viewClass() -> AnyClass {
         return StickerPackRowView.self
@@ -234,59 +237,39 @@ private final class StickerPackRowView : HorizontalRowView {
     
     private var inlineSticker: InlineStickerItemLayer?
     
-    private class LockView : NSVisualEffectView {
-        private let lockedView: ImageView = ImageView()
-
-        override init(frame frameRect: NSRect) {
-            super.init(frame: frameRect)
-            addSubview(lockedView)
-            
-            wantsLayer = true
-            self.blendingMode = .withinWindow
-            self.state = .active
-            self.material = .dark
-            
-            lockedView.image = theme.icons.premium_lock
-            lockedView.sizeToFit()
-            lockedView.setFrameSize(lockedView.frame.width * 0.5, lockedView.frame.height * 0.5)
-            self.layer?.cornerRadius = frameRect.height / 2
-        }
-        
-        func update(_ image: CGImage) {
-            self.lockedView.image = image
-        }
-        
-        required init?(coder: NSCoder) {
-            fatalError("init(coder:) has not been implemented")
-        }
-        
-        override func layout() {
-            super.layout()
-            lockedView.center()
-        }
+    
+    
+    func animateAppearance(delay: Double, duration: Double, ignoreCount: Int) {
+        self.inlineSticker?.animateScale(from: 0.1, to: 1, duration: duration, timingFunction: .spring, delay: delay)
+        self.lockedView?.animateScale(from: 0.1, to: 1, duration: duration, timingFunction: .spring, delay: delay)
     }
     
-    private var lockedView: LockView?
+    private var lockedView: InlineStickerLockLayer?
 
     
     private var isLocked: Bool = false
     func set(locked: Bool, unlock: Bool, animated: Bool) {
         self.isLocked = locked
         if isLocked {
-            let current: LockView
+            let current: InlineStickerLockLayer
             if let view = self.lockedView {
                 current = view
             } else {
-                current = LockView(frame: NSMakeRect(0, 0, 12, 12))
+                current = InlineStickerLockLayer(frame: NSMakeRect(0, 0, 15, 15))
                 self.lockedView = current
-                addSubview(current)
                 if animated {
-                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    current.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
             }
-            current.update(unlock ? theme.icons.premium_lock : theme.icons.premium_plus)
+            current.removeFromSuperlayer()
+            self.container.layer?.addSublayer(current)
+
+            current.updateImage(unlock ? theme.icons.premium_lock : theme.icons.premium_plus)
+            if let layer = self.inlineSticker {
+                current.tieToLayer(layer)
+            }
         } else if let view = lockedView {
-            performSubviewRemoval(view, animated: animated)
+            performSublayerRemoval(view, animated: animated)
             self.lockedView = nil
         }
         needsLayout = true
@@ -353,7 +336,8 @@ private final class StickerPackRowView : HorizontalRowView {
     override func layout() {
         super.layout()
         if let lockedView = lockedView {
-            lockedView.setFrameOrigin(frame.width - lockedView.frame.width - 4, frame.height - lockedView.frame.height - 4)
+            let point = NSMakePoint(frame.width - lockedView.frame.width - 4, frame.height - lockedView.frame.height - 4)
+            lockedView.frame = CGRect.init(origin: point, size: lockedView.frame.size)
         }
     }
     
@@ -379,15 +363,15 @@ private final class StickerPackRowView : HorizontalRowView {
                 self.inlineSticker?.removeFromSuperlayer()
                 self.inlineSticker = nil
                 if let file = file {
-                    current = InlineStickerItemLayer(account: item.context.account, file: file, size: NSMakeSize(28, 28))
-                    self.container.layer?.addSublayer(current!)
+                    current = InlineStickerItemLayer(account: item.context.account, file: file, size: NSMakeSize(26, 26))
                     self.inlineSticker = current
                 } else {
                     current = nil
                 }
+                self.container.layer?.addSublayer(current!)
             }
             current?.superview = self.container
-            current?.frame = CGRect(origin: NSMakePoint(4, 4), size: NSMakeSize(28, 28))
+            current?.frame = CGRect(origin: NSMakePoint(5, 5), size: NSMakeSize(26, 26))
             
             let unlock: Bool
             if !item.context.isPremium && item.isPremium {
@@ -443,6 +427,10 @@ class ETabRowItem: TableRowItem {
         super.init(initialSize)
     }
     
+    func animateAppearance(delay: Double, duration: Double, ignoreCount: Int) {
+        (self.view as? ETabRowView)?.animateAppearance(delay: delay, duration: duration, ignoreCount: ignoreCount)
+    }
+    
 }
 
 
@@ -484,5 +472,9 @@ class ETabRowView: HorizontalRowView {
             image.sizeToFit()
         }
         needsLayout = true
+    }
+    
+    func animateAppearance(delay: Double, duration: Double, ignoreCount: Int) {
+        image.layer?.animateScaleSpring(from: 0.1, to: 1, duration: duration, delay: delay)
     }
 }

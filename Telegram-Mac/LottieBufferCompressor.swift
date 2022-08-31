@@ -30,8 +30,6 @@ private enum ReadResult {
 
 private var sharedData:Atomic<[LottieAnimationEntryKey:WeakReference<TRLotData>]> = Atomic(value: [:])
 
-
-
 private struct FrameDst : Codable {
     let offset: Int
     let length: Int
@@ -42,13 +40,20 @@ private struct FrameDst : Codable {
         self.finished = finished
     }
 }
+private struct DstData : Codable {
+    var dest: [Int : FrameDst]
+    var fps: Int32
+    var startFrame: Int32
+    var endFrame: Int32
+}
 
-private let version = 62
+
+private let version = 63
 
 final class TRLotData {
     
     
-    fileprivate var map:[Int : FrameDst]
+    fileprivate var map:DstData
     fileprivate let bufferSize: Int
     
     private let mapPath: String
@@ -57,8 +62,8 @@ final class TRLotData {
         didSet {
             assert(queue.isCurrent())
             let cpy = map
-            for (key, value) in cpy {
-                map[key] = .init(offset: value.offset, length: value.length, finished: isFinished)
+            for (key, value) in cpy.dest {
+                map.dest[key] = .init(offset: value.offset, length: value.length, finished: isFinished)
             }
         }
     }
@@ -70,7 +75,7 @@ final class TRLotData {
     
     fileprivate func hasAlreadyFrame(_ frame: Int) -> Bool {
         assert(queue.isCurrent())
-        return self.map[frame] != nil
+        return map.dest[frame] != nil
     }
     fileprivate func readFrame(frame: Int) -> ReadResult {
         
@@ -82,7 +87,7 @@ final class TRLotData {
             return .failed
         }
         
-        if let dest = map[frame] {
+        if let dest = map.dest[frame] {
             let readHande: FileHandle?
             if let handle = self.readHandle {
                 readHande = handle
@@ -92,7 +97,7 @@ final class TRLotData {
             }
             
             guard let dataHandle = readHande else {
-                self.map.removeAll()
+                self.map.dest.removeAll()
                 return .failed
             }
             
@@ -101,7 +106,7 @@ final class TRLotData {
             if data.count == dest.length {
                 return .success(data)
             } else {
-                self.map.removeValue(forKey: frame)
+                self.map.dest.removeValue(forKey: frame)
                 return .failed
             }
         }
@@ -129,7 +134,7 @@ final class TRLotData {
         self.readHandle?.closeFile()
         self.readHandle = nil
         assert(queue.isCurrent())
-        if map[frame] == nil {
+        if map.dest[frame] == nil {
             let writeHandle: FileHandle?
             if let handle = self.writeHandle {
                 writeHandle = handle
@@ -143,7 +148,9 @@ final class TRLotData {
             }
             let length = dataHandle.seekToEndOfFile()
             dataHandle.write(data)
-            self.map[frame] = FrameDst(offset: Int(length), length: data.count, finished: isFinished)
+            var frames = self.map.dest
+            frames[frame] = FrameDst(offset: Int(length), length: data.count, finished: isFinished)
+            self.map = DstData(dest: frames, fps: self.map.fps, startFrame: self.map.startFrame, endFrame: self.map.endFrame)
         }
 
         return .success
@@ -199,7 +206,7 @@ final class TRLotData {
         }
         
         guard let handle = FileHandle(forReadingAtPath: self.mapPath) else {
-            self.map = [:]
+            self.map = .init(dest: [:], fps: 0, startFrame: 0, endFrame: 0)
             self.bufferSize = bufferSize
             deferr(self)
             return
@@ -207,25 +214,31 @@ final class TRLotData {
         mapHandle = handle
         
         guard let data = NSKeyedUnarchiver.unarchiveObject(withFile: self.mapPath) as? Data else {
-            self.map = [:]
+            self.map = .init(dest: [:], fps: 0, startFrame: 0, endFrame: 0)
             self.bufferSize = bufferSize
             deferr(self)
             return
         }
         do {
-            self.map = try PropertyListDecoder().decode([Int: FrameDst].self, from: data)
+            self.map = try PropertyListDecoder().decode(DstData.self, from: data)
             self.bufferSize = bufferSize
             deferr(self)
         } catch {
-            self.map = [:]
+            self.map = .init(dest: [:], fps: 0, startFrame: 0, endFrame: 0)
             self.bufferSize = bufferSize
             deferr(self)
         }
-        if !self.map.isEmpty {
-            self.isFinished = self.map.filter { $0.value.finished }.count == self.map.count
+        if !self.map.dest.isEmpty {
+            self.isFinished = self.map.dest.filter { $0.value.finished }.count == self.map.dest.count
         } else {
             self.isFinished = false
         }
+    }
+    
+    func initialize(fps: Int32, startFrame: Int32, endFrame: Int32) {
+        self.map.fps = fps
+        self.map.startFrame = startFrame
+        self.map.endFrame = endFrame
     }
     
 }
@@ -245,10 +258,37 @@ final class TRLotFileSupplyment {
         self.queue = queue
         self.bufferSize = bufferSize
     }
+    
+    func initialize(fps: Int32, startFrame: Int32, endFrame: Int32) {
+        queue.sync {
+            self.data.initialize(fps: fps, startFrame: startFrame, endFrame: endFrame)
+        }
+
+    }
+    
+    var fps: Int32 {
+        var fps: Int32 = 0
+        queue.sync {
+            fps = self.data.map.fps
+        }
+        return fps
+    }
+    var endFrame: Int32 {
+        var endFrame: Int32 = 0
+        queue.sync {
+            endFrame = self.data.map.endFrame
+        }
+        return endFrame
+    }
+    var startFrame: Int32 {
+        var startFrame: Int32 = 0
+        queue.sync {
+            startFrame = self.data.map.startFrame
+        }
+        return startFrame
+    }
 
     func markFinished() {
-        var bp = 0
-        bp += 1
         queue.async {
             self.data.isFinished = true
         }

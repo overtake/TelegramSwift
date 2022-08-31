@@ -323,19 +323,19 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     index += 1
     
     
-    if !state.periods.isEmpty, !state.isPremium {
-        let period = state.period
-        let periods = state.periods
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_id_periods"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
-            return PremiumSelectPeriodRowItem(initialSize, stableId: stableId, context: arguments.context, periods: periods, selectedPeriod: period, viewType: .singleItem, callback: { period in
-                arguments.togglePeriod(period)
-            })
-        }))
-        index += 1
-        
-        entries.append(.sectionId(sectionId, type: .customModern(15)))
-        sectionId += 1
-    }
+//    if !state.periods.isEmpty, !state.isPremium {
+//        let period = state.period
+//        let periods = state.periods
+//        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_id_periods"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+//            return PremiumSelectPeriodRowItem(initialSize, stableId: stableId, context: arguments.context, periods: periods, selectedPeriod: period, viewType: .singleItem, callback: { period in
+//                arguments.togglePeriod(period)
+//            })
+//        }))
+//        index += 1
+//
+//        entries.append(.sectionId(sectionId, type: .customModern(15)))
+//        sectionId += 1
+//    }
     
     for (i, value) in state.values.enumerated() {
         let viewType = bestGeneralViewType(state.values, for: i)
@@ -413,10 +413,14 @@ private final class PremiumBoardingView : View {
         
         func update(animated: Bool, state: State) -> NSSize {
             let price: String
+            let product = state.premiumConfiguration.premiumProductOptions.first(where: { $0.months == 1
+           })
             if let product = state.premiumProduct {
                 price = product.price
+            } else if let product = product {
+                price = formatCurrencyAmount(product.amount, currency: product.currency)
             } else {
-                price = formatCurrencyAmount(state.premiumConfiguration.monthlyAmount, currency: state.premiumConfiguration.currency)
+                price = ""
             }
             let text: String
             if state.canMakePayment {

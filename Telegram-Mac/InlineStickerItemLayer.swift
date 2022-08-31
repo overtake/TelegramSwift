@@ -11,6 +11,122 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 import TGUIKit
+import Accelerate
+
+class InlineStickerLockLayer : SimpleLayer {
+    private let lockedView: SimpleLayer = SimpleLayer()
+    private let disposable = MetaDisposable()
+    init(frame frameRect: NSRect) {
+        super.init()
+        self.frame = frameRect
+        addSublayer(lockedView)
+        
+        lockedView.contents = theme.icons.premium_lock
+        let lockSize = theme.icons.premium_lock.backingSize
+        lockedView.frame = frameRect.focus(NSMakeSize(lockSize.width * 0.7, lockSize.height * 0.7))
+        self.cornerRadius = frameRect.height / 2
+        self.masksToBounds = true
+    }
+    
+    func updateImage(_ image: CGImage) {
+        lockedView.contents = image
+    }
+    
+    func tieToLayer(_ layer: InlineStickerItemLayer) {
+        layer.contentDidUpdate = { [weak self] image in
+            self?.applyBlur(color: theme.colors.background.darker(), image: image)
+        }
+    }
+    
+    func applyBlur(color: NSColor?, image: CGImage) {
+        
+        let signal: Signal<CGImage?, NoError> = Signal { subscriber in
+            let blurredWidth = 12
+            let blurredHeight = 12
+            let context = DrawingContext(size: CGSize(width: CGFloat(blurredWidth), height: CGFloat(blurredHeight)), scale: 1.0)
+            let size = CGSize(width: CGFloat(blurredWidth), height: CGFloat(blurredHeight))
+
+
+            context.withContext { c in
+                c.setFillColor((color ?? .white).cgColor)
+                c.fill(CGRect(origin: CGPoint(), size: size))
+                
+                let rect = CGRect(origin: CGPoint(x: -size.width / 2.0, y: -size.height / 2.0), size: CGSize(width: size.width * 1.8, height: size.height * 1.8))
+                c.draw(image, in: rect)
+            }
+                        
+            var destinationBuffer = vImage_Buffer()
+            destinationBuffer.width = UInt(blurredWidth)
+            destinationBuffer.height = UInt(blurredHeight)
+            destinationBuffer.data = context.bytes
+            destinationBuffer.rowBytes = context.bytesPerRow
+            
+            vImageBoxConvolve_ARGB8888(&destinationBuffer,
+                                       &destinationBuffer,
+                                       nil,
+                                       0, 0,
+                                       UInt32(15),
+                                       UInt32(15),
+                                       nil,
+                                       vImage_Flags(kvImageTruncateKernel))
+            
+            let divisor: Int32 = 0x1000
+
+            let rwgt: CGFloat = 0.3086
+            let gwgt: CGFloat = 0.6094
+            let bwgt: CGFloat = 0.0820
+
+            let adjustSaturation: CGFloat = 1.7
+
+            let a = (1.0 - adjustSaturation) * rwgt + adjustSaturation
+            let b = (1.0 - adjustSaturation) * rwgt
+            let c = (1.0 - adjustSaturation) * rwgt
+            let d = (1.0 - adjustSaturation) * gwgt
+            let e = (1.0 - adjustSaturation) * gwgt + adjustSaturation
+            let f = (1.0 - adjustSaturation) * gwgt
+            let g = (1.0 - adjustSaturation) * bwgt
+            let h = (1.0 - adjustSaturation) * bwgt
+            let i = (1.0 - adjustSaturation) * bwgt + adjustSaturation
+
+            let satMatrix: [CGFloat] = [
+                a, b, c, 0,
+                d, e, f, 0,
+                g, h, i, 0,
+                0, 0, 0, 1
+            ]
+
+            var matrix: [Int16] = satMatrix.map { value in
+                return Int16(value * CGFloat(divisor))
+            }
+
+            vImageMatrixMultiply_ARGB8888(&destinationBuffer, &destinationBuffer, &matrix, divisor, nil, nil, vImage_Flags(kvImageDoNotTile))
+            
+            context.withFlippedContext { c in
+                c.setFillColor((color ?? .white).withMultipliedAlpha(0.6).cgColor)
+                c.fill(CGRect(origin: CGPoint(), size: size))
+            }
+            
+            subscriber.putNext(context.generateImage())
+            return ActionDisposable {
+                
+            }
+        }
+        |> runOn(.concurrentBackgroundQueue())
+        |> deliverOnMainQueue
+        |> delay(self.contents != nil ? 0.1 : 0, queue: .concurrentBackgroundQueue())
+        
+        disposable.set(signal.start(next: { [weak self] image in
+            self?.contents = image
+        }))
+
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+}
+
 
 
 private final class MultiTargetAnimationContext {
@@ -79,32 +195,40 @@ private final class MultiTargetAnimationContext {
     }
 }
 
+
+
 private final class MultiTargetContextCache {
-    private static var cache: [LottieAnimationEntryKey : MultiTargetAnimationContext] = [:]
+    
+    struct Key : Hashable {
+        let key: LottieAnimationEntryKey
+        let unique: Int
+    }
+    
+    private static var cache: [Key : MultiTargetAnimationContext] = [:]
     
 
-    static func create(_ animation: LottieAnimation, displayFrame: @escaping(CGImage?)->Void, release:@escaping()->Void, updateState: @escaping(LottiePlayerState)->Void) -> Int {
+    static func create(_ animation: LottieAnimation, key: Key, displayFrame: @escaping(CGImage?)->Void, release:@escaping()->Void, updateState: @escaping(LottiePlayerState)->Void) -> Int {
         
         assertOnMainThread()
         
         let handlers: MultiTargetAnimationContext.Handlers = .init(displayFrame: displayFrame, release: release, updateState: updateState)
         
-        if let context = cache[animation.key] {
+        if let context = cache[key] {
             return context.add(handlers)
         }
         var token: Int = 0
         let context = MultiTargetAnimationContext(animation, handlers: handlers, token: &token)
         
-        cache[animation.key] = context
+        cache[key] = context
         
         return token
     }
     
-    static func exists(_ animation: LottieAnimation) -> Bool {
-        return cache[animation.key] != nil
+    static func exists(_ key: Key) -> Bool {
+        return cache[key] != nil
     }
     
-    static func remove(_ token: Int, for key: LottieAnimationEntryKey) {
+    static func remove(_ token: Int, for key: Key) {
         let context = self.cache[key]
         if let context = context {
             let isEmpty = context.remove(token)
@@ -112,6 +236,79 @@ private final class MultiTargetContextCache {
                 self.cache.removeValue(forKey: key)
             }
         }
+    }
+}
+
+final class InlineStickerView: View {
+    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize) {
+        let layer = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: emoji, size: size)
+        super.init(frame: size.bounds)
+        self.layer = layer
+        layer.superview = self
+    }
+    init(account: Account, file: TelegramMediaFile, size: NSSize) {
+        let layer = InlineStickerItemLayer(account: account, file: file, size: size)
+        super.init(frame: size.bounds)
+        self.layer = layer
+        layer.superview = self
+    }
+    
+    
+    @objc func updateAnimatableContent() -> Void {
+        if let superview = animateLayer.superview {
+            var isKeyWindow: Bool = false
+            if let window = window {
+                if !window.canBecomeKey {
+                    isKeyWindow = true
+                } else {
+                    isKeyWindow = window.isKeyWindow
+                }
+            }
+            animateLayer.isPlayable = NSIntersectsRect(animateLayer.frame, superview.visibleRect) && isKeyWindow
+        }
+    }
+    
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        self.updateListeners()
+        self.updateAnimatableContent()
+    }
+    
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        self.updateListeners()
+        self.updateAnimatableContent()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    private func updateListeners() {
+        let center = NotificationCenter.default
+        if let window = window {
+            center.removeObserver(self)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didBecomeKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
+            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self)
+        } else {
+            center.removeObserver(self)
+        }
+    }
+    
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
+    private var animateLayer: InlineStickerItemLayer {
+        return self.layer! as! InlineStickerItemLayer
     }
 }
 
@@ -127,7 +324,7 @@ final class InlineStickerItemLayer : SimpleLayer {
     
     private let fetchDisposable = MetaDisposable()
     private let resourceDisposable = MetaDisposable()
-    
+    private let shimmerDataDisposable = MetaDisposable()
     private var previewDisposable: Disposable?
     private let delayDisposable = MetaDisposable()
     
@@ -138,8 +335,22 @@ final class InlineStickerItemLayer : SimpleLayer {
     
     private var shimmer: ShimmerLayer?
     
-    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize) {
+    var contentDidUpdate:((CGImage)->Void)? = nil
+    
+    override var contents: Any? {
+        didSet {
+            if let image = contents {
+                self.contentDidUpdate?(image as! CGImage)
+            }
+        }
+    }
+    
+    private let getColors:((TelegramMediaFile)->[LottieColor])?
+    
+    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, playPolicy: LottiePlayPolicy = .loop, checkStatus: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil) {
         self.account = account
+        self.playPolicy = playPolicy
+        self.getColors = getColors
         super.init()
         self.frame = size.bounds
         self.initialize()
@@ -149,7 +360,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             signal = .single(file)
         } else {
             if let inlinePacksContext = inlinePacksContext {
-                signal = inlinePacksContext.load(fileId: emoji.fileId) |> deliverOnMainQueue
+                signal = inlinePacksContext.load(fileId: emoji.fileId, checkStatus: checkStatus) |> deliverOnMainQueue
             } else {
                 signal = TelegramEngine(account: account).stickers.resolveInlineStickers(fileIds: [emoji.fileId])
                 |> map { $0.values.first }
@@ -162,8 +373,10 @@ final class InlineStickerItemLayer : SimpleLayer {
         })
     }
     
-    init(account: Account, file: TelegramMediaFile, size: NSSize) {
+    init(account: Account, file: TelegramMediaFile, size: NSSize, playPolicy: LottiePlayPolicy = .loop, getColors:((TelegramMediaFile)->[LottieColor])? = nil) {
         self.account = account
+        self.playPolicy = playPolicy
+        self.getColors = getColors
         super.init()
         self.initialize()
         self.file = file
@@ -173,6 +386,9 @@ final class InlineStickerItemLayer : SimpleLayer {
 
     
     private func initialize() {
+        if playPolicy != .loop {
+            unique = Int(arc4random64())
+        }
         self.contentsGravity = .center
         self.isOpaque = true
     }
@@ -183,20 +399,26 @@ final class InlineStickerItemLayer : SimpleLayer {
     
     private var animation: LottieAnimation?
     private var playerState: LottiePlayerState?
+    private let playPolicy: LottiePlayPolicy
+    
+    private var unique: Int = 0
+    var stopped: Bool = false
+    
     var isPlayable: Bool? = nil {
         didSet {
             if oldValue != isPlayable {
-                self.set(self.animation)
+                self.set(self.animation?.withUpdatedPolicy(self.playPolicy))
             }
         }
     }
-    private var contextToken: (Int, LottieAnimationEntryKey)?
+    private var contextToken: (Int, MultiTargetContextCache.Key)?
     private func set(_ animation: LottieAnimation?) {
         self.animation = animation
-        if let animation = animation, let isPlayable = self.isPlayable, isPlayable {
+        if let animation = animation, let isPlayable = self.isPlayable, isPlayable, !stopped {
             weak var layer: CALayer? = self
-            delayDisposable.set(delaySignal(MultiTargetContextCache.exists(animation) ? 0 : 0.1).start(completed: { [weak self] in
-                self?.contextToken = (MultiTargetContextCache.create(animation, displayFrame: { image in
+            let key: MultiTargetContextCache.Key = .init(key: animation.key, unique: unique)
+            delayDisposable.set(delaySignal(MultiTargetContextCache.exists(key) ? 0 : 0.1).start(completed: { [weak self] in
+                self?.contextToken = (MultiTargetContextCache.create(animation, key: key, displayFrame: { image in
                     DispatchQueue.main.async {
                         layer?.contents = image
                     }
@@ -204,9 +426,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                     
                 }, updateState: { [weak self] state in
                     self?.updateState(state)
-                }), animation.key)
-                
-                
+                }), key)
             }))
         } else {
             if let contextToken = contextToken {
@@ -231,15 +451,20 @@ final class InlineStickerItemLayer : SimpleLayer {
                 })
                 self.shimmer = nil
             }
+        } else if state == .finished, case .playCount = self.playPolicy {
+            stopped = true
         }
     }
     
     func updateSize(size: NSSize, sync: Bool) {
+        
+        shimmerDataDisposable.set(nil)
+        
         if let file = self.file {
             
            
-            
-                        
+            let playPolicy = self.playPolicy
+
             let aspectSize = file.dimensions?.size.aspectFitted(size) ?? size
                                                 
             let reference: FileMediaReference
@@ -281,7 +506,6 @@ final class InlineStickerItemLayer : SimpleLayer {
                     return nil
                 } |> deliverOnMainQueue).start(next: { [weak self] data in
                     if let data = data {
-                        let playPolicy: LottiePlayPolicy = .loop
                         let maximumFps: Int = 30
                         var cache: ASCachePurpose = .temporaryLZ4(.effect)
                         if file.isVideo && file.isCustomEmoji {
@@ -295,7 +519,8 @@ final class InlineStickerItemLayer : SimpleLayer {
                         } else {
                             type = .lottie
                         }
-                        self?.set(LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: aspectSize), type: type, cachePurpose: cache, playPolicy: playPolicy, maximumFps: maximumFps, metalSupport: false))
+                        let colors = self?.getColors?(file) ?? []
+                        self?.set(LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: aspectSize, colors: colors), type: type, cachePurpose: cache, playPolicy: playPolicy, maximumFps: maximumFps, colors: colors, metalSupport: false))
                         
                     } else {
                         self?.set(nil)
@@ -307,84 +532,119 @@ final class InlineStickerItemLayer : SimpleLayer {
             
             fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: mediaResource).start())
             
-            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: aspectSize, boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: nil)
-
-            let fontSize = NSMakeSize(theme.fontSize + 8, theme.fontSize + 5)
-            let fontAspectSize = file.dimensions?.size.aspectFitted(fontSize) ?? fontSize
-
-            let fontArguments = TransformImageArguments(corners: ImageCorners(), imageSize: fontAspectSize, boundingSize: fontSize, intrinsicInsets: NSEdgeInsets(), emptyColor: nil)
-
-            
-            let signal: Signal<ImageDataTransformation, NoError>
-                
-            switch file.mimeType {
-            case "image/webp":
-                signal = chatMessageSticker(postbox: account.postbox, file: reference, small: aspectSize.width <= 5, scale: System.backingScale, fetched: true)
-            default:
-                signal = chatMessageAnimatedSticker(postbox: account.postbox, file: reference, small: aspectSize.width <= 5, scale: System.backingScale, size: aspectSize, fetched: true, thumbAtFrame: 0, isVideo: file.fileName == "webm-preview" || file.isVideoSticker)
-            }
-            
-            var result: TransformImageResult?
-            _ = cachedMedia(media: file, arguments: arguments, scale: System.backingScale).start(next: { value in
-                result = value
-            })
-            if self.playerState != .playing {
-                self.contents = result?.image
-                
-                if let image = result?.image {
-                    self.preview = image
-                }
-            }
-            if self.preview == nil, let data = file.immediateThumbnailData, self.playerState != .playing {
-                let current: ShimmerLayer
-                if let layer = self.shimmer {
-                    current = layer
-                } else {
-                    current = ShimmerLayer()
-                    addSublayer(current)
-                    self.shimmer = current
-                    current.frame = size.bounds.focus(aspectSize)
-                }
-                current.update(backgroundColor: nil, foregroundColor: NSColor(rgb: 0x748391, alpha: 0.2), shimmeringColor: NSColor(rgb: 0x748391, alpha: 0.35), data: data, size: aspectSize)
-                current.updateAbsoluteRect(size.bounds, within: aspectSize)
+            let fillColor: NSColor? = getColors?(file).first?.color
+            let emptyColor: TransformImageEmptyColor?
+            if let fillColor = fillColor {
+                emptyColor = .fill(fillColor)
             } else {
-                if let shimmer = shimmer {
-                    shimmer.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak shimmer] _ in
-                        shimmer?.removeFromSuperlayer()
+                emptyColor = nil
+            }
+            if file.mimeType == "bundle/jpeg", let resource = file.resource as? LocalBundleResource {
+                let image = NSImage(named: resource.name)?.precomposed(theme.colors.accentIcon)
+                self.contents = image
+            } else {
+                let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: aspectSize, boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: emptyColor)
+
+                let fontSize = NSMakeSize(theme.fontSize + 8, theme.fontSize + 5)
+                let fontAspectSize = file.dimensions?.size.aspectFitted(fontSize) ?? fontSize
+
+                let fontArguments = TransformImageArguments(corners: ImageCorners(), imageSize: fontAspectSize, boundingSize: fontSize, intrinsicInsets: NSEdgeInsets(), emptyColor: emptyColor)
+
+                
+                let signal: Signal<ImageDataTransformation, NoError>
+                    
+                switch file.mimeType {
+                case "image/webp":
+                    signal = chatMessageSticker(postbox: account.postbox, file: reference, small: aspectSize.width <= 5, scale: System.backingScale, fetched: true)
+                default:
+                    signal = chatMessageAnimatedSticker(postbox: account.postbox, file: reference, small: aspectSize.width <= 5, scale: System.backingScale, size: aspectSize, fetched: true, thumbAtFrame: 0, isVideo: file.fileName == "webm-preview" || file.isVideoSticker)
+                }
+                
+                var result: TransformImageResult?
+                _ = cachedMedia(media: file, arguments: arguments, scale: System.backingScale).start(next: { value in
+                    result = value
+                })
+                if self.playerState != .playing {
+                    self.contents = result?.image
+                    
+                    if let image = result?.image {
+                        self.preview = image
+                    }
+                }
+               
+                
+                if self.preview == nil, let data = file.immediateThumbnailData, self.playerState != .playing {
+                    
+                    let dataSignal = account.postbox.mediaBox.resourceData(mediaResource.resource)
+                    |> map { $0.complete }
+                    |> take(1)
+                    |> deliverOnMainQueue
+                    
+                    shimmerDataDisposable.set(dataSignal.start(next: { [weak self] completed in
+                        if completed, self?.preview == nil, self?.playerState != .playing {
+                            let current: ShimmerLayer
+                            if let layer = self?.shimmer {
+                                current = layer
+                            } else {
+                                current = ShimmerLayer()
+                                self?.addSublayer(current)
+                                self?.shimmer = current
+                                current.frame = size.bounds.focus(aspectSize)
+                            }
+                            current.update(backgroundColor: nil, foregroundColor: NSColor(rgb: 0x748391, alpha: 0.2), shimmeringColor: NSColor(rgb: 0x748391, alpha: 0.35), data: data, size: aspectSize)
+                            current.updateAbsoluteRect(size.bounds, within: aspectSize)
+                        } else {
+                            if let shimmer = self?.shimmer {
+                                shimmer.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak shimmer] _ in
+                                    shimmer?.removeFromSuperlayer()
+                                })
+                                self?.shimmer = nil
+                            }
+                        }
+                    }))
+                    
+                    
+                } else {
+                    if let shimmer = shimmer {
+                        shimmer.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak shimmer] _ in
+                            shimmer?.removeFromSuperlayer()
+                        })
+                        self.shimmer = nil
+                    }
+                }
+                
+                previewDisposable?.dispose()
+                
+                if result == nil || result?.highQuality == false {
+                    let result = signal |> map { data -> (TransformImageResult, TransformImageResult) in
+                        let context = data.execute(arguments, data.data)
+                        let image = context?.generateImage()
+                        let fontContext = data.execute(fontArguments, data.data)
+                        let fontImage = fontContext?.generateImage()
+                        return (TransformImageResult(image, context?.isHighQuality ?? false), TransformImageResult(fontImage, fontContext?.isHighQuality ?? false))
+                    } |> deliverOnMainQueue
+                    
+                    previewDisposable = result.start(next: { [weak self] result, fontResult in
+                        if self?.playerState != .playing {
+                            self?.contents = result.image
+                        }
+                        if let image = result.image {
+                            self?.preview = image
+                            if let shimmer = self?.shimmer {
+                                shimmer.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak shimmer] _ in
+                                    shimmer?.removeFromSuperlayer()
+                                })
+                                self?.shimmer = nil
+                            }
+                        }
+                        
+                        cacheMedia(fontResult, media: file, arguments: fontArguments, scale: System.backingScale)
+                        cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
                     })
-                    self.shimmer = nil
                 }
             }
             
-            previewDisposable?.dispose()
-            
-            if result == nil || result?.highQuality == false {
-                let result = signal |> map { data -> (TransformImageResult, TransformImageResult) in
-                    let context = data.execute(arguments, data.data)
-                    let image = context?.generateImage()
-                    let fontContext = data.execute(fontArguments, data.data)
-                    let fontImage = fontContext?.generateImage()
-                    return (TransformImageResult(image, context?.isHighQuality ?? false), TransformImageResult(fontImage, fontContext?.isHighQuality ?? false))
-                } |> deliverOnMainQueue
-                
-                previewDisposable = result.start(next: { [weak self] result, fontResult in
-                    if self?.playerState != .playing {
-                        self?.contents = result.image
-                    }
-                    if let image = result.image {
-                        self?.preview = image
-                        if let shimmer = self?.shimmer {
-                            shimmer.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak shimmer] _ in
-                                shimmer?.removeFromSuperlayer()
-                            })
-                            self?.shimmer = nil
-                        }
-                    }
-                    
-                    cacheMedia(fontResult, media: file, arguments: fontArguments, scale: System.backingScale)
-                    cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
-                })
-            } 
+           
         }
     }
     
@@ -393,7 +653,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         previewDisposable?.dispose()
         resourceDisposable.dispose()
         delayDisposable.dispose()
-        
+        shimmerDataDisposable.dispose()
         if let contextToken = contextToken {
             MultiTargetContextCache.remove(contextToken.0, for: contextToken.1)
         }

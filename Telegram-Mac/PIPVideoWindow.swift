@@ -86,7 +86,7 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         self._contentInteractions = contentInteractions
         self._type = type
         self.control = control
-        let minSize = control.view.frame.size.aspectFilled(NSMakeSize(250, 250))
+        let minSize = control.view.frame.size.aspectFilled(NSMakeSize(120, 120))
         let size = item.notFittedSize.aspectFilled(NSMakeSize(250, 250)).aspectFilled(minSize)
         let newRect = NSMakeRect(origin.x, origin.y, size.width, size.height)
         self.rect = newRect
@@ -290,7 +290,7 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
             let savedRect: NSRect = NSMakeRect(0, 0, screen.frame.width * 0.3, screen.frame.width * 0.3)
             let convert_s = self.rect.size.aspectFilled(NSMakeSize(min(savedRect.width, 250), min(savedRect.height, 250)))
             self.aspectRatio = self.rect.size.fitted(NSMakeSize(savedRect.width, savedRect.height))
-            self.minSize = self.rect.size.aspectFitted(NSMakeSize(savedRect.width, savedRect.height)).aspectFilled(NSMakeSize(250, 250))
+            self.minSize = self.rect.size.aspectFitted(NSMakeSize(savedRect.width, savedRect.height)).aspectFilled(NSMakeSize(120, 120))
             
             let frame = NSScreen.main?.frame ?? NSMakeRect(0, 0, 1920, 1080)
             

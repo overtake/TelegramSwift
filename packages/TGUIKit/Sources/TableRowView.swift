@@ -245,11 +245,14 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         contextMenu = nil
         
         if let item = item {
-            menuDisposable.set((item.menuItems(in: convertWindowPointToContent(event.locationInWindow)) |> deliverOnMainQueue |> take(1)).start(next: { [weak self, weak item] items in
+            let items = item.menuItems(in: convertWindowPointToContent(event.locationInWindow))
+                         |> deliverOnMainQueue
+                         |> take(1)
+            menuDisposable.set(combineLatest(queue: .mainQueue(), items, item.menuAdditionView).start(next: { [weak self, weak item] items, topWindow in
                 if let strongSelf = self, let item = item {
                     let menu = ContextMenu(presentation: item.menuPresentation, isLegacy: item.isLegacyMenu)
 
-                    menu.topWindow = item.menuAdditionView
+                    menu.topWindow = topWindow
                     
                     menu.onShow = { [weak strongSelf] menu in
                         strongSelf?.onShowContextMenu()

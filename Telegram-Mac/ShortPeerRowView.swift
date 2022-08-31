@@ -487,7 +487,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         guard let item = item as? ShortPeerRowItem else {return}
         
         #if !SHARE
-        if item.highlightVerified {
+        if item.highlightVerified, (!item.isLookSavedMessage || item.peerId != item.account.peerId) {
             let control = PremiumStatusControl.control(item.peer, account: item.account, inlinePacksContext: item.context?.inlinePacksContext, isSelected: isRowSelected, cached: self.statusControl, animated: animated)
             if let control = control {
                 self.statusControl = control

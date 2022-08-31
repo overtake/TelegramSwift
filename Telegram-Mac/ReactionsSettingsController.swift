@@ -131,22 +131,22 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    switch state.mode {
-    case .quick:
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("legacy"), data: .init(name: strings().reactionSettingsLegacy, color: theme.colors.text, type: .switchable(FastSettings.legacyReactions), viewType: .singleItem, action: {
-            FastSettings.toggleReactionMode(!FastSettings.legacyReactions)
-        })))
-        index += 1
-        
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().reactionSettingsLegacyInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-        index += 1
-
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-    default:
-        break
-    }
-    
+//    switch state.mode {
+//    case .quick:
+//        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("legacy"), data: .init(name: strings().reactionSettingsLegacy, color: theme.colors.text, type: .switchable(FastSettings.legacyReactions), viewType: .singleItem, action: {
+//            FastSettings.toggleReactionMode(!FastSettings.legacyReactions)
+//        })))
+//        index += 1
+//        
+//        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().reactionSettingsLegacyInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+//        index += 1
+//
+//        entries.append(.sectionId(sectionId, type: .normal))
+//        sectionId += 1
+//    default:
+//        break
+//    }
+//    
     return entries
 }
 
@@ -164,16 +164,33 @@ enum ReactionSettingsMode : Equatable {
     }
 }
 
-func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowedReactions: [MessageReaction.Reaction]?, availableReactions: AvailableReactions?, mode: ReactionSettingsMode) -> InputDataController {
+func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?, mode: ReactionSettingsMode) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
     let update = MetaDisposable()
     actionsDisposable.add(update)
-    let allowed = allowedReactions ?? availableReactions?.reactions.map { $0.value } ?? []
+    let allowed:[MessageReaction.Reaction]
+    let chatReactions: State.ChatReactions
+    if let allowedReactions = allowedReactions {
+        switch allowedReactions {
+        case let .limited(reactions):
+            allowed = reactions
+            chatReactions = .some
+        case .all:
+            allowed = availableReactions?.enabled.map { $0.value } ?? []
+            chatReactions = .all
+        case .empty:
+            allowed = []
+            chatReactions = .none
+        }
+    } else {
+        allowed = availableReactions?.enabled.map { $0.value } ?? []
+        chatReactions = .all
+    }
     
-    let initialState = State(mode: mode, reactions: allowed, availableReactions: availableReactions)
+    let initialState = State(mode: mode, reactions: allowed, availableReactions: availableReactions, chatReactions: chatReactions)
     
-    let statePromise: ValuePromise<State> = ValuePromise(initialState, ignoreRepeated: true)
+    let statePromise: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
@@ -248,7 +265,6 @@ func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowe
     })
     
     
-    
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
@@ -259,7 +275,26 @@ func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowe
         actionsDisposable.dispose()
         switch mode {
         case .chat:
-            _ = context.engine.peers.updatePeerAllowedReactions(peerId: peerId, allowedReactions: stateValue.with { $0.reactions }).start()
+            let updated: PeerAllowedReactions
+            let state = stateValue.with { $0 }
+            if state.mode.isGroup {
+                switch state.chatReactions {
+                case .none:
+                    updated = .empty
+                case .all:
+                    updated = .all
+                case .some:
+                    updated = .limited(state.availableReactions?.enabled.map { value in
+                        return value.value
+                    } ?? [])
+                }
+            } else {
+                updated = .limited(state.availableReactions?.enabled.map { value in
+                    return value.value
+                } ?? [])
+            }
+            
+            _ = context.engine.peers.updatePeerAllowedReactions(peerId: peerId, allowedReactions: updated).start()
         default:
             break
         }

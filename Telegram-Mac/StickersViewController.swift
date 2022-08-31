@@ -717,7 +717,7 @@ class NStickersView : View {
             self?.updateSelectionState(animated: false)
         }))
         
-        tableView.scrollerInsets = .init(left: 0, right: 0, top: 46, bottom: 0)
+        tableView.scrollerInsets = .init(left: 0, right: 0, top: 46, bottom: 50)
         
         self.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] position in
             self?.updateScrollerSearch()
@@ -1059,7 +1059,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
             }
         }, showPack: { [weak self] reference in
             if let peerId = self?.chatInteraction?.peerId {
-                showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: .stickers(reference)), for: context.window)
+                showModal(with: StickerPackPreviewModalController(context, peerId: peerId, references: [.stickers(reference)]), for: context.window)
             }
         }, addPack: { [weak self] reference in
             
@@ -1150,7 +1150,6 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                             }
                     }
                 case let .scroll(aroundIndex):
-                    var firstTime = true
                     let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.CloudAllPremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: aroundIndex.packIndex, count: count)
                     let featuredView = context.account.viewTracker.featuredStickerPacks()
 
@@ -1169,7 +1168,6 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                             }
                     }
                 case let .navigate(index):
-                    var firstTime = true
                     let featuredView = context.account.viewTracker.featuredStickerPacks()
                     let packsView = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentStickers, Namespaces.OrderedItemList.CloudSavedStickers, Namespaces.OrderedItemList.CloudAllPremiumStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: index.packIndex, count: count)
                     return combineLatest(packsView, featuredView)
@@ -1193,6 +1191,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                 if values.0.request.isEmpty {
                     switch values.1 {
                     case .initial:
+                        var firstTime = true
                         return combineLatest(context.account.viewTracker.featuredStickerPacks(), context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])])) |> map { value, view in
                             var found = FoundStickerSets()
                             
@@ -1216,7 +1215,9 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
                                 }
                             }
                             let searchData = StickerPacksSearchData(sets: found, loading: false, basicFeaturedCount: found.infos.count, emojiRelated: [])
-                            return StickerPacksUpdateData(view: nil, update: .generic(animated: true, scrollToTop: true), specificPack: nil, searchData: searchData, hasUnread: false, featured: [], mode: mode)
+                            let scrollToTop = firstTime
+                            firstTime = false
+                            return StickerPacksUpdateData(view: nil, update: .generic(animated: true, scrollToTop: scrollToTop), specificPack: nil, searchData: searchData, hasUnread: false, featured: [], mode: mode)
                         }
                     case let .loadFeaturedMore(current):
                         return combineLatest(requestOldFeaturedStickerPacks(network: context.account.network, postbox: context.account.postbox, offset: current.sets.infos.count - current.basicFeaturedCount, limit: 50), context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [Namespaces.ItemCollection.CloudStickerPacks])])) |> map { values, view in

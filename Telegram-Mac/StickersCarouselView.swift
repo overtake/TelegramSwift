@@ -292,7 +292,7 @@ class StickersCarouselView: View, PremiumSlideView {
             self?.removeAnimationEffects(for: index)
         }, {})
         
-        let view = EmojiAnimationEffectView(animation: animation, animationSize: animationSize, animationPoint: .zero, frameRect: viewFrame)
+        let view = EmojiAnimationEffectView(animation: .builtin(animation), animationSize: animationSize, animationPoint: .zero, frameRect: viewFrame)
         view.index = index
         effectView.addSubview(view)
         updateLayout(size: self.frame.size, transition: .immediate)

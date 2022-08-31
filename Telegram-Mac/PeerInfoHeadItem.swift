@@ -744,7 +744,7 @@ private final class NameContainer : View {
         
         nameView.centerY(x: 0)
         if let control = statusControl {
-            control.centerY(x: nameView.frame.maxX + 5, addition: 0)
+            control.centerY(x: nameView.frame.maxX + 5, addition: -1)
         }
     }
     

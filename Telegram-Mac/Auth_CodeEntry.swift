@@ -207,6 +207,10 @@ final class Auth_CodeEntryView: View {
                 textError = strings().phoneCodeExpired
             case .codeExpired:
                 textError = strings().phoneCodeExpired
+            case .invalidEmailToken:
+                fatalError()
+            case .invalidEmailAddress:
+                fatalError()
             }
             self.error.state.set(.error(textError))
             self.control.shake()

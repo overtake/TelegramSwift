@@ -836,7 +836,7 @@ class ChatListRowItem: TableRowItem {
             dateSize = dateLayout.0.size.width
         }
         var offset: CGFloat = 0
-        if let peer = peer, let controlSize = PremiumStatusControl.controlSize(peer, false) {
+        if let peer = peer, peer.id != context.peerId, let controlSize = PremiumStatusControl.controlSize(peer, false) {
             offset += controlSize.width
         }
         if isMuted {

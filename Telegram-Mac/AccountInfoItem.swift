@@ -91,6 +91,10 @@ class AccountInfoItem: GeneralRowItem {
         return AccountInfoView.self
     }
     
+    var statusControl: Control? {
+        return (self.view as? AccountInfoView)?.statusControl
+    }
+    
 }
 
 private class AccountInfoView : GeneralContainableRowView {
@@ -106,7 +110,7 @@ private class AccountInfoView : GeneralContainableRowView {
 
     private let container = View()
     
-    private var statusControl: PremiumStatusControl?
+    fileprivate var statusControl: PremiumStatusControl?
     
     required init(frame frameRect: NSRect) {
         avatarView = AvatarControl(font: .avatar(22.0))
@@ -207,55 +211,23 @@ private class AccountInfoView : GeneralContainableRowView {
         
         let animationSize = NSMakeSize(90, 90)
         
-//        let reaction: Signal<AvailableReactions.Reaction?, NoError> = context.inlinePacksContext.load(fileId: status.fileId) |> mapToSignal { file in
-//            return context.reactions.stateValue |> take(1) |> map { value in
-//                let found = value?.reactions.first(where: {
-//                    $0.value.fixed == file?.customEmojiText?.fixed
-//                })
-//                return found
-//            }
-//        }
-//        let signal: Signal<LottieAnimation?, NoError> = reaction
-//        |> filter { $0 != nil}
-//        |> map {
-//            $0!
-//        } |> mapToSignal { reaction -> Signal<MediaResourceData, NoError> in
-//            if let file = reaction.aroundAnimation {
-//                return context.account.postbox.mediaBox.resourceData(file.resource)
-//                |> filter { $0.complete }
-//                |> take(1)
-//            } else {
-//                return .complete()
-//            }
-//        } |> map { data in
-//            if let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
-//                return LottieAnimation(compressed: data, key: .init(key: .bundle("_status_effect_new_\(status.fileId)"), size: animationSize, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd)
-//            } else {
-//                return nil
-//            }
-//        } |> deliverOnMainQueue
-//        
-//        playStatusDisposable.set(signal.start(next: { [weak self] animation in
-//            if let animation = animation {
-//                self?.playAnimation(animation)
-//            }
-//        }))
+        self.playAnimation(status.fileId, context: context)
     }
     
-    private func playAnimation(_ animation: LottieAnimation) {
-        guard let control = statusControl else {
+    private func playAnimation(_  fileId: Int64, context: AccountContext) {
+        guard let control = statusControl, visibleRect != .zero, window != nil else {
             return
         }
-        let player = LottiePlayerView(frame: animation.size.bounds)
+        
+        
+        let player = CustomReactionEffectView(frame: NSMakeSize(160, 160).bounds, context: context, fileId: fileId)
         
         player.isEventLess = true
         
-        animation.triggerOn = (LottiePlayerTriggerFrame.last, { [weak player] in
+        player.triggerOnFinish = { [weak player] in
             player?.removeFromSuperview()
-        }, {})
-        
-        player.set(animation)
-        
+        }
+                
         let controlRect = container.convert(control.frame, to: item?.table?.contentView)
         
         let rect = CGRect(origin: CGPoint(x: controlRect.midX - player.frame.width / 2, y: controlRect.midY - player.frame.height / 2), size: player.frame.size)
@@ -275,7 +247,7 @@ private class AccountInfoView : GeneralContainableRowView {
         if let item = item as? AccountInfoItem {
             
             
-            let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: item.isSelected, isBig: true, cached: self.statusControl, animated: animated, force: true)
+            let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: item.isSelected, isBig: true, cached: self.statusControl, animated: animated)
             if let control = control {
                 self.statusControl = control
                 self.container.addSubview(control)
@@ -369,10 +341,11 @@ private class AccountInfoView : GeneralContainableRowView {
         super.layout()
         avatarView.centerY(x:16)
         
+        let h: CGFloat = statusControl != nil ? 2 : 0
         
-        container.setFrameSize(NSMakeSize(max(titleView.frame.width, textView.frame.width + (statusControl != nil ? 35 : 0)), titleView.frame.height + textView.frame.height + 2))
+        container.setFrameSize(NSMakeSize(max(titleView.frame.width, textView.frame.width + (statusControl != nil ? 35 : 0)), titleView.frame.height + textView.frame.height + 2 + h))
         
-        titleView.setFrameOrigin(0, 0)
+        titleView.setFrameOrigin(0, h)
         textView.setFrameOrigin(0, titleView.frame.maxY + 2)
         
         container.centerY(x: avatarView.frame.maxX + 25)

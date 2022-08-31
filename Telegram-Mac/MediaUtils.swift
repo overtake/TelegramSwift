@@ -1109,15 +1109,16 @@ public func chatMessageAnimatedSticker(postbox: Postbox, file: FileMediaReferenc
                 blurredThumbnailImage = thumbnailContext.generateImage()
             }
             context.withFlippedContext(isHighQuality: data.fullSizeData != nil, horizontal: arguments.mirror, { c in
+                c.clear(drawingRect)
                 if let color = arguments.emptyColor {
                     c.setBlendMode(.normal)
                     switch color {
                     case let .color(color):
                         c.setFillColor(color.cgColor)
+                        c.fill(drawingRect)
                     default:
                         break
                     }
-                    c.fill(drawingRect)
                 } else {
                     c.setBlendMode(.copy)
                 }
@@ -1125,15 +1126,27 @@ public func chatMessageAnimatedSticker(postbox: Postbox, file: FileMediaReferenc
                 if let blurredThumbnailImage = blurredThumbnailImage, fullSizeImage == nil {
                     c.interpolationQuality = .low
                     let thumbnailScaledInset = thumbnailInset * (fittedRect.width / blurredThumbnailImage.size.width)
-                    c.draw(blurredThumbnailImage, in: fittedRect.insetBy(dx: -thumbnailScaledInset, dy: -thumbnailScaledInset))
+                    let rect = fittedRect.insetBy(dx: -thumbnailScaledInset, dy: -thumbnailScaledInset)
+                    if case let .fill(color) = arguments.emptyColor {
+                        c.clip(to: rect, mask: blurredThumbnailImage)
+                        c.setFillColor(color.cgColor)
+                        c.fill(rect)
+                    } else {
+                        c.draw(blurredThumbnailImage, in: rect)
+                    }
                 }
                 
                 if let fullSizeImage = fullSizeImage {
                     let cgImage = fullSizeImage
                     c.setBlendMode(.normal)
                     c.interpolationQuality = .medium
-                    
-                    c.draw(cgImage, in: fittedRect)
+                    if case let .fill(color) = arguments.emptyColor {
+                        c.clip(to: fittedRect, mask: cgImage)
+                        c.setFillColor(color.cgColor)
+                        c.fill(fittedRect)
+                    } else {
+                        c.draw(cgImage, in: fittedRect)
+                    }
                     
                    // c.setFillColor(NSColor.random.cgColor)
                    // c.fill(fittedRect)
@@ -3283,6 +3296,8 @@ private func chatWallpaperInternal(_ signal: Signal<ImageRenderData, NoError>, p
                     intensity = _intensity
                     colors = _colors.reversed().map { $0.withAlphaComponent(1.0) }
                     rotation = _rotation
+                default:
+                    fatalError()
                 }
                 
                 let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)

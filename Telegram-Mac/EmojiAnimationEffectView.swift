@@ -8,26 +8,38 @@
 
 import Foundation
 import TGUIKit
+import AppKit
 
 final class EmojiAnimationEffectView : View {
-    
-    private let player: LottiePlayerView
-    private let animation: LottieAnimation
+    enum Source {
+        case builtin(LottieAnimation)
+        case custom(CustomReactionEffectView)
+    }
+    private let player: NSView
+    private let animation: Source
     let animationSize: NSSize
     private var animationPoint: CGPoint
     
     var index: Int? = nil
     
-    init(animation: LottieAnimation, animationSize: NSSize, animationPoint: CGPoint, frameRect: NSRect) {
+    init(animation: Source, animationSize: NSSize, animationPoint: CGPoint, frameRect: NSRect) {
         self.animation = animation
-        self.player = LottiePlayerView(frame: .init(origin: animationPoint, size: animationSize))
         self.animationSize = animationSize
         self.animationPoint = animationPoint
+        let view: NSView
+        switch animation {
+        case let .builtin(animation):
+            let player = LottiePlayerView(frame: .init(origin: animationPoint, size: animationSize))
+            player.set(animation)
+            view = player
+            player.isEventLess = true
+        case let .custom(current):
+            view = current
+        }
+        self.player = view
         super.init(frame: frameRect)
-        addSubview(player)
-        player.set(animation)
+        addSubview(view)
         isEventLess = true
-        player.isEventLess = true
         updateLayout(size: frameRect.size, transition: .immediate)
     }
     
@@ -38,7 +50,9 @@ final class EmojiAnimationEffectView : View {
         
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         transition.updateFrame(view: self.player, frame: CGRect(origin: animationPoint, size: animationSize))
-        self.player.update(size: animationSize, transition: transition)
+        if let view = player as? LottiePlayerView {
+            view.update(size: animationSize, transition: transition)
+        }
     }
     
     func updatePoint(_ point: NSPoint, transition: ContainedViewLayoutTransition) {

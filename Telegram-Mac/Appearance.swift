@@ -2524,11 +2524,22 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 premium_reaction_lock: { NSImage(named: "Icon_Premium_ReactionLock")!.precomposed(palette.accent) },
                                                 premium_boarding_feature_next: { NSImage(named: "Premium_Boarding_Feature_Next")!.precomposed(palette.grayIcon) },
                                                 premium_stickers: { generateStickerPackPremium() },
-                                                premium_emoji_lock: { NSImage.init(named: "Icon_EmojiLock")!.precomposed(palette.grayIcon)}
+                                                premium_emoji_lock: { NSImage(named: "Icon_EmojiLock")!.precomposed(palette.grayIcon)},
+                                                account_add_account: { NSImage(named: "Icon_Account_Add_Account")!.precomposed(palette.accent, flipVertical: true)},
+                                                account_set_status: { NSImage(named: "Icon_Account_Set_Status")!.precomposed(palette.accent, flipVertical: true)},
+                                                account_change_status: { NSImage(named: "Icon_Account_Change_Status")!.precomposed(palette.accent, flipVertical: true)},
+                                                chat_premium_status_red: { generatePremium(false, color: palette.groupPeerNameRed, small: true) },
+                                                chat_premium_status_orange: { generatePremium(false, color: palette.groupPeerNameOrange, small: true) },
+                                                chat_premium_status_violet: { generatePremium(false, color: palette.groupPeerNameViolet, small: true) },
+                                                chat_premium_status_green: { generatePremium(false, color: palette.groupPeerNameGreen, small: true) },
+                                                chat_premium_status_cyan: { generatePremium(false, color: palette.groupPeerNameCyan, small: true) },
+                                                chat_premium_status_light_blue: { generatePremium(false, color: palette.groupPeerNameLightBlue, small: true) },
+                                                chat_premium_status_blue: { generatePremium(false, color: palette.groupPeerNameBlue, small: true) }
 
     )
 
 }
+
 func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bubbled: Bool, fontSize: CGFloat, wallpaper: ThemeWallpaper) -> TelegramPresentationTheme {
     
     let chatList = TelegramChatListTheme(selectedBackgroundColor: palette.accentSelect,

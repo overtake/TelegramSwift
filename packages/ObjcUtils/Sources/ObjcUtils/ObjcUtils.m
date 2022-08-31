@@ -10,6 +10,7 @@
 #import <CommonCrypto/CommonCrypto.h>
 #import <AVFoundation/AVFoundation.h>
 #import <Carbon/Carbon.h>
+#import <Accelerate/Accelerate.h>
 
 @implementation OpenWithObject
 
@@ -1114,6 +1115,9 @@ NSArray<NSString *> *cut_long_message(NSString *message, int max_length) {
     @try {
         for (int i = 0; i < message.length; i += inc)
         {
+            
+            inc = max_length;
+            
             int length = MIN(max_length, (int)message.length - i);
             
             NSString *substring = [message substringWithRange:NSMakeRange(i, length)];
@@ -1168,9 +1172,6 @@ NSArray<NSString *> *cut_long_message(NSString *message, int max_length) {
                         }
                     }
                 }
-                
-                
-                
             }
             
             substring = [substring substringWithRange:NSMakeRange(0, index)];
@@ -1377,4 +1378,95 @@ NSEvent * __nullable createScrollWheelEvent() {
     NSEvent *event = [NSEvent eventWithCGEvent:upEvent];
     CFRelease(upEvent);
     return event;
+}
+
+
+static inline CGSize fitSize(CGSize size, CGSize maxSize)
+{
+    if (size.width < 1)
+        size.width = 1;
+    if (size.height < 1)
+        size.height = 1;
+    
+    if (size.width > maxSize.width)
+    {
+        size.height = floor((size.height * maxSize.width / size.width));
+        size.width = maxSize.width;
+    }
+    if (size.height > maxSize.height)
+    {
+        size.width = floor((size.width * maxSize.height / size.height));
+        size.height = maxSize.height;
+    }
+    return size;
+}
+
+
+CGImageRef TGBlurredAlphaImage(CGImageRef source, CGSize size, CGFloat scale)
+{
+    
+    CGSize fittedSize = fitSize(size, CGSizeMake(90, 90));
+    
+    const struct { int width, height; } blurredContextSize = { (int)fittedSize.width, (int)fittedSize.height };
+    const struct { int width, height; } targetContextSize = { (int)(size.width * scale), (int)(size.height * scale)};
+    
+    size_t blurredBytesPerRow = ((4 * (int)blurredContextSize.width) + 15) & (~15);
+    size_t targetBytesPerRow = ((4 * (int)targetContextSize.width) + 15) & (~15);
+    
+    void *blurredMemory = malloc((int)(blurredBytesPerRow * blurredContextSize.height));
+    memset(blurredMemory, 0, blurredBytesPerRow * blurredContextSize.height);
+    void *targetMemory = malloc((int)(targetBytesPerRow * targetContextSize.height));
+    
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGBitmapInfo bitmapInfo = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host;
+    
+    CGContextRef blurredContext = CGBitmapContextCreate(blurredMemory, (int)blurredContextSize.width, (int)blurredContextSize.height, 8, blurredBytesPerRow, colorSpace, bitmapInfo);
+    CGContextRef targetContext = CGBitmapContextCreate(targetMemory, (int)targetContextSize.width, (int)targetContextSize.height, 8, targetBytesPerRow, colorSpace, bitmapInfo);
+    
+    CGColorSpaceRelease(colorSpace);
+    
+    
+    CGContextTranslateCTM(blurredContext, blurredContextSize.width / 2.0f, blurredContextSize.height / 2.0f);
+    CGContextScaleCTM(blurredContext, 1.0f, -1.0f);
+    CGContextTranslateCTM(blurredContext, -blurredContextSize.width / 2.0f, -blurredContextSize.height / 2.0f);
+    CGContextSetInterpolationQuality(blurredContext, kCGInterpolationLow);
+    
+    CGContextDrawImage(blurredContext, CGRectMake(6, 6, blurredContextSize.width - 12, blurredContextSize.height - 12), source);
+    
+    vImage_Buffer srcBuffer;
+    srcBuffer.width = blurredContextSize.width;
+    srcBuffer.height = blurredContextSize.height;
+    srcBuffer.rowBytes = blurredBytesPerRow;
+    srcBuffer.data = blurredMemory;
+    
+    {
+        vImage_Buffer dstBuffer;
+        dstBuffer.width = blurredContextSize.width;
+        dstBuffer.height = blurredContextSize.height;
+        dstBuffer.rowBytes = blurredBytesPerRow;
+        dstBuffer.data = targetMemory;
+        
+        int boxSize = (int)(0.02f * 100);
+        boxSize = boxSize - (boxSize % 2) + 1;
+        
+        vImageBoxConvolve_ARGB8888(&srcBuffer, &dstBuffer, NULL, 0, 0, boxSize, boxSize, NULL, kvImageEdgeExtend);
+        vImageBoxConvolve_ARGB8888(&dstBuffer, &srcBuffer, NULL, 0, 0, boxSize, boxSize, NULL, kvImageEdgeExtend);
+    }
+    
+    vImage_Buffer dstBuffer;
+    dstBuffer.width = targetContextSize.width;
+    dstBuffer.height = targetContextSize.height;
+    dstBuffer.rowBytes = targetBytesPerRow;
+    dstBuffer.data = targetMemory;
+    
+    vImageScale_ARGB8888(&srcBuffer, &dstBuffer, NULL, kvImageDoNotTile);
+    
+    CGContextRelease(blurredContext);
+    free(blurredMemory);
+    
+    CGImageRef bitmapImage = CGBitmapContextCreateImage(targetContext);
+    CGContextRelease(targetContext);
+    free(targetMemory);
+    
+    return bitmapImage;
 }

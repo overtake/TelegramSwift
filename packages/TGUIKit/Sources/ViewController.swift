@@ -981,7 +981,7 @@ open class ViewController : NSObject {
     
     open func show(for control:Control, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint, static: Bool = false) -> Void {
         if popover == nil {
-            self.popover = (self.popoverClass as! Popover.Type).init(controller: self, static: `static`)
+            self.popover = (self.popoverClass as! Popover.Type).init(controller: self, static: `static`, animationMode: .classic)
         }
         
         if let popover = popover {

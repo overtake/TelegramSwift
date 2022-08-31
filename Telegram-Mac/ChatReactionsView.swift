@@ -157,12 +157,17 @@ final class ChatReactionsLayout {
             }
         }
         
-        func getInlineLayer() -> InlineStickerItemLayer {
+        func getInlineLayer(_ mode: ChatReactionsLayout.Mode) -> InlineStickerItemLayer {
             switch source {
             case let .builtin(reaction):
                 return .init(account: context.account, file: reaction.staticIcon, size: presentation.reactionSize)
             case let .custom(fileId, file, _):
-                return .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: presentation.reactionSize)
+                var reactionSize: NSSize = presentation.reactionSize
+                if mode == .full {
+                    reactionSize.width += 3
+                    reactionSize.height += 3
+                }
+                return .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: reactionSize)
             }
         }
         
@@ -196,7 +201,8 @@ final class ChatReactionsLayout {
             lhs.source == rhs.source &&
             lhs.mode == rhs.mode &&
             lhs.rect == rhs.rect &&
-            lhs.canViewList == rhs.canViewList
+            lhs.canViewList == rhs.canViewList &&
+            lhs.message.reactionsAttribute == rhs.message.reactionsAttribute
         }
         static func <(lhs: Reaction, rhs: Reaction) -> Bool {
             return lhs.index < rhs.index
@@ -319,12 +325,19 @@ final class ChatReactionsLayout {
             self.state = state
             let account = self.context.account
             let context = self.context
+            let source: ReactionPeerMenu.Source
+            switch self.source {
+            case let .builtin(reaction):
+                source = .builtin(reaction.staticIcon)
+            case let .custom(fileId, file, _):
+                source = .custom(fileId, file)
+            }
             weak var weakSelf = self
             let makeItem:(_ peer: Peer) -> ContextMenuItem = { peer in
                 let title = peer.displayTitle.prefixWithDots(25)
                 let item = ReactionPeerMenu(title: title, handler: {
                     weakSelf?.openInfo(peer.id)
-                }, peer: peer, context: context, reaction: nil)
+                }, peer: peer, context: context, reaction: source)
                 
                 let signal:Signal<(CGImage?, Bool), NoError>
                 signal = peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
@@ -340,9 +353,22 @@ final class ChatReactionsLayout {
                     self?.reactions?.loadMore()
                 }
             }
-            menu?.items = state.items.map {
+            
+            var items = state.items.map {
                 return makeItem($0.peer._asPeer())
             }
+            
+            switch source {
+            case let .custom(_, file):
+                if let reference = file?.emojiReference {
+                    items.append(MessageContainsPacksMenuItem(title: "text", handler: {
+
+                    }, packs: [reference], context: context))
+                }
+            default:
+                break
+            }
+            menu?.items = items
         }
     }
     fileprivate let context: AccountContext
@@ -365,7 +391,7 @@ final class ChatReactionsLayout {
     let mode: Mode
     
     
-    init(context: AccountContext, message: Message, available: AvailableReactions?, peerAllowed: [MessageReaction.Reaction], engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, openInfo:@escaping(PeerId)->Void, runEffect: @escaping(MessageReaction.Reaction)->Void) {
+    init(context: AccountContext, message: Message, available: AvailableReactions?, peerAllowed: PeerAllowedReactions?, engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, openInfo:@escaping(PeerId)->Void, runEffect: @escaping(MessageReaction.Reaction)->Void) {
         
         var mode: Mode = message.id.peerId.namespace == Namespaces.Peer.CloudUser ? .short : .full
         if context.isPremium, mode == .short, message.peers[message.id.peerId]?.isPremium == true {
@@ -398,17 +424,19 @@ final class ChatReactionsLayout {
             }
         }
         
-        var sorted = reactions.reactions.sorted(by: { lhs, rhs in
-            if lhs.count == rhs.count {
-                let lhsIndex = indexes[lhs.value]
-                let rhsIndex = indexes[rhs.value]
-                if let lhsIndex = lhsIndex, let rhsIndex = rhsIndex {
-                    return lhsIndex < rhsIndex
+        let sorted = reactions.reactions.sorted(by: { lhs, rhs in
+            if lhs.isSelected != rhs.isSelected {
+                if lhs.isSelected {
+                    return true
                 } else {
                     return false
                 }
             } else {
-                return lhs.count > rhs.count
+                if let lhsIndex = lhs.chosenOrder, let rhsIndex = rhs.chosenOrder {
+                    return lhsIndex < rhsIndex
+                } else {
+                    return lhs.count > rhs.count
+                }
             }
         })
         
@@ -417,7 +445,7 @@ final class ChatReactionsLayout {
             let source: Reaction.Source?
             switch reaction.value {
             case let .custom(fileId):
-                let mediaId = MediaId.init(namespace: Namespaces.Media.CloudFile, id: fileId)
+                let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
                 source = .custom(fileId, message.associatedMedia[mediaId] as? TelegramMediaFile, nil)
             case .builtin:
                 if let current = available?.reactions.first(where: { $0.value == reaction.value || reaction.value.isEmpty }) {
@@ -433,24 +461,13 @@ final class ChatReactionsLayout {
                 }.compactMap {
                     message.peers[$0.peerId]
                 }
-                if let peer = message.peers[message.id.peerId] {
-                    if !peer.isGroup && !peer.isSupergroup {
-                        recentPeers = []
-                    }
-                    let count = reactions.reactions.reduce(0, {
-                        $0 + $1.count
-                    })
-                    if count >= 3 || count > recentPeers.count {
-                        recentPeers = []
-                    }
+                if recentPeers.count < reaction.count {
+                    recentPeers = []
                 }
                 return .init(value: reaction, recentPeers: recentPeers, canViewList: reactions.canViewList, message: message, context: context, mode: mode, index: getIndex(), source: source, presentation: presentation, action: { value, checkPrem in
-                    let reaction = sorted.first(where: { $0.value == value})
-                    if let reaction = reaction {
-                        engine.react(message.id, value: reaction.isSelected ? nil : reaction.value, file: source.file, checkPrem: checkPrem)
-                    } else {
-                        engine.react(message.id, value: value, file: source.file, checkPrem: checkPrem)
-                    }
+                    
+                    engine.react(message.id, values: message.newReactions(with: value.toUpdate(source.file)))
+                    
                 }, openInfo: openInfo, runEffect: runEffect)
             } else {
                 return nil
@@ -556,6 +573,7 @@ class AnimationLayerContainer : View {
     fileprivate var imageLayer: InlineStickerItemLayer?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        isEventLess = true
     }
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -632,7 +650,7 @@ final class ChatReactionsView : View {
     
     final class ReactionView: Control, ReactionViewImpl {
         fileprivate private(set) var reaction: ChatReactionsLayout.Reaction?
-        fileprivate let imageView: AnimationLayerContainer = AnimationLayerContainer(frame: .zero)
+        fileprivate let imageView: AnimationLayerContainer = AnimationLayerContainer(frame: NSMakeRect(0, 0, 16, 16))
         private var textView: DynamicCounterTextView?
         private let avatarsContainer = View(frame: NSMakeRect(0, 0, 16 * 3, 16))
         private var avatars:[AvatarContentView] = []
@@ -846,31 +864,13 @@ final class ChatReactionsView : View {
             }
             
             if layerUpdated {
-                self.imageView.updateLayer(reaction.getInlineLayer(), animated: animated)
+                self.imageView.updateLayer(reaction.getInlineLayer(reaction.mode), animated: animated)
             }
             
-//            let file = reaction.available.centerAnimation ?? reaction.available.staticIcon
-//            var reactionSize: NSSize = reaction.presentation.reactionSize
-//
-//
-//            if reaction.available.centerAnimation != nil {
-//                reactionSize = NSMakeSize(reaction.presentation.reactionSize.width * 2, reaction.presentation.reactionSize.height * 2)
-//            }
-//            let arguments = TransformImageArguments(corners: .init(), imageSize: reactionSize, boundingSize: reaction.presentation.reactionSize, intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
-//
-//            self.imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: System.backingScale, positionFlags: nil), clearInstantly: true)
-//
-//            if !self.imageView.isFullyLoaded {
-//                imageView.setSignal(chatMessageSticker(postbox: account.postbox, file: .standalone(media: file), small: false, scale: System.backingScale), cacheImage: { result in
-//                    cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
-//                })
-//            }
-//
             if !first, reactionUpdated, animated {
                 self.imageView.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
             }
 
-//            imageView.set(arguments: arguments)
             if first {
                 updateLayout(size: reaction.rect.size, transition: .immediate)
                 first = false
@@ -900,8 +900,15 @@ final class ChatReactionsView : View {
             }
             
             let presentation = reaction.presentation
-
-            transition.updateFrame(view: self.imageView, frame: CGRect(origin: NSMakePoint(presentation.insetOuter, (size.height - presentation.reactionSize.height) / 2), size: presentation.reactionSize))
+            
+            var reactionSize = presentation.reactionSize
+            
+            if case .custom = reaction.value.value {
+                reactionSize.width += 3
+                reactionSize.height += 3
+            }
+            
+            transition.updateFrame(view: self.imageView, frame: CGRect(origin: NSMakePoint(presentation.insetOuter, (size.height - reactionSize.height) / 2), size: reactionSize))
             
             
             if let textView = textView, let text = reaction.text {
@@ -940,24 +947,8 @@ final class ChatReactionsView : View {
             self.reaction = reaction
             
             if updated {
-                self.imageView.updateLayer(reaction.getInlineLayer(), animated: animated)
+                self.imageView.updateLayer(reaction.getInlineLayer(reaction.mode), animated: animated)
             }
-            
-//            let file = reaction.available.centerAnimation ?? reaction.available.staticIcon
-//
-//            var reactionSize: NSSize = reaction.presentation.reactionSize
-//
-//            if reaction.available.centerAnimation != nil {
-//                reactionSize = NSMakeSize(reaction.presentation.reactionSize.width * 2, reaction.presentation.reactionSize.height * 2)
-//            }
-//            let arguments = TransformImageArguments(corners: .init(), imageSize: reactionSize, boundingSize: reaction.presentation.reactionSize, intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
-//            self.imageView.setSignal(signal: cachedMedia(media: file, arguments: arguments, scale: System.backingScale, positionFlags: nil), clearInstantly: true)
-//            if !self.imageView.isFullyLoaded {
-//                imageView.setSignal(chatMessageSticker(postbox: account.postbox, file: .standalone(media: file), small: false, scale: System.backingScale), cacheImage: { result in
-//                    cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
-//                })
-//            }
-//            imageView.set(arguments: arguments)
             
             if let text = reaction.text {
                 let current: DynamicCounterTextView
@@ -1158,12 +1149,15 @@ final class ChatReactionsView : View {
                     reused.insert(pix)
                     reusedPix = pix
                 }
-            } else if inserted.count == 1, removed.count == 1 {
+            }
+            /*
+             else if inserted.count == 1, removed.count == 1 {
                 let kv = deletedViews.first!
                 prevView = kv.value
                 reused.insert(kv.key)
                 reusedPix = kv.key
            }
+             */
             let getView: (NSView?)->NSView = { prev in
                 switch layout.mode {
                 case .full:
@@ -1226,30 +1220,22 @@ final class ChatReactionsView : View {
         
         self.updateLayout(size: layout.size, transition: transition)
         
+                
+        let new = reactions.filter { $0.value.isSelected }.filter { value in
+            let prev = previous.first(where: { $0.value.value == value.value.value && $0.value.isSelected })
+            return prev == nil
+        }
         
-        let prevSelected = previous.first(where: { $0.value.isSelected })
-        let curSelected = reactions.first(where: { $0.value.isSelected })
-        
-        if let curSelected = curSelected, prevSelected?.value.value != curSelected.value.value {
-            if layout.context.reactions.interactive == layout.message.id {
-                curSelected.runEffect(curSelected.value.value)
-                let view = getView(curSelected.value.value)
-                view?.playEffect()
+        DispatchQueue.main.async { [weak self] in
+            for selected in new {
+                if layout.context.reactions.interactive == layout.message.id {
+                    selected.runEffect(selected.value.value)
+                    let view = self?.getView(selected.value.value)
+                    view?.playEffect()
+                }
             }
         }
-//        else if animated, !layout.message.flags.contains(.Incoming), let peer = layout.message.peers[layout.message.id.peerId] {
-//            if peer.isGroup || peer.isSupergroup || peer.isGigagroup || peer.isUser, peer.canSendMessage()  {
-//                Loop: for reaction in reactions {
-//                    let prev = previous.first(where: { $0.value.value == reaction.value.value })
-//                    if prev == nil || prev!.value.count < reaction.value.count {
-//                        reaction.runEffect(reaction.value.value)
-//                        let view = getView(reaction.value.value)
-//                        view?.playEffect()
-//                        break Loop
-//                    }
-//                }
-//            }
-//        }
+        
     }
     
     func playSeenReactionEffect(_ checkUnseen: Bool) {

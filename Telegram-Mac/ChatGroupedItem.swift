@@ -155,7 +155,11 @@ class ChatGroupedItem: ChatRowItem {
         
         for layout in captionLayouts {
             layout.layout.interactions.topWindow = { [weak self] in
-                return self?.menuAdditionView
+                if let strongSelf = self {
+                    return strongSelf.menuAdditionView
+                } else {
+                    return .single(nil)
+                }
             }
         }
                 

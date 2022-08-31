@@ -128,7 +128,16 @@ import Postbox
 //}
 
 
-
+private extension RecentReactionItem.Content {
+    var reaction: MessageReaction.Reaction {
+        switch self {
+        case let .custom(file):
+            return .custom(file.fileId.id)
+        case let .builtin(emoji):
+            return .builtin(emoji)
+        }
+    }
+}
 
 enum EmojiSegment : Int64, Comparable  {
     case RecentAnimated = 100
@@ -279,7 +288,8 @@ private final class Arguments {
     let showAllItems:(Int64)->Void
     let openPremium:()->Void
     let installPack:(StickerPackCollectionInfo, [StickerPackItem])->Void
-    init(context: AccountContext, mode: EmojiesController.Mode, send:@escaping(StickerPackItem)->Void, sendEmoji:@escaping(String)->Void, selectEmojiSegment:@escaping(EmojiSegment)->Void, viewSet:@escaping(StickerPackCollectionInfo)->Void, showAllItems:@escaping(Int64)->Void, openPremium:@escaping()->Void, installPack:@escaping(StickerPackCollectionInfo,  [StickerPackItem])->Void) {
+    let clearRecent:()->Void
+    init(context: AccountContext, mode: EmojiesController.Mode, send:@escaping(StickerPackItem)->Void, sendEmoji:@escaping(String)->Void, selectEmojiSegment:@escaping(EmojiSegment)->Void, viewSet:@escaping(StickerPackCollectionInfo)->Void, showAllItems:@escaping(Int64)->Void, openPremium:@escaping()->Void, installPack:@escaping(StickerPackCollectionInfo,  [StickerPackItem])->Void, clearRecent:@escaping()->Void) {
         self.context = context
         self.send = send
         self.sendEmoji = sendEmoji
@@ -289,6 +299,7 @@ private final class Arguments {
         self.openPremium = openPremium
         self.installPack = installPack
         self.mode = mode
+        self.clearRecent = clearRecent
     }
 }
 
@@ -308,7 +319,18 @@ private struct State : Equatable {
     var emojiState: EmojiState = .init(selected: nil)
     var revealed:[Int64: Bool] = [:]
     var search: [String]? = nil
-    var reactions: AvailableReactions?
+    var reactions: AvailableReactions? = nil
+    var recentStatusItems: [RecentMediaItem] = []
+    var featuredStatusItems: [RecentMediaItem] = []
+    
+    var recentReactionsItems: [RecentReactionItem] = []
+    var topReactionsItems: [RecentReactionItem] = []
+
+    
+    var recent: RecentUsedEmoji = .defaultSettings
+    var reactionSettings: ReactionSettings = .default
+    
+    var defaultStatuses:[StickerPackItem] = []
 }
 
 private func _id_section(_ id:Int64) -> InputDataIdentifier {
@@ -340,10 +362,22 @@ private func packEntries(_ state: State, arguments: Arguments) -> [InputDataEntr
     }))
     index += 1
     
-    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_recent_pack, equatable: nil, comparable: nil, item: { initialSize, stableId in
-        return ETabRowItem(initialSize, stableId: stableId, icon: theme.icons.emojiRecentTab, iconSelected: theme.icons.emojiRecentTabActive)
-    }))
-    index += 1
+    let hasRecent: Bool
+    switch arguments.mode {
+    case .status:
+        hasRecent = !state.recentStatusItems.isEmpty || !state.featuredStatusItems.isEmpty
+    case .emoji:
+        hasRecent = true
+    case .reactions:
+        hasRecent = !state.recentReactionsItems.isEmpty || !state.topReactionsItems.isEmpty
+    }
+    if hasRecent {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_recent_pack, equatable: nil, comparable: nil, item: { initialSize, stableId in
+            return ETabRowItem(initialSize, stableId: stableId, icon: theme.icons.emojiRecentTab, iconSelected: theme.icons.emojiRecentTabActive)
+        }))
+        index += 1
+    }
+    
    
 
     if arguments.mode == .emoji {
@@ -372,7 +406,7 @@ private func packEntries(_ state: State, arguments: Arguments) -> [InputDataEntr
 
 
 
-private func entries(_ state: State, recent: RecentUsedEmoji, arguments: Arguments) -> [InputDataEntry] {
+private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     var entries:[InputDataEntry] = []
     
     var sectionId:Int32 = 0
@@ -398,8 +432,8 @@ private func entries(_ state: State, recent: RecentUsedEmoji, arguments: Argumen
 //    sectionId += 1
     
     var e = emojiesInstance
-    e[EmojiSegment.Recent] = recent.emojies
-    let seg = segments(e, skinModifiers: recent.skinModifiers)
+    e[EmojiSegment.Recent] = state.recent.emojies
+    let seg = segments(e, skinModifiers: state.recent.skinModifiers)
     let seglist = seg.map { (key,_) -> EmojiSegment in
         return key
     }.sorted(by: <)
@@ -412,7 +446,7 @@ private func entries(_ state: State, recent: RecentUsedEmoji, arguments: Argumen
             return item.file.fileId
         })
     })
-    let recentAnimated:[StickerPackItem] = recent.animated.compactMap { mediaId in
+    let recentAnimated:[StickerPackItem] = state.recent.animated.compactMap { mediaId in
         if let item = recentDict[mediaId] {
             if !item.file.isPremiumEmoji || isPremium {
                 return item
@@ -443,7 +477,7 @@ private func entries(_ state: State, recent: RecentUsedEmoji, arguments: Argumen
                 
             }
             
-            let animatedEmoji:[StickerPackItem] = state.sections.reduce([], { current, value in
+            var animatedEmoji:[StickerPackItem] = state.sections.reduce([], { current, value in
                 return current + value.items.filter { item in
                     for key in item.getStringRepresentationsOfIndexKeys() {
                         if search.contains(key) {
@@ -454,6 +488,24 @@ private func entries(_ state: State, recent: RecentUsedEmoji, arguments: Argumen
                 }
             })
             
+            let statuses = state.recentStatusItems + state.featuredStatusItems
+            var contains:Set<MediaId> = Set()
+            let normalized:[StickerPackItem] = statuses.filter { item in
+                let text = item.media.customEmojiText ?? item.media.stickerText ?? ""
+                if !contains.contains(item.media.fileId), search.contains(text) {
+                    contains.insert(item.media.fileId)
+                    return true
+                }
+                return false
+            }.map { value in
+                return StickerPackItem(index: .init(index: 0, id: 0), file: value.media, indexKeys: [])
+            }
+            for item in normalized {
+                if !animatedEmoji.contains(where: { $0.file.fileId == item.file.fileId }) {
+                    animatedEmoji.append(item)
+                }
+            }
+            
             if !animatedEmoji.isEmpty {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_ae_stick"), equatable: InputDataEquatable(search), comparable: nil, item: { initialSize, stableId in
                     return EStickItem(initialSize, stableId: stableId, segmentName: strings().emojiSearchAnimatedEmoji)
@@ -462,7 +514,7 @@ private func entries(_ state: State, recent: RecentUsedEmoji, arguments: Argumen
                 
                                 
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_ae"), equatable: InputDataEquatable(animatedEmoji), comparable: nil, item: { initialSize, stableId in
-                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: false, info: nil, items: animatedEmoji, callback: { item in
+                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: false, info: nil, items: animatedEmoji, mode: arguments.mode.itemMode, callback: { item in
                         arguments.send(item)
                     })
                 }))
@@ -484,21 +536,131 @@ private func entries(_ state: State, recent: RecentUsedEmoji, arguments: Argumen
     } else {
         for key in seglist {
             
-            if key == .Recent, arguments.mode == .reactions, let reactions = state.reactions {
-                let reactions:[StickerPackItem] = reactions.reactions.compactMap { value in
-                    return .init(index: .init(index: 0, id: 0), file: value.selectAnimation, indexKeys: [])
+            if key == .Recent, arguments.mode == .reactions {
+                
+                
+                var reactionsRecent:[StickerPackItem] = []
+                var reactionsPopular:[StickerPackItem] = []
+                
+                
+                var recent:[RecentReactionItem] = []
+                var popular:[RecentReactionItem] = []
+                let perline: Int = 8
+//                if arguments.context.isPremium {
+                
+                let top = state.topReactionsItems.filter { value in
+                    if arguments.context.isPremium {
+                        return true
+                    } else {
+                        return !value.content.reaction.string.isEmpty
+                    }
                 }
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(reactions), comparable: nil, item: { initialSize, stableId in
-                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: reactions, callback: { item in
+                popular = Array(top.prefix(perline * 2))
+                recent = state.recentReactionsItems
+                for item in state.topReactionsItems {
+                    let recentContains = recent.contains(where: { $0.id.id == item.id.id })
+                    let popularContains = popular.contains(where: { $0.id.id == item.id.id })
+                    
+                    if !recentContains && !popularContains {
+                        recent.append(item)
+                    }
+                }
+                recent = Array(recent.prefix(perline * 10))
+//                } else {
+//                    popular = Array(state.topReactionsItems.prefix(perline * 2))
+//                    for item in state.recentReactionsItems {
+//                        let popularContains = popular.contains(where: { $0.id.id == item.id.id })
+//
+//                        if !popularContains {
+//                            popular.append(item)
+//                        }
+//                    }
+//                    for item in state.topReactionsItems {
+//                        let popularContains = popular.contains(where: { $0.id.id == item.id.id })
+//                        if !popularContains {
+//                            popular.append(item)
+//                        }
+//                    }
+//                    popular = Array(popular.prefix(perline * 10))
+//                }
+                
+                let transform:(RecentReactionItem)->StickerPackItem? = { item in
+                    switch item.content {
+                    case let .builtin(emoji):
+                        let builtin = state.reactions?.reactions.first(where: {
+                            $0.value.string == emoji
+                        })
+                        if let builtin = builtin {
+                            return .init(index: .init(index: 0, id: 0), file: builtin.selectAnimation, indexKeys: [])
+                        }
+                    case let .custom(file):
+                        return .init(index: .init(index: -1, id: 0), file: file, indexKeys: [])
+                    }
+                    return nil
+                }
+                
+                reactionsPopular.append(contentsOf: popular.compactMap(transform))
+                reactionsRecent.append(contentsOf: recent.compactMap(transform))
+                
+                
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(reactionsPopular), comparable: nil, item: { initialSize, stableId in
+                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: reactionsPopular, mode: arguments.mode.itemMode, callback: { item in
+                        arguments.send(item)
+                    })
+                }))
+                index += 1
+                
+                if !reactionsRecent.isEmpty {
+                    
+                    let containsCustom = reactionsRecent.contains(where: { $0.index.index == -1 })
+                    if containsCustom {
+                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_segment(-1), equatable: InputDataEquatable(key), comparable: nil, item: { initialSize, stableId in
+                            return EStickItem(initialSize, stableId: stableId, segmentName: strings().reactionsRecentlyUsed, clearCallback: arguments.clearRecent)
+                        }))
+                        index += 1
+                    }
+                    
+                    
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(-1), equatable: InputDataEquatable(reactionsRecent), comparable: nil, item: { initialSize, stableId in
+                        return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: reactionsRecent, mode: arguments.mode.itemMode, callback: { item in
+                            arguments.send(item)
+                        })
+                    }))
+                    index += 1
+                }
+                
+            }
+            
+            let statuses = state.recentStatusItems + state.featuredStatusItems
+            var contains:Set<MediaId> = Set()
+            var normalized:[StickerPackItem] = statuses.filter { item in
+                if !contains.contains(item.media.fileId) {
+                    contains.insert(item.media.fileId)
+                    return true
+                }
+                return false
+            }.map { value in
+                return StickerPackItem(index: .init(index: 0, id: 0), file: value.media, indexKeys: [])
+            }
+            
+            
+            if key == .Recent, arguments.mode == .status {
+                
+                let def = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_Premium_StickerPack", ext: ""), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
+                
+                normalized.insert(.init(index: .init(index: 0, id: 0), file: def, indexKeys: []), at: 0)
+                
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(normalized), comparable: nil, item: { initialSize, stableId in
+                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: normalized, mode: arguments.mode.itemMode, callback: { item in
                         arguments.send(item)
                     })
                 }))
                 index += 1
             }
             
-            if key == .Recent, !recentAnimated.isEmpty, arguments.mode != .reactions {
+            if key == .Recent, !recentAnimated.isEmpty, arguments.mode == .emoji {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(recentAnimated), comparable: nil, item: { initialSize, stableId in
-                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: recentAnimated, callback: { item in
+                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: recentAnimated, mode: arguments.mode.itemMode, callback: { item in
                         arguments.send(item)
                     })
                 }))
@@ -539,7 +701,7 @@ private func entries(_ state: State, recent: RecentUsedEmoji, arguments: Argumen
             let tuple = Tuple(section: section, isPremium: state.peer?.peer.isPremium ?? false, revealed: state.revealed[section.info.id.id] != nil)
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_section(section.info.id.id), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: section.installed, info: section.info, items: section.items, callback: { item in
+                return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: section.installed, info: section.info, items: section.items, mode: arguments.mode.itemMode, callback: { item in
                     arguments.send(item)
                 }, viewSet: { info in
                     arguments.viewSet(info)
@@ -686,7 +848,7 @@ final class AnimatedEmojiesView : View {
         self.packsView.merge(with: packs)
         
         searchContainer.isHidden = mode == .reactions
-        tableView.scrollerInsets = mode == .reactions ? .init() : .init(left: 0, right: 0, top: 46, bottom: 0)
+        tableView.scrollerInsets = mode == .reactions ? .init() : .init(left: 0, right: 0, top: 46, bottom: 50)
 
         updateSelectionState(animated: packs.animated)
         updateLocalizationAndTheme(theme: theme)
@@ -841,9 +1003,20 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         case emoji
         case status
         case reactions
+        
+        var itemMode: EmojiesSectionRowItem.Mode {
+            switch self {
+            case .reactions:
+                return .reactions
+            default:
+                return .panel
+            }
+        }
     }
     private let mode: Mode
     
+    var closeCurrent:(()->Void)? = nil
+    var animateAppearance:(([TableRowItem])->Void)? = nil
     
     init(_ context: AccountContext, mode: Mode = .emoji) {
         self.mode = mode
@@ -945,13 +1118,21 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         }
         
         let arguments = Arguments(context: context, mode: self.mode, send: { [weak self] item in
-            if !context.isPremium && item.file.isPremiumEmoji, context.peerId != self?.chatInteraction?.peerId {
-                showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
-                    showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
-                })
-            } else {
+            switch mode {
+            case .emoji:
+                if !context.isPremium && item.file.isPremiumEmoji, context.peerId != self?.chatInteraction?.peerId {
+                    showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
+                        showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
+                    })
+                } else {
+                    self?.interactions?.sendAnimatedEmoji(item)
+                }
+            case .status:
+                self?.interactions?.sendAnimatedEmoji(item)
+            case .reactions:
                 self?.interactions?.sendAnimatedEmoji(item)
             }
+            
         }, sendEmoji: { [weak self] emoji in
             self?.interactions?.sendEmoji(emoji)
         }, selectEmojiSegment: { [weak self] segment in
@@ -962,19 +1143,22 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             }
             self?.genericView.scroll(to: segment, animated: true)
         }, viewSet: { info in
-            showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .emoji(.name(info.shortName))), for: context.window)
+            showModal(with: StickerPackPreviewModalController(context, peerId: nil, references: [.emoji(.name(info.shortName))]), for: context.window)
         }, showAllItems: { id in
             updateState { current in
                 var current = current
                 current.revealed[id] = true
                 return current
             }
-        }, openPremium: {
+        }, openPremium: { [weak self] in
             showModal(with: PremiumBoardingController(context: context, source: .premium_emoji), for: context.window)
+            self?.closeCurrent?()
         }, installPack: { info, items in
             _ = scrollToOnNextTransaction.swap(info)
             let signal = context.engine.stickers.addStickerPackInteractively(info: info, items: items) |> deliverOnMainQueue
             _ = signal.start()
+        }, clearRecent: {
+            _ = context.engine.stickers.clearRecentlyUsedReactions().start()
         })
         
         let selectUpdater = { [weak self] in
@@ -1005,12 +1189,11 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 return context.sharedContext.inputSource.searchEmoji(postbox: context.account.postbox, engine: context.engine, sharedContext: context.sharedContext, query: state.request, completeMatch: false, checkPrediction: false) |> map(Optional.init) |> delay(0.2, queue: .concurrentDefaultQueue())
             }
         }
-
         
-        let combined = combineLatest(recentUsedEmoji(postbox: context.account.postbox), statePromise.get())
+        let combined = statePromise.get()
         
-        let signal:Signal<(sections: InputDataSignalValue, packs: InputDataSignalValue, state: State), NoError> = combined |> deliverOnPrepareQueue |> map { recent, state in
-            let sections = InputDataSignalValue(entries: entries(state, recent: recent, arguments: arguments))
+        let signal:Signal<(sections: InputDataSignalValue, packs: InputDataSignalValue, state: State), NoError> = combined |> deliverOnPrepareQueue |> map { state in
+            let sections = InputDataSignalValue(entries: entries(state, arguments: arguments))
             let packs = InputDataSignalValue(entries: packEntries(state, arguments: arguments))
             return (sections: sections, packs: packs, state: state)
         }
@@ -1058,20 +1241,122 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             }
             
             self?.updatePackReorder(values.state.sections)
+            var visibleItems:[TableRowItem] = []
+            if self?.didSetReady == false {
+                self?.genericView.packsView.enumerateVisibleItems(with: { item in
+                    visibleItems.append(item)
+                    return true
+                })
+                self?.genericView.tableView.enumerateVisibleItems(with: { item in
+                    visibleItems.append(item)
+                    return true
+                })
+            }
             self?.readyOnce()
+            if !visibleItems.isEmpty {
+                self?.animateAppearance?(visibleItems)
+            }
         }))
         
         let updateSearchCommand:()->Void = { [weak self] in
             self?.makeSearchCommand?(.normal)
 
         }
+        
+        /*
+         public static let CloudRecentStatusEmoji: Int32 = 17
+         public static let CloudFeaturedStatusEmoji: Int32 = 18
+
+         */
+        
+        var orderedItemListCollectionIds: [Int32] = []
+        
+        if mode == .status {
+            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudFeaturedStatusEmoji)
+            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudRecentStatusEmoji)
+        } else if mode == .reactions {
+            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudRecentReactions)
+            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudTopReactions)
+        }
+
+        
  
-        let emojies = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000)
+        let emojies = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: orderedItemListCollectionIds, namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000)
 
         
         let reactions = context.reactions.stateValue
         
-        actionsDisposable.add(combineLatest(emojies, context.account.viewTracker.featuredEmojiPacks(), context.account.postbox.peerView(id: context.peerId), search, reactions).start(next: { view, featured, peerView, search, reactions in
+        let reactionSettings = context.account.postbox.preferencesView(keys: [PreferencesKeys.reactionSettings])
+           |> map { preferencesView -> ReactionSettings in
+               let reactionSettings: ReactionSettings
+               if let entry = preferencesView.values[PreferencesKeys.reactionSettings], let value = entry.get(ReactionSettings.self) {
+                   reactionSettings = value
+               } else {
+                   reactionSettings = .default
+               }
+               return reactionSettings
+           }
+        
+        let emojiStatuses = context.engine.stickers.loadedStickerPack(reference: .name("StatusEmojiWhite"), forceActualized: false)
+        
+        actionsDisposable.add(combineLatest(emojies, context.account.viewTracker.featuredEmojiPacks(), context.account.postbox.peerView(id: context.peerId), search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, emojiStatuses).start(next: { view, featured, peerView, search, reactions, recentEmoji, reactionSettings, emojiStatuses in
+            
+            
+            var featuredStatusEmoji: OrderedItemListView?
+            var recentStatusEmoji: OrderedItemListView?
+            var recentReactionsView: OrderedItemListView?
+            var topReactionsView: OrderedItemListView?
+            for orderedView in view.orderedItemListsViews {
+                if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedStatusEmoji {
+                    featuredStatusEmoji = orderedView
+                } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedStatusEmoji {
+                    recentStatusEmoji = orderedView
+                } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudRecentReactions {
+                    recentReactionsView = orderedView
+                } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudTopReactions {
+                    topReactionsView = orderedView
+                }
+            }
+            var recentStatusItems:[RecentMediaItem] = []
+            var featuredStatusItems:[RecentMediaItem] = []
+            var recentReactionsItems:[RecentReactionItem] = []
+            var topReactionsItems:[RecentReactionItem] = []
+
+            if let recentStatusEmoji = recentStatusEmoji {
+                for item in recentStatusEmoji.items {
+                    guard let item = item.contents.get(RecentMediaItem.self) else {
+                        continue
+                    }
+                    recentStatusItems.append(item)
+                }
+            }
+            if let featuredStatusEmoji = featuredStatusEmoji {
+                for item in featuredStatusEmoji.items {
+                    guard let item = item.contents.get(RecentMediaItem.self) else {
+                        continue
+                    }
+                    featuredStatusItems.append(item)
+                }
+            }
+            if let recentReactionsView = recentReactionsView {
+                for item in recentReactionsView.items {
+                    guard let item = item.contents.get(RecentReactionItem.self) else {
+                        continue
+                    }
+                    recentReactionsItems.append(item)
+                }
+            }
+            if let topReactionsView = topReactionsView {
+                for item in topReactionsView.items {
+                    guard let item = item.contents.get(RecentReactionItem.self) else {
+                        continue
+                    }
+                    topReactionsItems.append(item)
+                }
+            }
+            
+
+            
             updateState { current in
                 var current = current
                 var sections: [State.Section] = []
@@ -1100,9 +1385,21 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 if let peer = peerView.peers[peerView.peerId] {
                     current.peer = .init(peer)
                 }
+                current.featuredStatusItems = featuredStatusItems
+                current.recentStatusItems = recentStatusItems
                 current.sections = sections
                 current.search = search
                 current.reactions = reactions
+                current.recent = recentEmoji
+                current.topReactionsItems = topReactionsItems
+                current.recentReactionsItems = recentReactionsItems
+                current.reactionSettings = reactionSettings
+                switch emojiStatuses {
+                case let .result(_, items, _):
+                    current.defaultStatuses = items
+                default:
+                    break
+                }
                 return current
             }
             DispatchQueue.main.async {

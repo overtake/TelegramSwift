@@ -13,19 +13,39 @@ import TelegramCore
 import SwiftSignalKit
 
 
+private enum State {
+    enum Source {
+        case stickers
+        case emoji
+    }
+    struct Collection {
+        let info: StickerPackCollectionInfo
+        let items: [StickerPackItem]
+        let installed: Bool
+    }
+    case loading(Source)
+    case loaded(source: Source, collections: [Collection])
+}
 
 
-final class StickerPackArguments {
+
+private final class StickerPackArguments {
     let context: AccountContext
     let send:(TelegramMediaFile, NSView, Bool, Bool)->Void
-    let addpack:(StickerPackCollectionInfo, [ItemCollectionItem], Bool)->Void
+    let setEmoji:(TelegramMediaFile)->Void
+
+    let addpack:(State.Source, State.Collection, Bool)->Void
+    let addAll:(State.Source, [State.Collection])->Void
+
     let share:(String)->Void
     let close:()->Void
     let previewPremium: (TelegramMediaFile, NSView)->Void
-    init(context: AccountContext, send:@escaping(Media, NSView, Bool, Bool)->Void, addpack:@escaping(StickerPackCollectionInfo, [ItemCollectionItem], Bool)->Void, share:@escaping(String)->Void, close:@escaping()->Void, previewPremium: @escaping(TelegramMediaFile, NSView)->Void) {
+    init(context: AccountContext, send:@escaping(Media, NSView, Bool, Bool)->Void, setEmoji:@escaping(TelegramMediaFile)->Void, addpack:@escaping(State.Source, State.Collection, Bool)->Void, addAll:@escaping(State.Source, [State.Collection])->Void, share:@escaping(String)->Void, close:@escaping()->Void, previewPremium: @escaping(TelegramMediaFile, NSView)->Void) {
         self.context = context
         self.send = send
+        self.setEmoji = setEmoji
         self.addpack = addpack
+        self.addAll = addAll
         self.share = share
         self.close = close
         self.previewPremium = previewPremium
@@ -38,7 +58,7 @@ extension FeaturedStickerPackItem : Equatable {
     }
 }
 
-enum StickerPackPreviewSource {
+enum StickerPackPreviewSource : Hashable {
     case stickers(StickerPackReference)
     case emoji(StickerPackReference)
     
@@ -165,13 +185,11 @@ private class StickersModalView : View {
     }
     
     
-    func layout(with result: LoadedStickerPack, source: StickerPackPreviewSource, installedIds: [ItemCollectionId], arguments: StickerPackArguments) -> Void {
+    func layout(with state: State, installed: Set<StickerPackPreviewSource>, arguments: StickerPackArguments) -> Void {
         
         
-        switch result {
-        case .none:
-            break
-        case .fetching:
+        switch state {
+        case .loading:
             dismiss.isHidden = true
             shareView.isHidden = true
             if self.indicatorView == nil {
@@ -181,28 +199,63 @@ private class StickersModalView : View {
             self.indicatorView?.center()
             add.isHidden = true
             shadowView.isHidden = true
-        case let .result(info, collectionItems, installed):
+        case let .loaded(source, collections):
             if let indicatorView = self.indicatorView {
+                performSubviewRemoval(indicatorView, animated: true)
                 self.indicatorView = nil
-                indicatorView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak indicatorView] _ in
-                    indicatorView?.removeFromSuperview()
-                })
             }
-            dismiss.isHidden = !installed
+            
+            let isInstalled:(State.Collection)->Bool = { collection in
+                if collection.installed {
+                    return true
+                }
+                switch source {
+                case .emoji:
+                    return installed.contains(.emoji(.name(collection.info.shortName)))
+                case .stickers:
+                    return installed.contains(.stickers(.name(collection.info.shortName)))
+                }
+            }
+            
+            dismiss.isHidden = collections.count > 1 || !isInstalled(collections[0])
             shareView.isHidden = false
-            switch source {
-            case .emoji:
-                add.set(text: strings().emojiPackAddCountable(collectionItems.count).uppercased(), for: .Normal)
-            case .stickers:
-                add.set(text: strings().stickerPackAdd1Countable(collectionItems.count).uppercased(), for: .Normal)
+            
+            let allInstalled: Bool = !collections.contains(where: { !isInstalled($0) })
+            let notInstalledCount = collections.filter({ !isInstalled($0) }).count
+            add.isHidden = allInstalled
+            shadowView.isHidden = allInstalled
+            
+            if !allInstalled {
+                switch source {
+                case .emoji:
+                    if collections.count == 1 {
+                        add.set(text: strings().emojiPackAddCountable(collections[0].items.count).uppercased(), for: .Normal)
+                    } else {
+                        add.set(text: strings().emojiPackSetsAddCountable(notInstalledCount).uppercased(), for: .Normal)
+                    }
+                case .stickers:
+                    if collections.count == 1 {
+                        add.set(text: strings().stickerPackAdd1Countable(collections[0].items.count).uppercased(), for: .Normal)
+                    } else {
+                        add.set(text: strings().stickerPackSetsAdd1Countable(notInstalledCount).uppercased(), for: .Normal)
+                    }
+                }
+                _ = add.sizeToFit(NSMakeSize(20, 0), NSMakeSize(frame.width - 40, 40), thatFit: false)
             }
-            _ = add.sizeToFit(NSMakeSize(20, 0), NSMakeSize(frame.width - 40, 40), thatFit: false)
-            add.isHidden = installed
-            shadowView.isHidden = installed
-            
+
             let attr = NSMutableAttributedString()
-            
-            _ = attr.append(string: info.title, color: theme.colors.text, font: .medium(16.0))
+
+            if collections.count == 1 {
+                let collection = collections[0]
+                _ = attr.append(string: collection.info.title, color: theme.colors.text, font: .medium(16.0))
+            } else {
+                switch source {
+                case .emoji:
+                    _ = attr.append(string: strings().stickerPackEmoji, color: theme.colors.text, font: .medium(16.0))
+                case .stickers:
+                    _ = attr.append(string: strings().stickerPackStickers, color: theme.colors.text, font: .medium(16.0))
+                }
+            }
             attr.detectLinks(type: [.Mentions], context: arguments.context, color: theme.colors.accent, openInfo: { (peerId, _, _, _) in
                 _ = (arguments.context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue).start(next: { peer in
                     arguments.close()
@@ -215,12 +268,12 @@ private class StickersModalView : View {
             })
             let layout = TextViewLayout(attr, maximumNumberOfLines: 2, alignment: .center)
             layout.interactions = globalLinkExecutor
-            
-            
+
+
             layout.measure(width: frame.width - 160)
             headerTitle.update(layout)
             let context = arguments.context
-            
+
             let stickerArguments = StickerPanelArguments(context: arguments.context, sendMedia: {  media, view, silent, schedule in
                 if let media = media as? TelegramMediaFile {
                     if media.isPremiumSticker && !context.isPremium {
@@ -230,44 +283,55 @@ private class StickersModalView : View {
                     }
                 }
             }, showPack: { _ in
-                
+
             }, addPack: { _ in
-                
+
             }, navigate: { _ in
-                
+
             }, clearRecent: {
-                
+
             }, removePack: { _ in
-                
+
             }, closeInlineFeatured: { _ in
-                
+
             }, openFeatured: { _ in
-                
+
             }, mode: .common)
-            
-            let files = collectionItems.map { item -> TelegramMediaFile in
-                return item.file
-            }.filter { file in
-                !file.isPremiumSticker || !context.premiumIsBlocked
+
+
+            let size = frame.size
+
+
+            let makeItem:(State.Collection)->TableRowItem = { collection in
+                switch source {
+                case .emoji:
+                    return EmojiesSectionRowItem(size, stableId: collections.count == 1 ? 0 : arc4random64(), context: arguments.context, revealed: true, installed: isInstalled(collection), info: collection.info, items: collection.items, mode: .preview, callback: { item in
+                        arguments.setEmoji(item.file)
+                    }, installPack: { _, _ in
+                        arguments.addpack(source, collection, false)
+                    })
+                case .stickers:
+                    let files = collection.items.map { item -> TelegramMediaFile in
+                        return item.file
+                    }
+                    return StickerPackPanelRowItem(size, context: arguments.context, arguments: stickerArguments, files: files, packInfo: .emojiRelated, collectionId: .pack(collection.info.id), canSend: arguments.context.bindings.rootNavigation().controller is ChatController, isPreview: true)
+                }
             }
-            
-            
-            let item: TableRowItem
-            switch source {
-            case .emoji:
-                item = EmojiesSectionRowItem(frame.size, stableId: 0, context: arguments.context, revealed: true, installed: true, info: info, items: collectionItems, callback: { _ in })
-            case .stickers:
-                item = StickerPackPanelRowItem(frame.size, context: arguments.context, arguments: stickerArguments, files: files, packInfo: .emojiRelated, collectionId: .pack(info.id), canSend: arguments.context.bindings.rootNavigation().controller is ChatController, isPreview: true)
-            }
-                        
-            _ = item.makeSize(frame.width)
             
             tableView.beginTableUpdates()
             tableView.removeAll()
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 10, stableId: arc4random64()))
-            _ = tableView.addItem(item: item, animation: .effectFade)
             
-            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 70, stableId: arc4random64()))
+            _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 10, stableId: arc4random64()))
+            
+            for collection in collections {
+                let item = makeItem(collection)
+                _ = item.makeSize(frame.width)
+                _ = tableView.addItem(item: item, animation: .none)
+            }
+            
+            if !allInstalled {
+                _ = tableView.addItem(item: GeneralRowItem(frame.size, height: 70, stableId: arc4random64()))
+            }
 
             tableView.endTableUpdates()
             
@@ -275,20 +339,31 @@ private class StickersModalView : View {
         
             
             shareView.set(handler: { _ in
-                switch source {
-                case .emoji:
-                    arguments.share("https://t.me/addemoji/\(info.shortName)")
-                case .stickers:
-                    arguments.share("https://t.me/addstickers/\(info.shortName)")
-                }
+                
+                let shareText: String = collections.reduce("", { current, value in
+                    let text: String
+                    switch source {
+                    case .emoji:
+                        text = "https://t.me/addemoji/\(value.info.shortName)"
+                    case .stickers:
+                        text = "https://t.me/addstickers/\(value.info.shortName)"
+                    }
+                    return current + text + "\n"
+                })
+                arguments.share(shareText.trimmed)
+                
             }, for: .SingleClick)
-            
+//
             add.removeAllHandlers()
             dismiss.removeAllHandlers()
             close.removeAllHandlers()
-            
+//
             func action(_ control:Control) {
-                arguments.addpack(info, collectionItems, installed)
+                if collections.count == 1 {
+                    arguments.addpack(source, collections[0], true)
+                } else {
+                    arguments.addAll(source, collections)
+                }
             }
             
             
@@ -340,15 +415,23 @@ private final class SetPreviewController: TableViewController {
 class StickerPackPreviewModalController: ModalViewController {
     private let context:AccountContext
     private let peerId:PeerId?
-    private let reference:StickerPackPreviewSource
+    private let references: [StickerPackPreviewSource]
     private let disposable: MetaDisposable = MetaDisposable()
     private var arguments:StickerPackArguments!
     private var onAdd:(()->Void)? = nil
+    
+    private let installedValue = ValuePromise<Set<StickerPackPreviewSource>>(Set(), ignoreRepeated: true)
+    private var installed: Set<StickerPackPreviewSource> = Set() {
+        didSet {
+            installedValue.set(installed)
+        }
+    }
+    
 
-    init(_ context: AccountContext, peerId:PeerId?, reference: StickerPackPreviewSource, onAdd:(()->Void)? = nil) {
+    init(_ context: AccountContext, peerId:PeerId?, references: [StickerPackPreviewSource], onAdd:(()->Void)? = nil) {
         self.context = context
         self.peerId = peerId
-        self.reference = reference
+        self.references = references
         self.onAdd = onAdd
 
         super.init(frame: NSMakeRect(0, 0, 350, 400))
@@ -364,37 +447,71 @@ class StickerPackPreviewModalController: ModalViewController {
                     self?.close()
                 }
             }
-        }, addpack: { [weak self] info, items, installed in
-            self?.close()
-            self?.disposable.dispose()
-            let title: String
-            let text: String
-            if !installed {
-                
-                _ = context.engine.stickers.addStickerPackInteractively(info: info, items: items.compactMap { $0 as? StickerPackItem }).start()
-                switch reference {
-                case .stickers:
-                    title = strings().stickerPackAddedTitle
-                    text = strings().stickerPackAddedInfo(info.title)
-                case .emoji:
-                    title = strings().emojiPackAddedTitle
-                    text = strings().emojiPackAddedInfo(info.title)
+        }, setEmoji: { [weak self] file in
+            let interactions = (context.bindings.rootNavigation().controller as? ChatController)?.chatInteraction
+            guard let interactions = interactions else {
+                return
+            }
+            if context.isPremium {
+                if interactions.presentation.state == .normal {
+                    _ = interactions.appendText(.makeAnimated(file, text: file.customEmojiText ?? ""), selectedRange: nil)
+                    interactions.showEmojiUseTooltip()
+                    self?.close()
                 }
             } else {
-                switch reference {
+                showModalText(for: context.window, text: strings().emojiPackPremiumAlert, callback: { _ in
+                    showModal(with: PremiumBoardingController(context: context, source: .premium_emoji), for: context.window)
+                })
+            }
+            
+        }, addpack: { [weak self] source, collection, close in
+            let title: String
+            let text: String
+            if !collection.installed {
+                _ = context.engine.stickers.addStickerPackInteractively(info: collection.info, items: collection.items).start()
+                switch source {
+                case .stickers:
+                    title = strings().stickerPackAddedTitle
+                    text = strings().stickerPackAddedInfo(collection.info.title)
+                case .emoji:
+                    title = strings().emojiPackAddedTitle
+                    text = strings().emojiPackAddedInfo(collection.info.title)
+                }
+            } else {
+                switch source {
                 case .stickers:
                     title = strings().stickerPackRemovedTitle
-                    text = strings().stickerPackRemovedInfo(info.title)
+                    text = strings().stickerPackRemovedInfo(collection.info.title)
                 case .emoji:
                     title = strings().emojiPackRemovedTitle
-                    text = strings().emojiPackRemovedInfo(info.title)
+                    text = strings().emojiPackRemovedInfo(collection.info.title)
                 }
-                _ = context.engine.stickers.removeStickerPackInteractively(id: info.id, option: .archive).start()
+                _ = context.engine.stickers.removeStickerPackInteractively(id: collection.info.id, option: .archive).start()
             }
             showModalText(for: context.window, text: text, title: title)
 
+            if close {
+                self?.close()
+                self?.disposable.dispose()
+            } else {
+                switch source {
+                case .emoji:
+                    self?.installed.insert(.emoji(.name(collection.info.shortName)))
+                case .stickers:
+                    self?.installed.insert(.emoji(.name(collection.info.shortName)))
+                }
+            }
             self?.onAdd?()
             
+        }, addAll: { [weak self] source, collections in
+            
+            let signals = collections.map {
+                context.engine.stickers.addStickerPackInteractively(info: $0.info, items: $0.items)
+            }
+            _ = combineLatest(signals).start()
+            
+            self?.onAdd?()
+
         }, share: { [weak self] link in
             self?.close()
             showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: context.window)
@@ -422,8 +539,7 @@ class StickerPackPreviewModalController: ModalViewController {
     override func measure(size: NSSize) {
        // self.modal?.resize(with:NSMakeSize(genericView.frame.width, min(size.height - 70, genericView.listHeight)), animated: false)
     }
-    
-    
+ 
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -435,37 +551,76 @@ class StickerPackPreviewModalController: ModalViewController {
                     return Namespaces.ItemCollection.CloudEmojiPacks
             }
         }
-        let namespace = namespaceForMode(reference)
-
-        let reference = self.reference
+        let namespaces = self.references.map { namespaceForMode($0) }
+        let namespace = namespaces[0]
+        let references = self.references
         let context = self.context
-        let signal = context.engine.stickers.loadedStickerPack(reference: reference.reference, forceActualized: true)
+        let signal = combineLatest(references.map {
+            context.engine.stickers.loadedStickerPack(reference: $0.reference, forceActualized: true)
+        }) |> deliverOnMainQueue
         
-        let installedIds = context.account.postbox.combinedView(keys: [.itemCollectionInfos(namespaces: [namespace])]) |> map { view in
-            return view.views[.itemCollectionInfos(namespaces: [namespaceForMode(reference)])] as? ItemCollectionInfosView
-        } |> map { view in
-            return view?.entriesByNamespace[namespace]
-        } |> map { entries -> [ItemCollectionId] in
-            return entries?.map { $0.id } ?? []
-        }
+    
         
         
-
-   
-        disposable.set(combineLatest(queue: .mainQueue(), signal, installedIds).start(next: { [weak self] result, installedIds in
+        disposable.set(combineLatest(signal, installedValue.get()).start(next: { [weak self] result, installed in
             guard let `self` = self else {return}
-            switch result {
-            case .none:
+            let isEmpty = result.filter { value in
+                switch value {
+                case .none:
+                    return true
+                default:
+                    return false
+                }
+            }.count == result.count
+            
+            let isLoaded = result.filter { value in
+                switch value {
+                case .fetching:
+                    return true
+                default:
+                    return false
+                }
+            }.isEmpty
+
+            
+            let state: State
+            
+            let source: State.Source
+            if namespace == Namespaces.ItemCollection.CloudEmojiPacks {
+                source = .emoji
+            } else {
+                source = .stickers
+            }
+            
+            let collections:[State.Collection] = result.compactMap { value in
+                switch value {
+                case let .result(info, items, installed):
+                    return .init(info: info, items: items, installed: installed)
+                default:
+                    return nil
+                }
+            }
+            
+            state = isLoaded ? .loaded(source: source, collections: collections) : .loading(source)
+            
+            if isEmpty {
                 alert(for: context.window, info: strings().stickerSetDontExist)
                 self.close()
-            default:
-                self.genericView.layout(with: result, source: reference, installedIds: installedIds, arguments: self.arguments)
+            } else {
+                self.genericView.layout(with: state, installed: installed, arguments: self.arguments)
                 self.readyOnce()
             }
         }))
 
     }
     
+    override func becomeFirstResponder() -> Bool? {
+        return nil
+    }
+    
+    override var canBecomeResponder: Bool {
+        return false
+    }
     
     override func escapeKeyAction() -> KeyHandlerResult {
         if self.genericView.isPremium {

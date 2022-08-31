@@ -229,7 +229,7 @@ func permissionText(from peer: Peer, for flags: TelegramChatBannedRightsFlags) -
 
 extension RenderedPeer {
     convenience init(_ foundPeer: FoundPeer) {
-        self.init(peerId: foundPeer.peer.id, peers: SimpleDictionary([foundPeer.peer.id : foundPeer.peer]))
+        self.init(peerId: foundPeer.peer.id, peers: SimpleDictionary([foundPeer.peer.id : foundPeer.peer]), associatedMedia: [:])
     }
 }
 
@@ -490,6 +490,17 @@ public extension MessageHistoryView {
     
 }
 
+extension MessageReaction.Reaction {
+    func toUpdate(_ file: TelegramMediaFile? = nil) -> UpdateMessageReaction {
+        switch self {
+        case let .custom(fileId):
+            return .custom(fileId: fileId, file: file)
+        case let .builtin(emoji):
+            return .builtin(emoji)
+        }
+    }
+}
+
 
 public extension Message {
     var replyMarkup:ReplyMarkupMessageAttribute? {
@@ -599,47 +610,52 @@ public extension Message {
         return nil
     }
     
-    func effectiveReactions(_ accountPeerId: PeerId) -> ReactionsMessageAttribute? {
-        var reactions = self.reactionsAttribute
-        if reactions == nil {
-            for attr in self.attributes {
-                if let attr = attr as? PendingReactionsMessageAttribute, let value = attr.value {
-                    reactions = .init(canViewList: false, reactions: [.init(value: value, count: 1, isSelected: true)], recentPeers: [.init(value: value, isLarge: attr.isLarge, isUnseen: false, peerId: attr.accountPeerId ?? accountPeerId)])
-                }
-            }
-        } else if let remote = reactions {
-            for attr in self.attributes {
-                if let attr = attr as? PendingReactionsMessageAttribute {
-                    if let value = attr.value {
-                        var values = remote.reactions
-                        if let index = values.firstIndex(where: { $0.isSelected })  {
-                            if values[index].count == 1 {
-                                values.remove(at: index)
-                            } else {
-                                values[index] = MessageReaction(value: values[index].value, count: values[index].count - 1, isSelected: false)
-                            }
-                        }
-                        if let index = values.firstIndex(where: { $0.value == value }) {
-                            values[index] = MessageReaction(value: value, count: values[index].count + 1, isSelected: true)
-                        } else {
-                            values.append(.init(value: value, count: 1, isSelected: true))
-                        }
-                        reactions = .init(canViewList: remote.canViewList, reactions: values, recentPeers: remote.recentPeers + [.init(value: value, isLarge: attr.isLarge, isUnseen: false, peerId: attr.accountPeerId ?? accountPeerId)])
+    func newReactions(with reaction: UpdateMessageReaction) -> [UpdateMessageReaction] {
+        var updated:[UpdateMessageReaction] = []
+        if let reactions = self.reactionsAttribute {
+            
+            let sorted = reactions.reactions.sorted(by: { lhs, rhs in
+                if lhs.isSelected != rhs.isSelected {
+                    if lhs.isSelected {
+                        return true
                     } else {
-                        var values = remote.reactions
-                        if let index = values.firstIndex(where: { $0.isSelected })  {
-                            if values[index].count == 1 {
-                                values.remove(at: index)
-                            } else {
-                                values[index] = MessageReaction(value: values[index].value, count: values[index].count - 1, isSelected: false)
-                            }
-                        }
-                        reactions = .init(canViewList: remote.canViewList, reactions: values, recentPeers: remote.recentPeers.filter({ $0.peerId != accountPeerId }))
+                        return false
+                    }
+                } else {
+                    if let lhsIndex = lhs.chosenOrder, let rhsIndex = rhs.chosenOrder {
+                        return lhsIndex < rhsIndex
+                    } else {
+                        return lhs.count > rhs.count
                     }
                 }
+            })
+            
+            updated = sorted.compactMap { value in
+                if value.isSelected {
+                    switch value.value {
+                    case let .builtin(emoji):
+                        return .builtin(emoji)
+                    case let .custom(fileId):
+                        let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
+                        let file = self.associatedMedia[mediaId] as? TelegramMediaFile
+                        return .custom(fileId: fileId, file: file)
+                    }
+                }
+                return nil
             }
+            if let index = updated.firstIndex(where: { $0.reaction == reaction.reaction }) {
+                updated.remove(at: index)
+            } else {
+                updated.append(reaction)
+            }
+        } else {
+            updated.append(reaction)
         }
-        return reactions
+        return updated
+    }
+    
+    func effectiveReactions(_ accountPeerId: PeerId) -> ReactionsMessageAttribute? {
+        return mergedMessageReactions(attributes: self.attributes)
     }
     
     func isCrosspostFromChannel(account: Account) -> Bool {
