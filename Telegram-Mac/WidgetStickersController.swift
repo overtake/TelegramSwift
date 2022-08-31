@@ -229,7 +229,7 @@ final class WidgetStickersController : TelegramGenericViewController<WidgetView<
         self.genericView.dataView = WidgetStickersContainer(frame: .zero)
         
         self.genericView.dataView?.previewPack = { item, f in
-            showModal(with: StickerPackPreviewModalController(context, peerId: nil, reference: .stickers(.id(id: item.info.id.id, accessHash: item.info.accessHash)), onAdd: f), for: context.window)
+            showModal(with: StickerPackPreviewModalController(context, peerId: nil, references: [.stickers(.name(item.info.shortName))], onAdd: f), for: context.window)
         }
         
         let initialState = State(settings: StickerSettings.defaultSettings)

@@ -960,7 +960,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
 
         
         genericView.textView.installGetAttach({ attachment, size in
-            let rect = size.bounds.insetBy(dx: -1, dy: -1)
+            let rect = size.bounds.insetBy(dx: -1.5, dy: -1.5)
             let view = ChatInputAnimatedEmojiAttach(frame: rect)
             view.set(attachment, size: rect.size, context: context)
             return view

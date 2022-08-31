@@ -53,8 +53,9 @@ fileprivate final class AccountInfoArguments {
     let openUpdateApp:() -> Void
     let openPremium:()->Void
     let addAccount:([AccountWithInfo])->Void
-    let setStatus:()->Void
-    init(context: AccountContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping()->Void) {
+    let setStatus:(Control)->Void
+    let runStatusPopover:()->Void
+    init(context: AccountContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping(Control)->Void, runStatusPopover:@escaping()->Void) {
         self.context = context
         self.presentController = presentController
         self.openFaq = openFaq
@@ -63,6 +64,7 @@ fileprivate final class AccountInfoArguments {
         self.openPremium = openPremium
         self.addAccount = addAccount
         self.setStatus = setStatus
+        self.runStatusPopover = runStatusPopover
     }
 }
 
@@ -271,11 +273,13 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
                 EditAccountInfoController(context: arguments.context, f: { controller in
                     arguments.presentController(controller, first.swap(false))
                 })
-            })
+            }, setStatus: arguments.setStatus)
         case let .setStatus(_, viewType, peer):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Update Status", icon: theme.icons.settingsGeneral, activeIcon: theme.icons.settingsGeneralActive, type: .next, viewType: viewType, action: arguments.setStatus, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+            let icon: CGImage = peer.peer.emojiStatus != nil ? theme.icons.account_change_status : theme.icons.account_set_status
+            let text = peer.peer.emojiStatus != nil ? strings().accountSettingsChangeStatus : strings().accountSettingsUpdateStatus
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accentIcon), type: .none, viewType: viewType, action: arguments.runStatusPopover, thumb: GeneralThumbAdditional(thumb: icon, textInset: 35, thumbInset: 0), border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .accountRecord(_, viewType, info):
-            return ShortPeerRowItem(initialSize, peer: info.peer, account: info.account, height: 42, photoSize: NSMakeSize(28, 28), titleStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text, highlightColor: theme.colors.underSelectedColor), borderType: [.Right], inset: NSEdgeInsets(left: 12, right: 12), viewType: viewType, action: {
+            return ShortPeerRowItem(initialSize, peer: info.peer, account: info.account, context: nil, height: 42, photoSize: NSMakeSize(28, 28), titleStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.text, highlightColor: theme.colors.underSelectedColor), borderType: [.Right], inset: NSEdgeInsets(left: 12, right: 12), viewType: viewType, action: {
                 arguments.context.sharedContext.switchToAccount(id: info.account.id, action: nil)
             }, contextMenuItems: {
                 
@@ -298,7 +302,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
         case let .addAccount(_, accounts, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsAddAccount, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accentIcon), type: .none, viewType: viewType, action: {
                 arguments.addAccount(accounts)
-            }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 35, thumbInset: 0), border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
+            }, thumb: GeneralThumbAdditional(thumb: theme.icons.account_add_account, textInset: 35, thumbInset: 0), border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .general(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsGeneral, icon: theme.icons.settingsGeneral, activeIcon: theme.icons.settingsGeneralActive, type: .next, viewType: viewType, action: {
                 arguments.presentController(GeneralSettingsViewController(arguments.context), true)
@@ -423,7 +427,13 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
         
 //        entries.append(.whiteSpace(index: index, height: 20))
 //        index += 1
+
        
+    }
+    
+    if let peer = peerViewMainPeer(peerView), context.isPremium {
+        entries.append(.setStatus(index: index, viewType: .singleItem, PeerEquatable(peer)))
+        index += 1
     }
     
     entries.append(.whiteSpace(index: index, height: 20))
@@ -699,6 +709,21 @@ class LayoutAccountController : TableViewController {
         let previous:Atomic<[AppearanceWrapperEntry<AccountInfoEntry>]> = Atomic(value: [])
         
         
+        let setStatus:(Control)->Void = { control in
+            let callback:(TelegramMediaFile)->Void = { file in
+                if file.mimeType.hasPrefix("bundle") {
+                    _ = context.engine.accountData.setEmojiStatus(file: nil).start()
+                } else {
+                    _ = context.engine.accountData.setEmojiStatus(file: file).start()
+
+                }
+                
+            }
+            if control.popover == nil {
+                showPopover(for: control, with: PremiumStatusController(context, callback: callback), edge: .maxY, inset: NSMakePoint(-80, -35), static: true, animationMode: .reveal)
+            }
+        }
+        
         let arguments = AccountInfoArguments(context: context, presentController: { [weak self] controller, main in
             guard let navigation = self?.navigation as? MajorNavigationController else {return}
             guard let singleLayout = self?.context.layout else {return}
@@ -729,9 +754,14 @@ class LayoutAccountController : TableViewController {
             } else {
                 context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
             }
-        }, setStatus: { [weak self] in
-            if let view = self?.genericView.item(stableId: AccountInfoEntryId.index(1))?.view as? GeneralInteractedRowView {
-                showPopover(for: view.containerView, with: PremiumStatusController(context), edge: NSRectEdge.maxY, inset: NSMakePoint(0, -50))
+        }, setStatus: { control in
+            setStatus(control)
+        }, runStatusPopover: { [weak self] in
+            guard let item = self?.genericView.item(at: 1) as? AccountInfoItem else {
+                return
+            }
+            if let control = item.statusControl {
+                setStatus(control)
             }
         })
         

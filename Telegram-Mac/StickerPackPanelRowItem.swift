@@ -539,7 +539,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                 view = current
             } else {
                 self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                view = InlineStickerItemLayer(context: context, file: item.0, size: rect.size)
+                view = InlineStickerItemLayer(account: context.account, file: item.0, size: rect.size)
                 self.inlineStickerItemViews[id] = view
                 view.superview = contentView
                 contentView.layer?.addSublayer(view)

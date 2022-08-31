@@ -235,7 +235,7 @@ final class GroupInfoArguments : PeerInfoArguments {
             self?.openInviteLinks()
         }))
     }
-    func openReactions(allowedReactions: [String]?, availableReactions: AvailableReactions?) {
+    func openReactions(allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?) {
         pushViewController(ReactionsSettingsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions, mode: .chat(isGroup: true)))
     }
     
@@ -1023,7 +1023,7 @@ enum GroupInfoEntry: PeerInfoEntry {
     case inviteLinks(section:Int, count: Int32, viewType: GeneralViewType)
     case requests(section:Int, count: Int32, viewType: GeneralViewType)
     case linkedChannel(section:Int, channel: Peer, subscribers: Int32?, viewType: GeneralViewType)
-    case reactions(section:Int, text: String, allowedReactions: [String]?, availableReactions: AvailableReactions?, viewType: GeneralViewType)
+    case reactions(section:Int, text: String, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?, viewType: GeneralViewType)
     case groupDescriptionSetup(section:Int, text: String, viewType: GeneralViewType)
     case groupAboutDescription(section:Int, viewType: GeneralViewType)
     case groupStickerset(section:Int, packName: String, viewType: GeneralViewType)
@@ -1660,7 +1660,7 @@ enum GroupInfoEntry: PeerInfoEntry {
                 interactionType = .plain
             }
             
-            return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.context.account, stableId: stableId.hashValue, enabled: enabled, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset: NSEdgeInsets(left:30.0,right:30.0), interactionType: interactionType, generalType: .context(label), viewType: viewType, action: { [weak arguments] in
+            return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.context.account, context: arguments.context, stableId: stableId.hashValue, enabled: enabled, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset: NSEdgeInsets(left:30.0,right:30.0), interactionType: interactionType, generalType: .context(label), viewType: viewType, action: { [weak arguments] in
                 arguments?.peerInfo(peer!.id)
             }, contextMenuItems: {
                 return .single(menuItems)
@@ -1753,23 +1753,23 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     }
                     
                     let cachedGroupData = view.cachedData as? CachedGroupData
-                    
-                    let allCount = cachedGroupData?.allowedReactions?.count ?? availableReactions?.enabled.count ?? 0
-                    
+                                        
                     let text: String
-                    if let availableReactions = availableReactions {
-                        if allCount == availableReactions.enabled.count {
+                    if let allowed = cachedGroupData?.allowedReactions.knownValue, let availableReactions = availableReactions {
+                        switch allowed {
+                        case .all:
                             text = strings().peerInfoReactionsAll
-                        } else if allCount == 0 {
+                        case let .limited(count):
+                            text = strings().peerInfoReactionsPart("\(count)", "\(availableReactions.enabled.count)")
+                        case .empty:
                             text = strings().peerInfoReactionsDisabled
-                        } else {
-                            text = strings().peerInfoReactionsPart("\(allCount)", "\(availableReactions.enabled.count)")
                         }
                     } else {
                         text = strings().peerInfoReactionsAll
                     }
                     
-                    actionBlock.append(.reactions(section: GroupInfoSection.type.rawValue, text: text, allowedReactions: cachedGroupData?.allowedReactions, availableReactions: availableReactions, viewType: .singleItem))
+                    
+                    actionBlock.append(.reactions(section: GroupInfoSection.type.rawValue, text: text, allowedReactions: cachedGroupData?.allowedReactions.knownValue, availableReactions: availableReactions, viewType: .singleItem))
                     
                 default:
                     break
@@ -1811,22 +1811,24 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 }
                 
                 if access.canEditGroupInfo {
-                    let allCount = cachedChannelData.allowedReactions?.count ?? availableReactions?.reactions.count ?? 0
-                    
+                    let cachedGroupData = view.cachedData as? CachedGroupData
+                                        
                     let text: String
-                    if let availableReactions = availableReactions {
-                        if allCount == availableReactions.enabled.count {
+                    if let allowed = cachedGroupData?.allowedReactions.knownValue, let availableReactions = availableReactions {
+                        switch allowed {
+                        case .all:
                             text = strings().peerInfoReactionsAll
-                        } else if allCount == 0 {
+                        case let .limited(count):
+                            text = strings().peerInfoReactionsPart("\(count)", "\(availableReactions.enabled.count)")
+                        case .empty:
                             text = strings().peerInfoReactionsDisabled
-                        } else {
-                            text = strings().peerInfoReactionsPart("\(allCount)", "\(availableReactions.enabled.count)")
                         }
                     } else {
                         text = strings().peerInfoReactionsAll
                     }
                     
-                    actionBlock.append(.reactions(section: GroupInfoSection.type.rawValue, text: text, allowedReactions: cachedChannelData.allowedReactions, availableReactions: availableReactions, viewType: .singleItem))
+                    
+                    actionBlock.append(.reactions(section: GroupInfoSection.type.rawValue, text: text, allowedReactions: cachedChannelData.allowedReactions.knownValue, availableReactions: availableReactions, viewType: .singleItem))
                 }
                 
 

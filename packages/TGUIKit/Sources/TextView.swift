@@ -213,9 +213,9 @@ public final class TextViewInteractions {
     public var copyAttributedString:(NSAttributedString)->Bool
     public var copyToClipboard:((String)->Void)?
     public var hoverOnLink: (LinkHoverValue)->Void
-    public var topWindow:(()->Window?)? = nil
+    public var topWindow:(()->Signal<Window?, NoError>)? = nil
     public var translate:((String, Window)->ContextMenuItem?)? = nil
-    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)? = nil, isDomainLink:@escaping(Any, String?)->Bool = {_, _ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}, resolveLink: @escaping(Any)->String? = { _ in return nil }, copyAttributedString: @escaping(NSAttributedString)->Bool = { _ in return false}, copyToClipboard: ((String)->Void)? = nil, hoverOnLink: @escaping(LinkHoverValue)->Void = { _ in }, topWindow:(()->Window?)? = nil, translate:((String, Window)->ContextMenuItem?)? = nil) {
+    public init(processURL:@escaping (Any)->Void = {_ in}, copy:(()-> Bool)? = nil, menuItems:((LinkType?)->Signal<[ContextMenuItem], NoError>)? = nil, isDomainLink:@escaping(Any, String?)->Bool = {_, _ in return true}, makeLinkType:@escaping((Any, String)) -> LinkType = {_ in return .plain}, localizeLinkCopy:@escaping(LinkType)-> String = {_ in return localizedString("Text.Copy")}, resolveLink: @escaping(Any)->String? = { _ in return nil }, copyAttributedString: @escaping(NSAttributedString)->Bool = { _ in return false}, copyToClipboard: ((String)->Void)? = nil, hoverOnLink: @escaping(LinkHoverValue)->Void = { _ in }, topWindow:(()->Signal<Window?, NoError>)? = nil, translate:((String, Window)->ContextMenuItem?)? = nil) {
         self.processURL = processURL
         self.copy = copy
         self.menuItems = menuItems
@@ -752,7 +752,8 @@ public final class TextViewLayout : Equatable {
                 if !line.embeddedItems.isEmpty {
                     layoutSize.height += 4
                 }
-             //   layoutSize.width += 5
+            } else if let line = lines.last, !line.embeddedItems.isEmpty {
+                layoutSize.height += 1
             }
         }
         
@@ -1668,45 +1669,47 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 let link = layout.link(at: convert(event.locationInWindow, from: nil))
                 
                 if let menuItems = layout.interactions.menuItems?(link?.1) {
-                    menuDisposable.set((menuItems |> deliverOnMainQueue).start(next:{ [weak self] items in
+                    let window = layout.interactions.topWindow?() ?? .single(nil)
+                    menuDisposable.set(combineLatest(queue: .mainQueue(), menuItems, window).start(next:{ [weak self] items, topWindow in
                         if let strongSelf = self {
                             let menu = ContextMenu()
                             for item in items {
                                 menu.addItem(item)
                             }
-                            menu.topWindow = layout.interactions.topWindow?()
+                            menu.topWindow = topWindow
                             AppMenu.show(menu: menu, event: event, for: strongSelf)
                         }
                     }))
                 } else {
-                    let link = layout.link(at: location)
-                    let resolved: String? = link != nil ? layout.interactions.resolveLink(link!.0) : nil
-                    let menu = ContextMenu()
-                    let copy = ContextMenuItem(link?.1 != nil ? layout.interactions.localizeLinkCopy(link!.1) : localizedString("Text.Copy"), handler: { [weak self] in
-                        guard let `self` = self else {return}
-                        if let resolved = resolved {
-                            let pb = NSPasteboard.general
-                            pb.clearContents()
-                            pb.declareTypes([.string], owner: self)
-                            pb.setString(resolved, forType: .string)
-                        } else {
-                            self.copy(self)
+                    let window = (layout.interactions.topWindow?() ?? .single(nil)) |> deliverOnMainQueue
+                    menuDisposable.set(window.start(next: { [weak self] topWindow in
+                        let link = layout.link(at: location)
+                        let resolved: String? = link != nil ? layout.interactions.resolveLink(link!.0) : nil
+                        let menu = ContextMenu()
+                        let copy = ContextMenuItem(link?.1 != nil ? layout.interactions.localizeLinkCopy(link!.1) : localizedString("Text.Copy"), handler: { [weak self] in
+                            guard let `self` = self else {return}
+                            if let resolved = resolved {
+                                let pb = NSPasteboard.general
+                                pb.clearContents()
+                                pb.declareTypes([.string], owner: self)
+                                pb.setString(resolved, forType: .string)
+                            } else {
+                                self.copy(self)
+                            }
+                        }, itemImage: TextView.context_copy_animation)
+                        
+                        menu.addItem(copy)
+                        
+                        if resolved == nil, let window = self?.kitWindow {
+                            if let text = self?.effectiveText, let translate = layout.interactions.translate?(text, window) {
+                                menu.addItem(translate)
+                            }
                         }
-                    }, itemImage: TextView.context_copy_animation)
-                    
-                    
-                    
-                    menu.addItem(copy)
-                    
-                    
-                    if resolved == nil, let window = self.kitWindow {
-                        if let text = self.effectiveText, let translate = layout.interactions.translate?(text, window) {
-                            menu.addItem(translate)
+                        menu.topWindow = topWindow
+                        if let strongSelf = self {
+                            AppMenu.show(menu: menu, event: event, for: strongSelf)
                         }
-                    }
-                    
-                    menu.topWindow = layout.interactions.topWindow?()
-                    AppMenu.show(menu: menu, event: event, for: self)
+                    }))
                 }
             } else {
                 layout.selectedRange.range = NSMakeRange(NSNotFound, 0)
@@ -2207,7 +2210,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             for subview in embeddedContainer.subviews {
                 var isHidden = false
                 loop: for rect in rects {
-                    if NSIntersectsRect(subview.frame, rect) {
+                    if NSIntersectsRect(NSMakeRect(subview.frame.midX, subview.frame.midY, 1, 1), rect) {
                         isHidden = true
                         break loop
                     }
@@ -2219,7 +2222,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             for subview in sublayers {
                 var isHidden = false
                 loop: for rect in rects {
-                    if NSIntersectsRect(subview.frame, rect) {
+                    if NSIntersectsRect(NSMakeRect(subview.frame.midX, subview.frame.midY, 1, 1), rect) {
                         isHidden = true
                         break loop
                     }

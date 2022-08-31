@@ -316,7 +316,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
         case let .existingLinksInfo(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
         case let .existingLinkPeerItem(_, _, peer, _, _, viewType):
-            return ShortPeerRowItem(initialSize, peer: peer.peer, account: arguments.context.account, status: "t.me/\(peer.peer.addressName ?? "unknown")", inset: NSEdgeInsets(left: 30, right:30), interactionType:.deletable(onRemove: { peerId in
+            return ShortPeerRowItem(initialSize, peer: peer.peer, account: arguments.context.account, context: arguments.context, status: "t.me/\(peer.peer.addressName ?? "unknown")", inset: NSEdgeInsets(left: 30, right:30), interactionType:.deletable(onRemove: { peerId in
                 arguments.revokePeerId(peerId)
             }, deletable: true), viewType: viewType)
         case let .manageLinks(_, viewType):

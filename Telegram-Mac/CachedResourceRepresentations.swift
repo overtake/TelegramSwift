@@ -18,9 +18,9 @@ final class CachedStickerAJpegRepresentation: CachedMediaResourceRepresentation 
     var keepDuration: CachedMediaRepresentationKeepDuration = .general
     var uniqueId: String {
         if let size = self.size {
-            return "sticker-v1-png-\(Int(size.width))x\(Int(size.height))"
+            return "sticker-v3-png-\(Int(size.width))x\(Int(size.height))"
         } else {
-            return "sticker-v1-png"
+            return "sticker-v3-png"
         }
     }
     

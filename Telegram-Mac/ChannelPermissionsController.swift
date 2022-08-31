@@ -189,7 +189,7 @@ private enum ChannelPermissionsEntry: TableItemListNodeEntry {
                 break
             }
             
-            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, stableId: stableId, enabled: enabled, status: text, inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: viewType, action: {
+            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: enabled, status: text, inset: NSEdgeInsetsMake(0, 30, 0, 30), viewType: viewType, action: {
                 if canOpen {
                     arguments.openPeer(participant.participant)
                 } else {

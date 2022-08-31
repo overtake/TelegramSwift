@@ -22,7 +22,7 @@ class ChatInputActionsView: View {
     private let send:ImageButton = ImageButton()
     private let voice:ImageButton = ImageButton()
     private let muteChannelMessages:ImageButton = ImageButton()
-    private let entertaiments:ImageButton = ImageButton()
+    let entertaiments:ImageButton = ImageButton()
     private let slowModeTimeout:TitleButton = TitleButton()
     private let inlineCancel:ImageButton = ImageButton()
     private let keyboard:ImageButton = ImageButton()

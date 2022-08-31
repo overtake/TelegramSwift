@@ -610,7 +610,7 @@ class ChatListRowItem: TableRowItem {
                     author = peer
                 } else if let signature = info.authorSignature {
                                         
-                    author = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+                    author = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil)
                 }
             } else {
                 author = message.author
@@ -836,20 +836,14 @@ class ChatListRowItem: TableRowItem {
             dateSize = dateLayout.0.size.width
         }
         var offset: CGFloat = 0
-        if isScam || isFake {
-            offset += badIcon.backingSize.width + 4
+        if let peer = peer, peer.id != context.peerId, let controlSize = PremiumStatusControl.controlSize(peer, false) {
+            offset += controlSize.width
         }
         if isMuted {
             offset += theme.icons.dialogMuteImage.backingSize.width + 4
         }
-        if isVerified {
-            offset += 20
-        }
         if isSecret {
             offset += 10
-        }
-        if self.isPremium {
-            offset += 20
         }
         return max(300, size.width) - 50 - margin * 4 - dateSize - (isOutMessage ? isRead ? 14 : 8 : 0) - offset
     }

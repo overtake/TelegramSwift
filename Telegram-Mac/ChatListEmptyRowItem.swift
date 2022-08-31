@@ -211,7 +211,7 @@ private class ChatListLoadingRowView : TableRowView {
         }
         
         
-        if let _ = item.filter {
+        if item.filter != .allChats {
             let animatedSticker: LocalAnimatedSticker = LocalAnimatedSticker.new_folder
             sticker.update(with: animatedSticker.file, size: NSMakeSize(112, 112), context: item.context, parent: nil, table: item.table, parameters: animatedSticker.parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
             sticker.isHidden = false
@@ -239,10 +239,10 @@ private class ChatListLoadingRowView : TableRowView {
         }
         
         let text: String
-        if let _ = item.filter {
+        if item.filter != .allChats {
             text = strings().chatListFilterLoading
         } else {
-            text = "Loading"
+            text = strings().chatListEmptyLoading
         }
         
         let attr = NSAttributedString.initialize(string: text, color: theme.colors.text, font: .normal(.text)).mutableCopy() as! NSMutableAttributedString
@@ -256,10 +256,10 @@ private class ChatListLoadingRowView : TableRowView {
         textView.update(layout)
         textView.center()
         
-        textView.isHidden = frame.width <= 70 || item.filter == nil
-        sticker.isHidden = frame.width <= 70 || item.filter == nil
+        textView.isHidden = frame.width <= 70 || item.filter == .allChats
+        sticker.isHidden = frame.width <= 70 || item.filter == .allChats
         
-        indicator.isHidden = item.filter != nil
+        indicator.isHidden = item.filter != .allChats
         
         separator.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
         

@@ -545,11 +545,11 @@ final class AccountContext {
             CallSessionManagerImplementationVersion(version: version, supportsVideo: supportsVideo)
         })
         
-        reactions.needsPremium = { [weak self] in
-            if let strongSelf = self {
-                showModal(with: PremiumReactionsModal(context: strongSelf), for: strongSelf.window)
-            }
-        }
+//        reactions.needsPremium = { [weak self] in
+//            if let strongSelf = self {
+//                showModal(with: PremiumReactionsModal(context: strongSelf), for: strongSelf.window)
+//            }
+//        }
         
         #endif
         

@@ -282,7 +282,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
     
     enum Source {
         case messages([Message], PeerGroupId)
-        case reaction(Message, Peer, String, Int32)
+        case reaction(Message, Peer, MessageReaction.Reaction, Int32)
         
         var messages:[Message] {
             switch self {
@@ -456,12 +456,23 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             var subText:String? = nil
                             switch source {
                             case let .reaction(message, peer, value, _):
+                                
+                                let reactionText: String
+                                switch value {
+                                case let .builtin(emoji):
+                                    reactionText = emoji
+                                case let .custom(fileId):
+                                    let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
+                                    let file = message.associatedMedia[mediaId] as? TelegramMediaFile
+                                    reactionText = file?.customEmojiText ?? file?.stickerText ?? ""
+                                }
+                                
                                 let msg = pullText(from: message) as String
                                 title = message.peers[message.id.peerId]?.displayTitle ?? ""
                                 if message.id.peerId.namespace == Namespaces.Peer.CloudUser {
-                                    text = strings().notificationContactReacted(value.fixed, msg)
+                                    text = strings().notificationContactReacted(reactionText.fixed, msg)
                                 } else {
-                                    text = strings().notificationGroupReacted(peer.displayTitle, value, msg)
+                                    text = strings().notificationGroupReacted(peer.displayTitle, reactionText.fixed, msg)
                                 }
                             case .messages:
                                 text = chatListText(account: account, for: message, applyUserName: true).string

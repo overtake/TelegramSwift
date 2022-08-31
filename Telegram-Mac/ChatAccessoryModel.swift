@@ -111,6 +111,12 @@ class ChatAccessoryView : Button {
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         self.updateListeners()
+        self.updateAnimatableContent()
+    }
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        self.updateListeners()
+        self.updateAnimatableContent()
     }
     
     
@@ -134,14 +140,14 @@ class ChatAccessoryView : Button {
                 let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index)
                 validIds.append(id)
                 
-                let rect = item.rect.insetBy(dx: -1, dy: -1)
+                let rect = item.rect.insetBy(dx: -2, dy: -2)
                 
                 let view: InlineStickerItemLayer
                 if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
                     view = current
                 } else {
                     self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                    view = InlineStickerItemLayer(context: context, emoji: emoji, size: rect.size)
+                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size)
                     self.inlineStickerItemViews[id] = view
                     view.superview = textView
                     textView.addEmbeddedLayer(view)

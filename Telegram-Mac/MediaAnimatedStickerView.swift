@@ -165,7 +165,7 @@ class MediaAnimatedStickerView: ChatMediaContentView {
     override func executeInteraction(_ isControl: Bool) {
         if let window = window as? Window {
             if let context = context, let peerId = parent?.id.peerId, let media = media as? TelegramMediaFile, !media.isEmojiAnimatedSticker, let reference = media.stickerReference {
-                showModal(with:StickerPackPreviewModalController(context, peerId: peerId, reference: .stickers(reference)), for:window)
+                showModal(with:StickerPackPreviewModalController(context, peerId: peerId, references: [.stickers(reference)]), for:window)
             } else if let media = media as? TelegramMediaFile, let sticker = media.stickerText, !sticker.isEmpty {
                 self.playerView.playIfNeeded(true)
                 parameters?.runEmojiScreenEffect(sticker)

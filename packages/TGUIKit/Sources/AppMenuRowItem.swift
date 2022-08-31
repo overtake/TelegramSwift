@@ -154,7 +154,12 @@ open class AppMenuRowItem : AppMenuBasicItem {
     private var observation_t: NSKeyValueObservation?
     public init(_ initialSize: NSSize, item: ContextMenuItem, interaction: Interaction, presentation: AppMenu.Presentation) {
         self.item = item
-        self.text = TextViewLayout(.initialize(string: item.title, color: presentation.primaryColor(item), font: .medium(.text)))
+        let textColor = presentation.primaryColor(item)
+        let attr = parseMarkdownIntoAttributedString(item.title, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: textColor), bold: MarkdownAttributeSet(font: .bold(.text), textColor: textColor), link: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.accentIcon), linkAttribute: { contents in
+            return (NSAttributedString.Key.link.rawValue, contents)
+        }))
+        
+        self.text = TextViewLayout(attr)
         
         if item.keyEquivalent.isEmpty {
             keyEquivalentText = nil
@@ -182,8 +187,12 @@ open class AppMenuRowItem : AppMenuBasicItem {
     }
     
     public override func redraw(animated: Bool = false, options: NSTableView.AnimationOptions = .effectFade, presentAsNew: Bool = false) {
+        let textColor = presentation.primaryColor(item)
+        let attr = parseMarkdownIntoAttributedString(item.title, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: textColor), bold: MarkdownAttributeSet(font: .bold(.text), textColor: textColor), link: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.accentIcon), linkAttribute: { contents in
+            return (NSAttributedString.Key.link.rawValue, contents)
+        }))
         
-        self.text = TextViewLayout(.initialize(string: item.title, color: presentation.primaryColor(item), font: .medium(.text)))
+        self.text = TextViewLayout(attr)
         
         _ = makeSize(self.width)
         

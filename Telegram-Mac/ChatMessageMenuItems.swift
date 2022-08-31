@@ -214,7 +214,8 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         var thirdBlock:[ContextMenuItem] = []
         var fourthBlock:[ContextMenuItem] = []
         var fifthBlock:[ContextMenuItem] = []
-        
+        var sixBlock:[ContextMenuItem] = []
+
         
         if data.message.adAttribute != nil {
             items.append(ContextMenuItem(strings().chatMessageSponsoredWhat, handler: {
@@ -324,26 +325,6 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             }
         }
         
-        if let attr = message.textEntities {
-            var reference:StickerPackReference? = attr.entities.compactMap({ value in
-                if case let .CustomEmoji(reference, _) = value.type {
-                    return reference
-                } else {
-                    return nil
-                }
-            }).first
-            
-            if reference == nil {
-                reference = (message.associatedMedia.first?.value as? TelegramMediaFile)?.emojiReference
-            }
-            
-            if let reference = reference {
-                thirdBlock.append(ContextMenuItem(strings().chatContextViewEmojiSet, handler: {
-                    showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: .emoji(reference)), for: context.window)
-                }, itemImage: MenuAnimation.menu_smile.value))
-            }
-        }
-
         
         if !data.message.isCopyProtected() {
             if let textLayout = data.textLayout?.0 {
@@ -648,7 +629,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     
                     if let reference = file.stickerReference {
                         thirdBlock.append(ContextMenuItem(strings().contextViewStickerSet, handler: {
-                            showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: .stickers(reference)), for: context.window)
+                            showModal(with: StickerPackPreviewModalController(context, peerId: peerId, references: [.stickers(reference)]), for: context.window)
                         }, itemImage: MenuAnimation.menu_view_sticker_set.value))
                     }
                     
@@ -811,12 +792,47 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
         }
         
+        if let attr = message.textEntities {
+            var references: [StickerPackReference] = attr.entities.compactMap({ value in
+                if case let .CustomEmoji(reference, _) = value.type {
+                    return reference
+                } else {
+                    return nil
+                }
+            })
+            
+            references += message.associatedMedia.compactMap {
+                ($0.value as? TelegramMediaFile)?.emojiReference
+            }
+            references = references.uniqueElements
+            
+            let sources: [StickerPackPreviewSource] = references.map {
+                .emoji($0)
+            }
+            
+            if !sources.isEmpty {
+                
+                let text = strings().chatContextMessageContainsEmojiCountable(sources.count)
+                
+                let item = MessageContainsPacksMenuItem(title: text, handler: {
+                    showModal(with: StickerPackPreviewModalController(context, peerId: peerId, references: sources), for: context.window)
+                }, packs: references, context: context)
+                
+                sixBlock.append(item)
+                
+//                sixBlock.append(ContextMenuItem(strings().chatContextViewEmojiSetNewCountable(sources.count), handler: {
+//                    showModal(with: StickerPackPreviewModalController(context, peerId: peerId, references: sources), for: context.window)
+//                }, itemImage: MenuAnimation.menu_smile.value))
+            }
+        }
+        
         let blocks:[[ContextMenuItem]] = [firstBlock,
                                           add_secondBlock,
                                           thirdBlock,
                                           secondBlock,
                                           fourthBlock,
-                                          fifthBlock].filter { !$0.isEmpty }
+                                          fifthBlock,
+                                          sixBlock].filter { !$0.isEmpty }
         
         for (i, block) in blocks.enumerated() {
             if i == 0 {

@@ -305,7 +305,7 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelAdminsEnt
                 interactionType = .plain
             }
             
-            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, stableId: entry.stableId, status: peerText, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
+            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, context: arguments.context, stableId: entry.stableId, status: peerText, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
                 if editing == nil {
                     arguments.openAdmin(participant)
                 }

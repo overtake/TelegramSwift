@@ -8377,6 +8377,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var reactions_show_more: CGImage {
+      if let image = cached.with({ $0["reactions_show_more"] }) {
+          return image
+      } else {
+          let image = _reactions_show_more()
+          _ = cached.modify { current in 
+              var current = current
+              current["reactions_show_more"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var chat_reactions_badge: CGImage {
       if let image = cached.with({ $0["chat_reactions_badge"] }) {
           return image
@@ -8684,6 +8697,136 @@ public final class TelegramIconsTheme {
           _ = cached.modify { current in 
               var current = current
               current["premium_emoji_lock"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var account_add_account: CGImage {
+      if let image = cached.with({ $0["account_add_account"] }) {
+          return image
+      } else {
+          let image = _account_add_account()
+          _ = cached.modify { current in 
+              var current = current
+              current["account_add_account"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var account_set_status: CGImage {
+      if let image = cached.with({ $0["account_set_status"] }) {
+          return image
+      } else {
+          let image = _account_set_status()
+          _ = cached.modify { current in 
+              var current = current
+              current["account_set_status"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var account_change_status: CGImage {
+      if let image = cached.with({ $0["account_change_status"] }) {
+          return image
+      } else {
+          let image = _account_change_status()
+          _ = cached.modify { current in 
+              var current = current
+              current["account_change_status"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chat_premium_status_red: CGImage {
+      if let image = cached.with({ $0["chat_premium_status_red"] }) {
+          return image
+      } else {
+          let image = _chat_premium_status_red()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_premium_status_red"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chat_premium_status_orange: CGImage {
+      if let image = cached.with({ $0["chat_premium_status_orange"] }) {
+          return image
+      } else {
+          let image = _chat_premium_status_orange()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_premium_status_orange"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chat_premium_status_violet: CGImage {
+      if let image = cached.with({ $0["chat_premium_status_violet"] }) {
+          return image
+      } else {
+          let image = _chat_premium_status_violet()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_premium_status_violet"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chat_premium_status_green: CGImage {
+      if let image = cached.with({ $0["chat_premium_status_green"] }) {
+          return image
+      } else {
+          let image = _chat_premium_status_green()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_premium_status_green"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chat_premium_status_cyan: CGImage {
+      if let image = cached.with({ $0["chat_premium_status_cyan"] }) {
+          return image
+      } else {
+          let image = _chat_premium_status_cyan()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_premium_status_cyan"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chat_premium_status_light_blue: CGImage {
+      if let image = cached.with({ $0["chat_premium_status_light_blue"] }) {
+          return image
+      } else {
+          let image = _chat_premium_status_light_blue()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_premium_status_light_blue"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chat_premium_status_blue: CGImage {
+      if let image = cached.with({ $0["chat_premium_status_blue"] }) {
+          return image
+      } else {
+          let image = _chat_premium_status_blue()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_premium_status_blue"] = image
               return current
           }
           return image
@@ -9334,6 +9477,7 @@ public final class TelegramIconsTheme {
   private let _reactions_badge_active: ()->CGImage
   private let _reactions_badge_archive: ()->CGImage
   private let _reactions_badge_archive_active: ()->CGImage
+  private let _reactions_show_more: ()->CGImage
   private let _chat_reactions_badge: ()->CGImage
   private let _chat_reactions_badge_active: ()->CGImage
   private let _gallery_pip_close: ()->CGImage
@@ -9358,6 +9502,16 @@ public final class TelegramIconsTheme {
   private let _premium_boarding_feature_next: ()->CGImage
   private let _premium_stickers: ()->CGImage
   private let _premium_emoji_lock: ()->CGImage
+  private let _account_add_account: ()->CGImage
+  private let _account_set_status: ()->CGImage
+  private let _account_change_status: ()->CGImage
+  private let _chat_premium_status_red: ()->CGImage
+  private let _chat_premium_status_orange: ()->CGImage
+  private let _chat_premium_status_violet: ()->CGImage
+  private let _chat_premium_status_green: ()->CGImage
+  private let _chat_premium_status_cyan: ()->CGImage
+  private let _chat_premium_status_light_blue: ()->CGImage
+  private let _chat_premium_status_blue: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -10004,6 +10158,7 @@ public final class TelegramIconsTheme {
       reactions_badge_active: @escaping()->CGImage,
       reactions_badge_archive: @escaping()->CGImage,
       reactions_badge_archive_active: @escaping()->CGImage,
+      reactions_show_more: @escaping()->CGImage,
       chat_reactions_badge: @escaping()->CGImage,
       chat_reactions_badge_active: @escaping()->CGImage,
       gallery_pip_close: @escaping()->CGImage,
@@ -10027,7 +10182,17 @@ public final class TelegramIconsTheme {
       premium_reaction_lock: @escaping()->CGImage,
       premium_boarding_feature_next: @escaping()->CGImage,
       premium_stickers: @escaping()->CGImage,
-      premium_emoji_lock: @escaping()->CGImage
+      premium_emoji_lock: @escaping()->CGImage,
+      account_add_account: @escaping()->CGImage,
+      account_set_status: @escaping()->CGImage,
+      account_change_status: @escaping()->CGImage,
+      chat_premium_status_red: @escaping()->CGImage,
+      chat_premium_status_orange: @escaping()->CGImage,
+      chat_premium_status_violet: @escaping()->CGImage,
+      chat_premium_status_green: @escaping()->CGImage,
+      chat_premium_status_cyan: @escaping()->CGImage,
+      chat_premium_status_light_blue: @escaping()->CGImage,
+      chat_premium_status_blue: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -10673,6 +10838,7 @@ public final class TelegramIconsTheme {
       self._reactions_badge_active = reactions_badge_active
       self._reactions_badge_archive = reactions_badge_archive
       self._reactions_badge_archive_active = reactions_badge_archive_active
+      self._reactions_show_more = reactions_show_more
       self._chat_reactions_badge = chat_reactions_badge
       self._chat_reactions_badge_active = chat_reactions_badge_active
       self._gallery_pip_close = gallery_pip_close
@@ -10697,5 +10863,15 @@ public final class TelegramIconsTheme {
       self._premium_boarding_feature_next = premium_boarding_feature_next
       self._premium_stickers = premium_stickers
       self._premium_emoji_lock = premium_emoji_lock
+      self._account_add_account = account_add_account
+      self._account_set_status = account_set_status
+      self._account_change_status = account_change_status
+      self._chat_premium_status_red = chat_premium_status_red
+      self._chat_premium_status_orange = chat_premium_status_orange
+      self._chat_premium_status_violet = chat_premium_status_violet
+      self._chat_premium_status_green = chat_premium_status_green
+      self._chat_premium_status_cyan = chat_premium_status_cyan
+      self._chat_premium_status_light_blue = chat_premium_status_light_blue
+      self._chat_premium_status_blue = chat_premium_status_blue
   }
 }

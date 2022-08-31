@@ -658,7 +658,7 @@ class AuthController : GenericViewController<AuthView> {
                         return current
                     }
                     
-                    let signal = authorizeWithCode(accountManager: sharedContext.accountManager, account: account, code: code, termsOfService: nil, forcedPasswordSetupNotice: { _ in
+                    let signal = authorizeWithCode(accountManager: sharedContext.accountManager, account: account, code: .phoneCode(code), termsOfService: nil, forcedPasswordSetupNotice: { _ in
                         return nil
                     })
                     |> deliverOnMainQueue

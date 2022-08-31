@@ -24,6 +24,11 @@ private struct PopoverFrameValue {
 
 open class Popover: NSObject {
     
+    public enum AnimationMode {
+        case classic
+        case reveal
+    }
+    
     private weak var window:Window?
     
     private var disposable:MetaDisposable = MetaDisposable()
@@ -43,10 +48,14 @@ open class Popover: NSObject {
     
     public var animationStyle:AnimationStyle = AnimationStyle(duration:0.2, function:CAMediaTimingFunctionName.spring)
     
+    
+    private let animationMode: AnimationMode
+    
     var readyDisposable:MetaDisposable = MetaDisposable()
     private let `static`: Bool
-    required public init(controller:ViewController, static: Bool) {
+    required public init(controller:ViewController, static: Bool, animationMode: AnimationMode) {
         self.controller = controller
+        self.animationMode = animationMode
 //        self.background.layer?.shadowOpacity = 0.4
         self.background.layer?.rasterizationScale = CGFloat(System.backingScale)
         self.background.layer?.shouldRasterize = true
@@ -206,11 +215,11 @@ open class Popover: NSObject {
                     strongSelf.overlay.layer?.opacity = 0.99
                     
                     
-                    let bg = View(frame: NSMakeRect(strongSelf.overlay.frame.minX + 2, strongSelf.overlay.frame.minY + 2, strongSelf.overlay.frame.width - 4, strongSelf.overlay.frame.height - 4))
-                    bg.layer?.cornerRadius = 10
-                    bg.backgroundColor = presentation.colors.background
+//                    let bg = View(frame: NSMakeRect(strongSelf.overlay.frame.minX + 2, strongSelf.overlay.frame.minY + 2, strongSelf.overlay.frame.width - 4, strongSelf.overlay.frame.height - 4))
+//                    bg.layer?.cornerRadius = 10
+//                    bg.backgroundColor = presentation.colors.background
                     
-                    strongSelf.background.addSubview(bg)
+                   // strongSelf.background.addSubview(bg)
                     
                     strongSelf.background.addSubview(strongSelf.overlay)
                     
@@ -226,12 +235,20 @@ open class Popover: NSObject {
                     
                     strongSelf.isShown = true
                     
-                    if let _ = strongSelf.overlay {
+                    if let _ = strongSelf.overlay, let window = strongSelf.window {
                         if strongSelf.animates {
                             
                             var once:Bool = false
                             
-                            strongSelf.background.layer?.animateAlpha(from: 0, to: 1, duration: 0.1, completion: { [weak controller] (comple) in
+                            let point = control.convert(NSMakePoint(control.frame.width / 2, control.frame.height / 2), to: nil)
+                            
+                            var anchor = strongSelf.background.convert(point, from: nil)
+                            
+                            if strongSelf.background.flip {
+                                anchor.y += strongSelf.background.frame.height
+                            }
+                            
+                            let completion:(Bool)->Void = { [weak controller] _ in
                                 if let strongSelf = self, !once {
                                     once = true
                                     controller?.viewDidAppear(strongSelf.animates)
@@ -241,8 +258,21 @@ open class Popover: NSObject {
                                         _ = strongSelf.window?.makeFirstResponder(nil)
                                     }
                                 }
+                            }
+                            switch strongSelf.animationMode {
+                            case .classic:
+                                strongSelf.background.layer?.animateScaleSpringFrom(anchor: anchor, from: 0.1, to: 1.0, duration: 0.4, bounce: false)
+                                strongSelf.background.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, completion: completion)
+                            case .reveal:
                                 
-                            })
+                                let point = strongSelf.overlay.convert(NSMakePoint(0, 0), from: control)
+                                let from: NSRect = control.frame.size.bounds
+                                let to = strongSelf.overlay.frame.size.bounds
+                                
+                                strongSelf.overlay.layer?.animateBounds(from: from.offsetBy(dx: point.x, dy: point.y), to: to, duration: 0.35, timingFunction: .spring, completion: completion)
+                                strongSelf.overlay.layer?.animatePosition(from: point, to: strongSelf.overlay.frame.origin, duration: 0.35, timingFunction: .spring)
+
+                            }
                             
                         } else {
                             controller.viewDidAppear(strongSelf.animates)
@@ -435,7 +465,7 @@ public func closeAllPopovers(for window: Window) {
    
 }
 
-public func showPopover(for control:Control, with controller:ViewController, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint, delayBeforeShown: Double = 0.015, static: Bool = false ) -> Void {
+public func showPopover(for control:Control, with controller:ViewController, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint, delayBeforeShown: Double = 0.015, static: Bool = false, animationMode: Popover.AnimationMode = .classic) -> Void {
     if let window = control.window as? Window {
         if window.inLiveSwiping {
             return
@@ -454,7 +484,7 @@ public func showPopover(for control:Control, with controller:ViewController, edg
             return
         }
                 
-        controller.popover = (controller.popoverClass as! Popover.Type).init(controller: controller, static: `static`)
+        controller.popover = (controller.popoverClass as! Popover.Type).init(controller: controller, static: `static`, animationMode: animationMode)
         
         if let popover = controller.popover {
             popover.show(for: control, edge: edge, inset: inset, delayBeforeShown: delayBeforeShown)

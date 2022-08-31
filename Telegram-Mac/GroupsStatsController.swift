@@ -207,7 +207,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                         }
                         
                         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("top_posters_\(peer.id)"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-                            return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
+                            return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, context: accountContext, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                                 openPeerInfo(peer.id)
                             })
                         }))
@@ -268,7 +268,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                         }
                         
                         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier.init("top_admin_\(peer.id)"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-                            return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
+                            return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, context: accountContext, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                                 openPeerInfo(peer.id)
                             })
                         }))
@@ -331,7 +331,7 @@ private func statsEntries(_ state: GroupStatsContextState, uiState: UIStatsState
                         
                         
                         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: InputDataIdentifier("top_inviter_\(peer.id)"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-                            return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
+                            return ShortPeerRowItem(initialSize, peer: peer, account: accountContext.account, context: accountContext, stableId: stableId, enabled: true, height: 56, photoSize: NSMakeSize(36, 36), status: textComponents.joined(separator: ", "), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                                 openPeerInfo(peer.id)
                             })
                         }))

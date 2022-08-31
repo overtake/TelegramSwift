@@ -16,7 +16,6 @@ public final class Reactions {
         return state.get() |> distinctUntilChanged |> deliverOnMainQueue
     }
     
-    public var needsPremium:()->Void = {}
     public var isPremium: Bool = false
     
     public var interactive: MessageId? {
@@ -33,20 +32,12 @@ public final class Reactions {
         }))
     }
     
-    public func react(_ messageId: MessageId, value: String?, checkPrem: Bool = false) {
+    public func react(_ messageId: MessageId, values: [UpdateMessageReaction], storeAsRecentlyUsed: Bool = false) {
         _ = _isInteractive.swap(messageId)
-        
-        if let reaction = self.available?.reactions.first(where: { $0.value == value}) {
-            if reaction.isPremium && !isPremium && checkPrem {
-                needsPremium()
-                return
-            }
-        }
-        
-        reactable.set(updateMessageReactionsInteractively(account: self.engine.account, messageId: messageId, reaction: value, isLarge: false).start(), forKey: messageId)
+        reactable.set(updateMessageReactionsInteractively(account: self.engine.account, messageId: messageId, reactions: values, isLarge: false, storeAsRecentlyUsed: storeAsRecentlyUsed).start(), forKey: messageId)
     }
     
-    public func updateQuick(_ value: String) {
+    public func updateQuick(_ value: MessageReaction.Reaction) {
         _ = self.engine.stickers.updateQuickReaction(reaction: value).start()
     }
     

@@ -73,7 +73,11 @@ class TextAndLabelItem: GeneralRowItem {
             })
         }
         self.canCopy = canCopy
-        self._copyToClipboard = _copyToClipboard
+        if canCopy {
+            self._copyToClipboard = _copyToClipboard
+        } else {
+            self._copyToClipboard = nil
+        }
         
         textLayout = TextViewLayout(attr, maximumNumberOfLines: 3, alwaysStaticItems: !detectLinks)
         textLayout.interactions = globalLinkExecutor

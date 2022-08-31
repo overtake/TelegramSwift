@@ -1228,7 +1228,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let peerView = Promise<PostboxView?>()
     
     private let emojiEffects: EmojiScreenEffect
-    private var reactionManager:AddReactionManager?
+//    private var reactionManager:AddReactionManager?
 
     private let historyDisposable:MetaDisposable = MetaDisposable()
     private let peerDisposable:MetaDisposable = MetaDisposable()
@@ -1318,7 +1318,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     private var currentPeerView: PeerView? {
         didSet {
-            self.reactionManager?.updatePeerView(currentPeerView)
+          //  self.reactionManager?.updatePeerView(currentPeerView)
         }
     }
     
@@ -1570,7 +1570,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         var groupped:[[ChatRowItem]] = []
         var current:[ChatRowItem] = []
         
-        let visibleItems = self.genericView.tableView.visibleRows(self.genericView.frame.height)
+        let visibleItems = self.genericView.tableView.visibleRows(50)
                 
         for i in visibleItems.lowerBound ..< visibleItems.upperBound {
             let item = self.genericView.tableView.item(at: i)
@@ -1674,9 +1674,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         genericView.tableView.addScroll(listener: emojiEffects.scrollUpdater)
         
-        if FastSettings.legacyReactions {
-            self.reactionManager = .init(chatInteraction: self.chatInteraction, view: self.genericView, peerView: self.currentPeerView, context: self.context, priority: self.responderPriority, window: self.context.window)
-        }
+//        if FastSettings.legacyReactions {
+//            self.reactionManager = .init(chatInteraction: self.chatInteraction, view: self.genericView, peerView: self.currentPeerView, context: self.context, priority: self.responderPriority, window: self.context.window)
+//        }
 
 
         self.genericView.tableView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: true, { [weak self] position in
@@ -2184,7 +2184,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         chatInteraction.updateFrame = { [weak self] frame, transition in
-            self?.reactionManager?.updateLayout(size: frame.size, transition: transition)
+//            self?.reactionManager?.updateLayout(size: frame.size, transition: transition)
             if let tableView = self?.genericView.tableView {
                 self?.updateFloatingPhotos(tableView.scrollPosition().current, animated: transition.isAnimated)
             }
@@ -2310,7 +2310,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.chatInteraction.scrollToLatest(true)
             self.context.bindings.entertainment().closePopover()
             self.context.cancelGlobalSearch.set(true)
-            self.reactionManager?.clearAndTempLock()
+//            self.reactionManager?.clearAndTempLock()
         }
         
         
@@ -3768,6 +3768,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             scrollAfterSend()
         }
+        
+        chatInteraction.showEmojiUseTooltip = { [weak self] in
+            if let view = self?.genericView.inputView.emojiView {
+                tooltip(for: view, text: strings().emojiPackMoreEmoji)
+            }
+        }
 
         chatInteraction.showDeleterSetup = { [weak self] control in
             guard let strongSelf = self else {
@@ -4458,10 +4464,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         
                     } else if let cachedData = combinedInitialData.cachedData as? CachedChannelData {
                         present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
-                            .withUpdatedAllowedReactions(cachedData.allowedReactions)
+                            .withUpdatedAllowedReactions(cachedData.allowedReactions.knownValue)
                     } else if let cachedData = combinedInitialData.cachedData as? CachedGroupData {
                         present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
-                            .withUpdatedAllowedReactions(cachedData.allowedReactions)
+                            .withUpdatedAllowedReactions(cachedData.allowedReactions.knownValue)
                     } else if let cachedData = combinedInitialData.cachedData as? CachedUserData {
                         present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
                     }
@@ -4651,10 +4657,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
                             } else if let cachedData = peerView.cachedData as? CachedChannelData {
                                 present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
-                                    .withUpdatedAllowedReactions(cachedData.allowedReactions)
+                                    .withUpdatedAllowedReactions(cachedData.allowedReactions.knownValue)
                             } else if let cachedData = peerView.cachedData as? CachedGroupData {
                                 present = present.withUpdatedMessageSecretTimeout(cachedData.autoremoveTimeout)
-                                    .withUpdatedAllowedReactions(cachedData.allowedReactions)
+                                    .withUpdatedAllowedReactions(cachedData.allowedReactions.knownValue)
                             }
                             
                         }
@@ -5380,7 +5386,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         genericView.tableView.merge(with: transition)
         
-        self.reactionManager?.update(transition: .animated(duration: 0.2, curve: .easeOut))
+//        self.reactionManager?.update(transition: .animated(duration: 0.2, curve: .easeOut))
         
         self.updateBackgroundColor(processedView.theme.controllerBackgroundMode)
         
@@ -6383,8 +6389,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 view.moveReveal(delta: delta)
                 self.updateFloatingPhotos(self.genericView.scroll, animated: false)
-                self.reactionManager?.clearAndTempLock()
-                self.reactionManager?.update()
+//                self.reactionManager?.clearAndTempLock()
+//                self.reactionManager?.update()
             case let .success(_, controller), let .failed(_, controller):
                 let controller = controller as! RevealTableItemController
                 guard let view = (controller.item.view as? RevealTableView) else {return .nothing}
@@ -6392,7 +6398,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 view.completeReveal(direction: direction)
                 self.updateFloatingPhotos(self.genericView.scroll, animated: true)
                 
-                self.reactionManager?.update(transition: .animated(duration: 0.2, curve: .easeOut))
+             //   self.reactionManager?.update(transition: .animated(duration: 0.2, curve: .easeOut))
 
             }
             

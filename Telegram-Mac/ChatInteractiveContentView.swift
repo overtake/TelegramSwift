@@ -285,10 +285,10 @@ class ChatInteractiveContentView: ChatMediaContentView {
         case let .Fetching(_, progress), let .Paused(progress):
             let current = String.prettySized(with: Int(Float(file.elapsedSize) * progress), afterDot: 1)
             var size = "\(current) / \(String.prettySized(with: file.elapsedSize))"
-            if (maxWidth < 100 && parent?.groupingKey != nil) || file.elapsedSize == 0 {
+            if maxWidth < 150 || file.elapsedSize == 0 {
                 size = "\(Int(progress * 100))%"
             }
-            if file.isStreamable, parent?.groupingKey == nil, maxWidth > 100 {
+            if file.isStreamable, parent?.groupingKey == nil, maxWidth > 150 {
                 if let parent = parent {
                     if !parent.flags.contains(.Unsent) && !parent.flags.contains(.Failed) {
                         size = String.durationTransformed(elapsed: file.videoDuration) + ", \(size)"

@@ -86,6 +86,12 @@ private final class GifKeyboardTabRowView: HorizontalRowView {
         self.updateAnimatableContent()
     }
     
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        self.updateListeners()
+        self.updateAnimatableContent()
+    }
+    
     private func updateListeners() {
         let center = NotificationCenter.default
         if let window = window {
@@ -102,7 +108,15 @@ private final class GifKeyboardTabRowView: HorizontalRowView {
 
     @objc func updateAnimatableContent() -> Void {
         if let value = self.animationLayer, let superview = value.superview {
-            value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow
+            var isKeyWindow: Bool = false
+            if let window = window {
+                if !window.canBecomeKey {
+                    isKeyWindow = true
+                } else {
+                    isKeyWindow = window.isKeyWindow
+                }
+            }
+            value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
         }
     }
     
@@ -131,7 +145,7 @@ private final class GifKeyboardTabRowView: HorizontalRowView {
                 current = layer
             } else {
                 self.animationLayer?.removeFromSuperlayer()
-                current = InlineStickerItemLayer(context: item.context, file: file, size: NSMakeSize(28, 28))
+                current = InlineStickerItemLayer(account: item.context.account, file: file, size: NSMakeSize(28, 28))
                 current.contentsGravity = .center
                 self.animationLayer = current
                 control.layer?.addSublayer(current)

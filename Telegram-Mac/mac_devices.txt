@@ -615,3 +615,6 @@ MacBookPro6,1
 
 MacBook Pro 17"
 MacBookPro8,3
+
+MacBook Air M2
+Mac14,2
