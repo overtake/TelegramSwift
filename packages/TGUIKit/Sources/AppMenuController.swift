@@ -158,7 +158,7 @@ final class MenuView: View, TableViewDelegate {
     
     func makeSize(presentation: AppMenu.Presentation, screen: NSScreen, maxHeight: CGFloat? = nil, appearMode: AppMenu.AppearMode) {
         
-        var max: CGFloat = 0
+        var max: CGFloat = 180
         tableView.enumerateItems(with: { item in
             if let item = item as? AppMenuBasicItem {
                 if max < item.effectiveSize.width {
@@ -334,7 +334,6 @@ final class AppMenuController : NSObject  {
     private weak var parentView: NSView?
     private let delayDisposable = MetaDisposable()
     
-    private var topBubbleWindow: Window?
     
     init(_ menu: ContextMenu, presentation: AppMenu.Presentation, holder: AppMenu, betterInside: Bool, appearMode: AppMenu.AppearMode, parentView: NSView?) {
         self.menu = menu
@@ -561,10 +560,12 @@ final class AppMenuController : NSObject  {
     
     private var isClosed = false
     func close() {
+        
+        let duration: Double = 0.2
         if !isClosed {
             for (_, panel) in self.windows {
                 var panel: Window? = panel
-                panel?.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { _ in
+                panel?.view.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { _ in
                     panel?.orderOut(nil)
                     panel = nil
                 })
@@ -576,13 +577,8 @@ final class AppMenuController : NSObject  {
             self.parent?.copyhandler = self.previousCopyHandler
 
             if let window = self.menu.topWindow, let view = window.contentView {
-                view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view, weak window] _ in
-                    view?.removeFromSuperview()
-                    window?.orderOut(nil)
-                })
-            }
-            if let window = self.topBubbleWindow, let view = window.contentView {
-                view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view, weak window] _ in
+                view.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak view, weak window] _ in
+                    
                     view?.removeFromSuperview()
                     window?.orderOut(nil)
                 })
@@ -822,15 +818,14 @@ final class AppMenuController : NSObject  {
         
         if let window = menu.topWindow {
             
-            let width = min(window.frame.width, rect.width - 20)
-            
-            let rect = NSMakeRect(rect.minX + 10, rect.maxY - 18, width, window.frame.height)
+            let width = window.frame.width
+            let rect = NSMakeRect(rect.maxX - width + 40, rect.maxY - 25, width, window.frame.height)
             window.setFrame(rect, display: true)
             window.makeKeyAndOrderFront(nil)
             
             let view = window.contentView!.subviews.first!
             
-            view.frame = rect.size.bounds.insetBy(dx: 10, dy: 5)
+            view.frame = NSMakeRect(rect.focus(view.frame.size).minX, 0, view.frame.width, view.frame.height)
             
             window.contentView?.layer?.animateAlpha(from: 0.1, to: 1, duration: 0.2)
             window.contentView?.layer?.animateScaleSpringFrom(anchor: NSMakePoint(anchor.x, rect.height / 2), from: 0.1, to: 1, duration: 0.2, bounce: false)
@@ -838,7 +833,7 @@ final class AppMenuController : NSObject  {
             window.set(mouseHandler: { [weak self] event in
                 self?.closeAll()
                 return .rejected
-            }, with: self, for: .leftMouseUp)
+            }, with: self, for: .leftMouseUp, priority: .supreme)
             
 //            let topBubble = Window(contentRect: .zero, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
 //            topBubble._canBecomeMain = false
@@ -940,5 +935,6 @@ final class AppMenuController : NSObject  {
     
     deinit {
         self.delayDisposable.dispose()
+        self.keyDisposable?.dispose()
     }
 }

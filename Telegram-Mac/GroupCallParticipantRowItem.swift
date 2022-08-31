@@ -217,12 +217,18 @@ final class GroupCallParticipantRowItem : GeneralRowItem {
             self.titleLayout = TextViewLayout(.initialize(string: data.peer.displayTitle, color: (data.state != nil ? .white : GroupCallTheme.grayStatusColor), font: .medium(.text)), maximumNumberOfLines: 1)
         }
         
+        let addition: CGFloat
+        if let size = PremiumStatusControl.controlSize(peer, false) {
+            addition = size.width + 5
+        } else {
+            addition = 0
+        }
+        
         if isVertical {
-            titleLayout.measure(width: GroupCallTheme.smallTableWidth - 16 - 10 - (supplementIcon != nil ? 16 : 0))
+            titleLayout.measure(width: GroupCallTheme.smallTableWidth - 16 - 10 - addition)
         } else {
             let width = (data.isFullscreen && data.videoMode) ? GroupCallTheme.tileTableWidth - 20 : width - 20
-            
-            titleLayout.measure(width: width - itemInset.left - itemInset.left - itemInset.right - (data.videoMode ? 0 : 28) - itemInset.right - (supplementIcon != nil ? 16 : 0))
+            titleLayout.measure(width: width - itemInset.left - itemInset.left - itemInset.right - (data.videoMode ? 0 : 28) - itemInset.right - addition)
             statusLayout.measure(width: width - itemInset.left - itemInset.left - itemInset.right - (data.videoMode ? 0 : 28) - itemInset.right - inset)
         }
         
@@ -682,7 +688,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
     private let videoContainer: VideoContainer = VideoContainer(frame: .zero)
     private var volumeView: TextView?
     private var statusImageContainer: View = View()
-    private var supplementImageView: ImageView?
+    private var statusControl: PremiumStatusControl?
     private let audioLevelDisposable = MetaDisposable()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -784,9 +790,9 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
         transition.updateFrame(view: self.photoView, frame: self.photoView.centerFrameY(x: item.itemInset.left - (self.photoView.frame.width - photoView.photoSize.width) / 2))
 
         transition.updateFrame(view: titleView, frame: CGRect(origin: NSMakePoint(item.itemInset.left + photoView.photoSize.width + item.itemInset.left, 6), size: titleView.frame.size))
-                    
-        if let imageView = self.supplementImageView {
-            transition.updateFrame(view: imageView, frame: CGRect.init(origin: NSMakePoint(titleView.frame.maxX + 3 + (item.supplementIcon?.1.width ?? 0), titleView.frame.minY + (item.supplementIcon?.1.height ?? 0)), size: imageView.frame.size))
+        
+        if let statusControl = self.statusControl {
+            transition.updateFrame(view: statusControl, frame: CGRect(origin: NSMakePoint(titleView.frame.maxX + 3, titleView.frame.minY), size: statusControl.frame.size))
         }
         if item.drawLine {
             transition.updateFrame(view: separator, frame: NSMakeRect(titleView.frame.minX, frame.height - .borderSize, frame.width - titleView.frame.minX, .borderSize))
@@ -848,20 +854,13 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
             }
         }
         
-        if let icon = item.supplementIcon {
-            let current: ImageView
-            if let value = self.supplementImageView {
-                current = value
-            } else {
-                current = ImageView()
-                self.supplementImageView = current
-                addSubview(current)
-            }
-            current.image = icon.0
-            current.sizeToFit()
-        } else {
-            self.supplementImageView?.removeFromSuperview()
-            self.supplementImageView = nil
+        let control = PremiumStatusControl.control(item.peer, account: item.account, inlinePacksContext: nil, isSelected: false, cached: self.statusControl, animated: animated)
+        if let control = control {
+            self.statusControl = control
+            self.containerView.addSubview(control)
+        } else if let view = self.statusControl {
+            performSubviewRemoval(view, animated: animated)
+            self.statusControl = nil
         }
         
         

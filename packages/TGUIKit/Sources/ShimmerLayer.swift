@@ -10,6 +10,16 @@ import Cocoa
 import SwiftSignalKit
 
 
+private struct Shimmerkey : Hashable {
+    var backroundColor: NSColor
+    var foregroundColor: NSColor
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(backroundColor.hashValue)
+        hasher.combine(foregroundColor.hashValue)
+    }
+}
+
+private var cached:[Shimmerkey: CGImage] = [:]
 
 private final class ShimmerEffectForegroundLayer: SimpleLayer {
     private var currentBackgroundColor: NSColor?
@@ -46,25 +56,32 @@ private final class ShimmerEffectForegroundLayer: SimpleLayer {
         }
         self.currentBackgroundColor = backgroundColor
         self.currentForegroundColor = foregroundColor
+        let key = Shimmerkey(backroundColor: backgroundColor, foregroundColor: foregroundColor)
+        let image: CGImage?
+        if let cachedImage = cached[key] {
+            image = cachedImage
+        } else {
+            image = generateImage(CGSize(width: 320.0, height: 16.0), opaque: false, scale: 1.0, rotatedContext: { size, context in
+                context.clear(CGRect(origin: CGPoint(), size: size))
+                context.setFillColor(backgroundColor.cgColor)
+                context.fill(CGRect(origin: CGPoint(), size: size))
+                
+                context.clip(to: CGRect(origin: CGPoint(), size: size))
+                
+                let transparentColor = foregroundColor.withAlphaComponent(0.0).cgColor
+                let peakColor = foregroundColor.cgColor
+                
+                var locations: [CGFloat] = [0.0, 0.5, 1.0]
+                let colors: [CGColor] = [transparentColor, peakColor, transparentColor]
+                
+                let colorSpace = CGColorSpaceCreateDeviceRGB()
+                let gradient = CGGradient(colorsSpace: colorSpace, colors: colors as CFArray, locations: &locations)!
+                
+                context.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: size.width, y: 0.0), options: CGGradientDrawingOptions())
+            })
+            cached[key] = image
+        }
         
-        let image = generateImage(CGSize(width: 320.0, height: 16.0), opaque: false, scale: 1.0, rotatedContext: { size, context in
-            context.clear(CGRect(origin: CGPoint(), size: size))
-            context.setFillColor(backgroundColor.cgColor)
-            context.fill(CGRect(origin: CGPoint(), size: size))
-            
-            context.clip(to: CGRect(origin: CGPoint(), size: size))
-            
-            let transparentColor = foregroundColor.withAlphaComponent(0.0).cgColor
-            let peakColor = foregroundColor.cgColor
-            
-            var locations: [CGFloat] = [0.0, 0.5, 1.0]
-            let colors: [CGColor] = [transparentColor, peakColor, transparentColor]
-            
-            let colorSpace = CGColorSpaceCreateDeviceRGB()
-            let gradient = CGGradient(colorsSpace: colorSpace, colors: colors as CFArray, locations: &locations)!
-            
-            context.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: size.width, y: 0.0), options: CGGradientDrawingOptions())
-        })
         self.imageView.contents = image
     }
     

@@ -9,6 +9,8 @@
 import Cocoa
 import TGUIKit
 
+
+
 class GifPanelTabRowItem: TableRowItem {
     override var stableId: AnyHashable {
         return entry

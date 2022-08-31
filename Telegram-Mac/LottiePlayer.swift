@@ -61,6 +61,7 @@ enum LottiePlayerState : Equatable {
     case failed
     case playing
     case stoped
+    case finished
 }
 
 protocol RenderedFrame {
@@ -629,6 +630,8 @@ private final class PlayerRenderer {
         var add_frames_impl:(()->Void)? = nil
         var askedRender: Bool = false
         var playedCount: Int32 = 0
+        var loopCount: Int32 = 0
+        var previousFrame: Int32 = 0
         let render:()->Void = { [weak self] in
             var hungry: Bool = false
             var cancelled: Bool = false
@@ -644,6 +647,7 @@ private final class PlayerRenderer {
                     return state
                 }
                 
+                
                 if !cancelled {
                     if let current = current {
                         let displayFrame = renderer.displayFrame
@@ -653,6 +657,13 @@ private final class PlayerRenderer {
                         if current.frame > 0 {
                             updateState(.playing)
                         }
+                        
+                        if previousFrame > current.frame {
+                            loopCount += 1
+                        }
+                        
+                        previousFrame = current.frame
+                        
                         if let soundEffect = renderer.soundEffect {
                             if let triggerOn = soundEffect.triggerOn {
                                 let triggers:[Int32] = [triggerOn - 1, triggerOn, triggerOn + 1]
@@ -686,7 +697,7 @@ private final class PlayerRenderer {
                         let finish:()->Void = {
                             renderer.finished = true
                             cancelled = true
-                            updateState(.stoped)
+                            updateState(.finished)
                             renderer.renderToken?.deinstall()
                             framesTask?.cancel()
                             let onFinish = renderer.animation.onFinish ?? {}
@@ -715,6 +726,10 @@ private final class PlayerRenderer {
                             }
                         case let .onceToFrame(frame):
                             if frame <= current.frame  {
+                                finish()
+                            }
+                        case let .playCount(count):
+                            if loopCount >= count {
                                 finish()
                             }
                         }
@@ -940,10 +955,9 @@ enum LottieAnimationKey : Hashable {
             }
         }
     }
-
 }
 
-enum LottiePlayPolicy : Equatable {
+enum LottiePlayPolicy : Hashable {
     case loop
     case loopAt(firstStart:Int32?, range: ClosedRange<Int32>)
     case once
@@ -952,44 +966,7 @@ enum LottiePlayPolicy : Equatable {
     case toStart(from: Int32)
     case framesCount(Int32)
     case onceToFrame(Int32)
-    
-    static func ==(lhs: LottiePlayPolicy, rhs: LottiePlayPolicy) -> Bool {
-        switch lhs {
-        case .loop:
-            if case .loop = rhs {
-                return true
-            }
-        case let .loopAt(firstStart, range):
-            if case .loopAt(firstStart, range) = rhs {
-                return true
-            }
-        case .once:
-            if case .once = rhs {
-                return true
-            }
-        case .onceEnd:
-            if case .onceEnd = rhs {
-                return true
-            }
-        case .toEnd:
-            if case .toEnd = rhs {
-                return true
-            }
-        case .toStart:
-            if case .toStart = rhs {
-                return true
-            }
-        case let .framesCount(count):
-            if case .framesCount(count) = rhs {
-                return true
-            }
-        case let .onceToFrame(count):
-            if case .onceToFrame(count) = rhs {
-                return true
-            }
-        }
-        return false
-    }
+    case playCount(Int32)
 }
 
 struct LottieColor : Equatable {
@@ -1151,29 +1128,29 @@ private final class WebmRenderer : RenderContainer {
 private final class LottieRenderer : RenderContainer {
     
     private let animation: LottieAnimation
-    private let bridge: RLottieBridge
+    private let bridge: RLottieBridge?
     private let fileSupplyment: TRLotFileSupplyment?
     
-    init(animation: LottieAnimation, bridge: RLottieBridge, fileSupplyment: TRLotFileSupplyment?) {
+    init(animation: LottieAnimation, bridge: RLottieBridge?, fileSupplyment: TRLotFileSupplyment?) {
         self.animation = animation
         self.bridge = bridge
         self.fileSupplyment = fileSupplyment
     }
     var fps: Int {
-        return max(min(Int(bridge.fps()), self.animation.maximumFps), 24)
+        return max(min(Int(bridge?.fps() ?? fileSupplyment?.fps ?? 60), self.animation.maximumFps), 24)
     }
     var mainFps: Int {
-        return Int(bridge.fps())
+        return Int(bridge?.fps() ?? fileSupplyment?.fps ?? 60)
     }
     var endFrame: Int32 {
-        return bridge.endFrame()
+        return bridge?.endFrame() ?? fileSupplyment?.endFrame ?? 0
     }
     var startFrame: Int32 {
-        return bridge.startFrame()
+        return bridge?.startFrame() ?? fileSupplyment?.startFrame ?? 0
     }
     
     func setColor(_ color: NSColor, keyPath: String) {
-        self.bridge.setColor(color, forKeyPath: keyPath)
+        self.bridge?.setColor(color, forKeyPath: keyPath)
     }
     
     func cacheFrame(_ previous: RenderedFrame?, _ current: RenderedFrame) {
@@ -1204,7 +1181,7 @@ private final class LottieRenderer : RenderContainer {
             let memoryData = malloc(bufferSize)!
             let frameData = memoryData.assumingMemoryBound(to: UInt8.self)
             
-            bridge.renderFrame(with: frame, into: frameData, width: Int32(s.w), height: Int32(s.h), bytesPerRow: Int32(bytesPerRow))
+            bridge?.renderFrame(with: frame, into: frameData, width: Int32(s.w), height: Int32(s.h), bytesPerRow: Int32(bytesPerRow))
             data = UnsafeRawPointer(frameData)
         }
         
@@ -1349,25 +1326,32 @@ final class LottieAnimation : Equatable {
                 data = self.compressed
             }
             if let data = data, !data.isEmpty {
-                let modified: Data
-                if let color = self.colors.first(where: { $0.keyPath == "" }) {
-                    modified = applyLottieColor(data: data, color: color.color)
-                } else {
-                    modified = transformedWithFitzModifier(data: data, fitzModifier: self.key.fitzModifier)
+                
+                let fileSupplyment: TRLotFileSupplyment?
+                switch self.cache {
+                case .temporaryLZ4:
+                    fileSupplyment = TRLotFileSupplyment(self, bufferSize: bufferSize, queue: Queue())
+                case .none:
+                    fileSupplyment = nil
                 }
-                if let json = String(data: modified, encoding: .utf8) {
-                    if let bridge = RLottieBridge(json: json, key: self.cacheKey) {
-                        for color in self.colors {
-                            bridge.setColor(color.color, forKeyPath: color.keyPath)
+                
+                if fileSupplyment?.isFinished == true {
+                    return LottieRenderer(animation: self, bridge: nil, fileSupplyment: fileSupplyment)
+                } else {
+                    let modified: Data
+                    if let color = self.colors.first(where: { $0.keyPath == "" }) {
+                        modified = applyLottieColor(data: data, color: color.color)
+                    } else {
+                        modified = transformedWithFitzModifier(data: data, fitzModifier: self.key.fitzModifier)
+                    }
+                    if let json = String(data: modified, encoding: .utf8) {
+                        if let bridge = RLottieBridge(json: json, key: self.cacheKey) {
+                            for color in self.colors {
+                                bridge.setColor(color.color, forKeyPath: color.keyPath)
+                            }
+                            fileSupplyment?.initialize(fps: bridge.fps(), startFrame: bridge.startFrame(), endFrame: bridge.endFrame())
+                            return LottieRenderer(animation: self, bridge: bridge, fileSupplyment: fileSupplyment)
                         }
-                        let fileSupplyment: TRLotFileSupplyment?
-                        switch self.cache {
-                        case .temporaryLZ4:
-                            fileSupplyment = TRLotFileSupplyment(self, bufferSize: bufferSize, queue: Queue())
-                        case .none:
-                            fileSupplyment = nil
-                        }
-                        return LottieRenderer(animation: self, bridge: bridge, fileSupplyment: fileSupplyment)
                     }
                 }
             }

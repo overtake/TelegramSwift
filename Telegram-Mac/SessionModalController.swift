@@ -129,16 +129,27 @@ func SessionModalController(context: AccountContext, session: RecentAccountSessi
         actionsDisposable.dispose()
     }
 
-    let modalInteractions = ModalInteractions(acceptTitle: strings().sessionPreviewTerminateSession, accept: {
-        confirm(for: context.window, information: strings().recentSessionsConfirmRevoke, successHandler: { _ in
-            _ = context.activeSessionsContext.remove(hash: session.hash).start()
+    let modalInteractions: ModalInteractions
+    if session.isCurrent {
+        modalInteractions = ModalInteractions(acceptTitle: strings().modalOK, accept: {
             close?()
-        })
-    }, drawBorder: true, height: 50, singleButton: true)
+        }, drawBorder: true, height: 50, singleButton: true)
+    } else {
+        modalInteractions = ModalInteractions(acceptTitle: strings().sessionPreviewTerminateSession, accept: {
+            confirm(for: context.window, information: strings().recentSessionsConfirmRevoke, successHandler: { _ in
+                _ = context.activeSessionsContext.remove(hash: session.hash).start()
+                close?()
+            })
+        }, drawBorder: true, height: 50, singleButton: true)
+    }
     
     DispatchQueue.main.async {
         modalInteractions.updateDone { button in
-            button.set(color: theme.colors.redUI, for: .Normal)
+            if session.isCurrent {
+                button.set(color: theme.colors.accent, for: .Normal)
+            } else {
+                button.set(color: theme.colors.redUI, for: .Normal)
+            }
         }
     }
     

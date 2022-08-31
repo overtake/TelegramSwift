@@ -407,7 +407,7 @@ class ChatMessageItem: ChatRowItem {
             let containsBigEmoji: Bool
             if message.media.first == nil, bigEmojiMessage(context.sharedContext, message: message) {
                 containsBigEmoji = true
-                switch copy.string.length {
+                switch copy.string.count {
                 case 1:
                     copy.addAttribute(.font, value: NSFont.normal(theme.fontSize * 8), range: copy.range)
                 case 2:
@@ -448,8 +448,7 @@ class ChatMessageItem: ChatRowItem {
                                  color = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
                              }
                              let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
-                             copy.addAttribute(.init(rawValue: TGSpoilerAttributeName), value: TGInputTextTag(uniqueId: arc4random64(), attachment: NSNumber(value: -1), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.text)), range: range)
-                             spoilers.append(.init(range: range, color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
+                             copy.addAttribute(.init(rawValue: TGSpoilerAttributeName), value: TGInputTextTag(uniqueId: arc4random64(), attachment: NSNumber(value: -1), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: color)), range: range)
                          default:
                              break
                          }
@@ -468,6 +467,13 @@ class ChatMessageItem: ChatRowItem {
              }
              
 
+             copy.enumerateAttribute(.init(rawValue: TGSpoilerAttributeName), in: copy.range, options: .init(), using: { value, range, stop in
+                 if let text = value as? TGInputTextTag {
+                     if let color = text.attribute.value as? NSColor {
+                         spoilers.append(.init(range: range, color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
+                     }
+                 }
+             })
              
              textLayout = TextViewLayout(self.messageText, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble && !containsBigEmoji, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
                  chatInteraction?.update({
@@ -619,7 +625,11 @@ class ChatMessageItem: ChatRowItem {
                 copyToClipboard(text)
             }
             interactions.topWindow = { [weak self] in
-                return self?.menuAdditionView
+                if let strongSelf = self {
+                    return strongSelf.menuAdditionView
+                } else {
+                    return .single(nil)
+                }
             }
             interactions.menuItems = { [weak self] type in
                 if let strongSelf = self, let message = strongSelf.message {

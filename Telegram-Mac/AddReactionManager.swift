@@ -14,50 +14,86 @@ import TelegramCore
 import Postbox
 import ObjcUtils
 
+enum ContextReaction : Equatable {
+    case builtin(value: MessageReaction.Reaction, staticFile: TelegramMediaFile, selectFile: TelegramMediaFile, appearFile: TelegramMediaFile)
+    case custom(value: MessageReaction.Reaction, fileId: Int64, TelegramMediaFile?)
+    
+    var file: TelegramMediaFile? {
+        switch self {
+        case let .builtin(_, staticFile, _, _):
+            return staticFile
+        case let .custom(_, _, file):
+            return file
+        }
+    }
+    var fileId: Int64 {
+        switch self {
+        case let .builtin(_, staticFile, _, _):
+            return staticFile.fileId.id
+        case let .custom(_, fileId, _):
+            return fileId
+        }
+    }
+    func selectAnimation(_ context: AccountContext) -> Signal<TelegramMediaFile, NoError> {
+        switch self {
+        case let .builtin(_, _, selectAnimation, _):
+            return .single(selectAnimation)
+        case .custom:
+            return .complete()
+        }
+    }
+    var appearAnimation: TelegramMediaFile? {
+        switch self {
+        case let .builtin(_, _, _, appearAnimation):
+            return appearAnimation
+        case .custom:
+            return nil
+        }
+    }
+    var value: MessageReaction.Reaction {
+        switch self {
+        case let .builtin(value, _, _, _):
+            return value
+        case let .custom(value, _, _):
+            return value
+        }
+    }
+    
+}
+
+
 
 final class ContextAddReactionsListView : View  {
     
     
     private final class ReactionView : Control {
                 
-        private let player = LottiePlayerView(frame: NSMakeRect(0, 0, 20, 20))
-        private let imageView = TransformImageView(frame: NSMakeRect(0, 0, 20, 20))
+        private let player: LottiePlayerView
+        private let imageView: InlineStickerView
         private let disposable = MetaDisposable()
         private let appearDisposable = MetaDisposable()
-        let reaction: AvailableReactions.Reaction
+        let reaction: ContextReaction
         let context: AccountContext
         private let stateDisposable = MetaDisposable()
         private var selectAnimationData: Data?
         private var currentKey: String?
         
-        private let premium: LockView?
-
         
-        required init(frame frameRect: NSRect, context: AccountContext, reaction: AvailableReactions.Reaction, add: @escaping(String, Bool)->Void) {
+        required init(frame frameRect: NSRect, context: AccountContext, reaction: ContextReaction, add: @escaping(MessageReaction.Reaction, Bool)->Void) {
+            self.player = LottiePlayerView(frame: NSMakeRect(0, 0, 30, 30))
+            self.imageView = InlineStickerView.init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: reaction.fileId, file: reaction.file, emoji: ""), size: NSMakeSize(30, 30))
             self.reaction = reaction
             self.context = context
-            if reaction.isPremium, !context.isPremium {
-                self.premium = LockView()
-            } else {
-                self.premium = nil
-            }
+           
             super.init(frame: frameRect)
             addSubview(imageView)
             addSubview(player)
-            if let premium = premium {
-                addSubview(premium)
-            }
-            self.imageView.isHidden = premium != nil
-            self.player.isHidden = premium != nil
-
-            let signal = context.account.postbox.mediaBox.resourceData(reaction.selectAnimation.resource, attemptSynchronously: true)
-            |> filter {
-                $0.complete
-            }
-            |> deliverOnMainQueue
             
-            _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .standalone(resource: reaction.selectAnimation.resource)).start()
-            _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .standalone(resource: reaction.appearAnimation.resource)).start()
+            self.imageView.isHidden = false
+            self.player.isHidden = false
+
+           
+            
             
             stateDisposable.set(player.state.start(next: { [weak self] state in
                 switch state {
@@ -73,21 +109,16 @@ final class ContextAddReactionsListView : View  {
                     break
                 }
             }))
-            
-            let size = imageView.frame.size
-            
-            let arguments = TransformImageArguments(corners: .init(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
-            
-            self.imageView.setSignal(signal: cachedMedia(media: reaction.staticIcon, arguments: arguments, scale: System.backingScale, positionFlags: nil), clearInstantly: true)
+                                    
 
-            if !self.imageView.isFullyLoaded {
-                imageView.setSignal(chatMessageSticker(postbox: context.account.postbox, file: .standalone(media: reaction.staticIcon), small: false, scale: System.backingScale), cacheImage: { result in
-                    cacheMedia(result, media: reaction.staticIcon, arguments: arguments, scale: System.backingScale)
-                })
+            let signal = reaction.selectAnimation(context) |> mapToSignal {
+                context.account.postbox.mediaBox.resourceData($0.resource, attemptSynchronously: true)
             }
-
-            imageView.set(arguments: arguments)
-
+            |> filter {
+                $0.complete
+            }
+            |> deliverOnMainQueue
+            
             disposable.set(signal.start(next: { [weak self] resourceData in
                 if let data = try? Data(contentsOf: URL.init(fileURLWithPath: resourceData.path)) {
                     self?.selectAnimationData = data
@@ -98,14 +129,12 @@ final class ContextAddReactionsListView : View  {
                 add(reaction.value, true)
             }, for: .Click)
             
-            if !reaction.isPremium || context.isPremium {
-                contextMenu = {
-                    let menu = ContextMenu()
-                    menu.addItem(ContextMenuItem(strings().chatContextReactionQuick, handler: {
-                        context.reactions.updateQuick(reaction.value)
-                    }, itemImage: MenuAnimation.menu_add_to_favorites.value))
-                    return menu
-                }
+            contextMenu = {
+                let menu = ContextMenu()
+                menu.addItem(ContextMenuItem(strings().chatContextReactionQuick, handler: {
+                    context.reactions.updateQuick(reaction.value)
+                }, itemImage: MenuAnimation.menu_add_to_favorites.value))
+                return menu
             }
             
 
@@ -131,10 +160,6 @@ final class ContextAddReactionsListView : View  {
         func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
             transition.updateFrame(view: player, frame: self.focus(player.frame.size))
             transition.updateFrame(view: imageView, frame: self.focus(imageView.frame.size))
-            
-            if let premium = premium {
-                transition.updateFrame(view: premium, frame: self.focus(premium.frame.size))
-            }
         }
         private var previous: ControlState = .Normal
         override func stateDidUpdate(_ state: ControlState) {
@@ -164,23 +189,28 @@ final class ContextAddReactionsListView : View  {
         
         func playAppearAnimation() {
             
-            if let premium = premium {
-                premium.layer?.animateScaleSpring(from: 0.7, to: 1, duration: 0.3, bounce: true)
+            guard self.visibleRect != .zero else {
+                return
             }
-                        
-            let signal = context.account.postbox.mediaBox.resourceData(reaction.appearAnimation.resource, attemptSynchronously: true)
-            |> filter {
-                $0.complete
-            }
-            |> deliverOnMainQueue
             
-            self.imageView.removeFromSuperview()
-                        
-            appearDisposable.set(signal.start(next: { [weak self] resourceData in
-                if let data = try? Data(contentsOf: URL.init(fileURLWithPath: resourceData.path)) {
-                    self?.apply(data, key: "appear", policy: .toEnd(from: 0))
+            if let appearAnimation = reaction.appearAnimation {
+                let signal = context.account.postbox.mediaBox.resourceData(appearAnimation.resource, attemptSynchronously: true)
+                |> filter {
+                    $0.complete
                 }
-            }))
+                |> deliverOnMainQueue
+                
+                self.imageView.removeFromSuperview()
+                            
+                appearDisposable.set(signal.start(next: { [weak self] resourceData in
+                    if let data = try? Data(contentsOf: URL.init(fileURLWithPath: resourceData.path)) {
+                        self?.apply(data, key: "appear", policy: .toEnd(from: 0))
+                    }
+                }))
+            } else {
+                imageView.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.35, bounce: true)
+            }
+            
         }
         
         required init?(coder: NSCoder) {
@@ -192,67 +222,104 @@ final class ContextAddReactionsListView : View  {
         }
     }
     
+    class ShowMore : Control {
+        private let imageView = ImageView()
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            self.backgroundColor = !theme.colors.isDark ? NSColor.black.withAlphaComponent(0.1) : NSColor.white.withAlphaComponent(0.1)
+            self.scaleOnClick = true
+            self.layer?.cornerRadius = frameRect.height / 2
+            addSubview(self.imageView)
+            self.imageView.image = theme.icons.reactions_show_more
+            self.imageView.sizeToFit()
+        }
+        
+        override func layout() {
+            super.layout()
+            imageView.center()
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
+    
     private let scrollView = HorizontalScrollView()
     private let documentView = View()
-    private let list: [AvailableReactions.Reaction]
+    private let list: [ContextReaction]
     
     private let topGradient = ShadowView()
     private let bottomGradient = ShadowView()
 
     private let backgroundView = View()
     private let visualEffect = NSVisualEffectView(frame: .zero)
-    private let radiusLayer: Bool
-    required init(frame frameRect: NSRect, context: AccountContext, list: [AvailableReactions.Reaction], add:@escaping(String, Bool)->Void, radiusLayer: Bool = true) {
+    private let radiusLayer: CGFloat?
+    
+    private let showMore = ShowMore(frame: NSMakeRect(0, 0, 30, 30))
+    private let revealReactions:((NSView)->Void)?
+    
+    private let maskLayer = SimpleShapeLayer()
+    private let backgroundColorView = View()
+    private let shadowLayer = SimpleShapeLayer()
+    required init(frame frameRect: NSRect, context: AccountContext, list: [ContextReaction], add:@escaping(MessageReaction.Reaction, Bool)->Void, radiusLayer: CGFloat? = 15, revealReactions:((NSView)->Void)? = nil) {
         self.list = list
+        self.revealReactions = revealReactions
         self.radiusLayer = radiusLayer
         super.init(frame: frameRect)
+        
+        
+        backgroundView.layer?.mask = maskLayer
         
         self.visualEffect.state = .active
         self.visualEffect.wantsLayer = true
         self.visualEffect.blendingMode = .behindWindow
         
         
+        showMore.isHidden = revealReactions == nil
         
+        showMore.set(handler: { [weak self] control in
+            if let view = self {
+                revealReactions?(view)
+            }
+            control.layer?.animateScaleCenter(from: 1, to: 0.1, duration: 0.35, removeOnCompletion: false)
+            control.layer?.animateAlpha(from: 1, to: 0, duration: 0.35, removeOnCompletion: false)
+        }, for: .Click)
         
-        if radiusLayer {
-            
-            let shadow = NSShadow()
-            shadow.shadowBlurRadius = 2
-            shadow.shadowColor = NSColor.black.withAlphaComponent(0.2)
-            shadow.shadowOffset = NSMakeSize(0, 0)
-            self.shadow = shadow
-            
-            self.layer?.cornerRadius = 15
-            visualEffect.layer?.cornerRadius = 15
-            backgroundView.layer?.cornerRadius = 15
-            
-            scrollView.layer?.cornerRadius = 15
-            documentView.layer?.cornerRadius = 15
-            
-            
-            bottomGradient.shadowBackground = theme.colors.background.withAlphaComponent(0.6)
-            bottomGradient.direction = .horizontal(true)
-            topGradient.shadowBackground = theme.colors.background.withAlphaComponent(0.6)
-            topGradient.direction = .horizontal(false)
-            
-            scrollView.addSubview(topGradient)
-            scrollView.addSubview(bottomGradient)
-        }
+        shadowLayer.shadowColor = NSColor.black.cgColor
+        shadowLayer.shadowOffset = CGSize(width: 0.0, height: 0)
+        shadowLayer.shadowRadius = 2
+        shadowLayer.shadowOpacity = 0.2
+        shadowLayer.fillColor = NSColor.clear.cgColor
+        self.layer?.addSublayer(shadowLayer)
+
+        bottomGradient.shadowBackground = theme.colors.background.withAlphaComponent(1)
+        bottomGradient.direction = .horizontal(true)
+        topGradient.shadowBackground = theme.colors.background.withAlphaComponent(1)
+        topGradient.direction = .horizontal(false)
         
+       
         visualEffect.material = theme.colors.isDark ? .dark : .mediumLight
 
-        if #available(macOS 11.0, *), radiusLayer {
-            self.addSubview(visualEffect)
-            backgroundView.backgroundColor = theme.colors.background.withAlphaComponent(0.7)
-        } else if !radiusLayer {
-            backgroundView.backgroundColor = .clear
+        
+        if #available(macOS 11.0, *) {
+            backgroundColorView.backgroundColor = theme.colors.background.withAlphaComponent(0.7)
         } else {
-            backgroundView.backgroundColor = theme.colors.background
+            backgroundColorView.backgroundColor = theme.colors.background
         }
+        if #available(macOS 11.0, *) {
+            backgroundView.addSubview(visualEffect)
+        }
+        backgroundView.addSubview(backgroundColorView)
+
+        
         
         addSubview(backgroundView)
-        addSubview(scrollView)
-     
+        backgroundView.addSubview(scrollView)
+        addSubview(showMore)
+        
+        backgroundView.addSubview(topGradient)
+        backgroundView.addSubview(bottomGradient)
+
         
         NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: scrollView.clipView, queue: OperationQueue.main, using: { [weak self] notification  in
             self?.updateScroll()
@@ -260,16 +327,20 @@ final class ContextAddReactionsListView : View  {
                 
         scrollView.background = .clear
         scrollView.documentView = documentView
-        let size = NSMakeSize(30, 30)
+        let size = ContextAddReactionsListView.size
         var x: CGFloat = 0
         
         
         
         for reaction in list {
-            let reaction = ReactionView(frame: NSMakeRect(x, 0, size.width, size.height), context: context, reaction: reaction, add: add)
+            let itemSize = size.bounds
+            let reaction = ReactionView(frame: NSMakeRect(x, 5, itemSize.width, itemSize.height), context: context, reaction: reaction, add: add)
             documentView.addSubview(reaction)
-            x += size.width
+            x += size.width + 4
         }
+        
+        
+        
         updateLayout(size: frame.size, transition: .immediate)
         
        
@@ -280,7 +351,11 @@ final class ContextAddReactionsListView : View  {
         }
     }
     
-    func rect(for reaction: AvailableReactions.Reaction) -> NSRect {
+    static var size: CGSize {
+        return .init(width: 37, height: 30)
+    }
+    
+    func rect(for reaction: ContextReaction) -> NSRect {
         let view = documentView.subviews.compactMap {
             $0 as? ReactionView
         }.first(where: {
@@ -309,7 +384,7 @@ final class ContextAddReactionsListView : View  {
         }
         self.previousRange = range
         
-        if self.radiusLayer {
+        if self.radiusLayer != nil {
             for view in documentView.subviews {
                 var fr = CATransform3DIdentity
                 if view.visibleRect.size != view.frame.size {
@@ -342,8 +417,13 @@ final class ContextAddReactionsListView : View  {
         updateLayout(size: frame.size, transition: .immediate)
     }
     
-    static func width(for list: [AvailableReactions.Reaction]) -> CGFloat {
-        return  CGFloat(list.count) * 30
+    static func width(for count: Int, maxCount: Int = .max, allowToAll: Bool = true) -> CGFloat {
+        var width = CGFloat(min(count, maxCount)) * self.size.width
+        width += CGFloat(min(count - 1, maxCount)) * 4
+        if maxCount != .max, allowToAll {
+            width += self.size.width
+        }
+        return width
     }
     
     
@@ -360,14 +440,53 @@ final class ContextAddReactionsListView : View  {
     }
     
     func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
-        transition.updateFrame(view: self.scrollView, frame: size.bounds)
-        transition.updateFrame(view: self.documentView, frame: NSMakeSize(CGFloat(list.count) * 30, size.height).bounds)
         
-        transition.updateFrame(view: self.topGradient, frame: NSMakeRect(0, 0, 10, frame.height))
-        transition.updateFrame(view: self.bottomGradient, frame: NSMakeRect(frame.width - 10, 0, 10, frame.height))
+        var rect = size.bounds.insetBy(dx: 10, dy: 10)
+        rect.origin.y -= 5
+        
+        
+        let documentRect = NSMakeSize(ContextAddReactionsListView.width(for: self.list.count), rect.height).bounds
+        var scrollRect = rect
+        if documentRect.width < scrollRect.width, self.list.count < 6 {
+            scrollRect.size.width = documentRect.width
+            scrollRect.origin.x = rect.minX + (rect.width - documentRect.width) / 2
+        }
+        transition.updateFrame(view: self.documentView, frame: documentRect)
+        transition.updateFrame(view: self.scrollView, frame: scrollRect)
+
+        transition.updateFrame(view: self.topGradient, frame: NSMakeRect(10, 0, 10, size.height))
+        transition.updateFrame(view: self.bottomGradient, frame: NSMakeRect(rect.width, 0, 10, size.height))
         
         transition.updateFrame(view: visualEffect, frame: size.bounds)
         transition.updateFrame(view: backgroundView, frame: size.bounds)
+        transition.updateFrame(view: backgroundColorView, frame: size.bounds)
+        
+        transition.updateFrame(view: showMore, frame: NSMakeRect(rect.maxX - showMore.frame.width - 5, rect.minY + 5, showMore.frame.width, showMore.frame.height))
+        
+//        transition.updateFrame(layer: maskLayer, frame: rect.size.bounds)
+        transition.updateFrame(layer: shadowLayer, frame: size.bounds)
+
+        maskLayer.path = getMaskPath(rect: rect)
+        
+        shadowLayer.path = getMaskPath(rect: rect)
+        shadowLayer.shadowPath = getMaskPath(rect: rect)
+
+        
+        if transition.isAnimated {
+            maskLayer.animatePath()
+        }
+    }
+    
+    private func getMaskPath(rect: CGRect) -> CGPath {
+        
+        let mutablePath = CGMutablePath()
+        mutablePath.addRoundedRect(in: rect, cornerWidth: rect.height / 2, cornerHeight: rect.height / 2)
+        
+        let bubbleRect = NSMakeRect(rect.width - 40, rect.maxY - 10, 20, 20)
+
+        mutablePath.addRoundedRect(in: bubbleRect, cornerWidth: bubbleRect.width / 2, cornerHeight: bubbleRect.width / 2)
+
+        return mutablePath
     }
 }
 
@@ -402,7 +521,7 @@ private final class LockView : View {
 }
 
 
-
+/*
 final class AddReactionManager : NSObject, Notifable {
    
     private final class ItemView : View {
@@ -434,7 +553,7 @@ final class AddReactionManager : NSObject, Notifable {
             
             private let premium: LockView?
             
-            required init(frame frameRect: NSRect, context: AccountContext, reaction: AvailableReactions.Reaction, add: @escaping(String)->Void) {
+            required init(frame frameRect: NSRect, context: AccountContext, reaction: AvailableReactions.Reaction, add: @escaping(MessageReaction.Reaction)->Void) {
                 self.reaction = reaction
                 if reaction.isPremium, !context.isPremium {
                     self.premium = LockView()
@@ -575,7 +694,7 @@ final class AddReactionManager : NSObject, Notifable {
         private let topGradient = ShadowView()
         private let bottomGradient = ShadowView()
 
-        required init(frame frameRect: NSRect, context: AccountContext, isReversed: Bool, list: [AvailableReactions.Reaction], add:@escaping(String)->Void) {
+        required init(frame frameRect: NSRect, context: AccountContext, isReversed: Bool, list: [AvailableReactions.Reaction], add:@escaping(MessageReaction.Reaction)->Void) {
             self.list = list
             self.isReversed = isReversed
             super.init(frame: frameRect)
@@ -663,10 +782,10 @@ final class AddReactionManager : NSObject, Notifable {
         private let context: AccountContext
         private let disposable = MetaDisposable()
         private var listView: ListView?
-        private let add:(String)->Void
+        private let add:(MessageReaction.Reaction)->Void
         var isReversed: Bool = false
         var isRemoving: Bool = false
-        required init(frame frameRect: NSRect, isBubbled: Bool, context: AccountContext, reactions: [AvailableReactions.Reaction], add:@escaping(String)->Void) {
+        required init(frame frameRect: NSRect, isBubbled: Bool, context: AccountContext, reactions: [AvailableReactions.Reaction], add:@escaping(MessageReaction.Reaction)->Void) {
             self.isBubbled = isBubbled
             self.reactions = reactions
             self.context = context
@@ -1160,11 +1279,8 @@ final class AddReactionManager : NSObject, Notifable {
                                         let available = filter(available, attr: item.firstMessage?.reactionsAttribute)
                                         
                                         let current = ReactionView(frame: base, isBubbled: item.isBubbled, context: context, reactions: available, add: { [weak self] value in
-                                            let isSelected = message.reactionsAttribute?.reactions.contains(where: { $0.value == value && $0.isSelected }) == true
                                             
-                                            let reaction = available.first(where: { $0.value == value })
-                                            
-                                            context.reactions.react(message.id, value: isSelected ? nil : value, checkPrem: true)
+                                            context.reactions.react(message.id, values: message.newReactions(with: value.toUpdate(nil)))
                                             
                                             self?.clearAndLock()
                                         })
@@ -1303,6 +1419,8 @@ final class AddReactionManager : NSObject, Notifable {
     }
     
 }
+ 
+ */
 
 
 

@@ -18,12 +18,12 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
     
     enum State {
         case loading
-        case stats(read: [Peer]?, reactions: EngineMessageReactionListContext.State?)
+        case stats(read: [Peer]?, reactions: EngineMessageReactionListContext.State?, customFiles: [TelegramMediaFile]?)
         var isEmpty: Bool {
             switch self {
             case .loading:
                 return false
-            case let .stats(read, reactions):
+            case let .stats(read, reactions, _):
                 var readIsEmpty = true
                 var reactionsIsEmpty = true
                 if let read = read {
@@ -40,11 +40,20 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
             return self.text(message).isEmpty
         }
         
+        var emojiReferences: [StickerPackReference] {
+            switch self {
+            case .loading:
+                return []
+            case let .stats(_, _, files):
+                return files?.compactMap { $0.emojiReference } ?? []
+            }
+        }
+        
         func photos(_ message: Message) -> [Peer] {
             switch self {
             case .loading:
                 return []
-            case let .stats(read, reactions):
+            case let .stats(read, reactions, _):
                 var photos:[Peer] = []
                 if let reactions = reactions {
                     photos = Array(reactions.items.map { $0.peer._asPeer() }.prefix(3))
@@ -57,16 +66,24 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
                         photos += Array(read.prefix(3 - photos.count))
                     }
                 }
+                var contains:Set<PeerId> = Set()
+                photos = photos.reduce([], { current, value in
+                    if !contains.contains(value.id) {
+                        contains.insert(value.id)
+                        return current + [value]
+                    }
+                    return current
+                })
                 return photos
             }
         }
         
-        var peers:[(Peer, String?)] {
+        var peers:[(Peer, MessageReaction.Reaction?)] {
             switch self {
-            case let .stats(read, reactions):
+            case let .stats(read, reactions, _):
                 let readPeers = read ?? []
                 let reactionPeers = reactions?.items.map { ($0.peer._asPeer(), $0.reaction) } ?? []
-                let read:[(Peer, String?)] = readPeers.map { ($0, nil) }.filter({ value in
+                let read:[(Peer, MessageReaction.Reaction?)] = readPeers.map { ($0, nil) }.filter({ value in
                     return !reactionPeers.contains(where: {
                         $0.0.id == value.0.id
                     })
@@ -80,7 +97,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         
         func text(_ message: Message) -> String {
             switch self {
-            case let .stats(read, reactions):
+            case let .stats(read, reactions, _):
                 if let reactions = reactions, !reactions.items.isEmpty {
                     if let read = read, read.count > reactions.totalCount {
                         return strings().chatContextReacted("\(reactions.totalCount)", "\(read.count)")
@@ -149,17 +166,27 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
     
     func load() {
         
+        let customIds:[Int64] = message.reactionsAttribute?.reactions.compactMap { value in
+            switch value.value {
+            case let .custom(fileId):
+                return fileId
+            default:
+                return nil
+            }
+        } ?? []
+        
+        let customFiles = context.engine.stickers.resolveInlineStickers(fileIds: customIds) |> map { $0.map { $0.value } } |> map(Optional.init)
         let stats: Signal<MessageReadStats?, NoError> = context.engine.messages.messageReadStats(id: message.id)
         let reactions = self.reactions.state |> map(Optional.init)
-        let combined = combineLatest(queue: .mainQueue(), reactions, stats)
+        let combined = combineLatest(queue: .mainQueue(), reactions, stats, customFiles)
         
-        let readStats: Signal<State, NoError> = .single((nil, nil)) |> then(combined)
+        let readStats: Signal<State, NoError> = .single((nil, nil, nil)) |> then(combined)
             |> deliverOnMainQueue
-            |> map { reactions, readStats in
+            |> map { reactions, readStats, customFiles in
                 if reactions == nil && readStats == nil {
                     return .loading
                 } else {
-                    return .stats(read: readStats?.peers.map { $0._asPeer() }, reactions: reactions)
+                    return .stats(read: readStats?.peers.map { $0._asPeer() }, reactions: reactions, customFiles: customFiles)
                 }
             }
 
@@ -176,16 +203,34 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         let message = self.message
         let context = self.context
         let availableReactions = self.availableReactions
-        let makeItem:(_ peer: (Peer, String?)) -> ContextMenuItem = { [weak chatInteraction] peer in
+        let makeItem:(_ peer: (Peer, MessageReaction.Reaction?)) -> ContextMenuItem = { [weak chatInteraction] peer in
             let title = peer.0.displayTitle.prefixWithDots(25)
             
-            let reaction = availableReactions?.reactions.first(where: {
-                $0.value.fixed == peer.1?.fixed
-            })?.staticIcon
+            let reaction: ReactionPeerMenu.Source?
+            
+            if let value = peer.1 {
+                let file = availableReactions?.reactions.first(where: {
+                    $0.value == value
+                })?.staticIcon
+                if let file = file {
+                    reaction = .builtin(file)
+                } else {
+                    switch value {
+                    case let .custom(fileId):
+                        let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
+                        reaction = .custom(fileId, message.associatedMedia[mediaId] as? TelegramMediaFile)
+                    default:
+                        reaction = nil
+                    }
+                }
+            } else {
+                reaction = nil
+            }
+            
             
             let item = ReactionPeerMenu(title: title, handler: {
                 chatInteraction?.openInfo(peer.0.id, false, nil, nil)
-            }, peerId: peer.0.id, context: context, reaction: reaction)
+            }, peer: peer.0, context: context, reaction: reaction)
             let signal:Signal<(CGImage?, Bool), NoError>
             signal = peerAvatarImage(account: context.account, photo: .peer(peer.0, peer.0.smallProfileImage, peer.0.displayLetters, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
             _ = signal.start(next: { [weak item] image, _ in
@@ -196,7 +241,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
             return item
         }
        
-        let items = state.peers.map {
+        var items = state.peers.map {
             makeItem($0)
         }
         
@@ -204,7 +249,28 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         
         if items.count > 1 || hasReactions {
             
+            let references:[StickerPackReference] = state.emojiReferences
+            
+            if !references.isEmpty {
+                
+                items.append(ContextSeparatorItem())
+                
+                let sources:[StickerPackPreviewSource] = references.map {
+                    .emoji($0)
+                }
+                let text = strings().chatContextMessageContainsEmojiCountable(sources.count)
+                
+                let item = MessageContainsPacksMenuItem(title: text, handler: {
+                    showModal(with: StickerPackPreviewModalController(context, peerId: context.peerId, references: sources), for: context.window)
+                }, packs: references, context: context)
+                
+                items.append(item)
+            }
+            
+            
             menu.items = items
+
+            
             self.item.submenu = menu
             if let view = self.view, view.mouseInside() || self.isSelected {
                 self.interaction?.presentSubmenu(self.item)
@@ -213,7 +279,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
             menu.loadMore = { [weak self] in
                 if let state = self?.state {
                     switch state {
-                    case let .stats(_, reactions):
+                    case let .stats(_, reactions, _):
                         if let reactions = reactions, reactions.canLoadMore {
                             self?.reactions.loadMore()
                         }
@@ -536,22 +602,37 @@ final class MessageReadMenuItem : ContextMenuItem {
 
 
 final class ReactionPeerMenu : ContextMenuItem {
-    
+    enum Source : Equatable {
+        case builtin(TelegramMediaFile)
+        case custom(Int64, TelegramMediaFile?)
+    }
     private let context: AccountContext
-    private let reaction: TelegramMediaFile?
-    private let peerId: PeerId
-    init(title: String, handler:@escaping()->Void, peerId: PeerId, context: AccountContext, reaction: TelegramMediaFile?) {
+    private let reaction: Source?
+    private let peer: Peer
+    init(title: String, handler:@escaping()->Void, peer: Peer, context: AccountContext, reaction: Source?) {
         self.reaction = reaction
-        self.peerId = peerId
+        self.peer = peer
         self.context = context
         super.init(title, handler: handler)
     }
     override var id: Int64 {
-        return peerId.toInt64()
+        var value: Hasher = Hasher()
+        value.combine(peer.id.toInt64())
+        if let reaction = reaction {
+            switch reaction {
+            case let .builtin(file):
+                value.combine("builtin")
+                value.combine(file.fileId.id)
+            case let .custom(fileId, _):
+                value.combine("custom")
+                value.combine(fileId)
+            }
+        }
+        return Int64(value.finalize().hashValue)
     }
     
     override func rowItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {
-        return ReactionPeerMenuItem(item: self, interaction: interaction, presentation: presentation, context: context, reaction: self.reaction)
+        return ReactionPeerMenuItem(item: self, peer: peer, interaction: interaction, presentation: presentation, context: context, reaction: self.reaction)
     }
     
     required init(coder decoder: NSCoder) {
@@ -560,11 +641,15 @@ final class ReactionPeerMenu : ContextMenuItem {
 }
 
 private final class ReactionPeerMenuItem : AppMenuRowItem {
+    
+    
     fileprivate let context: AccountContext
-    fileprivate let reaction: TelegramMediaFile?
-    init(item: ContextMenuItem, interaction: AppMenuBasicItem.Interaction, presentation: AppMenu.Presentation, context: AccountContext, reaction: TelegramMediaFile?) {
+    fileprivate let reaction: ReactionPeerMenu.Source?
+    fileprivate let peer: Peer
+    init(item: ContextMenuItem, peer: Peer, interaction: AppMenuBasicItem.Interaction, presentation: AppMenu.Presentation, context: AccountContext, reaction: ReactionPeerMenu.Source?) {
         self.context = context
         self.reaction = reaction
+        self.peer = peer
         super.init(.zero, item: item, interaction: interaction, presentation: presentation)
         if item.image == nil {
             let image = generateImage(NSMakeSize(imageSize, imageSize), rotatedContext: { size, ctx in
@@ -581,6 +666,9 @@ private final class ReactionPeerMenuItem : AppMenuRowItem {
         if let _ = reaction {
             size.width += 16 + 2 + self.innerInset
         }
+        if let s = PremiumStatusControl.controlSize(peer, false) {
+            size.width += s.width + 2
+        }
         return size
     }
     
@@ -590,7 +678,8 @@ private final class ReactionPeerMenuItem : AppMenuRowItem {
 }
 
 private final class ReactionPeerMenuItemView : AppMenuRowView {
-    private let imageView = TransformImageView(frame: NSMakeRect(0, 0, 16, 16))
+    private let imageView = AnimationLayerContainer(frame: NSMakeRect(0, 0, 16, 16))
+    private var statusControl: PremiumStatusControl?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(imageView)
@@ -602,14 +691,35 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
     
     override func layout() {
         super.layout()
+        
+        guard let item = item as? ReactionPeerMenuItem else {
+            return
+        }
+        
+        if let statusControl = statusControl {
+            statusControl.centerY(x: self.textX + item.text.layoutSize.width + 2)
+            imageView.centerY(x: self.rightX - imageView.frame.width)
+        }
+        
         imageView.centerY(x: self.rightX - imageView.frame.width)
+
     }
     
     override func set(item: TableRowItem, animated: Bool = false) {
+        let previous = self.item as? ReactionPeerMenuItem
         super.set(item: item, animated: animated)
         
         guard let item = item as? ReactionPeerMenuItem else {
             return
+        }
+        
+        let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: animated)
+        if let control = control {
+            self.statusControl = control
+            self.addSubview(control)
+        } else if let view = self.statusControl {
+            performSubviewRemoval(view, animated: animated)
+            self.statusControl = nil
         }
                 
         self.imageView.isHidden = item.reaction == nil
@@ -617,239 +727,86 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
         let reactionSize = NSMakeSize(16, 16)
         
         if let reaction = item.reaction {
-            let arguments = TransformImageArguments(corners: .init(), imageSize: reactionSize, boundingSize: reactionSize, intrinsicInsets: NSEdgeInsetsZero, emptyColor: nil)
             
-            self.imageView.setSignal(signal: cachedMedia(media: reaction, arguments: arguments, scale: System.backingScale, positionFlags: nil), clearInstantly: true)
-
-            if !self.imageView.isFullyLoaded {
-                self.imageView.setSignal(chatMessageSticker(postbox: item.context.account.postbox, file: .standalone(media: reaction), small: false, scale: System.backingScale), cacheImage: { result in
-                    cacheMedia(result, media: reaction, arguments: arguments, scale: System.backingScale)
-                })
+            
+            if previous?.reaction != item.reaction {
+                let layer: InlineStickerItemLayer
+                switch reaction {
+                case let .custom(fileId, file):
+                    layer = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: reactionSize)
+                case let .builtin(file):
+                    layer = .init(account: item.context.account, file: file, size: reactionSize)
+                }
+                self.imageView.updateLayer(layer, animated: animated)
             }
-
-            self.imageView.set(arguments: arguments)
-
+            
         }
         needsLayout = true
     }
 }
 
 
+final class MessageContainsPacksMenuItem : ContextMenuItem {
+   
+    private let context: AccountContext
+    private let packs: [StickerPackReference]
+    init(title: String, handler:@escaping()->Void, packs: [StickerPackReference], context: AccountContext) {
+        self.packs = packs
+        self.context = context
+        super.init(title, handler: handler, itemImage: MenuAnimation.menu_smile.value)
+    }
+    
+    override func rowItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {
+        return MessageContainsPacksItem(item: self, packs: packs, interaction: interaction, presentation: presentation, context: context)
+    }
+    
+    required init(coder decoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
 
 
 
+final class MessageContainsPacksItem : AppMenuRowItem {
 
+    let packs: [StickerPackReference]
+    let context: AccountContext
+    
+    init(item: ContextMenuItem, packs: [StickerPackReference], interaction: AppMenuBasicItem.Interaction, presentation: AppMenu.Presentation, context: AccountContext) {
+        self.packs = packs
+        self.context = context
+        super.init(.zero, item: item, interaction: interaction, presentation: presentation)
+    }
+    
+    public override var height: CGFloat {
+        return 28 + 13
+    }
+    
+//    override var effectiveSize: NSSize {
+//        var size = super.effectiveSize
+//        if let _ = reaction {
+//            size.width += 16 + 2 + self.innerInset
+//        }
+//        if let s = PremiumStatusControl.controlSize(peer, false) {
+//            size.width += s.width + 2
+//        }
+//        return size
+//    }
+    
+    override func viewClass() -> AnyClass {
+        return MessageContainsPacksItemView.self
+    }
 
+}
 
-
-
-
-
-
-
-
-
-
-
-/*
- 
- 
- 
- final class ReactionsHeaderMenuItem : ContextMenuItem {
-     
-     private let context: AccountContext
-     private let availableReactions: AvailableReactions?
-     init(context: AccountContext, availableReactions: AvailableReactions?) {
-         self.context = context
-         self.availableReactions = availableReactions
-         super.init("")
-     }
-     
-     required init(coder decoder: NSCoder) {
-         fatalError("init(coder:) has not been implemented")
-     }
-     
-     override func stickClass() -> AnyClass {
-         return ReactionsHeaderMenuRowItem.self
-     }
-     
-     override func rowItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {
-         return ReactionsHeaderMenuRowItem(.zero, item: self, presentation: presentation, interaction: interaction, context: self.context, availableReactions: self.availableReactions)
-     }
- }
-
- private final class ReactionsHeaderMenuRowItem : TableStickItem {
-     fileprivate let context: AccountContext?
-     fileprivate let availableReactions: AvailableReactions?
-     fileprivate let presentaion: AppMenu.Presentation?
-     fileprivate let interaction: AppMenuBasicItem.Interaction?
-     fileprivate let item: ContextMenuItem?
-     init(_ initialSize: NSSize, item: ContextMenuItem, presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction, context: AccountContext, availableReactions: AvailableReactions?) {
-         self.context = context
-         self.availableReactions = availableReactions
-         self.item = item
-         self.presentaion = presentation
-         self.interaction = interaction
-         super.init(initialSize)
-     }
-     
-     required init(_ initialSize: NSSize) {
-         self.context = nil
-         self.availableReactions = nil
-         self.item = nil
-         self.presentaion = nil
-         self.interaction = nil
-         super.init(initialSize)
-     }
-     
-     
-     override func viewClass() -> AnyClass {
-         return ReactionsHeaderMenuRowView.self
-     }
-     override var height: CGFloat {
-         return 26 + 4
-     }
- }
-
- private final class ReactionsHeaderMenuRowView: TableStickView {
-     private let tableView = HorizontalTableView(frame: .zero)
-     private let visualView = NSVisualEffectView(frame: .zero)
-     required init(frame frameRect: NSRect) {
-         super.init(frame: frameRect)
-         addSubview(visualView)
-         addSubview(tableView)
-         self.visualView.wantsLayer = true
-         self.visualView.state = .active
-         self.visualView.blendingMode = .behindWindow
-
-         tableView.getBackgroundColor = {
-             .clear
-         }
-     }
-     
-     required init?(coder: NSCoder) {
-         fatalError("init(coder:) has not been implemented")
-     }
-     
-     override var backdorColor: NSColor {
-         return .clear
-     }
-     
-     override func layout() {
-         super.layout()
-         visualView.frame = bounds
-         tableView.frame = self.bounds.insetBy(dx: 0, dy: 2)
-     }
-     
-     override func updateIsVisible(_ visible: Bool, animated: Bool) {
-         
-     }
-     
-     override func set(item: TableRowItem, animated: Bool = false) {
-         super.set(item: item, animated: animated)
-         
-         guard let item = item as? ReactionsHeaderMenuRowItem else {
-             return
-         }
-         
-         
-         
-         tableView.removeAll()
-         
-         guard let presentation = item.presentaion else {
-             return
-         }
-         guard let context = item.context else {
-             return
-         }
-         
-         if presentation.colors.isDark {
-             visualView.material = .dark
-         } else {
-             visualView.material = .light
-         }
-         
-         let data = ChatReactionsLayout.Theme(bgColor: .clear, textColor: presentation.textColor, borderColor: .clear, selectedColor: presentation.disabledTextColor.withAlphaComponent(0.4), reactionSize: NSMakeSize(16, 16), insetOuter: 10, insetInner: 5, renderType: .list, isIncoming: false, isOutOfBounds: false, hasWallpaper: false)
-         
-         if let availableReactions = item.availableReactions {
-             var index: Int = 0
-             _ = tableView.addItem(item: GeneralRowItem(.zero, height: 4, backgroundColor: .clear))
-             for reaction in availableReactions.reactions {
-                 let layout = ChatReactionsLayout.Reaction(value: MessageReaction(value: reaction.value, count: 55, isSelected: index == 0), index: index, available: reaction, presentation: data, action: {
-                     
-                 })
-                 layout.rect = layout.minimiumSize.bounds
-                 index += 1
-                 _ = tableView.addItem(item: ReactionMenuItem(.zero, context: context, layout: layout))
-                 
-                 if reaction != availableReactions.reactions.last {
-                     _ = tableView.addItem(item: GeneralRowItem(.zero, height: 4, backgroundColor: .clear))
-                 }
-             }
-             _ = tableView.addItem(item: GeneralRowItem(.zero, height: 4, backgroundColor: .clear))
-         }
-
-         needsLayout = true
-     }
- }
-
-
- private final class ReactionMenuItem : TableRowItem {
-     fileprivate let layout: ChatReactionsLayout.Reaction
-     fileprivate let context: AccountContext
-     init(_ initialSize: NSSize, context: AccountContext, layout: ChatReactionsLayout.Reaction) {
-         self.layout = layout
-         self.context = context
-         super.init(initialSize)
-     }
-     
-     override var stableId: AnyHashable {
-         return layout.value.value
-     }
-     
-     override var width: CGFloat {
-         return layout.minimiumSize.height
-     }
-     
-     override var height: CGFloat {
-         return layout.minimiumSize.width
-     }
-     
-     override func viewClass() -> AnyClass {
-         return ReactionMenuItemView.self
-     }
- }
-
- private final class ReactionMenuItemView : HorizontalRowView {
-     private let view:ChatReactionsView.ReactionView = .init(frame: .zero)
-     required init(frame frameRect: NSRect) {
-         super.init(frame: frameRect)
-         addSubview(view)
-     }
-     
-     required init?(coder: NSCoder) {
-         fatalError("init(coder:) has not been implemented")
-     }
-     
-     override var backdorColor: NSColor {
-         return .clear
-     }
-     
-     override func layout() {
-         super.layout()
-         view.center()
-     }
-     override func set(item: TableRowItem, animated: Bool = false) {
-         super.set(item: item, animated: animated)
-         guard let item = item as? ReactionMenuItem else {
-             return
-         }
-         view.setFrameSize(item.layout.minimiumSize)
-         view.update(with: item.layout, account: item.context.account, animated: animated)
-         view.updateLayout(size: item.layout.minimiumSize, transition: .immediate)
-         
-         needsLayout = true
-     }
- }
-
- */
+private final class MessageContainsPacksItemView: AppMenuRowView {
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        
+        backgroundColor = .random
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}

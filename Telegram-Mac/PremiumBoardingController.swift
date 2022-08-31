@@ -126,12 +126,14 @@ private final class Arguments {
     let showPrivacy:()->Void
     let openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void
     let openFeature:(PremiumValue)->Void
-    init(context: AccountContext, showTerms: @escaping()->Void, showPrivacy:@escaping()->Void, openInfo:@escaping(PeerId, Bool, MessageId?, ChatInitialAction?)->Void, openFeature:@escaping(PremiumValue)->Void) {
+    let togglePeriod:(PremiumPeriod)->Void
+    init(context: AccountContext, showTerms: @escaping()->Void, showPrivacy:@escaping()->Void, openInfo:@escaping(PeerId, Bool, MessageId?, ChatInitialAction?)->Void, openFeature:@escaping(PremiumValue)->Void, togglePeriod:@escaping(PremiumPeriod)->Void) {
         self.context = context
         self.showPrivacy = showPrivacy
         self.showTerms = showTerms
         self.openInfo = openInfo
         self.openFeature = openFeature
+        self.togglePeriod = togglePeriod
     }
 }
 
@@ -295,6 +297,9 @@ private struct State : Equatable {
     var premiumConfiguration: PremiumPromoConfiguration
     var stickers: [TelegramMediaFile]
     var canMakePayment: Bool
+    
+    var periods: [PremiumPeriod] = [.init(period: .month, price: 0, currency: "usd"), .init(period: .year, price: 100000, currency: "usd")]
+    var period: PremiumPeriod = .init(period: .month, price: 0, currency: "usd")
 }
 
 
@@ -316,6 +321,21 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         return PremiumBoardingHeaderItem(initialSize, stableId: stableId, context: arguments.context, isPremium: state.isPremium, peer: state.peer?.peer, source: state.source, premiumText: status, viewType: .legacy)
     }))
     index += 1
+    
+    
+//    if !state.periods.isEmpty, !state.isPremium {
+//        let period = state.period
+//        let periods = state.periods
+//        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_id_periods"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
+//            return PremiumSelectPeriodRowItem(initialSize, stableId: stableId, context: arguments.context, periods: periods, selectedPeriod: period, viewType: .singleItem, callback: { period in
+//                arguments.togglePeriod(period)
+//            })
+//        }))
+//        index += 1
+//
+//        entries.append(.sectionId(sectionId, type: .customModern(15)))
+//        sectionId += 1
+//    }
     
     for (i, value) in state.values.enumerated() {
         let viewType = bestGeneralViewType(state.values, for: i)
@@ -393,10 +413,14 @@ private final class PremiumBoardingView : View {
         
         func update(animated: Bool, state: State) -> NSSize {
             let price: String
+            let product = state.premiumConfiguration.premiumProductOptions.first(where: { $0.months == 1
+           })
             if let product = state.premiumProduct {
                 price = product.price
+            } else if let product = product {
+                price = formatCurrencyAmount(product.amount, currency: product.currency)
             } else {
-                price = formatCurrencyAmount(state.premiumConfiguration.monthlyAmount, currency: state.premiumConfiguration.currency)
+                price = ""
             }
             let text: String
             if state.canMakePayment {
@@ -796,6 +820,12 @@ final class PremiumBoardingController : ModalViewController {
                 }, makeAcceptView: { [weak strongSelf] in
                     return strongSelf?.genericView.makeAcceptView()
                 }), animated: true)
+            }
+        }, togglePeriod: { period in
+            updateState { current in
+                var current = current
+                current.period = period
+                return current
             }
         })
         

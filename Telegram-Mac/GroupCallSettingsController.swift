@@ -194,7 +194,7 @@ private func _id_peer(_ id:PeerId) -> InputDataIdentifier {
     return InputDataIdentifier("_id_peer_\(id.toInt64())")
 }
 
-private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODevices, uiState: GroupCallSettingsState, settings: VoiceCallSettings, account: Account, peer: Peer, accountPeer: Peer, joinAsPeerId: PeerId, arguments: Arguments) -> [InputDataEntry] {
+private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODevices, uiState: GroupCallSettingsState, settings: VoiceCallSettings, context: AccountContext, peer: Peer, accountPeer: Peer, joinAsPeerId: PeerId, arguments: Arguments) -> [InputDataEntry] {
     
     var entries:[InputDataEntry] = []
     let theme = GroupCallTheme.customTheme
@@ -241,7 +241,7 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
             
             let tuple = Tuple(peer: FoundPeer(peer: accountPeer, subscribers: nil), viewType: uiState.displayAsList == nil || uiState.displayAsList?.isEmpty == false ? .firstItem : .singleItem, selected: accountPeer.id == joinAsPeerId, status: strings().voiceChatSettingsDisplayAsPersonalAccount)
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("self"), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: account, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.textColor, highlightColor: .white), statusStyle: ControlStyle(foregroundColor: theme.grayTextColor), status: tuple.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
+                return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: context.account, context: context, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.textColor, highlightColor: .white), statusStyle: ControlStyle(foregroundColor: theme.grayTextColor), status: tuple.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
                     arguments.switchAccount(tuple.peer.peer.id)
                 }, customTheme: theme)
             }))
@@ -272,7 +272,7 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
                 
                 
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(peer.peer.id), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                    return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: account, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.textColor, highlightColor: .white), statusStyle: ControlStyle(foregroundColor: theme.grayTextColor), status: tuple.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
+                    return ShortPeerRowItem(initialSize, peer: tuple.peer.peer, account: context.account, context: context, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.textColor, highlightColor: .white), statusStyle: ControlStyle(foregroundColor: theme.grayTextColor), status: tuple.status, inset: NSEdgeInsets(left: 30, right: 30), interactionType: .plain, generalType: .selectable(tuple.selected), viewType: tuple.viewType, action: {
                         arguments.switchAccount(tuple.peer.peer.id)
                     }, customTheme: theme)
 
@@ -330,7 +330,7 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
             
             if uiState.recordVideo {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("video_orientation"), equatable: InputDataEquatable(uiState), comparable: nil, item: { initialSize, stableId in
-                    return GroupCallVideoOrientationRowItem(initialSize, stableId: stableId, viewType: .innerItem, account: account, customTheme: theme, selected: uiState.videoOrientation, select: arguments.selectVideoRecordOrientation)
+                    return GroupCallVideoOrientationRowItem(initialSize, stableId: stableId, viewType: .innerItem, account: context.account, customTheme: theme, selected: uiState.videoOrientation, select: arguments.selectVideoRecordOrientation)
                 }))
                 index += 1
             }
@@ -344,7 +344,7 @@ private func groupCallSettingsEntries(callState: GroupCallUIState, devices: IODe
         let tuple = Tuple(recordingStartTimestamp: recordingStartTimestamp, viewType: recordingStartTimestamp == nil ? .lastItem : .singleItem)
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("recording"), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-            return GroupCallRecorderRowItem(initialSize, stableId: stableId, viewType: tuple.viewType, account: account, startedRecordedTime: tuple.recordingStartTimestamp, customTheme: theme, start: arguments.startRecording, stop: arguments.stopRecording)
+            return GroupCallRecorderRowItem(initialSize, stableId: stableId, viewType: tuple.viewType, account: context.account, startedRecordedTime: tuple.recordingStartTimestamp, customTheme: theme, start: arguments.startRecording, stop: arguments.stopRecording)
         }))
         index += 1
         
@@ -594,7 +594,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
     fileprivate let sharedContext: SharedAccountContext
     fileprivate let call: PresentationGroupCall
     private let disposable = MetaDisposable()
-    private let account: Account
+    private let context: AccountContext
     private let monitorPermissionDisposable = MetaDisposable()
     private let actualizeTitleDisposable = MetaDisposable()
     private let displayAsPeersDisposable = MetaDisposable()
@@ -602,11 +602,11 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
     
     private let callState: Signal<GroupCallUIState, NoError>
     
-    init(sharedContext: SharedAccountContext, account: Account, callState: Signal<GroupCallUIState, NoError>, call: PresentationGroupCall) {
+    init(sharedContext: SharedAccountContext, context: AccountContext, callState: Signal<GroupCallUIState, NoError>, call: PresentationGroupCall) {
         self.sharedContext = sharedContext
-        self.account = account
         self.call = call
         self.callState = callState
+        self.context = context
         super.init()
         bar = .init(height: 0)
     }
@@ -716,7 +716,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
 
         self.genericView.tableView._mouseDownCanMoveWindow = true
         
-        let account = self.account
+        let context = self.context
         let peerId = self.call.peerId
         let initialState = GroupCallSettingsState(hasPermission: nil, title: nil, recordVideo: true, videoOrientation: .landscape)
         
@@ -749,7 +749,7 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
             }
         }))
         
-        displayAsPeersDisposable.set(combineLatest(queue: prepareQueue,call.displayAsPeers, account.postbox.peerView(id: account.peerId)).start(next: { list, peerView in
+        displayAsPeersDisposable.set(combineLatest(queue: prepareQueue,call.displayAsPeers, context.account.postbox.peerView(id: context.peerId)).start(next: { list, peerView in
             updateState { current in
                 var current = current
                 current.displayAsList = list
@@ -920,8 +920,8 @@ final class GroupCallSettingsController : GenericViewController<GroupCallSetting
         }))
         
         
-        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, sharedContext.devicesContext.signal, voiceCallSettings(sharedContext.accountManager), appearanceSignal, self.call.account.postbox.loadedPeerWithId(self.call.peerId), self.call.account.postbox.loadedPeerWithId(account.peerId), joinAsPeer, self.callState, statePromise.get()) |> mapToQueue { devices, settings, appearance, peer, accountPeer, joinAsPeerId, state, uiState in
-            let entries = groupCallSettingsEntries(callState: state, devices: devices, uiState: uiState, settings: settings, account: account, peer: peer, accountPeer: accountPeer, joinAsPeerId: joinAsPeerId, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
+        let signal: Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, sharedContext.devicesContext.signal, voiceCallSettings(sharedContext.accountManager), appearanceSignal, self.call.account.postbox.loadedPeerWithId(self.call.peerId), self.call.account.postbox.loadedPeerWithId(context.peerId), joinAsPeer, self.callState, statePromise.get()) |> mapToQueue { devices, settings, appearance, peer, accountPeer, joinAsPeerId, state, uiState in
+            let entries = groupCallSettingsEntries(callState: state, devices: devices, uiState: uiState, settings: settings, context: context, peer: peer, accountPeer: accountPeer, joinAsPeerId: joinAsPeerId, arguments: arguments).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
             return prepareInputDataTransition(left: previousEntries.swap(entries), right: entries, animated: true, searchState: nil, initialSize: initialSize.with { $0 }, arguments: inputDataArguments, onMainQueue: false)
         } |> deliverOnMainQueue
 

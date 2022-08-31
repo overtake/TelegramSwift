@@ -743,7 +743,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         }
         afterComplete(true)
     case let .stickerPack(_, reference, context, peerId):
-        showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for: context.window)
+        showModal(with: StickerPackPreviewModalController(context, peerId: peerId, references: [reference]), for: context.window)
         afterComplete(true)
     case let .confirmPhone(_, context, phone, hash):
         _ = showModalProgress(signal: context.engine.auth.requestCancelAccountResetData(hash: hash) |> deliverOnMainQueue, for: context.window).start(next: { data in
@@ -1131,14 +1131,48 @@ private let keyURLPass = "pass";
 let legacyPassportUsername = "telegrampassport"
 
 func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = nil, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings) -> Void)? = nil, confirm: Bool = false) -> inAppLink {
-    let external = url
-    let urlString = external as String
-    let url = url.lowercased.nsstring
     
-
+    var value = url
+    let subdomainRange = url.range(of: ".t.me")
+    if subdomainRange.location != NSNotFound, let subdomain = URL(string: url as String) {
+        var subdomain = subdomain
+        if subdomain.scheme == nil, let domain = URL(string: "https://" + subdomain.path) {
+            subdomain = domain
+        }
+        if let host = subdomain.host {
+            var components:[String] = []
+            components = host.components(separatedBy: ".")
+            var newValue: String = ""
+            if components.count == 3, components[1] == "t", components[2] == "me" {
+                newValue = "https://" + components[1] + "." + components[2] + "/" + components[0]
+                let queryRange = url.range(of: host + "/?")
+                if queryRange.location != NSNotFound {
+                    let query = url.substring(with: NSMakeRange(queryRange.max, url.length - queryRange.max))
+                    newValue += "?" + query
+                } else {
+                    let queryRange = url.range(of: host + "/")
+                    if queryRange.location != NSNotFound {
+                        let query = url.substring(with: NSMakeRange(queryRange.max, url.length - queryRange.max))
+                        newValue += "/" + query
+                    }
+                }
+            }
+            if !newValue.isEmpty {
+                value = newValue.nsstring
+            }
+        }
+    }
+    
+    let external = value
+    let urlString = external as String
+    let url = value.lowercased.nsstring
+    
+    
     if let url = URL(string: url as String), url.scheme == "file" {
         return .nothing
     }
+    
+    
     
     for domain in telegram_me {
         let range = url.range(of: domain)

@@ -125,7 +125,7 @@ private final class AnimatedClueRowView: HorizontalRowView {
             
             let size = NSMakeSize(item.height - 10, item.height - 10)
             
-            let sticker = InlineStickerItemLayer(context: item.context, file: item.clue, size: size)
+            let sticker = InlineStickerItemLayer(account: item.context.account, file: item.clue, size: size)
             sticker.superview = self
             sticker.isPlayable = true
             self.sticker = sticker
@@ -143,12 +143,25 @@ private final class AnimatedClueRowView: HorizontalRowView {
     
     @objc func updateAnimatableContent() -> Void {
         if let value = self.sticker, let superview = value.superview {
-            value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow
+            var isKeyWindow: Bool = false
+            if let window = window {
+                if !window.canBecomeKey {
+                    isKeyWindow = true
+                } else {
+                    isKeyWindow = window.isKeyWindow
+                }
+            }
+            value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
         }
     }
     
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
+        self.updateListeners()
+        self.updateAnimatableContent()
+    }
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
         self.updateListeners()
         self.updateAnimatableContent()
     }

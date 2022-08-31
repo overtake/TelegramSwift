@@ -330,7 +330,7 @@ private func searchEntriesForPeers(_ peers:[SelectPeerValue], _ global: [SelectP
     return entries
 }
 
-fileprivate func prepareEntries(from:[SelectPeerEntry]?, to:[SelectPeerEntry], account: Account, initialSize:NSSize, animated:Bool, interactions:SelectPeerInteraction, singleAction:((Peer)->Void)? = nil, scroll: TableScrollState = .none(nil)) -> Signal<TableUpdateTransition, NoError> {
+fileprivate func prepareEntries(from:[SelectPeerEntry]?, to:[SelectPeerEntry], context: AccountContext, initialSize:NSSize, animated:Bool, interactions:SelectPeerInteraction, singleAction:((Peer)->Void)? = nil, scroll: TableScrollState = .none(nil)) -> Signal<TableUpdateTransition, NoError> {
     return Signal { subscriber in
         var cancelled = false
         
@@ -349,9 +349,9 @@ fileprivate func prepareEntries(from:[SelectPeerEntry]?, to:[SelectPeerEntry], a
                     interactionType = .selectable(interactions)
                 }
                 
-                let (status, color) = peer.status(account)
+                let (status, color) = peer.status(context.account)
                 
-                item = ShortPeerRowItem(initialSize, peer: peer.peer, account: account, stableId: entry.stableId, enabled: enabled, titleStyle: ControlStyle(font: .medium(.title), foregroundColor: peer.customTheme?.textColor ?? theme.colors.text, highlightColor: .white), statusStyle: ControlStyle(foregroundColor: color), status: status, isLookSavedMessage: true, drawLastSeparator: true, inset:NSEdgeInsets(left: 10, right:10), interactionType:interactionType, action: {
+                item = ShortPeerRowItem(initialSize, peer: peer.peer, account: context.account, context: context, stableId: entry.stableId, enabled: enabled, titleStyle: ControlStyle(font: .medium(.title), foregroundColor: peer.customTheme?.textColor ?? theme.colors.text, highlightColor: .white), statusStyle: ControlStyle(foregroundColor: color), status: status, isLookSavedMessage: true, drawLastSeparator: true, inset:NSEdgeInsets(left: 10, right:10), interactionType:interactionType, action: {
                     if let singleAction = singleAction {
                         singleAction(peer.peer)
                     }
@@ -1419,7 +1419,7 @@ class SelectPeersController: SelectPeersMainController<[PeerId], Void, SelectPee
         let first: Atomic<Bool> = Atomic(value: true)
         
         let transition = combineLatest(queue: prepareQueue, behavior.start(context: context, search: search.get() |> distinctUntilChanged |> map {SearchState(state: .None, request: $0)}), limitsSignal) |> mapToQueue { entries, limits -> Signal<(TableUpdateTransition, LimitsConfiguration?), NoError> in
-            return prepareEntries(from: previous.swap(entries.0), to: entries.0, account: account, initialSize: initialSize.modify({$0}), animated: false, interactions: interactions, scroll: entries.1 ? .up(false) : .none(nil)) |> runOn(first.swap(false) ? .mainQueue() : prepareQueue) |> map { ($0, limits) }
+            return prepareEntries(from: previous.swap(entries.0), to: entries.0, context: context, initialSize: initialSize.modify({$0}), animated: false, interactions: interactions, scroll: entries.1 ? .up(false) : .none(nil)) |> runOn(first.swap(false) ? .mainQueue() : prepareQueue) |> map { ($0, limits) }
         } |> deliverOnMainQueue
         
         disposable.set(transition.start(next: { [weak self] transition, limits in
@@ -1687,7 +1687,7 @@ private class SelectPeersModalController : ModalViewController, Notifable {
 
         
         let transition = behavior.start(context: context, search: search.get() |> distinctUntilChanged, linkInvation: linkInvation) |> mapToQueue { entries, updateSearch -> Signal<TableUpdateTransition, NoError> in
-            return prepareEntries(from: previous.swap(entries), to: entries, account: account, initialSize: initialSize.modify({$0}), animated: false, interactions:interactions, singleAction: singleAction, scroll: updateSearch ? .up(false) : .none(nil)) |> runOn(first.swap(false) ? .mainQueue() : prepareQueue)
+            return prepareEntries(from: previous.swap(entries), to: entries, context: context, initialSize: initialSize.modify({$0}), animated: false, interactions:interactions, singleAction: singleAction, scroll: updateSearch ? .up(false) : .none(nil)) |> runOn(first.swap(false) ? .mainQueue() : prepareQueue)
         } |> deliverOnMainQueue
         
         disposable.set(transition.start(next: { [weak self] transition in

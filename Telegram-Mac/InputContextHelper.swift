@@ -178,7 +178,7 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
             let statusStyle:ControlStyle = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.grayText, backgroundColor: theme.colors.background, highlightColor:.white)
             
 
-            return ShortPeerRowItem(initialSize, peer: peer, account: context.account, height: 40, photoSize: NSMakeSize(30, 30), titleStyle: titleStyle, statusStyle: statusStyle, status: status, borderType: [], drawCustomSeparator: true, inset: NSEdgeInsets(left:20))
+            return ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, height: 40, photoSize: NSMakeSize(30, 30), titleStyle: titleStyle, statusStyle: statusStyle, status: status, borderType: [], drawCustomSeparator: true, inset: NSEdgeInsets(left:20))
         case let .contextResult(results,result,index):
             return ContextListRowItem(initialSize, results, result, index, context, chatInteraction)
         case let .contextMediaResult(results,result,index):

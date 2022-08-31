@@ -733,6 +733,7 @@ func initialize() -> [String] {
     array.append("reactions_badge_archive")
     array.append("reactions_badge_archive_active")
 
+    array.append("reactions_show_more")
     
     array.append("chat_reactions_badge")
     array.append("chat_reactions_badge_active")
@@ -757,20 +758,29 @@ func initialize() -> [String] {
     array.append("premium_account_rev")
     array.append("premium_account_rev_active")
     
-    
     array.append("premium_account_small")
     array.append("premium_account_small_active")
-
     array.append("premium_account_small_rev")
     array.append("premium_account_small_rev_active")
-    
     array.append("premium_reaction_lock")
-    
     array.append("premium_boarding_feature_next")
-    
     array.append("premium_stickers")
-    
     array.append("premium_emoji_lock")
+    
+    
+    array.append("account_add_account")
+    array.append("account_set_status")
+    array.append("account_change_status")
+    
+    
+    array.append("chat_premium_status_red")
+    array.append("chat_premium_status_orange")
+    array.append("chat_premium_status_violet")
+    array.append("chat_premium_status_green")
+    array.append("chat_premium_status_cyan")
+    array.append("chat_premium_status_light_blue")
+    array.append("chat_premium_status_blue")
+
 
     return array
 }

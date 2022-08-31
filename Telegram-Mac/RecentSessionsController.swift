@@ -251,7 +251,9 @@ private enum RecentSessionsEntry: Comparable, Identifiable {
         case let .currentSessionHeader(_, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: strings().sessionsCurrentSessionHeader, viewType: viewType)
         case let .currentSession(_, session, viewType):
-            return RecentSessionRowItem(initialSize, session: session, stableId: stableId, viewType: viewType, icon: iconForSession(session), handler: {})
+            return RecentSessionRowItem(initialSize, session: session, stableId: stableId, viewType: viewType, icon: iconForSession(session), handler: {
+                arguments.preview(session)
+            })
         case let .terminateOtherSessions(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().sessionsTerminateOthers, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
                 arguments.terminateOthers()

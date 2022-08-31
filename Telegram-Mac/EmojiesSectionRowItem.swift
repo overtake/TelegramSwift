@@ -12,24 +12,37 @@ import TelegramCore
 import AppKit
 import SwiftSignalKit
 import Postbox
+import FastBlur
+import ObjcUtils
+import Accelerate
 
 final class EmojiesSectionRowItem : GeneralRowItem {
     
     enum Item : Equatable {
-        case item(rect: NSRect, item: StickerPackItem)
+        case item(rect: NSRect, item: StickerPackItem, lock: Bool)
         case more(rect: NSRect, count: Int)
         
         var rect: NSRect {
             switch self {
-            case let .item(rect, _):
+            case let .item(rect, _, _):
                 return rect
             case let .more(rect, _):
                 return rect
             }
         }
+        
+        var lock: Bool {
+            switch self {
+            case let .item(_, _, lock):
+                return lock
+            default:
+                return false
+            }
+        }
+        
         var item: StickerPackItem? {
             switch self {
-            case let .item(_, item):
+            case let .item(_, item, _):
                 return item
             default:
                 return nil
@@ -52,14 +65,22 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     
     let installed: Bool
     
-    let unlockText: (String, Bool)?
+    let unlockText: (String, Bool, Bool)?
     
     let openPremium:(()->Void)?
     let installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)?
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], callback:@escaping(StickerPackItem)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
+    enum Mode {
+        case panel
+        case preview
+        case reactions
+    }
+    let mode: Mode
+    
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], mode: Mode = .panel, callback:@escaping(StickerPackItem)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
         self.itemSize = NSMakeSize(41, 34)
         self.info = info
+        self.mode = mode
         self.viewSet = viewSet
         self.installed = installed
         self.revealed = revealed
@@ -73,7 +94,10 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         
         let optimized = (isPremium && !context.isPremium || !installed) && !revealed && items.count > 24 ? Array(items.prefix(23)) : items
         for item in optimized {
-            mapped.append(.item(rect: CGRect(origin: point, size: itemSize).insetBy(dx: 2, dy: 2), item: item))
+            
+            let isLocked = mode == .reactions && !context.isPremium && info == nil && item.file.stickerText == nil && item.getStringRepresentationsOfIndexKeys().isEmpty
+            
+            mapped.append(.item(rect: CGRect(origin: point, size: itemSize).insetBy(dx: 2, dy: 2), item: item, lock: isLocked))
             point.x += itemSize.width
             if mapped.count % 8 == 0 {
                 point.y += itemSize.height
@@ -90,25 +114,39 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         self.callback = callback
         
         if stableId != AnyHashable(0), let info = info {
-            let layout = TextViewLayout(.initialize(string: info.title.uppercased(), color: theme.colors.grayText, font: .normal(12)), alwaysStaticItems: true)
-            layout.measure(width: 300)
+            let text = info.title.uppercased()
+            let layout = TextViewLayout(.initialize(string: text, color: theme.colors.grayText, font: .normal(12)), maximumNumberOfLines: 1, alwaysStaticItems: true)
             self.nameLayout = layout
         } else {
             self.nameLayout = nil
         }
         
         if let _ = info {
-            if isPremium && !context.isPremium {
-                if installed {
-                    self.unlockText = (strings().emojiPackRestore, true)
+            switch mode {
+            case .panel, .reactions:
+                if isPremium && !context.isPremium {
+                    if installed {
+                        self.unlockText = (strings().emojiPackRestore, true, true)
+                    } else {
+                        self.unlockText = (strings().emojiPackUnlock, true, true)
+                    }
+                } else if !installed {
+                    self.unlockText = (strings().emojiPackAdd, false, true)
                 } else {
-                    self.unlockText = (strings().emojiPackUnlock, true)
+                    self.unlockText = nil
                 }
-            } else if !installed {
-                self.unlockText = (strings().emojiPackAdd, false)
-            } else {
-                self.unlockText = nil
+            case .preview:
+                if stableId != AnyHashable(0) {
+                    if installed {
+                        self.unlockText = (strings().emojiPackAdded, false, false)
+                    } else {
+                        self.unlockText = (strings().emojiPackAdd, false, true)
+                    }
+                } else {
+                    self.unlockText = nil
+                }
             }
+            
         } else {
             self.unlockText = nil
         }
@@ -117,6 +155,8 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         
         
         super.init(initialSize, stableId: stableId)
+        
+        _ = makeSize(initialSize.width)
     }
     
     override func viewClass() -> AnyClass {
@@ -125,7 +165,9 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
-                
+        
+        nameLayout?.measure(width: unlockText != nil ? 200 : 300)
+
         return true
     }
     
@@ -150,16 +192,63 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         var items: [ContextMenuItem] = []
         
         let info = self.info
-//        let context = self.context
+        let context = self.context
         
-        if stableId == AnyHashable(0) || self.viewSet == nil {
-            return super.menuItems(in: location)
+        var copyItem: ContextMenuItem?
+        if let view = self.view as? EmojiesSectionRowView, let file = view.itemUnderMouse?.0.file {
+            let input: ChatTextInputState
+            if let bundle = file.stickerText {
+                input = .init(inputText: bundle, selectionRange: 0..<bundle.length, attributes: [])
+            } else {
+                let text = file.customEmojiText ?? file.stickerText ?? ""
+                input = .init(inputText: text, selectionRange: 0..<text.length, attributes: [.animated(0..<text.length, text, arc4random64(), file)])
+            }
+            copyItem = ContextMenuItem(strings().contextCopy, handler: {
+                copyToClipboard(input)
+            }, itemImage: MenuAnimation.menu_add_to_favorites.value)
         }
         
-        if let info = info {
+        switch mode {
+        case .reactions:
+            if let view = self.view as? EmojiesSectionRowView, let file = view.itemUnderMouse?.0.file {
+                
+                let value: MessageReaction.Reaction
+                if let bundle = file.stickerText {
+                    value = .builtin(bundle)
+                } else {
+                    value = .custom(file.fileId.id)
+                }
+                items.append(ContextMenuItem(strings().chatContextReactionQuick, handler: {
+                    context.reactions.updateQuick(value)
+                }, itemImage: MenuAnimation.menu_add_to_favorites.value))
+                
+                if let copyItem = copyItem {
+                    items.append(copyItem)
+                }
+            }
+            return .single(items)
+        case .preview:
+            if let copyItem = copyItem {
+                items.append(copyItem)
+            }
+            return .single(items)
+        default:
+            break
+        }
+        
+        if stableId == AnyHashable(0) || self.viewSet == nil {
+            return .single(items)
+        }
+        
+        
+        if let info = info, mode == .panel {
             items.append(ContextMenuItem(strings().contextViewEmojiSet, handler: { [weak self] in
                 self?.viewSet?(info)
             }, itemImage: MenuAnimation.menu_view_sticker_set.value))
+            
+            if let copyItem = copyItem {
+                items.append(copyItem)
+            }
         }
        
         
@@ -171,13 +260,23 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         return .single(items)
     }
     
+    func animateAppearance(delay: Double, duration: Double, ignoreCount: Int) {
+        (self.view as? EmojiesSectionRowView)?.animateAppearance(delay: delay, duration: duration, ignoreCount: ignoreCount)
+    }
+    
     func invokeLockAction() {
         if let info = info {
-            if isPremium && !context.isPremium {
-                self.openPremium?()
-            } else if !installed {
+            switch mode {
+            case .panel, .reactions:
+                if isPremium && !context.isPremium {
+                    self.openPremium?()
+                } else if !installed {
+                    self.installPack?(info, self.stickerItems)
+                }
+            case .preview:
                 self.installPack?(info, self.stickerItems)
             }
+            
         }
     }
 }
@@ -186,6 +285,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
 
 private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewProtocol {
     
+
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         
@@ -250,6 +350,8 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
     
     private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
 
+    private var locks:[InlineStickerItemLayer.Key : InlineStickerLockLayer] = [:]
+    
     private let contentView = Control()
     
     private var nameView: TextView?
@@ -363,7 +465,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         }
     }
     
-    private var itemUnderMouse: (InlineStickerItemLayer, EmojiesSectionRowItem.Item)? {
+    fileprivate var itemUnderMouse: (InlineStickerItemLayer, EmojiesSectionRowItem.Item)? {
         guard let window = self.window, let item = self.item as? EmojiesSectionRowItem else {
             return nil
         }
@@ -390,6 +492,18 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         }
         if let first = currentDownItem, let current = first.1.item {
             item.callback(current)
+        }
+    }
+    
+    func animateAppearance(delay: Double, duration: Double, ignoreCount: Int) {
+        var delay = delay
+        let itemDelay = duration / Double(inlineStickerItemViews.count)
+        for (key, value) in inlineStickerItemViews {
+            if key.index > ignoreCount - 1 {
+                value.animateScale(from: 0.1, to: 1, duration: duration, timingFunction: .spring, delay: itemDelay)
+                locks[key]?.animateScale(from: 0.1, to: 1, duration: duration, timingFunction: .spring, delay: itemDelay)
+                delay += itemDelay
+            }
         }
     }
 
@@ -440,11 +554,6 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
             performSubviewRemoval(view, animated: animated)
             self.nameView = nil
         }
-        
-        
-        //        if (isPremium && !context.isPremium) || !installed {
-
-     
         
         
         if case let .more(rect, count) = item.items.last {
@@ -522,12 +631,13 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     self.addSubview(current)
                     isNew = true
                 }
-                current.set(background: theme.colors.accent, for: .Normal)
+                current.set(background: unlockText.2 ? theme.colors.accent : theme.colors.accent.withAlphaComponent(0.6), for: .Normal)
                 current.set(font: .medium(12), for: .Normal)
                 current.set(color: theme.colors.underSelectedColor, for: .Normal)
                 current.set(text: unlockText.0, for: .Normal)
                 current.sizeToFit(NSMakeSize(10, 10), .zero, thatFit: false)
-                
+                current.userInteractionEnabled = unlockText.2
+                                
                 let rect = CGRect(origin: NSMakePoint(frame.width - current.frame.size.width - 15, 0), size: current.frame.size)
                 if isNew {
                     current.frame = rect
@@ -555,7 +665,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         
  
 
-        self.updateInlineStickers(context: item.context, contentView: contentView, items: item.items)
+        self.updateInlineStickers(context: item.context, contentView: contentView, items: item.items, animated: animated)
         
         self.updateListeners()
         
@@ -565,6 +675,12 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
     
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
+        self.updateListeners()
+        self.updateAnimatableContent()
+    }
+    
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
         self.updateListeners()
         self.updateAnimatableContent()
     }
@@ -590,13 +706,22 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
     @objc func updateAnimatableContent() -> Void {
         for (_, value) in inlineStickerItemViews {
             if let superview = value.superview {
-                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow
+                var isKeyWindow: Bool = false
+                if let window = window {
+                    if !window.canBecomeKey {
+                        isKeyWindow = true
+                    } else {
+                        isKeyWindow = window.isKeyWindow
+                    }
+                }
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
             }
         }
     }
     
-    func updateInlineStickers(context: AccountContext, contentView: NSView, items: [EmojiesSectionRowItem.Item]) {
+    func updateInlineStickers(context: AccountContext, contentView: NSView, items: [EmojiesSectionRowItem.Item], animated: Bool) {
         var validIds: [InlineStickerItemLayer.Key] = []
+        var validLockIds: [InlineStickerItemLayer.Key] = []
         var index: Int = 0
 
         for item in items {
@@ -611,14 +736,48 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     view = current
                 } else {
                     self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                    view = InlineStickerItemLayer(context: context, file: current.file, size: rect.size)
+                    view = InlineStickerItemLayer(account: context.account, file: current.file, size: rect.size, getColors: { file in
+                        var colors: [LottieColor] = []
+                        if file.emojiReference?.id == defaultStatusesPackId(context) {
+                            colors.append(.init(keyPath: "", color: theme.colors.accent))
+                        }
+                        return colors
+                    })
                     self.inlineStickerItemViews[id] = view
                     view.superview = contentView
                     contentView.layer?.addSublayer(view)
                 }
+                
+                if item.lock {
+                    let current: InlineStickerLockLayer
+                    if let view = self.locks[id] {
+                        current = view
+                    } else {
+                        current = InlineStickerLockLayer(frame: CGRect(origin: rect.origin.offsetBy(dx: rect.width - 15, dy: rect.height - 15), size: NSMakeSize(15, 15)))
+                        contentView.layer?.addSublayer(current)
+                        self.locks[id] = current
+                    }
+                    validLockIds.append(id)
+                    
+                    current.tieToLayer(view)
+                    
+                } else {
+                    if let lockView = self.locks[id] {
+                        performSublayerRemoval(lockView, animated: animated)
+                        self.locks.removeValue(forKey: id)
+                    }
+                }
+                
                 index += 1
-
-                view.isPlayable = NSIntersectsRect(rect, contentView.visibleRect) && window != nil && window!.isKeyWindow
+                var isKeyWindow: Bool = false
+                if let window = window {
+                    if !window.canBecomeKey {
+                        isKeyWindow = true
+                    } else {
+                        isKeyWindow = window.isKeyWindow
+                    }
+                }
+                view.isPlayable = NSIntersectsRect(rect, contentView.visibleRect) && isKeyWindow
                 view.frame = rect
             }
         }
@@ -633,6 +792,18 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         for key in removeKeys {
             self.inlineStickerItemViews.removeValue(forKey: key)
         }
+        
+        var removeLockKeys: [InlineStickerItemLayer.Key] = []
+        for (key, view) in self.locks {
+            if !validLockIds.contains(key) {
+                removeLockKeys.append(key)
+                performSublayerRemoval(view, animated: animated)
+            }
+        }
+        for key in removeLockKeys {
+            self.locks.removeValue(forKey: key)
+        }
+        
     }
     
     required init?(coder: NSCoder) {

@@ -665,7 +665,7 @@ final class PremiumGiftController : ModalViewController {
         
         genericView.accept = {
             
-            #if APP_STORE || DEBUG
+            #if APP_STORE// || DEBUG
             buyAppStore()
             #else
             buyNonAppStore()

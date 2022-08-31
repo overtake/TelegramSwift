@@ -38,7 +38,7 @@ final class TelegramFilterCategory : Peer {
     var indexName: PeerIndexNameRepresentation
     
     var associatedPeerId: PeerId?
-    
+    var associatedMediaIds: [MediaId]?
     var notificationSettingsPeerId: PeerId?
     
     func isEqual(_ other: Peer) -> Bool {
