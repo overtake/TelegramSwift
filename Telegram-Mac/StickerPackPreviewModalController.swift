@@ -274,7 +274,7 @@ private class StickersModalView : View {
             headerTitle.update(layout)
             let context = arguments.context
 
-            let stickerArguments = StickerPanelArguments(context: arguments.context, sendMedia: {  media, view, silent, schedule in
+            let stickerArguments = StickerPanelArguments(context: arguments.context, sendMedia: {  media, view, silent, schedule, _ in
                 if let media = media as? TelegramMediaFile {
                     if media.isPremiumSticker && !context.isPremium {
                         arguments.previewPremium(media, view)
@@ -305,7 +305,7 @@ private class StickersModalView : View {
             let makeItem:(State.Collection)->TableRowItem = { collection in
                 switch source {
                 case .emoji:
-                    return EmojiesSectionRowItem(size, stableId: collections.count == 1 ? 0 : arc4random64(), context: arguments.context, revealed: true, installed: isInstalled(collection), info: collection.info, items: collection.items, mode: .preview, callback: { item in
+                    return EmojiesSectionRowItem(size, stableId: collections.count == 1 ? 0 : arc4random64(), context: arguments.context, revealed: true, installed: isInstalled(collection), info: collection.info, items: collection.items, mode: .preview, callback: { item, _ in
                         arguments.setEmoji(item.file)
                     }, installPack: { _, _ in
                         arguments.addpack(source, collection, false)
@@ -443,7 +443,7 @@ class StickerPackPreviewModalController: ModalViewController {
                 if let slowMode = interactions.presentation.slowMode, slowMode.hasLocked {
                     showSlowModeTimeoutTooltip(slowMode, for: view)
                 } else {
-                    interactions.sendAppFile(media, silent, nil, schedule)
+                    interactions.sendAppFile(media, silent, nil, schedule, nil)
                     self?.close()
                 }
             }

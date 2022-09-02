@@ -482,8 +482,8 @@ public final class EntertainmentInteractions {
     var current:EntertainmentState = .emoji
     
     var sendEmoji:(String) ->Void = {_ in}
-    var sendAnimatedEmoji:(StickerPackItem) ->Void = { _ in}
-    var sendSticker:(TelegramMediaFile, Bool, Bool) ->Void = { _, _, _ in}
+    var sendAnimatedEmoji:(StickerPackItem, StickerPackCollectionInfo?) ->Void = { _, _ in}
+    var sendSticker:(TelegramMediaFile, Bool, Bool, ItemCollectionId?) ->Void = { _, _, _, _ in}
     var sendGIF:(TelegramMediaFile, Bool, Bool) ->Void = { _, _, _ in}
     
     var showEntertainment:(EntertainmentState, Bool)->Void = { _,_  in}
@@ -682,12 +682,12 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
         interactions.close = { [weak self] in
             self?.closePopover()
         }
-        interactions.sendSticker = { [weak self] file, silent, scheduled in
-            self?.chatInteraction?.sendAppFile(file, silent, self?.effectiveSearchView?.query, scheduled)
+        interactions.sendSticker = { [weak self] file, silent, scheduled, collectionId in
+            self?.chatInteraction?.sendAppFile(file, silent, self?.effectiveSearchView?.query, scheduled, collectionId)
             self?.closePopover()
         }
         interactions.sendGIF = { [weak self] file, silent, scheduled in
-            self?.chatInteraction?.sendAppFile(file, silent, self?.effectiveSearchView?.query, scheduled)
+            self?.chatInteraction?.sendAppFile(file, silent, self?.effectiveSearchView?.query, scheduled, nil)
             self?.closePopover()
         }
         interactions.sendEmoji = { [weak self] emoji in
@@ -699,12 +699,12 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             }
         }
         
-        interactions.sendAnimatedEmoji = { [weak self] sticker in
+        interactions.sendAnimatedEmoji = { [weak self] sticker, info in
             if self?.mode == .selectAvatar {
               
             } else {
                 let text = (sticker.file.customEmojiText ?? sticker.file.stickerText ?? "😀").fixed
-                _ = self?.chatInteraction?.appendText(.makeAnimated(sticker.file, text: text))
+                _ = self?.chatInteraction?.appendText(.makeAnimated(sticker.file, text: text, info: info?.id))
             }
         }
         

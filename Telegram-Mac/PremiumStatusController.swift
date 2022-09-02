@@ -17,8 +17,16 @@ final class PremiumStatusController : TelegramViewController {
     private let emojis: EmojiesController
     
     let callback: (TelegramMediaFile)->Void
-    init(_ context: AccountContext, callback: @escaping(TelegramMediaFile)->Void) {
-        self.emojis = .init(context, mode: .status)
+    init(_ context: AccountContext, callback: @escaping(TelegramMediaFile)->Void, peer: TelegramUser) {
+        
+        
+        var selected: [EmojiesSectionRowItem.SelectedItem] = []
+        if let fileId = peer.emojiStatus?.fileId {
+            selected.append(.init(source: .custom(fileId), type: .normal))
+        } else {
+            selected.append(.init(source: .custom(0), type: .normal))
+        }
+        self.emojis = .init(context, mode: .status, selectedItems: selected)
         self.callback = callback
         super.init(context)
         bar = .init(height: 0)
@@ -35,7 +43,7 @@ final class PremiumStatusController : TelegramViewController {
         
         let interactions = EntertainmentInteractions(.emoji, peerId: context.peerId)
         
-        interactions.sendAnimatedEmoji = { [weak self] item in
+        interactions.sendAnimatedEmoji = { [weak self] item, _ in
             self?.callback(item.file)
             self?.closePopover()
         }
@@ -101,7 +109,7 @@ final class SetupQuickReactionController : TelegramViewController {
         
         let interactions = EntertainmentInteractions(.emoji, peerId: context.peerId)
         
-        interactions.sendAnimatedEmoji = { [weak self] item in
+        interactions.sendAnimatedEmoji = { [weak self] item, _ in
             self?.callback(item.file)
             self?.closePopover()
         }

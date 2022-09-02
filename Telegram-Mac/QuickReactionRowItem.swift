@@ -121,9 +121,9 @@ private final class QuickReactionRowView : GeneralContainableRowView {
             let size = NSMakeSize(25, 25)
             let current: InlineStickerItemLayer
             switch item.reaction {
-            case let .builtin(_, staticFile, _, _):
+            case let .builtin(_, staticFile, _, _, _):
                current = InlineStickerItemLayer(account: item.context.account, file: staticFile, size: size)
-            case let .custom(_, fileId, file):
+            case let .custom(_, fileId, file, _):
                 current = InlineStickerItemLayer(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: size)
             }
             current.superview = self

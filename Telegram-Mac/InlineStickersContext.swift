@@ -67,7 +67,9 @@ final class InlineStickersContext {
             
             let context = self.dataContexts[key] ?? .init()
             
-            subscriber.putNext(context.data)
+            if let file = context.data {
+                subscriber.putNext(file)
+            }
 
             let index = context.subscribers.add({ data in
                 subscriber.putNext(data)
@@ -83,7 +85,7 @@ final class InlineStickersContext {
                 
                 disposable = signal.start(next: { file in
                     
-                    var current = file[fileId]
+                    let current = file[fileId]
                     
                     context.data = current
                     for subscriber in context.subscribers.copyItems() {

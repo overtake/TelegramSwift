@@ -60,7 +60,7 @@ final class Avatar_EmojiListView : View {
     
     func set(list: [StickerPackItem], context: AccountContext, selectForeground: @escaping(TelegramMediaFile)->Void, animated: Bool) {
         
-        let arguments = StickerPanelArguments(context: context, sendMedia: {  media, view, silent, schedule in
+        let arguments = StickerPanelArguments(context: context, sendMedia: {  media, view, silent, schedule, _ in
             if let media = media as? TelegramMediaFile {
                 selectForeground(media)
             }

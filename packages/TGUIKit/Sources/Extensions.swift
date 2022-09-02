@@ -979,7 +979,7 @@ public extension CGSize {
     
     func aspectFitted(_ size: CGSize) -> CGSize {
         let scale = min(size.width / max(1.0, self.width), size.height / max(1.0, self.height))
-        return CGSize(width: ceil(self.width * scale), height: ceil(self.height * scale))
+        return CGSize(width: floor(self.width * scale), height: floor(self.height * scale))
     }
     
     func multipliedByScreenScale() -> CGSize {

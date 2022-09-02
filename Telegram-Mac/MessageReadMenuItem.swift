@@ -166,7 +166,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
     
     func load() {
         
-        let customIds:[Int64] = message.reactionsAttribute?.reactions.compactMap { value in
+        let customIds:[Int64] = message.effectiveReactions?.compactMap { value in
             switch value.value {
             case let .custom(fileId):
                 return fileId

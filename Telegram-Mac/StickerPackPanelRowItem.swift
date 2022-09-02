@@ -254,7 +254,7 @@ class StickerPackPanelRowItem: TableRowItem {
                             }
      
                             if let contentView = self.view {
-                                self.arguments.sendMedia(file, contentView, true, false)
+                                self.arguments.sendMedia(file, contentView, true, false, self.collectionId.itemCollectionId)
                             }
                         }, itemImage: MenuAnimation.menu_mute.value))
                         
@@ -264,7 +264,7 @@ class StickerPackPanelRowItem: TableRowItem {
                             }
                             
                             if let contentView = self.view {
-                                self.arguments.sendMedia(file, contentView, false, true)
+                                self.arguments.sendMedia(file, contentView, false, true, self.collectionId.itemCollectionId)
                             }
                         }, itemImage: MenuAnimation.menu_schedule_message.value))
                     }
@@ -389,7 +389,7 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
                 if let reference = item.packReference, item.packInfo.featured {
                     item.arguments.showPack(reference)
                 } else if let current = self.currentDownItem {
-                    item.arguments.sendMedia(current.1, contentView, false, false)
+                    item.arguments.sendMedia(current.1, contentView, false, false, item.collectionId.itemCollectionId)
                 }
             }
         }

@@ -216,10 +216,42 @@ final class EmojiScreenEffect {
         
         switch value {
         case let .custom(fileId):
-            let animationSize = NSMakeSize(animationSize.width * 2, animationSize.height * 2)
-            let rect = NSMakeSize(animationSize.width, animationSize.height).bounds
-            let view = CustomReactionEffectView(frame: rect, context: context, fileId: fileId)
-            self.initAnimation(.custom(view), mode: .reaction(value), emoji: nil, reaction: value, mirror: false, isIncoming: false, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
+            
+            let signal: Signal<LottieAnimation?, NoError> = combineLatest(context.reactions.stateValue |> take(1), context.inlinePacksContext.load(fileId: fileId)) |> map { state, file in
+                return state?.reactions.first(where: {
+                    $0.value.string == file?.customEmojiText
+                })
+            }
+             |> mapToSignal { reaction -> Signal<MediaResourceData?, NoError> in
+                if let file = reaction?.aroundAnimation {
+                    return context.account.postbox.mediaBox.resourceData(file.resource)
+                    |> map { $0.complete ? $0 : nil }
+                    |> take(1)
+                } else {
+                    return .single(nil)
+                }
+            } |> map { resource in
+                if let resource = resource, let data = try? Data(contentsOf: URL(fileURLWithPath: resource.path)) {
+                    return LottieAnimation(compressed: data, key: .init(key: .bundle("_reaction_e_\(value)"), size: animationSize, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd)
+                } else {
+                    return nil
+                }
+            } |> deliverOnMainQueue
+            
+            reactionDataDisposable.set(signal.start(next: { [weak self, weak parentView] animation in
+                if let parentView = parentView {
+                    if let animation = animation {
+                        self?.initAnimation(.builtin(animation), mode: .reaction(value), emoji: nil, reaction: value, mirror: false, isIncoming: false, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
+                    } else {
+                        let animationSize = NSMakeSize(animationSize.width * 2, animationSize.height * 2)
+                        let rect = NSMakeSize(animationSize.width, animationSize.height).bounds
+                        let view = CustomReactionEffectView(frame: rect, context: context, fileId: fileId)
+                        self?.initAnimation(.custom(view), mode: .reaction(value), emoji: nil, reaction: value, mirror: false, isIncoming: false, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
+                    }
+                }
+            }), forKey: messageId)
+            
+            
         case .builtin:
             let signal: Signal<LottieAnimation?, NoError> = context.reactions.stateValue |> take(1) |> map {
                 return $0?.reactions.first(where: {

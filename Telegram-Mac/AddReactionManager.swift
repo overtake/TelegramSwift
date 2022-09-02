@@ -15,28 +15,36 @@ import Postbox
 import ObjcUtils
 
 enum ContextReaction : Equatable {
-    case builtin(value: MessageReaction.Reaction, staticFile: TelegramMediaFile, selectFile: TelegramMediaFile, appearFile: TelegramMediaFile)
-    case custom(value: MessageReaction.Reaction, fileId: Int64, TelegramMediaFile?)
+    case builtin(value: MessageReaction.Reaction, staticFile: TelegramMediaFile, selectFile: TelegramMediaFile, appearFile: TelegramMediaFile, isSelected: Bool)
+    case custom(value: MessageReaction.Reaction, fileId: Int64, TelegramMediaFile?, isSelected: Bool)
     
     var file: TelegramMediaFile? {
         switch self {
-        case let .builtin(_, staticFile, _, _):
+        case let .builtin(_, staticFile, _, _, _):
             return staticFile
-        case let .custom(_, _, file):
+        case let .custom(_, _, file, _ ):
             return file
         }
     }
     var fileId: Int64 {
         switch self {
-        case let .builtin(_, staticFile, _, _):
+        case let .builtin(_, staticFile, _, _, _):
             return staticFile.fileId.id
-        case let .custom(_, fileId, _):
+        case let .custom(_, fileId, _, _):
             return fileId
+        }
+    }
+    var isSelected: Bool {
+        switch self {
+        case let .builtin(_, _, _, _, isSelected):
+            return isSelected
+        case let .custom(_, _, _, isSelected):
+            return isSelected
         }
     }
     func selectAnimation(_ context: AccountContext) -> Signal<TelegramMediaFile, NoError> {
         switch self {
-        case let .builtin(_, _, selectAnimation, _):
+        case let .builtin(_, _, selectAnimation, _, _):
             return .single(selectAnimation)
         case .custom:
             return .complete()
@@ -44,7 +52,7 @@ enum ContextReaction : Equatable {
     }
     var appearAnimation: TelegramMediaFile? {
         switch self {
-        case let .builtin(_, _, _, appearAnimation):
+        case let .builtin(_, _, _, appearAnimation, _):
             return appearAnimation
         case .custom:
             return nil
@@ -52,9 +60,9 @@ enum ContextReaction : Equatable {
     }
     var value: MessageReaction.Reaction {
         switch self {
-        case let .builtin(value, _, _, _):
+        case let .builtin(value, _, _, _, _):
             return value
-        case let .custom(value, _, _):
+        case let .custom(value, _, _, _):
             return value
         }
     }
@@ -88,12 +96,16 @@ final class ContextAddReactionsListView : View  {
             super.init(frame: frameRect)
             addSubview(imageView)
             addSubview(player)
-            
             self.imageView.isHidden = false
             self.player.isHidden = false
 
            
-            
+            switch reaction {
+            case .builtin:
+                self.layer?.cornerRadius = 0
+            case .custom:
+                self.layer?.cornerRadius = 4
+            }
             
             stateDisposable.set(player.state.start(next: { [weak self] state in
                 switch state {
@@ -141,7 +153,7 @@ final class ContextAddReactionsListView : View  {
         }
         
         private func apply(_ data: Data, key: String, policy: LottiePlayPolicy) {
-            let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .bundle("reaction_\(reaction.value)_\(key)"), size: player.frame.size), type: .lottie, cachePurpose: .none, playPolicy: policy, maximumFps: 60, runOnQueue: .mainQueue(), metalSupport: false)
+            let animation = LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .bundle("reaction_\(reaction.value)_\(key)"), size: player.frame.size), type: .lottie, cachePurpose: .temporaryLZ4(.thumb), playPolicy: policy, maximumFps: 60, runOnQueue: .mainQueue(), metalSupport: false)
             player.set(animation, reset: true, saveContext: true, animated: false)
             self.currentKey = key
         }
@@ -335,6 +347,7 @@ final class ContextAddReactionsListView : View  {
         for reaction in list {
             let itemSize = size.bounds
             let reaction = ReactionView(frame: NSMakeRect(x, 5, itemSize.width, itemSize.height), context: context, reaction: reaction, add: add)
+            
             documentView.addSubview(reaction)
             x += size.width + 4
         }
