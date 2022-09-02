@@ -616,6 +616,11 @@ public class ColorPalette : Equatable {
     public var focusAnimationColor: NSColor {
         return self._focusAnimationColor
     }
+    
+    private let _vibrant: NSColor
+    public var vibrant: NSColor {
+        return self._vibrant
+    }
    
     private let _premium:NSColor
     public var premium: NSColor {
@@ -797,7 +802,8 @@ public class ColorPalette : Equatable {
                 listGrayText: NSColor,
                 grayHighlight: NSColor,
                 focusAnimationColor: NSColor,
-                premium: NSColor) {
+                premium: NSColor,
+                vibrant: NSColor) {
         
         let background: NSColor = background.withAlphaComponent(1.0)
         let grayBackground: NSColor = grayBackground.withAlphaComponent(1.0)
@@ -1007,6 +1013,7 @@ public class ColorPalette : Equatable {
         self._focusAnimationColor = focusAnimationColor
         
         self._premium = premium
+        self._vibrant = vibrant
     }
     
     public func listProperties(reflect: Mirror? = nil) -> [String] {
@@ -1172,7 +1179,8 @@ public class ColorPalette : Equatable {
                             listGrayText: listGrayText,
                             grayHighlight: grayHighlight,
                             focusAnimationColor: focusAnimationColor,
-                            premium: premium)
+                            premium: premium,
+                            vibrant: vibrant)
     }
     public func withUpdatedWallpaper(_ wallpaper: PaletteWallpaper) -> ColorPalette {
         return ColorPalette(isNative: self.isNative, isDark: isDark,
@@ -1300,7 +1308,8 @@ public class ColorPalette : Equatable {
                             listGrayText: listGrayText,
                             grayHighlight: grayHighlight,
                             focusAnimationColor: focusAnimationColor,
-                            premium: premium)
+                            premium: premium,
+                            vibrant: vibrant)
     }
     
     public func withAccentColor(_ color: PaletteAccentColor, disableTint: Bool = false) -> ColorPalette {
@@ -1579,7 +1588,8 @@ public class ColorPalette : Equatable {
                             listGrayText: listGrayText,
                             grayHighlight: grayHighlight,
                             focusAnimationColor: focusAnimationColor,
-                            premium: premium)
+                            premium: premium,
+                            vibrant: vibrant)
     }
 }
 
@@ -1771,7 +1781,8 @@ public let whitePalette = ColorPalette(isNative: true, isDark: false,
                                         listGrayText: NSColor(0x6D6D71),
                                         grayHighlight: NSColor(0xF8F8F8),
                                         focusAnimationColor: NSColor(0x68A8E2),
-                                        premium: NSColor(0x6B93FF0)
+                                        premium: NSColor(0x6B93FF0),
+                                        vibrant: NSColor(0x808080, 0.1)
 )
 
 
@@ -1918,7 +1929,8 @@ public let nightAccentPalette = ColorPalette(isNative: true, isDark: true,
                                            listGrayText: NSColor(0xb1c3d5),
                                            grayHighlight: NSColor(0x18222d).darker(amount: 0.08),
                                            focusAnimationColor: NSColor(0x68A8E2),
-                                             premium: NSColor(0x6B93FF0)
+                                           premium: NSColor(0x6B93FF0),
+                                           vibrant: NSColor(0x808080, 0.1)
 )
 public let dayClassicPalette = ColorPalette(isNative: true,
                                             isDark: false,
@@ -2052,7 +2064,8 @@ public let dayClassicPalette = ColorPalette(isNative: true,
                                             listGrayText: NSColor(0x6D6D71),
                                             grayHighlight: NSColor(0xF8F8F8),
                                             focusAnimationColor: NSColor(0x68A8E2),
-                                            premium: NSColor(0x6B93FF0)
+                                            premium: NSColor(0x6B93FF0),
+                                            vibrant: NSColor(0x808080, 0.1)
 )
 
 public let darkPalette = ColorPalette(isNative: true, isDark:true,
@@ -2187,7 +2200,8 @@ public let darkPalette = ColorPalette(isNative: true, isDark:true,
                                       listGrayText: NSColor(0x8699a3),
                                       grayHighlight: NSColor(0x292b36).darker(amount: 0.08),
                                       focusAnimationColor: NSColor(0x68A8E2),
-                                      premium: NSColor(0x6B93FF0)
+                                      premium: NSColor(0x6B93FF0),
+                                      vibrant: NSColor(0x808080, 0.1)
 )
 
 @available(macOS 10.14, *)
@@ -2485,7 +2499,8 @@ public let systemPalette: ColorPalette = {
                             listGrayText: NSColor(0xb1c3d5),
                             grayHighlight: NSColor(0x292a2f).darker(amount: 0.08),
                             focusAnimationColor: NSColor(0x68A8E2),
-                            premium: NSColor(0x6B93FF0)
+                            premium: NSColor(0x6B93FF0),
+                            vibrant: NSColor(0x808080, 0.1)
     )
     
    

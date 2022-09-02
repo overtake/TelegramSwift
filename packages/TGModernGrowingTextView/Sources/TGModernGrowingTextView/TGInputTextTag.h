@@ -5,7 +5,8 @@
 @property (nonatomic,strong,readonly) NSString * _Nonnull text;
 @property (nonatomic,strong,readonly) id _Nonnull fileId;
 @property (nonatomic,strong,readonly) id _Nullable file;
--(id _Nonnull)initWithIdentifier:(NSString * _Nonnull)identifier fileId:(id _Nonnull)fileId file:(id _Nullable)file text:(NSString * _Nonnull)text;
+@property (nonatomic,strong,readonly) id _Nullable info;
+-(id _Nonnull)initWithIdentifier:(NSString * _Nonnull)identifier fileId:(id _Nonnull)fileId file:(id _Nullable)file text:(NSString * _Nonnull)text info:(id _Nullable)info;
 -(id _Nonnull)unique;
 @end
 

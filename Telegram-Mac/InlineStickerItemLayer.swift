@@ -335,6 +335,7 @@ final class InlineStickerItemLayer : SimpleLayer {
     
     private var shimmer: ShimmerLayer?
     
+    private let aspectFilled: Bool
     var contentDidUpdate:((CGImage)->Void)? = nil
     
     override var contents: Any? {
@@ -347,7 +348,8 @@ final class InlineStickerItemLayer : SimpleLayer {
     
     private let getColors:((TelegramMediaFile)->[LottieColor])?
     
-    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, playPolicy: LottiePlayPolicy = .loop, checkStatus: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil) {
+    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, playPolicy: LottiePlayPolicy = .loop, checkStatus: Bool = false, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil) {
+        self.aspectFilled = aspectFilled
         self.account = account
         self.playPolicy = playPolicy
         self.getColors = getColors
@@ -373,7 +375,8 @@ final class InlineStickerItemLayer : SimpleLayer {
         })
     }
     
-    init(account: Account, file: TelegramMediaFile, size: NSSize, playPolicy: LottiePlayPolicy = .loop, getColors:((TelegramMediaFile)->[LottieColor])? = nil) {
+    init(account: Account, file: TelegramMediaFile, size: NSSize, playPolicy: LottiePlayPolicy = .loop, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil) {
+        self.aspectFilled = aspectFilled
         self.account = account
         self.playPolicy = playPolicy
         self.getColors = getColors
@@ -465,8 +468,12 @@ final class InlineStickerItemLayer : SimpleLayer {
            
             let playPolicy = self.playPolicy
 
-            let aspectSize = file.dimensions?.size.aspectFitted(size) ?? size
-                                                
+            let aspectSize: NSSize
+            if aspectFilled {
+                aspectSize = file.dimensions?.size.aspectFilled(size) ?? size
+            } else {
+                aspectSize = file.dimensions?.size.aspectFitted(size) ?? size
+            }
             let reference: FileMediaReference
             let mediaResource: MediaResourceReference
              if let stickerReference = file.stickerReference {
@@ -543,6 +550,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                 let image = NSImage(named: resource.name)?.precomposed(theme.colors.accentIcon)
                 self.contents = image
             } else {
+                
                 let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: aspectSize, boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: emptyColor)
 
                 let fontSize = NSMakeSize(theme.fontSize + 8, theme.fontSize + 5)

@@ -24,14 +24,14 @@ class AccountInfoItem: GeneralRowItem {
     fileprivate let titleActiveLayout: TextViewLayout
 
     fileprivate let context: AccountContext
-    fileprivate let peer: TelegramUser
+    let peer: TelegramUser
     private(set) var photos: [TelegramPeerPhoto] = []
 
     private let peerPhotosDisposable = MetaDisposable()
     
-    let setStatus:(Control)->Void
+    let setStatus:(Control, TelegramUser)->Void
     
-    init(_ initialSize:NSSize, stableId:AnyHashable, viewType: GeneralViewType, inset: NSEdgeInsets = NSEdgeInsets(left: 30, right: 30), context: AccountContext, peer: TelegramUser, action: @escaping()->Void, setStatus: @escaping(Control)->Void) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, viewType: GeneralViewType, inset: NSEdgeInsets = NSEdgeInsets(left: 30, right: 30), context: AccountContext, peer: TelegramUser, action: @escaping()->Void, setStatus: @escaping(Control, TelegramUser)->Void) {
         self.context = context
         self.peer = peer
         self.setStatus = setStatus
@@ -264,7 +264,9 @@ private class AccountInfoView : GeneralContainableRowView {
                 control.removeAllHandlers()
                 control.userInteractionEnabled = true
                 control.set(handler: { [weak item] control in
-                    item?.setStatus(control)
+                    if let user = item?.peer {
+                        item?.setStatus(control, user)
+                    }
                 }, for: .Click)
             } else if let control = statusControl {
                 control.removeAllHandlers()

@@ -2728,6 +2728,10 @@ class ChatRowItem: TableRowItem {
                 let allowed = peerAllowed
                 
                 var accessToAll: Bool
+                
+                let isSelected:(MessageReaction.Reaction)->Bool = { reaction in
+                    return message.effectiveReactions?.contains(where: { $0.value == reaction }) ?? false
+                }
 
                 
                 if let peerAllowed = peerAllowed {
@@ -2759,7 +2763,7 @@ class ChatRowItem: TableRowItem {
                                 return true
                             }
                         }.map {
-                            .builtin(value: $0.value, staticFile: $0.staticIcon, selectFile: $0.selectAnimation, appearFile: $0.appearAnimation)
+                            .builtin(value: $0.value, staticFile: $0.staticIcon, selectFile: $0.selectAnimation, appearFile: $0.appearAnimation, isSelected: false)
                         }
                     }
                 } else {
@@ -2767,12 +2771,12 @@ class ChatRowItem: TableRowItem {
                         switch value.content {
                         case let .builtin(emoji):
                             if let generic = enabled.first(where: { $0.value.string == emoji }) {
-                                return .builtin(value: generic.value, staticFile: generic.staticIcon, selectFile: generic.selectAnimation, appearFile: generic.appearAnimation)
+                                return .builtin(value: generic.value, staticFile: generic.staticIcon, selectFile: generic.selectAnimation, appearFile: generic.appearAnimation, isSelected: isSelected(generic.value))
                             } else {
                                 return nil
                             }
                         case let .custom(file):
-                            return .custom(value: .custom(file.fileId.id), fileId: file.fileId.id, file)
+                            return .custom(value: .custom(file.fileId.id), fileId: file.fileId.id, file, isSelected: isSelected(.custom(file.fileId.id)))
                         }
                     }
                 }
@@ -2782,19 +2786,19 @@ class ChatRowItem: TableRowItem {
                     uniqueLimit = Int(value)
                 }
                             
-                if let reactions = message.reactionsAttribute, reactions.reactions.count >= uniqueLimit {
-                    available = reactions.reactions.compactMap { reaction in
+                if let reactions = message.effectiveReactions, reactions.count >= uniqueLimit {
+                    available = reactions.compactMap { reaction in
                         switch reaction.value {
                         case let .custom(fileId):
                             if accessToAll {
                                 let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
-                                return .custom(value: reaction.value, fileId: fileId, message.associatedMedia[mediaId] as? TelegramMediaFile)
+                                return .custom(value: reaction.value, fileId: fileId, message.associatedMedia[mediaId] as? TelegramMediaFile, isSelected: isSelected(reaction.value))
                             } else {
                                 return nil
                             }
                         case .builtin:
                             if let generic = enabled.first(where: { $0.value == reaction.value }) {
-                                return .builtin(value: generic.value, staticFile: generic.staticIcon, selectFile: generic.selectAnimation, appearFile: generic.appearAnimation)
+                                return .builtin(value: generic.value, staticFile: generic.staticIcon, selectFile: generic.selectAnimation, appearFile: generic.appearAnimation, isSelected: isSelected(reaction.value))
                             } else {
                                 return nil
                             }

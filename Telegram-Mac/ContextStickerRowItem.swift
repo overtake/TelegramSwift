@@ -80,13 +80,13 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
             }
             if let file = reference?.0.fileReference?.media {
                 menu.addItem(ContextMenuItem(strings().chatSendWithoutSound, handler: { [weak item] in
-                    item?.chatInteraction.sendAppFile(file, true, nil, false)
+                    item?.chatInteraction.sendAppFile(file, true, nil, false, nil)
                     item?.chatInteraction.clearInput()
                 }, itemImage: MenuAnimation.menu_mute.value))
             }
             if let file = reference?.0.fileReference?.media {
                 menu.addItem(ContextMenuItem(strings().chatSendScheduledMessage, handler: { [weak item] in
-                    item?.chatInteraction.sendAppFile(file, false, nil, true)
+                    item?.chatInteraction.sendAppFile(file, false, nil, true, nil)
                     item?.chatInteraction.clearInput()
                 }, itemImage: MenuAnimation.menu_schedule_message.value))
             }
@@ -142,7 +142,7 @@ class ContextStickerRowView : TableRowView, ModalPreviewRowViewProtocol {
                         if let slowMode = item?.chatInteraction.presentation.slowMode, slowMode.hasLocked {
                             showSlowModeTimeoutTooltip(slowMode, for: control)
                         } else {
-                            item?.chatInteraction.sendAppFile(data.file, false, nil, false)
+                            item?.chatInteraction.sendAppFile(data.file, false, nil, false, nil)
                             item?.chatInteraction.clearInput()
                         }
                     }, for: .Click)

@@ -1275,7 +1275,7 @@ final class AvatarConstructorController : ModalViewController {
         
         let interactions = EntertainmentInteractions(.stickers, peerId: context.peerId)
 
-        interactions.sendSticker = { file, _, _ in
+        interactions.sendSticker = { file, _, _, _ in
             arguments.selectForeground(file)
         }
         interactions.sendGIF = { file, _, _ in

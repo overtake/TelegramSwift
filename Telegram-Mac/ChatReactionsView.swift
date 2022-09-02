@@ -202,7 +202,7 @@ final class ChatReactionsLayout {
             lhs.mode == rhs.mode &&
             lhs.rect == rhs.rect &&
             lhs.canViewList == rhs.canViewList &&
-            lhs.message.reactionsAttribute == rhs.message.reactionsAttribute
+            lhs.message.effectiveReactions == rhs.message.effectiveReactions
         }
         static func <(lhs: Reaction, rhs: Reaction) -> Bool {
             return lhs.index < rhs.index
@@ -464,6 +464,25 @@ final class ChatReactionsLayout {
                 if recentPeers.count < reaction.count {
                     recentPeers = []
                 }
+                if message.id.peerId.namespace == Namespaces.Peer.CloudUser {
+                    if mode == .full {
+                        recentPeers = []
+                        if reaction.isSelected {
+                            if let peer = context.myPeer {
+                                recentPeers.append(peer)
+                            }
+                            if reaction.count > 1 {
+                                if let peer = message.peers[message.id.peerId] {
+                                    recentPeers.append(peer)
+                                }
+                            }
+                        } else {
+                            if let peer = message.peers[message.id.peerId] {
+                                recentPeers.append(peer)
+                            }
+                        }
+                    }
+                }
                 return .init(value: reaction, recentPeers: recentPeers, canViewList: reactions.canViewList, message: message, context: context, mode: mode, index: getIndex(), source: source, presentation: presentation, action: { value, checkPrem in
                     
                     engine.react(message.id, values: message.newReactions(with: value.toUpdate(source.file)))
@@ -687,7 +706,6 @@ final class ChatReactionsView : View {
                 self?.reaction?.cancelMenu()
             }, for: .Normal)
             
-           
             
         }
         
@@ -758,6 +776,8 @@ final class ChatReactionsView : View {
             } else {
                 self.toolTip = tooltip
             }
+            
+            self.imageView.layer?.cornerRadius = reaction.value.value.string == "" ? 4 : 0
             
             let presentation = reaction.presentation
             

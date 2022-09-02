@@ -3824,5 +3824,5 @@ func generateEmoji(_ emoji: NSAttributedString) -> Signal<CGImage, NoError> {
         return ActionDisposable {
             
         }
-    } |> runOn(resourcesQueue)
+    } |> runOn(.concurrentBackgroundQueue())
 }

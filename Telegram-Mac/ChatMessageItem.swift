@@ -42,7 +42,7 @@ struct ChatTextCustomEmojiAttribute : Equatable {
         self.file = file
     }
     var attachment: TGTextAttachment {
-        return .init(identifier: "\(arc4random64())", fileId: self.fileId, file: file, text: emoji)
+        return .init(identifier: "\(arc4random64())", fileId: self.fileId, file: file, text: emoji, info: nil)
     }
 }
 

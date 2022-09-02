@@ -53,9 +53,9 @@ fileprivate final class AccountInfoArguments {
     let openUpdateApp:() -> Void
     let openPremium:()->Void
     let addAccount:([AccountWithInfo])->Void
-    let setStatus:(Control)->Void
+    let setStatus:(Control, TelegramUser)->Void
     let runStatusPopover:()->Void
-    init(context: AccountContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping(Control)->Void, runStatusPopover:@escaping()->Void) {
+    init(context: AccountContext, presentController:@escaping(ViewController, Bool)->Void, openFaq: @escaping()->Void, ask:@escaping()->Void, openUpdateApp: @escaping() -> Void, openPremium:@escaping()->Void, addAccount:@escaping([AccountWithInfo])->Void, setStatus:@escaping(Control, TelegramUser)->Void, runStatusPopover:@escaping()->Void) {
         self.context = context
         self.presentController = presentController
         self.openFaq = openFaq
@@ -709,18 +709,18 @@ class LayoutAccountController : TableViewController {
         let previous:Atomic<[AppearanceWrapperEntry<AccountInfoEntry>]> = Atomic(value: [])
         
         
-        let setStatus:(Control)->Void = { control in
+        let setStatus:(Control, TelegramUser)->Void = { control, peer in
             let callback:(TelegramMediaFile)->Void = { file in
                 if file.mimeType.hasPrefix("bundle") {
-                    _ = context.engine.accountData.setEmojiStatus(file: nil).start()
+                    _ = context.engine.accountData.setEmojiStatus(file: nil, expirationDate: nil).start()
                 } else {
-                    _ = context.engine.accountData.setEmojiStatus(file: file).start()
+                    _ = context.engine.accountData.setEmojiStatus(file: file, expirationDate: nil).start()
 
                 }
                 
             }
             if control.popover == nil {
-                showPopover(for: control, with: PremiumStatusController(context, callback: callback), edge: .maxY, inset: NSMakePoint(-80, -35), static: true, animationMode: .reveal)
+                showPopover(for: control, with: PremiumStatusController(context, callback: callback, peer: peer), edge: .maxY, inset: NSMakePoint(-80, -35), static: true, animationMode: .reveal)
             }
         }
         
@@ -754,14 +754,14 @@ class LayoutAccountController : TableViewController {
             } else {
                 context.sharedContext.beginNewAuth(testingEnvironment: testingEnvironment)
             }
-        }, setStatus: { control in
-            setStatus(control)
+        }, setStatus: { control, user in
+            setStatus(control, user)
         }, runStatusPopover: { [weak self] in
             guard let item = self?.genericView.item(at: 1) as? AccountInfoItem else {
                 return
             }
             if let control = item.statusControl {
-                setStatus(control)
+                setStatus(control, item.peer)
             }
         })
         

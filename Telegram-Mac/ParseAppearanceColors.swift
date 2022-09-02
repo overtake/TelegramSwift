@@ -547,7 +547,8 @@ func importPalette(_ path: String) -> ColorPalette? {
                                 listGrayText: colors["listGrayText"] ?? parent.palette.listGrayText,
                                 grayHighlight: colors["grayHighlight"] ?? parent.palette.grayHighlight,
                                 focusAnimationColor: colors["focusAnimationColor"] ?? parent.palette.focusAnimationColor,
-                                premium: colors["premium"] ?? parent.palette.premium)
+                                premium: colors["premium"] ?? parent.palette.premium,
+                                vibrant: colors["vibrant"] ?? parent.palette.vibrant)
         }
         
     }

@@ -476,13 +476,13 @@ class InstalledStickerPacksController: TableViewController {
                 switch settings.quickReaction {
                 case .builtin:
                     if let reaction = available?.enabled.first(where: { $0.value == settings.quickReaction }) {
-                        current.quick = .builtin(value: reaction.value, staticFile: reaction.staticIcon, selectFile: reaction.selectAnimation, appearFile: reaction.appearAnimation)
+                        current.quick = .builtin(value: reaction.value, staticFile: reaction.staticIcon, selectFile: reaction.selectAnimation, appearFile: reaction.appearAnimation, isSelected: false)
                     }
                 case let .custom(fileId):
                     if context.isPremium {
-                        current.quick = .custom(value: settings.quickReaction, fileId: fileId, nil)
+                        current.quick = .custom(value: settings.quickReaction, fileId: fileId, nil, isSelected: false)
                     } else if let first = available?.enabled.first {
-                        current.quick = .builtin(value: first.value, staticFile: first.staticIcon, selectFile: first.selectAnimation, appearFile: first.appearAnimation)
+                        current.quick = .builtin(value: first.value, staticFile: first.staticIcon, selectFile: first.selectAnimation, appearFile: first.appearAnimation, isSelected: false)
                     }
                 }
                 return current

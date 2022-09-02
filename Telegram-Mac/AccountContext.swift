@@ -194,6 +194,13 @@ final class AccountContext {
         return _appConfiguration.with { $0 }
     }
     
+    private var _myPeer: Peer?
+    
+    var myPeer: Peer? {
+        return _myPeer
+    }
+
+    
     
     private let isKeyWindowValue: ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
     
@@ -278,10 +285,10 @@ final class AccountContext {
         prefDisposable.add(account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]).start(next: { view in
             let configuration = view.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
             _ = appConfiguration.swap(configuration)
-            
-            
         }))
-        
+        prefDisposable.add((account.postbox.peerView(id: account.peerId) |> deliverOnMainQueue).start(next: { [weak self] peerView in
+            self?._myPeer = peerView.peers[peerView.peerId]
+        }))
         
         
         #if !SHARE

@@ -171,13 +171,27 @@ final class ReactionsWindowController : NSObject {
     
     init(_ context: AccountContext, message: Message) {
         self.context = context
-        self.emojies = .init(context, mode: .reactions)
+        
+        var selectedItems: [EmojiesSectionRowItem.SelectedItem] = []
+        
+        if let reactions = message.effectiveReactions {
+            for reaction in reactions {
+                switch reaction.value {
+                case let .builtin(emoji):
+                    selectedItems.append(.init(source: .builtin(emoji), type: .transparent))
+                case let .custom(fileId):
+                    selectedItems.append(.init(source: .custom(fileId), type: .transparent))
+                }
+            }
+        }
+        
+        self.emojies = .init(context, mode: .reactions, selectedItems: selectedItems)
         self.emojies.loadViewIfNeeded()
         super.init()
         
         let interactions = EntertainmentInteractions(.emoji, peerId: message.id.peerId)
         
-        interactions.sendAnimatedEmoji = { [weak self] sticker in
+        interactions.sendAnimatedEmoji = { [weak self] sticker, _ in
             let value: UpdateMessageReaction
             if let bundle = sticker.file.stickerText {
                 value = .builtin(bundle)

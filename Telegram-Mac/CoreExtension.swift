@@ -612,9 +612,9 @@ public extension Message {
     
     func newReactions(with reaction: UpdateMessageReaction) -> [UpdateMessageReaction] {
         var updated:[UpdateMessageReaction] = []
-        if let reactions = self.reactionsAttribute {
+        if let reactions = self.effectiveReactions {
             
-            let sorted = reactions.reactions.sorted(by: { lhs, rhs in
+            let sorted = reactions.sorted(by: { lhs, rhs in
                 if lhs.isSelected != rhs.isSelected {
                     if lhs.isSelected {
                         return true
@@ -3618,10 +3618,10 @@ func installAttachMenuBot(context: AccountContext, peer: Peer, completion: @esca
 
 
 extension NSAttributedString {
-    static func makeAnimated(_ file: TelegramMediaFile, text: String) -> NSAttributedString {
+    static func makeAnimated(_ file: TelegramMediaFile, text: String, info: ItemCollectionId? = nil) -> NSAttributedString {
         let attach = NSMutableAttributedString()
         _ = attach.append(string: text)
-        attach.addAttribute(.init(rawValue: TGAnimatedEmojiAttributeName), value: TGTextAttachment(identifier: "\(arc4random())", fileId: file.fileId.id, file: file, text: text), range: NSMakeRange(0, text.length))
+        attach.addAttribute(.init(rawValue: TGAnimatedEmojiAttributeName), value: TGTextAttachment(identifier: "\(arc4random())", fileId: file.fileId.id, file: file, text: text, info: info), range: NSMakeRange(0, text.length))
         return attach
     }
 }

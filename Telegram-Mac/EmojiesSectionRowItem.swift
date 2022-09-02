@@ -19,12 +19,12 @@ import Accelerate
 final class EmojiesSectionRowItem : GeneralRowItem {
     
     enum Item : Equatable {
-        case item(rect: NSRect, item: StickerPackItem, lock: Bool)
+        case item(rect: NSRect, item: StickerPackItem, lock: Bool, selected: SelectedItem.Selection?)
         case more(rect: NSRect, count: Int)
         
         var rect: NSRect {
             switch self {
-            case let .item(rect, _, _):
+            case let .item(rect, _, _, _):
                 return rect
             case let .more(rect, _):
                 return rect
@@ -33,16 +33,25 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         
         var lock: Bool {
             switch self {
-            case let .item(_, _, lock):
+            case let .item(_, _, lock, _):
                 return lock
             default:
                 return false
             }
         }
         
+        var selection: SelectedItem.Selection? {
+            switch self {
+            case let .item(_, _, _, selection):
+                return selection
+            default:
+                return nil
+            }
+        }
+        
         var item: StickerPackItem? {
             switch self {
-            case let .item(_, item, _):
+            case let .item(_, item, _, _):
                 return item
             default:
                 return nil
@@ -50,10 +59,33 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         }
     }
     
+    struct SelectedItem : Equatable {
+        enum Selection : Equatable {
+            case normal
+            case transparent
+        }
+        enum Source : Equatable {
+            case builtin(String)
+            case custom(Int64)
+        }
+        let source : Source
+        let type: Selection
+        
+        func isEqual(to file: TelegramMediaFile) -> Bool {
+            switch self.source {
+            case let .custom(fileId):
+                return file.fileId.id == fileId
+            case let .builtin(emoji):
+                return file.stickerText == emoji
+            }
+        }
+    }
+    
     let items: [Item]
+    let selectedItems: [SelectedItem]
     let stickerItems: [StickerPackItem]
     let context: AccountContext
-    let callback:(StickerPackItem)->Void
+    let callback:(StickerPackItem, StickerPackCollectionInfo?)->Void
     let itemSize: NSSize
     let info: StickerPackCollectionInfo?
     let viewSet: ((StickerPackCollectionInfo)->Void)?
@@ -77,13 +109,14 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     }
     let mode: Mode
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], mode: Mode = .panel, callback:@escaping(StickerPackItem)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], mode: Mode = .panel, selectedItems:[SelectedItem] = [], callback:@escaping(StickerPackItem, StickerPackCollectionInfo?)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
         self.itemSize = NSMakeSize(41, 34)
         self.info = info
         self.mode = mode
         self.viewSet = viewSet
         self.installed = installed
         self.revealed = revealed
+        self.selectedItems = selectedItems
         self.stickerItems = items
         self.showAllItems = showAllItems
         self.openPremium = openPremium
@@ -97,7 +130,15 @@ final class EmojiesSectionRowItem : GeneralRowItem {
             
             let isLocked = mode == .reactions && !context.isPremium && info == nil && item.file.stickerText == nil && item.getStringRepresentationsOfIndexKeys().isEmpty
             
-            mapped.append(.item(rect: CGRect(origin: point, size: itemSize).insetBy(dx: 2, dy: 2), item: item, lock: isLocked))
+            let selected = selectedItems.first(where: { $0.isEqual(to: item.file) })?.type
+            
+            let inset: NSPoint
+            if selected != nil {
+                inset = NSMakePoint(6, 3)
+            } else {
+                inset = NSMakePoint(2, 2)
+            }
+            mapped.append(.item(rect: CGRect(origin: point, size: itemSize).insetBy(dx: inset.x, dy: inset.y), item: item, lock: isLocked, selected: selected))
             point.x += itemSize.width
             if mapped.count % 8 == 0 {
                 point.y += itemSize.height
@@ -201,7 +242,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                 input = .init(inputText: bundle, selectionRange: 0..<bundle.length, attributes: [])
             } else {
                 let text = file.customEmojiText ?? file.stickerText ?? ""
-                input = .init(inputText: text, selectionRange: 0..<text.length, attributes: [.animated(0..<text.length, text, arc4random64(), file)])
+                input = .init(inputText: text, selectionRange: 0..<text.length, attributes: [.animated(0..<text.length, text, arc4random64(), file, info?.id)])
             }
             copyItem = ContextMenuItem(strings().contextCopy, handler: {
                 copyToClipboard(input)
@@ -349,8 +390,9 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
 
     
     private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
-
     private var locks:[InlineStickerItemLayer.Key : InlineStickerLockLayer] = [:]
+    private var selectedLayers:[InlineStickerItemLayer.Key : SimpleLayer] = [:]
+    
     
     private let contentView = Control()
     
@@ -491,7 +533,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
             return
         }
         if let first = currentDownItem, let current = first.1.item {
-            item.callback(current)
+            item.callback(current, item.info)
         }
     }
     
@@ -502,6 +544,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
             if key.index > ignoreCount - 1 {
                 value.animateScale(from: 0.1, to: 1, duration: duration, timingFunction: .spring, delay: itemDelay)
                 locks[key]?.animateScale(from: 0.1, to: 1, duration: duration, timingFunction: .spring, delay: itemDelay)
+                selectedLayers[key]?.animateScale(from: 0.1, to: 1, duration: duration, timingFunction: .spring, delay: itemDelay)
                 delay += itemDelay
             }
         }
@@ -665,7 +708,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         
  
 
-        self.updateInlineStickers(context: item.context, contentView: contentView, items: item.items, animated: animated)
+        self.updateInlineStickers(context: item.context, contentView: contentView, items: item.items, selected: item.selectedItems, animated: animated)
         
         self.updateListeners()
         
@@ -719,9 +762,11 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         }
     }
     
-    func updateInlineStickers(context: AccountContext, contentView: NSView, items: [EmojiesSectionRowItem.Item], animated: Bool) {
+    func updateInlineStickers(context: AccountContext, contentView: NSView, items: [EmojiesSectionRowItem.Item], selected: [EmojiesSectionRowItem.SelectedItem], animated: Bool) {
         var validIds: [InlineStickerItemLayer.Key] = []
         var validLockIds: [InlineStickerItemLayer.Key] = []
+        var validSelectedIds: [InlineStickerItemLayer.Key] = []
+        
         var index: Int = 0
 
         for item in items {
@@ -730,6 +775,40 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                 validIds.append(id)
 
                 let rect = item.rect
+                
+                if let selection = item.selection {
+                    let current: SimpleLayer
+                    if let view = self.selectedLayers[id] {
+                        current = view
+                    } else {
+                        current = SimpleLayer()
+                        current.masksToBounds = true
+                        current.frame = NSMakeRect(rect.minX - 2.5, rect.minY - 2.5, 34, 33)
+                        current.cornerRadius = 10
+                        if #available(macOS 10.15, *) {
+                            current.cornerCurve = .continuous
+                        }
+                        contentView.layer?.addSublayer(current)
+                        self.selectedLayers[id] = current
+                    }
+                    
+                    
+                    
+                    switch selection {
+                    case .normal:
+                        current.backgroundColor = theme.colors.accent.withAlphaComponent(0.2).cgColor
+                    case .transparent:
+                        current.backgroundColor = theme.colors.vibrant.mixedWith(NSColor(0x000000), alpha: 0.1).cgColor
+                    }
+                    
+                    validSelectedIds.append(id)
+                                        
+                } else {
+                    if let layer = self.selectedLayers[id] {
+                        performSublayerRemoval(layer, animated: animated)
+                        self.selectedLayers.removeValue(forKey: id)
+                    }
+                }
 
                 let view: InlineStickerItemLayer
                 if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
@@ -747,6 +826,13 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     view.superview = contentView
                     contentView.layer?.addSublayer(view)
                 }
+                
+                if #available(macOS 10.15, *) {
+                    view.cornerCurve = .continuous
+                }
+                view.masksToBounds = true
+                view.cornerRadius = item.selection != nil ? 10 : 0
+//                view.backgroundColor = NSColor.random.cgColor
                 
                 if item.lock {
                     let current: InlineStickerLockLayer
@@ -767,6 +853,8 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                         self.locks.removeValue(forKey: id)
                     }
                 }
+                
+               
                 
                 index += 1
                 var isKeyWindow: Bool = false
@@ -802,6 +890,17 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         }
         for key in removeLockKeys {
             self.locks.removeValue(forKey: key)
+        }
+        
+        var removeSelectionKeys: [InlineStickerItemLayer.Key] = []
+        for (key, view) in self.selectedLayers {
+            if !validSelectedIds.contains(key) {
+                removeSelectionKeys.append(key)
+                performSublayerRemoval(view, animated: animated)
+            }
+        }
+        for key in removeSelectionKeys {
+            self.selectedLayers.removeValue(forKey: key)
         }
         
     }
