@@ -41,6 +41,7 @@ enum PremiumLogEventsSource : Equatable {
     case premium_emoji
     case profile(PeerId)
     case gift(from: PeerId, to: PeerId, months: Int32)
+    case send_as
     var value: String {
         switch self {
         case let .deeplink(ref):
@@ -65,6 +66,8 @@ enum PremiumLogEventsSource : Equatable {
             return "profile__\(peerId.id._internalGetInt64Value())"
         case .gift:
             return "gift"
+        case .send_as:
+            return "send_as"
         }
     }
     var subsource: String? {

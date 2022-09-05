@@ -281,7 +281,7 @@ private func segments(_ emoji: [EmojiSegment : [String]], skinModifiers: [EmojiS
 private final class Arguments {
     let context: AccountContext
     let mode: EmojiesController.Mode
-    let send:(StickerPackItem, StickerPackCollectionInfo?)->Void
+    let send:(StickerPackItem, StickerPackCollectionInfo?, Int32?)->Void
     let sendEmoji:(String)->Void
     let selectEmojiSegment:(EmojiSegment)->Void
     let viewSet:(StickerPackCollectionInfo)->Void
@@ -289,7 +289,7 @@ private final class Arguments {
     let openPremium:()->Void
     let installPack:(StickerPackCollectionInfo, [StickerPackItem])->Void
     let clearRecent:()->Void
-    init(context: AccountContext, mode: EmojiesController.Mode, send:@escaping(StickerPackItem, StickerPackCollectionInfo?)->Void, sendEmoji:@escaping(String)->Void, selectEmojiSegment:@escaping(EmojiSegment)->Void, viewSet:@escaping(StickerPackCollectionInfo)->Void, showAllItems:@escaping(Int64)->Void, openPremium:@escaping()->Void, installPack:@escaping(StickerPackCollectionInfo,  [StickerPackItem])->Void, clearRecent:@escaping()->Void) {
+    init(context: AccountContext, mode: EmojiesController.Mode, send:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?)->Void, sendEmoji:@escaping(String)->Void, selectEmojiSegment:@escaping(EmojiSegment)->Void, viewSet:@escaping(StickerPackCollectionInfo)->Void, showAllItems:@escaping(Int64)->Void, openPremium:@escaping()->Void, installPack:@escaping(StickerPackCollectionInfo,  [StickerPackItem])->Void, clearRecent:@escaping()->Void) {
         self.context = context
         self.send = send
         self.sendEmoji = sendEmoji
@@ -331,7 +331,7 @@ private struct State : Equatable {
     var reactionSettings: ReactionSettings = .default
     
     var defaultStatuses:[StickerPackItem] = []
-    
+    var iconStatusEmoji: [TelegramMediaFile] = []
     var selectedItems: [EmojiesSectionRowItem.SelectedItem]
 }
 
@@ -490,17 +490,17 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 }
             })
             
-            let statuses = state.recentStatusItems + state.featuredStatusItems
+            let statuses = state.iconStatusEmoji + state.recentStatusItems.map { $0.media } + state.featuredStatusItems.map { $0.media }
             var contains:Set<MediaId> = Set()
             let normalized:[StickerPackItem] = statuses.filter { item in
-                let text = item.media.customEmojiText ?? item.media.stickerText ?? ""
-                if !contains.contains(item.media.fileId), search.contains(text) {
-                    contains.insert(item.media.fileId)
+                let text = item.customEmojiText ?? item.stickerText ?? ""
+                if !contains.contains(item.fileId), search.contains(text) {
+                    contains.insert(item.fileId)
                     return true
                 }
                 return false
             }.map { value in
-                return StickerPackItem(index: .init(index: 0, id: 0), file: value.media, indexKeys: [])
+                return StickerPackItem(index: .init(index: 0, id: 0), file: value, indexKeys: [])
             }
             for item in normalized {
                 if !animatedEmoji.contains(where: { $0.file.fileId == item.file.fileId }) {
@@ -516,9 +516,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 
                                 
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_ae"), equatable: InputDataEquatable(animatedEmoji), comparable: nil, item: { initialSize, stableId in
-                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: false, info: nil, items: animatedEmoji, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: { item, info in
-                        arguments.send(item, info)
-                    })
+                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: false, info: nil, items: animatedEmoji, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send)
                 }))
                 index += 1
                 
@@ -606,9 +604,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 
                 
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(reactionsPopular), comparable: nil, item: { initialSize, stableId in
-                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: reactionsPopular, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: { item, info in
-                        arguments.send(item, info)
-                    })
+                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: reactionsPopular, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send)
                 }))
                 index += 1
                 
@@ -624,9 +620,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     
                     
                     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(-1), equatable: InputDataEquatable(reactionsRecent), comparable: nil, item: { initialSize, stableId in
-                        return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: reactionsRecent, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: { item, info in
-                            arguments.send(item, info)
-                        })
+                        return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: reactionsRecent, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send)
                     }))
                     index += 1
                 }
@@ -648,23 +642,35 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
             if key == .Recent, arguments.mode == .status {
                 
+                let string: String
+                if let expiryDate = state.peer?.peer.emojiStatus?.expirationDate {
+                    string = strings().customStatusExpires(timeIntervalString(Int(expiryDate - arguments.context.timestamp)))
+                } else {
+                    string = strings().customStatusExpiresPromo
+                }
+                
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_id_status_status"), equatable: .init(string), comparable: nil, item: { initialSize, stableId in
+                    return EmojiStatusStatusRowItem(initialSize, stableId: stableId, status: string.uppercased(), viewType: .textTopItem)
+                }))
+                index += 1
+                
                 let def = TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_Premium_StickerPack", ext: ""), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
                 
                 normalized.insert(.init(index: .init(index: 0, id: 0), file: def, indexKeys: []), at: 0)
                 
+                normalized.insert(contentsOf: state.iconStatusEmoji.map {
+                    .init(index: .init(index: 0, id: 0), file: $0, indexKeys: [])
+                }, at: 1)
+                
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(normalized), comparable: nil, item: { initialSize, stableId in
-                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: normalized, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: { item, info in
-                        arguments.send(item, info)
-                    })
+                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: normalized, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send)
                 }))
                 index += 1
             }
             
             if key == .Recent, !recentAnimated.isEmpty, arguments.mode == .emoji {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(recentAnimated), comparable: nil, item: { initialSize, stableId in
-                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: recentAnimated, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: { item, info in
-                        arguments.send(item, info)
-                    })
+                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: recentAnimated, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send)
                 }))
                 index += 1
             }
@@ -703,9 +709,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             let tuple = Tuple(section: section, isPremium: state.peer?.peer.isPremium ?? false, revealed: state.revealed[section.info.id.id] != nil)
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_section(section.info.id.id), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
-                return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: section.installed, info: section.info, items: section.items, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: { item, info in
-                    arguments.send(item, info)
-                }, viewSet: { info in
+                return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: section.installed, info: section.info, items: section.items, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send, viewSet: { info in
                     arguments.viewSet(info)
                 }, showAllItems: {
                     arguments.showAllItems(section.info.id.id)
@@ -1016,6 +1020,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             switch self {
             case .reactions:
                 return .reactions
+            case .status:
+                return .statuses
             default:
                 return .panel
             }
@@ -1128,7 +1134,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             updateState(f)
         }
         
-        let arguments = Arguments(context: context, mode: self.mode, send: { [weak self] item, info in
+        let arguments = Arguments(context: context, mode: self.mode, send: { [weak self] item, info, timeout in
             switch mode {
             case .emoji:
                 if !context.isPremium && item.file.isPremiumEmoji, context.peerId != self?.chatInteraction?.peerId {
@@ -1136,12 +1142,12 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                         showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
                     })
                 } else {
-                    self?.interactions?.sendAnimatedEmoji(item, info)
+                    self?.interactions?.sendAnimatedEmoji(item, info, nil)
                 }
             case .status:
-                self?.interactions?.sendAnimatedEmoji(item, nil)
+                self?.interactions?.sendAnimatedEmoji(item, nil, timeout)
             case .reactions:
-                self?.interactions?.sendAnimatedEmoji(item, nil)
+                self?.interactions?.sendAnimatedEmoji(item, nil, nil)
             }
             
         }, sendEmoji: { [weak self] emoji in
@@ -1281,10 +1287,26 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
          */
         
         var orderedItemListCollectionIds: [Int32] = []
-        
+        var iconStatusEmoji: Signal<[TelegramMediaFile], NoError> = .single([])
+
+
         if mode == .status {
             orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudFeaturedStatusEmoji)
             orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudRecentStatusEmoji)
+            
+            
+            iconStatusEmoji = context.engine.stickers.loadedStickerPack(reference: .iconStatusEmoji, forceActualized: false)
+            |> map { result -> [TelegramMediaFile] in
+                switch result {
+                case let .result(_, items, _):
+                    return items.map(\.file)
+                default:
+                    return []
+                }
+            }
+            |> take(1)
+
+            
         } else if mode == .reactions {
             orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudRecentReactions)
             orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudTopReactions)
@@ -1310,7 +1332,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         
         let emojiStatuses = context.engine.stickers.loadedStickerPack(reference: .name("StatusEmojiWhite"), forceActualized: false)
         
-        actionsDisposable.add(combineLatest(emojies, context.account.viewTracker.featuredEmojiPacks(), context.account.postbox.peerView(id: context.peerId), search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, emojiStatuses).start(next: { view, featured, peerView, search, reactions, recentEmoji, reactionSettings, emojiStatuses in
+        actionsDisposable.add(combineLatest(emojies, context.account.viewTracker.featuredEmojiPacks(), context.account.postbox.peerView(id: context.peerId), search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, emojiStatuses, iconStatusEmoji).start(next: { view, featured, peerView, search, reactions, recentEmoji, reactionSettings, emojiStatuses, iconStatusEmoji in
             
             
             var featuredStatusEmoji: OrderedItemListView?
@@ -1405,6 +1427,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 current.topReactionsItems = topReactionsItems
                 current.recentReactionsItems = recentReactionsItems
                 current.reactionSettings = reactionSettings
+                current.iconStatusEmoji = iconStatusEmoji
                 switch emojiStatuses {
                 case let .result(_, items, _):
                     current.defaultStatuses = items

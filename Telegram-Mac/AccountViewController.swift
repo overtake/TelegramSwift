@@ -710,11 +710,17 @@ class LayoutAccountController : TableViewController {
         
         
         let setStatus:(Control, TelegramUser)->Void = { control, peer in
-            let callback:(TelegramMediaFile)->Void = { file in
-                if file.mimeType.hasPrefix("bundle") {
-                    _ = context.engine.accountData.setEmojiStatus(file: nil, expirationDate: nil).start()
+            let callback:(TelegramMediaFile, Int32?)->Void = { file, timeout in
+                let expiryDate: Int32?
+                if let timeout = timeout {
+                    expiryDate = context.timestamp + timeout
                 } else {
-                    _ = context.engine.accountData.setEmojiStatus(file: file, expirationDate: nil).start()
+                    expiryDate = nil
+                }
+                if file.mimeType.hasPrefix("bundle") {
+                    _ = context.engine.accountData.setEmojiStatus(file: nil, expirationDate: expiryDate).start()
+                } else {
+                    _ = context.engine.accountData.setEmojiStatus(file: file, expirationDate: expiryDate).start()
 
                 }
                 

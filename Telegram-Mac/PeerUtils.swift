@@ -31,7 +31,7 @@ extension ChatListFilterPeerCategories {
 
 final class TelegramFilterCategory : Peer {
     
-    
+    var timeoutAttribute: UInt32? 
     
     var id: PeerId
     

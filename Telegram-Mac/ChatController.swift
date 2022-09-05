@@ -652,7 +652,7 @@ class ChatControllerView : View, ChatInputDelegate {
             } else if peerStatus.canAddContact && settings.contains(.canAddContact) {
                 state = .addContact(voiceChat, block: settings.contains(.canReport) || settings.contains(.canBlock), autoArchived: settings.contains(.autoArchived))
             } else if settings.contains(.canReport) {
-                state = .report(voiceChat, autoArchived: settings.contains(.autoArchived))
+                state = .report(voiceChat, autoArchived: settings.contains(.autoArchived), status: interfaceState.peer?.emojiStatus)
             } else if settings.contains(.canShareContact) {
                 state = .shareInfo(voiceChat)
             } else if let pinnedMessageId = interfaceState.pinnedMessageId, !interfaceState.interfaceState.dismissedPinnedMessageId.contains(pinnedMessageId.messageId), !interfaceState.hidePinnedMessage, interfaceState.chatMode != .pinned {
@@ -676,7 +676,7 @@ class ChatControllerView : View, ChatInputDelegate {
             state = .none(voiceChat)
         }
         
-
+        
         header.updateState(state, animated: animated, for: self)
         
         tableView.updateStickInset(state.height - state.toleranceHeight, animated: animated)
@@ -1758,7 +1758,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         let currentAccountPeer = self.context.account.postbox.loadedPeerWithId(self.context.account.peerId)
         |> map { peer in
-            return [FoundPeer(peer: peer, subscribers: nil)]
+            return [SendAsPeer(peer: peer, subscribers: nil, isPremiumRequired: false)]
         }
         
         sendAsPeersDisposable.set((combineLatest(queue: Queue.mainQueue(), currentAccountPeer, peerView.get(), self.context.engine.peers.sendAsAvailablePeers(peerId: self.chatLocation.peerId)))
@@ -1766,7 +1766,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             guard let strongSelf = self, let peerView = peerView as? PeerView else {
                 return
             }
-            var allPeers: [FoundPeer]?
+            
+            var allPeers: [SendAsPeer]?
             if !peers.isEmpty {
                 if let channel = peerViewMainPeer(peerView) as? TelegramChannel, case .group = channel.info, channel.hasPermission(.canBeAnonymous) {
                     allPeers = []

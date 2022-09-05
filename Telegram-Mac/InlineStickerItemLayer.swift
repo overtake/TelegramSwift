@@ -240,14 +240,14 @@ private final class MultiTargetContextCache {
 }
 
 final class InlineStickerView: View {
-    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize) {
-        let layer = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: emoji, size: size)
+    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil) {
+        let layer = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: emoji, size: size, getColors: getColors)
         super.init(frame: size.bounds)
         self.layer = layer
         layer.superview = self
     }
-    init(account: Account, file: TelegramMediaFile, size: NSSize) {
-        let layer = InlineStickerItemLayer(account: account, file: file, size: size)
+    init(account: Account, file: TelegramMediaFile, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil) {
+        let layer = InlineStickerItemLayer(account: account, file: file, size: size, getColors: getColors)
         super.init(frame: size.bounds)
         self.layer = layer
         layer.superview = self
@@ -264,7 +264,7 @@ final class InlineStickerView: View {
                     isKeyWindow = window.isKeyWindow
                 }
             }
-            animateLayer.isPlayable = NSIntersectsRect(animateLayer.frame, superview.visibleRect) && isKeyWindow
+            animateLayer.isPlayable = superview.visibleRect != .zero && isKeyWindow
         }
     }
     
@@ -307,7 +307,7 @@ final class InlineStickerView: View {
         fatalError("init(frame:) has not been implemented")
     }
     
-    private var animateLayer: InlineStickerItemLayer {
+    var animateLayer: InlineStickerItemLayer {
         return self.layer! as! InlineStickerItemLayer
     }
 }

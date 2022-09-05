@@ -21,6 +21,7 @@
 		27034074282BDEBF00D0156C /* PremiumBoardingHeaderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27034073282BDEBF00D0156C /* PremiumBoardingHeaderItem.swift */; };
 		27034076282CF79E00D0156C /* SceneKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27034075282CF79E00D0156C /* SceneKit.framework */; };
 		27034078282CF7BE00D0156C /* PremiumStarSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27034077282CF7BE00D0156C /* PremiumStarSceneView.swift */; };
+		2704BAAB28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2704BAAA28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift */; };
 		270A262A269D8F1000B31B2B /* WidgetStickersController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 270A2629269D8F1000B31B2B /* WidgetStickersController.swift */; };
 		270E2B4B2609F95D00B0738C /* playlist_play_pause.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */; };
 		270E2B4E2609FDBB00B0738C /* playlist_pause_play.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */; };
@@ -1368,6 +1369,7 @@
 		27034073282BDEBF00D0156C /* PremiumBoardingHeaderItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumBoardingHeaderItem.swift; sourceTree = "<group>"; };
 		27034075282CF79E00D0156C /* SceneKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SceneKit.framework; path = System/Library/Frameworks/SceneKit.framework; sourceTree = SDKROOT; };
 		27034077282CF7BE00D0156C /* PremiumStarSceneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumStarSceneView.swift; sourceTree = "<group>"; };
+		2704BAAA28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiStatusStatusRowItem.swift; sourceTree = "<group>"; };
 		270A2629269D8F1000B31B2B /* WidgetStickersController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetStickersController.swift; sourceTree = "<group>"; };
 		270E2B4A2609F95D00B0738C /* playlist_play_pause.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playlist_play_pause.tgs; sourceTree = "<group>"; };
 		270E2B4D2609FDBA00B0738C /* playlist_pause_play.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = playlist_pause_play.tgs; sourceTree = "<group>"; };
@@ -3059,6 +3061,7 @@
 				27F4F1792844F7C700A3B4D4 /* EmojiesSectionRowItem.swift */,
 				2726BDF4286F31B30044D260 /* EmojiesPackItem.swift */,
 				27916F1D287C76E10046DB44 /* EmojiTabsItem.swift */,
+				2704BAAA28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift */,
 			);
 			name = items;
 			sourceTree = "<group>";
@@ -6720,6 +6723,7 @@
 				2773A53E25FA220C00AB45E9 /* JoinVoiceChatAlertRowItem.swift in Sources */,
 				C25C132F1E8A405E00AE26A1 /* ArchivedStickerPacksController.swift in Sources */,
 				D01E1F0422B39A4800AD6DAE /* LottiePlayer.swift in Sources */,
+				2704BAAB28C63DB60018FBC7 /* EmojiStatusStatusRowItem.swift in Sources */,
 				2728991926CBC0D100F4D288 /* UNUserNotifications.swift in Sources */,
 				D004167522D37AD00000566B /* StickerPackPanelRowItem.swift in Sources */,
 				2703406C2825434700D0156C /* PremiumLimitRowItem.swift in Sources */,
