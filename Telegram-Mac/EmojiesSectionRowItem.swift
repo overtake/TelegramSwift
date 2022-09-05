@@ -85,7 +85,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     let selectedItems: [SelectedItem]
     let stickerItems: [StickerPackItem]
     let context: AccountContext
-    let callback:(StickerPackItem, StickerPackCollectionInfo?)->Void
+    let callback:(StickerPackItem, StickerPackCollectionInfo?, Int32?)->Void
     let itemSize: NSSize
     let info: StickerPackCollectionInfo?
     let viewSet: ((StickerPackCollectionInfo)->Void)?
@@ -106,10 +106,11 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         case panel
         case preview
         case reactions
+        case statuses
     }
     let mode: Mode
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], mode: Mode = .panel, selectedItems:[SelectedItem] = [], callback:@escaping(StickerPackItem, StickerPackCollectionInfo?)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], mode: Mode = .panel, selectedItems:[SelectedItem] = [], callback:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
         self.itemSize = NSMakeSize(41, 34)
         self.info = info
         self.mode = mode
@@ -164,7 +165,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         
         if let _ = info {
             switch mode {
-            case .panel, .reactions:
+            case .panel, .reactions, .statuses:
                 if isPremium && !context.isPremium {
                     if installed {
                         self.unlockText = (strings().emojiPackRestore, true, true)
@@ -268,6 +269,25 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                 }
             }
             return .single(items)
+        case .statuses:
+            if let view = self.view as? EmojiesSectionRowView, let sticker = view.itemUnderMouse?.1.item {
+                
+                if !sticker.file.mimeType.hasPrefix("bundle") {
+                    let hours: [Int32] = [60 * 60,
+                                          60 * 60 * 2,
+                                          60 * 60 * 8,
+                                          60 * 60 * 24 * 1,
+                                          60 * 60 * 24 * 2]
+
+                    for hour in hours {
+                        items.append(ContextMenuItem(strings().customStatusMenuTimer(timeIntervalString(Int(hour))), handler: { [weak self] in
+                            self?.callback(sticker, self?.info, hour)
+                        }))
+                    }
+                }
+                
+            }
+            return .single(items)
         case .preview:
             if let copyItem = copyItem {
                 items.append(copyItem)
@@ -308,7 +328,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     func invokeLockAction() {
         if let info = info {
             switch mode {
-            case .panel, .reactions:
+            case .panel, .reactions, .statuses:
                 if isPremium && !context.isPremium {
                     self.openPremium?()
                 } else if !installed {
@@ -533,7 +553,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
             return
         }
         if let first = currentDownItem, let current = first.1.item {
-            item.callback(current, item.info)
+            item.callback(current, item.info, nil)
         }
     }
     
@@ -831,7 +851,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     view.cornerCurve = .continuous
                 }
                 view.masksToBounds = true
-                view.cornerRadius = item.selection != nil ? 10 : 0
+//                view.cornerRadius = item.selection != nil ? 10 : 0
 //                view.backgroundColor = NSColor.random.cgColor
                 
                 if item.lock {

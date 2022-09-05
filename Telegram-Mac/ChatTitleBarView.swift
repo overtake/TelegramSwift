@@ -817,9 +817,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 
                 let context = chatInteraction.context
                 
-                if chatInteraction.presentation.reportMode == nil, chatInteraction.context.peerId != chatInteraction.peerId {
-                    statusControl = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: false)
-                }
+                statusControl = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: false)
                 
                 
                 if peer.isGroup || peer.isSupergroup || peer.isChannel {

@@ -4275,6 +4275,18 @@ public final class L10n {
   public static var customEmojiSuggest: String  { return L10n.tr("Localizable", "CustomEmoji.Suggest") }
   /// Subscribe to Telegram Premium to unlock this reaction. [Read More]()
   public static var customReactionPremiumAlert: String  { return L10n.tr("Localizable", "CustomReaction.PremiumAlert") }
+  /// YOUR STATUS EXPIRES IN %@
+  public static func customStatusExpires(_ p1: String) -> String {
+    return L10n.tr("Localizable", "CustomStatus.Expires", p1)
+  }
+  /// This account uses 🤡 as a custom status next to its name. Such emoji statuses are available to all subscribers of Telegram Premium.
+  public static var customStatusReportSpam: String  { return L10n.tr("Localizable", "CustomStatus.ReportSpam") }
+  /// RIGHT CLICK TO SET A TIMER
+  public static var customStatusExpiresPromo: String  { return L10n.tr("Localizable", "CustomStatus.Expires.Promo") }
+  /// Set for %@
+  public static func customStatusMenuTimer(_ p1: String) -> String {
+    return L10n.tr("Localizable", "CustomStatus.Menu.Timer", p1)
+  }
   /// Night Mode
   public static var darkModeConfirmNightModeHeader: String  { return L10n.tr("Localizable", "DarkMode.Confirm.NightMode.Header") }
   /// Disable

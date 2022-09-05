@@ -158,7 +158,7 @@ final class MenuView: View, TableViewDelegate {
     
     func makeSize(presentation: AppMenu.Presentation, screen: NSScreen, maxHeight: CGFloat? = nil, appearMode: AppMenu.AppearMode) {
         
-        var max: CGFloat = 180
+        var max: CGFloat = 100
         tableView.enumerateItems(with: { item in
             if let item = item as? AppMenuBasicItem {
                 if max < item.effectiveSize.width {
@@ -167,7 +167,6 @@ final class MenuView: View, TableViewDelegate {
             }
             return true
         })
-        
         
         self.setFrameSize(max, min(tableView.listHeight, min(maxHeight ?? appearMode.max, screen.visibleFrame.height - 200)))
         if presentation.colors.isDark {
@@ -937,4 +936,14 @@ final class AppMenuController : NSObject  {
         self.delayDisposable.dispose()
         self.keyDisposable?.dispose()
     }
+}
+
+
+func contextMenuOnScreen()->Bool {
+    for window in NSApp.windows {
+        if let window = window as? Window, let _ = window.weakView {
+            return true
+        }
+    }
+    return false
 }

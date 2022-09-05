@@ -13,6 +13,7 @@ import SwiftSignalKit
 import TelegramCore
 
 import Postbox
+import TGModernGrowingTextView
 
 
 
@@ -32,7 +33,7 @@ enum ChatHeaderState : Identifiable, Equatable {
     case requestChat(ChatActiveGroupCallInfo?, String, String)
     case shareInfo(ChatActiveGroupCallInfo?)
     case pinned(ChatActiveGroupCallInfo?, ChatPinnedMessage, doNotChangeTable: Bool)
-    case report(ChatActiveGroupCallInfo?, autoArchived: Bool)
+    case report(ChatActiveGroupCallInfo?, autoArchived: Bool, status: PeerEmojiStatus?)
     case promo(ChatActiveGroupCallInfo?, PromoChatListItem.Kind)
     case pendingRequests(ChatActiveGroupCallInfo?, Int, [PeerInvitationImportersState.Importer])
 
@@ -65,7 +66,7 @@ enum ChatHeaderState : Identifiable, Equatable {
             return voiceChat
         case let .search(voiceChat, _, _, _):
             return voiceChat
-        case let .report(voiceChat, _):
+        case let .report(voiceChat, _, _):
             return voiceChat
         case let .addContact(voiceChat, _, _):
             return voiceChat
@@ -122,7 +123,10 @@ enum ChatHeaderState : Identifiable, Equatable {
             height += 0
         case .search:
             height += 44
-        case .report:
+        case let .report(_, _, status):
+            if let _ = status {
+                height += 30
+            }
             height += 44
         case .addContact:
             height += 44
@@ -749,12 +753,17 @@ class ChatReportView : Control, ChatHeaderProtocol {
     private let unarchiveButton = TitleButton()
     private let dismiss:ImageButton = ImageButton()
 
+    private var statusLayer: InlineStickerView?
+    
     private let buttonsContainer = View()
+    
+    private var textView: TextView?
     
     required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
         self.chatInteraction = chatInteraction
         super.init(frame: frame)
         dismiss.disableActions()
+        
         
         self.style = ControlStyle(backgroundColor: theme.colors.background)
         
@@ -805,16 +814,70 @@ class ChatReportView : Control, ChatHeaderProtocol {
     func update(with state: ChatHeaderState, animated: Bool) {
         buttonsContainer.removeAllSubviews()
         switch state {
-        case let .report(_, autoArchived):
+        case let .report(_, autoArchived, status):
             buttonsContainer.addSubview(report)
-
             if autoArchived {
                 buttonsContainer.addSubview(unarchiveButton)
+            }
+            
+            if let status = status {
+                let current: TextView
+                if let view = self.textView {
+                    current = view
+                } else {
+                    current = TextView()
+                    current.userInteractionEnabled = false
+                    current.isSelectable = false
+                    self.textView = current
+                    addSubview(current)
+                }
+                let text = strings().customStatusReportSpam
+                let attr = NSMutableAttributedString()
+                _ = attr.append(string: text, color: theme.colors.grayText, font: .normal(.short))
+                
+                let range = attr.string.nsstring.range(of: "🤡")
+                if range.location != NSNotFound {
+                    attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: TGTextAttachment(identifier: "\(arc4random())", fileId: status.fileId, file: nil, text: "", info: nil), range: range)
+                }
+                let layout = TextViewLayout(attr, alignment: .center)
+                layout.measure(width: frame.width - 80)
+                current.update(layout)
+                
+                self.statusLayer?.removeFromSuperview()
+                self.statusLayer = nil
+                
+                for embedded in layout.embeddedItems {
+                    let rect = embedded.rect.insetBy(dx: -1.5, dy: -1.5)
+                    let view = InlineStickerView(account: chatInteraction.context.account, inlinePacksContext: chatInteraction.context.inlinePacksContext, emoji: .init(fileId: status.fileId, file: nil, emoji: ""), size: rect.size, getColors: { file in
+                        var colors: [LottieColor] = []
+                        if file.emojiReference?.id == defaultStatusesPackId(nil) {
+                            colors.append(.init(keyPath: "", color: theme.colors.accent))
+                        }
+                        return colors
+                    })
+                    view.frame = rect
+                    current.addEmbeddedView(view)
+                    self.statusLayer = view
+                    view.updateAnimatableContent()
+                    view.animateLayer.isPlayable = true
+                }
+            } else if let view = self.textView {
+                performSubviewRemoval(view, animated: animated)
+                self.textView = nil
             }
         default:
             break
         }
         updateLocalizationAndTheme(theme: theme)
+    }
+    
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        self.statusLayer?.updateAnimatableContent()
+    }
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        self.statusLayer?.updateAnimatableContent()
     }
 
     override func draw(_ layer: CALayer, in ctx: CGContext) {
@@ -825,9 +888,9 @@ class ChatReportView : Control, ChatHeaderProtocol {
     
     override func layout() {
         report.center()
-        dismiss.centerY(x: frame.width - dismiss.frame.width - 20)
+        dismiss.frame = NSMakeRect(frame.width - dismiss.frame.width - 20, floorToScreenPixels(backingScaleFactor, (44 - dismiss.frame.height) / 2), dismiss.frame.width, dismiss.frame.height)
         
-        buttonsContainer.frame = NSMakeRect(0, 0, frame.width, frame.height - .borderSize)
+        buttonsContainer.frame = NSMakeRect(0, 0, frame.width, 44 - .borderSize)
 
         var buttons:[Control] = []
         if report.superview != nil {
@@ -842,6 +905,10 @@ class ChatReportView : Control, ChatHeaderProtocol {
         for button in buttons {
             button.frame = NSMakeRect(x, 0, buttonWidth, buttonsContainer.frame.height)
             x += buttonWidth
+        }
+        
+        if let textView = textView {
+            textView.centerX(y: frame.height - textView.frame.height - 5)
         }
     }
     

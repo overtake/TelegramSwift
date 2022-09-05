@@ -265,7 +265,8 @@ open class Popover: NSObject {
                                 strongSelf.background.layer?.animateAlpha(from: 0, to: 1, duration: 0.2, completion: completion)
                             case .reveal:
                                 
-                                let point = strongSelf.overlay.convert(NSMakePoint(0, 0), from: control)
+                                var point = strongSelf.overlay.convert(NSMakePoint(0, 0), from: control)
+                                point.y = 20
                                 let from: NSRect = control.frame.size.bounds
                                 let to = strongSelf.overlay.frame.size.bounds
                                 
@@ -286,7 +287,9 @@ open class Popover: NSObject {
                                     if let strongSelf = strongSelf {
                                         if !strongSelf.inside() && !control.mouseInside() {
                                             if (NSEvent.pressedMouseButtons & (1 << 0)) == 0 {
-                                                strongSelf.hide()
+                                                if !contextMenuOnScreen() {
+                                                    strongSelf.hide()
+                                                }
                                             }
                                         }
                                     }

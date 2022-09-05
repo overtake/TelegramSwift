@@ -168,13 +168,12 @@ open class AppMenuRowItem : AppMenuBasicItem {
         }
         super.init(initialSize, presentation: presentation, menuItem: item, interaction: interaction)
         self.menuItem = item
-        self.observation_i = item.observe(\.image) { [weak self] object, change in
+        self.observation_i = item.observe(\.image, options: .new, changeHandler: { [weak self] object, change in
             self?.redraw(animated: true)
-        }
-        self.observation_t = item.observe(\.title) { [weak self] object, change in
+        })
+        self.observation_t = item.observe(\.title, options: .new, changeHandler: { [weak self] object, change in
             self?.redraw(animated: true)
-        }
-        
+        })
     }
     
     open var imageSize: CGFloat {
@@ -222,7 +221,10 @@ open class AppMenuRowItem : AppMenuBasicItem {
     
     open override var effectiveSize: NSSize {
         var defaultSize = NSMakeSize(textSize, height)
+        
         if let _ = self.item.image {
+            defaultSize.width += imageSize + leftInset - 2
+        } else if imageSize != 18 {
             defaultSize.width += imageSize + leftInset - 2
         }
         

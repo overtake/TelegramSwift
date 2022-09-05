@@ -1373,10 +1373,14 @@ final class LottieAnimation : Equatable {
             if let path = path {
                 let decoder = SoftwareVideoSource(path: path, hintVP9: true, unpremultiplyAlpha: true)
                 let fileSupplyment: TRLotFileSupplyment?
-                switch self.cache {
-                case .temporaryLZ4:
-                    fileSupplyment = TRLotFileSupplyment(self, bufferSize: bufferSize, queue: Queue())
-                case .none:
+                if size.width > 40 {
+                    switch self.cache {
+                    case .temporaryLZ4:
+                        fileSupplyment = TRLotFileSupplyment(self, bufferSize: bufferSize, queue: Queue())
+                    case .none:
+                        fileSupplyment = nil
+                    }
+                } else {
                     fileSupplyment = nil
                 }
                 return WebmRenderer(animation: self, decoder: decoder, fileSupplyment: fileSupplyment)
