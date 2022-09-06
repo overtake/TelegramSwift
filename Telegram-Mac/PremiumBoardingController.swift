@@ -162,6 +162,7 @@ enum PremiumValue : String {
                                 NSColor(rgb: 0xC258B7),
                                 NSColor(rgb: 0xA868FC),
                                 NSColor(rgb: 0x9279FF),
+                                NSColor(rgb: 0x9279FF),
                                 NSColor(rgb: 0x846EF6),
                                 NSColor(rgb: 0x7561eb),
                                 NSColor(rgb: 0x758EFF),
@@ -223,7 +224,7 @@ enum PremiumValue : String {
         case .unique_reactions:
             return NSImage(named: "Icon_Premium_Boarding_Reactions")!.precomposed(theme.colors.accent)
         case .statuses:
-            return NSImage(named: "Icon_Premium_Boarding_Reactions")!.precomposed(theme.colors.accent)
+            return NSImage(named: "Premium_Boarding_Status")!.precomposed(theme.colors.accent)
         case .premium_stickers:
             return NSImage(named: "Icon_Premium_Boarding_Stickers")!.precomposed(theme.colors.accent)
         case .animated_emoji:
@@ -298,7 +299,7 @@ enum PremiumValue : String {
 
 
 private struct State : Equatable {
-    var values:[PremiumValue] = [.double_limits, .more_upload, .faster_download, .voice_to_text, .no_ads, .unique_reactions, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics]
+    var values:[PremiumValue] = [.double_limits, .more_upload, .faster_download, .voice_to_text, .no_ads, .unique_reactions, .statuses, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics]
     let source: PremiumLogEventsSource
     
     var premiumProduct: InAppPurchaseManager.Product?
