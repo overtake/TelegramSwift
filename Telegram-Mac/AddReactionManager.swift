@@ -86,10 +86,15 @@ final class ContextAddReactionsListView : View  {
         private var selectAnimationData: Data?
         private var currentKey: String?
         
+        private var selectionView : View?
         
         required init(frame frameRect: NSRect, context: AccountContext, reaction: ContextReaction, add: @escaping(MessageReaction.Reaction, Bool)->Void) {
-            self.player = LottiePlayerView(frame: NSMakeRect(0, 0, 30, 30))
-            self.imageView = InlineStickerView.init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: reaction.fileId, file: reaction.file, emoji: ""), size: NSMakeSize(30, 30))
+            
+            let size: NSSize = reaction.isSelected ? NSMakeSize(25, 24) : NSMakeSize(frameRect.width, 30)
+            let rect = CGRect(origin: .zero, size: size)
+            
+            self.player = LottiePlayerView(frame: rect)
+            self.imageView = InlineStickerView.init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: reaction.fileId, file: reaction.file, emoji: ""), size: size)
             self.reaction = reaction
             self.context = context
            
@@ -149,7 +154,20 @@ final class ContextAddReactionsListView : View  {
                 return menu
             }
             
-
+            if reaction.isSelected {
+                let view = View()
+                self.selectionView = view
+                view.frame = NSMakeRect(0, 0, 34, 34)
+                view.layer?.cornerRadius = view.frame.height / 2
+                view.backgroundColor = theme.colors.vibrant.mixedWith(NSColor(0x000000), alpha: 0.1)
+                self.addSubview(view, positioned: .below, relativeTo: self.subviews.first)
+                
+                if case .custom = reaction.value {
+                    self.player.layer?.cornerRadius = 4
+                    self.imageView.layer?.cornerRadius = 4
+                }
+            }
+            
         }
         
         private func apply(_ data: Data, key: String, policy: LottiePlayPolicy) {
@@ -172,6 +190,9 @@ final class ContextAddReactionsListView : View  {
         func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
             transition.updateFrame(view: player, frame: self.focus(player.frame.size))
             transition.updateFrame(view: imageView, frame: self.focus(imageView.frame.size))
+            if let selectionView = self.selectionView {
+                selectionView.center()
+            }
         }
         private var previous: ControlState = .Normal
         override func stateDidUpdate(_ state: ControlState) {
@@ -238,7 +259,7 @@ final class ContextAddReactionsListView : View  {
         private let imageView = ImageView()
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
-            self.backgroundColor = !theme.colors.isDark ? NSColor.black.withAlphaComponent(0.1) : NSColor.white.withAlphaComponent(0.1)
+            self.backgroundColor = theme.colors.vibrant.mixedWith(NSColor(0x000000), alpha: 0.1)
             self.scaleOnClick = true
             self.layer?.cornerRadius = frameRect.height / 2
             addSubview(self.imageView)
@@ -273,6 +294,7 @@ final class ContextAddReactionsListView : View  {
     private let maskLayer = SimpleShapeLayer()
     private let backgroundColorView = View()
     private let shadowLayer = SimpleShapeLayer()
+    
     required init(frame frameRect: NSRect, context: AccountContext, list: [ContextReaction], add:@escaping(MessageReaction.Reaction, Bool)->Void, radiusLayer: CGFloat? = 15, revealReactions:((NSView)->Void)? = nil) {
         self.list = list
         self.revealReactions = revealReactions
@@ -340,13 +362,13 @@ final class ContextAddReactionsListView : View  {
         scrollView.background = .clear
         scrollView.documentView = documentView
         let size = ContextAddReactionsListView.size
-        var x: CGFloat = 0
+        var x: CGFloat = 1
         
         
         
         for reaction in list {
             let itemSize = size.bounds
-            let reaction = ReactionView(frame: NSMakeRect(x, 5, itemSize.width, itemSize.height), context: context, reaction: reaction, add: add)
+            let reaction = ReactionView(frame: NSMakeRect(x, 3, itemSize.width, itemSize.height), context: context, reaction: reaction, add: add)
             
             documentView.addSubview(reaction)
             x += size.width + 4
@@ -362,10 +384,11 @@ final class ContextAddReactionsListView : View  {
             let view = view as? ReactionView
             view?.playAppearAnimation()
         }
+        updateScroll()
     }
     
     static var size: CGSize {
-        return .init(width: 37, height: 30)
+        return .init(width: 37, height: 34)
     }
     
     func rect(for reaction: ContextReaction) -> NSRect {
@@ -385,6 +408,9 @@ final class ContextAddReactionsListView : View  {
     private var previousRange: [Int] = []
     private func updateScroll() {
         
+        self.topGradient.isHidden = self.scrollView.documentOffset.x == 0
+        self.bottomGradient.isHidden = self.scrollView.documentOffset.x == self.scrollView.documentSize.width - self.scrollView.frame.width
+
         let range = visibleRange(self.scrollView.documentOffset)
         if previousRange != range, !previousRange.isEmpty {
             let new = range.filter({

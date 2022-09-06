@@ -361,9 +361,16 @@ final class ChatReactionsLayout {
             switch source {
             case let .custom(_, file):
                 if let reference = file?.emojiReference {
-                    items.append(MessageContainsPacksMenuItem(title: "text", handler: {
-
-                    }, packs: [reference], context: context))
+                    items.append(ContextSeparatorItem())
+                    
+                    let sources:[StickerPackPreviewSource] = [.emoji(reference)]
+                    let text = strings().chatContextMessageContainsEmojiCountable(1)
+                    
+                    let item = MessageContainsPacksMenuItem(title: text, handler: {
+                        showModal(with: StickerPackPreviewModalController(context, peerId: context.peerId, references: sources), for: context.window)
+                    }, packs: [reference], context: context)
+                    
+                    items.append(item)
                 }
             default:
                 break
@@ -394,7 +401,7 @@ final class ChatReactionsLayout {
     init(context: AccountContext, message: Message, available: AvailableReactions?, peerAllowed: PeerAllowedReactions?, engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, openInfo:@escaping(PeerId)->Void, runEffect: @escaping(MessageReaction.Reaction)->Void) {
         
         var mode: Mode = message.id.peerId.namespace == Namespaces.Peer.CloudUser ? .short : .full
-        if context.isPremium, mode == .short, message.peers[message.id.peerId]?.isPremium == true {
+        if context.isPremium, mode == .short {
             mode = .full
         }
         self.message = message

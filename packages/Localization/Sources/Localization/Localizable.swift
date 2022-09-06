@@ -7929,7 +7929,7 @@ public final class L10n {
   public static var premiumBoardingNoAdsTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.NoAds.Title") }
   /// Not Available
   public static var premiumBoardingPaymentNotAvailalbe: String  { return L10n.tr("Localizable", "Premium.Boarding.Payment.NotAvailalbe") }
-  ///  Owners of Telegram Premium accounts have exclusive access to multiple additional features.
+  /// Owners of Telegram Premium accounts have exclusive access to multiple additional features.
   public static var premiumBoardingPeerInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Peer.Info") }
   /// [%@](profile) is a subscriber of\nTelegram Premium
   public static func premiumBoardingPeerTitle(_ p1: String) -> String {
@@ -7947,11 +7947,21 @@ public final class L10n {
   public static func premiumBoardingPeerGiftYouTitle(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Premium.Boarding.Peer.Gift.You.Title", p1, p2)
   }
-  /// Additional animated reactions on messages, available only to the Premium subscribers.
-  public static var premiumBoardingReactionsInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Reactions.Info") }
-  /// Unique Reactions
-  public static var premiumBoardingReactionsTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Reactions.Title") }
-  /// Exclusive enlarged stickers featuring additional effects, updated monthly.
+  /// Emoji status is a premium feature.\nOther features included in **Telegram Premium**
+  public static var premiumBoardingPeerStatusInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.PeerStatus.Info") }
+  /// This is %@'s current status
+  public static func premiumBoardingPeerStatusTitle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.PeerStatus.Title", p1)
+  }
+  /// React with thousands of emoji — with multiple reactions per message.
+  public static var premiumBoardingReactionsNewInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.ReactionsNew.Info") }
+  /// Infinite Reactions
+  public static var premiumBoardingReactionsNewTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.ReactionsNew.Title") }
+  /// React with thousands of emoji — with multiple reactions per message.
+  public static var premiumBoardingStatusInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Status.Info") }
+  /// Emoji Status
+  public static var premiumBoardingStatusTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Status.Title") }
+  /// Add any of thousands emojis next to your name to display current activity.
   public static var premiumBoardingStickersInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Stickers.Info") }
   /// Premium Stickers
   public static var premiumBoardingStickersTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Stickers.Title") }
