@@ -671,9 +671,12 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         }
         
         let bots = self.context.engine.messages.attachMenuBots() |> deliverOnMainQueue
-        installedBotsDisposable.set(bots.start(next: { [weak self] items in
+        installedBotsDisposable.set(combineLatest(bots, appearanceSignal).start(next: { [weak self] items, appearance in
             self?.installedBots = items.map { $0.peer.id }
+            self?.updateLocalizationAndTheme(theme: appearance.presentation)
         }))
+        
+        
 
     }
     
@@ -933,6 +936,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                             alert.addButton(withTitle: button["text"] as? String ?? "")
                         } else if (button["type"] as? String) == "ok" {
                             alert.addButton(withTitle: strings().alertOK)
+                        } else if (button["type"] as? String) == "close" {
+                            alert.addButton(withTitle: strings().navigationClose)
                         } else if (button["type"]  as? String) == "cancel" {
                             alert.addButton(withTitle: strings().alertCancel)
                         } else if (button["type"]  as? String) == "destructive" {
@@ -940,7 +945,6 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                         }
                     }
                 }
-                
                 if !alert.buttons.isEmpty {
                     alert.beginSheetModal(for: context.window, completionHandler: { [weak self] response in
                         let index = response.rawValue - 1000
@@ -1018,7 +1022,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
     
     private func poupDidClose(_ id: String) {
-        self.sendEvent(name: "popup_closed", data: "{\"id\":\"\(id)}\"")
+        self.sendEvent(name: "popup_closed", data: "{id:\"\(id)\"}")
     }
     
     func sendEvent(name: String, data: String?) {
@@ -1048,10 +1052,11 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                 if themeParamsString.count > 16 {
                     themeParamsString.append(", ")
                 }
-                themeParamsString.append("\"\(key)\": \"#\(color.hexString)\"")
+                themeParamsString.append("\"\(key)\": \"\(color.hexString)\"")
             }
         }
         themeParamsString.append("}}")
+        
         self.sendEvent(name: "theme_changed", data: themeParamsString)
         
         

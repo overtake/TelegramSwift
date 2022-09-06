@@ -288,7 +288,7 @@ final class ContextAddReactionsListView : View  {
     private let visualEffect = NSVisualEffectView(frame: .zero)
     private let radiusLayer: CGFloat?
     
-    private let showMore = ShowMore(frame: NSMakeRect(0, 0, 30, 30))
+    private let showMore = ShowMore(frame: NSMakeRect(0, 0, 34, 34))
     private let revealReactions:((NSView)->Void)?
     
     private let maskLayer = SimpleShapeLayer()
@@ -458,7 +458,7 @@ final class ContextAddReactionsListView : View  {
     
     static func width(for count: Int, maxCount: Int = .max, allowToAll: Bool = true) -> CGFloat {
         var width = CGFloat(min(count, maxCount)) * self.size.width
-        width += CGFloat(min(count - 1, maxCount)) * 4
+        width += CGFloat(min(count, maxCount)) * 4
         if maxCount != .max, allowToAll {
             width += self.size.width
         }
@@ -500,7 +500,7 @@ final class ContextAddReactionsListView : View  {
         transition.updateFrame(view: backgroundView, frame: size.bounds)
         transition.updateFrame(view: backgroundColorView, frame: size.bounds)
         
-        transition.updateFrame(view: showMore, frame: NSMakeRect(rect.maxX - showMore.frame.width - 5, rect.minY + 5, showMore.frame.width, showMore.frame.height))
+        transition.updateFrame(view: showMore, frame: NSMakeRect(rect.maxX - showMore.frame.width - 3, rect.minY + 3, showMore.frame.width, showMore.frame.height))
         
 //        transition.updateFrame(layer: maskLayer, frame: rect.size.bounds)
         transition.updateFrame(layer: shadowLayer, frame: size.bounds)
