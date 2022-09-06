@@ -713,14 +713,20 @@ private final class ReactionPeerMenuItemView : AppMenuRowView {
             return
         }
         
-        let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: animated)
-        if let control = control {
-            self.statusControl = control
-            self.addSubview(control)
+        if item.peer.id != item.context.peerId {
+            let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: animated)
+            if let control = control {
+                self.statusControl = control
+                self.addSubview(control)
+            } else if let view = self.statusControl {
+                performSubviewRemoval(view, animated: animated)
+                self.statusControl = nil
+            }
         } else if let view = self.statusControl {
             performSubviewRemoval(view, animated: animated)
             self.statusControl = nil
         }
+        
                 
         self.imageView.isHidden = item.reaction == nil
         

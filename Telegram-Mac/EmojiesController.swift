@@ -823,7 +823,7 @@ final class AnimatedEmojiesView : View {
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
-        self.backgroundColor = .clear
+        self.backgroundColor = mode == .reactions ? .clear : theme.colors.background
         borderView.backgroundColor = mode == .reactions ? theme.colors.grayIcon.withAlphaComponent(0.1) : theme.colors.border
         tabs.backgroundColor = mode != .reactions ? theme.colors.background : .clear
         searchContainer.backgroundColor = theme.colors.background

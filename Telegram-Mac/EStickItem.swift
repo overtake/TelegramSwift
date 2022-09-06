@@ -71,7 +71,7 @@ private class EStickView: TableStickView {
                 current = ImageButton()
                 current.autohighlight = false
                 current.scaleOnClick = true
-                current.set(image: theme.icons.recentDismiss, for: .Normal)
+                current.set(image: theme.icons.wallpaper_color_close, for: .Normal)
                 current.sizeToFit()
                 addSubview(current)
                 self.button = current

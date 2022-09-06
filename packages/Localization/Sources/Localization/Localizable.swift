@@ -4279,7 +4279,7 @@ public final class L10n {
   public static func customStatusExpires(_ p1: String) -> String {
     return L10n.tr("Localizable", "CustomStatus.Expires", p1)
   }
-  /// This account uses 🤡 as a custom status next to its name. Such emoji statuses are available to all subscribers of Telegram Premium.
+  /// This account uses 🤡 as a custom status next to it's name. Such emoji statuses are available to all subscribers of [Telegram Premium]().
   public static var customStatusReportSpam: String  { return L10n.tr("Localizable", "CustomStatus.ReportSpam") }
   /// RIGHT CLICK TO SET A TIMER
   public static var customStatusExpiresPromo: String  { return L10n.tr("Localizable", "CustomStatus.Expires.Promo") }
@@ -7949,9 +7949,9 @@ public final class L10n {
   }
   /// Emoji status is a premium feature.\nOther features included in **Telegram Premium**
   public static var premiumBoardingPeerStatusInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.PeerStatus.Info") }
-  /// This is %@'s current status
-  public static func premiumBoardingPeerStatusTitle(_ p1: String) -> String {
-    return L10n.tr("Localizable", "Premium.Boarding.PeerStatus.Title", p1)
+  /// This is %@'s current status from 🤡 [%@]().
+  public static func premiumBoardingPeerStatusTitle(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.PeerStatus.Title", p1, p2)
   }
   /// React with thousands of emoji — with multiple reactions per message.
   public static var premiumBoardingReactionsNewInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.ReactionsNew.Info") }

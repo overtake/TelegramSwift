@@ -256,7 +256,7 @@ private class AccountInfoView : GeneralContainableRowView {
                 self.statusControl = nil
             }
             
-            if previous?.peer.emojiStatus != item.peer.emojiStatus, let status = item.peer.emojiStatus {
+            if previous?.peer.emojiStatus?.fileId != item.peer.emojiStatus?.fileId, let status = item.peer.emojiStatus {
                 self.playStatusEffect(status, context: item.context)
             }
             

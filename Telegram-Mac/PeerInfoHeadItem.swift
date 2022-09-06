@@ -711,25 +711,27 @@ private final class NameContainer : View {
             self.statusControl = nil
         }
         
-        if let stateText = item.stateText, let control = statusControl {
+        if let stateText = item.stateText, let control = statusControl, let peerId = item.peer?.id {
             control.userInteractionEnabled = true
             control.scaleOnClick = true
             control.set(handler: { control in
-                let attr = parseMarkdownIntoAttributedString(stateText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: .white), bold: MarkdownAttributeSet(font: .bold(.text), textColor: .white), link: MarkdownAttributeSet(font: .normal(.text), textColor: nightAccentPalette.link), linkAttribute: { contents in
-                    return (NSAttributedString.Key.link.rawValue, contents)
-                }))
-                if let peerId = item.peer?.id, !context.premiumIsBlocked {
-                    let interactions = TextViewInteractions(processURL: { content in
-                        if let content = content as? String {
-                            if content == "premium" {
-                                showModal(with: PremiumBoardingController(context: context, source: .profile(peerId)), for: context.window)
+                if item.peer?.emojiStatus != nil {
+                    showModal(with: PremiumBoardingController(context: context, source: .profile(peerId)), for: context.window)
+                } else {
+                    let attr = parseMarkdownIntoAttributedString(stateText, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: .white), bold: MarkdownAttributeSet(font: .bold(.text), textColor: .white), link: MarkdownAttributeSet(font: .normal(.text), textColor: nightAccentPalette.link), linkAttribute: { contents in
+                        return (NSAttributedString.Key.link.rawValue, contents)
+                    }))
+                    if !context.premiumIsBlocked {
+                        let interactions = TextViewInteractions(processURL: { content in
+                            if let content = content as? String {
+                                if content == "premium" {
+                                    showModal(with: PremiumBoardingController(context: context, source: .profile(peerId)), for: context.window)
+                                }
                             }
-                        }
-                    })
-                    tooltip(for: control, text: "", attributedText: attr, interactions: interactions)
+                        })
+                        tooltip(for: control, text: "", attributedText: attr, interactions: interactions)
+                    }
                 }
-                
-                
             }, for: .Click)
         } else {
             statusControl?.scaleOnClick = false

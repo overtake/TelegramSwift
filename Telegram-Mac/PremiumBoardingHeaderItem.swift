@@ -16,7 +16,7 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
     fileprivate let infoLayout: TextViewLayout
     let peer: Peer?
     let context: AccountContext
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, isPremium: Bool, peer: Peer?, source: PremiumLogEventsSource, premiumText: NSAttributedString?, viewType: GeneralViewType) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, isPremium: Bool, peer: Peer?, emojiStatus: PremiumEmojiStatusInfo?, source: PremiumLogEventsSource, premiumText: NSAttributedString?, viewType: GeneralViewType) {
         
         self.context = context
         self.peer = peer
@@ -34,7 +34,7 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
                     return (NSAttributedString.Key.link.rawValue, contents)
                 }))
             } else if let status = peer.emojiStatus {
-                title = parseMarkdownIntoAttributedString(strings().premiumBoardingPeerStatusTitle(peer.displayTitle), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.peerAvatarVioletBottom), linkAttribute: { contents in
+                title = parseMarkdownIntoAttributedString(strings().premiumBoardingPeerStatusTitle(peer.displayTitle, "pack"), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.peerAvatarVioletBottom), linkAttribute: { contents in
                     return (NSAttributedString.Key.link.rawValue, contents)
                 }))
             } else {

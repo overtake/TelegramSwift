@@ -14,6 +14,12 @@ import Postbox
 import InAppPurchaseManager
 import CurrencyFormat
 
+struct PremiumEmojiStatusInfo {
+    let status: PeerEmojiStatus?
+    let file: TelegramMediaFile?
+    let pack: StickerPackCollectionInfo
+}
+
 enum PremiumLogEventsSource : Equatable {
     
     enum Subsource : String {
@@ -36,7 +42,7 @@ enum PremiumLogEventsSource : Equatable {
     case settings
     case double_limits(Subsource)
     case more_upload
-    case unique_reactions
+    case infinite_reactions
     case premium_stickers
     case premium_emoji
     case profile(PeerId)
@@ -56,8 +62,8 @@ enum PremiumLogEventsSource : Equatable {
             return "double_limits__\(sub.rawValue)"
         case .more_upload:
             return "more_upload"
-        case .unique_reactions:
-            return "unique_reactions"
+        case .infinite_reactions:
+            return "infinite_reactions"
         case .premium_stickers:
             return "premium_stickers"
         case .premium_emoji:
@@ -146,8 +152,8 @@ enum PremiumValue : String {
     case faster_download
     case voice_to_text
     case no_ads
-    case unique_reactions
-    case statuses
+    case infinite_reactions
+    case emoji_status
     case premium_stickers
     case animated_emoji
     case advanced_chat_management
@@ -155,18 +161,19 @@ enum PremiumValue : String {
     case animated_userpics
     
     func gradient(_ index: Int) -> [NSColor] {
-        let colors:[NSColor] = [NSColor(rgb: 0xF17D2F),
-                                NSColor(rgb: 0xE9574A),
-                                NSColor(rgb: 0xD84C7D),
-                                NSColor(rgb: 0xc14998),
-                                NSColor(rgb: 0xC258B7),
-                                NSColor(rgb: 0xA868FC),
-                                NSColor(rgb: 0x9279FF),
-                                NSColor(rgb: 0x9279FF),
-                                NSColor(rgb: 0x846EF6),
-                                NSColor(rgb: 0x7561eb),
-                                NSColor(rgb: 0x758EFF),
-                                NSColor(rgb: 0x59A4FF)]
+        let colors:[NSColor] = [ NSColor(rgb: 0xF27C30),
+                                 NSColor(rgb: 0xE36850),
+                                 NSColor(rgb: 0xda5d63),
+                                 NSColor(rgb: 0xD15078),
+                                 NSColor(rgb: 0xC14998),
+                                 NSColor(rgb: 0xB24CB5),
+                                 NSColor(rgb: 0xA34ED0),
+                                 NSColor(rgb: 0x9054E9),
+                                 NSColor(rgb: 0x7561EB),
+                                 NSColor(rgb: 0x5A6EEE),
+                                 NSColor(rgb: 0x548DFF),
+                                 NSColor(rgb: 0x54A3FF),
+                                 NSColor(rgb: 0x54bdff)]
         return [colors[index]]
     }
     
@@ -221,9 +228,9 @@ enum PremiumValue : String {
             return NSImage(named: "Icon_Premium_Boarding_Voice")!.precomposed(theme.colors.accent)
         case .no_ads:
             return NSImage(named: "Icon_Premium_Boarding_Ads")!.precomposed(theme.colors.accent)
-        case .unique_reactions:
+        case .infinite_reactions:
             return NSImage(named: "Icon_Premium_Boarding_Reactions")!.precomposed(theme.colors.accent)
-        case .statuses:
+        case .emoji_status:
             return NSImage(named: "Premium_Boarding_Status")!.precomposed(theme.colors.accent)
         case .premium_stickers:
             return NSImage(named: "Icon_Premium_Boarding_Stickers")!.precomposed(theme.colors.accent)
@@ -250,11 +257,11 @@ enum PremiumValue : String {
             return strings().premiumBoardingVoiceTitle
         case .no_ads:
             return strings().premiumBoardingNoAdsTitle
-        case .unique_reactions:
+        case .infinite_reactions:
             return strings().premiumBoardingReactionsNewTitle
         case .premium_stickers:
             return strings().premiumBoardingStickersTitle
-        case .statuses:
+        case .emoji_status:
             return strings().premiumBoardingStatusTitle
         case .animated_emoji:
             return strings().premiumBoardingEmojiTitle
@@ -278,11 +285,11 @@ enum PremiumValue : String {
             return strings().premiumBoardingVoiceInfo
         case .no_ads:
             return strings().premiumBoardingNoAdsInfo
-        case .unique_reactions:
+        case .infinite_reactions:
             return strings().premiumBoardingReactionsNewInfo
         case .premium_stickers:
             return strings().premiumBoardingStickersInfo
-        case .statuses:
+        case .emoji_status:
             return strings().premiumBoardingStatusInfo
         case .animated_emoji:
             return strings().premiumBoardingEmojiInfo
@@ -299,7 +306,7 @@ enum PremiumValue : String {
 
 
 private struct State : Equatable {
-    var values:[PremiumValue] = [.double_limits, .more_upload, .faster_download, .voice_to_text, .no_ads, .unique_reactions, .statuses, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics]
+    var values:[PremiumValue] = [.double_limits, .more_upload, .faster_download, .voice_to_text, .no_ads, .infinite_reactions, .emoji_status, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics]
     let source: PremiumLogEventsSource
     
     var premiumProduct: InAppPurchaseManager.Product?
@@ -329,7 +336,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
         let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 13, openInfo: arguments.openInfo)
-        return PremiumBoardingHeaderItem(initialSize, stableId: stableId, context: arguments.context, isPremium: state.isPremium, peer: state.peer?.peer, source: state.source, premiumText: status, viewType: .legacy)
+        return PremiumBoardingHeaderItem(initialSize, stableId: stableId, context: arguments.context, isPremium: state.isPremium, peer: state.peer?.peer, emojiStatus: nil, source: state.source, premiumText: status, viewType: .legacy)
     }))
     index += 1
     

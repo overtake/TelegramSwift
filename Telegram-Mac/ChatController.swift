@@ -676,7 +676,7 @@ class ChatControllerView : View, ChatInputDelegate {
             state = .none(voiceChat)
         }
         
-        
+
         header.updateState(state, animated: animated, for: self)
         
         tableView.updateStickInset(state.height - state.toleranceHeight, animated: animated)
