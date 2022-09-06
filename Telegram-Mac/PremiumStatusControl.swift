@@ -96,7 +96,7 @@ final class PremiumStatusControl : Control {
             }
             if let image = image {
                 current.contents = image
-                var rect = focus(image.systemSize)
+                var rect = focus(image.backingSize)
                 rect.origin.x = 0
                 current.frame = rect
             } else {
