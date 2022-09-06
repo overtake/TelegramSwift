@@ -820,20 +820,29 @@ class ChatReportView : Control, ChatHeaderProtocol {
                 buttonsContainer.addSubview(unarchiveButton)
             }
             
+            
+            let context = chatInteraction.context
+            let peerId = chatInteraction.peerId
+            
             if let status = status {
                 let current: TextView
                 if let view = self.textView {
                     current = view
                 } else {
                     current = TextView()
-                    current.userInteractionEnabled = false
                     current.isSelectable = false
                     self.textView = current
                     addSubview(current)
                 }
                 let text = strings().customStatusReportSpam
-                let attr = NSMutableAttributedString()
-                _ = attr.append(string: text, color: theme.colors.grayText, font: .normal(.short))
+                let attr: NSMutableAttributedString
+                
+                attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.short), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .medium(.short), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .medium(.short), textColor: theme.colors.link), linkAttribute: { contents in
+                    return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { value in
+                        showModal(with: PremiumBoardingController.init(context: context, source: .profile(peerId)), for: context.window)
+                    }))
+                })).mutableCopy() as! NSMutableAttributedString
+                
                 
                 let range = attr.string.nsstring.range(of: "🤡")
                 if range.location != NSNotFound {
@@ -841,6 +850,7 @@ class ChatReportView : Control, ChatHeaderProtocol {
                 }
                 let layout = TextViewLayout(attr, alignment: .center)
                 layout.measure(width: frame.width - 80)
+                layout.interactions = globalLinkExecutor
                 current.update(layout)
                 
                 self.statusLayer?.removeFromSuperview()

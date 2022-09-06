@@ -851,7 +851,7 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
                         selectInteraction.toggleSelection(peer)
                     }, itemImage: MenuAnimation.menu_select_messages.value)
                 ])
-            })
+            }, highlightVerified: true)
         case let .secretChat(peer, peerId, _, _, drawSeparator, multiple):
             return  ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, peerId: peerId, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.colors.accent, highlightColor: .white), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status: strings().composeSelectSecretChat.lowercased(), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction) : .plain, action: {
                 selectInteraction.action(peerId)

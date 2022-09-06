@@ -511,9 +511,9 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             
             func makeItem(_ peer: Peer) -> ContextMenuItem {
                 let title = peer.id == context.peerId ? strings().peerSavedMessages : peer.displayTitle.prefixWithDots(20)
-                let item = ContextMenuItem(title, handler: {
+                let item = ReactionPeerMenu(title: title, handler: {
                     _ = forwardObject.perform(to: [peer.id]).start()
-                })
+                }, peer: peer, context: context, reaction: nil)
                 let signal:Signal<(CGImage?, Bool), NoError>
                 if peer.id == context.peerId {
                     let icon = theme.icons.searchSaved

@@ -415,7 +415,7 @@ final class CustomReactionEffectView: View {
         let combined = combineLatest(signal, context.inlinePacksContext.load(fileId: fileId))
                                      |> deliverOnMainQueue
         disposable.set(combined.start(next: { [weak self] animation, file in
-            if isDefaultStatusesPackId(file?.emojiReference) {
+            if !isDefaultStatusesPackId(file?.emojiReference) {
                 self?.backgroundView.set(animation)
             }
         }))

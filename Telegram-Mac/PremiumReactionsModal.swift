@@ -170,7 +170,7 @@ final class PremiumReactionsModal : ModalViewController {
         genericView.set(context: context)
         
         genericView.unlock.set(handler: { _ in
-            showModal(with: PremiumBoardingController(context: context, source: .unique_reactions), for: context.window)
+            showModal(with: PremiumBoardingController(context: context, source: .infinite_reactions), for: context.window)
         }, for: .Click)
         
         readyOnce()

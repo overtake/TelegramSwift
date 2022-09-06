@@ -117,17 +117,17 @@ final class PremiumBoardingFeaturesView: View {
         slideView.addSlide(no_ads)
         
         let unique_reactions = PremiumFeatureSlideView(frame: slideView.bounds)
-        unique_reactions.setup(context: context, type: .unique_reactions, decoration: .none, getView: { _ in
+        unique_reactions.setup(context: context, type: .infinite_reactions, decoration: .none, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
-            view.setup(context: context, video: configuration.videos[PremiumValue.unique_reactions.rawValue], position: .bottom)
+            view.setup(context: context, video: configuration.videos[PremiumValue.infinite_reactions.rawValue], position: .top)
             return view
         })
         slideView.addSlide(unique_reactions)
         
         let statuses = PremiumFeatureSlideView(frame: slideView.bounds)
-        statuses.setup(context: context, type: .statuses, decoration: .none, getView: { _ in
+        statuses.setup(context: context, type: .emoji_status, decoration: .none, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
-            view.setup(context: context, video: configuration.videos[PremiumValue.statuses.rawValue], position: .bottom)
+            view.setup(context: context, video: configuration.videos[PremiumValue.emoji_status.rawValue], position: .top)
             return view
         })
         slideView.addSlide(statuses)
@@ -182,18 +182,20 @@ final class PremiumBoardingFeaturesView: View {
             slideView.displaySlide(at: 2, animated: false)
         case .no_ads:
             slideView.displaySlide(at: 3, animated: false)
-        case .unique_reactions:
+        case .infinite_reactions:
             slideView.displaySlide(at: 4, animated: false)
-        case .premium_stickers:
+        case .emoji_status:
             slideView.displaySlide(at: 5, animated: false)
-        case .animated_emoji:
+        case .premium_stickers:
             slideView.displaySlide(at: 6, animated: false)
-        case .advanced_chat_management:
+        case .animated_emoji:
             slideView.displaySlide(at: 7, animated: false)
-        case .profile_badge:
+        case .advanced_chat_management:
             slideView.displaySlide(at: 8, animated: false)
-        case .animated_userpics:
+        case .profile_badge:
             slideView.displaySlide(at: 9, animated: false)
+        case .animated_userpics:
+            slideView.displaySlide(at: 10, animated: false)
         default:
             break
         }

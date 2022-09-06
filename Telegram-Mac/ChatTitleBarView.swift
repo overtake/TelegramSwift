@@ -817,8 +817,9 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 
                 let context = chatInteraction.context
                 
-                statusControl = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: false)
-                
+                if chatInteraction.context.peerId != chatInteraction.peerId {
+                    statusControl = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, isSelected: false, cached: self.statusControl, animated: false)
+                }
                 
                 if peer.isGroup || peer.isSupergroup || peer.isChannel {
                     callButton.set(image: theme.icons.chat_voice_chat, for: .Normal)

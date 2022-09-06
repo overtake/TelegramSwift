@@ -270,8 +270,8 @@ open class Popover: NSObject {
                                 let from: NSRect = control.frame.size.bounds
                                 let to = strongSelf.overlay.frame.size.bounds
                                 
-                                strongSelf.overlay.layer?.animateBounds(from: from.offsetBy(dx: point.x, dy: point.y), to: to, duration: 0.35, timingFunction: .spring, completion: completion)
-                                strongSelf.overlay.layer?.animatePosition(from: point, to: strongSelf.overlay.frame.origin, duration: 0.35, timingFunction: .spring)
+                                strongSelf.overlay.layer?.animateBounds(from: from.offsetBy(dx: point.x, dy: point.y), to: to, duration: 0.25, timingFunction: .spring, completion: completion)
+                                strongSelf.overlay.layer?.animatePosition(from: point, to: strongSelf.overlay.frame.origin, duration: 0.25, timingFunction: .spring)
 
                             }
                             

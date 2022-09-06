@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "status_24.png",
+      "filename" : "status.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "status_24@2x.png",
+      "filename" : "status@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },

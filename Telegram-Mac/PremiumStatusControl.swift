@@ -88,7 +88,7 @@ final class PremiumStatusControl : Control {
                         }
                         
                     } else {
-                        image = isSelected ? theme.icons.premium_account_small_active : theme.icons.premium_account_small
+                        image = isSelected ? theme.icons.premium_account_active : theme.icons.premium_account
                     }
                 }
             } else {
@@ -111,6 +111,11 @@ final class PremiumStatusControl : Control {
             let current: InlineStickerItemLayer
             if let layer = self.animateLayer, layer.file?.fileId.id == fileId, statusSelected == isSelected {
                 current = layer
+                if isDefaultStatusesPackId(layer.file?.emojiReference), color != nil {
+                    self.layer?.opacity = 0.4
+                } else {
+                    self.layer?.opacity = 1.0
+                }
             } else {
                 let animated = animated && statusSelected == isSelected
                 var previousStopped: Bool = false
