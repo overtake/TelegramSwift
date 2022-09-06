@@ -2763,7 +2763,7 @@ class ChatRowItem: TableRowItem {
                                 return true
                             }
                         }.map {
-                            .builtin(value: $0.value, staticFile: $0.staticIcon, selectFile: $0.selectAnimation, appearFile: $0.appearAnimation, isSelected: false)
+                            .builtin(value: $0.value, staticFile: $0.staticIcon, selectFile: $0.selectAnimation, appearFile: $0.appearAnimation, isSelected: isSelected($0.value))
                         }
                     }
                 } else {

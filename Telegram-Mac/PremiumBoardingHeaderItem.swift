@@ -14,7 +14,12 @@ import Postbox
 final class PremiumBoardingHeaderItem : GeneralRowItem {
     fileprivate let titleLayout: TextViewLayout
     fileprivate let infoLayout: TextViewLayout
+    let peer: Peer?
+    let context: AccountContext
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, isPremium: Bool, peer: Peer?, source: PremiumLogEventsSource, premiumText: NSAttributedString?, viewType: GeneralViewType) {
+        
+        self.context = context
+        self.peer = peer
         
         let title: NSAttributedString
         if let peer = peer {
@@ -26,6 +31,10 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
                     text = strings().premiumBoardingPeerGiftTitle(peer.displayTitle, "\(months)")
                 }
                 title = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.peerAvatarVioletBottom), linkAttribute: { contents in
+                    return (NSAttributedString.Key.link.rawValue, contents)
+                }))
+            } else if let status = peer.emojiStatus {
+                title = parseMarkdownIntoAttributedString(strings().premiumBoardingPeerStatusTitle(peer.displayTitle), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.peerAvatarVioletBottom), linkAttribute: { contents in
                     return (NSAttributedString.Key.link.rawValue, contents)
                 }))
             } else {
@@ -54,6 +63,8 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
                     text = strings().premiumBoardingPeerGiftInfo
                 }
                 _ = info.append(string: text, color: theme.colors.text, font: .normal(.text))
+            } else if let _ = peer?.emojiStatus {
+                _ = info.append(string: strings().premiumBoardingPeerStatusInfo, color: theme.colors.text, font: .normal(.text))
             } else {
                 _ = info.append(string: strings().premiumBoardingPeerInfo, color: theme.colors.text, font: .normal(.text))
             }
@@ -83,7 +94,11 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
     }
     
     override var height: CGFloat {
-        return 100 + 10 + titleLayout.layoutSize.height + 10 + infoLayout.layoutSize.height + 10
+        var height = 100 + 10 + titleLayout.layoutSize.height + 10 + infoLayout.layoutSize.height + 10
+        if peer?.emojiStatus != nil {
+            height += 10
+        }
+        return height
     }
     
     
@@ -94,7 +109,8 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
 
 
 private final class PremiumBoardingHeaderView : TableRowView {
-    private let premiumView = PremiumStarSceneView(frame: NSMakeRect(0, 0, 150, 150))
+    private var premiumView: PremiumStarSceneView?
+    private var statusView: InlineStickerView?
     private let titleView = TextView()
     private let infoView = TextView()
     private var timer: SwiftSignalKit.Timer?
@@ -102,7 +118,6 @@ private final class PremiumBoardingHeaderView : TableRowView {
         super.init(frame: frameRect)
         addSubview(titleView)
         addSubview(infoView)
-        addSubview(premiumView)
         
         
         titleView.userInteractionEnabled = false
@@ -110,7 +125,6 @@ private final class PremiumBoardingHeaderView : TableRowView {
         
         infoView.isSelectable = false
         
-        premiumView.updateLayout(size: premiumView.frame.size, transition: .immediate)
     }
     
     override var backdorColor: NSColor {
@@ -120,8 +134,13 @@ private final class PremiumBoardingHeaderView : TableRowView {
     
     override func layout() {
         super.layout()
-        premiumView.centerX(y: -30)
-        titleView.centerX(y: premiumView.frame.maxY - 30 + 10)
+        if let premiumView = premiumView {
+            premiumView.centerX(y: -30)
+            titleView.centerX(y: premiumView.frame.maxY - 30 + 10)
+        } else if let statusView = statusView {
+            statusView.centerX(y: 0)
+            titleView.centerX(y: statusView.frame.maxY + 10)
+        }
         infoView.centerX(y: titleView.frame.maxY + 10)
     }
     
@@ -140,10 +159,44 @@ private final class PremiumBoardingHeaderView : TableRowView {
         infoView.update(item.infoLayout)
                 
         timer = SwiftSignalKit.Timer(timeout: 5.0, repeat: true, completion: { [weak self] in
-            self?.premiumView.playAgain()
+            self?.premiumView?.playAgain()
         }, queue: .mainQueue())
         
         timer?.start()
+        
+        if let status = item.peer?.emojiStatus {
+            if let view = self.premiumView {
+                performSubviewRemoval(view, animated: animated)
+                self.premiumView = nil
+            }
+            let context = item.context
+            if self.statusView == nil {
+                let status = InlineStickerView(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: status.fileId, file: nil, emoji: ""), size: NSMakeSize(100, 100), getColors: { file in
+                    var colors: [LottieColor] = []
+                    if file.emojiReference?.id == defaultStatusesPackId(context) {
+                        colors.append(.init(keyPath: "", color: theme.colors.accent))
+                    }
+                    return colors
+                })
+                self.statusView = status
+                addSubview(status)
+            }
+        } else {
+            if let view = self.statusView {
+                performSubviewRemoval(view, animated: animated)
+                self.statusView = nil
+            }
+            let current: PremiumStarSceneView
+            if let view = self.premiumView {
+                current = view
+            } else {
+                current = PremiumStarSceneView(frame: NSMakeRect(0, 0, 150, 150))
+                addSubview(current)
+                self.premiumView = current
+            }
+            current.updateLayout(size: current.frame.size, transition: .immediate)
+
+        }
         
         needsLayout = true
         

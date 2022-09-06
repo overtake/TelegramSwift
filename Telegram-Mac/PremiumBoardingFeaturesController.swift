@@ -118,10 +118,19 @@ final class PremiumBoardingFeaturesView: View {
         
         let unique_reactions = PremiumFeatureSlideView(frame: slideView.bounds)
         unique_reactions.setup(context: context, type: .unique_reactions, decoration: .none, getView: { _ in
-            let view = ReactionCarouselView(context: context, reactions: context.reactions.available?.reactions ?? [])
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.unique_reactions.rawValue], position: .bottom)
             return view
         })
         slideView.addSlide(unique_reactions)
+        
+        let statuses = PremiumFeatureSlideView(frame: slideView.bounds)
+        statuses.setup(context: context, type: .statuses, decoration: .none, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.statuses.rawValue], position: .bottom)
+            return view
+        })
+        slideView.addSlide(statuses)
         
         let premium_stickers = PremiumFeatureSlideView(frame: slideView.bounds)
         

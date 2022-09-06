@@ -135,7 +135,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
             
             let inset: NSPoint
             if selected != nil {
-                inset = NSMakePoint(6, 3)
+                inset = NSMakePoint(8, 5)
             } else {
                 inset = NSMakePoint(2, 2)
             }
@@ -566,6 +566,9 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                 locks[key]?.animateScale(from: 0.1, to: 1, duration: duration, timingFunction: .spring, delay: itemDelay)
                 selectedLayers[key]?.animateScale(from: 0.1, to: 1, duration: duration, timingFunction: .spring, delay: itemDelay)
                 delay += itemDelay
+            } else if let selected = selectedLayers[key] {
+                selected.animate(from: NSNumber(value: selected.frame.height / 2), to: NSNumber(value: 10), keyPath: "cornerRadius", timingFunction: .easeOut, duration: 0.2, forKey: "cornerRadius")
+
             }
         }
     }
@@ -803,7 +806,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     } else {
                         current = SimpleLayer()
                         current.masksToBounds = true
-                        current.frame = NSMakeRect(rect.minX - 2.5, rect.minY - 2.5, 34, 33)
+                        current.frame = NSMakeRect(rect.minX - 4.5, rect.minY - 4.5, 34, 33)
                         current.cornerRadius = 10
                         if #available(macOS 10.15, *) {
                             current.cornerCurve = .continuous
@@ -851,7 +854,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     view.cornerCurve = .continuous
                 }
                 view.masksToBounds = true
-//                view.cornerRadius = item.selection != nil ? 10 : 0
+                view.cornerRadius = item.selection != nil ? 4 : 0
 //                view.backgroundColor = NSColor.random.cgColor
                 
                 if item.lock {

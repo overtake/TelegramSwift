@@ -147,6 +147,7 @@ enum PremiumValue : String {
     case voice_to_text
     case no_ads
     case unique_reactions
+    case statuses
     case premium_stickers
     case animated_emoji
     case advanced_chat_management
@@ -221,6 +222,8 @@ enum PremiumValue : String {
             return NSImage(named: "Icon_Premium_Boarding_Ads")!.precomposed(theme.colors.accent)
         case .unique_reactions:
             return NSImage(named: "Icon_Premium_Boarding_Reactions")!.precomposed(theme.colors.accent)
+        case .statuses:
+            return NSImage(named: "Icon_Premium_Boarding_Reactions")!.precomposed(theme.colors.accent)
         case .premium_stickers:
             return NSImage(named: "Icon_Premium_Boarding_Stickers")!.precomposed(theme.colors.accent)
         case .animated_emoji:
@@ -247,9 +250,11 @@ enum PremiumValue : String {
         case .no_ads:
             return strings().premiumBoardingNoAdsTitle
         case .unique_reactions:
-            return strings().premiumBoardingReactionsTitle
+            return strings().premiumBoardingReactionsNewTitle
         case .premium_stickers:
             return strings().premiumBoardingStickersTitle
+        case .statuses:
+            return strings().premiumBoardingStatusTitle
         case .animated_emoji:
             return strings().premiumBoardingEmojiTitle
         case .advanced_chat_management:
@@ -273,9 +278,11 @@ enum PremiumValue : String {
         case .no_ads:
             return strings().premiumBoardingNoAdsInfo
         case .unique_reactions:
-            return strings().premiumBoardingReactionsInfo
+            return strings().premiumBoardingReactionsNewInfo
         case .premium_stickers:
             return strings().premiumBoardingStickersInfo
+        case .statuses:
+            return strings().premiumBoardingStatusInfo
         case .animated_emoji:
             return strings().premiumBoardingEmojiInfo
         case .advanced_chat_management:

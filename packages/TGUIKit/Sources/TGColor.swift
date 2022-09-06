@@ -109,6 +109,11 @@ public extension NSColor {
     }
     
     func mixedWith(_ other: NSColor, alpha: CGFloat) -> NSColor {
+        
+            if let blended = self.blended(withFraction: alpha, of: other) {
+                return blended
+            }
+        
             let alpha = min(1.0, max(0.0, alpha))
             let oneMinusAlpha = 1.0 - alpha
             
