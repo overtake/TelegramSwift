@@ -125,7 +125,7 @@ final class PremiumStatusControl : Control {
                     
                     var colors: [LottieColor] = []
 
-                    if file.emojiReference?.id == defaultStatusesPackId(nil) {
+                    if isDefaultStatusesPackId(file.emojiReference) {
                         if isSelected {
                             colors.append(.init(keyPath: "", color: theme.colors.underSelectedColor))
                         } else {

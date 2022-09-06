@@ -850,7 +850,7 @@ class ChatReportView : Control, ChatHeaderProtocol {
                     let rect = embedded.rect.insetBy(dx: -1.5, dy: -1.5)
                     let view = InlineStickerView(account: chatInteraction.context.account, inlinePacksContext: chatInteraction.context.inlinePacksContext, emoji: .init(fileId: status.fileId, file: nil, emoji: ""), size: rect.size, getColors: { file in
                         var colors: [LottieColor] = []
-                        if file.emojiReference?.id == defaultStatusesPackId(nil) {
+                        if isDefaultStatusesPackId(file.emojiReference) {
                             colors.append(.init(keyPath: "", color: theme.colors.accent))
                         }
                         return colors
