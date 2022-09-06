@@ -16,13 +16,13 @@ private final class InlineFileDataContext {
     let subscribers = Bag<(TelegramMediaFile?) -> Void>()
 }
 
-func defaultStatusesPackId(_ context: AccountContext?) -> Int64 {
-    
-    if let id = context?.appConfiguration.data?["default_emoji_statuses_stickerset_id"] as? Double {
-        return Int64(id)
+func isDefaultStatusesPackId(_ reference: StickerPackReference?) -> Bool {
+    if case let .id(id, _) = reference {
+        if id == 773947703670341676 || id == 2964141614563343 {
+            return true
+        }
     }
-    
-    return 773947703670341676
+    return reference == .iconStatusEmoji
 }
 
 extension StickerPackReference {

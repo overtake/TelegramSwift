@@ -840,7 +840,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                     self.inlineStickerItemViews[id]?.removeFromSuperlayer()
                     view = InlineStickerItemLayer(account: context.account, file: current.file, size: rect.size, getColors: { file in
                         var colors: [LottieColor] = []
-                        if file.emojiReference?.id == defaultStatusesPackId(context) {
+                        if isDefaultStatusesPackId(file.emojiReference) {
                             colors.append(.init(keyPath: "", color: theme.colors.accent))
                         }
                         return colors

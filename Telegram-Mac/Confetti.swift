@@ -415,7 +415,7 @@ final class CustomReactionEffectView: View {
         let combined = combineLatest(signal, context.inlinePacksContext.load(fileId: fileId))
                                      |> deliverOnMainQueue
         disposable.set(combined.start(next: { [weak self] animation, file in
-            if file?.emojiReference?.id != defaultStatusesPackId(context) {
+            if isDefaultStatusesPackId(file?.emojiReference) {
                 self?.backgroundView.set(animation)
             }
         }))
@@ -449,7 +449,7 @@ final class CustomReactionEffectView: View {
             
             let sublayer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, checkStatus: true, getColors: { file in
                 var colors: [LottieColor] = []
-                if file.emojiReference?.id == defaultStatusesPackId(context) {
+                if isDefaultStatusesPackId(file.emojiReference) {
                     colors.append(.init(keyPath: "", color: theme.colors.accent))
                 }
                 return colors
