@@ -143,6 +143,13 @@ private final class MultiTargetAnimationContext {
         }
     }
     
+    func jump(to frame: Int32) -> Void {
+        context.jump(to: frame)
+    }
+    func setColors(_ colors: [LottieColor]) {
+        context.setColors(colors)
+    }
+    
     init(_ animation: LottieAnimation, handlers: Handlers, token: inout Int) {
         
         token = self.add(handlers)
@@ -227,6 +234,9 @@ private final class MultiTargetContextCache {
     static func exists(_ key: Key) -> Bool {
         return cache[key] != nil
     }
+    static func find(_ key: Key) -> MultiTargetAnimationContext? {
+        return cache[key]
+    }
     
     static func remove(_ token: Int, for key: Key) {
         let context = self.cache[key]
@@ -264,9 +274,10 @@ final class InlineStickerView: View {
                     isKeyWindow = window.isKeyWindow
                 }
             }
-            animateLayer.isPlayable = superview.visibleRect != .zero && isKeyWindow
+            animateLayer.isPlayable = isKeyWindow
         }
     }
+    
     
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
@@ -401,11 +412,35 @@ final class InlineStickerItemLayer : SimpleLayer {
     }
     
     private var animation: LottieAnimation?
-    private var playerState: LottiePlayerState?
+    private(set) var playerState: LottiePlayerState? {
+        didSet {
+            if let value = playerState {
+                self.triggerNextState?(value)
+                self.triggerNextState = nil
+            }
+        }
+    }
     private let playPolicy: LottiePlayPolicy
+    
+    var triggerNextState: ((LottiePlayerState)->Void)? = nil
     
     private var unique: Int = 0
     var stopped: Bool = false
+    
+    func reset() -> Void {
+        if let contextToken = contextToken {
+            MultiTargetContextCache.remove(contextToken.0, for: contextToken.1)
+        }
+        self.contents = nil
+        self.contextToken = nil
+        self.updateState(.stoped)
+        self.delayDisposable.set(nil)
+        unique = Int(arc4random64())
+    }
+    
+    func apply() {
+        self.set(self.animation, force: true)
+    }
     
     var isPlayable: Bool? = nil {
         didSet {
@@ -415,12 +450,13 @@ final class InlineStickerItemLayer : SimpleLayer {
         }
     }
     private var contextToken: (Int, MultiTargetContextCache.Key)?
-    private func set(_ animation: LottieAnimation?) {
+    private func set(_ animation: LottieAnimation?, force: Bool = false) {
         self.animation = animation
         if let animation = animation, let isPlayable = self.isPlayable, isPlayable, !stopped {
             weak var layer: CALayer? = self
             let key: MultiTargetContextCache.Key = .init(key: animation.key, unique: unique)
-            delayDisposable.set(delaySignal(MultiTargetContextCache.exists(key) ? 0 : 0.1).start(completed: { [weak self] in
+            delayDisposable.set(delaySignal(MultiTargetContextCache.exists(key) || force ? 0 : 0.1).start(completed: { [weak self] in
+                                
                 self?.contextToken = (MultiTargetContextCache.create(animation, key: key, displayFrame: { image in
                     DispatchQueue.main.async {
                         layer?.contents = image
@@ -456,6 +492,22 @@ final class InlineStickerItemLayer : SimpleLayer {
             }
         } else if state == .finished, case .playCount = self.playPolicy {
             stopped = true
+        }
+    }
+    
+    func jump(to frame: Int32) -> Void {
+        var initWithFrame: Bool = true
+        if let key = self.contextToken {
+            if let context = MultiTargetContextCache.find(key.1) {
+                context.jump(to: frame)
+                initWithFrame = false
+            }
+        }
+    }
+    
+    func setColors(_ colors: [LottieColor]) {
+        if let key = self.contextToken {
+            MultiTargetContextCache.find(key.1)?.setColors(colors)
         }
     }
     
@@ -515,7 +567,8 @@ final class InlineStickerItemLayer : SimpleLayer {
                     if let data = data {
                         let maximumFps: Int = 30
                         var cache: ASCachePurpose = .temporaryLZ4(.effect)
-                        if file.isVideo && file.isCustomEmoji {
+                        let colors = self?.getColors?(file) ?? []
+                        if file.isVideo && file.isCustomEmoji || !colors.isEmpty {
                             cache = .none
                         }
                         let type: LottieAnimationType
@@ -526,7 +579,6 @@ final class InlineStickerItemLayer : SimpleLayer {
                         } else {
                             type = .lottie
                         }
-                        let colors = self?.getColors?(file) ?? []
                         self?.set(LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: aspectSize, colors: colors), type: type, cachePurpose: cache, playPolicy: playPolicy, maximumFps: maximumFps, colors: colors, metalSupport: false))
                         
                     } else {

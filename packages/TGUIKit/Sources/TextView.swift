@@ -736,7 +736,8 @@ public final class TextViewLayout : Equatable {
         var embeddedItems: [EmbeddedItem] = []
         for line in lines {
             for embeddedItem in line.embeddedItems {
-                embeddedItems.append(EmbeddedItem(range: embeddedItem.range, rect: embeddedItem.frame.offsetBy(dx: line.frame.minX, dy: line.frame.minY), value: embeddedItem.item))
+                let penOffset = floor(CGFloat(CTLineGetPenOffsetForFlush(line.line, line.penFlush, Double(layoutSize.width))))
+                embeddedItems.append(EmbeddedItem(range: embeddedItem.range, rect: embeddedItem.frame.offsetBy(dx: line.frame.minX, dy: line.frame.minY).offsetBy(dx: penOffset, dy: 0), value: embeddedItem.item))
             }
         }
         if lines.count == 1 {

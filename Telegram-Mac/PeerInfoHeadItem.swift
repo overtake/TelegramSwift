@@ -561,7 +561,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     fileprivate var nameSize: NSSize {
         var stateHeight: CGFloat = 0
         if let peer = peer, let size = PremiumStatusControl.controlSize(peer, true) {
-            stateHeight = max(size.height, nameLayout.layoutSize.height)
+            stateHeight = max(size.height + 4, nameLayout.layoutSize.height)
         } else {
             stateHeight = nameLayout.layoutSize.height
         }

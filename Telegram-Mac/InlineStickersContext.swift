@@ -12,7 +12,13 @@ import TelegramCore
 import Postbox
 
 private final class InlineFileDataContext {
+    enum LoadState {
+        case inited
+        case loading
+        case loaded
+    }
     var data: TelegramMediaFile?
+    var loadState: LoadState = .inited
     let subscribers = Bag<(TelegramMediaFile?) -> Void>()
 }
 
@@ -77,8 +83,9 @@ final class InlineStickersContext {
             
             var disposable: Disposable?
             
-            if self.dataContexts[key] == nil {
+            if self.dataContexts[key] == nil || self.dataContexts[key]?.loadState == .inited {
                
+                context.loadState = .loading
                 
                 let signal = self.engine.stickers.resolveInlineStickers(fileIds: [fileId])
                 |> deliverOnMainQueue
@@ -88,18 +95,21 @@ final class InlineStickersContext {
                     let current = file[fileId]
                     
                     context.data = current
+                    context.loadState = .loaded
                     for subscriber in context.subscribers.copyItems() {
                         subscriber(context.data)
                     }
                     self.dataContexts[key] = context
                 })
             }
-                
             self.dataContexts[key] = context
 
             return ActionDisposable {
                 if let current = self.dataContexts[key] {
                     current.subscribers.remove(index)
+                }
+                if self.dataContexts[key]?.loadState != .loaded {
+                    self.dataContexts[key]?.loadState = .inited
                 }
                 disposable?.dispose()
             }

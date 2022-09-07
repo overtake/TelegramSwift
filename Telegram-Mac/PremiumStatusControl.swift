@@ -109,13 +109,39 @@ final class PremiumStatusControl : Control {
             }
             let fileId: Int64 = status.fileId
             let current: InlineStickerItemLayer
-            if let layer = self.animateLayer, layer.file?.fileId.id == fileId, statusSelected == isSelected {
+            
+            let getColors:(TelegramMediaFile?)->[LottieColor] = { file in
+                var colors: [LottieColor] = []
+                if let file = file {
+                    if isDefaultStatusesPackId(file.emojiReference) {
+                        if isSelected {
+                            colors.append(.init(keyPath: "", color: theme.colors.underSelectedColor))
+                        } else {
+                            colors.append(.init(keyPath: "", color: color ?? theme.colors.accent))
+                        }
+                    }
+                }
+                return colors
+            }
+            
+            var updated: Bool = false
+            
+            if statusSelected != isSelected, let layer = self.animateLayer {
+                if layer.file?.fileId.id == fileId {
+                    if !getColors(layer.file).isEmpty {
+                        updated = true
+                    } 
+                }
+            }
+            
+            if let layer = self.animateLayer, layer.file?.fileId.id == fileId && !updated {
                 current = layer
                 if isDefaultStatusesPackId(layer.file?.emojiReference), color != nil {
                     self.layer?.opacity = 0.4
                 } else {
                     self.layer?.opacity = 1.0
                 }
+                
             } else {
                 let animated = animated && statusSelected == isSelected
                 var previousStopped: Bool = false
@@ -126,22 +152,7 @@ final class PremiumStatusControl : Control {
                     performSublayerRemoval(animateLayer, animated: animated, scale: true)
                     self.animateLayer = nil
                 }
-                current = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: frame.size, playPolicy: isBig ? .loop : .playCount(2), checkStatus: true, getColors: { [weak self] file in
-                    
-                    var colors: [LottieColor] = []
-
-                    if isDefaultStatusesPackId(file.emojiReference) {
-                        if isSelected {
-                            colors.append(.init(keyPath: "", color: theme.colors.underSelectedColor))
-                        } else {
-                            colors.append(.init(keyPath: "", color: color ?? theme.colors.accent))
-                        }
-                    } else {
-                        self?.layer?.opacity = 1.0
-                    }
-                    
-                    return colors
-                })
+                current = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: frame.size, playPolicy: isBig ? .loop : .playCount(2), checkStatus: true, getColors: getColors)
                 current.stopped = previousStopped
                 current.superview = self
                 self.animateLayer = current
@@ -223,7 +234,7 @@ final class PremiumStatusControl : Control {
             if peer.isScam || peer.isFake {
                 addition.width += 20
             }
-            return isBig ? NSMakeSize(20 + addition.width, 20 + addition.height) : NSMakeSize(16 + addition.width, 16 + addition.height)
+            return isBig ? NSMakeSize(25 + addition.width, 25 + addition.height) : NSMakeSize(16 + addition.width, 16 + addition.height)
         } else {
             return nil
         }

@@ -609,7 +609,7 @@ class AnimationLayerContainer : View {
         if let layer = self.imageLayer {
             performSublayerRemoval(layer, animated: animated)
         }
-        imageLayer.superview = self
+        imageLayer.superview = superview
         self.layer?.addSublayer(imageLayer)
         if animated && self.imageLayer != nil {
             imageLayer.animateAlpha(from: 0, to: 1, duration: 0.2)
@@ -638,7 +638,7 @@ class AnimationLayerContainer : View {
                     isKeyWindow = window.isKeyWindow
                 }
             }
-            value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
+            value.isPlayable = !superview.visibleRect.isEmpty && isKeyWindow
         }
     }
     
@@ -714,6 +714,15 @@ final class ChatReactionsView : View {
             }, for: .Normal)
             
             
+        }
+        
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            imageView.updateAnimatableContent()
+        }
+        override func viewDidMoveToSuperview() {
+            super.viewDidMoveToSuperview()
+            imageView.updateAnimatableContent()
         }
         
         func playEffect() {
@@ -890,10 +899,6 @@ final class ChatReactionsView : View {
                 self.layer?.animateBackground()
             }
             
-            if layerUpdated {
-                self.imageView.updateLayer(reaction.getInlineLayer(reaction.mode), animated: animated)
-            }
-            
             if !first, reactionUpdated, animated {
                 self.imageView.layer?.animateScaleCenter(from: 0.1, to: 1, duration: 0.2)
             }
@@ -902,7 +907,9 @@ final class ChatReactionsView : View {
                 updateLayout(size: reaction.rect.size, transition: .immediate)
                 first = false
             }
-            
+            if layerUpdated {
+                self.imageView.updateLayer(reaction.getInlineLayer(reaction.mode), animated: animated)
+            }
         }
         
         deinit {

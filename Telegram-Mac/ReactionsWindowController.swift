@@ -12,6 +12,10 @@ import TelegramCore
 import SwiftSignalKit
 import Postbox
 
+protocol StickerFramesCollector {
+    func collect() -> [Int : LottiePlayerView]
+}
+
 private var reactions: ReactionsWindowController?
 
 final class ReactionsWindowController : NSObject {
@@ -130,6 +134,8 @@ final class ReactionsWindowController : NSObject {
     
     private var panel: Window?
     private let overlay = OverlayControl()
+    
+    private var initialPlayers:[Int: LottiePlayerView] = [:]
 
     
     private var keyDisposable: Disposable?
@@ -217,11 +223,11 @@ final class ReactionsWindowController : NSObject {
             self?.close(animated: true)
         }
         emojies.animateAppearance = { [weak self] items in
-            self?.animateAppearanceItems(items)
+            self?.animateAppearanceItems(items, initialPlayers: self?.initialPlayers ?? [:])
         }
     }
     
-    private func animateAppearanceItems(_ items: [TableRowItem]) {
+    private func animateAppearanceItems(_ items: [TableRowItem], initialPlayers:[Int: LottiePlayerView]) {
         let sections = items.compactMap {
             $0 as? EmojiesSectionRowItem
         }
@@ -243,12 +249,12 @@ final class ReactionsWindowController : NSObject {
         }
         
         for (i, section) in sections.enumerated() {
-            section.animateAppearance(delay: delay, duration: duration, ignoreCount: i == 0 ? 6 : 0)
+            section.animateAppearance(delay: delay, duration: duration, initialPlayers: i == 0 ? initialPlayers : [:])
             delay += itemDelay
         }
     }
     
-    func show(_ initialView: NSView, animated: Bool = true) {
+    func show(_ initialView: NSView & StickerFramesCollector, animated: Bool = true) {
         reactions?.panel?.orderOut(nil)
         
         reactions = self
@@ -257,7 +263,7 @@ final class ReactionsWindowController : NSObject {
        
     }
     
-    private func ready(_ initialView: NSView, animated: Bool) {
+    private func ready(_ initialView: NSView & StickerFramesCollector, animated: Bool) {
         
         
         let initialScreenRect = initialView.window!.convertToScreen(initialView.convert(initialView.bounds, to: nil))
@@ -340,11 +346,12 @@ final class ReactionsWindowController : NSObject {
         context.window.contentView?.addSubview(overlay)
 
         
-        let ready = emojies.ready.get() |> take(1) |> delay(0.1, queue: .mainQueue())
-        _ = ready.start(next: { [weak view, weak initialView] _ in
+        let ready = emojies.ready.get() |> take(1)
+        _ = ready.start(next: { [weak view, weak initialView, weak self] _ in
             guard let view = view, let initialView = initialView else {
                 return
             }
+            self?.initialPlayers = initialView.collect()
             CATransaction.begin()
             view.appearAnimated(from: initialView.frame, to: view.frame)
             initialView.removeFromSuperview()

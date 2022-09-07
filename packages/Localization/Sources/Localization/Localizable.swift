@@ -7950,8 +7950,12 @@ public final class L10n {
   /// Emoji status is a premium feature.\nOther features included in **Telegram Premium**
   public static var premiumBoardingPeerStatusInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.PeerStatus.Info") }
   /// This is %@'s current status from 🤡 [%@]().
-  public static func premiumBoardingPeerStatusTitle(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "Premium.Boarding.PeerStatus.Title", p1, p2)
+  public static func premiumBoardingPeerStatusCustomTitle(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.PeerStatus.Custom.Title", p1, p2)
+  }
+  /// This is %@'s current status
+  public static func premiumBoardingPeerStatusDefaultTitle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Premium.Boarding.PeerStatus.Default.Title", p1)
   }
   /// React with thousands of emoji — with multiple reactions per message.
   public static var premiumBoardingReactionsNewInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.ReactionsNew.Info") }
