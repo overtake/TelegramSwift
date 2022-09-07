@@ -471,6 +471,10 @@ final class ChatReactionsLayout {
                 if recentPeers.count < reaction.count {
                     recentPeers = []
                 }
+                if let peer = message.peers[message.id.peerId], peer.isChannel {
+                    recentPeers = []
+                }
+                
                 if message.id.peerId.namespace == Namespaces.Peer.CloudUser {
                     if mode == .full {
                         recentPeers = []

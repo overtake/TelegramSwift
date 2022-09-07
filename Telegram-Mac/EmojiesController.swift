@@ -562,7 +562,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     let popularContains = popular.contains(where: { $0.id.id == item.id.id })
                     
                     if !recentContains && !popularContains {
-                        recent.append(item)
+                        switch item.content {
+                        case .builtin:
+                            recent.append(item)
+                        default:
+                            break
+                        }
                     }
                 }
                 recent = Array(recent.prefix(perline * 10))
@@ -612,8 +617,15 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     
                     let containsCustom = reactionsRecent.contains(where: { $0.index.index == -1 })
                     if containsCustom {
-                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_segment(-1), equatable: InputDataEquatable(key), comparable: nil, item: { initialSize, stableId in
-                            return EStickItem(initialSize, stableId: stableId, segmentName: strings().reactionsRecentlyUsed, clearCallback: arguments.clearRecent)
+                        let text = strings().reactionsRecentlyUsed
+                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_segment(-1), equatable: InputDataEquatable(text), comparable: nil, item: { initialSize, stableId in
+                            return EStickItem(initialSize, stableId: stableId, segmentName: text, clearCallback: arguments.clearRecent)
+                        }))
+                        index += 1
+                    } else {
+                        let text = strings().reactionsPopular
+                        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_segment(-1), equatable: InputDataEquatable(text), comparable: nil, item: { initialSize, stableId in
+                            return EStickItem(initialSize, stableId: stableId, segmentName: text )
                         }))
                         index += 1
                     }
