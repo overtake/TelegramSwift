@@ -560,6 +560,11 @@ private final class PlayerRenderer {
     var totalFrames: Int32? {
         return self.getTotalFrames()
     }
+    private var jumpTo:(Int32)->Void = { _ in }
+    func jump(to frame: Int32) -> Void {
+        self.jumpTo(frame)
+    }
+    
     private func play(_ player: RenderContainer) {
         
         
@@ -606,6 +611,12 @@ private final class PlayerRenderer {
         }
         self.getTotalFrames = { [weak stateValue] in
             return stateValue?.with { $0?.endFrame }
+        }
+        
+        self.jumpTo = { [weak stateValue] frame in
+            _ = stateValue?.with { state in
+                state?.updateCurrentFrame(frame)
+            }
         }
         
         var framesTask: ThreadPoolTask? = nil
@@ -882,6 +893,12 @@ final class AnimationPlayerContext {
             totalFrames = renderer.totalFrames
         }
         return totalFrames
+    }
+    
+    func jump(to frame: Int32) -> Void {
+        self.rendererRef.with { renderer in
+            renderer.jump(to: frame)
+        }
     }
 }
 

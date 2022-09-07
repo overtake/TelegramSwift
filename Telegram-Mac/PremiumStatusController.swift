@@ -76,8 +76,8 @@ final class PremiumStatusController : TelegramViewController {
             tab.animateAppearance(delay: 0, duration: duration, ignoreCount: 0)
         }
         
-        for (i, section) in sections.enumerated() {
-            section.animateAppearance(delay: delay, duration: duration, ignoreCount: i == 0 ? 6 : 0)
+        for section in sections {
+            section.animateAppearance(delay: delay, duration: duration, initialPlayers: [:])
             delay += itemDelay
         }
     }
@@ -142,8 +142,8 @@ final class SetupQuickReactionController : TelegramViewController {
             tab.animateAppearance(delay: 0, duration: duration, ignoreCount: 0)
         }
         
-        for (i, section) in sections.enumerated() {
-            section.animateAppearance(delay: delay, duration: duration, ignoreCount: i == 0 ? 6 : 0)
+        for section in sections {
+            section.animateAppearance(delay: delay, duration: duration, initialPlayers: [:])
             delay += itemDelay
         }
     }

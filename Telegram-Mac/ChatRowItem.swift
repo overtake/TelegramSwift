@@ -2839,7 +2839,7 @@ class ChatRowItem: TableRowItem {
                 panel.hasShadow = false
                 
 
-                let reveal:((NSView)->Void)?
+                let reveal:((NSView & StickerFramesCollector)->Void)?
                 
                 
                 if accessToAll {

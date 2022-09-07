@@ -10,16 +10,20 @@ import Foundation
 import TGUIKit
 import SwiftSignalKit
 import Postbox
+import TGModernGrowingTextView
+import TelegramCore
 
 final class PremiumBoardingHeaderItem : GeneralRowItem {
     fileprivate let titleLayout: TextViewLayout
     fileprivate let infoLayout: TextViewLayout
     let peer: Peer?
     let context: AccountContext
+    let status: PremiumEmojiStatusInfo?
     init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, isPremium: Bool, peer: Peer?, emojiStatus: PremiumEmojiStatusInfo?, source: PremiumLogEventsSource, premiumText: NSAttributedString?, viewType: GeneralViewType) {
         
         self.context = context
         self.peer = peer
+        self.status = emojiStatus
         
         let title: NSAttributedString
         if let peer = peer {
@@ -33,10 +37,27 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
                 title = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.peerAvatarVioletBottom), linkAttribute: { contents in
                     return (NSAttributedString.Key.link.rawValue, contents)
                 }))
-            } else if let status = peer.emojiStatus {
-                title = parseMarkdownIntoAttributedString(strings().premiumBoardingPeerStatusTitle(peer.displayTitle, "pack"), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.peerAvatarVioletBottom), linkAttribute: { contents in
-                    return (NSAttributedString.Key.link.rawValue, contents)
-                }))
+            } else if let status = emojiStatus {
+                
+                if let info = status.info {
+                    let packName: String = info.title
+                    let packFile: TelegramMediaFile = status.items.first?.file ?? status.file
+                    
+                    let attr = parseMarkdownIntoAttributedString(strings().premiumBoardingPeerStatusCustomTitle(peer.displayTitle, packName), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.peerAvatarVioletBottom), linkAttribute: { contents in
+                        return (NSAttributedString.Key.link.rawValue, inAppLink.callback("", { _ in
+                            showModal(with: StickerPackPreviewModalController(context, peerId: nil, references: [.emoji(.name(info.shortName))]), for: context.window)
+                        }))
+                    })) as! NSMutableAttributedString
+                    
+                    let range = attr.string.nsstring.range(of: "🤡")
+                    if range.location != NSNotFound {
+                        attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: TGTextAttachment(identifier: "\(arc4random())", fileId: packFile.fileId.id, file: packFile, text: "", info: nil), range: range)
+                    }
+                    
+                    title = attr
+                } else {
+                    title = .initialize(string: strings().premiumBoardingPeerStatusDefaultTitle(peer.displayTitle), color: theme.colors.text, font: .medium(.header))
+                }
             } else {
                 title = parseMarkdownIntoAttributedString(strings().premiumBoardingPeerTitle(peer.displayTitle), attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .bold(.text), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .medium(.header), textColor: theme.colors.peerAvatarVioletBottom), linkAttribute: { contents in
                     return (NSAttributedString.Key.link.rawValue, contents)
@@ -52,6 +73,8 @@ final class PremiumBoardingHeaderItem : GeneralRowItem {
         }
         self.titleLayout = .init(title, alignment: .center)
 
+        self.titleLayout.interactions = globalLinkExecutor
+        
         var info = NSMutableAttributedString()
         if let _ = peer {
             
@@ -113,6 +136,7 @@ private final class PremiumBoardingHeaderView : TableRowView {
     private var statusView: InlineStickerView?
     private let titleView = TextView()
     private let infoView = TextView()
+    private var packInlineView: InlineStickerView?
     private var timer: SwiftSignalKit.Timer?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -120,7 +144,6 @@ private final class PremiumBoardingHeaderView : TableRowView {
         addSubview(infoView)
         
         
-        titleView.userInteractionEnabled = false
         titleView.isSelectable = false
         
         infoView.isSelectable = false
@@ -157,6 +180,20 @@ private final class PremiumBoardingHeaderView : TableRowView {
         }
         titleView.update(item.titleLayout)
         infoView.update(item.infoLayout)
+        
+        if let status = item.status, let embedded = item.titleLayout.embeddedItems.first {
+            let file = status.items.first?.file ?? status.file
+            let rect = embedded.rect.insetBy(dx: -1.5, dy: -1.5)
+            let view = InlineStickerView(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: file.fileId.id, file: file, emoji: ""), size: rect.size)
+            view.frame = rect
+            titleView.addEmbeddedView(view)
+            self.packInlineView = view
+            view.animateLayer.isPlayable = true
+        } else if let view = packInlineView {
+            performSubviewRemoval(view, animated: animated)
+            self.packInlineView = nil
+        }
+        
                 
         timer = SwiftSignalKit.Timer(timeout: 5.0, repeat: true, completion: { [weak self] in
             self?.premiumView?.playAgain()
@@ -179,6 +216,7 @@ private final class PremiumBoardingHeaderView : TableRowView {
                 })
                 self.statusView = status
                 addSubview(status)
+                
             }
         } else {
             if let view = self.statusView {

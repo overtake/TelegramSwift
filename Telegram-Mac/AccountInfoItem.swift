@@ -343,7 +343,7 @@ private class AccountInfoView : GeneralContainableRowView {
         super.layout()
         avatarView.centerY(x:16)
         
-        let h: CGFloat = statusControl != nil ? 2 : 0
+        let h: CGFloat = statusControl != nil ? 6 : 0
         
         container.setFrameSize(NSMakeSize(max(titleView.frame.width, textView.frame.width + (statusControl != nil ? 35 : 0)), titleView.frame.height + textView.frame.height + 2 + h))
         

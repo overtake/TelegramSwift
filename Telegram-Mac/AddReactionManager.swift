@@ -71,12 +71,12 @@ enum ContextReaction : Equatable {
 
 
 
-final class ContextAddReactionsListView : View  {
+final class ContextAddReactionsListView : View, StickerFramesCollector  {
     
     
     private final class ReactionView : Control {
                 
-        private let player: LottiePlayerView
+        let player: LottiePlayerView
         private let imageView: InlineStickerView
         private let disposable = MetaDisposable()
         private let appearDisposable = MetaDisposable()
@@ -289,13 +289,13 @@ final class ContextAddReactionsListView : View  {
     private let radiusLayer: CGFloat?
     
     private let showMore = ShowMore(frame: NSMakeRect(0, 0, 34, 34))
-    private let revealReactions:((NSView)->Void)?
+    private let revealReactions:((NSView & StickerFramesCollector)->Void)?
     
     private let maskLayer = SimpleShapeLayer()
     private let backgroundColorView = View()
     private let shadowLayer = SimpleShapeLayer()
     
-    required init(frame frameRect: NSRect, context: AccountContext, list: [ContextReaction], add:@escaping(MessageReaction.Reaction, Bool)->Void, radiusLayer: CGFloat? = 15, revealReactions:((NSView)->Void)? = nil) {
+    required init(frame frameRect: NSRect, context: AccountContext, list: [ContextReaction], add:@escaping(MessageReaction.Reaction, Bool)->Void, radiusLayer: CGFloat? = 15, revealReactions:((NSView & StickerFramesCollector)->Void)? = nil) {
         self.list = list
         self.revealReactions = revealReactions
         self.radiusLayer = radiusLayer
@@ -355,9 +355,25 @@ final class ContextAddReactionsListView : View  {
         backgroundView.addSubview(bottomGradient)
 
         
-        NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: scrollView.clipView, queue: OperationQueue.main, using: { [weak self] notification  in
-            self?.updateScroll()
-        })
+        if revealReactions == nil {
+            NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: scrollView.clipView, queue: OperationQueue.main, using: { [weak self] notification  in
+                self?.updateScroll()
+            })
+        } else {
+            var calc:CGFloat = 0
+            
+            scrollView.applyExternalScroll = { [weak self] event in
+                calc += abs(event.deltaY)
+                calc += abs(event.deltaX)
+                
+                if calc > 30 {
+                    self?.showMore.send(event: .Click)
+                    AppMenu.closeAll()
+                }
+                return true
+            }
+        }
+        
                 
         scrollView.background = .clear
         scrollView.documentView = documentView
@@ -385,6 +401,16 @@ final class ContextAddReactionsListView : View  {
             view?.playAppearAnimation()
         }
         updateScroll()
+    }
+    
+    func collect() -> [Int : LottiePlayerView] {
+        var frames:[Int : LottiePlayerView] = [:]
+        for (i, view) in self.documentView.subviews.enumerated() {
+            if let view = view as? ReactionView {
+                frames[i] = view.player
+            }
+        }
+        return frames
     }
     
     static var size: CGSize {

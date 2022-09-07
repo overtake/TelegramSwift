@@ -321,8 +321,8 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         return .single(items)
     }
     
-    func animateAppearance(delay: Double, duration: Double, ignoreCount: Int) {
-        (self.view as? EmojiesSectionRowView)?.animateAppearance(delay: delay, duration: duration, ignoreCount: ignoreCount)
+    func animateAppearance(delay: Double, duration: Double, initialPlayers: [Int: LottiePlayerView]) {
+        (self.view as? EmojiesSectionRowView)?.animateAppearance(delay: delay, duration: duration, initialPlayers: initialPlayers)
     }
     
     func invokeLockAction() {
@@ -350,16 +350,16 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         
-        if let item = itemUnderMouse?.1, let file = item.item?.file, let emojiReference = file.emojiReference {
-            let reference = FileMediaReference.stickerPack(stickerPack: emojiReference, media: file)
-            if file.isVideoSticker && !file.isWebm {
-                return (.file(reference, GifPreviewModalView.self), nil)
-            } else if file.isAnimatedSticker || file.isWebm {
-                return (.file(reference, AnimatedStickerPreviewModalView.self), nil)
-            } else if file.isStaticSticker {
-                return (.file(reference, StickerPreviewModalView.self), nil)
-            }
-        }
+//        if let item = itemUnderMouse?.1, let file = item.item?.file, let emojiReference = file.emojiReference {
+//            let reference = FileMediaReference.stickerPack(stickerPack: emojiReference, media: file)
+//            if file.isVideoSticker && !file.isWebm {
+//                return (.file(reference, GifPreviewModalView.self), nil)
+//            } else if file.isAnimatedSticker || file.isWebm {
+//                return (.file(reference, AnimatedStickerPreviewModalView.self), nil)
+//            } else if file.isStaticSticker {
+//                return (.file(reference, StickerPreviewModalView.self), nil)
+//            }
+//        }
         return nil
     }
     
@@ -478,8 +478,8 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
     }
     private func updateUp() {
         if let itemUnderMouse = self.currentDownItem {
-            itemUnderMouse.0.animateScale(from: 0.85, to: 1, duration: 0.2, removeOnCompletion: true)
             if itemUnderMouse.1 == self.itemUnderMouse?.1 {
+                itemUnderMouse.0.animateScale(from: 0.85, to: 1, duration: 0.2, removeOnCompletion: true)
                 self.click()
             }
         }
@@ -557,18 +557,32 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         }
     }
     
-    func animateAppearance(delay: Double, duration: Double, ignoreCount: Int) {
-        var delay = delay
+    func animateAppearance(delay delay_t: Double, duration: Double, initialPlayers: [Int: LottiePlayerView]) {
+        var delay_t = delay_t
         let itemDelay = duration / Double(inlineStickerItemViews.count)
         for (key, value) in inlineStickerItemViews {
-            if key.index > ignoreCount - 1 {
+            if initialPlayers[key.index] == nil {
                 value.animateScale(from: 0.1, to: 1, duration: duration, timingFunction: .spring, delay: itemDelay)
                 locks[key]?.animateScale(from: 0.1, to: 1, duration: duration, timingFunction: .spring, delay: itemDelay)
                 selectedLayers[key]?.animateScale(from: 0.1, to: 1, duration: duration, timingFunction: .spring, delay: itemDelay)
-                delay += itemDelay
+                delay_t += itemDelay
             } else if let selected = selectedLayers[key] {
                 selected.animate(from: NSNumber(value: selected.frame.height / 2), to: NSNumber(value: 10), keyPath: "cornerRadius", timingFunction: .easeOut, duration: 0.2, forKey: "cornerRadius")
-
+            }
+            if let view = initialPlayers[key.index], view.currentState == .playing {
+                view.frame = value.frame
+                value.superview?.addSubview(view)
+                value.stopped = true
+                value.reset()
+                value.opacity = 0
+                view.contextAnimation?.triggerOn = (.last, { [weak view, weak value] in
+                    value?.triggerNextState = { _ in
+                        view?.removeFromSuperview()
+                        value?.opacity = 1
+                    }
+                    value?.stopped = false
+                    value?.apply()
+                }, {})
             }
         }
     }

@@ -14,10 +14,11 @@ import Postbox
 import InAppPurchaseManager
 import CurrencyFormat
 
-struct PremiumEmojiStatusInfo {
-    let status: PeerEmojiStatus?
-    let file: TelegramMediaFile?
-    let pack: StickerPackCollectionInfo
+struct PremiumEmojiStatusInfo : Equatable {
+    let status: PeerEmojiStatus
+    let file: TelegramMediaFile
+    let info: StickerPackCollectionInfo?
+    let items: [StickerPackItem]
 }
 
 enum PremiumLogEventsSource : Equatable {
@@ -315,7 +316,7 @@ private struct State : Equatable {
     var premiumConfiguration: PremiumPromoConfiguration
     var stickers: [TelegramMediaFile]
     var canMakePayment: Bool
-    
+    var status: PremiumEmojiStatusInfo?
     var periods: [PremiumPeriod] = [.init(period: .month, price: 0, currency: "usd"), .init(period: .year, price: 100000, currency: "usd")]
     var period: PremiumPeriod = .init(period: .month, price: 0, currency: "usd")
 }
@@ -336,7 +337,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: InputDataEquatable(state), comparable: nil, item: { initialSize, stableId in
         let status = ChatMessageItem.applyMessageEntities(with: [TextEntitiesMessageAttribute(entities: state.premiumConfiguration.statusEntities)], for: state.premiumConfiguration.status, message: nil, context: arguments.context, fontSize: 13, openInfo: arguments.openInfo)
-        return PremiumBoardingHeaderItem(initialSize, stableId: stableId, context: arguments.context, isPremium: state.isPremium, peer: state.peer?.peer, emojiStatus: nil, source: state.source, premiumText: status, viewType: .legacy)
+        return PremiumBoardingHeaderItem(initialSize, stableId: stableId, context: arguments.context, isPremium: state.isPremium, peer: state.peer?.peer, emojiStatus: state.status, source: state.source, premiumText: status, viewType: .legacy)
     }))
     index += 1
     
@@ -847,18 +848,48 @@ final class PremiumBoardingController : ModalViewController {
             }
         })
         
-        let peer: Signal<Peer?, NoError>
+        let peer: Signal<(Peer?, PremiumEmojiStatusInfo?), NoError>
         switch source {
         case let .profile(peerId):
             peer = context.account.postbox.transaction { $0.getPeer(peerId) }
+            |> mapToSignal { peer in
+                if let peer = peer {
+                    if let status = peer.emojiStatus {
+                        return context.inlinePacksContext.load(fileId: status.fileId) |> mapToSignal { file in
+                            if let file = file, let reference = file.emojiReference {
+                                if !isDefaultStatusesPackId(reference) {
+                                    return context.engine.stickers.loadedStickerPack(reference: reference, forceActualized: false) |> map { pack in
+                                        switch pack {
+                                        case let .result(info, items, _):
+                                            return (peer, PremiumEmojiStatusInfo(status: status, file: file, info: info, items: items))
+                                        default:
+                                            return (peer, nil)
+                                        }
+                                    } |> filter {
+                                        return $0.1 != nil
+                                    }
+                                } else {
+                                    return .single((peer, .init(status: status, file: file, info: nil, items: [])))
+                                }
+                            } else {
+                                return .single((peer, nil))
+                            }
+                        }
+                    } else {
+                        return .single((peer, nil))
+                    }
+                } else {
+                    return .single((peer, nil))
+                }
+            }
         case let .gift(from, to, _):
             if from == context.peerId {
-                peer = context.account.postbox.transaction { $0.getPeer(to) }
+                peer = context.account.postbox.transaction { ($0.getPeer(to), nil) }
             } else {
-                peer = context.account.postbox.transaction { $0.getPeer(from) }
+                peer = context.account.postbox.transaction { ($0.getPeer(from), nil) }
             }
         default:
-            peer = .single(nil)
+            peer = .single((nil, nil))
         }
         
         
@@ -906,15 +937,16 @@ final class PremiumBoardingController : ModalViewController {
             context.account.postbox.peerView(id: context.account.peerId)
             |> map { view -> Bool in
                 return view.peers[view.peerId]?.isPremium ?? false
-            }, peer).start(next: { products, promoConfiguration, stickers, isPremium, peer in
+            }, peer).start(next: { products, promoConfiguration, stickers, isPremium, peerAndStatus in
                 updateState { current in
                     var current = current
                     current.premiumProduct = products.first
                     current.isPremium = isPremium
                     current.premiumConfiguration = promoConfiguration
                     current.stickers = stickers
-                    if let peer = peer {
+                    if let peer = peerAndStatus.0 {
                         current.peer = .init(peer)
+                        current.status = peerAndStatus.1
                     }
                     
                     return current
