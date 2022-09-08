@@ -82,8 +82,8 @@ class AccountInfoItem: GeneralRowItem {
         
         let hasControl = PremiumStatusControl.hasControl(peer)
         
-        self.titleLayout.measure(width: width - 140 - (hasControl ? 35 : 0))
-        self.titleActiveLayout.measure(width: width - 140 - (hasControl ? 35 : 0))
+        self.titleLayout.measure(width: width - 140 - (hasControl ? 45 : 0))
+        self.titleActiveLayout.measure(width: width - 140 - (hasControl ? 45 : 0))
         return success
     }
     
@@ -345,7 +345,7 @@ private class AccountInfoView : GeneralContainableRowView {
         
         let h: CGFloat = statusControl != nil ? 6 : 0
         
-        container.setFrameSize(NSMakeSize(max(titleView.frame.width, textView.frame.width + (statusControl != nil ? 35 : 0)), titleView.frame.height + textView.frame.height + 2 + h))
+        container.setFrameSize(NSMakeSize(max(titleView.frame.width, textView.frame.width + (statusControl != nil ? 40 : 0)), titleView.frame.height + textView.frame.height + 2 + h))
         
         titleView.setFrameOrigin(0, h)
         textView.setFrameOrigin(0, titleView.frame.maxY + 2)

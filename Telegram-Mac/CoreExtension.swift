@@ -614,21 +614,7 @@ public extension Message {
         var updated:[UpdateMessageReaction] = []
         if let reactions = self.effectiveReactions {
             
-            let sorted = reactions.sorted(by: { lhs, rhs in
-                if lhs.isSelected != rhs.isSelected {
-                    if lhs.isSelected {
-                        return true
-                    } else {
-                        return false
-                    }
-                } else {
-                    if let lhsIndex = lhs.chosenOrder, let rhsIndex = rhs.chosenOrder {
-                        return lhsIndex < rhsIndex
-                    } else {
-                        return lhs.count > rhs.count
-                    }
-                }
-            })
+            let sorted = reactions.sorted(by: <)
             
             updated = sorted.compactMap { value in
                 if value.isSelected {

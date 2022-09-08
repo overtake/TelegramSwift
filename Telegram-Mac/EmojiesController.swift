@@ -557,19 +557,41 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 }
                 popular = Array(top.prefix(perline * 2))
                 recent = state.recentReactionsItems
+                
+                
                 for item in state.topReactionsItems {
                     let recentContains = recent.contains(where: { $0.id.id == item.id.id })
                     let popularContains = popular.contains(where: { $0.id.id == item.id.id })
                     
                     if !recentContains && !popularContains {
-                        switch item.content {
-                        case .builtin:
+                        if state.recentReactionsItems.isEmpty {
+                            switch item.content {
+                            case .builtin:
+                                recent.append(item)
+                            default:
+                                break
+                            }
+                        } else {
                             recent.append(item)
-                        default:
-                            break
                         }
                     }
                 }
+                
+                if let reactions = state.reactions?.reactions {
+                    for reaction in reactions {
+                        let recentContains = recent.contains(where: { $0.content.reaction == reaction.value })
+                        let popularContains = popular.contains(where: { $0.content.reaction == reaction.value })
+                        if !recentContains && !popularContains {
+                            switch reaction.value {
+                            case let .builtin(emoji):
+                                recent.append(.init(.builtin(emoji)))
+                            default:
+                                break
+                            }
+                        }
+                    }
+                }
+                
                 recent = Array(recent.prefix(perline * 10))
 //                } else {
 //                    popular = Array(state.topReactionsItems.prefix(perline * 2))

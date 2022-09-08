@@ -2733,7 +2733,7 @@ class ChatRowItem: TableRowItem {
                 var accessToAll: Bool
                 
                 let isSelected:(MessageReaction.Reaction)->Bool = { reaction in
-                    return message.effectiveReactions?.contains(where: { $0.value == reaction }) ?? false
+                    return message.effectiveReactions?.contains(where: { $0.value == reaction && $0.isSelected }) ?? false
                 }
 
                 

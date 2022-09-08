@@ -94,7 +94,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
             let rect = CGRect(origin: .zero, size: size)
             
             self.player = LottiePlayerView(frame: rect)
-            self.imageView = InlineStickerView(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: reaction.fileId, file: reaction.file, emoji: ""), size: size)
+            self.imageView = InlineStickerView(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: reaction.fileId, file: reaction.file, emoji: ""), size: size, shimmerColor: .init(circle: true))
             self.reaction = reaction
             self.context = context
            
