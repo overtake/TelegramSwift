@@ -34,6 +34,33 @@ extension MessageReaction.Reaction {
     }
 }
 
+extension MessageReaction {
+    static func <(lhs: MessageReaction, rhs: MessageReaction) -> Bool {
+        var lhsCount = lhs.count
+        if lhs.chosenOrder != nil {
+            lhsCount -= 1
+        }
+        var rhsCount = rhs.count
+        if rhs.chosenOrder != nil {
+            rhsCount -= 1
+        }
+        if lhsCount != rhsCount {
+            return lhsCount > rhsCount
+        }
+        
+        if (lhs.chosenOrder != nil) != (rhs.chosenOrder != nil) {
+            if lhs.chosenOrder != nil {
+                return true
+            } else {
+                return false
+            }
+        } else if let lhsIndex = lhs.chosenOrder, let rhsIndex = rhs.chosenOrder {
+            return lhsIndex < rhsIndex
+        }
+        return false
+    }
+}
+
 final class ChatReactionsLayout {
     
     struct Theme : Equatable {
@@ -160,14 +187,14 @@ final class ChatReactionsLayout {
         func getInlineLayer(_ mode: ChatReactionsLayout.Mode) -> InlineStickerItemLayer {
             switch source {
             case let .builtin(reaction):
-                return .init(account: context.account, file: reaction.staticIcon, size: presentation.reactionSize)
+                return .init(account: context.account, file: reaction.staticIcon, size: presentation.reactionSize, shimmerColor: .init(color: presentation.bgColor.darker(), circle: true))
             case let .custom(fileId, file, _):
                 var reactionSize: NSSize = presentation.reactionSize
                 if mode == .full {
                     reactionSize.width += 3
                     reactionSize.height += 3
                 }
-                return .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: reactionSize)
+                return .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: reactionSize, shimmerColor: .init(color: presentation.bgColor.darker(), circle: true))
             }
         }
         
@@ -431,21 +458,7 @@ final class ChatReactionsLayout {
             }
         }
         
-        let sorted = reactions.reactions.sorted(by: { lhs, rhs in
-            if lhs.isSelected != rhs.isSelected {
-                if lhs.isSelected {
-                    return true
-                } else {
-                    return false
-                }
-            } else {
-                if let lhsIndex = lhs.chosenOrder, let rhsIndex = rhs.chosenOrder {
-                    return lhsIndex < rhsIndex
-                } else {
-                    return lhs.count > rhs.count
-                }
-            }
-        })
+        let sorted = reactions.reactions.sorted(by: <)
         
         
         self.reactions = sorted.compactMap { reaction in
@@ -472,6 +485,9 @@ final class ChatReactionsLayout {
                     recentPeers = []
                 }
                 if let peer = message.peers[message.id.peerId], peer.isChannel {
+                    recentPeers = []
+                }
+                if reactions.reactions.reduce(0, { $0 + $1.count }) > 3 {
                     recentPeers = []
                 }
                 
@@ -627,7 +643,7 @@ class AnimationLayerContainer : View {
     override func layout() {
         super.layout()
         if let imageLayer = self.imageLayer {
-            imageLayer.frame = focus(imageLayer.frame.size)
+            imageLayer.frame = self.bounds
         }
     }
     

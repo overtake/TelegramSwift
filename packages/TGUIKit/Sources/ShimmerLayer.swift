@@ -14,8 +14,8 @@ private struct Shimmerkey : Hashable {
     var backroundColor: NSColor
     var foregroundColor: NSColor
     func hash(into hasher: inout Hasher) {
-        hasher.combine(backroundColor.hashValue)
-        hasher.combine(foregroundColor.hashValue)
+        hasher.combine(backroundColor.hexString)
+        hasher.combine(foregroundColor.hexString)
     }
 }
 
@@ -232,7 +232,7 @@ public class ShimmerLayer: SimpleLayer {
                     renderPath(segments, context: context)
                 } else {
                     let path = CGMutablePath()
-                    path.addRoundedRect(in: CGRect(origin: CGPoint(), size: size), cornerWidth: min(min(10, size.height / 2), size.width / 2), cornerHeight: min(min(size.height / 2, 10), size.height / 2))
+                    path.addRoundedRect(in: CGRect(origin: CGPoint(), size: size), cornerWidth: min(min(4, size.height / 2), size.width / 2), cornerHeight: min(min(size.height / 2, 4), size.height / 2))
                     context.addPath(path)
                     context.fillPath()
                 }

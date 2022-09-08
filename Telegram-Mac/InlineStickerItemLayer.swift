@@ -12,6 +12,7 @@ import TelegramCore
 import Postbox
 import TGUIKit
 import Accelerate
+import AppKit
 
 class InlineStickerLockLayer : SimpleLayer {
     private let lockedView: SimpleLayer = SimpleLayer()
@@ -250,14 +251,14 @@ private final class MultiTargetContextCache {
 }
 
 final class InlineStickerView: View {
-    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil) {
-        let layer = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: emoji, size: size, getColors: getColors)
+    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false)) {
+        let layer = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: emoji, size: size, getColors: getColors, shimmerColor: shimmerColor)
         super.init(frame: size.bounds)
         self.layer = layer
         layer.superview = self
     }
-    init(account: Account, file: TelegramMediaFile, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil) {
-        let layer = InlineStickerItemLayer(account: account, file: file, size: size, getColors: getColors)
+    init(account: Account, file: TelegramMediaFile, size: NSSize, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: InlineStickerItemLayer.Shimmer = .init(circle: false)) {
+        let layer = InlineStickerItemLayer(account: account, file: file, size: size, getColors: getColors, shimmerColor: shimmerColor)
         super.init(frame: size.bounds)
         self.layer = layer
         layer.superview = self
@@ -359,11 +360,23 @@ final class InlineStickerItemLayer : SimpleLayer {
     
     private let getColors:((TelegramMediaFile)->[LottieColor])?
     
-    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, playPolicy: LottiePlayPolicy = .loop, checkStatus: Bool = false, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil) {
+    struct Shimmer {
+        let color: NSColor
+        let circle: Bool
+        init(color:NSColor = NSColor(0x748391), circle: Bool) {
+            self.color = color
+            self.circle = circle
+        }
+    }
+    private let shimmerColor: Shimmer
+    
+    
+    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, playPolicy: LottiePlayPolicy = .loop, checkStatus: Bool = false, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false)) {
         self.aspectFilled = aspectFilled
         self.account = account
         self.playPolicy = playPolicy
         self.getColors = getColors
+        self.shimmerColor = shimmerColor
         super.init()
         self.frame = size.bounds
         self.initialize()
@@ -386,11 +399,12 @@ final class InlineStickerItemLayer : SimpleLayer {
         })
     }
     
-    init(account: Account, file: TelegramMediaFile, size: NSSize, playPolicy: LottiePlayPolicy = .loop, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil) {
+    init(account: Account, file: TelegramMediaFile, size: NSSize, playPolicy: LottiePlayPolicy = .loop, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false)) {
         self.aspectFilled = aspectFilled
         self.account = account
         self.playPolicy = playPolicy
         self.getColors = getColors
+        self.shimmerColor = shimmerColor
         super.init()
         self.initialize()
         self.file = file
@@ -449,20 +463,26 @@ final class InlineStickerItemLayer : SimpleLayer {
             }
         }
     }
+    private var isPreviousPreview: Bool = false
+    
     private var contextToken: (Int, MultiTargetContextCache.Key)?
     private func set(_ animation: LottieAnimation?, force: Bool = false) {
         self.animation = animation
         if let animation = animation, let isPlayable = self.isPlayable, isPlayable, !stopped {
-            weak var layer: CALayer? = self
+            weak var layer: InlineStickerItemLayer? = self
             let key: MultiTargetContextCache.Key = .init(key: animation.key, unique: unique)
             delayDisposable.set(delaySignal(MultiTargetContextCache.exists(key) || force ? 0 : 0.1).start(completed: { [weak self] in
-                                
+
                 self?.contextToken = (MultiTargetContextCache.create(animation, key: key, displayFrame: { image in
                     DispatchQueue.main.async {
                         layer?.contents = image
+                        if layer?.isPreviousPreview == true {
+                            layer?.animateContents()
+                            layer?.isPreviousPreview = false
+                        }
                     }
                 }, release: {
-                    
+
                 }, updateState: { [weak self] state in
                     self?.updateState(state)
                 }), key)
@@ -590,7 +610,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             }
             
             fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: mediaResource).start())
-            
+            let shimmerColor = self.shimmerColor
             let fillColor: NSColor? = getColors?(file).first?.color
             let emptyColor: TransformImageEmptyColor?
             if let fillColor = fillColor {
@@ -612,28 +632,29 @@ final class InlineStickerItemLayer : SimpleLayer {
 
                 
                 let signal: Signal<ImageDataTransformation, NoError>
-                    
+
                 switch file.mimeType {
                 case "image/webp":
                     signal = chatMessageSticker(postbox: account.postbox, file: reference, small: aspectSize.width <= 5, scale: System.backingScale, fetched: true)
                 default:
                     signal = chatMessageAnimatedSticker(postbox: account.postbox, file: reference, small: aspectSize.width <= 5, scale: System.backingScale, size: aspectSize, fetched: true, thumbAtFrame: 0, isVideo: file.fileName == "webm-preview" || file.isVideoSticker)
                 }
-                
+
                 var result: TransformImageResult?
                 _ = cachedMedia(media: file, arguments: arguments, scale: System.backingScale).start(next: { value in
                     result = value
                 })
                 if self.playerState != .playing {
                     self.contents = result?.image
-                    
+
                     if let image = result?.image {
                         self.preview = image
+                        self.isPreviousPreview = true
                     }
                 }
                
                 
-                if self.preview == nil, let data = file.immediateThumbnailData, self.playerState != .playing {
+                if self.preview == nil, self.playerState != .playing {
                     
                     let dataSignal = account.postbox.mediaBox.resourceData(mediaResource.resource)
                     |> map { $0.complete }
@@ -649,10 +670,19 @@ final class InlineStickerItemLayer : SimpleLayer {
                                 current = ShimmerLayer()
                                 self?.addSublayer(current)
                                 self?.shimmer = current
-                                current.frame = size.bounds.focus(aspectSize)
                             }
-                            current.update(backgroundColor: nil, foregroundColor: NSColor(rgb: 0x748391, alpha: 0.2), shimmeringColor: NSColor(rgb: 0x748391, alpha: 0.35), data: data, size: aspectSize)
-                            current.updateAbsoluteRect(size.bounds, within: aspectSize)
+                                                        
+                            let data = shimmerColor.circle ? nil : file.immediateThumbnailData
+                            
+                            let shimmerSize = aspectSize
+                            
+                            current.update(backgroundColor: nil, foregroundColor: shimmerColor.color.withAlphaComponent(0.2), shimmeringColor: shimmerColor.color.withAlphaComponent(0.35), data: data, size: shimmerSize)
+                            current.updateAbsoluteRect(size.bounds, within: shimmerSize)
+                            
+                            current.frame = size.bounds.focus(aspectSize)
+                            
+                            self?.isPreviousPreview = true
+
                         } else {
                             if let shimmer = self?.shimmer {
                                 shimmer.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak shimmer] _ in
@@ -683,10 +713,14 @@ final class InlineStickerItemLayer : SimpleLayer {
                         let fontImage = fontContext?.generateImage()
                         return (TransformImageResult(image, context?.isHighQuality ?? false), TransformImageResult(fontImage, fontContext?.isHighQuality ?? false))
                     } |> deliverOnMainQueue
-                    
+
                     previewDisposable = result.start(next: { [weak self] result, fontResult in
                         if self?.playerState != .playing {
                             self?.contents = result.image
+                        }
+                        if self?.isPreviousPreview == true {
+                            self?.animateContents()
+                            self?.isPreviousPreview = false
                         }
                         if let image = result.image {
                             self?.preview = image
@@ -697,7 +731,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                                 self?.shimmer = nil
                             }
                         }
-                        
+
                         cacheMedia(fontResult, media: file, arguments: fontArguments, scale: System.backingScale)
                         cacheMedia(result, media: file, arguments: arguments, scale: System.backingScale)
                     })

@@ -282,13 +282,13 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
     
     enum Source {
         case messages([Message], PeerGroupId)
-        case reaction(Message, Peer, MessageReaction.Reaction, Int32)
+        case reaction(Message, Peer, MessageReaction.Reaction, Int32, TelegramMediaFile?)
         
         var messages:[Message] {
             switch self {
             case let .messages(messages, _):
                 return messages
-            case let .reaction(message, _, _, _):
+            case let .reaction(message, _, _, _, _):
                 return [message]
             }
         }
@@ -302,7 +302,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         }
         func key(for message: Message) -> String {
             switch self {
-            case let .reaction(_, peer, value, timestamp):
+            case let .reaction(_, peer, value, timestamp, _):
                 return "reaction_\(message.id.toInt64())_\(peer.id.toInt64())_\(value)_\(timestamp)"
             case .messages:
                 return "message_\(message.id.toInt64())"
@@ -314,10 +314,36 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         let screenLocked = self.screenLocked
         var alreadyNotified:Set<String> = Set()
         
+        let engine = TelegramEngine(account: account)
         
+        let reactions: Signal<[(reactionAuthor: Peer, reaction: MessageReaction.Reaction, message: Message, timestamp: Int32, file: TelegramMediaFile?)], NoError> = account.stateManager.reactionNotifications |> mapToSignal { reactions in
+            
+            
+            var fileIds: Set<Int64> = Set()
+            for reaction in reactions {
+                switch reaction.reaction {
+                case let .custom(fileId):
+                    fileIds.insert(fileId)
+                default:
+                    break
+                }
+            }
+            return engine.stickers.resolveInlineStickers(fileIds: Array(fileIds)) |> map { files in
+                var reactions:[(reactionAuthor: Peer, reaction: MessageReaction.Reaction, message: Message, timestamp: Int32, file: TelegramMediaFile?)] = reactions.map { (reactionAuthor: $0, reaction: $1, message: $2, timestamp: $3, file: nil) }
+                
+                for (i, reaction) in reactions.enumerated() {
+                    sw: switch reaction.reaction {
+                        case let .custom(fileId):
+                        reactions[i] = (reactionAuthor: reaction.reactionAuthor, reaction: reaction.reaction, message: reaction.message, timestamp: reaction.timestamp, file: files[fileId])
+                        default:
+                            break sw
+                    }
+                }
+                return reactions
+            }
+        }
         
-        
-        disposableDict.set((combineLatest(account.stateManager.notificationMessages, account.stateManager.reactionNotifications) |> mapToSignal { messages, reactions -> Signal<([Source], InAppNotificationSettings), NoError> in
+        disposableDict.set((combineLatest(account.stateManager.notificationMessages, reactions) |> mapToSignal { messages, reactions -> Signal<([Source], InAppNotificationSettings), NoError> in
             return appNotificationSettings(accountManager: self.accountManager) |> take(1) |> mapToSignal { inAppSettings -> Signal<([Source], InAppNotificationSettings), NoError> in
                 self.snoofEnabled = inAppSettings.showNotificationsOutOfFocus
                 self.requestUserAttention = inAppSettings.requestUserAttention
@@ -333,7 +359,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                     }
                     
                     let rctns:[Source] = reactions.map {
-                        .reaction($2, $0, $1, $3)
+                        .reaction($2, $0, $1, $3, $4)
                     }
 
                     return .single((msgs + rctns, inAppSettings))
@@ -455,7 +481,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             var text: String
                             var subText:String? = nil
                             switch source {
-                            case let .reaction(message, peer, value, _):
+                            case let .reaction(message, peer, value, _, file):
                                 
                                 let reactionText: String
                                 switch value {
@@ -463,7 +489,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                     reactionText = emoji
                                 case let .custom(fileId):
                                     let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
-                                    let file = message.associatedMedia[mediaId] as? TelegramMediaFile
+                                    let file = file ?? message.associatedMedia[mediaId] as? TelegramMediaFile
                                     reactionText = file?.customEmojiText ?? file?.stickerText ?? ""
                                 }
                                 
