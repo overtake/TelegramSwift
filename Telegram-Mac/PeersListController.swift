@@ -114,6 +114,23 @@ class PeerListContainerView : View {
             switch connection {
             case .connecting, .waitingForNetwork:
              //   proxyConnecting.isHidden = !pref.enabled
+                if pref.enabled {
+                    let current: ProgressIndicator
+                    if let view = self.connecting {
+                        current = view
+                    } else {
+                        current = ProgressIndicator(frame: focus(NSMakeSize(11, 11)))
+                        self.connecting = current
+                        addSubview(current)
+                    }
+                    current.userInteractionEnabled = false
+                    current.isEventLess = true
+                    current.progressColor = theme.colors.accentIcon
+                } else if let view = connecting {
+                    performSubviewRemoval(view, animated: animated)
+                    self.connecting = nil
+                }
+                
                 button.set(image: pref.enabled ? theme.icons.proxyState : theme.icons.proxyEnable, for: .Normal)
             case .online, .updating:
                 if let view = connecting {
@@ -133,6 +150,14 @@ class PeerListContainerView : View {
         override func layout() {
             super.layout()
             button.center()
+            if let connecting = connecting {
+                var rect = connecting.centerFrame()
+                if backingScaleFactor == 2.0 {
+                    rect.origin.x -= 0.5
+                    rect.origin.y -= 0.5
+                }
+                connecting.frame = rect
+            }
         }
         
         required init?(coder: NSCoder) {
@@ -152,6 +177,7 @@ class PeerListContainerView : View {
         }
         
         private var peer: Peer?
+        private weak var effectPanel: Window?
         
         func update(_ peer: Peer, context: AccountContext, animated: Bool) {
             let statusUpdated = self.peer?.emojiStatus?.fileId != peer.emojiStatus?.fileId && self.peer != nil
@@ -176,31 +202,57 @@ class PeerListContainerView : View {
         }
         
         private func playAnimation(_  fileId: Int64, context: AccountContext) {
-            guard let control = button, visibleRect != .zero, window != nil else {
+            guard let control = button, visibleRect != .zero, let window = self.window else {
                 return
             }
+            
+            let panel = Window(contentRect: NSMakeRect(0, 0, 160, 160), styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
+            panel._canBecomeMain = false
+            panel._canBecomeKey = false
+            
+            panel.level = .popUpMenu
+            panel.backgroundColor = .clear
+            panel.isOpaque = false
+            panel.hasShadow = false
+
             
             let player = CustomReactionEffectView(frame: NSMakeSize(160, 160).bounds, context: context, fileId: fileId)
             
             player.isEventLess = true
             
-            player.triggerOnFinish = { [weak player] in
-                player?.removeFromSuperview()
+            player.triggerOnFinish = { [weak panel] in
+                if let panel = panel  {
+                    panel.parent?.removeChildWindow(panel)
+                    panel.orderOut(nil)
+                }
             }
+            self.effectPanel = panel
                     
-            let controlRect = self.convert(control.frame, to: window?.contentView?.superview)
+            let controlRect = self.convert(control.frame, to: nil)
             
-            let rect = CGRect(origin: CGPoint(x: controlRect.midX - player.frame.width / 2, y: controlRect.midY - player.frame.height / 2), size: player.frame.size)
+            var rect = CGRect(origin: CGPoint(x: controlRect.midX - player.frame.width / 2, y: controlRect.midY - player.frame.height / 2), size: player.frame.size)
             
-            player.frame = rect
             
-            window?.contentView?.superview?.addSubview(player)
+            rect = window.convertToScreen(rect)
             
+            panel.setFrame(rect, display: true)
+            
+            panel.contentView?.addSubview(player)
+            
+            
+            window.addChildWindow(panel, ordered: .above)
         }
         
         override func layout() {
             super.layout()
             button?.center()
+        }
+        
+        deinit {
+            if let panel = effectPanel {
+                panel.parent?.removeChildWindow(panel)
+                panel.orderOut(nil)
+            }
         }
         
         required init?(coder: NSCoder) {
