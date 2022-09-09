@@ -281,7 +281,7 @@ private func segments(_ emoji: [EmojiSegment : [String]], skinModifiers: [EmojiS
 private final class Arguments {
     let context: AccountContext
     let mode: EmojiesController.Mode
-    let send:(StickerPackItem, StickerPackCollectionInfo?, Int32?)->Void
+    let send:(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void
     let sendEmoji:(String)->Void
     let selectEmojiSegment:(EmojiSegment)->Void
     let viewSet:(StickerPackCollectionInfo)->Void
@@ -289,7 +289,7 @@ private final class Arguments {
     let openPremium:()->Void
     let installPack:(StickerPackCollectionInfo, [StickerPackItem])->Void
     let clearRecent:()->Void
-    init(context: AccountContext, mode: EmojiesController.Mode, send:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?)->Void, sendEmoji:@escaping(String)->Void, selectEmojiSegment:@escaping(EmojiSegment)->Void, viewSet:@escaping(StickerPackCollectionInfo)->Void, showAllItems:@escaping(Int64)->Void, openPremium:@escaping()->Void, installPack:@escaping(StickerPackCollectionInfo,  [StickerPackItem])->Void, clearRecent:@escaping()->Void) {
+    init(context: AccountContext, mode: EmojiesController.Mode, send:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void, sendEmoji:@escaping(String)->Void, selectEmojiSegment:@escaping(EmojiSegment)->Void, viewSet:@escaping(StickerPackCollectionInfo)->Void, showAllItems:@escaping(Int64)->Void, openPremium:@escaping()->Void, installPack:@escaping(StickerPackCollectionInfo,  [StickerPackItem])->Void, clearRecent:@escaping()->Void) {
         self.context = context
         self.send = send
         self.sendEmoji = sendEmoji
@@ -1176,7 +1176,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             }
         }
         
-        let arguments = Arguments(context: context, mode: self.mode, send: { [weak self] item, info, timeout in
+        let arguments = Arguments(context: context, mode: self.mode, send: { [weak self] item, info, timeout, rect in
             switch mode {
             case .emoji:
                 if !context.isPremium && item.file.isPremiumEmoji, context.peerId != self?.chatInteraction?.peerId {
@@ -1184,13 +1184,13 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                         showModal(with: PremiumBoardingController(context: context, source: .premium_stickers), for: context.window)
                     })
                 } else {
-                    self?.interactions?.sendAnimatedEmoji(item, info, nil)
+                    self?.interactions?.sendAnimatedEmoji(item, info, nil, rect)
                 }
                 _ = scrollToOnNextAppear.swap(info)
             case .status:
-                self?.interactions?.sendAnimatedEmoji(item, nil, timeout)
+                self?.interactions?.sendAnimatedEmoji(item, nil, timeout, rect)
             case .reactions:
-                self?.interactions?.sendAnimatedEmoji(item, nil, nil)
+                self?.interactions?.sendAnimatedEmoji(item, nil, nil, rect)
             }
             
         }, sendEmoji: { [weak self] emoji in

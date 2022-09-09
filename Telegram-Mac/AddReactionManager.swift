@@ -14,19 +14,31 @@ import TelegramCore
 import Postbox
 import ObjcUtils
 
-func playParapollicReactionAnimation(_ layer: CALayer, fromPoint: NSPoint, toPoint: NSPoint, window: Window) {
+func parabollicReactionAnimation(_ layer: InlineStickerItemLayer, fromPoint: NSPoint, toPoint: NSPoint, window: Window, completion: ((Bool)->Void)? = nil) {
     
     let view = View(frame: window.frame.size.bounds)
     view.isEventLess = true
+    view.flip = false
+    view.backgroundColor = .clear
     window.contentView?.addSubview(view)
+    
+    layer.removeFromSuperlayer()
+    layer.frame = CGRect(origin: toPoint.offsetBy(dx: -layer.frame.width/2, dy: -layer.frame.height/2), size: layer.frame.size)
+    
     view.layer?.addSublayer(layer)
     
     let transition = ContainedViewLayoutTransition.animated(duration: 0.3, curve: .easeInOut)
     
-    let keyFrames = generateParabollicMotionKeyframes(from: fromPoint, to: toPoint, elevation: 30)
+    let keyFrames = generateParabollicMotionKeyframes(from: fromPoint, to: toPoint, elevation: 50)
     
-    transition.animatePositionWithKeyframes(layer: layer, keyframes: keyFrames, removeOnCompletion: false, completion: { [weak view] _ in
-        view?.removeFromSuperview()
+    transition.animatePositionWithKeyframes(layer: layer, keyframes: keyFrames, removeOnCompletion: true, completion: { [weak view] completed in
+        CATransaction.begin()
+        completion?(completed)
+
+        CATransaction.commit()
+        DispatchQueue.main.async {
+            view?.removeFromSuperview()
+        }
     })
 }
 
@@ -142,7 +154,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
         
         private var selectionView : View?
         
-        required init(frame frameRect: NSRect, context: AccountContext, reaction: ContextReaction, add: @escaping(MessageReaction.Reaction, Bool)->Void) {
+        required init(frame frameRect: NSRect, context: AccountContext, reaction: ContextReaction, add: @escaping(MessageReaction.Reaction, Bool, NSRect?)->Void) {
             
             let size: NSSize = reaction.isSelected ? NSMakeSize(25, 24) : NSMakeSize(frameRect.width, 30)
             let rect = CGRect(origin: .zero, size: size)
@@ -196,8 +208,12 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
                     self?.apply(data, key: "select", policy: .framesCount(1))
                 }
             }))
-            set(handler: { _ in
-                add(reaction.value, true)
+            set(handler: { control in
+                if let window = control.window {
+                    let wrect = control.convert(control.frame.size.bounds, to: nil)
+                    let srect = window.convertToScreen(wrect)
+                    add(reaction.value, true, context.window.convertFromScreen(srect))
+                }
             }, for: .Click)
             
             contextMenu = {
@@ -349,7 +365,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
     private let backgroundColorView = View()
     private let shadowLayer = SimpleShapeLayer()
     
-    required init(frame frameRect: NSRect, context: AccountContext, list: [ContextReaction], add:@escaping(MessageReaction.Reaction, Bool)->Void, radiusLayer: CGFloat? = 15, revealReactions:((NSView & StickerFramesCollector)->Void)? = nil) {
+    required init(frame frameRect: NSRect, context: AccountContext, list: [ContextReaction], add:@escaping(MessageReaction.Reaction, Bool, NSRect?)->Void, radiusLayer: CGFloat? = 15, revealReactions:((NSView & StickerFramesCollector)->Void)? = nil) {
         self.list = list
         self.revealReactions = revealReactions
         self.radiusLayer = radiusLayer

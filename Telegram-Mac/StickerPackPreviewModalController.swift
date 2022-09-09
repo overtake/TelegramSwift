@@ -305,7 +305,7 @@ private class StickersModalView : View {
             let makeItem:(State.Collection)->TableRowItem = { collection in
                 switch source {
                 case .emoji:
-                    return EmojiesSectionRowItem(size, stableId: collections.count == 1 ? 0 : arc4random64(), context: arguments.context, revealed: true, installed: isInstalled(collection), info: collection.info, items: collection.items, mode: .preview, callback: { item, _, _ in
+                    return EmojiesSectionRowItem(size, stableId: collections.count == 1 ? 0 : arc4random64(), context: arguments.context, revealed: true, installed: isInstalled(collection), info: collection.info, items: collection.items, mode: .preview, callback: { item, _, _, _ in
                         arguments.setEmoji(item.file)
                     }, installPack: { _, _ in
                         arguments.addpack(source, collection, false)

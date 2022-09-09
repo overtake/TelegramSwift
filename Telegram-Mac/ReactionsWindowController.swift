@@ -197,7 +197,7 @@ final class ReactionsWindowController : NSObject {
         
         let interactions = EntertainmentInteractions(.emoji, peerId: message.id.peerId)
         
-        interactions.sendAnimatedEmoji = { [weak self] sticker, _, _ in
+        interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, fromRect in
             let value: UpdateMessageReaction
             if let bundle = sticker.file.stickerText {
                 value = .builtin(bundle)
@@ -210,7 +210,7 @@ final class ReactionsWindowController : NSObject {
                 })
             } else {
                 let updated = message.newReactions(with: value)
-                context.reactions.react(message.id, values: updated, storeAsRecentlyUsed: true)
+                context.reactions.react(message.id, values: updated, fromRect: fromRect, storeAsRecentlyUsed: true)
             }
            
             self?.close(animated: true)

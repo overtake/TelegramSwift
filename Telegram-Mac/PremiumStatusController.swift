@@ -43,7 +43,7 @@ final class PremiumStatusController : TelegramViewController {
         
         let interactions = EntertainmentInteractions(.emoji, peerId: context.peerId)
         
-        interactions.sendAnimatedEmoji = { [weak self] item, _, timeout in
+        interactions.sendAnimatedEmoji = { [weak self] item, _, timeout, rect in
             self?.callback(item.file, timeout)
             self?.closePopover()
         }
@@ -109,7 +109,7 @@ final class SetupQuickReactionController : TelegramViewController {
         
         let interactions = EntertainmentInteractions(.emoji, peerId: context.peerId)
         
-        interactions.sendAnimatedEmoji = { [weak self] item, _, _ in
+        interactions.sendAnimatedEmoji = { [weak self] item, _, _, rect in
             self?.callback(item.file)
             self?.closePopover()
         }

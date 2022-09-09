@@ -85,7 +85,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     let selectedItems: [SelectedItem]
     let stickerItems: [StickerPackItem]
     let context: AccountContext
-    let callback:(StickerPackItem, StickerPackCollectionInfo?, Int32?)->Void
+    let callback:(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void
     let itemSize: NSSize
     let info: StickerPackCollectionInfo?
     let viewSet: ((StickerPackCollectionInfo)->Void)?
@@ -110,7 +110,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
     }
     let mode: Mode
     
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], mode: Mode = .panel, selectedItems:[SelectedItem] = [], callback:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, revealed: Bool, installed: Bool, info: StickerPackCollectionInfo?, items: [StickerPackItem], mode: Mode = .panel, selectedItems:[SelectedItem] = [], callback:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void, viewSet:((StickerPackCollectionInfo)->Void)? = nil, showAllItems:(()->Void)? = nil, openPremium:(()->Void)? = nil, installPack:((StickerPackCollectionInfo, [StickerPackItem])->Void)? = nil) {
         self.itemSize = NSMakeSize(41, 34)
         self.info = info
         self.mode = mode
@@ -281,7 +281,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
 
                     for hour in hours {
                         items.append(ContextMenuItem(strings().customStatusMenuTimer(timeIntervalString(Int(hour))), handler: { [weak self] in
-                            self?.callback(sticker, self?.info, hour)
+                            self?.callback(sticker, self?.info, hour, nil)
                         }))
                     }
                 }
@@ -552,8 +552,11 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         guard let item = self.item as? EmojiesSectionRowItem else {
             return
         }
-        if let first = currentDownItem, let current = first.1.item {
-            item.callback(current, item.info, nil)
+        if let first = currentDownItem, let current = first.1.item, let window = self.window {
+            let wrect = self.contentView.convert(first.1.rect, to: nil)
+            let srect = window.convertToScreen(wrect)
+            
+            item.callback(current, item.info, nil, item.context.window.convertFromScreen(srect))
         }
     }
     
