@@ -260,6 +260,24 @@ func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowe
         updateState { current in
             var current = current
             current.chatReactions = value
+            if value == .some {
+                var list = current.reactions
+                list = list.filter({ reaction in
+                    if let available = current.availableReactions {
+                        if available.enabled.count <= 2 {
+                            return false
+                        }
+                        if reaction == available.enabled[0].value {
+                            return true
+                        }
+                        if reaction == available.enabled[1].value {
+                            return true
+                        }
+                    }
+                    return false
+                })
+                current.reactions = list
+            }
             return current
         }
     })
@@ -284,9 +302,7 @@ func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowe
                 case .all:
                     updated = .all
                 case .some:
-                    updated = .limited(state.availableReactions?.enabled.map { value in
-                        return value.value
-                    } ?? [])
+                    updated = .limited(state.reactions)
                 }
             } else {
                 updated = .limited(state.availableReactions?.enabled.map { value in

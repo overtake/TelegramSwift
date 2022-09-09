@@ -1760,7 +1760,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                         case .all:
                             text = strings().peerInfoReactionsAll
                         case let .limited(count):
-                            text = strings().peerInfoReactionsPart("\(count)", "\(availableReactions.enabled.count)")
+                            text = strings().peerInfoReactionsPart("\(count.count)", "\(availableReactions.enabled.count)")
                         case .empty:
                             text = strings().peerInfoReactionsDisabled
                         }
@@ -1811,15 +1811,14 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 }
                 
                 if access.canEditGroupInfo {
-                    let cachedGroupData = view.cachedData as? CachedGroupData
                                         
                     let text: String
-                    if let allowed = cachedGroupData?.allowedReactions.knownValue, let availableReactions = availableReactions {
+                    if let allowed = cachedChannelData.allowedReactions.knownValue, let availableReactions = availableReactions {
                         switch allowed {
                         case .all:
                             text = strings().peerInfoReactionsAll
                         case let .limited(count):
-                            text = strings().peerInfoReactionsPart("\(count)", "\(availableReactions.enabled.count)")
+                            text = strings().peerInfoReactionsPart("\(count.count)", "\(availableReactions.enabled.count)")
                         case .empty:
                             text = strings().peerInfoReactionsDisabled
                         }

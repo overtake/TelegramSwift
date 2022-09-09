@@ -2852,8 +2852,8 @@ class ChatRowItem: TableRowItem {
                 }
                 
                 
-                let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem in
-                    context.reactions.react(message.id, values: message.newReactions(with: value.toUpdate()), storeAsRecentlyUsed: true)
+                let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem, fromRect in
+                    context.reactions.react(message.id, values: message.newReactions(with: value.toUpdate()), fromRect: fromRect, storeAsRecentlyUsed: true)
                 }, radiusLayer: nil, revealReactions: reveal)
                 
                 

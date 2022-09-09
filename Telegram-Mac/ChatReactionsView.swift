@@ -609,10 +609,15 @@ final class ChatReactionsLayout {
     }
 }
 
-protocol ReactionViewImpl {
+protocol ReactionViewImpl : class {
     func update(with reaction: ChatReactionsLayout.Reaction, account: Account, animated: Bool)
     func updateLayout(size: CGSize, transition: ContainedViewLayoutTransition)
     func playEffect()
+    
+    func getView()-> NSView
+    
+    func lockVisibility()
+    func unlockVisibility()
 }
 
 class AnimationLayerContainer : View {
@@ -940,6 +945,17 @@ final class ChatReactionsView : View {
             return self.reaction?.value.value == reaction.value.value
         }
         
+        func getView() -> NSView {
+            return self.imageView
+        }
+        
+        func lockVisibility() {
+            self.imageView.isHidden = true
+        }
+        func unlockVisibility() {
+            self.imageView.isHidden = false
+        }
+        
         required init?(coder: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
@@ -994,6 +1010,17 @@ final class ChatReactionsView : View {
             super.init(frame: frameRect)
             self.userInteractionEnabled = false
             self.addSubview(imageView)
+        }
+        
+        func getView() -> NSView {
+            return self.imageView
+        }
+        
+        func lockVisibility() {
+            self.imageView.isHidden = true
+        }
+        func unlockVisibility() {
+            self.imageView.isHidden = false
         }
         
         func update(with reaction: ChatReactionsLayout.Reaction, account: Account, animated: Bool) {
@@ -1280,12 +1307,37 @@ final class ChatReactionsView : View {
             return prev == nil
         }
         
-        DispatchQueue.main.async { [weak self] in
-            for selected in new {
-                if layout.context.reactions.interactive?.messageId == layout.message.id {
-                    selected.runEffect(selected.value.value)
-                    let view = self?.getView(selected.value.value)
-                    view?.playEffect()
+        let interactive = layout.context.reactions.interactive
+        if let interactive = interactive {
+            if let selected = new.first {
+                if interactive.messageId == layout.message.id {
+                    let view = self.getView(selected.value.value)
+                    if let view = view {
+                        if let fromRect = interactive.rect {
+                            let current = view.getView()
+                            
+                            let layer = selected.getInlineLayer(selected.mode)
+
+                            let toRect = current.convert(current.frame.size.bounds, to: nil)
+                            
+                            let from = fromRect.origin.offsetBy(dx: fromRect.width / 2, dy: fromRect.height / 2)
+                            let to = toRect.origin.offsetBy(dx: toRect.width / 2, dy: toRect.height / 2)
+
+                            view.lockVisibility()
+                            
+                            let completed: (Bool)->Void = { [weak view] _ in
+                                view?.unlockVisibility()
+                                DispatchQueue.main.async {
+                                    view?.playEffect()
+                                    selected.runEffect(selected.value.value)
+                                }
+                            }
+                            parabollicReactionAnimation(layer, fromPoint: from, toPoint: to, window: layout.context.window, completion: completed)
+                        } else {
+                            view.playEffect()
+                            selected.runEffect(selected.value.value)
+                        }
+                    }
                 }
             }
         }
