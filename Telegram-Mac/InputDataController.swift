@@ -931,7 +931,6 @@ class InputDataController: GenericViewController<InputDataView> {
     deinit {
         disposable.dispose()
         appearanceDisposablet.dispose()
-        onDeinit?()
     }
     
 }
