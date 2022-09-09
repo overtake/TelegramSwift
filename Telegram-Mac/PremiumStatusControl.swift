@@ -153,6 +153,16 @@ final class PremiumStatusControl : Control {
                     self.animateLayer = nil
                 }
                 current = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: frame.size, playPolicy: isBig && !playTwice ? .loop : .playCount(2), checkStatus: true, getColors: getColors)
+                
+                current.fileDidUpdate = { file in
+                    if isDefaultStatusesPackId(file?.emojiReference), color != nil {
+                        self.layer?.opacity = 0.4
+                    } else {
+                        self.layer?.opacity = 1.0
+                    }
+                }
+                current.fileDidUpdate?(current.file)
+                
                 current.stopped = previousStopped
                 current.superview = self
                 self.animateLayer = current
