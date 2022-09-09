@@ -1022,7 +1022,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     }
     
     private func poupDidClose(_ id: String) {
-        self.sendEvent(name: "popup_closed", data: "{id:\"\(id)\"}")
+        self.sendEvent(name: "popup_closed", data: "{button_id:\"\(id)\"}")
     }
     
     func sendEvent(name: String, data: String?) {

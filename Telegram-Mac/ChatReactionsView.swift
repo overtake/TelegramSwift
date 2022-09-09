@@ -1282,7 +1282,7 @@ final class ChatReactionsView : View {
         
         DispatchQueue.main.async { [weak self] in
             for selected in new {
-                if layout.context.reactions.interactive == layout.message.id {
+                if layout.context.reactions.interactive?.messageId == layout.message.id {
                     selected.runEffect(selected.value.value)
                     let view = self?.getView(selected.value.value)
                     view?.playEffect()
