@@ -890,7 +890,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
         actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, appearanceSignal).start(next: { pref, layout, peer, _ in
             updateState { state in
-                let state: State = .init(proxySettings: pref.0, connectionStatus: pref.1, splitState: layout, peer: peer, mode: mode)
+                let state: State = .init(proxySettings: pref.0, connectionStatus: pref.1, splitState: layout, searchState: state?.searchState ?? .None, peer: peer, mode: mode)
                 return state
             }
         }))
