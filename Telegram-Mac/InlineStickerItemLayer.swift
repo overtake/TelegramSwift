@@ -341,7 +341,12 @@ final class InlineStickerItemLayer : SimpleLayer {
     private let delayDisposable = MetaDisposable()
     
     
-    private(set) var file: TelegramMediaFile?
+    private(set) var file: TelegramMediaFile? {
+        didSet {
+            self.fileDidUpdate?(file)
+        }
+    }
+    var fileDidUpdate:((TelegramMediaFile?)->Void)?
     
     private var preview: CGImage?
     
