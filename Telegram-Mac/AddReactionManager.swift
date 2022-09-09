@@ -29,7 +29,7 @@ func parabollicReactionAnimation(_ layer: InlineStickerItemLayer, fromPoint: NSP
     
     let transition = ContainedViewLayoutTransition.animated(duration: 0.3, curve: .easeInOut)
     
-    let keyFrames = generateParabollicMotionKeyframes(from: fromPoint, to: toPoint, elevation: 50)
+    let keyFrames = generateParabollicMotionKeyframes(from: fromPoint, to: toPoint, elevation: 30)
     
     transition.animatePositionWithKeyframes(layer: layer, keyframes: keyFrames, removeOnCompletion: true, completion: { [weak view] completed in
         CATransaction.begin()
