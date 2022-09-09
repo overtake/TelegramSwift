@@ -1307,41 +1307,42 @@ final class ChatReactionsView : View {
             return prev == nil
         }
         
-        let interactive = layout.context.reactions.interactive
-        if let interactive = interactive {
-            if let selected = new.first {
-                if interactive.messageId == layout.message.id {
-                    let view = self.getView(selected.value.value)
-                    if let view = view {
-                        if let fromRect = interactive.rect {
-                            let current = view.getView()
-                            
-                            let layer = selected.getInlineLayer(selected.mode)
+        DispatchQueue.main.async {
+            let interactive = layout.context.reactions.interactive
+            if let interactive = interactive {
+                if let selected = new.first {
+                    if interactive.messageId == layout.message.id {
+                        let view = self.getView(selected.value.value)
+                        if let view = view {
+                            if let fromRect = interactive.rect {
+                                let current = view.getView()
+                                
+                                let layer = selected.getInlineLayer(selected.mode)
 
-                            let toRect = current.convert(current.frame.size.bounds, to: nil)
-                            
-                            let from = fromRect.origin.offsetBy(dx: fromRect.width / 2, dy: fromRect.height / 2)
-                            let to = toRect.origin.offsetBy(dx: toRect.width / 2, dy: toRect.height / 2)
+                                let toRect = current.convert(current.frame.size.bounds, to: nil)
+                                
+                                let from = fromRect.origin.offsetBy(dx: fromRect.width / 2, dy: fromRect.height / 2)
+                                let to = toRect.origin.offsetBy(dx: toRect.width / 2, dy: toRect.height / 2)
 
-                            view.lockVisibility()
-                            
-                            let completed: (Bool)->Void = { [weak view] _ in
-                                view?.unlockVisibility()
-                                DispatchQueue.main.async {
-                                    view?.playEffect()
-                                    selected.runEffect(selected.value.value)
+                                view.lockVisibility()
+                                
+                                let completed: (Bool)->Void = { [weak view] _ in
+                                    view?.unlockVisibility()
+                                    DispatchQueue.main.async {
+                                        view?.playEffect()
+                                        selected.runEffect(selected.value.value)
+                                    }
                                 }
+                                parabollicReactionAnimation(layer, fromPoint: from, toPoint: to, window: layout.context.window, completion: completed)
+                            } else {
+                                view.playEffect()
+                                selected.runEffect(selected.value.value)
                             }
-                            parabollicReactionAnimation(layer, fromPoint: from, toPoint: to, window: layout.context.window, completion: completed)
-                        } else {
-                            view.playEffect()
-                            selected.runEffect(selected.value.value)
                         }
                     }
                 }
             }
         }
-        
     }
     
     func playSeenReactionEffect(_ checkUnseen: Bool) {
