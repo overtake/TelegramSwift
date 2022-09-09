@@ -975,14 +975,13 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
         
         genericView.searchView.searchInteractions = SearchInteractions({ [weak self] state, animated in
-            guard let `self` = self else {return}
             switch state.state {
             case .Focus:
-                assert(self.searchController == nil)
-                self.showSearchController(animated: animated)
+                assert(self?.searchController == nil)
+                self?.showSearchController(animated: animated)
                 
             case .None:
-                self.hideSearchController(animated: animated)
+                self?.hideSearchController(animated: animated)
             }
             updateState { current in
                 var current = current
@@ -990,8 +989,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 return current
             }
         }, { [weak self] state in
-            guard let `self` = self else {return}
-            self.searchController?.request(with: state.request)
+            updateState { current in
+                var current = current
+                current?.searchState = state.state
+                return current
+            }
+            self?.searchController?.request(with: state.request)
         }, responderModified: { [weak self] state in
             self?.context.isInGlobalSearch = state.responder
         })

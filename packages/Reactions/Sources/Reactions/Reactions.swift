@@ -1,6 +1,7 @@
 import TelegramCore
 import SwiftSignalKit
 import Postbox
+import Foundation
 
 public final class Reactions {
     
@@ -10,7 +11,13 @@ public final class Reactions {
     private let downloadable = DisposableSet()
     private let state: Promise<AvailableReactions?> = Promise()
     private let reactable = DisposableDict<MessageId>()
-    private let _isInteractive = Atomic<MessageId?>(value: nil)
+    
+    public struct Interactive {
+        public let messageId: MessageId
+        public let rect: NSRect?
+    }
+    
+    private let _isInteractive = Atomic<Interactive?>(value: nil)
     private(set) public var available: AvailableReactions?
     public var stateValue: Signal<AvailableReactions?, NoError> {
         return state.get() |> distinctUntilChanged |> deliverOnMainQueue
@@ -18,7 +25,7 @@ public final class Reactions {
     
     public var isPremium: Bool = false
     
-    public var interactive: MessageId? {
+    public var interactive: Interactive? {
         return _isInteractive.swap(nil)
     }
     
@@ -32,8 +39,8 @@ public final class Reactions {
         }))
     }
     
-    public func react(_ messageId: MessageId, values: [UpdateMessageReaction], storeAsRecentlyUsed: Bool = false) {
-        _ = _isInteractive.swap(messageId)
+    public func react(_ messageId: MessageId, values: [UpdateMessageReaction], fromRect: NSRect? = nil, storeAsRecentlyUsed: Bool = false) {
+        _ = _isInteractive.swap(.init(messageId: messageId, rect: fromRect))
         reactable.set(updateMessageReactionsInteractively(account: self.engine.account, messageId: messageId, reactions: values, isLarge: false, storeAsRecentlyUsed: storeAsRecentlyUsed).start(), forKey: messageId)
     }
     

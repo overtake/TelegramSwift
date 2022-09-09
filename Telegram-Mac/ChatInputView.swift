@@ -213,7 +213,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         blockedActionView?.style = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accent,backgroundColor: theme.colors.background, highlightColor: theme.colors.grayBackground)
         bottomView.backgroundColor = theme.colors.background
         bottomView.documentView?.background = theme.colors.background
-        replyMarkupModel?.layout()
+        self.needUpdateReplyMarkup(with: chatInteraction.presentation, false)
+    
         accessory.update(with: chatInteraction.presentation, context: chatInteraction.context, animated: false)
         accessory.backgroundColor = theme.colors.background
         accessory.container.backgroundColor = theme.colors.background

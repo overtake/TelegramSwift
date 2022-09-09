@@ -910,12 +910,13 @@ final class AnimatedEmojiesView : View {
         }
 
         
-        guard let item = item, let view = item.view else {
+        guard let item = item else {
             return
         }
+        let viewPoint = packsView.rectOf(item: item).origin
         
         let point = packsView.clipView.destination ?? packsView.contentOffset
-        let rect = NSMakeRect(view.frame.origin.y - point.y, 5, item.height, packsView.frame.height)
+        let rect = NSMakeRect(viewPoint.y - point.y, 5, item.height, packsView.frame.height)
         
         selectionView.layer?.cornerRadius = item.height == item.width && item.index != 1 ? .cornerRadius : item.width / 2
         if mode == .reactions {
@@ -1008,8 +1009,8 @@ final class AnimatedEmojiesView : View {
         let item = self.packsView.item(stableId: InputDataEntryId.custom(_id_pack(info.id.id)))
         if let item = item {
             _ = self.packsView.select(item: item)
-            self.packsView.scroll(to: .center(id: item.stableId, innerId: nil, animated: true, focus: .init(focus: false), inset: 0))
-            tableView.scroll(to: .top(id: InputDataEntryId.custom(_id_aemoji_block(info.id.id)), innerId: nil, animated: animated, focus: .init(focus: false), inset: 0))
+            self.packsView.scroll(to: .center(id: item.stableId, innerId: nil, animated: animated, focus: .init(focus: false), inset: 0))
+            self.tableView.scroll(to: .top(id: InputDataEntryId.custom(_id_aemoji_block(info.id.id)), innerId: nil, animated: animated, focus: .init(focus: false), inset: 0))
             
             updateSelectionState(animated: animated)
 
@@ -1024,7 +1025,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
     private weak var chatInteraction: ChatInteraction?
     
     private var updateState: (((State) -> State) -> Void)? = nil
-
+    private var scrollOnAppear:(()->Void)? = nil
     
     var makeSearchCommand:((ESearchCommand)->Void)?
     private let searchValue = ValuePromise<SearchState>(.init(state: .None, request: nil))
@@ -1151,7 +1152,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         
         
         let scrollToOnNextTransaction: Atomic<StickerPackCollectionInfo?> = Atomic(value: nil)
-        
+        let scrollToOnNextAppear: Atomic<StickerPackCollectionInfo?> = Atomic(value: nil)
+
         let context = self.context
         let mode = self.mode
         let actionsDisposable = DisposableSet()
@@ -1168,6 +1170,12 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             updateState(f)
         }
         
+        self.scrollOnAppear = { [weak self] in
+            if let info = scrollToOnNextAppear.swap(nil) {
+                self?.genericView.scroll(to: info, animated: false)
+            }
+        }
+        
         let arguments = Arguments(context: context, mode: self.mode, send: { [weak self] item, info, timeout in
             switch mode {
             case .emoji:
@@ -1178,6 +1186,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 } else {
                     self?.interactions?.sendAnimatedEmoji(item, info, nil)
                 }
+                _ = scrollToOnNextAppear.swap(info)
             case .status:
                 self?.interactions?.sendAnimatedEmoji(item, nil, timeout)
             case .reactions:
@@ -1288,7 +1297,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             selectUpdater()
 
             if let info = scrollToOnNextTransaction.swap(nil) {
-                self?.genericView.scroll(to: info, animated: values.sections.animated)
+                self?.genericView.scroll(to: info, animated: false)
             }
             
             self?.updatePackReorder(values.state.sections)
@@ -1483,6 +1492,11 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
              _ = previousPacks.swap([])
          }
         
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.scrollOnAppear?()
     }
     
     func update(with interactions:EntertainmentInteractions?, chatInteraction: ChatInteraction) {
