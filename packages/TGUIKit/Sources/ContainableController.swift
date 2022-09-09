@@ -242,6 +242,16 @@ public extension ContainedViewLayoutTransition {
             })
         }
     }
+    
+    func animatePositionWithKeyframes(layer: CALayer, keyframes: [CGPoint], removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
+           switch self {
+           case .immediate:
+               completion?(true)
+           case let .animated(duration, curve):
+               layer.animateKeyframes(values: keyframes.map(NSValue.init(point:)), duration: duration, keyPath: "position", timingFunction: curve.timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
+           }
+       }
+
 }
 
 public protocol ContainableController: class {

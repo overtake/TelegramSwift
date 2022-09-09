@@ -649,7 +649,7 @@ final class InlineStickerItemLayer : SimpleLayer {
 
                     if let image = result?.image {
                         self.preview = image
-                        self.isPreviousPreview = true
+                        self.isPreviousPreview = false
                     }
                 }
                
@@ -681,7 +681,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                             
                             current.frame = size.bounds.focus(aspectSize)
                             
-                            self?.isPreviousPreview = true
+                            self?.isPreviousPreview = false
 
                         } else {
                             if let shimmer = self?.shimmer {
