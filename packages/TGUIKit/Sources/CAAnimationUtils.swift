@@ -688,6 +688,44 @@ public extension CALayer {
         self.add(animation, forKey: "position")
     }
     
+    func animateKeyframes(values: [AnyObject], duration: Double, keyPath: String, timingFunction: CAMediaTimingFunctionName = CAMediaTimingFunctionName.easeOut, mediaTimingFunction: CAMediaTimingFunction? = nil, removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
+        let k = Float(1)
+        var speed: Float = 1.0
+        if k != 0 && k != 1 {
+            speed = Float(1.0) / k
+        }
+        
+        let animation = CAKeyframeAnimation(keyPath: keyPath)
+        animation.values = values
+        var keyTimes: [NSNumber] = []
+        for i in 0 ..< values.count {
+            if i == 0 {
+                keyTimes.append(0.0)
+            } else if i == values.count - 1 {
+                keyTimes.append(1.0)
+            } else {
+                keyTimes.append((Double(i) / Double(values.count - 1)) as NSNumber)
+            }
+        }
+        animation.keyTimes = keyTimes
+        animation.speed = speed
+        animation.duration = duration
+        animation.isAdditive = additive
+        if let mediaTimingFunction = mediaTimingFunction {
+            animation.timingFunction = mediaTimingFunction
+        } else {
+            animation.timingFunction = CAMediaTimingFunction(name: timingFunction)
+        }
+        animation.isRemovedOnCompletion = removeOnCompletion
+        if let completion = completion {
+            animation.delegate = CALayerAnimationDelegate(completion: completion)
+        }
+        
+//        adjustFrameRate(animation: animation)
+        
+        self.add(animation, forKey: keyPath)
+    }
+
     
     
     /*

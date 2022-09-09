@@ -89,24 +89,141 @@ final class FilterTabsView : View {
     }
 }
 
+private struct State : Equatable {
+    var proxySettings: ProxySettings
+    var connectionStatus: ConnectionStatus
+    var splitState: SplitViewState
+    var searchState: SearchFieldState = .None
+    var peer: PeerEquatable?
+    var mode: PeerListMode
+}
+
 class PeerListContainerView : View {
-    private let backgroundView = BackgroundView(frame: NSZeroRect)
     
-    private var downloads: DownloadsControl?
-    
-    var tableView = TableView(frame:NSZeroRect, drawBorder: true) {
-        didSet {
-            oldValue.removeFromSuperview()
-            addSubview(tableView)
+    private final class ProxyView : Control {
+        fileprivate let button:ImageButton = ImageButton()
+        private var connecting: ProgressIndicator?
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(button)
+            button.userInteractionEnabled = false
+            button.isEventLess = true
+        }
+        
+        func update(_ pref: ProxySettings, connection: ConnectionStatus, animated: Bool) {
+            switch connection {
+            case .connecting, .waitingForNetwork:
+             //   proxyConnecting.isHidden = !pref.enabled
+                button.set(image: pref.enabled ? theme.icons.proxyState : theme.icons.proxyEnable, for: .Normal)
+            case .online, .updating:
+                if let view = connecting {
+                    performSubviewRemoval(view, animated: animated)
+                    self.connecting = nil
+                }
+                if pref.enabled  {
+                    button.set(image: theme.icons.proxyEnabled, for: .Normal)
+                } else {
+                    button.set(image: theme.icons.proxyEnable, for: .Normal)
+                }
+            }
+            button.sizeToFit()
+            needsLayout = true
+        }
+        
+        override func layout() {
+            super.layout()
+            button.center()
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func updateLocalizationAndTheme(theme: PresentationTheme) {
+            super.updateLocalizationAndTheme(theme: theme)
+            connecting?.progressColor = theme.colors.accentIcon
         }
     }
-    private let searchContainer: View = View()
+    
+    private final class StatusView : Control {
+        fileprivate var button:PremiumStatusControl?
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+        }
+        
+        private var peer: Peer?
+        
+        func update(_ peer: Peer, context: AccountContext, animated: Bool) {
+            let statusUpdated = self.peer?.emojiStatus?.fileId != peer.emojiStatus?.fileId && self.peer != nil
+            let control = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, isSelected: false, isBig: true, playTwice: true, cached: self.button, animated: animated)
+            if let control = control {
+                self.button = control
+                addSubview(control)
+                control.center()
+            } else {
+                self.button?.removeFromSuperview()
+                self.button = nil
+            }
+            self.peer = peer
+            
+            if statusUpdated, let status = peer.emojiStatus {
+                self.playStatusEffect(status, context: context)
+            }
+        }
+        
+        private func playStatusEffect(_ status: PeerEmojiStatus, context: AccountContext) -> Void {
+            self.playAnimation(status.fileId, context: context)
+        }
+        
+        private func playAnimation(_  fileId: Int64, context: AccountContext) {
+            guard let control = button, visibleRect != .zero, window != nil else {
+                return
+            }
+            
+            let player = CustomReactionEffectView(frame: NSMakeSize(160, 160).bounds, context: context, fileId: fileId)
+            
+            player.isEventLess = true
+            
+            player.triggerOnFinish = { [weak player] in
+                player?.removeFromSuperview()
+            }
+                    
+            let controlRect = self.convert(control.frame, to: window?.contentView?.superview)
+            
+            let rect = CGRect(origin: CGPoint(x: controlRect.midX - player.frame.width / 2, y: controlRect.midY - player.frame.height / 2), size: player.frame.size)
+            
+            player.frame = rect
+            
+            window?.contentView?.superview?.addSubview(player)
+            
+        }
+        
+        override func layout() {
+            super.layout()
+            button?.center()
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func updateLocalizationAndTheme(theme: PresentationTheme) {
+            super.updateLocalizationAndTheme(theme: theme)
+        }
+    }
+
+    
+    private let backgroundView = BackgroundView(frame: NSZeroRect)
+    
+    let tableView = TableView(frame:NSZeroRect, drawBorder: true)
+    private let containerView: View = View()
     
     let searchView:SearchView = SearchView(frame:NSMakeRect(10, 0, 0, 0))
     let compose:ImageButton = ImageButton()
-    fileprivate let proxyButton:ImageButton = ImageButton()
-    private let proxyConnecting: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 11, 11))
-    private var searchState: SearchFieldState = .None
+    
+    private var premiumStatus: StatusView?
+    private var downloads: DownloadsControl?
+    private var proxy: ProxyView?
     
     var openSharedMediaWithToken:((PeerId?, MessageTags?)->Void)? = nil
     
@@ -124,7 +241,7 @@ class PeerListContainerView : View {
             case .filter:
                 compose.isHidden = true
             }
-            needsLayout = true
+            updateLayout(self.frame.size, transition: .immediate)
         }
     }
     required init(frame frameRect: NSRect) {
@@ -132,54 +249,106 @@ class PeerListContainerView : View {
         self.border = [.Right]
         compose.autohighlight = false
         autoresizesSubviews = false
-        addSubview(searchContainer)
+        addSubview(containerView)
         addSubview(tableView)
-        searchContainer.addSubview(compose)
-        searchContainer.addSubview(proxyButton)
-        searchContainer.addSubview(searchView)
-        proxyButton.addSubview(proxyConnecting)
-        setFrameSize(frameRect.size)
-        updateLocalizationAndTheme(theme: theme)
-        proxyButton.disableActions()
+        containerView.addSubview(compose)
+        containerView.addSubview(searchView)
         addSubview(backgroundView)
         backgroundView.isHidden = true
-        
-
         
         tableView.getBackgroundColor = {
             .clear
         }
-        layout()
-    }
-    
-    fileprivate func updateProxyPref(_ pref: ProxySettings, _ connection: ConnectionStatus) {
-        proxyButton.isHidden = pref.servers.isEmpty && pref.effectiveActiveServer == nil
-        switch connection {
-        case .connecting, .waitingForNetwork:
-            proxyConnecting.isHidden = !pref.enabled
-            proxyButton.set(image: pref.enabled ? theme.icons.proxyState : theme.icons.proxyEnable, for: .Normal)
-        case .online, .updating:
-            proxyConnecting.isHidden = true
-            if pref.enabled  {
-                proxyButton.set(image: theme.icons.proxyEnabled, for: .Normal)
-            } else {
-                proxyButton.set(image: theme.icons.proxyEnable, for: .Normal)
-            }
-        }
-        proxyConnecting.isEventLess = true
-        proxyConnecting.userInteractionEnabled = false
-        _ = proxyButton.sizeToFit()
-        proxyConnecting.centerX()
-        needsLayout = true
-    }
-    
-    
-    func searchStateChanged(_ state: SearchFieldState, animated: Bool, updateSearchTags: @escaping(SearchTags)->Void, updatePeerTag:@escaping(@escaping(Peer?)->Void)->Void, updateMessageTags: @escaping(@escaping(MessageTags?)->Void)->Void) {
-        self.searchState = state
-        searchView.change(size: NSMakeSize(state == .Focus || !mode.isPlain ? frame.width - searchView.frame.minX * 2 : (frame.width - (36 + compose.frame.width) - (proxyButton.isHidden ? 0 : proxyButton.frame.width + 12)), 30), animated: animated)
-        compose.change(opacity: state == .Focus ? 0 : 1, animated: animated)
-        proxyButton.change(opacity: state == .Focus ? 0 : 1, animated: animated)
+        updateLocalizationAndTheme(theme: theme)
         
+    }
+    
+    private var state: State?
+    
+    
+    var openProxy:((Control)->Void)? = nil
+    var openStatus:((Control)->Void)? = nil
+
+    fileprivate func updateState(_ state: State, context: AccountContext, animated: Bool) {
+        
+        let animated = animated && self.state?.splitState == state.splitState && self.state != nil
+        self.state = state
+        
+        self.searchView.isHidden = state.splitState == .minimisize
+        
+        let componentSize = NSMakeSize(40, 30)
+        
+        var controlPoint = NSMakePoint(frame.width - 12 - compose.frame.width, floorToScreenPixels(backingScaleFactor, (containerView.frame.height - componentSize.height)/2.0))
+        
+        let hasControls = state.splitState != .minimisize && state.searchState != .Focus && mode.isPlain
+        
+        let hasProxy = (!state.proxySettings.servers.isEmpty || state.proxySettings.effectiveActiveServer != nil) && hasControls
+        
+        let hasStatus = state.peer?.peer.isPremium ?? false && hasControls
+        
+        if hasProxy {
+            controlPoint.x -= componentSize.width
+            
+            let current: ProxyView
+            if let view = self.proxy {
+                current = view
+            } else {
+                current = ProxyView(frame: CGRect(origin: controlPoint, size: componentSize))
+                self.proxy = current
+                self.containerView.addSubview(current, positioned: .below, relativeTo: searchView)
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+                current.set(handler: { [weak self] control in
+                    self?.openProxy?(control)
+                }, for: .Click)
+            }
+            current.update(state.proxySettings, connection: state.connectionStatus, animated: animated)
+            
+        } else if let view = self.proxy {
+            performSubviewRemoval(view, animated: animated)
+            self.proxy = nil
+        }
+        
+        if hasStatus, let peer = state.peer?.peer {
+            
+            controlPoint.x -= componentSize.width
+            
+            let current: StatusView
+            if let view = self.premiumStatus {
+                current = view
+            } else {
+                current = StatusView(frame: CGRect(origin: controlPoint, size: componentSize))
+                self.premiumStatus = current
+                self.containerView.addSubview(current, positioned: .below, relativeTo: searchView)
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+                current.set(handler: { [weak self] control in
+                    self?.openStatus?(control)
+                }, for: .Click)
+            }
+            current.update(peer, context: context, animated: animated)
+            
+        } else if let view = self.premiumStatus {
+            performSubviewRemoval(view, animated: animated)
+            self.premiumStatus = nil
+        }
+        
+        
+        let transition: ContainedViewLayoutTransition
+        if animated {
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        } else {
+            transition = .immediate
+        }
+  
+        self.updateLayout(self.frame.size, transition: transition)
+    }
+    
+    
+    fileprivate func searchStateChanged(_ state: State, context: AccountContext, animated: Bool, updateSearchTags: @escaping(SearchTags)->Void, updatePeerTag:@escaping(@escaping(Peer?)->Void)->Void, updateMessageTags: @escaping(@escaping(MessageTags?)->Void)->Void) {
+                        
         var currentTag: MessageTags?
         var currentPeerTag: Peer?
         
@@ -213,7 +382,7 @@ class PeerListContainerView : View {
             return (values, image)
         }
         
-        switch state {
+        switch state.searchState {
         case .Focus:
             searchView.customSearchControl = CustomSearchController(clickHandler: { [weak self] control, updateTitle in
                 
@@ -318,6 +487,8 @@ class PeerListContainerView : View {
         case .None:
             searchView.customSearchControl = nil
         }
+        
+        self.updateState(state, context: context, animated: animated)
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -330,9 +501,6 @@ class PeerListContainerView : View {
         compose.set(image: theme.icons.composeNewChat, for: .Hover)
         compose.set(image: theme.icons.composeNewChatActive, for: .Highlight)
         compose.layer?.cornerRadius = .cornerRadius
-        compose.setFrameSize(NSMakeSize(40, 30))
-        proxyConnecting.progressColor = theme.colors.accentIcon
-//        proxyConnecting.lineWidth = 1.0
         super.updateLocalizationAndTheme(theme: theme)
     }
     
@@ -342,6 +510,15 @@ class PeerListContainerView : View {
 
     override func layout() {
         super.layout()
+        self.updateLayout(frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(_ size: NSSize, transition: ContainedViewLayoutTransition) {
+        
+        
+        guard let state = self.state else {
+            return
+        }
         
         var offset: CGFloat
         switch theme.controllerBackgroundMode {
@@ -353,45 +530,79 @@ class PeerListContainerView : View {
             offset = 50
         }
         
-        if frame.width < 200 {
+        if state.splitState == .minimisize {
             switch self.mode {
             case .folder:
                 offset = 0
-                
             default:
                 break
             }
         }
         
-        searchContainer.frame = NSMakeRect(0, 0, frame.width, offset)
+        let componentSize = NSMakeSize(40, 30)
+        
+        transition.updateFrame(view: self.containerView, frame: NSMakeRect(0, 0, size.width, offset))
 
+        var searchWidth = (size.width - 10 * 2)
         
-        searchView.setFrameSize(NSMakeSize(searchState == .Focus || !mode.isPlain ? frame.width - searchView.frame.minX * 2 : (frame.width - (36 + compose.frame.width) - (proxyButton.isHidden ? 0 : proxyButton.frame.width + 12)), 30))
-        
-        
-        tableView.setFrameSize(frame.width, frame.height - offset)
-        
-        searchView.isHidden = frame.width < 200
-        if searchView.isHidden {
-            compose.center()
-            proxyButton.setFrameOrigin(-proxyButton.frame.width, 0)
-        } else {
-            compose.setFrameOrigin(searchContainer.frame.width - 12 - compose.frame.width, floorToScreenPixels(backingScaleFactor, (searchContainer.frame.height - compose.frame.height)/2.0))
-            proxyButton.setFrameOrigin(searchContainer.frame.width - 12 - compose.frame.width - proxyButton.frame.width - 6, floorToScreenPixels(backingScaleFactor, (searchContainer.frame.height - proxyButton.frame.height)/2.0))
+        if state.searchState != .Focus && state.mode.isPlain {
+            searchWidth -= (componentSize.width + 12)
         }
-        searchView.setFrameOrigin(10, floorToScreenPixels(backingScaleFactor, (offset - searchView.frame.height)/2.0))
-        tableView.setFrameOrigin(0, offset)
+        if let _ = self.proxy {
+            searchWidth -= componentSize.width
+        }
+        if let _ = self.premiumStatus {
+            searchWidth -= componentSize.width
+        }
         
-        proxyConnecting.centerX()
-        proxyConnecting.centerY(addition: -(backingScaleFactor == 2.0 ? 0.5 : 0))
+        let searchRect = NSMakeRect(10, floorToScreenPixels(backingScaleFactor, (offset - componentSize.height)/2.0), searchWidth, componentSize.height)
         
-        backgroundView.frame = bounds
+        transition.updateFrame(view: searchView, frame: searchRect)
+        transition.updateFrame(view: tableView, frame: NSMakeRect(0, offset, size.width, size.height - offset))
+
+        transition.updateFrame(view: backgroundView, frame: size.bounds)
         
         if let downloads = downloads {
-            downloads.frame = NSMakeRect(0, frame.height - downloads.frame.height, frame.width - .borderSize, downloads.frame.height)
+            let rect = NSMakeRect(0, size.height - downloads.frame.height, size.width - .borderSize, downloads.frame.height)
+            transition.updateFrame(view: downloads, frame: rect)
+        }
+        if state.splitState == .minimisize {
+            transition.updateFrame(view: compose, frame: compose.centerFrame())
+        } else {
+            
+            var controlPoint = NSMakePoint(size.width - 12, floorToScreenPixels(backingScaleFactor, (offset - componentSize.height)/2.0))
+
+            controlPoint.x -= componentSize.width
+            
+            transition.updateFrame(view: compose, frame: CGRect(origin: controlPoint, size: componentSize))
+                        
+            if let view = proxy {
+                controlPoint.x -= componentSize.width
+                transition.updateFrame(view: view, frame: CGRect(origin: controlPoint, size: componentSize))
+            }
+            if let view = premiumStatus {
+                controlPoint.x -= componentSize.width
+                transition.updateFrame(view: view, frame: CGRect(origin: controlPoint, size: componentSize))
+            }
         }
         
-        self.needsDisplay = true
+        
+//        if splitState == .minimisize {
+//            transition.updateFrame(view: compose, frame: compose.centerFrame())
+//
+//            proxyButton.setFrameOrigin(-proxyButton.frame.width, 0)
+//        } else {
+//            compose.setFrameOrigin(containerView.frame.width - 12 - compose.frame.width, floorToScreenPixels(backingScaleFactor, (containerView.frame.height - compose.frame.height)/2.0))
+//
+//            proxyButton.setFrameOrigin(containerView.frame.width - 12 - compose.frame.width - proxyButton.frame.width - 6, floorToScreenPixels(backingScaleFactor, (containerView.frame.height - proxyButton.frame.height)/2.0))
+//        }
+//
+//        proxyConnecting.centerX()
+//        proxyConnecting.centerY(addition: -(backingScaleFactor == 2.0 ? 0.5 : 0))
+        
+        
+      
+        
     }
     
     func updateDownloads(_ state: DownloadsSummary.State, context: AccountContext, arguments: DownloadsControlArguments, animated: Bool) {
@@ -422,7 +633,7 @@ class PeerListContainerView : View {
 }
 
 
-enum PeerListMode {
+enum PeerListMode : Equatable {
     case plain
     case folder(PeerGroupId)
     case filter(Int32)
@@ -550,6 +761,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     override func viewDidLoad() {
         super.viewDidLoad()
         let context = self.context
+        let mode = self.mode
 
         
         genericView.showDownloads = { [weak self] in
@@ -603,17 +815,32 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
         genericView.tableView.delegate = self
         
-        var settings:(ProxySettings, ConnectionStatus)? = nil
+        let stateValue: Atomic<State?> = Atomic(value: nil)
+        let state: ValuePromise<State?> = ValuePromise(nil, ignoreRepeated: true)
+        let updateState:((State?)->State?) -> Void = { f in
+            state.set(stateValue.modify(f))
+        }
         
-        
-        
-        actionsDisposable.add(combineLatest(proxySettings(accountManager: context.sharedContext.accountManager) |> mapToSignal { ps -> Signal<(ProxySettings, ConnectionStatus), NoError> in
+
+        let layoutSignal = context.layoutHandler.get()
+        let proxy = proxySettings(accountManager: context.sharedContext.accountManager) |> mapToSignal { ps -> Signal<(ProxySettings, ConnectionStatus), NoError> in
             return context.account.network.connectionStatus |> map { status -> (ProxySettings, ConnectionStatus) in
                 return (ps, status)
             }
-        } |> deliverOnMainQueue, appearanceSignal |> deliverOnMainQueue).start(next: { [weak self] pref, _ in
-            settings = (pref.0, pref.1)
-            self?.genericView.updateProxyPref(pref.0, pref.1)
+        }
+        let peer: Signal<PeerEquatable?, NoError> = context.account.postbox.peerView(id: context.peerId) |> map { view in
+            if let peer = peerViewMainPeer(view) {
+                return PeerEquatable(peer)
+            } else {
+                return nil
+            }
+        }
+        
+        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, appearanceSignal).start(next: { pref, layout, peer, _ in
+            updateState { state in
+                let state: State = .init(proxySettings: pref.0, connectionStatus: pref.1, splitState: layout, peer: peer, mode: mode)
+                return state
+            }
         }))
         
         let pushController:(ViewController)->Void = { [weak self] c in
@@ -640,11 +867,40 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             pushController(controller)
         }
         
-        genericView.proxyButton.set(handler: {  _ in
-            if let settings = settings {
-                 openProxySettings()
+        
+        genericView.openProxy = { _ in
+            openProxySettings()
+        }
+        
+        genericView.openStatus = { control in
+            let peer = stateValue.with { $0?.peer?.peer }
+            if let peer = peer as? TelegramUser {
+                let callback:(TelegramMediaFile, Int32?)->Void = { file, timeout in
+                    let expiryDate: Int32?
+                    if let timeout = timeout {
+                        expiryDate = context.timestamp + timeout
+                    } else {
+                        expiryDate = nil
+                    }
+                    if file.mimeType.hasPrefix("bundle") {
+                        _ = context.engine.accountData.setEmojiStatus(file: nil, expirationDate: expiryDate).start()
+                    } else {
+                        _ = context.engine.accountData.setEmojiStatus(file: file, expirationDate: expiryDate).start()
+
+                    }
+                    
+                }
+                if control.popover == nil {
+                    showPopover(for: control, with: PremiumStatusController(context, callback: callback, peer: peer), edge: .maxY, inset: NSMakePoint(-80, -35), static: true, animationMode: .reveal)
+                }
             }
-        }, for: .Click)
+        }
+        
+//        genericView.proxyButton.set(handler: {  _ in
+//            if let settings = settings {
+//                 openProxySettings()
+//            }
+//        }, for: .Click)
         
         
         genericView.compose.contextMenu = { [weak self] in
@@ -676,15 +932,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             case .None:
                 self.hideSearchController(animated: animated)
             }
-            self.genericView.searchStateChanged(state.state, animated: animated, updateSearchTags: { [weak self] tags in
-                self?.searchController?.updateSearchTags(tags)
-                self?.sharedMediaWithToken(tags)
-            }, updatePeerTag: { [weak self] f in
-                self?.searchController?.setPeerAsTag = f
-            }, updateMessageTags: { [weak self] f in
-                self?.updateSearchMessageTags = f
-            })
-
+            updateState { current in
+                var current = current
+                current?.searchState = state.state
+                return current
+            }
         }, { [weak self] state in
             guard let `self` = self else {return}
             self.searchController?.request(with: state.request)
@@ -692,7 +944,20 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             self?.context.isInGlobalSearch = state.responder
         })
         
+        let stateSignal = state.get()
+        |> filter { $0 != nil }
+        |> map { $0! }
         
+        actionsDisposable.add(stateSignal.start(next: { [weak self] state in
+            self?.genericView.searchStateChanged(state, context: context, animated: true, updateSearchTags: { [weak self] tags in
+                self?.searchController?.updateSearchTags(tags)
+                self?.sharedMediaWithToken(tags)
+            }, updatePeerTag: { [weak self] f in
+                self?.searchController?.setPeerAsTag = f
+            }, updateMessageTags: { [weak self] f in
+                self?.updateSearchMessageTags = f
+            })
+        }))
     }
     
     private func checkSearchMedia() {

@@ -28,7 +28,7 @@ final class PremiumStatusControl : Control {
     }
     
     
-    func set(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, color: NSColor?, isSelected: Bool, isBig: Bool, animated: Bool) {
+    func set(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, color: NSColor?, isSelected: Bool, isBig: Bool, animated: Bool, playTwice: Bool = false) {
         
         
         
@@ -152,7 +152,7 @@ final class PremiumStatusControl : Control {
                     performSublayerRemoval(animateLayer, animated: animated, scale: true)
                     self.animateLayer = nil
                 }
-                current = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: frame.size, playPolicy: isBig ? .loop : .playCount(2), checkStatus: true, getColors: getColors)
+                current = InlineStickerItemLayer(account: account, inlinePacksContext: inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: frame.size, playPolicy: isBig && !playTwice ? .loop : .playCount(2), checkStatus: true, getColors: getColors)
                 current.stopped = previousStopped
                 current.superview = self
                 self.animateLayer = current
@@ -216,12 +216,12 @@ final class PremiumStatusControl : Control {
         }
     }
     
-    static func control(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, isSelected: Bool, isBig: Bool = false, color: NSColor? = nil, cached: PremiumStatusControl?, animated: Bool) -> PremiumStatusControl? {
+    static func control(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, isSelected: Bool, isBig: Bool = false, playTwice: Bool = false, color: NSColor? = nil, cached: PremiumStatusControl?, animated: Bool) -> PremiumStatusControl? {
         var current: PremiumStatusControl? = nil
         if peer.isVerified || peer.isScam || peer.isFake || peer.isPremium {
             current = cached ?? PremiumStatusControl(frame: .zero)
         }
-        current?.set(peer, account: account, inlinePacksContext: inlinePacksContext, color: color, isSelected: isSelected, isBig: isBig, animated: animated)
+        current?.set(peer, account: account, inlinePacksContext: inlinePacksContext, color: color, isSelected: isSelected, isBig: isBig, animated: animated, playTwice: playTwice)
         return current
     }
     
