@@ -528,7 +528,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 
                 if items.count > 0 {
                     
-                    let selectedItem = self.selectedItem
+                    let previousSelected = self.selectedItem
                     
                     controller.arrangedObjects = items
                     controller.completeTransition()
@@ -545,7 +545,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                     }
                     if wasInited {
                         items[controller.selectedIndex].request(immediately: false)
-                        if selectedItem != self.selectedItem {
+                        if previousSelected != self.selectedItem {
                             self.selectedItem?.appear(for: controller.selectedViewController?.view)
                         }
                     }
@@ -730,10 +730,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             pageController.completeTransition()
             if  let controllerView = pageController.selectedViewController?.view as? GMagnifyView, previousView != controllerView || force {
                 controllerView.hideOrShowControls(hasPrev: hasPrev, hasNext: hasNext, animated: !force)
-                let item = self.item(at: startIndex)
                 if hasInited {
-                    item.appear(for: controllerView.contentView)
-                    
+                    self.selectedItem?.appear(for: controllerView.contentView)
                 }
                 controllerView.frame = view.focus(contentFrame.size, inset:contentInset)
                 magnifyDisposable.set(controllerView.magnifyUpdaterValue.start(next: { [weak self] value in
