@@ -27,7 +27,7 @@ func parabollicReactionAnimation(_ layer: InlineStickerItemLayer, fromPoint: NSP
     
     view.layer?.addSublayer(layer)
     
-    let transition = ContainedViewLayoutTransition.animated(duration: 0.3, curve: .easeInOut)
+    let transition = ContainedViewLayoutTransition.animated(duration: 0.2, curve: .linear)
     
     let keyFrames = generateParabollicMotionKeyframes(from: fromPoint, to: toPoint, elevation: 30)
     

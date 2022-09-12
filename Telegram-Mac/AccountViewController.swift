@@ -710,20 +710,8 @@ class LayoutAccountController : TableViewController {
         
         
         let setStatus:(Control, TelegramUser)->Void = { control, peer in
-            let callback:(TelegramMediaFile, Int32?)->Void = { file, timeout in
-                let expiryDate: Int32?
-                if let timeout = timeout {
-                    expiryDate = context.timestamp + timeout
-                } else {
-                    expiryDate = nil
-                }
-                if file.mimeType.hasPrefix("bundle") {
-                    _ = context.engine.accountData.setEmojiStatus(file: nil, expirationDate: expiryDate).start()
-                } else {
-                    _ = context.engine.accountData.setEmojiStatus(file: file, expirationDate: expiryDate).start()
-
-                }
-                
+            let callback:(TelegramMediaFile, Int32?, CGRect?)->Void = { file, timeout, fromRect in
+                context.reactions.setStatus(file, peer: peer, timestamp: context.timestamp, timeout: timeout, fromRect: fromRect)
             }
             if control.popover == nil {
                 showPopover(for: control, with: PremiumStatusController(context, callback: callback, peer: peer), edge: .maxY, inset: NSMakePoint(-80, -35), static: true, animationMode: .reveal)

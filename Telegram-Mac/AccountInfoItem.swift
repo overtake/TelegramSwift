@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-
+import Reactions
 import SwiftSignalKit
 
 
@@ -209,32 +209,60 @@ private class AccountInfoView : GeneralContainableRowView {
     
     private func playStatusEffect(_ status: PeerEmojiStatus, context: AccountContext) -> Void {
         
-        let animationSize = NSMakeSize(90, 90)
         
-        self.playAnimation(status.fileId, context: context)
     }
     
-    private func playAnimation(_  fileId: Int64, context: AccountContext) {
+    private func playAnimation(_  status: Reactions.InteractiveStatus, context: AccountContext) {
         guard let control = statusControl, visibleRect != .zero, window != nil else {
             return
         }
         
+        control.isHidden = true
         
-        let player = CustomReactionEffectView(frame: NSMakeSize(160, 160).bounds, context: context, fileId: fileId)
-        
-        player.isEventLess = true
-        
-        player.triggerOnFinish = { [weak player] in
-            player?.removeFromSuperview()
+        let play:(NSView, TableRowItem)->Void = { [weak control] container, item in
+            
+            guard let control = control else {
+                return
+            }
+            control.isHidden = false
+            control.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.3, bounce: true)
+            let player = CustomReactionEffectView(frame: NSMakeSize(120, 120).bounds, context: context, fileId: status.fileId)
+            
+            player.isEventLess = true
+            
+            player.triggerOnFinish = { [weak player] in
+                player?.removeFromSuperview()
+            }
+                    
+            let controlRect = container.convert(control.frame, to: item.table?.contentView)
+            
+            let rect = CGRect(origin: CGPoint(x: controlRect.midX - player.frame.width / 2, y: controlRect.midY - player.frame.height / 2), size: player.frame.size)
+            
+            player.frame = rect
+            
+            item.table?.contentView.addSubview(player)
         }
+        if let item = self.item {
+            if let fromRect = status.rect {
+                let layer = InlineStickerItemLayer.init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: status.fileId, file: nil, emoji: ""), size: control.frame.size)
                 
-        let controlRect = container.convert(control.frame, to: item?.table?.contentView)
-        
-        let rect = CGRect(origin: CGPoint(x: controlRect.midX - player.frame.width / 2, y: controlRect.midY - player.frame.height / 2), size: player.frame.size)
-        
-        player.frame = rect
-        
-        item?.table?.contentView.addSubview(player)
+                let toRect = control.convert(control.frame.size.bounds, to: nil)
+                
+                let from = fromRect.origin.offsetBy(dx: fromRect.width / 2, dy: fromRect.height / 2)
+                let to = toRect.origin.offsetBy(dx: toRect.width / 2, dy: toRect.height / 2)
+                
+                let completed: (Bool)->Void = { [weak self] _ in
+                    DispatchQueue.main.async {
+                        if let item = self?.item, let container = self?.container {
+                            play(container, item)
+                        }
+                    }
+                }
+                parabollicReactionAnimation(layer, fromPoint: from, toPoint: to, window: context.window, completion: completed)
+            } else {
+                play(self.container, item)
+            }
+        }
         
     }
     
@@ -256,8 +284,8 @@ private class AccountInfoView : GeneralContainableRowView {
                 self.statusControl = nil
             }
             
-            if previous?.peer.emojiStatus?.fileId != item.peer.emojiStatus?.fileId, let status = item.peer.emojiStatus {
-                self.playStatusEffect(status, context: item.context)
+            if visibleRect != .zero, window != nil, let interactive = item.context.reactions.interactiveStatus {
+                self.playAnimation(interactive, context: item.context)
             }
             
             if let control = statusControl, item.peer.isPremium {

@@ -270,22 +270,27 @@ final class EmojiesSectionRowItem : GeneralRowItem {
             }
             return .single(items)
         case .statuses:
-            if let view = self.view as? EmojiesSectionRowView, let sticker = view.itemUnderMouse?.1.item {
-                
-                if !sticker.file.mimeType.hasPrefix("bundle") {
-                    let hours: [Int32] = [60 * 60,
-                                          60 * 60 * 2,
-                                          60 * 60 * 8,
-                                          60 * 60 * 24 * 1,
-                                          60 * 60 * 24 * 2]
+            if let view = self.view as? EmojiesSectionRowView, let item = view.itemUnderMouse {
+                if let sticker = item.1.item, let window = view.window {
+                    if !sticker.file.mimeType.hasPrefix("bundle") {
+                        let hours: [Int32] = [60 * 60,
+                                              60 * 60 * 2,
+                                              60 * 60 * 8,
+                                              60 * 60 * 24 * 1,
+                                              60 * 60 * 24 * 2]
 
-                    for hour in hours {
-                        items.append(ContextMenuItem(strings().customStatusMenuTimer(timeIntervalString(Int(hour))), handler: { [weak self] in
-                            self?.callback(sticker, self?.info, hour, nil)
-                        }))
+                        let wrect = view.contentView.convert(item.1.rect, to: nil)
+                        let srect = window.convertToScreen(wrect)
+                        
+                        let lrect = context.window.convertFromScreen(srect)
+                        
+                        for hour in hours {
+                            items.append(ContextMenuItem(strings().customStatusMenuTimer(timeIntervalString(Int(hour))), handler: { [weak self] in
+                                self?.callback(sticker, self?.info, hour, lrect)
+                            }))
+                        }
                     }
                 }
-                
             }
             return .single(items)
         case .preview:
@@ -414,7 +419,7 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
     private var selectedLayers:[InlineStickerItemLayer.Key : SimpleLayer] = [:]
     
     
-    private let contentView = Control()
+    fileprivate let contentView = Control()
     
     private var nameView: TextView?
     
@@ -422,6 +427,8 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
     private let container = View()
     
     private var reveal: TitleButton?
+    
+    private var appearanceViews:[WeakReference<NSView>] = []
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -578,13 +585,18 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
                 value.stopped = true
                 value.reset()
                 value.opacity = 0
+                appearanceViews.append(.init(value: view))
                 view.contextAnimation?.triggerOn = (.last, { [weak view, weak value] in
-                    value?.triggerNextState = { _ in
+                    if let value = value {
+                        value.triggerNextState = { [weak value] _ in
+                            view?.removeFromSuperview()
+                            value?.opacity = 1
+                        }
+                        value.stopped = false
+                        value.apply()
+                    } else {
                         view?.removeFromSuperview()
-                        value?.opacity = 1
                     }
-                    value?.stopped = false
-                    value?.apply()
                 }, {})
             }
         }
@@ -749,6 +761,10 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
  
 
         self.updateInlineStickers(context: item.context, contentView: contentView, items: item.items, selected: item.selectedItems, animated: animated)
+
+        while !appearanceViews.isEmpty {
+            appearanceViews.removeLast().value?.removeFromSuperview()
+        }
         
         self.updateListeners()
         
