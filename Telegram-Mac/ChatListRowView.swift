@@ -164,10 +164,7 @@ private final class ChatListMediaPreviewView: View {
             playIcon.isHidden = true
             if let largest = largestImageRepresentation(image.representations) {
                 dimensions = largest.dimensions.size
-                if !self.requestedImage {
-                    self.requestedImage = true
-                    signal = mediaGridMessagePhoto(account: self.context.account, imageReference: .message(message: MessageReference(self.message), media: image), scale: backingScaleFactor)
-                }
+                signal = mediaGridMessagePhoto(account: self.context.account, imageReference: .message(message: MessageReference(self.message), media: image), scale: backingScaleFactor)
             }
         } else if let file = self.media as? TelegramMediaFile {
             if file.isAnimated {
@@ -178,10 +175,7 @@ private final class ChatListMediaPreviewView: View {
 
             if let mediaDimensions = file.dimensions {
                 dimensions = mediaDimensions.size
-                if !self.requestedImage {
-                    self.requestedImage = true
-                    signal = mediaGridMessageVideo(postbox: self.context.account.postbox, fileReference: .message(message: MessageReference(self.message), media: file), scale: backingScaleFactor)
-                }
+                signal = mediaGridMessageVideo(postbox: self.context.account.postbox, fileReference: .message(message: MessageReference(self.message), media: file), scale: backingScaleFactor)
             }
         }
         let arguments = TransformImageArguments(corners: ImageCorners(radius: 2.0), imageSize: dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets())

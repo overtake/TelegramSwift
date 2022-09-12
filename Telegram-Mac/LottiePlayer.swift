@@ -1224,7 +1224,7 @@ enum LottieAnimationType {
 
 final class LottieAnimation : Equatable {
     static func == (lhs: LottieAnimation, rhs: LottieAnimation) -> Bool {
-        return lhs.key == rhs.key && lhs.playPolicy == rhs.playPolicy && lhs.colors == rhs.colors
+        return lhs.key == rhs.key && lhs.colors == rhs.colors
     }
     
     let type: LottieAnimationType
