@@ -16,8 +16,11 @@ public final class Reactions {
         public let messageId: MessageId
         public let rect: NSRect?
     }
+    public struct InteractiveStatus {
+        public let fileId: Int64
+        public let rect: NSRect?
+    }
     
-    private let _isInteractive = Atomic<Interactive?>(value: nil)
     private(set) public var available: AvailableReactions?
     public var stateValue: Signal<AvailableReactions?, NoError> {
         return state.get() |> distinctUntilChanged |> deliverOnMainQueue
@@ -25,8 +28,14 @@ public final class Reactions {
     
     public var isPremium: Bool = false
     
+    private let _isInteractive = Atomic<Interactive?>(value: nil)
     public var interactive: Interactive? {
         return _isInteractive.swap(nil)
+    }
+    
+    private let _interactiveStatus = Atomic<InteractiveStatus?>(value: nil)
+    public var interactiveStatus: InteractiveStatus? {
+        return _interactiveStatus.swap(nil)
     }
     
     public init(_ engine: TelegramEngine) {
@@ -46,6 +55,30 @@ public final class Reactions {
     
     public func updateQuick(_ value: MessageReaction.Reaction) {
         _ = self.engine.stickers.updateQuickReaction(reaction: value).start()
+    }
+    
+    public func setStatus(_ file: TelegramMediaFile, peer: Peer, timestamp: Int32, timeout: Int32?, fromRect: NSRect?) {
+        
+        let emojiStatus = (peer as? TelegramUser)?.emojiStatus
+        
+        let expiryDate: Int32?
+        if let timeout = timeout {
+            expiryDate = timestamp + timeout
+        } else {
+            expiryDate = nil
+        }
+        if file.mimeType.hasPrefix("bundle") {
+            _ = _interactiveStatus.swap(nil)
+            _ = engine.accountData.setEmojiStatus(file: nil, expirationDate: expiryDate).start()
+        } else {
+            if file.fileId.id == emojiStatus?.fileId {
+                _ = _interactiveStatus.swap(nil)
+                _ = engine.accountData.setEmojiStatus(file: nil, expirationDate: expiryDate).start()
+            } else {
+                _ = _interactiveStatus.swap(.init(fileId: file.fileId.id, rect: fromRect))
+                _ = engine.accountData.setEmojiStatus(file: file, expirationDate: expiryDate).start()
+            }
+        }
     }
     
     deinit {

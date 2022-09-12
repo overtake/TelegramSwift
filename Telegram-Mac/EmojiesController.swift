@@ -692,7 +692,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 
                 normalized.insert(.init(index: .init(index: 0, id: 0), file: def, indexKeys: []), at: 0)
                 
-                normalized.insert(contentsOf: state.iconStatusEmoji.map {
+                normalized.insert(contentsOf: state.iconStatusEmoji.prefix(7).map {
                     .init(index: .init(index: 0, id: 0), file: $0, indexKeys: [])
                 }, at: 1)
                 

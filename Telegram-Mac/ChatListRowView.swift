@@ -127,6 +127,7 @@ private final class ChatListMediaPreviewView: View {
     
     private var requestedImage: Bool = false
     private var disposable: Disposable?
+    private var shimmer: ShimmerLayer?
     
     init(context: AccountContext, message: Message, media: Media) {
         self.context = context
@@ -155,15 +156,17 @@ private final class ChatListMediaPreviewView: View {
     }
     
     func updateLayout(size: CGSize) {
+        let frame = CGRect(origin: CGPoint(), size: size)
+        let media = self.media
         var dimensions = CGSize(width: 100.0, height: 100.0)
+        var signal: Signal<ImageDataTransformation, NoError>? = nil
         if let image = self.media as? TelegramMediaImage {
             playIcon.isHidden = true
             if let largest = largestImageRepresentation(image.representations) {
                 dimensions = largest.dimensions.size
                 if !self.requestedImage {
                     self.requestedImage = true
-                    let signal = mediaGridMessagePhoto(account: self.context.account, imageReference: .message(message: MessageReference(self.message), media: image), scale: backingScaleFactor)
-                    self.imageView.setSignal(signal)
+                    signal = mediaGridMessagePhoto(account: self.context.account, imageReference: .message(message: MessageReference(self.message), media: image), scale: backingScaleFactor)
                 }
             }
         } else if let file = self.media as? TelegramMediaFile {
@@ -177,16 +180,47 @@ private final class ChatListMediaPreviewView: View {
                 dimensions = mediaDimensions.size
                 if !self.requestedImage {
                     self.requestedImage = true
-                    let signal = mediaGridMessageVideo(postbox: self.context.account.postbox, fileReference: .message(message: MessageReference(self.message), media: file), scale: backingScaleFactor)
-                    self.imageView.setSignal(signal)
+                    signal = mediaGridMessageVideo(postbox: self.context.account.postbox, fileReference: .message(message: MessageReference(self.message), media: file), scale: backingScaleFactor)
                 }
             }
         }
-
-        self.imageView.frame = CGRect(origin: CGPoint(), size: size)
-        //self.playIcon.center()
-        self.imageView.set(arguments: TransformImageArguments(corners: ImageCorners(radius: 2.0), imageSize: dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets()))
+        let arguments = TransformImageArguments(corners: ImageCorners(radius: 2.0), imageSize: dimensions.aspectFilled(size), boundingSize: size, intrinsicInsets: NSEdgeInsets())
         
+        self.imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: System.backingScale, positionFlags: nil), clearInstantly: true)
+        
+        if imageView.image == nil {
+            if shimmer == nil {
+                let shimmer = ShimmerLayer()
+                shimmer.cornerRadius = .cornerRadius
+                if #available(macOS 10.15, *) {
+                    shimmer.cornerCurve = .continuous
+                }
+                shimmer.frame = size.bounds
+                self.layer?.addSublayer(shimmer)
+                self.shimmer = shimmer
+                
+                shimmer.update(backgroundColor: nil, foregroundColor: NSColor(rgb: 0x748391, alpha: 0.2), shimmeringColor: NSColor(rgb: 0x748391, alpha: 0.35), data: nil, size: size)
+                shimmer.updateAbsoluteRect(size.bounds, within: size)
+
+            }
+        } else if let shimmer = shimmer {
+            shimmer.removeFromSuperlayer()
+            self.shimmer = nil
+        }
+        
+        if let signal = signal, !imageView.isFullyLoaded {
+            self.imageView.setSignal(signal, cacheImage: { [weak self] result in
+                cacheMedia(result, media: media, arguments: arguments, scale: System.backingScale, positionFlags: nil)
+                if result.highQuality {
+                    self?.shimmer?.removeFromSuperlayer()
+                    self?.shimmer = nil
+                }
+            })
+        }
+        
+        
+        self.imageView.frame = frame
+        self.imageView.set(arguments: arguments)
     }
 }
 

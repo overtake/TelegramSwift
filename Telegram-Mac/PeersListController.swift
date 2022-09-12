@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-
+import Reactions
 import SwiftSignalKit
 
 
@@ -180,7 +180,6 @@ class PeerListContainerView : View {
         private weak var effectPanel: Window?
         
         func update(_ peer: Peer, context: AccountContext, animated: Bool) {
-            let statusUpdated = self.peer?.emojiStatus?.fileId != peer.emojiStatus?.fileId && self.peer != nil
             let control = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, isSelected: false, isBig: true, playTwice: true, cached: self.button, animated: animated)
             if let control = control {
                 self.button = control
@@ -192,57 +191,82 @@ class PeerListContainerView : View {
             }
             self.peer = peer
             
-            if statusUpdated, let status = peer.emojiStatus {
-                self.playStatusEffect(status, context: context)
+            if visibleRect != .zero, let _ = self.window, let interactive = context.reactions.interactiveStatus {
+                self.playAnimation(interactive, context: context)
             }
         }
         
-        private func playStatusEffect(_ status: PeerEmojiStatus, context: AccountContext) -> Void {
-            self.playAnimation(status.fileId, context: context)
-        }
-        
-        private func playAnimation(_  fileId: Int64, context: AccountContext) {
-            guard let control = button, visibleRect != .zero, let window = self.window else {
+        private func playAnimation(_  status: Reactions.InteractiveStatus, context: AccountContext) {
+            guard let control = self.button, let window = self.window else {
                 return
             }
             
-            let panel = Window(contentRect: NSMakeRect(0, 0, 160, 160), styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
-            panel._canBecomeMain = false
-            panel._canBecomeKey = false
             
-            panel.level = .popUpMenu
-            panel.backgroundColor = .clear
-            panel.isOpaque = false
-            panel.hasShadow = false
-
+            control.isHidden = true
             
-            let player = CustomReactionEffectView(frame: NSMakeSize(160, 160).bounds, context: context, fileId: fileId)
-            
-            player.isEventLess = true
-            
-            player.triggerOnFinish = { [weak panel] in
-                if let panel = panel  {
-                    panel.parent?.removeChildWindow(panel)
-                    panel.orderOut(nil)
+            let play:(StatusView)->Void = { [weak control] superview in
+                
+                guard let control = control else {
+                    return
                 }
+                control.isHidden = false
+                
+                let panel = Window(contentRect: NSMakeRect(0, 0, 120, 120), styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
+                panel._canBecomeMain = false
+                panel._canBecomeKey = false
+                
+                panel.level = .popUpMenu
+                panel.backgroundColor = .clear
+                panel.isOpaque = false
+                panel.hasShadow = false
+
+                let player = CustomReactionEffectView(frame: NSMakeSize(120, 120).bounds, context: context, fileId: status.fileId)
+                
+                player.isEventLess = true
+                
+                player.triggerOnFinish = { [weak panel] in
+                    if let panel = panel  {
+                        panel.parent?.removeChildWindow(panel)
+                        panel.orderOut(nil)
+                    }
+                }
+                superview.effectPanel = panel
+                        
+                let controlRect = superview.convert(control.frame, to: nil)
+                
+                var rect = CGRect(origin: CGPoint(x: controlRect.midX - player.frame.width / 2, y: controlRect.midY - player.frame.height / 2), size: player.frame.size)
+                
+                
+                rect = window.convertToScreen(rect)
+                
+                panel.setFrame(rect, display: true)
+                
+                panel.contentView?.addSubview(player)
+                
+                window.addChildWindow(panel, ordered: .above)
             }
-            self.effectPanel = panel
-                    
-            let controlRect = self.convert(control.frame, to: nil)
-            
-            var rect = CGRect(origin: CGPoint(x: controlRect.midX - player.frame.width / 2, y: controlRect.midY - player.frame.height / 2), size: player.frame.size)
-            
-            
-            rect = window.convertToScreen(rect)
-            
-            panel.setFrame(rect, display: true)
-            
-            panel.contentView?.addSubview(player)
-            
-            
-            window.addChildWindow(panel, ordered: .above)
+            if let fromRect = status.rect {
+                let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: status.fileId, file: nil, emoji: ""), size: control.frame.size)
+                
+                let toRect = control.convert(control.frame.size.bounds, to: nil)
+                
+                let from = fromRect.origin.offsetBy(dx: fromRect.width / 2, dy: fromRect.height / 2)
+                let to = toRect.origin.offsetBy(dx: toRect.width / 2, dy: toRect.height / 2)
+                
+                let completed: (Bool)->Void = { [weak self] _ in
+                    DispatchQueue.main.async {
+                        if let container = self {
+                            play(container)
+                        }
+                    }
+                }
+                parabollicReactionAnimation(layer, fromPoint: from, toPoint: to, window: context.window, completion: completed)
+            } else {
+                play(self)
+            }
         }
         
+      
         override func layout() {
             super.layout()
             button?.center()
@@ -927,34 +951,15 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         genericView.openStatus = { control in
             let peer = stateValue.with { $0?.peer?.peer }
             if let peer = peer as? TelegramUser {
-                let callback:(TelegramMediaFile, Int32?)->Void = { file, timeout in
-                    let expiryDate: Int32?
-                    if let timeout = timeout {
-                        expiryDate = context.timestamp + timeout
-                    } else {
-                        expiryDate = nil
-                    }
-                    if file.mimeType.hasPrefix("bundle") {
-                        _ = context.engine.accountData.setEmojiStatus(file: nil, expirationDate: expiryDate).start()
-                    } else {
-                        _ = context.engine.accountData.setEmojiStatus(file: file, expirationDate: expiryDate).start()
-
-                    }
-                    
+                let callback:(TelegramMediaFile, Int32?, CGRect?)->Void = { file, timeout, fromRect in
+                    context.reactions.setStatus(file, peer: peer, timestamp: context.timestamp, timeout: timeout, fromRect: fromRect)
                 }
                 if control.popover == nil {
                     showPopover(for: control, with: PremiumStatusController(context, callback: callback, peer: peer), edge: .maxY, inset: NSMakePoint(-80, -35), static: true, animationMode: .reveal)
                 }
             }
         }
-        
-//        genericView.proxyButton.set(handler: {  _ in
-//            if let settings = settings {
-//                 openProxySettings()
-//            }
-//        }, for: .Click)
-        
-        
+
         genericView.compose.contextMenu = { [weak self] in
             let items = [ContextMenuItem(strings().composePopoverNewGroup, handler: { [weak self] in
                 self?.context.composeCreateGroup()

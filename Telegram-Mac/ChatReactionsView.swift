@@ -194,7 +194,13 @@ final class ChatReactionsLayout {
                     reactionSize.width += 3
                     reactionSize.height += 3
                 }
-                return .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: reactionSize, shimmerColor: .init(color: presentation.bgColor.darker(), circle: true))
+                return .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: reactionSize, getColors: { file in
+                    var colors: [LottieColor] = []
+                    if isDefaultStatusesPackId(file.emojiReference) {
+                        colors.append(.init(keyPath: "", color: theme.colors.accent))
+                    }
+                    return colors
+                }, shimmerColor: .init(color: presentation.bgColor.darker(), circle: true))
             }
         }
         
