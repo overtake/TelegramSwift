@@ -162,7 +162,7 @@ enum GalleryEntry : Comparable, Identifiable {
     var file:TelegramMediaFile? {
         switch self {
         case .message(let entry):
-            if let media = entry.message!.media[0] as? TelegramMediaFile {
+            if let media = entry.message!.effectiveMedia as? TelegramMediaFile {
                 return media
             } else if let media = entry.message!.media[0] as? TelegramMediaWebpage {
                 switch media.content {

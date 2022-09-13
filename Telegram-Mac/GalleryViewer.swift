@@ -76,6 +76,14 @@ enum GalleryAppearType : Equatable {
 
 private func mediaForMessage(message: Message, postbox: Postbox) -> Media? {
     for media in message.media {
+        if let media = media as? TelegramMediaInvoice, let extended = media.extendedMedia {
+            switch extended {
+            case .preview:
+                return nil
+            case let .full(media):
+                return media
+            }
+        }
         if let media = media as? TelegramMediaImage {
             return media
         } else if let file = media as? TelegramMediaFile {

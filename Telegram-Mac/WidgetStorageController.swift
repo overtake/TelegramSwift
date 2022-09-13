@@ -460,7 +460,7 @@ final class WidgetStorageController : TelegramGenericViewController<WidgetView<W
                 }).start()
             }))
             
-            let data: WidgetData = .init(title: { strings().emptyChatStorageUsageData }, desc: { strings().emptyChatStorageUsageDesc }, descClick: {
+            let data: WidgetData = .init(title: { strings().emptyChatStorageUsageData }, desc: { strings().widgedStorageInfoText }, descClick: {
                 context.bindings.rootNavigation().push(DataAndStorageViewController(context))
             }, buttons: buttons)
             

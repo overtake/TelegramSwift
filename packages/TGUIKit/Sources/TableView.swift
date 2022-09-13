@@ -2867,7 +2867,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if let supplyment = supplyment {
             return supplyment.contentInteractionView(for: stableId, animateIn: animateIn)
         }
-        
         var item = self.item(stableId: stableId)
         if item == nil {
             if let groupStableId = delegate?.findGroupStableId(for: stableId) {

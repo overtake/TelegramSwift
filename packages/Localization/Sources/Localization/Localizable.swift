@@ -4741,8 +4741,6 @@ public final class L10n {
   public static var emptyChatNavigationPrev: String  { return L10n.tr("Localizable", "EmptyChat.Navigation.Prev") }
   /// All Sets
   public static var emptyChatStickersAllSets: String  { return L10n.tr("Localizable", "EmptyChat.Stickers.AllSets") }
-  /// More trending stickers are available in\nSettings ⟶ Stickers ⟶ [Trending Stickers](trending).
-  public static var emptyChatStickersDesc: String  { return L10n.tr("Localizable", "EmptyChat.Stickers.Desc") }
   /// My Sets
   public static var emptyChatStickersMySets: String  { return L10n.tr("Localizable", "EmptyChat.Stickers.MySets") }
   /// None
@@ -4761,8 +4759,6 @@ public final class L10n {
   public static var emptyChatStorageUsageClearing: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Clearing") }
   /// Maximum Cache Size
   public static var emptyChatStorageUsageData: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Data") }
-  /// More data and storage settings are available in\nSettings ⟶ [Data And Storage](storage).
-  public static var emptyChatStorageUsageDesc: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Desc") }
   /// Calculating...
   public static var emptyChatStorageUsageLoading: String  { return L10n.tr("Localizable", "EmptyChat.StorageUsage.Loading") }
   /// 5 GB
@@ -5690,31 +5686,31 @@ public final class L10n {
     return L10n.tr("Localizable", "InviteLink.EmptyJoinDesc_zero", p1)
   }
   /// %d
-  public static func inviteLinkJoinedCountable(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "InviteLink.Joined_countable", p1)
+  public static func inviteLinkJoinedNewCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.JoinedNew_countable", p1)
   }
   /// %d joined
-  public static func inviteLinkJoinedFew(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "InviteLink.Joined_few", p1)
+  public static func inviteLinkJoinedNewFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.JoinedNew_few", p1)
   }
   /// %d joined
-  public static func inviteLinkJoinedMany(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "InviteLink.Joined_many", p1)
+  public static func inviteLinkJoinedNewMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.JoinedNew_many", p1)
   }
   /// %d joined
-  public static func inviteLinkJoinedOne(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "InviteLink.Joined_one", p1)
+  public static func inviteLinkJoinedNewOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.JoinedNew_one", p1)
   }
   /// %d joined
-  public static func inviteLinkJoinedOther(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "InviteLink.Joined_other", p1)
+  public static func inviteLinkJoinedNewOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.JoinedNew_other", p1)
   }
   /// %d joined
-  public static func inviteLinkJoinedTwo(_ p1: Int) -> String {
-    return L10n.tr("Localizable", "InviteLink.Joined_two", p1)
+  public static func inviteLinkJoinedNewTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "InviteLink.JoinedNew_two", p1)
   }
   /// no one joined yet
-  public static var inviteLinkJoinedZero: String  { return L10n.tr("Localizable", "InviteLink.Joined_zero") }
+  public static var inviteLinkJoinedNewZero: String  { return L10n.tr("Localizable", "InviteLink.JoinedNew_zero") }
   /// no one joined
   public static var inviteLinkJoinedRevoked: String  { return L10n.tr("Localizable", "InviteLink.JoinedRevoked") }
   /// %d
@@ -11861,6 +11857,10 @@ public final class L10n {
   public static var weekdayShortTuesday: String  { return L10n.tr("Localizable", "Weekday.ShortTuesday") }
   /// Wed
   public static var weekdayShortWednesday: String  { return L10n.tr("Localizable", "Weekday.ShortWednesday") }
+  /// More trending stickers are available in\nSettings ⟶ Stickers ⟶ [Trending Stickers](trending).
+  public static var widgedStickersInfoText: String  { return L10n.tr("Localizable", "Widged.Stickers.InfoText") }
+  /// More data and storage settings are available in\nSettings ⟶ [Data And Storage](storage).
+  public static var widgedStorageInfoText: String  { return L10n.tr("Localizable", "Widged.Storage.InfoText") }
   /// Use ⌘+K or ESC to enter [search](search) mode.
   public static var widgetRecentDesc: String  { return L10n.tr("Localizable", "Widget.Recent.Desc") }
   /// Both
