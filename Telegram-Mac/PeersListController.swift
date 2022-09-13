@@ -225,7 +225,7 @@ class PeerListContainerView : View {
                 }
                 control.isHidden = false
                 
-                let panel = Window(contentRect: NSMakeRect(0, 0, 120, 120), styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
+                let panel = Window(contentRect: NSMakeRect(0, 0, 160, 160), styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
                 panel._canBecomeMain = false
                 panel._canBecomeKey = false
                 
@@ -234,7 +234,7 @@ class PeerListContainerView : View {
                 panel.isOpaque = false
                 panel.hasShadow = false
 
-                let player = CustomReactionEffectView(frame: NSMakeSize(120, 120).bounds, context: context, fileId: fileId)
+                let player = CustomReactionEffectView(frame: NSMakeSize(160, 160).bounds, context: context, fileId: fileId)
                 
                 player.isEventLess = true
                 

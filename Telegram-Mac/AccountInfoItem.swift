@@ -229,7 +229,7 @@ private class AccountInfoView : GeneralContainableRowView {
             }
             control.isHidden = false
             control.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.3, bounce: true)
-            let player = CustomReactionEffectView(frame: NSMakeSize(120, 120).bounds, context: context, fileId: fileId)
+            let player = CustomReactionEffectView(frame: NSMakeSize(160, 160).bounds, context: context, fileId: fileId)
             
             player.isEventLess = true
             
