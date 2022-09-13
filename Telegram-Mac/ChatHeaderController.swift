@@ -537,6 +537,17 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
         super.init(frame: frame)
         
         dismiss.disableActions()
+        self.contextMenu = { [weak self] in
+            guard let pinnedMessage = self?.pinnedMessage else {
+                return nil
+            }
+            let menu = ContextMenu()
+            menu.addItem(ContextMenuItem(strings().chatContextPinnedHide, handler: {
+                self?.chatInteraction.updatePinned(pinnedMessage.messageId, true, false, false)
+            }, itemImage: MenuAnimation.menu_unpin.value))
+
+            return menu
+        }
 
         self.set(handler: { [weak self] _ in
             guard let `self` = self, let pinnedMessage = self.pinnedMessage else {
