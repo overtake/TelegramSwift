@@ -17,7 +17,8 @@ public final class Reactions {
         public let rect: NSRect?
     }
     public struct InteractiveStatus {
-        public let fileId: Int64
+        public let fileId: Int64?
+        public let previousFileId: Int64?
         public let rect: NSRect?
     }
     
@@ -68,14 +69,18 @@ public final class Reactions {
             expiryDate = nil
         }
         if file.mimeType.hasPrefix("bundle") {
-            _ = _interactiveStatus.swap(nil)
+            if emojiStatus != nil {
+                _ = _interactiveStatus.swap(.init(fileId: nil, previousFileId: emojiStatus?.fileId, rect: fromRect))
+            } else {
+                _ = _interactiveStatus.swap(nil)
+            }
             _ = engine.accountData.setEmojiStatus(file: nil, expirationDate: expiryDate).start()
         } else {
             if file.fileId.id == emojiStatus?.fileId {
                 _ = _interactiveStatus.swap(nil)
                 _ = engine.accountData.setEmojiStatus(file: nil, expirationDate: expiryDate).start()
             } else {
-                _ = _interactiveStatus.swap(.init(fileId: file.fileId.id, rect: fromRect))
+                _ = _interactiveStatus.swap(.init(fileId: file.fileId.id, previousFileId: emojiStatus?.fileId, rect: fromRect))
                 _ = engine.accountData.setEmojiStatus(file: file, expirationDate: expiryDate).start()
             }
         }

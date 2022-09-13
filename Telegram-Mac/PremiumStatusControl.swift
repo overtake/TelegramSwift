@@ -88,7 +88,11 @@ final class PremiumStatusControl : Control {
                         }
                         
                     } else {
-                        image = isSelected ? theme.icons.premium_account_active : theme.icons.premium_account
+                        if isBig {
+                            image = isSelected ? theme.icons.premium_account_active : theme.icons.premium_account
+                        } else {
+                            image = isSelected ? theme.icons.premium_account_small_active : theme.icons.premium_account_small
+                        }
                     }
                 }
             } else {
