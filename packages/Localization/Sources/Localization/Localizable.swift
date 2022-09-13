@@ -2165,6 +2165,8 @@ public final class L10n {
   public static func chatContextMessageContainsEmojiZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Context.Message.ContainsEmoji_zero", p1)
   }
+  /// Hide pinned message
+  public static var chatContextPinnedHide: String  { return L10n.tr("Localizable", "Chat.Context.Pinned.Hide") }
   /// Set As Quick
   public static var chatContextReactionQuick: String  { return L10n.tr("Localizable", "Chat.Context.Reaction.Quick") }
   /// Save for Notifications
