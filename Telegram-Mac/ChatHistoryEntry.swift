@@ -558,7 +558,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         
         
         var disableEntry = false
-        if let action = message.media.first as? TelegramMediaAction {
+        if let action = message.effectiveMedia as? TelegramMediaAction {
             switch action.action {
             case .historyCleared:
                 disableEntry = true
@@ -642,7 +642,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         if renderType == .list {
             if let prev = prev {
                 var actionShortAccess: Bool = true
-                if let action = prev.message.media.first as? TelegramMediaAction {
+                if let action = prev.message.effectiveMedia as? TelegramMediaAction {
                     switch action.action {
                     case .phoneCall:
                         actionShortAccess = true
@@ -655,7 +655,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                     if let peer = peer as? TelegramChannel, case .broadcast(_) = peer.info {
                         itemType = .Full(rank: rank, header: .normal)
                     } else {
-                        var canShort:Bool = (message.media.isEmpty || message.media.first?.isInteractiveMedia == false) || message.forwardInfo == nil || renderType == .list
+                        var canShort:Bool = (message.media.isEmpty || message.effectiveMedia?.isInteractiveMedia == false) || message.forwardInfo == nil || renderType == .list
                         
                         
                         
@@ -688,10 +688,10 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                         accept = false
                     }
                 }
-                if lhs.media.first is TelegramMediaAction {
+                if lhs.effectiveMedia is TelegramMediaAction {
                     accept = false
                 }
-                if rhs.media.first is TelegramMediaAction {
+                if rhs.effectiveMedia is TelegramMediaAction {
                     accept = false
                 }
                 if lhs.isAnonymousMessage {

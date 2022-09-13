@@ -298,7 +298,7 @@ class ChatMessageItem: ChatRowItem {
             var openSpecificTimecodeFromReply:((Double?)->Void)? = nil
             
             let messageAttr:NSMutableAttributedString
-            if message.inlinePeer == nil, message.text.isEmpty && (message.media.isEmpty || message.media.first is TelegramMediaUnsupported) {
+            if message.inlinePeer == nil, message.text.isEmpty && (message.media.isEmpty || message.effectiveMedia is TelegramMediaUnsupported) {
                 let attr = NSMutableAttributedString()
                 _ = attr.append(string: strings().chatMessageUnsupportedNew, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: .code(theme.fontSize))
                 messageAttr = attr
@@ -309,7 +309,7 @@ class ChatMessageItem: ChatRowItem {
                 
                 var canAssignToReply: Bool = true
                 
-                if let media = message.media.first as? TelegramMediaWebpage {
+                if let media = message.effectiveMedia as? TelegramMediaWebpage {
                     switch media.content {
                     case let .Loaded(content):
                         canAssignToReply = !ExternalVideoLoader.isPlayable(content)
@@ -324,9 +324,9 @@ class ChatMessageItem: ChatRowItem {
                     mediaDurationMessage = message
                 }
                 if let message = mediaDurationMessage {
-                    if let file = message.media.first as? TelegramMediaFile, file.isVideo && !file.isAnimated, let duration = file.duration {
+                    if let file = message.effectiveMedia as? TelegramMediaFile, file.isVideo && !file.isAnimated, let duration = file.duration {
                         mediaDuration = Double(duration)
-                    } else if let media = message.media.first as? TelegramMediaWebpage {
+                    } else if let media = message.effectiveMedia as? TelegramMediaWebpage {
                         switch media.content {
                         case let .Loaded(content):
                             if ExternalVideoLoader.isPlayable(content) {
@@ -405,7 +405,7 @@ class ChatMessageItem: ChatRowItem {
             }
 
             let containsBigEmoji: Bool
-            if message.media.first == nil, bigEmojiMessage(context.sharedContext, message: message) {
+            if message.effectiveMedia == nil, bigEmojiMessage(context.sharedContext, message: message) {
                 containsBigEmoji = true
                 switch copy.string.count {
                 case 1:
@@ -515,7 +515,7 @@ class ChatMessageItem: ChatRowItem {
             }
             
             
-            var media = message.media.first
+            var media = message.effectiveMedia
             if let game = media as? TelegramMediaGame {
                 media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: game.name, title: game.name, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, attributes: [], instantPage: nil)))
             }
@@ -554,7 +554,7 @@ class ChatMessageItem: ChatRowItem {
             
             
             (webpageLayout as? WPMediaLayout)?.parameters?.showMedia = { [weak self] message in
-                if let webpage = message.media.first as? TelegramMediaWebpage {
+                if let webpage = message.effectiveMedia as? TelegramMediaWebpage {
                     switch webpage.content {
                     case let .Loaded(content):
                         if content.embedType == "iframe" && content.type != kBotInlineTypeGif, let url = content.embedUrl {
@@ -581,7 +581,7 @@ class ChatMessageItem: ChatRowItem {
             openSpecificTimecodeFromReply = { [weak self] timecode in
                 if let timecode = timecode {
                     var canAssignToReply: Bool = true
-                    if let media = message.media.first as? TelegramMediaWebpage {
+                    if let media = message.effectiveMedia as? TelegramMediaWebpage {
                         switch media.content {
                         case let .Loaded(content):
                             canAssignToReply = !ExternalVideoLoader.isPlayable(content)

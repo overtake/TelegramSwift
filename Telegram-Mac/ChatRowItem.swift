@@ -255,7 +255,7 @@ class ChatRowItem: TableRowItem {
     }
     
     var isSticker: Bool {
-        let file = message?.media.first as? TelegramMediaFile
+        let file = message?.effectiveMedia as? TelegramMediaFile
         return file?.isStaticSticker == true || file?.isAnimatedSticker == true  || file?.isVideoSticker == true
     }
     
@@ -358,7 +358,7 @@ class ChatRowItem: TableRowItem {
         if presentation.shouldBlurService, isStateOverlayLayout {
             return true
         } else if isStateOverlayLayout {
-            if let message = message, let media = message.media.first {
+            if let message = message, let media = message.effectiveMedia {
                 return isBubbled && media.isInteractiveMedia && captionLayouts.isEmpty
             } else {
                 return false
@@ -368,7 +368,7 @@ class ChatRowItem: TableRowItem {
     }
     
     var isStateOverlayLayout: Bool {
-        if let message = message, let media = message.media.first {
+        if let message = message, let media = message.effectiveMedia {
             if isSticker {
                 return isBubbled
             }
@@ -475,7 +475,7 @@ class ChatRowItem: TableRowItem {
     }
     
     var isInstantVideo: Bool {
-        if let media = message?.media.first as? TelegramMediaFile {
+        if let media = message?.effectiveMedia as? TelegramMediaFile {
             return media.isInstantVideo
         }
         return false
@@ -751,7 +751,7 @@ class ChatRowItem: TableRowItem {
             if message.containsSecretMedia {
                 return false
             }
-            if let media = message.media.first, media is TelegramMediaAction {
+            if let media = message.effectiveMedia, media is TelegramMediaAction {
                 return false
             }
             return true
@@ -912,14 +912,14 @@ class ChatRowItem: TableRowItem {
         case .peer, .replyThread:
             if renderType == .bubble, let peer = coreMessageMainPeer(message) {
                 canFillAuthorName = isIncoming && (peer.isGroup || peer.isSupergroup || message.id.peerId == chatInteraction.context.peerId || message.id.peerId == repliesPeerId || message.adAttribute != nil)
-                if let media = message.media.first {
+                if let media = message.effectiveMedia {
                     canFillAuthorName = canFillAuthorName && !media.isInteractiveMedia && hasBubble && isIncoming
                 } else if bigEmojiMessage(chatInteraction.context.sharedContext, message: message) {
                     canFillAuthorName = false
                     disable = true
                 }
                 if message.isAnonymousMessage, !isIncoming {
-                    if let media = message.media.first as? TelegramMediaFile {
+                    if let media = message.effectiveMedia as? TelegramMediaFile {
                         if media.isSticker || media.isAnimatedSticker {
                             disable = true
                         }
@@ -929,7 +929,7 @@ class ChatRowItem: TableRowItem {
                     }
                 }
                 if !isIncoming && message.author?.id != chatInteraction.context.peerId, message.globallyUniqueId != 0 {
-                    if let media = message.media.first as? TelegramMediaFile {
+                    if let media = message.effectiveMedia as? TelegramMediaFile {
                         if media.isSticker || media.isAnimatedSticker {
                             disable = true
                         }
@@ -979,7 +979,7 @@ class ChatRowItem: TableRowItem {
     var hasBubble: Bool 
     
     static func hasBubble(_ message: Message?, entry: ChatHistoryEntry, type: ChatItemType, sharedContext: SharedAccountContext) -> Bool {
-        if let message = message, let media = message.media.first {
+        if let message = message, let media = message.effectiveMedia {
             
             if let file = media as? TelegramMediaFile {
                 if file.isStaticSticker {
@@ -1031,7 +1031,7 @@ class ChatRowItem: TableRowItem {
             if message.groupInfo != nil {
                 switch entry {
                 case .groupedPhotos(let entries, _):
-                    let prettyCount = entries.filter { $0.message?.media.first?.isInteractiveMedia ?? false }.count
+                    let prettyCount = entries.filter { $0.message?.effectiveMedia?.isInteractiveMedia ?? false }.count
                     return !message.text.isEmpty || message.replyAttribute != nil || message.forwardInfo != nil || entries.count == 1 || prettyCount != entries.count
                 default:
                     return true
@@ -1185,7 +1185,7 @@ class ChatRowItem: TableRowItem {
         if !isBubbled || !channelHasCommentButton {
             return nil
         }
-        if isStateOverlayLayout, let media = effectiveCommentMessage?.media.first, !media.isInteractiveMedia {
+        if isStateOverlayLayout, let media = effectiveCommentMessage?.effectiveMedia, !media.isInteractiveMedia {
             return nil
         } else if (self is ChatVideoMessageItem) {
             return nil
@@ -1407,7 +1407,7 @@ class ChatRowItem: TableRowItem {
         }
         
         var stateOverlayTextColor: NSColor {
-            if let media = message?.media.first, media.isInteractiveMedia || media is TelegramMediaMap {
+            if let media = message?.effectiveMedia, media.isInteractiveMedia || media is TelegramMediaMap {
                  return NSColor(0xffffff)
             } else {
                 return theme.chatServiceItemTextColor
@@ -1415,7 +1415,7 @@ class ChatRowItem: TableRowItem {
         }
         
         var isStateOverlayLayout: Bool {
-            if renderType == .bubble, let message = captionMessage, let media = message.media.first {
+            if renderType == .bubble, let message = captionMessage, let media = message.effectiveMedia {
                 if let file = media as? TelegramMediaFile {
                     if file.isStaticSticker || file.isAnimatedSticker || file.isVideoSticker  {
                         return renderType == .bubble
@@ -1590,7 +1590,7 @@ class ChatRowItem: TableRowItem {
                 
                 var accept:Bool = !isHasSource && message.id.peerId != context.peerId
                 
-                if let media = message.media.first as? TelegramMediaFile {
+                if let media = message.effectiveMedia as? TelegramMediaFile {
                     
                   
                     for attr in media.attributes {
@@ -1671,7 +1671,7 @@ class ChatRowItem: TableRowItem {
                     
                     
                     var isInstantVideo: Bool {
-                        if let media = message.media.first as? TelegramMediaFile {
+                        if let media = message.effectiveMedia as? TelegramMediaFile {
                             return media.isInstantVideo
                         }
                         return false
@@ -1951,7 +1951,7 @@ class ChatRowItem: TableRowItem {
                
                 
                 let paid: Bool
-                if let invoice = message.media.first as? TelegramMediaInvoice {
+                if let invoice = message.effectiveMedia as? TelegramMediaInvoice {
                     paid = invoice.receiptMessageId != nil
                 } else {
                     paid = false
@@ -2027,7 +2027,7 @@ class ChatRowItem: TableRowItem {
         }
         
         if let message = entry.message {
-            if message.media.count == 0 || message.media.first is TelegramMediaWebpage {
+            if message.media.count == 0 || message.effectiveMedia is TelegramMediaWebpage {
                 return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
             } else {
                 if let action = message.media[0] as? TelegramMediaAction {
@@ -2062,17 +2062,26 @@ class ChatRowItem: TableRowItem {
                     return ChatMapRowItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
                 } else if message.media[0] is TelegramMediaContact {
                     return ChatContactRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
-                } else if message.media[0] is TelegramMediaInvoice {
-                    return ChatInvoiceItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                } else if let media = message.media[0] as? TelegramMediaInvoice {
+                    if let extendedMedia = media.extendedMedia {
+                        switch extendedMedia {
+                        case .preview:
+                            return ChatInvoiceItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                        case .full:
+                            return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                        }
+                    } else {
+                        return ChatInvoiceItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                    }
                 } else if message.media[0] is TelegramMediaExpiredContent {
                     return ChatServiceItem(initialSize, interaction,interaction.context, entry, downloadSettings, theme: theme)
-                } else if message.media.first is TelegramMediaGame {
+                } else if message.effectiveMedia is TelegramMediaGame {
                     return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
-                } else if message.media.first is TelegramMediaPoll {
+                } else if message.effectiveMedia is TelegramMediaPoll {
                     return ChatPollItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
-                } else if message.media.first is TelegramMediaUnsupported {
+                } else if message.effectiveMedia is TelegramMediaUnsupported {
                     return ChatMessageItem(initialSize, interaction, interaction.context,entry, downloadSettings, theme: theme)
-                } else if message.media.first is TelegramMediaDice {
+                } else if message.effectiveMedia is TelegramMediaDice {
                     return ChatMediaDice(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                 }
                 
@@ -2419,7 +2428,7 @@ class ChatRowItem: TableRowItem {
     
     
     var unsupported: Bool {
-        if let message = message, message.text.isEmpty && (message.media.isEmpty || message.media.first is TelegramMediaUnsupported) {
+        if let message = message, message.text.isEmpty && (message.media.isEmpty || message.effectiveMedia is TelegramMediaUnsupported) {
             return message.inlinePeer == nil
         } else {
             return false
@@ -2880,7 +2889,7 @@ class ChatRowItem: TableRowItem {
     }
     
     var stateOverlayBackgroundColor: NSColor {
-        guard let media = self.message?.media.first else {
+        guard let media = self.message?.effectiveMedia else {
             return self.presentation.chatServiceItemColor
         }
         if media is TelegramMediaImage {
@@ -2895,7 +2904,7 @@ class ChatRowItem: TableRowItem {
     }
     
     var stateOverlayTextColor: NSColor {
-       guard let media = self.message?.media.first else {
+       guard let media = self.message?.effectiveMedia else {
            return self.presentation.chatServiceItemTextColor
        }
         if let file = media as? TelegramMediaFile, file.isInstantVideo {
@@ -2911,7 +2920,7 @@ class ChatRowItem: TableRowItem {
        }
     }
     var isInteractiveMedia: Bool {
-        guard let media = self.message?.media.first else {
+        guard let media = self.message?.effectiveMedia else {
             return false
         }
         return media.isInteractiveMedia

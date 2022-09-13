@@ -154,7 +154,7 @@ class ChatInputAccessory: View {
                 items.append(ContextSeparatorItem())
                 
                 let messagesWithCaption = state.interfaceState.forwardMessages.filter {
-                    !$0.text.isEmpty && $0.media.first != nil
+                    !$0.text.isEmpty && $0.effectiveMedia != nil
                 }.count
                 
                 if messagesWithCaption > 0 {

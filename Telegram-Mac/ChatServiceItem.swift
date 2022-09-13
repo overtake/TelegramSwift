@@ -316,7 +316,7 @@ class ChatServiceItem: ChatRowItem {
                     var gameName:String = ""
                     for attr in message.attributes {
                         if let attr = attr as? ReplyMessageAttribute {
-                            if let message = message.associatedMessages[attr.messageId], let gameMedia = message.media.first as? TelegramMediaGame {
+                            if let message = message.associatedMessages[attr.messageId], let gameMedia = message.effectiveMedia as? TelegramMediaGame {
                                 gameName = gameMedia.name
                             }
                         }
@@ -337,7 +337,7 @@ class ChatServiceItem: ChatRowItem {
                             }
                         }
                     }
-                    let media = paymentMessage?.media.first as? TelegramMediaInvoice
+                    let media = paymentMessage?.effectiveMedia as? TelegramMediaInvoice
                     
                     if let paymentMessage = paymentMessage, let media = media, let peer = paymentMessage.peers[paymentMessage.id.peerId] {
                         if isRecurringInit {
@@ -604,7 +604,7 @@ class ChatServiceItem: ChatRowItem {
             }
             _ = attributedString.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
         } else if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let _ = message.autoremoveAttribute {
-            let isPhoto: Bool = message.media.first is TelegramMediaImage
+            let isPhoto: Bool = message.effectiveMedia is TelegramMediaImage
             if authorId == context.peerId {
                 _ = attributedString.append(string: isPhoto ? strings().serviceMessageDesturctingPhotoYou(authorName) : strings().serviceMessageDesturctingVideoYou(authorName), color: grayTextColor, font: .normal(theme.fontSize))
             } else if let _ = authorId {
@@ -765,7 +765,7 @@ class ChatServiceRowView: TableRowView {
 
         textView.set(handler: { [weak self] control in
             if let item = self?.item as? ChatServiceItem {
-                if let message = item.message, let action = message.media.first as? TelegramMediaAction {
+                if let message = item.message, let action = message.effectiveMedia as? TelegramMediaAction {
                     switch action.action {
                     case let .messageAutoremoveTimeoutUpdated(timeout):
                         if let peer = item.chatInteraction.peer {
@@ -908,7 +908,7 @@ class ChatServiceRowView: TableRowView {
 
         var interactiveTextView: Bool = false
 
-        if let message = item.message, let action = message.media.first as? TelegramMediaAction {
+        if let message = item.message, let action = message.effectiveMedia as? TelegramMediaAction {
             switch action.action {
             case let .messageAutoremoveTimeoutUpdated(timeout):
                 if let peer = item.chatInteraction.peer {

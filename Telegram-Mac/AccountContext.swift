@@ -1017,7 +1017,7 @@ private final class ChatLocationContextHolderImpl: ChatLocationContextHolder {
 
 
 /*
- _ = (strongSelf.postbox.messageAtId(messageId) |> filter { $0?.isCopyProtected() == false } |> map { $0?.media.first as? TelegramMediaFile} |> filter {$0 != nil} |> map {$0!} |> mapToSignal { file -> Signal<Void, NoError> in
+ _ = (strongSelf.postbox.messageAtId(messageId) |> filter { $0?.isCopyProtected() == false } |> map { $0?.effectiveMedia as? TelegramMediaFile} |> filter {$0 != nil} |> map {$0!} |> mapToSignal { file -> Signal<Void, NoError> in
      if !file.isMusic && !file.isAnimated && !file.isVideo && !file.isVoice && !file.isInstantVideo && !file.isAnimatedSticker && !file.isStaticSticker {
          return copyToDownloads(file, postbox: postbox) |> map { _ in }
      }

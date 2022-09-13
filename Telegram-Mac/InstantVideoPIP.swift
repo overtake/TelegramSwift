@@ -149,7 +149,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
         loadViewIfNeeded()
         isShown = true
         genericView.animatesAlphaOnFirstTransition = false
-        if let message = currentMessage, let media = message.media.first as? TelegramMediaFile {
+        if let message = currentMessage, let media = message.effectiveMedia as? TelegramMediaFile {
             let signal:Signal<ImageDataTransformation, NoError> = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(message), media: media), scale: view.backingScaleFactor)
             
             let resource = FileMediaReference.message(message: MessageReference(message), media: media)
@@ -329,7 +329,7 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
         var msg:Message? = nil
         switch song.entry {
         case let .song(message):
-            if let md = (message.media.first as? TelegramMediaFile), md.isInstantVideo {
+            if let md = (message.effectiveMedia as? TelegramMediaFile), md.isInstantVideo {
                 msg = message
             }
         default:

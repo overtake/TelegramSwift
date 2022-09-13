@@ -331,6 +331,19 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
             })
 
         return signal
+    } else if let immediateThumbnailData = imageReference.media.immediateThumbnailData {
+        return Signal { subscriber in
+            let decodedThumbnailData = decodeTinyThumbnail(data: immediateThumbnailData)
+            if let data = decodedThumbnailData {
+                subscriber.putNext(.init(data, nil, true))
+                subscriber.putCompletion()
+            } else {
+                subscriber.putCompletion()
+            }
+            return ActionDisposable {
+                
+            }
+        }
     } else {
         return .never()
     }

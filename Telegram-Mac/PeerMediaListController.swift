@@ -213,13 +213,13 @@ fileprivate func preparedMediaTransition(from fromView:[AppearanceWrapperEntry<P
         
         switch entry.entry {
         case let .messageEntry(message, _, _, viewType):
-            if tags == .file, message.media.first is TelegramMediaFile {
+            if tags == .file, message.effectiveMedia is TelegramMediaFile {
                 return PeerMediaFileRowItem(initialSize, interaction, entry.entry, viewType: viewType)
             } else if tags == .webPage {
                 return PeerMediaWebpageRowItem(initialSize,interaction, entry.entry, viewType: viewType)
-            } else if tags == .music, message.media.first is TelegramMediaFile {
+            } else if tags == .music, message.effectiveMedia is TelegramMediaFile {
                 return PeerMediaMusicRowItem(initialSize, interaction, entry.entry, viewType: viewType)
-            } else if tags == .voiceOrInstantVideo, message.media.first is TelegramMediaFile {
+            } else if tags == .voiceOrInstantVideo, message.effectiveMedia is TelegramMediaFile {
                 return PeerMediaVoiceRowItem(initialSize,interaction, entry.entry, viewType: viewType)
             } else {
                 return GeneralRowItem(initialSize, height: 1, stableId: entry.stableId)

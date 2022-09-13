@@ -328,7 +328,16 @@ class ChatMediaItem: ChatRowItem {
         
         let isIncoming: Bool = message.isIncoming(context.account, object.renderType == .bubble)
 
-        media = message.media[0]
+        if let media = message.media[0] as? TelegramMediaInvoice, let extended = media.extendedMedia {
+            switch extended {
+            case .preview:
+                fatalError("not supported")
+            case .full(let media):
+                self.media = media
+            }
+        } else {
+            self.media = message.media[0]
+        }
         
         
         super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
@@ -392,7 +401,7 @@ class ChatMediaItem: ChatRowItem {
                 }
             }
             var mediaDuration: Double? = nil
-            if let file = message.media.first as? TelegramMediaFile, file.isVideo && !file.isAnimated, let duration = file.duration {
+            if let file = message.effectiveMedia as? TelegramMediaFile, file.isVideo && !file.isAnimated, let duration = file.duration {
                 mediaDuration = Double(duration)
             }
             

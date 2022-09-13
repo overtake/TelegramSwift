@@ -110,7 +110,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
                     } else if peers.count == 1 {
                         return peers[0].compactDisplayTitle.prefixWithDots(20)
                     } else {
-                        if let media = message.media.first as? TelegramMediaFile {
+                        if let media = message.effectiveMedia as? TelegramMediaFile {
                             if media.isInstantVideo {
                                 return strings().chatMessageReadStatsWatchedCountable(peers.count)
                             } else if media.isVoice {

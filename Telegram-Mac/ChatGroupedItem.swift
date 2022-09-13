@@ -35,7 +35,7 @@ class ChatGroupedItem: ChatRowItem {
         if case let .groupedPhotos(messages, _) = entry {
             
             let messages = messages.map{$0.message!}.filter({!$0.media.isEmpty})
-            let prettyCount = messages.filter { $0.media.first!.isInteractiveMedia }.count
+            let prettyCount = messages.filter { $0.effectiveMedia!.isInteractiveMedia }.count
             self.layout = GroupedLayout(messages, type: prettyCount != messages.count ? .files : .photoOrVideo)
             
             var captionMessages: [Message] = []
@@ -168,10 +168,10 @@ class ChatGroupedItem: ChatRowItem {
             switch layout.type {
             case .files:
                 
-               // self.parameters.append(ChatMediaLayoutParameters.layout(for: (message.media.first as! TelegramMediaFile), isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType), automaticDownload: downloadSettings.isDownloable(message), isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), isFile: true, autoplayMedia: entry.autoplayMedia, isChatRelated: true))
+               // self.parameters.append(ChatMediaLayoutParameters.layout(for: (message.effectiveMedia as! TelegramMediaFile), isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType), automaticDownload: downloadSettings.isDownloable(message), isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), isFile: true, autoplayMedia: entry.autoplayMedia, isChatRelated: true))
 
                 
-                self.parameters.append(ChatMediaLayoutParameters.layout(for: (message.media.first as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(message), isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), autoplayMedia: entry.autoplayMedia))
+                self.parameters.append(ChatMediaLayoutParameters.layout(for: (message.effectiveMedia as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(message), isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), autoplayMedia: entry.autoplayMedia))
             case .photoOrVideo:
                 self.parameters.append(ChatMediaGalleryParameters(showMedia: { [weak self] message in
                     guard let `self` = self else {return}
@@ -189,7 +189,7 @@ class ChatGroupedItem: ChatRowItem {
                     
                     }, showMessage: { [weak self] message in
                         self?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
-                    }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), media: message.media.first!, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: entry.autoplayMedia))
+                    }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), media: message.effectiveMedia!, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: entry.autoplayMedia))
                 
                 self.parameters[i].automaticDownloadFunc = { message in
                     return downloadSettings.isDownloable(message)
@@ -278,7 +278,7 @@ class ChatGroupedItem: ChatRowItem {
         }
         switch self.layoutType {
         case .files:
-            let file = self.messages[self.messages.count - 1].media.first as! TelegramMediaFile
+            let file = self.messages[self.messages.count - 1].effectiveMedia as! TelegramMediaFile
             if file.previewRepresentations.isEmpty {
                 if let parameters = self.parameters[messages.count - 1] as? ChatFileLayoutParameters {
                     let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
