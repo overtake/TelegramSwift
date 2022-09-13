@@ -52,7 +52,7 @@ class PeerMediaRowItem: GeneralRowItem {
         var resourceData: Signal<(TelegramMediaFile, MediaResourceData)?, NoError> = .single(nil)
         
         let context = self.interface.context
-        if let file = self.message.media.first as? TelegramMediaFile {
+        if let file = self.message.effectiveMedia as? TelegramMediaFile {
             resourceData = context.account.postbox.mediaBox.resourceData(file.resource) |> map {
                 (file, $0)
             }

@@ -100,7 +100,7 @@ final class AudioCommandCenter : NSObject, APDelegate {
                 
                 switch song.entry {
                 case let .song(message):
-                    let file = message.media.first as! TelegramMediaFile
+                    let file = message.effectiveMedia as! TelegramMediaFile
                     let resource: TelegramMediaResource?
                     if file.previewRepresentations.isEmpty {
                         if !file.mimeType.contains("ogg") {

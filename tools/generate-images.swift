@@ -781,6 +781,8 @@ func initialize() -> [String] {
     array.append("chat_premium_status_light_blue")
     array.append("chat_premium_status_blue")
 
+    
+    array.append("extend_content_lock")
 
     return array
 }

@@ -90,7 +90,7 @@ class PeerPhotosMonthItem: GeneralRowItem {
         var point: CGPoint = CGPoint(x: self.viewType.innerInset.left, y: self.viewType.innerInset.top + itemSize.height)
         for (i, message) in self.items.enumerated() {
             let viewType: MediaCell.Type
-            if let file = message.media.first as? TelegramMediaFile {
+            if let file = message.effectiveMedia as? TelegramMediaFile {
                 if file.isAnimated && file.isVideo {
                     viewType = MediaGifCell.self
                 } else {
@@ -240,13 +240,13 @@ private class MediaCell : Control {
             let arguments: TransformImageArguments
             let cacheArguments: TransformImageArguments
             let signal: Signal<ImageDataTransformation, NoError>
-            if let image = layout.message.media.first as? TelegramMediaImage, let largestSize = largestImageRepresentation(image.representations)?.dimensions.size {
+            if let image = layout.message.effectiveMedia as? TelegramMediaImage, let largestSize = largestImageRepresentation(image.representations)?.dimensions.size {
                 media = image
                 imageSize = largestSize.aspectFilled(NSMakeSize(150, 150))
                 arguments = TransformImageArguments(corners: layout.corners, imageSize: imageSize, boundingSize: layout.frame.size, intrinsicInsets: NSEdgeInsets())
                 cacheArguments = TransformImageArguments(corners: layout.corners, imageSize: imageSize, boundingSize: NSMakeSize(150, 150), intrinsicInsets: NSEdgeInsets())
                 signal = mediaGridMessagePhoto(account: context.account, imageReference: ImageMediaReference.message(message: MessageReference(layout.message), media: image), scale: backingScaleFactor)
-            } else if let file = layout.message.media.first as? TelegramMediaFile {
+            } else if let file = layout.message.effectiveMedia as? TelegramMediaFile {
                 media = file
                 let largestSize = file.previewRepresentations.last?.dimensions.size ?? file.imageSize
                 imageSize = largestSize.aspectFilled(NSMakeSize(150, 150))
@@ -390,7 +390,7 @@ private final class MediaVideoCell : MediaCell {
     }
     
     private func updateMediaStatus(_ status: MediaPlayerStatus, animated: Bool = false) {
-        if let videoView = videoView, let media = self.layoutItem?.message.media.first as? TelegramMediaFile {
+        if let videoView = videoView, let media = self.layoutItem?.message.effectiveMedia as? TelegramMediaFile {
             videoView.status = status
             updateVideoAccessory(self.authenticStatus ?? .Local, mediaPlayerStatus: status, file: media, animated: animated)
             
@@ -416,20 +416,20 @@ private final class MediaVideoCell : MediaCell {
     
     private func fetch() {
         if let context = context, let layoutItem = self.layoutItem {
-            let file = layoutItem.message.media.first as! TelegramMediaFile
+            let file = layoutItem.message.effectiveMedia as! TelegramMediaFile
             fetchingDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: layoutItem.message.id, messageReference: .init(layoutItem.message), file: file, userInitiated: true).start())
         }
     }
       
     private func cancelFetching() {
         if let context = context, let layoutItem = self.layoutItem {
-            let file = layoutItem.message.media.first as! TelegramMediaFile
+            let file = layoutItem.message.effectiveMedia as! TelegramMediaFile
             messageMediaFileCancelInteractiveFetch(context: context, messageId: layoutItem.message.id, file: file)
         }
     }
       
     override func innerAction() -> InvokeActionResult {
-        if let file = layoutItem?.message.media.first as? TelegramMediaFile, let window = self.window {
+        if let file = layoutItem?.message.effectiveMedia as? TelegramMediaFile, let window = self.window {
             switch progressView.state {
             case .Fetching:
                 if NSPointInRect(self.convert(window.mouseLocationOutsideOfEventStream, from: nil), progressView.frame) {
@@ -450,7 +450,7 @@ private final class MediaVideoCell : MediaCell {
         if let layoutItem = self.layoutItem {
             let context = layoutItem.chatInteraction.context
             if context.autoplayMedia.preloadVideos {
-                if let media = layoutItem.message.media.first as? TelegramMediaFile {
+                if let media = layoutItem.message.effectiveMedia as? TelegramMediaFile {
                     let reference = FileMediaReference.message(message: MessageReference(layoutItem.message), media: media)
                     let preload = preloadVideoResource(postbox: context.account.postbox, resourceReference: reference.resourceReference(media.resource), duration: 3.0)
                     partDisposable.set(preload.start())
@@ -498,7 +498,7 @@ private final class MediaVideoCell : MediaCell {
     
     override func update(layout: LayoutItem, context: AccountContext, table: TableView?) {
         super.update(layout: layout, context: context, table: table)
-        let file = layout.message.media.first as! TelegramMediaFile
+        let file = layout.message.effectiveMedia as! TelegramMediaFile
         
         let updatedStatusSignal = chatMessageFileStatus(context: context, message: layout.message, file: file) |> deliverOnMainQueue |> map { status -> (MediaResourceStatus, MediaResourceStatus) in
            if file.isStreamable && layout.message.id.peerId.namespace != Namespaces.Peer.SecretChat {
@@ -604,7 +604,7 @@ private final class MediaGifCell : MediaCell {
         let previousLayout = self.layoutItem
         super.update(layout: layout, context: context, table: table)
         if layout != previousLayout {
-            let file = layout.message.media.first as! TelegramMediaFile
+            let file = layout.message.effectiveMedia as! TelegramMediaFile
             
             let messageRefence = MessageReference(layout.message)
             
@@ -734,7 +734,7 @@ private final class PeerPhotosMonthView : TableRowView, Notifable {
                         case .gallery:
                             showChatGallery(context: item.context, message: layoutItem.message, item.gallerySupplyment, ChatMediaGalleryParameters(showMedia: { _ in}, showMessage: { message in
                                 layoutItem.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
-                            }, isWebpage: false, media: layoutItem.message.media.first!, automaticDownload: true), type: item.galleryType, reversed: true)
+                            }, isWebpage: false, media: layoutItem.message.effectiveMedia!, automaticDownload: true), type: item.galleryType, reversed: true)
                         case .nothing:
                             break
                         }

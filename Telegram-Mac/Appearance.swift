@@ -2534,7 +2534,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 chat_premium_status_green: { generatePremium(false, color: palette.groupPeerNameGreen, small: true) },
                                                 chat_premium_status_cyan: { generatePremium(false, color: palette.groupPeerNameCyan, small: true) },
                                                 chat_premium_status_light_blue: { generatePremium(false, color: palette.groupPeerNameLightBlue, small: true) },
-                                                chat_premium_status_blue: { generatePremium(false, color: palette.groupPeerNameBlue, small: true) }
+                                                chat_premium_status_blue: { generatePremium(false, color: palette.groupPeerNameBlue, small: true) },
+                                                extend_content_lock: { NSImage(named: "Icon_Premium_Lock")!.precomposed(.white) }
 
     )
 

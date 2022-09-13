@@ -352,7 +352,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         guard let item = item as? PeerMediaVoiceRowItem else {return}
         let backgroundColor: NSColor
         let foregroundColor: NSColor
-        if let media = item.message.media.first as? TelegramMediaFile, media.isInstantVideo {
+        if let media = item.message.effectiveMedia as? TelegramMediaFile, media.isInstantVideo {
             backgroundColor = .blackTransparent
             foregroundColor = .white
         } else {

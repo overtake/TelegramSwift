@@ -418,7 +418,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
         self.entry = entry
         self.context = context
         self._pagerSize = pagerSize
-        if let message = entry.message, !message.text.isEmpty, !(message.media.first is TelegramMediaWebpage) {
+        if let message = entry.message, !message.text.isEmpty, !(message.effectiveMedia is TelegramMediaWebpage) {
             let caption = message.text
             let attr = NSMutableAttributedString()
             _ = attr.append(string: caption.trimmed.fullTrimmed, color: .white, font: .normal(.text))
@@ -530,7 +530,7 @@ class MGalleryItem: NSObject, Comparable, Identifiable {
     }
     
     var isGraphicFile: Bool {
-        if self.entry.message?.media.first is TelegramMediaFile {
+        if self.entry.message?.effectiveMedia is TelegramMediaFile {
             return true
         } else {
             return false

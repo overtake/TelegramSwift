@@ -8832,6 +8832,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var extend_content_lock: CGImage {
+      if let image = cached.with({ $0["extend_content_lock"] }) {
+          return image
+      } else {
+          let image = _extend_content_lock()
+          _ = cached.modify { current in 
+              var current = current
+              current["extend_content_lock"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -9512,6 +9525,7 @@ public final class TelegramIconsTheme {
   private let _chat_premium_status_cyan: ()->CGImage
   private let _chat_premium_status_light_blue: ()->CGImage
   private let _chat_premium_status_blue: ()->CGImage
+  private let _extend_content_lock: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -10192,7 +10206,8 @@ public final class TelegramIconsTheme {
       chat_premium_status_green: @escaping()->CGImage,
       chat_premium_status_cyan: @escaping()->CGImage,
       chat_premium_status_light_blue: @escaping()->CGImage,
-      chat_premium_status_blue: @escaping()->CGImage
+      chat_premium_status_blue: @escaping()->CGImage,
+      extend_content_lock: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -10873,5 +10888,6 @@ public final class TelegramIconsTheme {
       self._chat_premium_status_cyan = chat_premium_status_cyan
       self._chat_premium_status_light_blue = chat_premium_status_light_blue
       self._chat_premium_status_blue = chat_premium_status_blue
+      self._extend_content_lock = extend_content_lock
   }
 }

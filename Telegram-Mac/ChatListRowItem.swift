@@ -617,7 +617,7 @@ class ChatListRowItem: TableRowItem {
             }
             
             if let author = author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, embeddedState == nil {
-                if !(message.media.first is TelegramMediaAction) {
+                if !(message.effectiveMedia is TelegramMediaAction) {
                     let peerText: String = (author.id == context.account.peerId ? "\(strings().chatListYou)" : author.displayTitle)
                     
                     let attr = NSMutableAttributedString()

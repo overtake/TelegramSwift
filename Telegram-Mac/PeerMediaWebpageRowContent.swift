@@ -69,7 +69,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         }
         
         
-        if let webpage = message.media.first as? TelegramMediaWebpage {
+        if let webpage = message.effectiveMedia as? TelegramMediaWebpage {
             if case let .Loaded(content) = webpage.content {
                 
                 var hostName: String = ""
@@ -154,7 +154,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
         
         for linkLayout in linkLayouts {
             linkLayout.interactions = TextViewInteractions(processURL: { [weak self] url in
-                if let webpage = self?.message.media.first as? TelegramMediaWebpage, let `self` = self {
+                if let webpage = self?.message.effectiveMedia as? TelegramMediaWebpage, let `self` = self {
                     if self.hasInstantPage {
                         showInstantPage(InstantPageViewController(self.interface.context, webPage: webpage, message: nil, saveToRecent: false))
                         return
@@ -177,7 +177,7 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
     }
     
     var hasInstantPage: Bool {
-        if let webpage = message.media.first as? TelegramMediaWebpage {
+        if let webpage = message.effectiveMedia as? TelegramMediaWebpage {
             if case let .Loaded(content) = webpage.content {
                 if let instantPage = content.instantPage {
                     let hasInstantPage:()->Bool = {

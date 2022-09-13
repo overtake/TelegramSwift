@@ -87,7 +87,7 @@ class WebGameViewController: TelegramGenericViewController<WKWebView>, WKUIDeleg
         super.viewDidLoad()
         genericView.wantsLayer = true
         loadMessageDisposable.set((context.account.postbox.messageAtId(messageId) |> deliverOnMainQueue).start(next: { [weak self] message in
-            if let message = message, let game = message.media.first as? TelegramMediaGame, let peer = message.inlinePeer {
+            if let message = message, let game = message.effectiveMedia as? TelegramMediaGame, let peer = message.inlinePeer {
                self?.start(with: game, peer: peer)
             }
         }))

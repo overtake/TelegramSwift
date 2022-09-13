@@ -134,7 +134,7 @@ class APSongItem : APItem {
 
     override init(_ entry:APEntry, _ account:Account) {
         if case let .song(message) = entry {
-            let file = (message.media.first as! TelegramMediaFile)
+            let file = (message.effectiveMedia as! TelegramMediaFile)
             resource = file.resource
             if let _ = file.mimeType.range(of: "m4a") {
                 self.ext = "m4a"
@@ -235,7 +235,7 @@ class APSongItem : APItem {
     var reference: MediaResourceReference {
         switch entry {
         case let .song(message):
-            return FileMediaReference.message(message: MessageReference(message), media: message.media.first as! TelegramMediaFile).resourceReference(resource)
+            return FileMediaReference.message(message: MessageReference(message), media: message.effectiveMedia as! TelegramMediaFile).resourceReference(resource)
         default:
             return MediaResourceReference.standalone(resource: resource)
         }
@@ -258,7 +258,7 @@ class APSongItem : APItem {
     var coverResource: TelegramMediaResource? {
         switch entry {
         case let .song(message):
-            if let file = message.media.first as? TelegramMediaFile {
+            if let file = message.effectiveMedia as? TelegramMediaFile {
                 if file.previewRepresentations.isEmpty {
                     if ext == "mp3" {
                         return ExternalMusicAlbumArtResource(title: file.musicText.0, performer: file.musicText.1, isThumbnail: true)
@@ -287,7 +287,7 @@ class APSongItem : APItem {
     var duration: Int32? {
         switch entry {
         case let .song(message):
-            return (message.media.first as? TelegramMediaFile)?.duration
+            return (message.effectiveMedia as? TelegramMediaFile)?.duration
         case let .single(wrapper):
             return wrapper.duration
         }
@@ -1183,7 +1183,7 @@ class APChatController : APController {
                 } |> map { view -> (APHistory?,APHistory) in
                     var entries:[APEntry] = []
                     for viewEntry in view.0.entries {
-                        if let media = viewEntry.message.media.first as? TelegramMediaFile, media.isMusicFile || media.isInstantVideo || media.isVoice {
+                        if let media = viewEntry.message.effectiveMedia as? TelegramMediaFile, media.isMusicFile || media.isInstantVideo || media.isVoice {
                             entries.append(.song(viewEntry.message))
                         }
                     }
