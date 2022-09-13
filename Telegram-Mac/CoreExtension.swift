@@ -512,6 +512,13 @@ public extension Message {
         return nil
     }
     
+    var hasExtendedMedia: Bool {
+        if let media = self.media.first as? TelegramMediaInvoice {
+            return media.extendedMedia != nil
+        }
+        return false
+    }
+    
     var consumableContent: ConsumableContentMessageAttribute? {
         for attr in attributes {
             if let attr = attr as? ConsumableContentMessageAttribute {

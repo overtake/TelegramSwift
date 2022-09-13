@@ -25,33 +25,36 @@ class ChatInvoiceItem: ChatRowItem {
         self.media = media
         let attr = NSMutableAttributedString()
         
-       
         
-        _ = attr.append(string: media.title, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
         
-        _ = attr.append(string: "\n")
 
-        if media.receiptMessageId != nil {
-            var title = strings().checkoutReceiptTitle.uppercased()
-            if media.flags.contains(.isTest) {
-                title += " (Test)"
-            }
-            _ = attr.append(string: title, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
-        } else {
-            _ = attr.append(string: formatCurrencyAmount(media.totalAmount, currency: media.currency), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
+        if let extendedMedia = media.extendedMedia {
             
-            _ = attr.append(string: " ")
+        } else {
+            _ = attr.append(string: media.title, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
+            _ = attr.append(string: "\n")
+            
+            if media.receiptMessageId != nil {
+                var title = strings().checkoutReceiptTitle.uppercased()
+                if media.flags.contains(.isTest) {
+                    title += " (Test)"
+                }
+                _ = attr.append(string: title, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
+            } else {
+                _ = attr.append(string: formatCurrencyAmount(media.totalAmount, currency: media.currency), color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
+                
+                _ = attr.append(string: " ")
 
-            var title = strings().messageInvoiceLabel.uppercased()
-            if media.flags.contains(.isTest) {
-                title += " (Test)"
+                var title = strings().messageInvoiceLabel.uppercased()
+                if media.flags.contains(.isTest) {
+                    title += " (Test)"
+                }
+                _ = attr.append(string: title, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
             }
-            _ = attr.append(string: title, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .medium(.text))
+            
+            _ = attr.append(string: "\n")
         }
-
-
         
-        _ = attr.append(string: "\n")
         _ = attr.append(string: media.description, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(.text))
         attr.detectLinks(type: [.Links], context: chatInteraction.context, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble))
         
@@ -229,6 +232,13 @@ class ChatInvoiceView : ChatRowView {
         super.set(item: item, animated: animated)
         
         if let item = item as? ChatInvoiceItem {
+            
+            /*
+             case preview(dimensions: PixelDimensions?, immediateThumbnailData: Data?, videoDuration: Int32?)
+             case full(media: Media)
+
+             */
+            
             textView.update(item.textLayout)
             if let photo = item.media.photo, let arguments = item.arguments, let message = item.message {
                 addSubview(imageView)
