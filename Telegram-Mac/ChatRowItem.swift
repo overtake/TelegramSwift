@@ -2737,15 +2737,15 @@ class ChatRowItem: TableRowItem {
                 }
 
                 
-                if let peerAllowed = peerAllowed {
+                if peer.isChannel {
+                   accessToAll = false
+                } else if let peerAllowed = peerAllowed {
                     switch peerAllowed {
                     case .all:
                         accessToAll = true
                     case .limited, .empty:
                         accessToAll = false
                     }
-                } else if peer.isChannel {
-                    accessToAll = false
                 } else {
                     accessToAll = true
                 }

@@ -391,10 +391,12 @@ final class InlineStickerItemLayer : SimpleLayer {
             signal = .single(file)
         } else {
             if let inlinePacksContext = inlinePacksContext {
-                signal = inlinePacksContext.load(fileId: emoji.fileId, checkStatus: checkStatus) |> deliverOnMainQueue
+                signal = inlinePacksContext.load(fileId: emoji.fileId, checkStatus: checkStatus)
+                |> deliverOnMainQueue
             } else {
                 signal = TelegramEngine(account: account).stickers.resolveInlineStickers(fileIds: [emoji.fileId])
                 |> map { $0.values.first }
+                |> deliverOnMainQueue
             }
         }
         

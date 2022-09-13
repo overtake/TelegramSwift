@@ -1329,8 +1329,9 @@ final class ChatReactionsView : View {
                                 
                                 let from = fromRect.origin.offsetBy(dx: fromRect.width / 2, dy: fromRect.height / 2)
                                 let to = toRect.origin.offsetBy(dx: toRect.width / 2, dy: toRect.height / 2)
-
-                                view.lockVisibility()
+                                if selected.value.count == 1 {
+                                    view.lockVisibility()
+                                }
                                 
                                 let completed: (Bool)->Void = { [weak view] _ in
                                     view?.unlockVisibility()

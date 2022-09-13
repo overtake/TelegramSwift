@@ -216,6 +216,9 @@ private class AccountInfoView : GeneralContainableRowView {
         guard let control = statusControl, visibleRect != .zero, window != nil else {
             return
         }
+        guard let fileId = status.fileId else {
+            return
+        }
         
         control.isHidden = true
         
@@ -226,7 +229,7 @@ private class AccountInfoView : GeneralContainableRowView {
             }
             control.isHidden = false
             control.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.3, bounce: true)
-            let player = CustomReactionEffectView(frame: NSMakeSize(120, 120).bounds, context: context, fileId: status.fileId)
+            let player = CustomReactionEffectView(frame: NSMakeSize(120, 120).bounds, context: context, fileId: fileId)
             
             player.isEventLess = true
             
@@ -244,7 +247,7 @@ private class AccountInfoView : GeneralContainableRowView {
         }
         if let item = self.item {
             if let fromRect = status.rect {
-                let layer = InlineStickerItemLayer.init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: status.fileId, file: nil, emoji: ""), size: control.frame.size)
+                let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: control.frame.size)
                 
                 let toRect = control.convert(control.frame.size.bounds, to: nil)
                 
@@ -267,24 +270,29 @@ private class AccountInfoView : GeneralContainableRowView {
     }
     
     override func set(item: TableRowItem, animated: Bool) {
-        let previous = self.item as? AccountInfoItem
-        
-        
         super.set(item: item)
         
         if let item = item as? AccountInfoItem {
             
+            var interactiveStatus: Reactions.InteractiveStatus? = nil
+            if visibleRect != .zero, window != nil, let interactive = item.context.reactions.interactiveStatus {
+                interactiveStatus = interactive
+            }
+            if let view = self.statusControl, interactiveStatus != nil, interactiveStatus?.fileId != nil {
+                performSubviewRemoval(view, animated: true, duration: 0.3)
+                self.statusControl = nil
+            }
             
             let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: item.isSelected, isBig: true, cached: self.statusControl, animated: animated)
+                        
             if let control = control {
                 self.statusControl = control
                 self.container.addSubview(control)
             } else if let view = self.statusControl {
-                performSubviewRemoval(view, animated: animated)
+                performSubviewRemoval(view, animated: true)
                 self.statusControl = nil
             }
-            
-            if visibleRect != .zero, window != nil, let interactive = item.context.reactions.interactiveStatus {
+            if let interactive = interactiveStatus {
                 self.playAnimation(interactive, context: item.context)
             }
             

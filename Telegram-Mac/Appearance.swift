@@ -514,9 +514,9 @@ func generatePremium(_ reversed: Bool = false, color: NSColor? = nil, small: Boo
 
         let image: CGImage
         if small {
-            image = NSImage(named: "Icon_Premium_Badge_Small")!.precomposed()
-        } else {
             image = NSImage(named: "Icon_Peer_Premium")!.precomposed()
+        } else {
+            image = NSImage(named: "Icon_Premium_StickerPack")!.precomposed()
         }
         ctx.clip(to: size.bounds, mask: image)
 
@@ -542,9 +542,9 @@ func generatePremium(_ reversed: Bool = false, color: NSColor? = nil, small: Boo
     
     let size: NSSize
     if small {
-        size = NSMakeSize(14, 14)
-    } else {
         size = NSMakeSize(16, 16)
+    } else {
+        size = NSMakeSize(24, 24)
     }
     if reversed {
         return generateImage(size, rotatedContext: { size, ctx in

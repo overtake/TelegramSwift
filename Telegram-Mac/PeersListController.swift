@@ -180,6 +180,17 @@ class PeerListContainerView : View {
         private weak var effectPanel: Window?
         
         func update(_ peer: Peer, context: AccountContext, animated: Bool) {
+            
+            
+            var interactiveStatus: Reactions.InteractiveStatus? = nil
+            if visibleRect != .zero, window != nil, let interactive = context.reactions.interactiveStatus {
+                interactiveStatus = interactive
+            }
+            if let view = self.button, interactiveStatus != nil, interactiveStatus?.fileId != nil {
+                performSubviewRemoval(view, animated: animated, duration: 0.3)
+                self.button = nil
+            }
+            
             let control = PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, isSelected: false, isBig: true, playTwice: true, cached: self.button, animated: animated)
             if let control = control {
                 self.button = control
@@ -191,7 +202,7 @@ class PeerListContainerView : View {
             }
             self.peer = peer
             
-            if visibleRect != .zero, let _ = self.window, let interactive = context.reactions.interactiveStatus {
+            if let interactive = interactiveStatus {
                 self.playAnimation(interactive, context: context)
             }
         }
@@ -201,6 +212,9 @@ class PeerListContainerView : View {
                 return
             }
             
+            guard let fileId = status.fileId else {
+                return
+            }
             
             control.isHidden = true
             
@@ -220,7 +234,7 @@ class PeerListContainerView : View {
                 panel.isOpaque = false
                 panel.hasShadow = false
 
-                let player = CustomReactionEffectView(frame: NSMakeSize(120, 120).bounds, context: context, fileId: status.fileId)
+                let player = CustomReactionEffectView(frame: NSMakeSize(120, 120).bounds, context: context, fileId: fileId)
                 
                 player.isEventLess = true
                 
@@ -246,7 +260,7 @@ class PeerListContainerView : View {
                 window.addChildWindow(panel, ordered: .above)
             }
             if let fromRect = status.rect {
-                let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: status.fileId, file: nil, emoji: ""), size: control.frame.size)
+                let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: control.frame.size)
                 
                 let toRect = control.convert(control.frame.size.bounds, to: nil)
                 
