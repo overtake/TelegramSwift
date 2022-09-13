@@ -1958,7 +1958,9 @@ class ChatRowItem: TableRowItem {
                 }
                 if let attribute = attribute as? ReplyMarkupMessageAttribute, attribute.flags.contains(.inline) {
                     if message.restrictedText(context.contentSettings) == nil {
-                        replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message), theme, paid: paid)
+                        if !message.hasExtendedMedia {
+                            replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message), theme, paid: paid)
+                        }
                     }
                 }
             }

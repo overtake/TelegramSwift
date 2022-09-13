@@ -984,6 +984,50 @@ enum LottiePlayPolicy : Hashable {
     case framesCount(Int32)
     case onceToFrame(Int32)
     case playCount(Int32)
+    
+    
+    static func ==(lhs: LottiePlayPolicy, rhs: LottiePlayPolicy) -> Bool {
+        switch lhs {
+        case .loop:
+            if case .loop = rhs {
+                return true
+            }
+        case let .loopAt(firstStart, range):
+            if case .loopAt(firstStart, range) = rhs {
+                return true
+            }
+        case .once:
+            if case .once = rhs {
+                return true
+            }
+        case .onceEnd:
+            if case .onceEnd = rhs {
+                return true
+            }
+        case .toEnd:
+            if case .toEnd = rhs {
+                return true
+            }
+        case .toStart:
+            if case .toStart = rhs {
+                return true
+            }
+        case let .framesCount(count):
+            if case .framesCount(count) = rhs {
+                return true
+            }
+        case let .onceToFrame(count):
+            if case .onceToFrame(count) = rhs {
+                return true
+            }
+        case .playCount:
+            if case .playCount = rhs {
+                return true
+            }
+        }
+        return false
+    }
+
 }
 
 struct LottieColor : Equatable {
@@ -1224,7 +1268,7 @@ enum LottieAnimationType {
 
 final class LottieAnimation : Equatable {
     static func == (lhs: LottieAnimation, rhs: LottieAnimation) -> Bool {
-        return lhs.key == rhs.key && lhs.colors == rhs.colors
+        return lhs.key == rhs.key && lhs.playPolicy == rhs.playPolicy && lhs.colors == rhs.colors
     }
     
     let type: LottieAnimationType
