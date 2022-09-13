@@ -74,25 +74,25 @@ class ExportedInvitationRowItem: GeneralRowItem {
             text = exportedLink.link.replacingOccurrences(of: "https://", with: "")
             color = theme.colors.text
             if let count = exportedLink.count {
-                usageText = strings().inviteLinkJoinedCountable(Int(count))
+                usageText = strings().inviteLinkJoinedNewCountable(Int(count))
                 if count > 0 {
                     usageColor = theme.colors.link
                 } else {
                     usageColor = theme.colors.grayText
                 }
             } else {
-                usageText = strings().inviteLinkJoinedZero
+                usageText = strings().inviteLinkJoinedNewZero
                 usageColor = theme.colors.grayText
             }
         } else if let publicAddress = publicAddress {
             text = "t.me/\(publicAddress)"
             color = theme.colors.text
-            usageText = strings().inviteLinkJoinedZero
+            usageText = strings().inviteLinkJoinedNewZero
             usageColor = theme.colors.grayText
         } else {
             text = strings().channelVisibilityLoading
             color = theme.colors.grayText
-            usageText = strings().inviteLinkJoinedZero
+            usageText = strings().inviteLinkJoinedNewZero
             usageColor = theme.colors.grayText
         }
         

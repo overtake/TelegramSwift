@@ -1385,7 +1385,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             for orderedView in view.orderedItemListsViews {
                 if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedStatusEmoji {
                     featuredStatusEmoji = orderedView
-                } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudFeaturedStatusEmoji {
+                } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudRecentStatusEmoji {
                     recentStatusEmoji = orderedView
                 } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudRecentReactions {
                     recentReactionsView = orderedView

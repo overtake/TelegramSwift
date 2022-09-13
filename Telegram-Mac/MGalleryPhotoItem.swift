@@ -21,7 +21,8 @@ class MGalleryPhotoItem: MGalleryItem {
     override init(_ context: AccountContext, _ entry: GalleryEntry, _ pagerSize: NSSize) {
         switch entry {
         case .message(let entry):
-            if let webpage =  entry.message!.media[0] as? TelegramMediaWebpage {
+            let media = entry.message!.effectiveMedia
+            if let webpage = media as? TelegramMediaWebpage {
                 if case let .Loaded(content) = webpage.content, let image = content.image {
                     self.media = image
                 } else if case let .Loaded(content) = webpage.content, let media = content.file  {
@@ -34,13 +35,13 @@ class MGalleryPhotoItem: MGalleryItem {
                     fatalError("image for webpage not found")
                 }
             } else {
-                if let media = entry.message!.media[0] as? TelegramMediaFile {
+                if let media = media as? TelegramMediaFile {
                     let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? PixelDimensions(0, 0), resource: media.resource, progressiveSizes: [], immediateThumbnailData: nil)
                     var representations = media.previewRepresentations
                     representations.append(represenatation)
                     self.media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                 } else {
-                    self.media = entry.message!.media[0] as! TelegramMediaImage
+                    self.media = media as! TelegramMediaImage
                 }
             }
             secureIdAccessContext = nil

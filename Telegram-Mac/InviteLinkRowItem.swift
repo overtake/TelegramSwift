@@ -267,7 +267,7 @@ private final class InviteLinkTokenView : Control {
                 text = strings().inviteLinkJoinedRevoked
             } else {
                 if let count = link.count {
-                    text = strings().inviteLinkJoinedCountable(Int(count))
+                    text = strings().inviteLinkJoinedNewCountable(Int(count))
                     text = text.replacingOccurrences(of: "\(count)", with: Int(count).prettyNumber)
                 } else if let usageLimit = link.usageLimit {
                     if link.isExpired {
@@ -276,7 +276,7 @@ private final class InviteLinkTokenView : Control {
                         text = strings().inviteLinkCanJoinCountable(Int(usageLimit))
                     }
                 } else {
-                    text = strings().inviteLinkJoinedZero
+                    text = strings().inviteLinkJoinedNewZero
                 }
                 if link.requestApproval, let requestedCount = link.requestedCount {
                     var textCount = strings().inviteLinkRequestedCountable(Int(requestedCount))
