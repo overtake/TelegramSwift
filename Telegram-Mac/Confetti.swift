@@ -373,8 +373,10 @@ final class CustomReactionEffectView: View {
     private let backgroundView = LottiePlayerView(frame: NSMakeRect(0, 0, 80, 80))
     
     private let disposable = MetaDisposable()
+    private let context: AccountContext
     
     required init(frame: CGRect, context: AccountContext, fileId: Int64) {
+        self.context = context
         super.init(frame: frame)
         addSubview(backgroundView)
         
@@ -412,16 +414,59 @@ final class CustomReactionEffectView: View {
             }
         } |> deliverOnMainQueue
         
-        let combined = combineLatest(signal, context.inlinePacksContext.load(fileId: fileId))
+        
+        let fileSignal: Signal<(TelegramMediaFile?, LottieAnimation?), NoError> = context.inlinePacksContext.load(fileId: fileId) |> mapToSignal { file in
+            if let file = file, let emoji = file.customEmojiText {
+                return context.reactions.stateValue
+                |> take(1) |> mapToSignal { value in
+                    if let reaction = value?.reactions.first(where: { $0.value == .builtin(emoji) }) {
+                        if let animation = reaction.aroundAnimation {
+                            return context.account.postbox.mediaBox.resourceData(animation.resource)
+                            |> take(1)
+                            |> map { data in
+                                if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
+                                    return (file, LottieAnimation(compressed: data, key: .init(key: .bundle("_status_effect_\(animation.fileId.id)"), size: size, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd))
+                                } else {
+                                    return (file, nil)
+                                }
+                            }
+                        }
+                    }
+                    return .single((file, nil))
+                }
+            } else {
+                return .single((file, nil))
+            }
+        }
+        
+        let combined = combineLatest(signal, fileSignal)
                                      |> deliverOnMainQueue
+        
+        
+        //
+        
         disposable.set(combined.start(next: { [weak self] animation, file in
-            if !isDefaultStatusesPackId(file?.emojiReference) {
-                self?.backgroundView.set(animation)
+            if let statusFile = file.0 {
+                if let builtinAnimation = file.1 {
+                    builtinAnimation.triggerOn = (.last, { [weak self] in
+                        self?.triggerOnFinish()
+                    }, {})
+                    self?.backgroundView.set(builtinAnimation)
+                } else {
+                    if !isDefaultStatusesPackId(statusFile.emojiReference) {
+                        self?.backgroundView.set(animation)
+                    }
+                    self?.playStrikeAnimation(fileId, statusFile)
+                }
             }
         }))
-
+        self.backgroundView.userInteractionEnabled = false
         self.backgroundView.isEventLess = true
         self.isEventLess = true
+
+    }
+    
+    private func playStrikeAnimation(_ fileId: Int64, _ file: TelegramMediaFile?) {
         
 //        let originXRange = Int(frame.width / 2 - 20) ..< Int(frame.width / 2 + 20)
         let topMassRange: Range<Float> = 40.0 ..< 50.0
@@ -447,7 +492,7 @@ final class CustomReactionEffectView: View {
                 originY = Int.random(in: Int(frame.height / 2 - 30) ..< Int(frame.height / 2 + 30))
             }
             
-            let sublayer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, checkStatus: true, getColors: { file in
+            let sublayer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: size, checkStatus: true, getColors: { file in
                 var colors: [LottieColor] = []
                 if isDefaultStatusesPackId(file.emojiReference) {
                     colors.append(.init(keyPath: "", color: theme.colors.accent))
