@@ -281,19 +281,23 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                     }
                     
                 case let .photo(data):
-                    let view = View()
-                    let imageView = TransformImageView()
-                    imageView.setSignal(chatWebpageSnippetPhoto(account: item.context.account, imageReference: ImageMediaReference.standalone(media: data), scale: backingScaleFactor, small:false))
+                    let view: TransformImageView
+                    let index = subviews.firstIndex(where: { $0 is TransformImageView})
+                    if let index = index {
+                        view = subviews.remove(at: index) as! TransformImageView
+                    } else {
+                        view = TransformImageView()
+                    }
+                    view.setSignal(chatWebpageSnippetPhoto(account: item.context.account, imageReference: ImageMediaReference.standalone(media: data), scale: backingScaleFactor, small:false))
                     _ = chatMessagePhotoInteractiveFetched(account: item.context.account, imageReference: ImageMediaReference.standalone(media: data)).start()
                     
                     let imageSize = item.result.sizes[i]
-                    imageView.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets()))
+                    view.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets()))
                     view.layer?.borderWidth = 2.0
                     view.layer?.borderColor = theme.colors.background.cgColor
                     view.setFrameSize(NSMakeSize(imageSize.width, item.height))
-                    imageView.setFrameSize(imageSize)
-                    imageView.center()
-                    view.addSubview(imageView)
+                    view.setFrameSize(imageSize)
+                    view.center()
                     container = view
                 }
                 

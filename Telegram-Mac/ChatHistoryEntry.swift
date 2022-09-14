@@ -921,7 +921,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         
         
         if !adMessages.isEmpty {
-            entries.append(.empty(MessageIndex.init(id: .init(peerId: lastMessage.id.peerId, namespace: lastMessage.id.namespace, id: lastMessage.id.id + nextAdMessageId), timestamp: lastMessage.timestamp + nextAdMessageId), chatTheme))
+            entries.append(.empty(MessageIndex.init(id: .init(peerId: lastMessage.id.peerId, namespace: lastMessage.id.namespace, id: Int32.max - 150), timestamp: Int32.max - 150), chatTheme))
             nextAdMessageId += 1
         }
         for message in adMessages {
@@ -933,7 +933,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 groupingKey: nil,
                 groupInfo: nil,
                 threadId: nil,
-                timestamp: lastMessage.timestamp + nextAdMessageId,
+                timestamp: (Int32.max - 100) + nextAdMessageId,
                 flags: message.flags,
                 tags: message.tags,
                 globalTags: message.globalTags,
