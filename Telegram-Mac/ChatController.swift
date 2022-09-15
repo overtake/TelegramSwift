@@ -5300,7 +5300,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let hasEntries = self.previousView.with { $0?.filteredEntries.count ?? 0 } > 1
         let checkScroll = self.historyState.isDownOfHistory && scroll.rect.minY == genericView.tableView.frame.height && hasEntries
         let screenIsLocked = appDelegate?.isLockedValue() ?? false
-        if let window = window, window.isKeyWindow, checkScroll, SystemIdleTime() < 5, !screenIsLocked {
+        if let window = window, window.isKeyWindow, checkScroll, SystemIdleTime() < 30, !screenIsLocked {
             return true
         } else {
             return false
