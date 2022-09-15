@@ -1325,7 +1325,7 @@ final class ChatReactionsView : View {
                                 
                                 let layer = selected.getInlineLayer(selected.mode)
 
-                                let toRect = current.convert(current.frame.size.bounds, to: nil)
+                                let toRect = current.convert(current.bounds, to: nil)
                                 
                                 let from = fromRect.origin.offsetBy(dx: fromRect.width / 2, dy: fromRect.height / 2)
                                 let to = toRect.origin.offsetBy(dx: toRect.width / 2, dy: toRect.height / 2)

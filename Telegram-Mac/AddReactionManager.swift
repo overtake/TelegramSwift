@@ -40,7 +40,7 @@ func parabollicReactionAnimation(_ layer: InlineStickerItemLayer, fromPoint: NSP
     animation.fillMode = .forwards
     animation.speed = 1
     animation.repeatCount = 2
-    animation.autoreverses = true
+//    animation.autoreverses = true
     
     layer.add(animation, forKey: "transform.scale")
     

@@ -243,7 +243,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                 input = .init(inputText: bundle, selectionRange: 0..<bundle.length, attributes: [])
             } else {
                 let text = file.customEmojiText ?? file.stickerText ?? ""
-                input = .init(inputText: text, selectionRange: 0..<text.length, attributes: [.animated(0..<text.length, text, arc4random64(), file, info?.id)])
+                input = .init(inputText: text, selectionRange: 0..<text.length, attributes: [.animated(0..<text.length, text, arc4random64(), file, info?.id, nil)])
             }
             copyItem = ContextMenuItem(strings().contextCopy, handler: {
                 copyToClipboard(input)
