@@ -13,6 +13,7 @@ import CalendarUtils
 import Postbox
 import SwiftSignalKit
 import InAppSettings
+import ObjcUtils
 
 private var nextClientId: Int32 = 1
 
@@ -2153,11 +2154,19 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         self.historyDisposable.set(appliedTransition.start())
         
+        let canRead: Signal<Bool, NoError>
+        if let isLocked = appDelegate?.isLocked() {
+            canRead = combineLatest(isLocked, self.isKeyWindow.get())
+            |> map { !$0 && $1 }
+        } else {
+            canRead = self.isKeyWindow.get()
+        }
+        
         let previousMaxIncomingMessageIdByNamespace = Atomic<[MessageId.Namespace: MessageIndex]>(value: [:])
-        let readHistory = combineLatest(self.maxVisibleIncomingMessageIndex.get(), self.isKeyWindow.get())
+        let readHistory = combineLatest(self.maxVisibleIncomingMessageIndex.get(), canRead)
             |> map { [weak self] messageIndex, canRead in
                 guard let `self` = self else {return}
-                if canRead {
+                if canRead && SystemIdleTime() < 30 {
                     var apply = false
                     let _ = previousMaxIncomingMessageIdByNamespace.modify { dict in
                         let previousIndex = dict[messageIndex.id.namespace]
@@ -5286,12 +5295,22 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         return nil
     }
     
+    private func canInteractiveRead() -> Bool {
+        let scroll = genericView.scroll
+        let hasEntries = self.previousView.with { $0?.filteredEntries.count ?? 0 } > 1
+        let checkScroll = self.historyState.isDownOfHistory && scroll.rect.minY == genericView.tableView.frame.height && hasEntries
+        let screenIsLocked = appDelegate?.isLockedValue() ?? false
+        if let window = window, window.isKeyWindow, checkScroll, SystemIdleTime() < 5, !screenIsLocked {
+            return true
+        } else {
+            return false
+        }
+    }
+    
     private func updateInteractiveReading() {
         switch mode {
         case .history:
-            let scroll = genericView.scroll
-            let hasEntries = self.previousView.with { $0?.filteredEntries.count ?? 0 } > 1
-            if let window = window, window.isKeyWindow, self.historyState.isDownOfHistory && scroll.rect.minY == genericView.tableView.frame.height, hasEntries {
+            if self.canInteractiveRead() {
                 self.interactiveReadingDisposable.set(context.engine.messages.installInteractiveReadMessagesAction(peerId: chatInteraction.peerId))
                 
                 let visibleMessageRange = self.visibleMessageRange
@@ -5361,6 +5380,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
     func applyTransition(_ transition:TableUpdateTransition, initialData:ChatHistoryCombinedInitialData, isLoading: Bool, processedView: ChatHistoryView) {
         
+        
+        
         let wasEmpty = genericView.tableView.isEmpty
 
         initialDataHandler.set(.single(initialData))
@@ -5384,8 +5405,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         let previousItems = self.collectPreviousItems()
         
+        var transition = transition
+
+        if case .none = transition.state, !canInteractiveRead() {
+            transition = transition.withUpdatedState(.saveVisible(.lower))
+        }
         
         genericView.tableView.merge(with: transition)
+        
         
 //        self.reactionManager?.update(transition: .animated(duration: 0.2, curve: .easeOut))
         

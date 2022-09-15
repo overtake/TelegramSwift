@@ -114,7 +114,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
    
 
     @IBOutlet weak var window: Window! {
-        didSet {            
+        didSet {
             window.delegate = self
             window.isOpaque = true
             let notInitial = window.initSaver()
@@ -1357,6 +1357,19 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     @IBAction func closeWindow(_ sender: Any) {
         NSApp.keyWindow?.close()
+    }
+    
+    func isLocked() -> Signal<Bool, NoError> {
+        if let context = sharedApplicationContextValue {
+            return context.notificationManager.isLockedValue
+        }
+        return .single(false)
+    }
+    func isLockedValue() -> Bool {
+        if let context = sharedApplicationContextValue {
+            return context.notificationManager.isLocked
+        }
+        return false
     }
     
     func showSavedPathSuccess(_ path: String) {
