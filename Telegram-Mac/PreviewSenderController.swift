@@ -988,9 +988,9 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         interactions.sendEmoji = { [weak self] emoji in
             self?.genericView.textView.appendText(emoji)
         }
-        interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, _ in
+        interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, fromRect in
             let text = (sticker.file.customEmojiText ?? sticker.file.stickerText ?? "😀").fixed
-            _ = self?.contextChatInteraction.appendText(.makeAnimated(sticker.file, text: text))
+            _ = self?.contextChatInteraction.appendText(.makeAnimated(sticker.file, text: text, fromRect: fromRect))
         }
         
         emoji.update(with: interactions, chatInteraction: contextChatInteraction)
