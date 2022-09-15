@@ -194,6 +194,10 @@ public class TableUpdateTransition : UpdateTransition<TableRowItem> {
     public override var description: String {
         return "inserted: \(inserted.count), updated:\(updated.count), deleted:\(deleted.count), state: \(state), animated: \(animated)"
     }
+    
+    public func withUpdatedState(_ state: TableScrollState) -> TableUpdateTransition {
+        return .init(deleted: self.deleted, inserted: self.inserted, updated: self.updated, animated: self.animated, state: state, grouping: self.grouping, animateVisibleOnly: self.animateVisibleOnly, searchState: self.searchState)
+    }
     deinit {
         var bp:Int = 0
         bp += 1

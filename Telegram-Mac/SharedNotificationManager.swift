@@ -264,14 +264,21 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         updateLocked { (previous) -> LockNotificationsData in
             return previous.withUpdatedScreenLock(true)
         }
+        _isLockedValue.set(true)
     }
     
     @objc func screenIsUnlocked() {
         updateLocked { (previous) -> LockNotificationsData in
             return previous.withUpdatedScreenLock(false)
         }
+        _isLockedValue.set(false)
     }
     
+    private let _isLockedValue = ValuePromise(false, ignoreRepeated: true)
+    var isLockedValue: Signal<Bool, NoError> {
+        return _isLockedValue.get()
+    }
+
     
     var isLocked: Bool {
         return _lockedValue.isLocked

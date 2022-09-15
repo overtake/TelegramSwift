@@ -501,12 +501,13 @@ final class CustomReactionEffectView: View {
             let particle = ParticleReactionLayer(sublayer: sublayer, size: CGSize(width: size.width, height: size.height), position: point, mass: Float.random(in: topMassRange), velocity: Vector2(x: 0, y: Float.random(in: velocityYRange)), angularVelocity: Float.random(in: angularVelocityRange))
             self.particles.append(particle)
             self.layer?.addSublayer(particle)
+            particle.animateScale(from: 0.1, to: 1, duration: 0.1)
         }
         
         self.displayLink = ConstantDisplayLinkAnimator(update: { [weak self] in
             self?.step()
         })
-        
+        self.step()
         self.displayLink?.isPaused = false
     }
     
@@ -598,14 +599,16 @@ final class CustomReactionEffectView: View {
             var scale: CGFloat = 1.0
             let oneOfThree = frame.height / 3
 
+            var opacity: CGFloat = 1.0
             if position.y > frame.height / 2, currentTime > slowdownStart + slowdownDuration + 0.35 {
                 let rest = (position.y - frame.height / 2)
                 scale = 1 - rest / oneOfThree
+                opacity = scale
             }
             fr = CATransform3DRotate(fr, CGFloat(particle.rotationAngle), 0.0, 0.0, 1.0)
             fr = CATransform3DScale(fr, scale, scale, scale)
             particle.transform = fr
-            particle.opacity = Float(scale)
+            particle.opacity = Float(opacity)
             let acceleration = g
             
             var velocity = particle.velocity
