@@ -305,7 +305,7 @@ final class ChatInteraction : InterfaceObserver  {
     }
     
     
-    func call() {
+    func call(isVideo: Bool = false) {
         if let peer = presentation.peer {
             let peerId:PeerId
             if let peer = peer as? TelegramSecretChat {
@@ -314,7 +314,7 @@ final class ChatInteraction : InterfaceObserver  {
                 peerId = peer.id
             }
             let context = self.context
-            requestSessionId.set((phoneCall(context: context, peerId: peerId) |> deliverOnMainQueue).start(next: { result in
+            requestSessionId.set((phoneCall(context: context, peerId: peerId, isVideo: isVideo) |> deliverOnMainQueue).start(next: { result in
                 applyUIPCallResult(context, result)
             }))
         }

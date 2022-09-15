@@ -36,7 +36,7 @@ final class PremiumStatusControl : Control {
         if let size = PremiumStatusControl.controlSize(peer, isBig) {
             setFrameSize(size)
         }
-        self.layer?.opacity = color != nil ? 0.4 : 1
+        self.layer?.opacity = color != nil && peer.emojiStatus != nil ? 0.4 : 1
 
         if peer.isFake || peer.isScam || peer.isVerified || (peer.isPremium && peer.emojiStatus == nil)  {
             if let animateLayer = animateLayer {

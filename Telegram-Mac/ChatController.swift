@@ -5654,10 +5654,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }, itemImage: MenuAnimation.menu_video_chat.value))
                         }
                         if peer.isUser, peer.id != context.peerId {
-                            if !peer.isBot, !peer.isSecretChat {
-                                items.append(ContextMenuItem(strings().peerInfoStartSecretChat, handler: { [weak self] in
-                                    self?.startSecretChat()
-                                }, itemImage: MenuAnimation.menu_lock.value))
+                            if !peer.isBot {
+                                items.append(ContextMenuItem(strings().peerInfoActionVideoCall, handler: { [weak self] in
+                                    self?.chatInteraction.call(isVideo: true)
+                                }, itemImage: MenuAnimation.menu_video_call.value))
                             }
                             
                             
@@ -5669,17 +5669,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 self?.showChatThemeSelector()
                             }, itemImage: MenuAnimation.menu_change_colors.value))
                         }
-                        
-                        if let groupId = peerView.groupId, groupId != .root {
-                            items.append(ContextMenuItem(strings().chatContextUnarchive, handler: {
-                                _ = context.engine.peers.updatePeersGroupIdInteractively(peerIds: [peerId], groupId: .root).start()
-                            }, itemImage: MenuAnimation.menu_unarchive.value))
-                        } else {
-                            items.append(ContextMenuItem(strings().chatContextArchive, handler: {
-                                _ = context.engine.peers.updatePeersGroupIdInteractively(peerIds: [peerId], groupId: .archive).start()
-                            }, itemImage: MenuAnimation.menu_archive.value))
-                        }
-                        
                         
                         let deleteChat = { [weak self] in
                             guard let `self` = self else {return}

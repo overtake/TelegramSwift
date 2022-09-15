@@ -473,24 +473,20 @@ final class CustomReactionEffectView: View {
         let velocityYRange = Float(3.0) ..< Float(5.0)
         let angularVelocityRange = Float(-3) ..< Float(3)
         let sizeVariation = Float(0.8) ..< Float(1.6)
-        for i in 0 ..< 6 {
+        
+        let count: Int = 7
+        
+        let r: CGFloat = 25
+        let mid = NSMakePoint(frame.width / 2, frame.height / 2)
+        for i in 0 ..< count {
             
-            let size = NSMakeSize(CGFloat.random(in: 20..<28), CGFloat.random(in: 20..<28))
+            let gotSize = CGFloat.random(in: 20..<28)
+            let size = NSMakeSize(gotSize, gotSize)
 
+            let angle = 360.0 / CGFloat(count) * CGFloat(i)
+            let point = NSMakePoint(mid.x + r * sin(angle), mid.y + r * cos(angle))
             
-            var velocityXRange: Range<Float>
-            let originX: Int
-            let originY: Int
 
-            if i % 2 == 0 {
-                velocityXRange = Float(1.0) ..< Float(3.0)
-                originX = Int.random(in: Int(frame.width / 2 - 30) ..< Int(frame.width / 2 + 30))
-                originY = Int.random(in: Int(frame.height / 2 - 30) ..< Int(frame.height / 2 + 30))
-            } else {
-                velocityXRange = Float(-3.0) ..< Float(-1.0)
-                originX = Int.random(in: Int(frame.width / 2 - 30) ..< Int(frame.width / 2 + 30))
-                originY = Int.random(in: Int(frame.height / 2 - 30) ..< Int(frame.height / 2 + 30))
-            }
             
             let sublayer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: size, checkStatus: true, getColors: { file in
                 var colors: [LottieColor] = []
@@ -502,7 +498,7 @@ final class CustomReactionEffectView: View {
            
             sublayer.isPlayable = true
             
-            let particle = ParticleReactionLayer(sublayer: sublayer, size: CGSize(width: size.width, height: size.height), position: CGPoint(x: CGFloat(originX), y: CGFloat(originY)), mass: Float.random(in: topMassRange), velocity: Vector2(x: 0, y: Float.random(in: velocityYRange)), angularVelocity: Float.random(in: angularVelocityRange))
+            let particle = ParticleReactionLayer(sublayer: sublayer, size: CGSize(width: size.width, height: size.height), position: point, mass: Float.random(in: topMassRange), velocity: Vector2(x: 0, y: Float.random(in: velocityYRange)), angularVelocity: Float.random(in: angularVelocityRange))
             self.particles.append(particle)
             self.layer?.addSublayer(particle)
         }
@@ -573,7 +569,7 @@ final class CustomReactionEffectView: View {
         CATransaction.setDisableActions(true)
         var turbulenceVariation: [Float] = []
         for _ in 0 ..< 20 {
-            turbulenceVariation.append(Float.random(in: -2 ..< 2))
+            turbulenceVariation.append(Float.random(in: -1 ..< 1))
         }
         let turbulenceVariationCount = turbulenceVariation.count
         var index = 0
