@@ -622,8 +622,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         guard let authorText = item.authorText else {return NSZeroPoint}
         
         var point = self.namePoint(item)
-        point.x += authorText.layoutSize.width
-        point.y += 1
+        point.x += authorText.layoutSize.width + 1
+//        point.y += 1
         return point
     }
     
