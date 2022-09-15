@@ -3,7 +3,7 @@
 #import <CoreText/CoreText.h>
 
 @implementation TGTextAttachment
--(id)initWithIdentifier:(NSString * _Nonnull)identifier fileId:(id _Nonnull)fileId file:(id _Nullable)file text:(NSString * _Nonnull)text info:(id _Nullable)info {
+-(id _Nonnull)initWithIdentifier:(NSString * _Nonnull)identifier fileId:(id _Nonnull)fileId file:(id _Nullable)file text:(NSString * _Nonnull)text info:(id _Nullable)info fromRect: (CGRect)fromRect {
     if (self = [super init]) {
         
         NSRect rect = NSMakeRect(0, 0, 18, 16);
@@ -15,9 +15,13 @@
         _text = text;
         _file = file;
         _info = info;
+        _fromRect = fromRect;
     }
     [self setBounds:NSMakeRect(0, -3, 18, 16)];
     return self;
+}
+-(id _Nonnull)initWithIdentifier:(NSString * _Nonnull)identifier fileId:(id _Nonnull)fileId file:(id _Nullable)file text:(NSString * _Nonnull)text info:(id _Nullable)info {
+    return [self initWithIdentifier:identifier fileId:fileId file:file text:text info:info fromRect:NSZeroRect];
 }
 
 

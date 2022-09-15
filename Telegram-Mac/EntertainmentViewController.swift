@@ -699,12 +699,12 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             }
         }
         
-        interactions.sendAnimatedEmoji = { [weak self] sticker, info, _, _ in
+        interactions.sendAnimatedEmoji = { [weak self] sticker, info, _, fromRect in
             if self?.mode == .selectAvatar {
               
             } else {
                 let text = (sticker.file.customEmojiText ?? sticker.file.stickerText ?? "😀").fixed
-                _ = self?.chatInteraction?.appendText(.makeAnimated(sticker.file, text: text, info: info?.id))
+                _ = self?.chatInteraction?.appendText(.makeAnimated(sticker.file, text: text, info: info?.id, fromRect: fromRect))
             }
         }
         
