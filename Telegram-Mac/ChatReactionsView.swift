@@ -1338,6 +1338,7 @@ final class ChatReactionsView : View {
                                     DispatchQueue.main.async {
                                         view?.playEffect()
                                         selected.runEffect(selected.value.value)
+                                        NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
                                     }
                                 }
                                 parabollicReactionAnimation(layer, fromPoint: from, toPoint: to, window: layout.context.window, completion: completed)

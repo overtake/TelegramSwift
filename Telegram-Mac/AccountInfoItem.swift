@@ -258,6 +258,7 @@ private class AccountInfoView : GeneralContainableRowView {
                     DispatchQueue.main.async {
                         if let item = self?.item, let container = self?.container {
                             play(container, item)
+                            NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
                         }
                     }
                 }

@@ -271,6 +271,7 @@ class PeerListContainerView : View {
                     DispatchQueue.main.async {
                         if let container = self {
                             play(container)
+                            NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
                         }
                     }
                 }
