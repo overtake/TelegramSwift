@@ -74,6 +74,27 @@
 
 @end
 
+
+@implementation TGInputTextEmojiHolder
+
+- (instancetype)initWithUniqueId:(int64_t)uniqueId emoji:(NSString *)emoji rect:(NSRect)rect attribute:(TGInputTextAttribute *)attribute {
+    
+    self = [super init];
+    
+    NSImage *image = [[NSImage alloc] initWithSize:NSMakeSize(1, 1)];
+    [super setImage:image];
+    
+    if (self != nil) {
+        _attribute = attribute;
+        _uniqueId = uniqueId;
+        _emoji = emoji;
+        _rect = rect;
+    }
+    return self;
+}
+
+@end
+
 @implementation TGInputTextTagAndRange
 
 - (instancetype)initWithTag:(TGInputTextTag *)tag range:(NSRange)range {

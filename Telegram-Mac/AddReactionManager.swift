@@ -14,7 +14,7 @@ import TelegramCore
 import Postbox
 import ObjcUtils
 
-func parabollicReactionAnimation(_ layer: InlineStickerItemLayer, fromPoint: NSPoint, toPoint: NSPoint, window: Window, completion: ((Bool)->Void)? = nil) {
+func parabollicReactionAnimation(_ layer: CALayer, fromPoint: NSPoint, toPoint: NSPoint, window: Window, completion: ((Bool)->Void)? = nil) {
     
     let view = View(frame: window.frame.size.bounds)
     view.isEventLess = true

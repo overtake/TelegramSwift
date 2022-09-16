@@ -29,6 +29,17 @@
 
 @end
 
+@interface TGInputTextEmojiHolder : NSTextAttachment
+
+@property (nonatomic, readonly) int64_t uniqueId;
+@property (nonatomic, strong, readonly) NSString * _Nonnull emoji;
+@property (nonatomic, assign, readonly) NSRect rect;
+
+@property (nonatomic,strong, readonly) TGInputTextAttribute * _Nonnull attribute;
+
+-(instancetype _Nonnull)initWithUniqueId:(int64_t)uniqueId emoji:(NSString * _Nonnull)emoji rect:(NSRect)rect attribute:(TGInputTextAttribute * _Nonnull)attribute;
+@end
+
 @interface TGInputTextTagAndRange : NSObject
 
 @property (nonatomic, strong, readonly) TGInputTextTag * _Nonnull tag;

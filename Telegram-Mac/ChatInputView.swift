@@ -19,9 +19,12 @@ protocol ChatInputDelegate : AnyObject {
     func inputChanged(height:CGFloat, animated:Bool);
 }
 
+
 let yInset:CGFloat = 8;
 
 class ChatInputView: View, TGModernGrowingDelegate, Notifable {
+    
+    private let emojiHolderAnimator = EmojiHolderAnimator()
     
     private let sendActivityDisposable = MetaDisposable()
     
@@ -441,6 +444,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         if initial {
             self.textView.update(true)
             self.textViewHeightChanged(self.textView.frame.height, animated: animated)
+        }
+        if state.effectiveInput != prevState.effectiveInput {
+            self.emojiHolderAnimator.apply(self.textView, chatInteraction: self.chatInteraction, current: state.effectiveInput)
+            self.textView.scrollToCursor()
         }
     }
     private var updateFirstTime: Bool = true

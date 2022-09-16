@@ -12,6 +12,13 @@
 extern NSString * _Nonnull const TGCustomLinkAttributeName;
 extern NSString * _Nonnull const TGSpoilerAttributeName;
 extern NSString * _Nonnull const TGAnimatedEmojiAttributeName;
+extern NSString * _Nonnull const TGEmojiHolderAttributeName;
+
+
+typedef NS_ENUM(NSInteger, TGTextInputTagId) {
+    inputTagIdSpoiler = -1,
+    inputTagIdEmojiHolder = -2
+};
 
 @class TGModernGrowingTextView;
 

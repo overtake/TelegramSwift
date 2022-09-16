@@ -1236,7 +1236,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         genericView.tableView.delegate = self
         
         let interactions = EntertainmentInteractions(.emoji, peerId: PeerId(0))
-        interactions.sendEmoji = { [weak self] emoji in
+        interactions.sendEmoji = { [weak self] emoji, _ in
             self?.genericView.textView.appendText(emoji)
             _ = self?.window?.makeFirstResponder(self?.genericView.textView.inputView)
         }

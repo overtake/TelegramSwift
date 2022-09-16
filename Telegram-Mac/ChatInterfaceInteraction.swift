@@ -383,6 +383,7 @@ final class ChatInteraction : InterfaceObserver  {
         
         return selectedRange.lowerBound ..< selectedRange.lowerBound + text.length
     }
+    
         
     func appendText(_ text:String, selectedRange:Range<Int>? = nil) -> Range<Int> {
         return self.appendText(NSAttributedString(string: text, font: .normal(theme.fontSize)), selectedRange: selectedRange)

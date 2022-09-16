@@ -985,7 +985,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         
         let interactions = EntertainmentInteractions(.emoji, peerId: chatInteraction.peerId)
         
-        interactions.sendEmoji = { [weak self] emoji in
+        interactions.sendEmoji = { [weak self] emoji, _ in
             self?.genericView.textView.appendText(emoji)
         }
         interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, fromRect in

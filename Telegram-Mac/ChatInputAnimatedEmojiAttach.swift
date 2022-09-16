@@ -68,3 +68,66 @@ final class ChatInputAnimatedEmojiAttach: View {
         fatalError("init(coder:) has not been implemented")
     }
 }
+
+
+
+final class EmojiHolderAnimator {
+    
+    private var alreadyAnimated: Set<Int64> = Set()
+    
+    init() {
+        
+    }
+    
+    func apply(_ textView: TGModernGrowingTextView, chatInteraction: ChatInteraction, current: ChatTextInputState) {
+        
+        let window = chatInteraction.context.window
+        
+        let holders = current.holdedEmojies.filter {
+            !alreadyAnimated.contains($0.1)
+        }
+        
+        if !holders.isEmpty {
+            for holder in holders {
+                let rect = textView.highlightRect(for: holder.0, whole: false)
+                
+                let fromRect = holder.2
+                let toRect = textView.scroll.documentView!.convert(rect, to: nil)
+                
+                let layer = SimpleLayer()
+                let emoji = cachedEmoji(emoji: holder.3, scale: System.backingScale)
+                if let emoji = emoji {
+                    layer.contents = emoji
+                    layer.contentsGravity = .resizeAspectFill
+                    layer.frame = toRect.size.bounds
+                    
+                    
+                    let from = fromRect.origin.offsetBy(dx: fromRect.width / 2, dy: fromRect.height / 2)
+                    let to = toRect.origin.offsetBy(dx: toRect.width / 2, dy: toRect.height / 2)
+
+                    parabollicReactionAnimation(layer, fromPoint: from, toPoint: to, window: window, completion: { _ in
+                        chatInteraction.update({
+                            $0.updatedInterfaceState { interfaceState in
+                                if interfaceState.editState != nil {
+                                    return interfaceState.updatedEditState { editState in
+                                        if let editState = editState {
+                                            let inputState = editState.inputState.withRemovedHolder(holder.1)
+                                            return editState.withUpdated(state: inputState)
+                                        } else {
+                                            return nil
+                                        }
+                                    }
+                                } else {
+                                    let inputState = interfaceState.inputState.withRemovedHolder(holder.1)
+                                    return interfaceState.withUpdatedInputState(inputState)
+                                }
+                            }
+                        })
+                    })
+                }
+                
+                alreadyAnimated.insert(holder.1)
+            }
+        }
+    }
+}

@@ -103,6 +103,7 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar) {
 NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
 NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
+NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
 
 
 
@@ -199,7 +200,7 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
     [self.attributedString enumerateAttribute:TGSpoilerAttributeName inRange:range options:0 usingBlock:^(__unused id value, NSRange range, __unused BOOL *stop) {
         if ([value isKindOfClass:[TGInputTextTag class]]) {
             TGInputTextTag *tag = (TGInputTextTag *)value;
-            if ([tag.attachment intValue] == -1) {
+            if ([tag.attachment intValue] == inputTagIdSpoiler) {
                 [ranges addObject:[NSValue valueWithRange:range]];
             }
         }
@@ -496,7 +497,7 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
     
     TGInputTextTag * attribute = (TGInputTextTag *) [was attribute:TGSpoilerAttributeName atIndex:0 effectiveRange:&effectiveRange];
     
-    if ([attribute.attachment intValue] == -1) {
+    if ([attribute.attachment intValue] == inputTagIdSpoiler) {
         [self.textStorage removeAttribute:TGSpoilerAttributeName range:self.selectedRange];
         NSAttributedString *be = [self.attributedString attributedSubstringFromRange:self.selectedRange];
         
@@ -505,7 +506,7 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
         MarkdownUndoItem *item = [[MarkdownUndoItem alloc] initWithAttributedString:was be:be inRange:self.selectedRange];
         [self addItem:item];
     } else {
-        id tag = [[TGInputTextTag alloc] initWithUniqueId:++nextId attachment:@(-1) attribute:[[TGInputTextAttribute alloc] initWithName:NSForegroundColorAttributeName value:[NSColor redColor]]];
+        id tag = [[TGInputTextTag alloc] initWithUniqueId:++nextId attachment:@(inputTagIdSpoiler) attribute:[[TGInputTextAttribute alloc] initWithName:NSForegroundColorAttributeName value:[NSColor redColor]]];
         [self.weakTextView addInputTextTag:tag range:self.selectedRange];
     }
 }
@@ -1508,6 +1509,12 @@ NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
                   nil]];
         }
         
+        [string enumerateAttribute:TGEmojiHolderAttributeName inRange:NSMakeRange(0, string.length) options:0 usingBlock:^(__unused id value, NSRange range, __unused BOOL *stop) {
+            TGInputTextEmojiHolder *attribute = (TGInputTextEmojiHolder *)value;
+            if (attribute) {
+                [self.textView.textStorage addAttribute:attribute.attribute.name value:attribute.attribute.value range:range];
+            }
+        }];
         
         NSArray<NSString *> *attributes = @[TGCustomLinkAttributeName, TGSpoilerAttributeName];
         

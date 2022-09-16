@@ -52,6 +52,7 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
     case uid(Range<Int>, Int64)
     case url(Range<Int>, String)
     case animated(Range<Int>, String, Int64, TelegramMediaFile?, ItemCollectionId?, CGRect?)
+    case emojiHolder(Range<Int>, Int64, CGRect, String)
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: StringCodingKey.self)
         
@@ -107,6 +108,8 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
             return 8
         case .animated:
             return 9
+        case .emojiHolder:
+            return 10
         }
     }
     
@@ -154,6 +157,8 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
             if let info = info {
                 try container.encode(info, forKey: "info")
             }
+        case .emojiHolder:
+           break
         }
     }
 
@@ -184,6 +189,9 @@ extension ChatTextInputAttribute {
         case let .animated(range, id, fileId, file, info, fromRect):
             let tag = TGTextAttachment(identifier: "\(id)", fileId: fileId, file: file, text: "", info: info, from: fromRect ?? .zero)
             return (TGAnimatedEmojiAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+        case let .emojiHolder(range, id, fromRect, emoji):
+            let tag = TGInputTextEmojiHolder(uniqueId: id, emoji: emoji, rect: fromRect, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: NSColor.clear))
+            return (TGEmojiHolderAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         }
     }
 
@@ -196,6 +204,8 @@ extension ChatTextInputAttribute {
         case let .url(range, _):
             return range
         case let .animated(range, _, _, _, _, _):
+            return range
+        case let .emojiHolder(range, _, _, _):
             return range
         }
     }
@@ -222,6 +232,8 @@ extension ChatTextInputAttribute {
             return .url(range, url)
         case let .animated(_, id, fileId, file, info, fromRect):
             return .animated(range, id, fileId, file, info, fromRect)
+        case let .emojiHolder(_, id, rect, emoji):
+            return .emojiHolder(range, id, rect, emoji)
         }
     }
 }
@@ -300,6 +312,8 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
                 if let fileId = attachment.fileId as? Int64 {
                     inputAttributes.append(.animated(range.location ..< range.location + range.length, attachment.identifier, fileId, attachment.file as? TelegramMediaFile, attachment.info as? ItemCollectionId, attachment.fromRect == .zero ? nil : attachment.fromRect))
                 }
+            } else if let attachment = value as? TGInputTextEmojiHolder {
+                inputAttributes.append(.emojiHolder(range.location ..< range.location + range.length, attachment.uniqueId, attachment.rect, attachment.emoji))
             }
         }
     }
@@ -349,6 +363,18 @@ final class ChatTextInputState: Codable, Equatable {
         }
         return media
     }
+    var holdedEmojies: [(NSRange, Int64, NSRect, String)] {
+        var values:[(NSRange, Int64, NSRect, String)] = []
+        for attribute in attributes {
+            switch attribute {
+            case let .emojiHolder(range, id, rect, emoji):
+                values.append((NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound), id, rect, emoji))
+            default:
+                break
+            }
+        }
+        return values
+    }
     
     var upCollections: [ItemCollectionId] {
         var media:[ItemCollectionId] = []
@@ -379,6 +405,18 @@ final class ChatTextInputState: Codable, Equatable {
         return .init(inputText: self.inputText, selectionRange: self.selectionRange, attributes: attrs)
     }
     
+    func withRemovedHolder(_ id: Int64) -> ChatTextInputState {
+        let attrs = self.attributes.filter { attr in
+            switch attr {
+            case .emojiHolder(_, id, _, _):
+                return false
+            default:
+                return true
+            }
+        }
+        return .init(inputText: self.inputText, selectionRange: self.selectionRange, attributes: attrs)
+    }
+    
     func isFirstAnimatedEmoji(_ string: String) -> Bool {
         for attribute in attributes {
             switch attribute {
@@ -396,6 +434,19 @@ final class ChatTextInputState: Codable, Equatable {
         for attribute in attributes {
             switch attribute {
             case let .animated(range, _, _, _, _, _):
+                if range.lowerBound == r.lowerBound && range.upperBound == range.upperBound {
+                    return true
+                }
+            default:
+                break
+            }
+        }
+        return false
+    }
+    func isEmojiHolder(at r: NSRange) -> Bool {
+        for attribute in attributes {
+            switch attribute {
+            case let .emojiHolder(range, _, _, _):
                 if range.lowerBound == r.lowerBound && range.upperBound == range.upperBound {
                     return true
                 }
@@ -686,6 +737,8 @@ final class ChatTextInputState: Codable, Equatable {
                     attributes.append(.url(newRange.min ..< newRange.max, url))
                 case let .animated(_, id, fileId, file, info, fromRect):
                     attributes.append(.animated(newRange.min ..< newRange.max, id, fileId, file, info, fromRect))
+                case let .emojiHolder(_, id, rect, emoji):
+                    attributes.append(.emojiHolder(newRange.min ..< newRange.max, id, rect, emoji))
                 }
           //  }
         }
@@ -758,6 +811,8 @@ final class ChatTextInputState: Codable, Equatable {
                 entities.append(.init(range: range, type: .TextUrl(url: url)))
             case let .animated(range, _, fileId, _, _, _):
                 entities.append(.init(range: range, type: .CustomEmoji(stickerPack: nil, fileId: fileId)))
+            case .emojiHolder:
+                break sw
             }
         }
 
