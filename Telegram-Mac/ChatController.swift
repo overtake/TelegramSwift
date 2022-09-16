@@ -718,6 +718,10 @@ class ChatControllerView : View, ChatInputDelegate {
         return .zero
     }
         
+    var hasEmojiSwap: Bool {
+        return self.textInputSuggestionsView != nil
+    }
+    
     func updateTextInputSuggestions(_ files: [TelegramMediaFile], range: NSRange, animated: Bool) {
         if !files.isEmpty {
             let current: InputSwapSuggestionsPanel
@@ -5404,12 +5408,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         let previousItems = self.collectPreviousItems()
-        
-        var transition = transition
-
-        if case .none = transition.state, !canInteractiveRead() {
-            transition = transition.withUpdatedState(.saveVisible(.lower))
-        }
+//
+//        var transition = transition
+//
+//        if case .none = transition.state, !canInteractiveRead() {
+//            transition = transition.withUpdatedState(.saveVisible(.lower))
+//        }
         
         genericView.tableView.merge(with: transition)
         
@@ -6777,7 +6781,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if textInputContextState.1.contains(.swapEmoji) {
                         let stringRange = textInputContextState.0
                         let range = NSRange(string: input.inputText, range: stringRange)
-                        if !input.isAnimatedEmoji(at: range) {
+                        let accept = self.genericView.hasEmojiSwap || !input.isEmojiHolder(at: range)
+                        if !input.isAnimatedEmoji(at: range) && accept {
                             let query = String(input.inputText[stringRange])
                             let signal = InputSwapSuggestionsPanelItems(query, peerId: chatInteraction.peerId, context: chatInteraction.context)
                             |> deliverOnMainQueue

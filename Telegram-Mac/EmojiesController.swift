@@ -282,14 +282,14 @@ private final class Arguments {
     let context: AccountContext
     let mode: EmojiesController.Mode
     let send:(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void
-    let sendEmoji:(String)->Void
+    let sendEmoji:(String, NSRect)->Void
     let selectEmojiSegment:(EmojiSegment)->Void
     let viewSet:(StickerPackCollectionInfo)->Void
     let showAllItems:(Int64)->Void
     let openPremium:()->Void
     let installPack:(StickerPackCollectionInfo, [StickerPackItem])->Void
     let clearRecent:()->Void
-    init(context: AccountContext, mode: EmojiesController.Mode, send:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void, sendEmoji:@escaping(String)->Void, selectEmojiSegment:@escaping(EmojiSegment)->Void, viewSet:@escaping(StickerPackCollectionInfo)->Void, showAllItems:@escaping(Int64)->Void, openPremium:@escaping()->Void, installPack:@escaping(StickerPackCollectionInfo,  [StickerPackItem])->Void, clearRecent:@escaping()->Void) {
+    init(context: AccountContext, mode: EmojiesController.Mode, send:@escaping(StickerPackItem, StickerPackCollectionInfo?, Int32?, NSRect?)->Void, sendEmoji:@escaping(String, NSRect)->Void, selectEmojiSegment:@escaping(EmojiSegment)->Void, viewSet:@escaping(StickerPackCollectionInfo)->Void, showAllItems:@escaping(Int64)->Void, openPremium:@escaping()->Void, installPack:@escaping(StickerPackCollectionInfo,  [StickerPackItem])->Void, clearRecent:@escaping()->Void) {
         self.context = context
         self.send = send
         self.sendEmoji = sendEmoji
@@ -593,24 +593,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 }
                 
                 recent = Array(recent.prefix(perline * 10))
-//                } else {
-//                    popular = Array(state.topReactionsItems.prefix(perline * 2))
-//                    for item in state.recentReactionsItems {
-//                        let popularContains = popular.contains(where: { $0.id.id == item.id.id })
-//
-//                        if !popularContains {
-//                            popular.append(item)
-//                        }
-//                    }
-//                    for item in state.topReactionsItems {
-//                        let popularContains = popular.contains(where: { $0.id.id == item.id.id })
-//                        if !popularContains {
-//                            popular.append(item)
-//                        }
-//                    }
-//                    popular = Array(popular.prefix(perline * 10))
-//                }
-                
+
                 let transform:(RecentReactionItem)->StickerPackItem? = { item in
                     switch item.content {
                     case let .builtin(emoji):
@@ -661,7 +644,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 
             }
             
-            let statuses = state.recentStatusItems + state.featuredStatusItems
+            let statuses = state.recentStatusItems.filter { !isDefaultStatusesPackId($0.media.emojiReference) } + state.featuredStatusItems
             var contains:Set<MediaId> = Set()
             var normalized:[StickerPackItem] = statuses.filter { item in
                 if !contains.contains(item.media.fileId) {
@@ -1193,8 +1176,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 self?.interactions?.sendAnimatedEmoji(item, nil, nil, rect)
             }
             
-        }, sendEmoji: { [weak self] emoji in
-            self?.interactions?.sendEmoji(emoji)
+        }, sendEmoji: { [weak self] emoji, fromRect in
+            self?.interactions?.sendEmoji(emoji, fromRect)
         }, selectEmojiSegment: { [weak self] segment in
             updateState { current in
                 var current = current

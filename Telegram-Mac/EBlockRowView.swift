@@ -136,7 +136,8 @@ class EBlockRowView: TableRowView {
     
     private func click() {
         if let currentDownItem = currentDownItem, let item = item as? EBlockItem {
-            item.selectHandler(currentDownItem.1.string)
+            let wrect = self.content.convert(currentDownItem.0.frame, to: nil)
+            item.selectHandler(currentDownItem.1.string, wrect)
         }
     }
     

@@ -90,8 +90,12 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
 //            return { _ in return .stickers(stickers) }
 //        })
     case let .emoji(query, firstWord):
-        let animated = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000) |> map {
+        let animated = combineLatest(context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000) |> map {
             $0.entries.compactMap({ $0.item as? StickerPackItem}).map { $0.file }
+        }, context.account.viewTracker.featuredEmojiPacks()) |> map {
+            $0 + $1.reduce([], { current, value in
+                return current + value.topItems.map { $0.file }
+            })
         }
 
         
@@ -141,8 +145,8 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                     
                     var selected: [TelegramMediaFile] = []
                     for sort in sorted {
-                        let file = animated.filter({ $0.customEmojiText?.fixed == sort.fixed}).first
-                        if let file = file {
+                        let files = animated.filter({ $0.customEmojiText?.fixed == sort.fixed})
+                        for file in files {
                             selected.append(file)
                             toRemove.append(sort)
                         }
@@ -552,8 +556,12 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
         return (inputQuery, signal |> then(result))
     case let .emoji(query, firstWord):
         
-        let animated = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000) |> map {
+        let animated = combineLatest(context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000) |> map {
             $0.entries.compactMap({ $0.item as? StickerPackItem}).map { $0.file }
+        }, context.account.viewTracker.featuredEmojiPacks()) |> map {
+            $0 + $1.reduce([], { current, value in
+                return current + value.topItems.map { $0.file }
+            })
         }
 
         if !query.isEmpty {

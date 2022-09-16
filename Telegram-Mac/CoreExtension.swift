@@ -3631,4 +3631,13 @@ extension NSAttributedString {
         attach.addAttribute(.init(rawValue: TGAnimatedEmojiAttributeName), value: TGTextAttachment(identifier: "\(arc4random())", fileId: file.fileId.id, file: file, text: text, info: info, from: fromRect ?? .zero), range: NSMakeRange(0, text.length))
         return attach
     }
+    static func makeEmojiHolder(_ emoji: String, fromRect: NSRect?) -> NSAttributedString {
+        let attach = NSMutableAttributedString()
+        _ = attach.append(string: emoji)
+        if let fromRect = fromRect {
+            let tag = TGInputTextEmojiHolder(uniqueId: arc4random64(), emoji: emoji, rect: fromRect, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: NSColor.clear))
+            attach.addAttribute(.init(rawValue: TGEmojiHolderAttributeName), value: tag, range: NSMakeRange(0, emoji.length))
+        }
+        return attach
+    }
 }

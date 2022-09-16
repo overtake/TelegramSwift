@@ -245,23 +245,19 @@ func inputContextQueryForChatPresentationIntefaceState(_ chatPresentationInterfa
         }
         
         var possibleQueryRange = possibleQueryRange
-//        if possibleQueryRange.upperBound > inputState.inputText.endIndex {
-//            possibleQueryRange = possibleQueryRange.lowerBound ..< inputState.inputText.endIndex
-//        }
-        
-//        possibleQueryRange.lowerBound.encodedOffset
-//        
-//        if let index = inputState.inputText.index(possibleQueryRange.upperBound, offsetBy: 0, limitedBy: inputState.inputText.endIndex) {
-//            possibleQueryRange = possibleQueryRange.lowerBound ..< index
-//        } else {
-//            return .none
-//        }
 
         if chatPresentationInterfaceState.botMenu?.revealed == true {
             return .command("")
         }
         
         let value = inputState.inputText[possibleQueryRange]
+        
+        let range = NSRange(string: inputState.inputText, range: possibleQueryRange)
+        
+        if inputState.isEmojiHolder(at: range) {
+            return .none
+        }
+        
         let query = String(value) 
         if possibleTypes == [.hashtag] {
             return .hashtag(query)
