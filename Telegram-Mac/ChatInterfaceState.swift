@@ -326,7 +326,7 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
         case .emojiHolder:
             attrs.append(attr)
         case .animated:
-            if animatedCount < 200 {
+            if animatedCount < 100 {
                 attrs.append(attr)
             }
             animatedCount += 1

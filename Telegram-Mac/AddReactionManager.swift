@@ -39,8 +39,8 @@ func parabollicReactionAnimation(_ layer: CALayer, fromPoint: NSPoint, toPoint: 
     animation.isRemovedOnCompletion = true
     animation.fillMode = .forwards
     animation.speed = 1
-    animation.repeatCount = 2
-//    animation.autoreverses = true
+    animation.repeatCount = 1
+    animation.autoreverses = true
     
     layer.add(animation, forKey: "transform.scale")
     

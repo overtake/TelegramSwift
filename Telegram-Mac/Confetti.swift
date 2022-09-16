@@ -590,7 +590,7 @@ final class CustomReactionEffectView: View {
             
             if currentTime < slowdownStart {
                 g.y = -Float.random(in: 40..<50)
-                g.x = arc4random64() % 2 == 0 ? -Float.random(in: 10..<30) : Float.random(in: 10..<30)
+                g.x = arc4random64() % 2 == 0 ? -Float.random(in: 5..<10) : Float.random(in: 5..<10)
             }
             
             
@@ -614,7 +614,7 @@ final class CustomReactionEffectView: View {
             var velocity = particle.velocity
             velocity.x += acceleration.x * particle.mass * localDt
             velocity.y += acceleration.y * particle.mass * localDt
-            velocity.x += turbulenceVariation[index % turbulenceVariationCount]
+//            velocity.x += turbulenceVariation[index % turbulenceVariationCount]
             if position.y > minPositionY {
                 velocity.x *= damping
                 velocity.y *= damping
