@@ -318,8 +318,27 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
         }
     }
 
-
-    return Array(inputAttributes.prefix(100))
+    var count: Int = 0
+    var animatedCount: Int = 0
+    var attrs:[ChatTextInputAttribute] = []
+    for attr in inputAttributes {
+        switch attr {
+        case .emojiHolder:
+            attrs.append(attr)
+        case .animated:
+            if animatedCount < 200 {
+                attrs.append(attr)
+            }
+            animatedCount += 1
+        default:
+            if count < 100 {
+                attrs.append(attr)
+            }
+            count += 1
+        }
+    }
+    
+    return attrs
 }
 
 //x/m
