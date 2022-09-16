@@ -14,9 +14,9 @@ public enum TitleButtonImageDirection {
     case top
 }
 
-class TextLayerExt: CATextLayer {
+public class TextLayerExt: CATextLayer {
     
-    override func draw(in ctx: CGContext) {
+    public override func draw(in ctx: CGContext) {
         ctx.setAllowsFontSubpixelPositioning(true)
         ctx.setShouldSubpixelPositionFonts(true)
         ctx.setAllowsAntialiasing(true)

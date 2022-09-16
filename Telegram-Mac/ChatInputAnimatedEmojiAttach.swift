@@ -87,6 +87,26 @@ final class EmojiHolderAnimator {
             !alreadyAnimated.contains($0.1)
         }
         
+        let clearAttribute:(Int64)->Void = { id in
+            chatInteraction.update({
+                $0.updatedInterfaceState { interfaceState in
+                    if interfaceState.editState != nil {
+                        return interfaceState.updatedEditState { editState in
+                            if let editState = editState {
+                                let inputState = editState.inputState.withRemovedHolder(id)
+                                return editState.withUpdated(state: inputState)
+                            } else {
+                                return nil
+                            }
+                        }
+                    } else {
+                        let inputState = interfaceState.inputState.withRemovedHolder(id)
+                        return interfaceState.withUpdatedInputState(inputState)
+                    }
+                }
+            })
+        }
+        
         if !holders.isEmpty {
             for holder in holders {
                 let rect = textView.highlightRect(for: holder.0, whole: false)
@@ -94,37 +114,23 @@ final class EmojiHolderAnimator {
                 let fromRect = holder.2
                 let toRect = textView.scroll.documentView!.convert(rect, to: nil)
                 
-                let layer = SimpleLayer()
-                let emoji = cachedEmoji(emoji: holder.3, scale: System.backingScale)
-                if let emoji = emoji {
-                    layer.contents = emoji
-                    layer.contentsGravity = .resizeAspectFill
-                    layer.frame = toRect.size.bounds
-                    
-                    
-                    let from = fromRect.origin.offsetBy(dx: fromRect.width / 2, dy: fromRect.height / 2)
-                    let to = toRect.origin.offsetBy(dx: toRect.width / 2, dy: toRect.height / 2)
+                let font = NSFont.normal(theme.fontSize)
+                let layer = TextLayerExt()
+                layer.string = holder.3
+                layer.contentsScale = System.backingScale
+                layer.font = font.fontName as CFTypeRef
+                layer.fontSize = font.pointSize
+                layer.foregroundColor = theme.colors.text.cgColor
+                layer.backgroundColor = .clear
+                
+                layer.frame = toRect.size.bounds
+                
+                let from = fromRect.origin.offsetBy(dx: fromRect.width / 2, dy: fromRect.height / 2)
+                let to = toRect.origin.offsetBy(dx: toRect.width / 2, dy: toRect.height / 2)
 
-                    parabollicReactionAnimation(layer, fromPoint: from, toPoint: to, window: window, completion: { _ in
-                        chatInteraction.update({
-                            $0.updatedInterfaceState { interfaceState in
-                                if interfaceState.editState != nil {
-                                    return interfaceState.updatedEditState { editState in
-                                        if let editState = editState {
-                                            let inputState = editState.inputState.withRemovedHolder(holder.1)
-                                            return editState.withUpdated(state: inputState)
-                                        } else {
-                                            return nil
-                                        }
-                                    }
-                                } else {
-                                    let inputState = interfaceState.inputState.withRemovedHolder(holder.1)
-                                    return interfaceState.withUpdatedInputState(inputState)
-                                }
-                            }
-                        })
-                    })
-                }
+                parabollicReactionAnimation(layer, fromPoint: from, toPoint: to, window: window, completion: { _ in
+                    clearAttribute(holder.1)
+                })
                 
                 alreadyAnimated.insert(holder.1)
             }

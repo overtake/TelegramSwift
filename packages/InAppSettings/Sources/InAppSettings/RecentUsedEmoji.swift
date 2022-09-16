@@ -143,10 +143,12 @@ public func saveUsedEmoji(_ list:[String], postbox:Postbox) -> Signal<Void, NoEr
         transaction.updatePreferencesEntry(key: ApplicationSpecificPreferencesKeys.recentEmoji, { entry in
             var emojies: [String]
             let value: RecentUsedEmoji = entry?.get(RecentUsedEmoji.self) ?? RecentUsedEmoji.defaultSettings
-            emojies = value.emojies
+            emojies = value.emojies.filter {
+                $0.isSingleEmoji
+            }
             
             for emoji in list.reversed() {
-                if emoji.containsOnlyEmoji {
+                if emoji.isSingleEmoji {
                     let emoji = emoji.emojiString.emojiUnmodified
                     if !emoji.isEmpty && emoji.count == 1 {
                         if let index = emojies.firstIndex(of: emoji) {

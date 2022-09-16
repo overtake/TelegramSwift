@@ -796,6 +796,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     private var sent: Bool = false
     private let pasteDisposable = MetaDisposable()
     
+    private let emojiHolderAnimator = EmojiHolderAnimator()
 
     private let inputSwapDisposable = MetaDisposable()
     private var temporaryInputState: ChatTextInputState?
@@ -985,8 +986,8 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         
         let interactions = EntertainmentInteractions(.emoji, peerId: chatInteraction.peerId)
         
-        interactions.sendEmoji = { [weak self] emoji, _ in
-            self?.genericView.textView.appendText(emoji)
+        interactions.sendEmoji = { [weak self] emoji, fromRect in
+            _ = self?.contextChatInteraction.appendText(.makeEmojiHolder(emoji, fromRect: fromRect))
         }
         interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, fromRect in
             let text = (sticker.file.customEmojiText ?? sticker.file.stickerText ?? "😀").fixed
@@ -1605,6 +1606,10 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                     let urls = self.urls
                     self.urls = urls
                 }
+            }
+            if value.effectiveInput != oldValue.effectiveInput {
+                self.emojiHolderAnimator.apply(self.genericView.textView, chatInteraction: self.contextChatInteraction, current: value.effectiveInput)
+                self.genericView.textView.scrollToCursor()
             }
         }
     }

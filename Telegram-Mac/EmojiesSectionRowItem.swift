@@ -126,7 +126,10 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         var mapped: [Item] = []
         var point = NSMakePoint(10, 0)
         
-        let optimized = (isPremium && !context.isPremium || !installed) && !revealed && items.count > 24 ? Array(items.prefix(23)) : items
+        var optimized = (isPremium && !context.isPremium || !installed) && !revealed && items.count > 24 ? Array(items.prefix(23)) : items
+        if mode == .statuses, info == nil {
+            optimized = Array(items.prefix(min(items.count, 8 * 5 - 1)))
+        }
         for item in optimized {
             
             let isLocked = mode == .reactions && !context.isPremium && info == nil && item.file.stickerText == nil && item.getStringRepresentationsOfIndexKeys().isEmpty
