@@ -35,6 +35,9 @@ final class ReactionsWindowController : NSObject {
             super.init(frame: content.bounds)
             if #available(macOS 11.0, *) {
                 container.addSubview(visualView)
+                backgroundView.backgroundColor = theme.colors.background.withAlphaComponent(0.7)
+            } else {
+                backgroundView.backgroundColor = theme.colors.background
             }
             container.addSubview(backgroundView)
             container.addSubview(contentView)
@@ -42,7 +45,6 @@ final class ReactionsWindowController : NSObject {
             
             addSubview(container)
             
-            backgroundView.backgroundColor = theme.colors.background.withAlphaComponent(0.7)
 
             self.visualView.wantsLayer = true
             self.visualView.state = .active
