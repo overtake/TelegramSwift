@@ -679,8 +679,17 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     .init(index: .init(index: 0, id: 0), file: $0, indexKeys: [])
                 }, at: 1)
                 
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(normalized), comparable: nil, item: { initialSize, stableId in
-                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: normalized, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send)
+                struct Tuple : Equatable {
+                    let items: [StickerPackItem]
+                    let revealed: Bool
+                    let selected:[EmojiesSectionRowItem.SelectedItem]
+                }
+                let tuple = Tuple(items: normalized, revealed: state.revealed[-1] ?? false, selected: state.selectedItems)
+                
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
+                    return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: true, info: nil, items: tuple.items, mode: arguments.mode.itemMode, selectedItems: tuple.selected, callback: arguments.send, showAllItems: {
+                        arguments.showAllItems(-1)
+                    })
                 }))
                 index += 1
             }

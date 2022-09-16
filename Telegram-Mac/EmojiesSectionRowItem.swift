@@ -127,7 +127,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         var point = NSMakePoint(10, 0)
         
         var optimized = (isPremium && !context.isPremium || !installed) && !revealed && items.count > 24 ? Array(items.prefix(23)) : items
-        if mode == .statuses, info == nil {
+        if mode == .statuses, info == nil, !revealed {
             optimized = Array(items.prefix(min(items.count, 8 * 5 - 1)))
         }
         for item in optimized {
@@ -250,7 +250,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
             }
             copyItem = ContextMenuItem(strings().contextCopy, handler: {
                 copyToClipboard(input)
-            }, itemImage: MenuAnimation.menu_add_to_favorites.value)
+            }, itemImage: MenuAnimation.menu_copy.value)
         }
         
         switch mode {
