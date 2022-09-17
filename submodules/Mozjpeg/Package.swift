@@ -7,7 +7,7 @@ import PackageDescription
 let package = Package(
     name: "Mozjpeg",
     platforms: [
-        .macOS(.v10_11)
+        .macOS(.v10_12)
     ],
     products: [
         .library(
