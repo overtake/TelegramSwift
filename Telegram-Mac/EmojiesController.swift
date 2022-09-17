@@ -660,7 +660,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             if key == .Recent, arguments.mode == .status {
                 
                 let string: String
-                if let expiryDate = state.peer?.peer.emojiStatus?.expirationDate {
+                if let expiryDate = state.peer?.peer.emojiStatus?.expirationDate, expiryDate > arguments.context.timestamp {
                     string = strings().customStatusExpires(timeIntervalString(Int(expiryDate - arguments.context.timestamp)))
                 } else {
                     string = strings().customStatusExpiresPromo

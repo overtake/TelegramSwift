@@ -249,7 +249,7 @@ final class MessageReadMenuRowItem : AppMenuRowItem {
         
         if items.count > 1 || hasReactions {
             
-            let references:[StickerPackReference] = state.emojiReferences
+            let references:[StickerPackReference] = state.emojiReferences.uniqueElements
             
             if !references.isEmpty {
                 
