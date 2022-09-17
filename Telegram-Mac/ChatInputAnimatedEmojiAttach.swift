@@ -37,7 +37,7 @@ final class ChatInputAnimatedEmojiAttach: View {
         self.media.frame = mediaRect
         self.layer?.addSublayer(media)
         
-        if fromRect != .zero {
+        if fromRect != .zero, FastSettings.animateInputEmoji {
             
             self.isHidden = true
             DispatchQueue.main.async {
@@ -81,10 +81,11 @@ final class EmojiHolderAnimator {
     
     func apply(_ textView: TGModernGrowingTextView, chatInteraction: ChatInteraction, current: ChatTextInputState) {
         
+        
         let window = chatInteraction.context.window
         
         let holders = current.holdedEmojies.filter {
-            !alreadyAnimated.contains($0.1)
+            !alreadyAnimated.contains($0.1) && FastSettings.animateInputEmoji
         }
         
         let clearAttribute:(Int64)->Void = { id in

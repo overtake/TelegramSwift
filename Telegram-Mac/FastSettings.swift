@@ -159,6 +159,10 @@ class FastSettings {
     
     private static let kConfirmWebApp = "kConfirmWebApp"
 
+    private static let kAnimateInputEmoji = "kAnimateInputEmoji"
+
+    
+    
     
     static var sendingType:SendingType {
         let type = UserDefaults.standard.value(forKey: kSendingType) as? String
@@ -535,6 +539,14 @@ class FastSettings {
         
         let intersection = Set(peerIds.map { $0.toInt64() }).intersection(peers)
         return intersection.count != peerIds.count
+    }
+    
+    static var animateInputEmoji: Bool {
+        return UserDefaults.standard.bool(forKey: kAnimateInputEmoji)
+    }
+    static func toggleAnimateInputEmoji() {
+        return UserDefaults.standard.set(!animateInputEmoji, forKey: kAnimateInputEmoji)
+
     }
     
     /*
