@@ -3634,7 +3634,7 @@ extension NSAttributedString {
     static func makeEmojiHolder(_ emoji: String, fromRect: NSRect?) -> NSAttributedString {
         let attach = NSMutableAttributedString()
         _ = attach.append(string: emoji)
-        if let fromRect = fromRect {
+        if let fromRect = fromRect, FastSettings.animateInputEmoji {
             let tag = TGInputTextEmojiHolder(uniqueId: arc4random64(), emoji: emoji, rect: fromRect, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: NSColor.clear))
             attach.addAttribute(.init(rawValue: TGEmojiHolderAttributeName), value: tag, range: NSMakeRange(0, emoji.length))
         }
