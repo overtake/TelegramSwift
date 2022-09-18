@@ -150,8 +150,8 @@ static MTAtomic *callContexts() {
 static int32_t nextId = 1;
 
 static int32_t addContext(OngoingCallThreadLocalContext *context, id<OngoingCallThreadLocalContextQueue> queue) {
-    nextId++;
-    int32_t contextId = nextId;
+    
+    int32_t contextId = OSAtomicIncrement32(&nextId);
     [callContexts() with:^id(NSMutableDictionary *dict) {
         dict[@(contextId)] = [[OngoingCallThreadLocalContextReference alloc] initWithContext:context queue:queue];
         return nil;
