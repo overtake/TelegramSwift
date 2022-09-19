@@ -576,10 +576,10 @@ final class InlineStickerItemLayer : SimpleLayer {
             }
             if file.isAnimatedSticker || file.isVideoSticker || (file.isCustomEmoji && (file.isSticker || file.isVideo)) {
                 self.resourceDisposable.set((data |> map { resourceData -> Data? in
-                    if resourceData.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
+                    if resourceData.complete {
                         if file.isWebm {
                             return resourceData.path.data(using: .utf8)!
-                        } else {
+                        } else if let data = try? Data(contentsOf: URL(fileURLWithPath: resourceData.path), options: [.mappedIfSafe]) {
                             return data
                         }
                     }

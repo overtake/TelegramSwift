@@ -309,6 +309,7 @@ final class PremiumLimitView: View {
             
             normalBackground.backgroundColor = theme.colors.grayForeground
             
+            needsLayout = true
         }
         
         override func layout() {
@@ -318,10 +319,10 @@ final class PremiumLimitView: View {
             
             normalText.centerY(x: 10)
             
-            normalCount.centerY(x: frame.midX - 2 - normalCount.frame.width - 10 - 10 - 10)
+            normalCount.centerY(x: bounds.midX - 2 - normalCount.frame.width - 10)
             
             premiumText.centerY(x: width + 10)
-            premiumCount.centerY(x: frame.width - 10 - premiumCount.frame.width)
+            premiumCount.centerY(x: bounds.width - 10 - premiumCount.frame.width)
             
             
             normalBackground.frame = NSMakeRect(0, 0, width, frame.height)
