@@ -745,7 +745,7 @@ final class ColorPaletteNativeCodable : Codable {
                                     grayHighlight: try parseColor(container, "grayHighlight") ?? palette.grayHighlight,
                                     focusAnimationColor: try parseColor(container, "focusAnimationColor") ?? palette.focusAnimationColor,
                                   premium: try parseColor(container, "premium") ?? palette.premium,
-                                  vibrant: try parseColor(container, "vibrant") ?? palette.premium
+                                  vibrant: try parseColor(container, "vibrant") ?? palette.vibrant
         )
         
     }
