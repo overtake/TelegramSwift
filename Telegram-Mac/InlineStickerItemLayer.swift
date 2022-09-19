@@ -132,7 +132,7 @@ class InlineStickerLockLayer : SimpleLayer {
 
 private final class MultiTargetAnimationContext {
     private var context: AnimationPlayerContext!
-    private let handlers:Atomic<[Int: Handlers]> = Atomic(value: [:])
+    private var handlers:[Int: Handlers] = [:]
     final class Handlers {
         let displayFrame:(CGImage?)->Void
         let release:()->Void
@@ -155,24 +155,27 @@ private final class MultiTargetAnimationContext {
         
         token = self.add(handlers)
         
-        let handlers = self.handlers
+        let handlers:()->[Int: Handlers] = { [weak self] in
+            return self?.handlers ?? [:]
+        }
         
         self.context = .init(animation, displayFrame: { frame, loop in
             let image = frame.image
-            handlers.with { handlers in
-                for (_, target) in handlers {
+            DispatchQueue.main.async {
+                for (_, target) in handlers() {
                     target.displayFrame(image)
                 }
             }
+            
         }, release: {
-            handlers.with { handlers in
-                for (_, target) in handlers {
+            DispatchQueue.main.async {
+                for (_, target) in handlers() {
                     target.release()
                 }
             }
         }, updateState: { state in
-            handlers.with { handlers in
-                for (_, target) in handlers {
+            DispatchQueue.main.async {
+                for (_, target) in handlers() {
                     target.updateState(state)
                 }
             }
@@ -180,26 +183,17 @@ private final class MultiTargetAnimationContext {
     }
     
     deinit {
-        _ = handlers.modify { _ in
-            [:]
-        }
+       
     }
     
     func add(_ handlers: Handlers) -> Int {
         let token = Int.random(in: 0..<Int.max)
-        _ = self.handlers.modify { value in
-            var value = value
-            value[token] = handlers
-            return value
-        }
+        self.handlers[token] = handlers
         return token
     }
     func remove(_ token: Int) -> Bool {
-        return handlers.modify { value in
-            var value = value
-            value.removeValue(forKey: token)
-            return value
-        }.isEmpty
+        self.handlers.removeValue(forKey: token)
+        return self.handlers.isEmpty
     }
 }
 
@@ -323,6 +317,7 @@ final class InlineStickerView: View {
         return self.layer! as! InlineStickerItemLayer
     }
 }
+
 
 final class InlineStickerItemLayer : SimpleLayer {
     struct Key: Hashable {
@@ -478,15 +473,14 @@ final class InlineStickerItemLayer : SimpleLayer {
         if let animation = animation, let isPlayable = self.isPlayable, isPlayable, !stopped {
             weak var layer: InlineStickerItemLayer? = self
             let key: MultiTargetContextCache.Key = .init(key: animation.key, unique: unique)
+            
             delayDisposable.set(delaySignal(MultiTargetContextCache.exists(key) || force ? 0 : 0.1).start(completed: { [weak self] in
-
+                
                 self?.contextToken = (MultiTargetContextCache.create(animation, key: key, displayFrame: { image in
-                    DispatchQueue.main.async {
-                        layer?.contents = image
-                        if layer?.isPreviousPreview == true {
-                            layer?.animateContents()
-                            layer?.isPreviousPreview = false
-                        }
+                    layer?.contents = image
+                    if layer?.isPreviousPreview == true {
+                        layer?.animateContents()
+                        layer?.isPreviousPreview = false
                     }
                 }, release: {
 
@@ -669,7 +663,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                     |> deliverOnMainQueue
                     
                     shimmerDataDisposable.set(dataSignal.start(next: { [weak self] completed in
-                        if completed, self?.preview == nil, self?.playerState != .playing {
+                        if !completed, self?.preview == nil, self?.playerState != .playing {
                             let current: ShimmerLayer
                             if let layer = self?.shimmer {
                                 current = layer
