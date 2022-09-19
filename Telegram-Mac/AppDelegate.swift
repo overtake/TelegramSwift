@@ -93,9 +93,16 @@ final class SharedApplicationContext {
 }
 
 private final class CtxInstallLayer : SimpleLayer {
+    private var timer: SwiftSignalKit.Timer?
     override init() {
         super.init()
-        frame = NSMakeRect(0, 0, 1, 1)
+        self.frame = NSMakeRect(-16, -16, 16, 16)
+//        self.isOpaque = true
+        self.timer = SwiftSignalKit.Timer(timeout: 2.0, repeat: true, completion: { [weak self] in
+            self?.setNeedsDisplay()
+        }, queue: .mainQueue())
+        
+        self.timer?.start()
     }
     
     required init?(coder: NSCoder) {
@@ -104,7 +111,6 @@ private final class CtxInstallLayer : SimpleLayer {
     
     override func draw(in ctx: CGContext) {
         DeviceGraphicsContextSettings.install(ctx)
-        self.removeFromSuperlayer()
     }
 }
 
@@ -333,7 +339,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
         let rootPath = containerUrl!
         let window = self.window!
-        _ = System.scaleFactor.swap(window.backingScaleFactor)
+        _ = System.updateScaleFactor(window.backingScaleFactor)
         window.minSize = NSMakeSize(380, 500)
         
         let appEncryption = AppEncryptionParameters(path: rootPath)
@@ -434,7 +440,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         let rootPath = containerUrl!
         let window = self.window!
-        _ = System.scaleFactor.swap(window.backingScaleFactor)
+        _ = System.updateScaleFactor(window.backingScaleFactor)
         
         
         window.minSize = NSMakeSize(380, 500)
@@ -1081,7 +1087,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
     @objc public func windiwDidChangeBackingProperties() {
-        _ = System.scaleFactor.swap(window.backingScaleFactor)
+        _ = System.updateScaleFactor(window.backingScaleFactor)
     }
     
     func playSound(_ path: String) {

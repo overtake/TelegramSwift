@@ -1432,7 +1432,8 @@ final class LottieAnimation : Equatable {
         case .webm:
             let path = String(data: self.compressed, encoding: .utf8)
             if let path = path {
-                let decoder = SoftwareVideoSource(path: path, hintVP9: true, unpremultiplyAlpha: true)
+                let premultiply = (DeviceGraphicsContextSettings.shared.opaqueBitmapInfo.rawValue & CGImageAlphaInfo.premultipliedFirst.rawValue) == 0
+                let decoder = SoftwareVideoSource(path: path, hintVP9: true, unpremultiplyAlpha: premultiply)
                 let fileSupplyment: TRLotFileSupplyment?
                 if size.width > 40 {
                     switch self.cache {
