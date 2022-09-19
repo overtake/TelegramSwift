@@ -247,7 +247,13 @@ private class AccountInfoView : GeneralContainableRowView {
         }
         if let item = self.item {
             if let fromRect = status.rect {
-                let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: control.frame.size)
+                let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: control.frame.size, getColors: { file in
+                    var colors: [LottieColor] = []
+                    if isDefaultStatusesPackId(file.emojiReference) {
+                        colors.append(.init(keyPath: "", color: theme.colors.accent))
+                    }
+                    return colors
+                })
                 
                 let toRect = control.convert(control.frame.size.bounds, to: nil)
                 

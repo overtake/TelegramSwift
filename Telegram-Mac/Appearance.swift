@@ -91,8 +91,7 @@ private func generateGradientBubble(_ colors: [NSColor]) -> CGImage {
                     locations.append(delta * CGFloat(i))
                 }
 
-                let colorSpace = deviceColorSpace
-                let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
+                let gradient = CGGradient(colorsSpace: DeviceGraphicsContextSettings.shared.colorSpace, colors: colors, locations: &locations)!
                 
                 context.drawLinearGradient(gradient, start: CGPoint(), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
             } else {
