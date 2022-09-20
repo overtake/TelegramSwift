@@ -232,18 +232,48 @@ public class DrawingContext {
 
         self.bytes = malloc(length)!
         
-        self.context = CGContext(
-                  data: self.bytes,
-                   width: Int(self.scaledSize.width),
-                   height: Int(self.scaledSize.height),
-                   bitsPerComponent: DeviceGraphicsContextSettings.shared.bitsPerComponent,
-                   bytesPerRow: self.bytesPerRow,
-                   space: DeviceGraphicsContextSettings.shared.colorSpace,
-                   bitmapInfo: self.bitmapInfo.rawValue,
-                   releaseCallback: nil,
-                   releaseInfo: nil
-               )!
-               self.context.scaleBy(x: actualScale, y: actualScale)
+        var ctx = CGContext(
+            data: self.bytes,
+             width: Int(self.scaledSize.width),
+             height: Int(self.scaledSize.height),
+             bitsPerComponent: DeviceGraphicsContextSettings.shared.bitsPerComponent,
+             bytesPerRow: self.bytesPerRow,
+             space: DeviceGraphicsContextSettings.shared.colorSpace,
+             bitmapInfo: self.bitmapInfo.rawValue,
+             releaseCallback: nil,
+             releaseInfo: nil
+         )
+        
+        if ctx == nil {
+            ctx = CGContext(
+                      data: self.bytes,
+                       width: Int(self.scaledSize.width),
+                       height: Int(self.scaledSize.height),
+                       bitsPerComponent: DeviceGraphicsContextSettings.shared.bitsPerComponent,
+                       bytesPerRow: self.bytesPerRow,
+                       space: deviceColorSpace,
+                       bitmapInfo: self.bitmapInfo.rawValue,
+                       releaseCallback: nil,
+                       releaseInfo: nil
+                   )
+        } else if ctx == nil {
+            let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.noneSkipFirst.rawValue)
+            ctx = CGContext(
+                      data: self.bytes,
+                       width: Int(self.scaledSize.width),
+                       height: Int(self.scaledSize.height),
+                       bitsPerComponent: DeviceGraphicsContextSettings.shared.bitsPerComponent,
+                       bytesPerRow: self.bytesPerRow,
+                       space: deviceColorSpace,
+                       bitmapInfo: bitmapInfo.rawValue,
+                       releaseCallback: nil,
+                       releaseInfo: nil
+                   )
+        }
+        
+        self.context = ctx!
+                
+        self.context.scaleBy(x: actualScale, y: actualScale)
 
         
         if clear {
