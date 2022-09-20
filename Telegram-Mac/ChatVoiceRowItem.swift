@@ -144,7 +144,7 @@ class ChatVoiceRowItem: ChatMediaItem {
                     case let .revealed(success):
                         if !success {
                             transcribed = strings().chatVoiceTransribeError
-                            transcribtedColor = parameters.presentation.activityBackground
+                            transcribtedColor = parameters.presentation.grayText
                         } else {
                             if let result = entry.message?.audioTranscription, !result.text.isEmpty {
                                 transcribed = result.text
