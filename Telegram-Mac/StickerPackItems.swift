@@ -364,11 +364,11 @@ private final class StickerPackRowView : HorizontalRowView {
                 self.inlineSticker = nil
                 if let file = file {
                     current = InlineStickerItemLayer(account: item.context.account, file: file, size: NSMakeSize(26, 26))
+                    self.container.layer?.addSublayer(current!)
                     self.inlineSticker = current
                 } else {
                     current = nil
                 }
-                self.container.layer?.addSublayer(current!)
             }
             current?.superview = self.container
             current?.frame = CGRect(origin: NSMakePoint(5, 5), size: NSMakeSize(26, 26))

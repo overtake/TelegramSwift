@@ -146,18 +146,17 @@ public struct DeviceGraphicsContextSettings : Equatable {
     private static let installed: Atomic<DeviceGraphicsContextSettings?> = Atomic(value: nil)
     
     public static func install(_ context: CGContext) {
-        let size = NSMakeSize(1, 1)
-        let scaledSize = NSMakeSize(size.width * 2, size.height * 2)
+        let size = NSMakeSize(CGFloat(context.width), CGFloat(context.height))
         
-        let baseValue = context.bitsPerPixel * Int(scaledSize.width) / 8
+        let baseValue = context.bitsPerPixel * Int(size.width) / 8
         let bytesPerRow = (baseValue + 31) & ~0x1F
         let length = bytesPerRow * 2
         let bytes = malloc(length)!
         
         let ctx = CGContext(
              data: bytes,
-             width: 2,
-             height: 2,
+             width: context.width,
+             height: context.height,
              bitsPerComponent: context.bitsPerComponent,
              bytesPerRow: bytesPerRow,
              space: context.colorSpace ?? deviceColorSpace,
