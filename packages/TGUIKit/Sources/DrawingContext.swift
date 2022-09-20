@@ -121,7 +121,7 @@ public func getSharedDevideGraphicsContextSettings(context: CGContext?) -> Devic
             self.rowAlignment =  context?.bytesPerRow ?? 32 /// Int(System.backingScale)
             self.bitsPerPixel = context?.bitsPerPixel ?? 32// / Int(System.backingScale)
             self.bitsPerComponent = context?.bitsPerComponent ?? 8// / Int(System.backingScale)
-            self.opaqueBitmapInfo = bitmapInfo//context?.bitmapInfo ?? bitmapInfo
+            self.opaqueBitmapInfo = context?.bitmapInfo ?? bitmapInfo
             self.colorSpace = context?.colorSpace ?? deviceColorSpace
 //            assert(self.rowAlignment == 32)
 //            assert(self.bitsPerPixel == 32)
@@ -146,7 +146,26 @@ public struct DeviceGraphicsContextSettings : Equatable {
     private static let installed: Atomic<DeviceGraphicsContextSettings?> = Atomic(value: nil)
     
     public static func install(_ context: CGContext) {
-        _ = installed.swap(getSharedDevideGraphicsContextSettings(context: context))
+        let size = NSMakeSize(1, 1)
+        let scaledSize = NSMakeSize(size.width * 2, size.height * 2)
+        
+        let baseValue = context.bitsPerPixel * Int(scaledSize.width) / 8
+        let bytesPerRow = (baseValue + 31) & ~0x1F
+        let length = bytesPerRow * 2
+        let bytes = malloc(length)!
+        
+        let ctx = CGContext(
+             data: bytes,
+             width: 2,
+             height: 2,
+             bitsPerComponent: context.bitsPerComponent,
+             bytesPerRow: bytesPerRow,
+             space: context.colorSpace ?? deviceColorSpace,
+             bitmapInfo: context.bitmapInfo.rawValue,
+             releaseCallback: nil,
+             releaseInfo: nil
+         )
+        _ = installed.swap(getSharedDevideGraphicsContextSettings(context: ctx))
     }
     
     public static var shared: DeviceGraphicsContextSettings {
@@ -232,7 +251,7 @@ public class DrawingContext {
 
         self.bytes = malloc(length)!
         
-        var ctx = CGContext(
+        let ctx = CGContext(
             data: self.bytes,
              width: Int(self.scaledSize.width),
              height: Int(self.scaledSize.height),
@@ -243,20 +262,6 @@ public class DrawingContext {
              releaseCallback: nil,
              releaseInfo: nil
          )
-        
-        if ctx == nil {
-            ctx = CGContext(
-                      data: self.bytes,
-                       width: Int(self.scaledSize.width),
-                       height: Int(self.scaledSize.height),
-                       bitsPerComponent: DeviceGraphicsContextSettings.shared.bitsPerComponent,
-                       bytesPerRow: self.bytesPerRow,
-                       space: deviceColorSpace,
-                       bitmapInfo: self.bitmapInfo.rawValue,
-                       releaseCallback: nil,
-                       releaseInfo: nil
-                   )
-        } 
         
         self.context = ctx!
                 

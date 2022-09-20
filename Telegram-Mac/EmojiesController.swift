@@ -684,7 +684,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     let revealed: Bool
                     let selected:[EmojiesSectionRowItem.SelectedItem]
                 }
-                let tuple = Tuple(items: normalized, revealed: state.revealed[-1] ?? false, selected: state.selectedItems)
+                let tuple = Tuple(items: Array(normalized.prefix(13 * 8)), revealed: state.revealed[-1] ?? false, selected: state.selectedItems)
                 
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
                     return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: true, info: nil, items: tuple.items, mode: arguments.mode.itemMode, selectedItems: tuple.selected, callback: arguments.send, showAllItems: {
