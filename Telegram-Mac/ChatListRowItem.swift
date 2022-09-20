@@ -837,7 +837,7 @@ class ChatListRowItem: TableRowItem {
         }
         var offset: CGFloat = 0
         if let peer = peer, peer.id != context.peerId, let controlSize = PremiumStatusControl.controlSize(peer, false) {
-            offset += controlSize.width
+            offset += controlSize.width + 4
         }
         if isMuted {
             offset += theme.icons.dialogMuteImage.backingSize.width + 4
