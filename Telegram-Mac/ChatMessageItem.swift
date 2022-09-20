@@ -120,8 +120,6 @@ final class InlineStickerItem : Hashable {
                 copy.replaceCharacters(in: range, with: insertString)
             }
         }
-        var bp = 0
-        bp += 1
     }
 }
 

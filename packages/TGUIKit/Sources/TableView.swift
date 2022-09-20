@@ -2693,7 +2693,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             let animated:Bool
             let gap = abs(self.list[index].height - item.height)
             let height:CGFloat = self is HorizontalTableView ? frame.width : frame.height
-            let value = (gap < height)
+            let value = (gap < height) || self.tableView.isFlipped
             animated = (visibleRange.indexIn(index) || !transition.animateVisibleOnly) && value
 //            if case .none = transition.state {
 //
