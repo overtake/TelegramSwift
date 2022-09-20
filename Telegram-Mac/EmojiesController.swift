@@ -330,7 +330,6 @@ private struct State : Equatable {
     var recent: RecentUsedEmoji = .defaultSettings
     var reactionSettings: ReactionSettings = .default
     
-    var defaultStatuses:[StickerPackItem] = []
     var iconStatusEmoji: [TelegramMediaFile] = []
     var selectedItems: [EmojiesSectionRowItem.SelectedItem]
 }
@@ -1365,9 +1364,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                return reactionSettings
            }
         
-        let emojiStatuses = context.engine.stickers.loadedStickerPack(reference: .name("StatusEmojiWhite"), forceActualized: false)
         
-        actionsDisposable.add(combineLatest(emojies, context.account.viewTracker.featuredEmojiPacks(), context.account.postbox.peerView(id: context.peerId), search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, emojiStatuses, iconStatusEmoji).start(next: { view, featured, peerView, search, reactions, recentEmoji, reactionSettings, emojiStatuses, iconStatusEmoji in
+        actionsDisposable.add(combineLatest(emojies, context.account.viewTracker.featuredEmojiPacks(), context.account.postbox.peerView(id: context.peerId), search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji).start(next: { view, featured, peerView, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji in
             
             
             var featuredStatusEmoji: OrderedItemListView?
@@ -1463,12 +1461,6 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 current.recentReactionsItems = recentReactionsItems
                 current.reactionSettings = reactionSettings
                 current.iconStatusEmoji = iconStatusEmoji
-                switch emojiStatuses {
-                case let .result(_, items, _):
-                    current.defaultStatuses = items
-                default:
-                    break
-                }
                 return current
             }
             DispatchQueue.main.async {
