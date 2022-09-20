@@ -908,7 +908,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
         
         if statusView?.textLayout?.attributedString.string != item.statusLayout.attributedString.string {
             if let statusView = statusView {
-                if animated {
+                if animated, previousItem?.peer.id == item.peer.id {
                     statusView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak statusView] _ in
                         statusView?.removeFromSuperview()
                     })
@@ -918,7 +918,7 @@ private final class HorizontalContainerView : GeneralContainableRowView, GroupCa
                 }
             }
             
-            let animated = statusView?.textLayout != nil
+            let animated = statusView?.textLayout != nil && previousItem?.peer.id == item.peer.id
             
             let statusView = TextView()
             let hadOld = self.statusView != nil
