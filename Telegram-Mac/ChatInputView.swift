@@ -447,7 +447,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         }
         if state.effectiveInput != prevState.effectiveInput {
             self.emojiHolderAnimator.apply(self.textView, chatInteraction: self.chatInteraction, current: state.effectiveInput)
-            self.textView.scrollToCursor()
+            if state.effectiveInput.inputText.count != prevState.effectiveInput.inputText.count {
+                self.textView.scrollToCursor()
+            }
         }
     }
     private var updateFirstTime: Bool = true

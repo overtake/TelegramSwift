@@ -1329,7 +1329,7 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
 -(void)scrollToCursor {
     [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
     
-    NSRect lineRect = [self.textView highlightRectForRange:self.selectedRange whole:true];
+    NSRect lineRect = [self.textView highlightRectForRange:NSMakeRange(self.selectedRange.location + self.selectedRange.length - 1, 1) whole:true];
     
     CGFloat maxY = [self.scrollView.contentView documentRect].size.height;
     maxY = MIN(MAX(lineRect.origin.y, 0), maxY - self.scrollView.frame.size.height);

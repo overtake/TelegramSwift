@@ -118,9 +118,9 @@ public func getSharedDevideGraphicsContextSettings(context: CGContext?) -> Devic
             
             let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue)
 
-            self.rowAlignment =  context?.bytesPerRow ?? 32 /// Int(System.backingScale)
-            self.bitsPerPixel = context?.bitsPerPixel ?? 32// / Int(System.backingScale)
-            self.bitsPerComponent = context?.bitsPerComponent ?? 8// / Int(System.backingScale)
+            self.rowAlignment = 32 /// Int(System.backingScale)
+            self.bitsPerPixel = 32// / Int(System.backingScale)
+            self.bitsPerComponent = 8// / Int(System.backingScale)
             self.opaqueBitmapInfo = context?.bitmapInfo ?? bitmapInfo
             self.colorSpace = context?.colorSpace ?? deviceColorSpace
 //            assert(self.rowAlignment == 32)
