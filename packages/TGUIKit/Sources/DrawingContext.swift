@@ -7,7 +7,7 @@
 //
 
 import Cocoa
-
+import SwiftSignalKit
 
 public func generateImage(_ size: CGSize, contextGenerator: (CGSize, CGContext) -> Void, opaque: Bool = false, scale: CGFloat = 2.0) -> CGImage? {
     if size.width.isZero || size.height.isZero {
@@ -118,9 +118,9 @@ public func getSharedDevideGraphicsContextSettings(context: CGContext?) -> Devic
             
             let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue)
 
-            self.rowAlignment = 32// context?.bytesPerRow ?? 32 /// Int(System.backingScale)
-            self.bitsPerPixel = 32//context?.bitsPerPixel ?? 32// / Int(System.backingScale)
-            self.bitsPerComponent = 8//context?.bitsPerComponent ?? 8// / Int(System.backingScale)
+            self.rowAlignment =  context?.bytesPerRow ?? 32 /// Int(System.backingScale)
+            self.bitsPerPixel = context?.bitsPerPixel ?? 32// / Int(System.backingScale)
+            self.bitsPerComponent = context?.bitsPerComponent ?? 8// / Int(System.backingScale)
             self.opaqueBitmapInfo = context?.bitmapInfo ?? bitmapInfo
             self.colorSpace = context?.colorSpace ?? deviceColorSpace
 //            assert(self.rowAlignment == 32)
@@ -143,14 +143,14 @@ public func getSharedDevideGraphicsContextSettings(context: CGContext?) -> Devic
 }
 
 public struct DeviceGraphicsContextSettings : Equatable {
-    private static var installed: DeviceGraphicsContextSettings?
+    private static let installed: Atomic<DeviceGraphicsContextSettings?> = Atomic(value: nil)
     
     public static func install(_ context: CGContext) {
-        installed = getSharedDevideGraphicsContextSettings(context: context)
+        _ = installed.swap(getSharedDevideGraphicsContextSettings(context: context))
     }
     
     public static var shared: DeviceGraphicsContextSettings {
-        if let installed = installed {
+        if let installed = installed.with ({ $0 }) {
             return installed
         } else {
             return getSharedDevideGraphicsContextSettings(context: nil)
