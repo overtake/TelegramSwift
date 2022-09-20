@@ -121,7 +121,7 @@ public func getSharedDevideGraphicsContextSettings(context: CGContext?) -> Devic
             self.rowAlignment =  context?.bytesPerRow ?? 32 /// Int(System.backingScale)
             self.bitsPerPixel = context?.bitsPerPixel ?? 32// / Int(System.backingScale)
             self.bitsPerComponent = context?.bitsPerComponent ?? 8// / Int(System.backingScale)
-            self.opaqueBitmapInfo = context?.bitmapInfo ?? bitmapInfo
+            self.opaqueBitmapInfo = bitmapInfo//context?.bitmapInfo ?? bitmapInfo
             self.colorSpace = context?.colorSpace ?? deviceColorSpace
 //            assert(self.rowAlignment == 32)
 //            assert(self.bitsPerPixel == 32)
@@ -256,20 +256,7 @@ public class DrawingContext {
                        releaseCallback: nil,
                        releaseInfo: nil
                    )
-        } else if ctx == nil {
-            let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.noneSkipFirst.rawValue)
-            ctx = CGContext(
-                      data: self.bytes,
-                       width: Int(self.scaledSize.width),
-                       height: Int(self.scaledSize.height),
-                       bitsPerComponent: DeviceGraphicsContextSettings.shared.bitsPerComponent,
-                       bytesPerRow: self.bytesPerRow,
-                       space: deviceColorSpace,
-                       bitmapInfo: bitmapInfo.rawValue,
-                       releaseCallback: nil,
-                       releaseInfo: nil
-                   )
-        }
+        } 
         
         self.context = ctx!
                 
