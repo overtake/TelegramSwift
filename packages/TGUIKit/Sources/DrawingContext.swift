@@ -117,10 +117,9 @@ public func getSharedDevideGraphicsContextSettings(context: CGContext?) -> Devic
         public init(context: CGContext?) {
             
             let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue)
-
-            self.rowAlignment = 32 /// Int(System.backingScale)
-            self.bitsPerPixel = 32// / Int(System.backingScale)
-            self.bitsPerComponent = 8// / Int(System.backingScale)
+            self.rowAlignment =  context?.bytesPerRow ?? 32 /// Int(System.backingScale)
+            self.bitsPerPixel = context?.bitsPerPixel ?? 32// / Int(System.backingScale)
+            self.bitsPerComponent = context?.bitsPerComponent ?? 8// / Int(System.backingScale)
             self.opaqueBitmapInfo = context?.bitmapInfo ?? bitmapInfo
             self.colorSpace = context?.colorSpace ?? deviceColorSpace
 //            assert(self.rowAlignment == 32)
@@ -146,7 +145,7 @@ public struct DeviceGraphicsContextSettings : Equatable {
     private static let installed: Atomic<DeviceGraphicsContextSettings?> = Atomic(value: nil)
     
     public static func install(_ context: CGContext) {
-        let size = NSMakeSize(CGFloat(context.width), CGFloat(context.height))
+        let size = NSMakeSize(CGFloat(1), CGFloat(1))
         
         let baseValue = context.bitsPerPixel * Int(size.width) / 8
         let bytesPerRow = (baseValue + 31) & ~0x1F

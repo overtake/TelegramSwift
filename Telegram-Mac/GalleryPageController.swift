@@ -844,10 +844,6 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             magnify.updateStatus(item.status)
             cache.setObject(controller, forKey: identifier as AnyObject)
             
-            if selectedItem == item, hasInited {
-               // item.view.set(.single(magnify.contentView))
-                item.appear(for: magnify.contentView)
-            }
             return controller
         }
     }
