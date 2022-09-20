@@ -96,9 +96,9 @@ private final class CtxInstallLayer : SimpleLayer {
     private var timer: SwiftSignalKit.Timer?
     override init() {
         super.init()
-        self.frame = NSMakeRect(-16, -16, 16, 16)
+        self.frame = NSMakeRect(-1, -1, 1, 1)
 //        self.isOpaque = true
-        self.timer = SwiftSignalKit.Timer(timeout: 2.0, repeat: true, completion: { [weak self] in
+        self.timer = SwiftSignalKit.Timer(timeout: 10, repeat: true, completion: { [weak self] in
             self?.setNeedsDisplay()
         }, queue: .mainQueue())
         
