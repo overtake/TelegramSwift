@@ -120,7 +120,7 @@ public func getSharedDevideGraphicsContextSettings(context: CGContext?) -> Devic
             self.rowAlignment =  context?.bytesPerRow ?? 32 /// Int(System.backingScale)
             self.bitsPerPixel = context?.bitsPerPixel ?? 32// / Int(System.backingScale)
             self.bitsPerComponent = context?.bitsPerComponent ?? 8// / Int(System.backingScale)
-            self.opaqueBitmapInfo = context?.bitmapInfo ?? bitmapInfo
+            self.opaqueBitmapInfo = bitmapInfo//context?.bitmapInfo ?? bitmapInfo
             self.colorSpace = context?.colorSpace ?? deviceColorSpace
 //            assert(self.rowAlignment == 32)
 //            assert(self.bitsPerPixel == 32)
