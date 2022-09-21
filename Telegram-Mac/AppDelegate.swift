@@ -96,8 +96,9 @@ private final class CtxInstallLayer : SimpleLayer {
     private var timer: SwiftSignalKit.Timer?
     override init() {
         super.init()
+        self.contentsScale = 1
         self.frame = NSMakeRect(-1, -1, 1, 1)
-//        self.isOpaque = true
+        self.isOpaque = false
         self.timer = SwiftSignalKit.Timer(timeout: 10, repeat: true, completion: { [weak self] in
             self?.setNeedsDisplay()
         }, queue: .mainQueue())
@@ -1078,10 +1079,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
             let isOnline = NSApp.isActive && NSApp.isRunning && !NSApp.isHidden && !sharedApplicationContextValue.sharedWakeupManager.isSleeping && !sharedApplicationContextValue.notificationManager._lockedValue.screenLock && !sharedApplicationContextValue.notificationManager._lockedValue.passcodeLock && SystemIdleTime() < 30
             
             
-            
-            #if DEBUG
-            NSLog("accountIsOnline: \(isOnline)")
-            #endif
             presentAccountStatus.set(.single(isOnline) |> then(.single(isOnline) |> delay(50, queue: Queue.concurrentBackgroundQueue())) |> restart)
         }
     }

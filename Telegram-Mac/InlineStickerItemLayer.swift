@@ -420,7 +420,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             unique = Int(arc4random64())
         }
         self.contentsGravity = .center
-        self.isOpaque = true
+//        self.isOpaque = true
     }
     
     required init?(coder: NSCoder) {
