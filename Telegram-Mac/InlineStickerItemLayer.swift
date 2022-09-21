@@ -475,7 +475,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             let key: MultiTargetContextCache.Key = .init(key: animation.key, unique: unique)
             
             delayDisposable.set(delaySignal(MultiTargetContextCache.exists(key) || force ? 0 : 0.1).start(completed: { [weak self] in
-                
+
                 self?.contextToken = (MultiTargetContextCache.create(animation, key: key, displayFrame: { image in
                     layer?.contents = image
                     if layer?.isPreviousPreview == true {
@@ -542,11 +542,13 @@ final class InlineStickerItemLayer : SimpleLayer {
             let playPolicy = self.playPolicy
 
             let aspectSize: NSSize
+            let dimensionSize: NSSize
             if aspectFilled {
                 aspectSize = file.dimensions?.size.aspectFilled(size) ?? size
             } else {
                 aspectSize = file.dimensions?.size.aspectFitted(size) ?? size
             }
+            dimensionSize = file.dimensions?.size ?? size
             let reference: FileMediaReference
             let mediaResource: MediaResourceReference
              if let stickerReference = file.stickerReference {
@@ -673,11 +675,11 @@ final class InlineStickerItemLayer : SimpleLayer {
                                 self?.shimmer = current
                             }
                                                         
-                            let data = shimmerColor.circle ? nil : file.immediateThumbnailData
+                            let data = file.immediateThumbnailData
                             
                             let shimmerSize = aspectSize
                             
-                            current.update(backgroundColor: nil, foregroundColor: shimmerColor.color.withAlphaComponent(0.2), shimmeringColor: shimmerColor.color.withAlphaComponent(0.35), data: data, size: shimmerSize)
+                            current.update(backgroundColor: nil, foregroundColor: shimmerColor.color.withAlphaComponent(0.2), shimmeringColor: shimmerColor.color.withAlphaComponent(0.35), data: data, size: shimmerSize, imageSize: dimensionSize)
                             current.updateAbsoluteRect(size.bounds, within: shimmerSize)
                             
                             current.frame = size.bounds.focus(aspectSize)
