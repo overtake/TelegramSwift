@@ -190,7 +190,7 @@ public class ShimmerLayer: SimpleLayer {
         self.effectView.updateAbsoluteRect(rect, within: containerSize)
     }
     
-    public func update(backgroundColor: NSColor?, foregroundColor: NSColor, shimmeringColor: NSColor, data: Data?, size: CGSize) {
+    public func update(backgroundColor: NSColor?, foregroundColor: NSColor, shimmeringColor: NSColor, data: Data?, size: CGSize, imageSize: NSSize) {
         if self.currentData == data, let currentBackgroundColor = self.currentBackgroundColor, currentBackgroundColor.isEqual(backgroundColor), let currentForegroundColor = self.currentForegroundColor, currentForegroundColor.isEqual(foregroundColor), let currentShimmeringColor = self.currentShimmeringColor, currentShimmeringColor.isEqual(shimmeringColor), self.currentSize == size {
             return
         }
@@ -227,7 +227,7 @@ public class ShimmerLayer: SimpleLayer {
                     let reader = PathDataReader(input: path)
                     let segments = reader.read()
 
-                    let scale = size.width / 512.0
+                    let scale = max(size.width, size.height) / max(imageSize.width, imageSize.height)
                     context.scaleBy(x: scale, y: scale)
                     renderPath(segments, context: context)
                 } else {

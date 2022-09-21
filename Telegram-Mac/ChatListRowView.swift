@@ -193,7 +193,7 @@ private final class ChatListMediaPreviewView: View {
                 self.layer?.addSublayer(shimmer)
                 self.shimmer = shimmer
                 
-                shimmer.update(backgroundColor: nil, foregroundColor: NSColor(rgb: 0x748391, alpha: 0.2), shimmeringColor: NSColor(rgb: 0x748391, alpha: 0.35), data: nil, size: size)
+                shimmer.update(backgroundColor: nil, foregroundColor: NSColor(rgb: 0x748391, alpha: 0.2), shimmeringColor: NSColor(rgb: 0x748391, alpha: 0.35), data: nil, size: size, imageSize: dimensions)
                 shimmer.updateAbsoluteRect(size.bounds, within: size)
 
             }
