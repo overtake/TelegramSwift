@@ -440,6 +440,10 @@ open class AppMenuRowView: AppMenuBasicItemView {
             keyEquivalent.centerY(x: self.rightX - keyEquivalent.frame.width)
         }
     }
+    open override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+      //  self.drawable?.updateState(.Hover)
+    }
     
     open override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
