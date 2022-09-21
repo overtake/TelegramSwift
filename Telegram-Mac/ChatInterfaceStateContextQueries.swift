@@ -96,6 +96,16 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
             $0 + $1.reduce([], { current, value in
                 return current + value.topItems.map { $0.file }
             })
+        } |> map { files -> [TelegramMediaFile] in
+            var exists: Set<Int64> = Set()
+            return files.filter { file in
+                if exists.contains(file.fileId.id) {
+                    return false
+                } else {
+                    exists.insert(file.fileId.id)
+                    return true
+                }
+            }
         }
 
         
@@ -556,12 +566,22 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
         return (inputQuery, signal |> then(result))
     case let .emoji(query, firstWord):
         
-        let animated = combineLatest(context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000) |> map {
+        let animated: Signal<[TelegramMediaFile], NoError> = combineLatest(context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000) |> map {
             $0.entries.compactMap({ $0.item as? StickerPackItem}).map { $0.file }
         }, context.account.viewTracker.featuredEmojiPacks()) |> map {
             $0 + $1.reduce([], { current, value in
                 return current + value.topItems.map { $0.file }
             })
+        } |> map { files -> [TelegramMediaFile] in
+            var exists: Set<Int64> = Set()
+            return files.filter { file in
+                if exists.contains(file.fileId.id) {
+                    return false
+                } else {
+                    exists.insert(file.fileId.id)
+                    return true
+                }
+            }
         }
 
         if !query.isEmpty {
