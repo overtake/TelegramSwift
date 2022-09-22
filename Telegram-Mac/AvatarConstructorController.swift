@@ -27,8 +27,9 @@ private final class Arguments {
     let zoom:(CGFloat)->Void
     let updateText:(String)->Void
     let stickersView:()->NSView?
+    let emojisView:()->NSView?
     let updateOffset:(NSPoint)->Void
-    init(context: AccountContext, dismiss:@escaping()->Void, select:@escaping(State.Item)->Void, selectOption:@escaping(State.Item.Option)->Void, selectColor:@escaping(AvatarColor)->Void, selectForeground:@escaping(TelegramMediaFile)->Void, set: @escaping()->Void, zoom:@escaping(CGFloat)->Void, updateText:@escaping(String)->Void, stickersView: @escaping()->NSView?, updateOffset:@escaping(NSPoint)->Void) {
+    init(context: AccountContext, dismiss:@escaping()->Void, select:@escaping(State.Item)->Void, selectOption:@escaping(State.Item.Option)->Void, selectColor:@escaping(AvatarColor)->Void, selectForeground:@escaping(TelegramMediaFile)->Void, set: @escaping()->Void, zoom:@escaping(CGFloat)->Void, updateText:@escaping(String)->Void, stickersView: @escaping()->NSView?, emojisView:@escaping()->NSView?, updateOffset:@escaping(NSPoint)->Void) {
         self.context = context
         self.dismiss = dismiss
         self.select = select
@@ -39,6 +40,7 @@ private final class Arguments {
         self.zoom = zoom
         self.updateText = updateText
         self.stickersView = stickersView
+        self.emojisView = emojisView
         self.updateOffset = updateOffset
     }
 }
@@ -813,8 +815,8 @@ private final class AvatarRightView: View {
             }
         }
         
-        if let content = self.content.subviews.last as? Avatar_EmojiListView {
-            content.set(list: state.emojies, context: arguments.context, selectForeground: arguments.selectForeground, animated: animated)
+        if state.selected.key == "e", let content = self.content.subviews.last as? Avatar_StickersList, let view = arguments.emojisView() {
+            content.set(view: view, context: arguments.context, animated: animated)
         } else if let content = self.content.subviews.last as? Avatar_BgListView {
             content.set(colors: state.colors, context: arguments.context, select: arguments.selectColor, animated: animated)
         } else if let content = self.content.subviews.last as? Avatar_MonogramView {
@@ -829,7 +831,7 @@ private final class AvatarRightView: View {
         if item.selectedOption.key == "b" {
             return Avatar_BgListView.self
         } else if item.key == "e" {
-            return Avatar_EmojiListView.self
+            return Avatar_StickersList.self
         } else if item.key == "m" {
             return Avatar_MonogramView.self
         } else if item.key == "s" {
@@ -974,11 +976,13 @@ final class AvatarConstructorController : ModalViewController {
     private var setPressed:(()->Void)?
     
     private let stickersController: NStickersViewController
-    
+    private let emojisController: EmojiesController
+
     init(_ context: AccountContext, target: Target, videoSignal:@escaping(MediaObjectToAvatar)->Void) {
         self.context = context
         self.target = target
         self.stickersController = .init(context)
+        self.emojisController = .init(context, mode: .selectAvatar, selectedItems: [])
         self.videoSignal = videoSignal
         super.init(frame: NSMakeRect(0, 0, 350, 450))
         
@@ -1253,6 +1257,8 @@ final class AvatarConstructorController : ModalViewController {
             }
         }, stickersView: { [weak self] in
             return self?.stickersController.view
+        }, emojisView: { [weak self] in
+            return self?.emojisController.view
         }, updateOffset: { offset in
             updateState { current in
                 var current = current
@@ -1281,13 +1287,22 @@ final class AvatarConstructorController : ModalViewController {
         interactions.sendGIF = { file, _, _ in
             arguments.selectForeground(file)
         }
+        interactions.sendAnimatedEmoji = { item, _, _, _ in
+            arguments.selectForeground(item.file)
+        }
         
         interactions.showStickerPremium = { [weak self] file, view in
             self?.genericView.previewPremium(file, context: context, view: view, animated: true)
         }
 
-        stickersController.update(with: interactions, chatInteraction: .init(chatLocation: .peer(context.peerId), context: context))
+        let c_interactions = ChatInteraction(chatLocation: .peer(context.peerId), context: context)
+        stickersController.update(with: interactions, chatInteraction: c_interactions)
         stickersController.loadViewIfNeeded()
+        
+        emojisController.update(with: interactions, chatInteraction: c_interactions)
+        emojisController.loadViewIfNeeded()
+
+        
         setPressed = arguments.set
         
         genericView.setView.set(handler: { _ in
