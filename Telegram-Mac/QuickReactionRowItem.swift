@@ -108,7 +108,7 @@ private final class QuickReactionRowView : GeneralContainableRowView {
             return
         }
         
-        let textLayout = TextViewLayout.init(.initialize(string: strings().reactionSettingsQuickTitle, color: theme.colors.text, font: .normal(.text)))
+        let textLayout = TextViewLayout.init(.initialize(string: strings().reactionSettingsQuickTitle, color: theme.colors.text, font: .normal(.title)))
         textLayout.measure(width: .greatestFiniteMagnitude)
         
         self.textView.update(textLayout)
