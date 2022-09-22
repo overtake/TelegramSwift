@@ -444,14 +444,16 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
             })
         } else {
             var calc:CGFloat = 0
-            
+            var clicked: Bool = false
             scrollView.applyExternalScroll = { [weak self] event in
                 calc += abs(event.deltaY)
                 calc += abs(event.deltaX)
                 
-                if calc > 30 {
+                if calc > 30, !clicked {
                     self?.showMore.send(event: .Click)
                     AppMenu.closeAll()
+                    clicked = true
+                    return false
                 }
                 return true
             }
