@@ -27,6 +27,7 @@ final class PremiumStatusControl : Control {
         fatalError("init(coder:) has not been implemented")
     }
     
+    private let disposable = MetaDisposable()
     
     func set(_ peer: Peer, account: Account, inlinePacksContext: InlineStickersContext?, color: NSColor?, isSelected: Bool, isBig: Bool, animated: Bool, playTwice: Bool = false) {
         
@@ -183,8 +184,23 @@ final class PremiumStatusControl : Control {
         
         self.updateAnimatableContent()
         self.updateListeners()
+        
+        
+        let updatedPeer = account.postbox.peerView(id: peer.id) |> map {
+            return peerViewMainPeer($0)
+        }
+        |> filter { $0 != nil }
+        |> map { $0! }
+        |> deliverOnMainQueue
+        
+        self.disposable.set(updatedPeer.start(next: { [weak self] updated in
+            if !updated.isEqual(peer) {
+                self?.set(updated, account: account, inlinePacksContext: inlinePacksContext, color: color, isSelected: isSelected, isBig: isBig, animated: animated, playTwice: playTwice)
+            }
+        }))
     }
     
+
     
     @objc func updateAnimatableContent() -> Void {
         if let layer = self.animateLayer, let superview = layer.superview {
@@ -214,6 +230,7 @@ final class PremiumStatusControl : Control {
     
     deinit {
         NotificationCenter.default.removeObserver(self)
+        self.disposable.dispose()
     }
     
     private func updateListeners() {

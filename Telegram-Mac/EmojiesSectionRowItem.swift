@@ -81,7 +81,8 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         }
     }
     
-    let items: [Item]
+    private(set) var items: [Item] = []
+    private let _items: [StickerPackItem]
     let selectedItems: [SelectedItem]
     let stickerItems: [StickerPackItem]
     let context: AccountContext
@@ -114,6 +115,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         self.itemSize = NSMakeSize(41, 34)
         self.info = info
         self.mode = mode
+        self._items = items
         self.viewSet = viewSet
         self.installed = installed
         self.revealed = revealed
@@ -123,38 +125,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         self.openPremium = openPremium
         self.installPack = installPack
         self.isPremium = items.contains(where: { $0.file.isPremiumEmoji }) && stableId != AnyHashable(0)
-        var mapped: [Item] = []
-        var point = NSMakePoint(10, 0)
-        
-        var optimized = (isPremium && !context.isPremium || !installed) && !revealed && items.count > 24 ? Array(items.prefix(23)) : items
-        if mode == .statuses, info == nil, !revealed {
-            optimized = Array(items.prefix(min(items.count, 8 * 5 - 1)))
-        }
-        for item in optimized {
-            
-            let isLocked = mode == .reactions && !context.isPremium && info == nil && item.file.stickerText == nil && item.getStringRepresentationsOfIndexKeys().isEmpty
-            
-            let selected = selectedItems.first(where: { $0.isEqual(to: item.file) })?.type
-            
-            let inset: NSPoint
-            if selected != nil {
-                inset = NSMakePoint(8, 5)
-            } else {
-                inset = NSMakePoint(2, 2)
-            }
-            mapped.append(.item(rect: CGRect(origin: point, size: itemSize).insetBy(dx: inset.x, dy: inset.y), item: item, lock: isLocked, selected: selected))
-            point.x += itemSize.width
-            if mapped.count % 8 == 0 {
-                point.y += itemSize.height
-                point.x = 10
-            }
-        }
-        
-        if optimized.count != items.count {
-            mapped.append(.more(rect: CGRect(origin: point, size: itemSize).insetBy(dx: -5, dy: 0), count: items.count - optimized.count))
-        }
-        
-        self.items = mapped
+       
         self.context = context
         self.callback = callback
         
@@ -208,8 +179,48 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         return EmojiesSectionRowView.self
     }
     
+    override var instantlyResize: Bool {
+        return true
+    }
+    
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
+        
+        
+        let perline: Int = Int(floor(width / itemSize.width))
+        
+        var mapped: [Item] = []
+        var point = NSMakePoint(10, 0)
+        
+        var optimized = (isPremium && !context.isPremium || !installed) && !revealed && _items.count > 3 * perline ? Array(_items.prefix(3 * perline - 1)) : _items
+        if mode == .statuses, info == nil, !revealed {
+            optimized = Array(_items.prefix(min(_items.count, perline * 5 - 1)))
+        }
+        for item in optimized {
+            
+            let isLocked = mode == .reactions && !context.isPremium && info == nil && item.file.stickerText == nil && item.getStringRepresentationsOfIndexKeys().isEmpty
+            
+            let selected = selectedItems.first(where: { $0.isEqual(to: item.file) })?.type
+            
+            let inset: NSPoint
+            if selected != nil {
+                inset = NSMakePoint(8, 5)
+            } else {
+                inset = NSMakePoint(2, 2)
+            }
+            mapped.append(.item(rect: CGRect(origin: point, size: itemSize).insetBy(dx: inset.x, dy: inset.y), item: item, lock: isLocked, selected: selected))
+            point.x += itemSize.width
+            if mapped.count % perline == 0 {
+                point.y += itemSize.height
+                point.x = 10
+            }
+        }
+        
+        if optimized.count != _items.count {
+            mapped.append(.more(rect: CGRect(origin: point, size: itemSize).insetBy(dx: -5, dy: 0), count: _items.count - optimized.count))
+        }
+        
+        self.items = mapped
         
         nameLayout?.measure(width: unlockText != nil ? 200 : 300)
 
@@ -223,7 +234,10 @@ final class EmojiesSectionRowItem : GeneralRowItem {
             height += nameLayout.layoutSize.height + (unlockText != nil ? 15 : 5)
         }
         
-        height += self.itemSize.height * CGFloat(ceil(CGFloat(items.count) / 8.0))
+        let perline: CGFloat = floor(width / itemSize.width)
+
+        
+        height += self.itemSize.height * CGFloat(ceil(CGFloat(items.count) / perline))
         
         if let _ = nameLayout {
             height += 5

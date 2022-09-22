@@ -371,6 +371,8 @@ private func packEntries(_ state: State, arguments: Arguments) -> [InputDataEntr
         hasRecent = true
     case .reactions:
         hasRecent = !state.recentReactionsItems.isEmpty || !state.topReactionsItems.isEmpty
+    case .selectAvatar:
+        hasRecent = true
     }
     if hasRecent {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_recent_pack, equatable: nil, comparable: nil, item: { initialSize, stableId in
@@ -576,7 +578,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     }
                 }
                 
-                if let reactions = state.reactions?.reactions {
+                if let reactions = state.reactions?.enabled {
                     for reaction in reactions {
                         let recentContains = recent.contains(where: { $0.content.reaction == reaction.value })
                         let popularContains = popular.contains(where: { $0.content.reaction == reaction.value })
@@ -596,7 +598,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 let transform:(RecentReactionItem)->StickerPackItem? = { item in
                     switch item.content {
                     case let .builtin(emoji):
-                        let builtin = state.reactions?.reactions.first(where: {
+                        let builtin = state.reactions?.enabled.first(where: {
                             $0.value.string == emoji
                         })
                         if let builtin = builtin {
@@ -1041,7 +1043,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         case emoji
         case status
         case reactions
-        
+        case selectAvatar
+
         var itemMode: EmojiesSectionRowItem.Mode {
             switch self {
             case .reactions:
@@ -1181,6 +1184,8 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
             case .status:
                 self?.interactions?.sendAnimatedEmoji(item, nil, timeout, rect)
             case .reactions:
+                self?.interactions?.sendAnimatedEmoji(item, nil, nil, rect)
+            case .selectAvatar:
                 self?.interactions?.sendAnimatedEmoji(item, nil, nil, rect)
             }
             

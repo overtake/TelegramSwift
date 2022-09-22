@@ -512,23 +512,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         addition += statusControl.frame.width + 1
                     }
                     
-                    
-//                    if item.isVerified {
-//                        ctx.draw(highlighted ? theme.icons.verifyDialogActive : theme.icons.verifyDialog, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin, 16, 16))
-//                        addition += 17
-//                    }
-//
-//
-//                    if item.isScam || item.isFake {
-//                        ctx.draw(highlighted ? item.badHighlightIcon : item.badIcon, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin + 1, theme.icons.scam.backingSize.width, theme.icons.scam.backingSize.height))
-//                        addition += item.badIcon.backingSize.width + 3
-//                    }
-//
-//                    if item.isPremium {
-//                        ctx.draw(highlighted ? theme.icons.premium_account_rev_active : theme.icons.premium_account_rev, in: NSMakeRect(displayLayout.0.size.width + item.leftInset + addition + 2, item.margin, 16, 16))
-//                        addition += 17
-//                    }
-                    
                     var messageOffset: CGFloat = 0
                     if let chatNameLayout = item.ctxChatNameLayout, !hiddenMessage {
                         chatNameLayout.1.draw(NSMakeRect(item.leftInset, displayLayout.0.size.height + item.margin + 2, chatNameLayout.0.size.width, chatNameLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
