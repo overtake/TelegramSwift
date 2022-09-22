@@ -624,8 +624,10 @@ final class InlineStickerItemLayer : SimpleLayer {
             if file.mimeType == "bundle/jpeg", let resource = file.resource as? LocalBundleResource {
                 let image = NSImage(named: resource.name)?.precomposed(theme.colors.accentIcon)
                 self.contents = image
+                self.contentsGravity = .resizeAspect
             } else {
-                
+                self.contentsGravity = .center
+
                 let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: aspectSize, boundingSize: size, intrinsicInsets: NSEdgeInsets(), emptyColor: emptyColor)
 
                 let fontSize = NSMakeSize(theme.fontSize + 8, theme.fontSize + 5)
