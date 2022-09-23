@@ -192,6 +192,8 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
     
     if chatInteraction.isLogInteraction {
         return .single([])
+    } else if chatInteraction.disableSelectAbility {
+        return .single([])
     }
     
     return chatMenuItemsData(for: message, textLayout: textLayout, entry: entry, chatInteraction: chatInteraction) |> map { data in

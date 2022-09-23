@@ -344,7 +344,25 @@ final class CurveLayer: CAShapeLayer {
     private var transition: CGFloat = 0 {
         didSet {
             guard let currentPoints = currentPoints else { return }
-            self.path = CGPath.smoothCurve(through: currentPoints, length: bounds.width, smoothness: smoothness, curve: true)
+            
+            let width = self.bounds.width
+            let smoothness = self.smoothness
+            
+            let signal: Signal<CGPath, NoError> = Signal { subscriber in
+                
+                subscriber.putNext(.smoothCurve(through: currentPoints, length: width, smoothness: smoothness, curve: true))
+                subscriber.putCompletion()
+                
+                return EmptyDisposable
+                
+            }
+            |> runOn(resourcesQueue)
+            |> deliverOnMainQueue
+            
+            
+            _ = signal.start(next: { [weak self] path in
+                self?.path = path
+            })
         }
     }
 

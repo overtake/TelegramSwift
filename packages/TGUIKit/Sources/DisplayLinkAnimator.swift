@@ -144,7 +144,7 @@ public final class DisplayLinkAnimator {
         }
         self.startTime = CACurrentMediaTime()
         
-        self.displayLink = SwiftSignalKit.Timer.init(timeout: 0.016, repeat: true, completion: { [weak self] in
+        self.displayLink = SwiftSignalKit.Timer(timeout: 0.032, repeat: true, completion: { [weak self] in
             self?.tick(false)
         }, queue: .mainQueue())
         

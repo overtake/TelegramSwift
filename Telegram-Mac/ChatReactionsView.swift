@@ -1314,9 +1314,9 @@ final class ChatReactionsView : View {
         }
         
         DispatchQueue.main.async {
-            let interactive = layout.context.reactions.interactive
-            if let interactive = interactive {
-                if let selected = new.first {
+            if let selected = new.first {
+                let interactive = layout.context.reactions.interactive
+                if let interactive = interactive {
                     if interactive.messageId == layout.message.id {
                         let view = self.getView(selected.value.value)
                         if let view = view {

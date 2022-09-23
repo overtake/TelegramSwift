@@ -73,6 +73,7 @@ class ChatAccessoryView : Button {
         self.model = model
         self.backgroundColor = model.presentation.background
  
+        
         borderLayer.opacity = model.drawLine ? 1 : 0
         borderLayer.backgroundColor = model.presentation.border.cgColor
         if model.drawLine {
@@ -237,6 +238,8 @@ class ChatAccessoryModel: NSObject {
     open weak var view:ChatAccessoryView? {
         didSet {
             if let view = view {
+                view.imageView?.removeFromSuperview()
+                view.imageView = nil
                 view.updateModel(self, animated: false)
             }
         }
