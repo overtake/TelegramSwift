@@ -17,7 +17,7 @@ import AppKit
 class InlineStickerLockLayer : SimpleLayer {
     private let lockedView: SimpleLayer = SimpleLayer()
     private let disposable = MetaDisposable()
-    init(frame frameRect: NSRect) {
+    override init(frame frameRect: NSRect) {
         super.init()
         self.frame = frameRect
         addSublayer(lockedView)

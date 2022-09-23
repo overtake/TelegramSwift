@@ -237,14 +237,10 @@ private final class VoiceCurveLayer: SimpleLayer {
         }
     }
     
-
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
-    required init(frame frameRect: NSRect) {
-        fatalError("init(frame:) has not been implemented")
-    }
+    
 
     public func setColor(_ color: NSColor) {
         smallCurve.setColor(color.withAlphaComponent(1.0))

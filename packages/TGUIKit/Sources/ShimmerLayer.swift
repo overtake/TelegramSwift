@@ -74,8 +74,8 @@ private final class ShimmerEffectForegroundLayer: SimpleLayer {
                 var locations: [CGFloat] = [0.0, 0.5, 1.0]
                 let colors: [CGColor] = [transparentColor, peakColor, transparentColor]
                 
-                let colorSpace = CGColorSpaceCreateDeviceRGB()
-                let gradient = CGGradient(colorsSpace: colorSpace, colors: colors as CFArray, locations: &locations)!
+//                let colorSpace = CGColorSpaceCreateDeviceRGB()
+                let gradient = CGGradient(colorsSpace: DeviceGraphicsContextSettings.shared.colorSpace, colors: colors as CFArray, locations: &locations)!
                 
                 context.drawLinearGradient(gradient, start: CGPoint(x: 0.0, y: 0.0), end: CGPoint(x: size.width, y: 0.0), options: CGGradientDrawingOptions())
             })
@@ -182,7 +182,7 @@ public class ShimmerLayer: SimpleLayer {
         fatalError("init(coder:) has not been implemented")
     }
     
-    required init(frame frameRect: NSRect) {
+    required override init(frame frameRect: NSRect) {
         fatalError("init(frame:) has not been implemented")
     }
     
@@ -190,7 +190,7 @@ public class ShimmerLayer: SimpleLayer {
         self.effectView.updateAbsoluteRect(rect, within: containerSize)
     }
     
-    public func update(backgroundColor: NSColor?, foregroundColor: NSColor, shimmeringColor: NSColor, data: Data?, size: CGSize, imageSize: NSSize) {
+    public func update(backgroundColor: NSColor?, foregroundColor: NSColor = NSColor(rgb: 0x748391, alpha: 0.2), shimmeringColor: NSColor = NSColor(rgb: 0x748391, alpha: 0.35), data: Data?, size: CGSize, imageSize: NSSize, cornerRadius: CGFloat? = nil) {
         if self.currentData == data, let currentBackgroundColor = self.currentBackgroundColor, currentBackgroundColor.isEqual(backgroundColor), let currentForegroundColor = self.currentForegroundColor, currentForegroundColor.isEqual(foregroundColor), let currentShimmeringColor = self.currentShimmeringColor, currentShimmeringColor.isEqual(shimmeringColor), self.currentSize == size {
             return
         }
@@ -232,7 +232,11 @@ public class ShimmerLayer: SimpleLayer {
                     renderPath(segments, context: context)
                 } else {
                     let path = CGMutablePath()
-                    path.addRoundedRect(in: CGRect(origin: CGPoint(), size: size), cornerWidth: min(min(4, size.height / 2), size.width / 2), cornerHeight: min(min(size.height / 2, 4), size.height / 2))
+                    if let cornerRadius = cornerRadius {
+                        path.addRoundedRect(in: CGRect(origin: CGPoint(), size: size), cornerWidth: cornerRadius, cornerHeight: cornerRadius)
+                    } else {
+                        path.addRoundedRect(in: CGRect(origin: CGPoint(), size: size), cornerWidth: min(min(4, size.height / 2), size.width / 2), cornerHeight: min(min(size.height / 2, 4), size.height / 2))
+                    }
                     context.addPath(path)
                     context.fillPath()
                 }

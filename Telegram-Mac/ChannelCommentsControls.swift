@@ -338,16 +338,15 @@ final class ChannelCommentsRenderData {
 
 class ChannelCommentsBubbleControl: CommentsBasicControl {
     private var peers:[ChannelCommentsRenderData.Avatar] = []
-    private var avatars:[AvatarContentView] = []
-    private let avatarsContainer = View(frame: NSMakeRect(0, 0, 22 * 3, 22))
+    private var avatars:[AvatarContentLayer] = []
+    private let avatarsContainer = SimpleLayer(frame: NSMakeRect(0, 0, 22 * 3, 22))
     private let arrowView = ImageView()
     private var dotView: View? = nil
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(avatarsContainer)
+        self.layer?.addSublayer(avatarsContainer)
         addSubview(arrowView)
         arrowView.isEventLess = true
-        avatarsContainer.isEventLess = true
         
         arrowView.image = theme.icons.channel_comments_bubble_next
         arrowView.sizeToFit()
@@ -425,46 +424,53 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
             let peer = self.peers[removed]
             let haveNext = data.peers.contains(where: { $0.stableId == peer.stableId })
             control.updateLayout(size: NSMakeSize(22, 22), isClipped: false, animated: animated)
+            control.anchorPoint = NSMakePoint(0.5, 0.5)
             if animated && !haveNext {
-                control.layer?.animateAlpha(from: 1, to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak control] _ in
-                    control?.removeFromSuperview()
+                control.animateAlpha(from: 1, to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak control] _ in
+                    control?.removeFromSuperlayer()
                 })
-                control.layer?.animateScaleSpring(from: 1.0, to: 0.2, duration: duration)
+                control.animateScaleSpring(from: 1.0, to: 0.2, duration: duration, center: false )
             } else {
-                control.removeFromSuperview()
+                control.removeFromSuperlayer()
             }
         }
+        let imageSize = NSMakeSize(22, 22)
         for inserted in inserted {
-            let control = AvatarContentView(context: data.context, peer: inserted.1.peer, message: data.message, synchronousLoad: false, size: NSMakeSize(22, 22))
-            control.updateLayout(size: NSMakeSize(22, 22), isClipped: inserted.0 != 0, animated: animated)
-            control.userInteractionEnabled = false
-            control.setFrameSize(NSMakeSize(22, 22))
-            control.setFrameOrigin(NSMakePoint(CGFloat(inserted.0) * 18, 0))
+            let control = AvatarContentLayer(context: data.context, peer: inserted.1.peer, message: data.message, synchronousLoad: false, size: imageSize)
+            control.updateLayout(size: imageSize, isClipped: inserted.0 != 0, animated: animated)
+            control.frame = CGRect(origin: NSMakePoint(CGFloat(inserted.0) * 18, 0), size: imageSize)
             avatars.insert(control, at: inserted.0)
-            avatarsContainer.subviews.insert(control, at: inserted.0)
+            if let _ = avatarsContainer.sublayers {
+                avatarsContainer.sublayers?.insert(control, at: inserted.0)
+            } else {
+                avatarsContainer.addSublayer(control)
+            }
             if animated {
                 if let index = inserted.2 {
-                    control.layer?.animatePosition(from: NSMakePoint(CGFloat(index) * 18, 0), to: control.frame.origin, timingFunction: timingFunction)
+                    control.animatePosition(from: NSMakePoint(CGFloat(index) * 18, 0).offsetBy(dx: imageSize.width/2, dy: imageSize.height/2), to: control.frame.origin.offsetBy(dx: imageSize.width/2, dy: imageSize.height/2), timingFunction: timingFunction)
                 } else {
-                    control.layer?.animateAlpha(from: 0, to: 1, duration: duration, timingFunction: timingFunction)
-                    control.layer?.animateScaleSpring(from: 0.2, to: 1.0, duration: duration)
+                    control.animateAlpha(from: 0, to: 1, duration: duration, timingFunction: timingFunction)
+                    control.animateScaleSpring(from: 0.2, to: 1.0, duration: duration, center: false)
                 }
             }
         }
         for updated in updated {
             let control = avatars[updated.0]
-            control.updateLayout(size: NSMakeSize(22, 22), isClipped: updated.0 != 0, animated: animated)
+            control.updateLayout(size: imageSize, isClipped: updated.0 != 0, animated: animated)
             let updatedPoint = NSMakePoint(CGFloat(updated.0) * 18, 0)
             if animated {
-                control.layer?.animatePosition(from: control.frame.origin - updatedPoint, to: .zero, duration: duration, timingFunction: timingFunction, additive: true)
+                control.animatePosition(from: control.frame.origin - updatedPoint, to: .zero, duration: duration, timingFunction: timingFunction, additive: true)
             }
-            control.setFrameOrigin(updatedPoint)
+            control.frame = CGRect(origin: updatedPoint, size: imageSize)
         }
         var index: CGFloat = 10
-        for control in avatarsContainer.subviews.compactMap({ $0 as? AvatarContentView }) {
-            control.layer?.zPosition = index
-            index -= 1
+        if let sublayers = avatarsContainer.sublayers {
+            for control in sublayers.compactMap({ $0 as? AvatarContentLayer }) {
+                control.zPosition = index
+                index -= 1
+            }
         }
+        
         
         self.peers = data.peers
 
@@ -476,7 +482,7 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
         arrowView.isHidden = data.isLoading
         
         if animated {
-            var f = focus(arrowView.frame.size)
+            var f = size.bounds.focus(arrowView.frame.size)
             f.origin.x = size.width - 6 - f.width
             arrowView.layer?.animatePosition(from: arrowView.frame.origin - f.origin, to: .zero, timingFunction: timingFunction, additive: true)
         }
@@ -524,7 +530,9 @@ class ChannelCommentsBubbleControl: CommentsBasicControl {
     
     override func layout() {
         super.layout()
-        self.avatarsContainer.centerY(x: 13 + 6)
+        var rect = focus(self.avatarsContainer.frame.size)
+        rect.origin.x = 13 + 6
+        self.avatarsContainer.frame = rect
         self.arrowView.centerY(x: frame.width - 6 - arrowView.frame.width)
         self.dotView?.centerY(x: lastTextPosition.x + 6, addition: 1)
     }

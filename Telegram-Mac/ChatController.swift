@@ -1363,6 +1363,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     private var selectTextController:ChatSelectText!
     
+    private let visibility = ValuePromise(true, ignoreRepeated: true)
+    
     private var contextQueryState: (ChatPresentationInputQuery?, Disposable)?
     private var urlPreviewQueryState: (String?, Disposable)?
 
@@ -1859,7 +1861,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     return (view, location.side)
                 }
         }
-        let historyViewUpdate = historyViewUpdate1
+        let historyViewUpdate = historyViewUpdate1 |> mapToThrottled { next in
+            return .single(next) |> then(.complete() |> delay(0.0166667, queue: messagesViewQueue))
+        }
+
 
         
         let animatedEmojiStickers = context.engine.stickers.loadedStickerPack(reference: .animatedEmoji, forceActualized: false)
@@ -2033,8 +2038,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                   adMessages,
                                                   effectiveTheme,
                                                   reactions,
-                                                  transribeStateValue.get()
-) |> mapToQueue { update, appearance, readIndexAndOther, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia, adMessages, chatTheme, reactions, transribeState -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool, ChatHistoryView), NoError> in
+                                                  transribeStateValue.get(),
+                                                  visibility.get()
+    ) |> filter { $0.12 } |> mapToQueue { update, appearance, readIndexAndOther, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia, adMessages, chatTheme, reactions, transribeState, _ -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool, ChatHistoryView), NoError> in
                         
             let maxReadIndex = readIndexAndOther.0
             let pollAnswersLoading = readIndexAndOther.1
@@ -6080,6 +6086,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         if let window = window {
             selectTextController.removeHandlers(for: window)
         }
+        self.visibility.set(false)
     }
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
@@ -6540,6 +6547,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let object = InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: genericView.tableView, supportTableView: nil)
             header.view.update(with: object)
         }
+        self.visibility.set(true)
     }
     
     private func updateMaxVisibleReadIncomingMessageIndex(_ index: MessageIndex) {
