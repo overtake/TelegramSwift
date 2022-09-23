@@ -54,20 +54,22 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
         
         let iconImageRepresentation:TelegramMediaImageRepresentation? = smallestImageRepresentation(file.previewRepresentations)
         
+        let fileName: String = file.fileName ?? ""
+        
+        var fileExtension: String = "file"
+        if let range = fileName.range(of: ".", options: [.backwards]) {
+            fileExtension = fileName[range.upperBound...].lowercased()
+        }
+        if fileExtension.length > 5 {
+            fileExtension = "file"
+        }
+        docIcon = extensionImage(fileExtension: fileExtension)
+        
         if let iconImageRepresentation = iconImageRepresentation {
             iconArguments = TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: iconImageRepresentation.dimensions.size.aspectFilled(PeerMediaIconSize), boundingSize: PeerMediaIconSize, intrinsicInsets: NSEdgeInsets())
             icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
         } else {
-            let fileName: String = file.fileName ?? ""
-            
-            var fileExtension: String = "file"
-            if let range = fileName.range(of: ".", options: [.backwards]) {
-                fileExtension = fileName[range.upperBound...].lowercased()
-            }
-            if fileExtension.length > 5 {
-                fileExtension = "file"
-            }
-            docIcon = extensionImage(fileExtension: fileExtension)
+           
             
             docTitle = NSAttributedString.initialize(string: fileExtension, color: theme.colors.text, font: .medium(.text))
 
@@ -263,8 +265,23 @@ class PeerMediaFileRowView : PeerMediaRowView {
             } else {
                 updateIconImageSignal = .complete()
             }
+            if let icon = item.icon, let arguments = item.iconArguments {
+                imageView.setSignal(signal: cachedMedia(media: icon, arguments: arguments, scale: System.backingScale), clearInstantly: previous?.message.id != item.message.id)
+            }
             
-            imageView.setSignal(updateIconImageSignal, clearInstantly: previous?.message.id != item.message.id)
+            if !imageView.isFullyLoaded {
+                
+                if imageView.image == nil || previous?.message.id != item.message.id {
+                    imageView.layer?.contents = item.docIcon
+                }
+                
+                imageView.setSignal(updateIconImageSignal, clearInstantly: false, animate: true, cacheImage: { result in
+                    if let icon = item.icon, let arguments = item.iconArguments {
+                        cacheMedia(result, media: icon, arguments: arguments, scale: System.backingScale, positionFlags: nil)
+                    }
+                })
+            }
+            
             if let arguments = item.iconArguments {
                 imageView.set(arguments: arguments)
             } else {

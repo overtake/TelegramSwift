@@ -58,8 +58,7 @@ class StickerShimmerEffectView: View {
     public func updateAbsoluteRect(_ rect: CGRect, within containerSize: CGSize) {
         self.effectView.updateAbsoluteRect(rect, within: containerSize)
     }
-    
-    public func update(backgroundColor: NSColor?, foregroundColor: NSColor, shimmeringColor: NSColor, data: Data?, size: CGSize) {
+    public func update(backgroundColor: NSColor?, foregroundColor: NSColor = NSColor(rgb: 0x748391, alpha: 0.2), shimmeringColor: NSColor = NSColor(rgb: 0x748391, alpha: 0.35), data: Data?, size: CGSize) {
         if self.currentData == data, let currentBackgroundColor = self.currentBackgroundColor, currentBackgroundColor.isEqual(backgroundColor), let currentForegroundColor = self.currentForegroundColor, currentForegroundColor.isEqual(foregroundColor), let currentShimmeringColor = self.currentShimmeringColor, currentShimmeringColor.isEqual(shimmeringColor), self.currentSize == size {
             return
         }

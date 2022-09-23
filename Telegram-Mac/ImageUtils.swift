@@ -104,7 +104,15 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                             }
                             telegramFastBlurMore(Int32(size.width), Int32(size.height), Int32(ctx.bytesPerRow), ctx.bytes)
                             
-                            image = ctx.generateImage()
+                            let rounded = DrawingContext(size: img.size, scale: 1.0)
+                            rounded.withContext { c in
+                                c.clear(size.bounds)
+                                c.round(size, size.height / 2)
+                                c.clear(size.bounds)
+                                c.draw(ctx.generateImage()!, in: size.bounds)
+                            }
+                            
+                            image = rounded.generateImage()//ctx.generateImage()
                         }
                         #endif
                         if let image = image {
