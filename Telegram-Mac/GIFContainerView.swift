@@ -234,7 +234,7 @@ class GIFContainerView: Control {
         view.backgroundColor = .clear
         let layer:CALayer = CALayer()
         layer.frame = NSMakeRect(0, visibleRect.minY == 0 ? 0 :  player.visibleRect.height - player.frame.height, player.frame.width,  player.frame.height)
-        layer.contents = player.layer?.contents
+        layer.contents = player.layer?.contents ?? player.imageHolder
         layer.masksToBounds = true
         view.frame = player.visibleRect
         layer.shouldRasterize = true
