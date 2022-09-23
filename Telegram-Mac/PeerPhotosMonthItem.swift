@@ -223,7 +223,6 @@ private class MediaCell : Control {
     fileprivate let imageView: TransformImageView
     private(set) var layoutItem: LayoutItem?
     fileprivate var context: AccountContext?
-    private var shimmer: ShimmerLayer?
     required init(frame frameRect: NSRect) {
         imageView = TransformImageView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
@@ -266,47 +265,17 @@ private class MediaCell : Control {
             
             self.imageView.setSignal(signal: cachedMedia(media: media, arguments: cacheArguments, scale: backingScaleFactor))
             
-            if self.imageView.image == nil, !layout.hasImmediateData {
-                let current: ShimmerLayer
-                if let layer = self.shimmer {
-                    current = layer
-                } else {
-                    current = ShimmerLayer()
-                    self.layer?.addSublayer(current)
-                    self.shimmer = current
-                }
-                let size = layout.frame.size
-                current.update(backgroundColor: nil, data: nil, size: size, imageSize: size, cornerRadius: 0)
-                current.updateAbsoluteRect(size.bounds, within: size)
-                current.frame = size.bounds
-            } else {
-                self.removePlaceholder(animated: true)
-
-            }
+           
             if !self.imageView.isFullyLoaded {
                 self.imageView.setSignal(signal, animate: true, cacheImage: { [weak media, weak self] result in
                     if let media = media {
                         cacheMedia(result, media: media, arguments: cacheArguments, scale: System.backingScale)
                     }
-                    self?.removePlaceholder(animated: false)
                 })
             }
             self.imageView.set(arguments: cacheArguments)
         }
         updateSelectionState(animated: false)
-    }
-    
-    private func removePlaceholder(animated: Bool) {
-        if let shimmer = self.shimmer {
-            if animated {
-                shimmer.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak shimmer] _ in
-                    shimmer?.removeFromSuperlayer()
-                })
-            } else {
-                shimmer.removeFromSuperlayer()
-            }
-            self.shimmer = nil
-        }
     }
     
     override func copy() -> Any {
