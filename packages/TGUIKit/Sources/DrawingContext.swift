@@ -156,9 +156,7 @@ public struct DeviceGraphicsContextSettings : Equatable {
 
         if context.colorSpace?.model != .rgb {
             _ = installed.swap(getSharedDevideGraphicsContextSettings(context: nil))
-        } else {
-            let bitmapInfo = CGBitmapInfo(rawValue: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue)
-            
+        } else {            
             let ctx = CGContext(
                  data: bytes,
                  width: context.width,
@@ -166,7 +164,7 @@ public struct DeviceGraphicsContextSettings : Equatable {
                  bitsPerComponent: context.bitsPerComponent,
                  bytesPerRow: bytesPerRow,
                  space: context.colorSpace ?? deviceColorSpace,
-                 bitmapInfo: bitmapInfo.rawValue,
+                 bitmapInfo: context.bitmapInfo.rawValue,
                  releaseCallback: nil,
                  releaseInfo: nil
              )

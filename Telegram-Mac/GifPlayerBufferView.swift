@@ -18,7 +18,7 @@ final class GifPlayerBufferView : TransformImageView {
     var timebase: CMTimebase!
     
     private var videoLayer: (SoftwareVideoLayerFrameManager, SampleBufferLayer)?
-    
+    private(set) var imageHolder: CGImage?
     override init() {
         super.init()
         initialize()
@@ -58,6 +58,7 @@ final class GifPlayerBufferView : TransformImageView {
             
             manager.onRender = { [weak self] in
                 if self?.image != nil {
+                    self?.imageHolder = self?.image
                     self?.setSignal(signal: .complete())
                     self?.image = nil
                     self?.isRendering = true

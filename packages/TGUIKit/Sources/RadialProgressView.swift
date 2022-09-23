@@ -136,7 +136,7 @@ public func ==(lhs:RadialProgressState, rhs:RadialProgressState) -> Bool {
 }
 
 
-private class RadialProgressOverlayLayer: CALayer {
+private class RadialProgressOverlayLayer: SimpleLayer {
     var theme: RadialProgressTheme
     let twist: Bool
     private var timer: SwiftSignalKit.Timer?
