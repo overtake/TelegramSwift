@@ -327,7 +327,7 @@ final class GroupCallView : View {
         let videoView = self.tileView
         if let videoView = videoView {
             if NSPointInRect(location, videoView.frame) && mouseInside() {
-                if isReal {
+                if isReal && window.isKeyWindow {
                     mode = .normal
                 } else {
                     mode = self.controlsMode
