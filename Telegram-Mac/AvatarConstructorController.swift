@@ -1217,7 +1217,7 @@ final class AvatarConstructorController : ModalViewController {
             if let file = state.selected.foreground {
                 if file.isAnimated && file.isVideo {
                     source = .gif(file)
-                } else if file.isVideoSticker || file.isAnimatedSticker {
+                } else if file.isVideoSticker || file.isAnimatedSticker || file.isVideoEmoji {
                     source = .animated(file)
                 } else {
                     source = .sticker(file)

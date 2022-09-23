@@ -305,9 +305,16 @@ func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowe
                     updated = .limited(state.reactions)
                 }
             } else {
-                updated = .limited(state.availableReactions?.enabled.map { value in
-                    return value.value
-                } ?? [])
+                let selected = state.reactions.map { value in
+                    return value
+                }
+                if selected.isEmpty {
+                    updated = .empty
+                } else if selected.count == state.availableReactions?.enabled.count {
+                    updated = .all
+                } else {
+                    updated = .limited(selected)
+                }
             }
             
             _ = context.engine.peers.updatePeerAllowedReactions(peerId: peerId, allowedReactions: updated).start()
