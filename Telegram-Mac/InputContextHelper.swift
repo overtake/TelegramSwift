@@ -930,8 +930,9 @@ class InputContextHelper: NSObject {
                             
                             for i in 0 ..< mediaRows.count {
                                 if !mediaRows[i].results.isEmpty {
-                                    let stableId = Int64(i) | ((Int64(entries.count) << 40))
-                                    let separatorStableId = Int64(i + 1) | ((Int64(entries.count) << 40))
+                                    let random = Int64(arc4random64())
+                                    let stableId = random | ((Int64(entries.count) << 40))
+                                    let separatorStableId = Int64(random + 1) | ((Int64(entries.count) << 40))
                                     entries.append(.contextMediaResult(result, mediaRows[i], stableId))
                                     if i != mediaRows.count - 1 {
                                         entries.append(.separator("", separatorStableId, arc4random64(), 1))
