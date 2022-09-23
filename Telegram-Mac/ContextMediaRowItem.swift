@@ -35,16 +35,22 @@ class ContextMediaRowItem: TableRowItem {
     let context: AccountContext
     let arguments: ContextMediaArguments
     let collection: ChatContextResultCollection?
+    private let _stableId: AnyHashable?
     override var stableId: AnyHashable {
-        return Int64(_index)
+        if let _stableId = _stableId {
+            return _stableId
+        } else {
+            return _index
+        }
     }
     
-    init(_ initialSize: NSSize, _ result:InputMediaContextRow, _ index:Int64, _ context: AccountContext, _ arguments: ContextMediaArguments, collection: ChatContextResultCollection? = nil) {
+    init(_ initialSize: NSSize, _ result:InputMediaContextRow, _ index:Int64, _ context: AccountContext, _ arguments: ContextMediaArguments, collection: ChatContextResultCollection? = nil, stableId: AnyHashable? = nil) {
         self.result = result
         self.arguments = arguments
         self._index = index
         self.context = context
         self.collection = collection
+        self._stableId = stableId
         dif = 0
         super.init(initialSize)
     }
@@ -200,12 +206,6 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                     let index = subviews.firstIndex(where: { $0 is GIFContainerView })
                     if let index = index {
                         view = subviews.remove(at: index) as! GIFContainerView
-                        inner: for view in view.subviews {
-                            if view.identifier == NSUserInterfaceItemIdentifier("gif-separator") {
-                                view.removeFromSuperview()
-                                break inner
-                            }
-                        }
                     } else {
                         view = GIFContainerView()
                     }
@@ -239,14 +239,8 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                     let signal = chatMessageVideo(postbox: item.context.account.postbox, fileReference: effectiveFile, scale: backingScaleFactor)
                     
 
-                    view.update(with: effectiveFile, size: NSMakeSize(item.result.sizes[i].width, item.height - 2), viewSize: item.result.sizes[i], context: item.context, table: item.table, iconSignal: signal)
-                    if i != (item.result.entries.count - 1) {
-                        let layer = View()
-                        layer.identifier = NSUserInterfaceItemIdentifier("gif-separator")
-                        layer.frame = NSMakeRect(view.frame.width - 2.0, 0, 2.0, view.frame.height)
-                        layer.background = theme.colors.background
-                        view.addSubview(layer)
-                    }
+                    view.update(with: effectiveFile, size: NSMakeSize(item.result.sizes[i].width, item.height), viewSize: item.result.sizes[i], context: item.context, table: item.table, iconSignal: signal)
+                    
                     view.userInteractionEnabled = false
                     container = view
                 case let .sticker(_, file):
@@ -355,11 +349,12 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                         inset += (dif + subview.frame.width)
                     }
                 }
-            } else {
-                var inset:CGFloat = dif + 1
+            } else if !subviews.isEmpty {
+                var x:CGFloat = 0
+                let itemWidth = ceil((frame.width - CGFloat(subviews.count - 1)) / CGFloat(subviews.count))
                 for subview in subviews {
-                    subview.setFrameOrigin(inset, 0)
-                    inset += (dif + subview.frame.width)
+                    subview.frame = NSMakeRect(x, 0, itemWidth, subview.frame.height)
+                    x += itemWidth + 1
                 }
             }
         }

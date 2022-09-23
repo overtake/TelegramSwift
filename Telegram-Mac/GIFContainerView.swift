@@ -170,13 +170,13 @@ class GIFContainerView: Control {
         
         let imageSize = viewSize.aspectFitted(NSMakeSize(size.width, size.height))
         let size = (fileReference.media.dimensions?.size ?? imageSize).aspectFilled(viewSize)
-        let arguments = TransformImageArguments(corners: ImageCorners(radius:2.0), imageSize: size, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
+        let arguments = TransformImageArguments(corners: ImageCorners(radius:0), imageSize: size, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
         
         player.setSignal(signal: cachedMedia(media: fileReference.media, arguments: arguments, scale: backingScaleFactor), clearInstantly: updated)
         
        
         if !player.isFullyLoaded {
-            player.setSignal(iconSignal, cacheImage: { [weak self] result in
+            player.setSignal(iconSignal, cacheImage: { result in
                 cacheMedia(result, media: fileReference.media, arguments: arguments, scale: System.backingScale)
             })
         }
@@ -195,8 +195,6 @@ class GIFContainerView: Control {
         super.layout()
         progressView?.center()
         updatePlayerIfNeeded()
-        let size = frame.size
-        shimmer?.frame = size.bounds
     }
     
     override func copy() -> Any {
