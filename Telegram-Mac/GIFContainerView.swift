@@ -44,7 +44,7 @@ class GIFContainerView: Control {
         
         
         super.init()
-      //  addSubview(player)
+        addSubview(player)
         self.backgroundColor = .clear
         
         
@@ -175,7 +175,7 @@ class GIFContainerView: Control {
         
         player.setSignal(signal: cachedMedia(media: fileReference.media, arguments: arguments, scale: backingScaleFactor), clearInstantly: updated)
         
-        if true {
+        if self.player.image == nil, fileReference.media.immediateThumbnailData == nil {
             let current: ShimmerLayer
             if let layer = self.shimmer {
                 current = layer
@@ -195,7 +195,7 @@ class GIFContainerView: Control {
         if !player.isFullyLoaded {
             player.setSignal(iconSignal, cacheImage: { [weak self] result in
                 cacheMedia(result, media: fileReference.media, arguments: arguments, scale: System.backingScale)
-                //self?.removePlaceholder(animated: false)
+                self?.removePlaceholder(animated: false)
             })
         }
         
