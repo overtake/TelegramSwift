@@ -334,7 +334,6 @@ private class MediaCell : Control {
     override func layout() {
         super.layout()
         imageView.frame = NSMakeRect(0, 0, frame.width - 1, frame.height)
-        self.shimmer?.frame = bounds
         if let selectionView = selectionView {
             selectionView.setFrameOrigin(frame.width - selectionView.frame.width - 5, 5)
         }

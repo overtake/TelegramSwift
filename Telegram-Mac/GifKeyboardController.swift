@@ -203,9 +203,15 @@ private func entries(_ state: State, arguments: Arguments, mediaArguments: Conte
             let tuple: Tuple = Tuple(row: entry, collection: collections[i])
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_gif(entry), equatable: .init(tuple), comparable: nil, item: { initialSize, stableId in
-                return ContextMediaRowItem(initialSize, tuple.row, arc4random64(), arguments.context, mediaArguments, collection: tuple.collection)
+                return ContextMediaRowItem(initialSize, tuple.row, 0, arguments.context, mediaArguments, collection: tuple.collection, stableId: stableId)
             }))
             index += 1
+            
+            if i != items.count - 1 {
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("_\(index)"), equatable: nil, comparable: nil, item: { initailSize, stableId in
+                    return GeneralRowItem(initailSize, height: 1, stableId: stableId, backgroundColor: .clear)
+                }))
+            }
         }
     }
     
@@ -381,7 +387,6 @@ final class GifKeyboardController : TelegramGenericViewController<GifKeyboardVie
         actionsDisposable.add(disposableDict)
         let initialSize = self.atomicSize
 
-        
         
         
        

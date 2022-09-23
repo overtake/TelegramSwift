@@ -367,6 +367,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+                
         let context = self.context
         let peerId = self.peerId
         let initialSize = self.atomicSize
@@ -388,7 +389,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
         setLocation(.Initial(count: requestCount))
         
         
-        let initialState = PeerMediaPhotosState(isLoading: false, messages: [], searchState: SearchState(state: .None, request: nil), contentSettings: context.contentSettings, scrollPosition: nil, updateType: nil, side: nil, perRowCount: self.perPageCount())
+        let initialState = PeerMediaPhotosState(isLoading: false, messages: [], searchState: SearchState(state: .None, request: nil), contentSettings: context.contentSettings, scrollPosition: nil, updateType: nil, side: nil, perRowCount: self.perRowCount)
         let state: ValuePromise<PeerMediaPhotosState> = ValuePromise(ignoreRepeated: true)
         let stateValue: Atomic<PeerMediaPhotosState> = Atomic(value: initialState)
         let updateState:((PeerMediaPhotosState)->PeerMediaPhotosState) -> Void = { f in
@@ -517,6 +518,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
         
         var previousSearch: SearchState = SearchState(state: .None, request: nil)
         
+        
         disposable.set(transition.start(next: { [weak self] transition, state in
             guard let `self` = self else {
                 return
@@ -526,7 +528,7 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
                 self.scrollup()
             }
             previousSearch = state.searchState
-            
+            NSLog("animated: \(transition.animated)")
             self.genericView.merge(with: transition)
             let searchState = MediaSearchState(state: state.searchState, animated: transition.animated, isLoading: state.isLoading)
             self.mediaSearchState.set(searchState)
