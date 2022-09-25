@@ -111,9 +111,13 @@ private final class CtxInstallLayer : SimpleLayer {
     }
     
     override func draw(in ctx: CGContext) {
+        if FastSettings.useNativeGraphicContext {
         #if !APP_STORE
-        DeviceGraphicsContextSettings.install(ctx)
+            DeviceGraphicsContextSettings.install(ctx)
         #endif
+        } else {
+            DeviceGraphicsContextSettings.install(nil)
+        }
     }
 }
 
@@ -198,6 +202,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
     private var ctxLayer: CtxInstallLayer?
+    
+    func updateGraphicContext() {
+        ctxLayer?.display()
+    }
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         

@@ -147,33 +147,34 @@ public func getSharedDevideGraphicsContextSettings(context: CGContext?) -> Devic
 public struct DeviceGraphicsContextSettings : Equatable {
     private static let installed: Atomic<DeviceGraphicsContextSettings?> = Atomic(value: nil)
     
-    public static func install(_ context: CGContext) {
-        let size = NSMakeSize(CGFloat(1), CGFloat(1))
-        
-        let baseValue = context.bitsPerPixel * Int(size.width) / 8
-        let bytesPerRow = (baseValue + 31) & ~0x1F
-        let length = bytesPerRow * 2
-        let bytes = malloc(length)!
-        
-
-        if context.colorSpace?.model != .rgb {
+    public static func install(_ context: CGContext?) {
+        if let context = context {
+            let size = NSMakeSize(CGFloat(1), CGFloat(1))
+            
+            let baseValue = context.bitsPerPixel * Int(size.width) / 8
+            let bytesPerRow = (baseValue + 31) & ~0x1F
+            let length = bytesPerRow * 2
+            let bytes = malloc(length)!
+            
+            if context.colorSpace?.model != .rgb {
+                _ = installed.swap(getSharedDevideGraphicsContextSettings(context: nil))
+            } else {
+                let ctx = CGContext(
+                     data: bytes,
+                     width: context.width,
+                     height: context.height,
+                     bitsPerComponent: context.bitsPerComponent,
+                     bytesPerRow: bytesPerRow,
+                     space: context.colorSpace ?? deviceColorSpace,
+                     bitmapInfo: context.bitmapInfo.rawValue,
+                     releaseCallback: nil,
+                     releaseInfo: nil
+                 )
+                _ = installed.swap(getSharedDevideGraphicsContextSettings(context: ctx))
+            }
+        } else {
             _ = installed.swap(getSharedDevideGraphicsContextSettings(context: nil))
-        } else {            
-            let ctx = CGContext(
-                 data: bytes,
-                 width: context.width,
-                 height: context.height,
-                 bitsPerComponent: context.bitsPerComponent,
-                 bytesPerRow: bytesPerRow,
-                 space: context.colorSpace ?? deviceColorSpace,
-                 bitmapInfo: context.bitmapInfo.rawValue,
-                 releaseCallback: nil,
-                 releaseInfo: nil
-             )
-            _ = installed.swap(getSharedDevideGraphicsContextSettings(context: ctx))
         }
-        
-        
     }
     
     public static var shared: DeviceGraphicsContextSettings {
