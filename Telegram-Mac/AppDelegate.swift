@@ -111,7 +111,9 @@ private final class CtxInstallLayer : SimpleLayer {
     }
     
     override func draw(in ctx: CGContext) {
+        #if !APP_STORE
         DeviceGraphicsContextSettings.install(ctx)
+        #endif
     }
 }
 
@@ -234,7 +236,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         
         ctxLayer.setNeedsDisplay()
         ctxLayer.display()
-        
+                
         let crashed = isCrashedLastTime(containerUrl.path)
         deinitCrashHandler(containerUrl.path)
         
