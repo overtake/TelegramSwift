@@ -67,15 +67,17 @@ public func generateImage(_ size: CGSize, opaque: Bool = false, scale: CGFloat? 
 
 
 public let deviceColorSpace: CGColorSpace = {
-    if #available(OSX 10.11.2, *) {
-        if let colorSpace = CGColorSpace(name: CGColorSpace.displayP3) {
-            return colorSpace
-        } else {
-            return CGColorSpaceCreateDeviceRGB()
-        }
-    } else {
-        return CGColorSpaceCreateDeviceRGB()
-    }
+    return CGColorSpaceCreateDeviceRGB()
+//
+//    if #available(OSX 10.11.2, *) {
+//        if let colorSpace = CGColorSpace(name: CGColorSpace.displayP3) {
+//            return colorSpace
+//        } else {
+//            return CGColorSpaceCreateDeviceRGB()
+//        }
+//    } else {
+//        return CGColorSpaceCreateDeviceRGB()
+//    }
 }()
 
 
