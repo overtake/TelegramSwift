@@ -23,8 +23,9 @@ private final class DeveloperArguments {
     let addAccount:()->Void
     let toggleMenu:(Bool)->Void
     let toggleAnimatedInputEmoji:()->Void
+    let toggleNativeGraphicContext:()->Void
     let toggleDebugWebApp:()->Void
-    init(importColors:@escaping()->Void, exportColors:@escaping()->Void, toggleLogs:@escaping(Bool)->Void, navigateToLogs:@escaping()->Void, addAccount: @escaping() -> Void, toggleMenu:@escaping(Bool)->Void, toggleDebugWebApp:@escaping()->Void, toggleAnimatedInputEmoji: @escaping()->Void) {
+    init(importColors:@escaping()->Void, exportColors:@escaping()->Void, toggleLogs:@escaping(Bool)->Void, navigateToLogs:@escaping()->Void, addAccount: @escaping() -> Void, toggleMenu:@escaping(Bool)->Void, toggleDebugWebApp:@escaping()->Void, toggleAnimatedInputEmoji: @escaping()->Void, toggleNativeGraphicContext:@escaping()->Void) {
         self.importColors = importColors
         self.exportColors = exportColors
         self.toggleLogs = toggleLogs
@@ -33,6 +34,7 @@ private final class DeveloperArguments {
         self.toggleMenu = toggleMenu
         self.toggleDebugWebApp = toggleDebugWebApp
         self.toggleAnimatedInputEmoji = toggleAnimatedInputEmoji
+        self.toggleNativeGraphicContext = toggleNativeGraphicContext
     }
 }
 
@@ -45,6 +47,7 @@ private enum DeveloperEntryId : Hashable {
     case enableFilters
     case toggleMenu
     case animateInputEmoji
+    case nativeGraphicContext
     case crash
     case debugWebApp
     case section(Int32)
@@ -66,12 +69,14 @@ private enum DeveloperEntryId : Hashable {
             return 6
         case .animateInputEmoji:
             return 7
-        case .debugWebApp:
+        case .nativeGraphicContext:
             return 8
-        case .crash:
+        case .debugWebApp:
             return 9
+        case .crash:
+            return 10
         case .section(let section):
-            return 10 + Int(section)
+            return 11 + Int(section)
         }
     }
 }
@@ -86,6 +91,7 @@ private enum DeveloperEntry : TableItemListNodeEntry {
     case enableFilters(sectionId: Int32, enabled: Bool)
     case toggleMenu(sectionId: Int32, enabled: Bool)
     case animateInputEmoji(sectionId: Int32, enabled: Bool)
+    case nativeGraphicContext(sectionId: Int32, enabled: Bool)
     case crash(sectionId: Int32)
     case debugWebApp(sectionId: Int32)
     case section(Int32)
@@ -108,6 +114,8 @@ private enum DeveloperEntry : TableItemListNodeEntry {
             return .toggleMenu
         case .animateInputEmoji:
             return .animateInputEmoji
+        case .nativeGraphicContext:
+            return .nativeGraphicContext
         case .crash:
             return .crash
         case .debugWebApp:
@@ -134,6 +142,8 @@ private enum DeveloperEntry : TableItemListNodeEntry {
         case let .toggleMenu(sectionId, _):
             return (sectionId * 1000) + Int32(stableId.hashValue)
         case let .animateInputEmoji(sectionId, _):
+            return (sectionId * 1000) + Int32(stableId.hashValue)
+        case let .nativeGraphicContext(sectionId, _):
             return (sectionId * 1000) + Int32(stableId.hashValue)
         case let .crash(sectionId):
             return (sectionId * 1000) + Int32(stableId.hashValue)
@@ -180,6 +190,8 @@ private enum DeveloperEntry : TableItemListNodeEntry {
             })
         case let .animateInputEmoji(_, enabled):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Animate Emoji to Input", type: .switchable(enabled), action: arguments.toggleAnimatedInputEmoji)
+        case let .nativeGraphicContext(_, enabled):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Use Native Graphic Context", type: .switchable(enabled), action: arguments.toggleNativeGraphicContext)
         case .crash:
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: "Crash App", type: .none, action: {
                 var array:[Int] = []
@@ -212,6 +224,7 @@ private func developerEntries(loginSettings: LoggingSettings) -> [DeveloperEntry
     entries.append(.openLogs(sectionId: sectionId))
     entries.append(.toggleMenu(sectionId: sectionId, enabled: System.legacyMenu))
     entries.append(.animateInputEmoji(sectionId: sectionId, enabled: FastSettings.animateInputEmoji))
+    entries.append(.nativeGraphicContext(sectionId: sectionId, enabled: FastSettings.useNativeGraphicContext))
     entries.append(.debugWebApp(sectionId: sectionId))
     entries.append(.crash(sectionId: sectionId))
 
@@ -287,6 +300,9 @@ class DeveloperViewController: TableViewController {
             FastSettings.toggleDebugWebApp()
         }, toggleAnimatedInputEmoji: {
             FastSettings.toggleAnimateInputEmoji()
+        }, toggleNativeGraphicContext: {
+            FastSettings.toggleNativeGraphicContext()
+            appDelegate?.updateGraphicContext()
         })
         
         let signal = combineLatest(queue: prepareQueue, context.sharedContext.accountManager.sharedData(keys: [SharedDataKeys.loggingSettings]), appearanceSignal, themeSettingsView(accountManager: context.sharedContext.accountManager))

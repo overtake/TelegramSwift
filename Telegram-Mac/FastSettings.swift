@@ -160,6 +160,7 @@ class FastSettings {
     private static let kConfirmWebApp = "kConfirmWebApp"
 
     private static let kAnimateInputEmoji = "kAnimateInputEmoji"
+    private static let kUseNativeGraphicContext = "kUseNativeGraphicContext"
 
     
     
@@ -546,8 +547,16 @@ class FastSettings {
     }
     static func toggleAnimateInputEmoji() {
         return UserDefaults.standard.set(!animateInputEmoji, forKey: kAnimateInputEmoji)
-
     }
+    static var useNativeGraphicContext: Bool {
+        let value = UserDefaults.standard.value(forKey: kUseNativeGraphicContext) as? Bool
+        return value ?? true
+    }
+    static func toggleNativeGraphicContext() {
+        return UserDefaults.standard.set(!useNativeGraphicContext, forKey: kUseNativeGraphicContext)
+    }
+    
+    
     
     /*
  
