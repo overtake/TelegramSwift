@@ -20,7 +20,7 @@ enum PeerPhoto {
     case peer(Peer, TelegramMediaImageRepresentation?, [String], Message?)
 }
 
-private var capHolder:[String : CGImage] = [:]
+private let capHolder:Atomic<[String : CGImage]> = Atomic(value: [:])
 
 private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, representation: TelegramMediaImageRepresentation?, message: Message? = nil, displayLetters: [String], font: NSFont, scale: CGFloat, genCap: Bool, synchronousLoad: Bool) -> Signal<(CGImage?, Bool), NoError> {
     if let representation = representation {
@@ -75,12 +75,17 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                     
                     let def = deferred({ () -> Signal<(CGImage?, Bool), NoError> in
                         let key = NSStringFromSize(displayDimensions)
-                        if let image = capHolder[key] {
+                        if let image = capHolder.with({ $0[key] }) {
                             return .single((image, false))
                         } else {
                             let size = NSMakeSize(max(15, displayDimensions.width), max(15, displayDimensions.height))
-                            capHolder[key] = generateAvatarPlaceholder(foregroundColor: theme.colors.grayBackground, size: size)
-                            return .single((capHolder[key]!, false))
+                            let image = generateAvatarPlaceholder(foregroundColor: theme.colors.grayBackground, size: size)
+                            _ = capHolder.modify { current in
+                                var current = current
+                                current[key] = image
+                                return current
+                            }
+                            return .single((image, false))
                         }
                     }) |> deliverOnMainQueue
                     
