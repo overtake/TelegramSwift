@@ -644,51 +644,37 @@ func saveAs(_ file:TelegramMediaFile, account:Account) {
 func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox, saveAnyway: Bool = false) -> Signal<String?, NoError>  {
     let path = downloadFilePath(file, postbox)
     return combineLatest(queue: resourcesQueue, path, downloadedFilePaths(postbox)) |> map { (expanded, paths) in
-        guard let (boxPath, adopted) = expanded else {
+        guard var (boxPath, adopted) = expanded else {
             return nil
         }
-        if let id = file.id {
-            if let path = paths.path(for: id), !saveAnyway {
-                let lastModified = Int32(FileManager.default.modificationDateForFileAtPath(path: path.downloadedPath)?.timeIntervalSince1970 ?? 0)
-                if fileSize(path.downloadedPath) == Int64(path.size), lastModified == path.lastModified {
-                    return path.downloadedPath
-                }
-                
+        let id = file.fileId
+        if let path = paths.path(for: id), !saveAnyway {
+            let lastModified = Int32(FileManager.default.modificationDateForFileAtPath(path: path.downloadedPath)?.timeIntervalSince1970 ?? 0)
+            if fileSize(path.downloadedPath) == Int64(path.size), lastModified == path.lastModified {
+                return path.downloadedPath
             }
-            
-            var adopted = adopted
-            var i:Int = 1
-            let deletedPathExt = adopted.nsstring.deletingPathExtension
-            while FileManager.default.fileExists(atPath: adopted, isDirectory: nil) {
-                let ext = adopted.nsstring.pathExtension
-                adopted = "\(deletedPathExt) (\(i)).\(ext)"
-                i += 1
-            }
-            
-            try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
-            
-//            let quarantineData = "doesn't matter".data(using: .utf8)!
-//
-//
-//            URL(fileURLWithPath: adopted).withUnsafeFileSystemRepresentation { fileSystemPath in
-//                _ = quarantineData.withUnsafeBytes {
-//                    setxattr(fileSystemPath, "com.apple.quarantine", $0.baseAddress, quarantineData.count, 0, 0)
-//                }
-//            }
-            
-            let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
-            
-            let fs = fileSize(boxPath)
-            let path = DownloadedPath(id: id, downloadedPath: adopted, size: fs != nil ? Int32(fs!) : nil ?? Int32(file.size ?? 0), lastModified: Int32(lastModified))
-            
-            _ = updateDownloadedFilePaths(postbox, {
-                $0.withAddedPath(path)
-            }).start()
-            
-            return adopted
-        } else {
-            return adopted
         }
+        var i:Int = 1
+        let deletedPathExt = adopted.nsstring.deletingPathExtension
+        while FileManager.default.fileExists(atPath: adopted, isDirectory: nil) {
+            let ext = adopted.nsstring.pathExtension
+            adopted = "\(deletedPathExt) (\(i)).\(ext)"
+            i += 1
+        }
+        
+        try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
+        
+        let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
+        
+        let fs = fileSize(boxPath)
+        let fileSize = fs ?? file.size ?? 0
+        let path = DownloadedPath(id: id, downloadedPath: adopted, size: Int64(fileSize), lastModified: Int32(lastModified))
+        
+        _ = updateDownloadedFilePaths(postbox, {
+            $0.withAddedPath(path)
+        }).start()
+        
+        return adopted
     }
     
 //    return downloadFilePath(file, postbox) |> deliverOn(resourcesQueue) |> map { (boxPath, adopted) in
@@ -726,7 +712,7 @@ extension String {
 }
 
 func downloadFilePath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<(String, String)?, NoError> {
-    return combineLatest(postbox.mediaBox.resourceData(file.resource) |> take(1), automaticDownloadSettings(postbox: postbox) |> take(1)) |> mapToSignal { data, settings -> Signal< (String, String)?, NoError> in
+    return combineLatest(postbox.mediaBox.resourceData(file.resource), automaticDownloadSettings(postbox: postbox)) |> take(1) |> mapToSignal { data, settings -> Signal< (String, String)?, NoError> in
         if data.complete {
             var ext:String = ""
             let fileName = (file.fileName ?? data.path.nsstring.lastPathComponent).fixedFileName
@@ -805,8 +791,8 @@ func showInFinder(_ file:TelegramMediaFile, account:Account)  {
                 let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
                 
                 let fs = fileSize(boxPath)
-                let path = DownloadedPath(id: id, downloadedPath: adopted, size: fs != nil ? Int32(fs!) : nil ?? Int32(file.size ?? 0), lastModified: Int32(lastModified))
-                
+                let fileSize = fs ?? file.size ?? 0
+                let path = DownloadedPath(id: id, downloadedPath: adopted, size: Int64(fileSize), lastModified: Int32(lastModified))
                 
                 NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: adopted)])
                 _ = updateDownloadedFilePaths(account.postbox, {
