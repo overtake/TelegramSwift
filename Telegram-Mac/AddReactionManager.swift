@@ -282,13 +282,15 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
             super.stateDidUpdate(state)
             switch state {
             case .Hover:
-                if self.player.animation?.playPolicy == .framesCount(1) {
-                    self.player.set(self.player.animation?.withUpdatedPolicy(.once), reset: false)
-                } else {
-                    if let data = selectAnimationData, self.currentKey != "select" {
-                        self.apply(data, key: "select", policy: .framesCount(1))
+                if self.player.currentState != .playing{
+                    if self.player.animation?.playPolicy == .framesCount(1) {
+                        self.player.set(self.player.animation?.withUpdatedPolicy(.once), reset: false)
                     } else {
-                        self.player.playAgain()
+                        if let data = selectAnimationData, self.currentKey != "select" {
+                            self.apply(data, key: "select", policy: .framesCount(1))
+                        } else {
+                            self.player.playAgain()
+                        }
                     }
                 }
             default:
