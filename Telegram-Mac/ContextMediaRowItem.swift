@@ -194,7 +194,7 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
 
         var subviews = self.subviews
 
-//        self.removeAllSubviews()
+        self.removeAllSubviews()
         
         if let item = item as? ContextMediaRowItem {
             var inset:CGFloat = 0
@@ -287,8 +287,6 @@ class ContextMediaRowView: TableRowView, ModalPreviewRowViewProtocol {
                     
                     let imageSize = item.result.sizes[i]
                     view.set(arguments: TransformImageArguments(corners: ImageCorners(), imageSize: imageSize, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets()))
-                    view.layer?.borderWidth = 2.0
-                    view.layer?.borderColor = theme.colors.background.cgColor
                     view.setFrameSize(NSMakeSize(imageSize.width, item.height))
                     view.setFrameSize(imageSize)
                     view.center()

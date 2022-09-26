@@ -381,12 +381,7 @@ final class RenderedLottieFrame : RenderedFrame, Equatable {
     
     
     deinit {
-        if initedOnMain {
-            if !Thread.isMainThread {
-                var bp = 0
-                bp += 1
-            }
-        }
+
     }
 }
 
