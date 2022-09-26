@@ -48,7 +48,7 @@ private struct DstData : Codable {
 }
 
 
-private let version = 63
+private let version = 64
 
 final class TRLotData {
     
@@ -303,91 +303,87 @@ final class TRLotFileSupplyment {
     
 
     
-    func addFrame(_ previous: RenderedFrame?, _ current: RenderedFrame) {
+    func addFrame(_ previous: Data?, _ current: (Data, Int32)) {
         queue.async {
             
-            if !self.data.hasAlreadyFrame(Int(current.frame)) {
-                let address = current.data!.assumingMemoryBound(to: UInt8.self)
-                
-                let dst: UnsafeMutablePointer<UInt8> = malloc(self.bufferSize)!.assumingMemoryBound(to: UInt8.self)
-                var length:Int = self.bufferSize
-                if let previous = previous, enableDifference {
-                    let uint64Bs = self.bufferSize / 8
-                    let dstDelta: UnsafeMutablePointer<UInt8> = malloc(self.bufferSize)!.assumingMemoryBound(to: UInt8.self)
-                    memcpy(dstDelta, previous.data!.assumingMemoryBound(to: UInt8.self), self.bufferSize)
-                    
-                    
-                    let ui64Dst = dstDelta.withMemoryRebound(to: UInt64.self, capacity: uint64Bs, { previousBytes in
-                        return previousBytes
-                    })
-                    
-                    let ui64Address = address.withMemoryRebound(to: UInt64.self, capacity: uint64Bs, { address in
-                        return address
-                    })
-                    
-                    
-                    var i: Int = 0
-                    while i < uint64Bs {
-                        ui64Dst[i] = ui64Dst[i] ^ ui64Address[i]
-                        i &+= 1
+            if !self.data.hasAlreadyFrame(Int(current.1)) {
+                current.0.withUnsafeBytes { pointer in
+                    let address = pointer.baseAddress!.assumingMemoryBound(to: UInt8.self)
+                    let ui64Address = pointer.baseAddress!.assumingMemoryBound(to: UInt64.self)
+                    let dst: UnsafeMutablePointer<UInt8> = malloc(self.bufferSize)!.assumingMemoryBound(to: UInt8.self)
+                    var length:Int = self.bufferSize
+                    if let previous = previous, enableDifference {
+                        let uint64Bs = self.bufferSize / 8
+                        let dstDelta: UnsafeMutablePointer<UInt8> = malloc(self.bufferSize)!.assumingMemoryBound(to: UInt8.self)
+                        
+                        previous.withUnsafeBytes { pointer in
+                            memcpy(dstDelta, pointer.baseAddress!.assumingMemoryBound(to: UInt8.self), self.bufferSize)
+                            
+                            let ui64Dst = dstDelta.withMemoryRebound(to: UInt64.self, capacity: uint64Bs, { previousBytes in
+                                return previousBytes
+                            })
+                            
+                            var i: Int = 0
+                            while i < uint64Bs {
+                                ui64Dst[i] = ui64Dst[i] ^ ui64Address[i]
+                                i &+= 1
+                            }
+                            
+                            let ui8 = ui64Dst.withMemoryRebound(to: UInt8.self, capacity: self.bufferSize, { body in
+                                return body
+                            })
+                            
+                            length = compression_encode_buffer(dst, self.bufferSize, ui8, self.bufferSize, nil, COMPRESSION_LZ4)
+                            dstDelta.deallocate()
+                        }
+                        
+                        
+                    } else {
+                        length = compression_encode_buffer(dst, self.bufferSize, address, self.bufferSize, nil, COMPRESSION_LZ4)
                     }
-                    
-                    let ui8 = ui64Dst.withMemoryRebound(to: UInt8.self, capacity: self.bufferSize, { body in
-                        return body
-                    })
-                    
-                    length = compression_encode_buffer(dst, self.bufferSize, ui8, self.bufferSize, nil, COMPRESSION_LZ4)
-                    dstDelta.deallocate()
-                } else {
-                    length = compression_encode_buffer(dst, self.bufferSize, address, self.bufferSize, nil, COMPRESSION_LZ4)
+                    let _ = self.data.writeFrame(frame: Int(current.1), data: Data(bytes: dst, count: length))
+                    dst.deallocate()
                 }
-                let _ = self.data.writeFrame(frame: Int(current.frame), data: Data(bytesNoCopy: dst, count: length, deallocator: .none))
-                dst.deallocate()
             }
         }
     }
 
 
-    func readFrame(previous: RenderedFrame?, frame: Int) -> UnsafeRawPointer? {
-        var rendered: UnsafeRawPointer? = nil
+    func readFrame(previous: Data?, frame: Int) -> Data? {
+        var rendered: Data? = nil
         queue.sync {
             
             if self.data.isFinished {
                 switch self.data.readFrame(frame: frame) {
                 case let .success(data):
                     let address = malloc(bufferSize)!.assumingMemoryBound(to: UInt8.self)
-                                    
-                    rendered = data.withUnsafeBytes { dataBytes -> UnsafeRawPointer in
-
+                    data.withUnsafeBytes { dataBytes in
                         let unsafeBufferPointer = dataBytes.bindMemory(to: UInt8.self)
                         let unsafePointer = unsafeBufferPointer.baseAddress!
 
                         let _ = compression_decode_buffer(address, bufferSize, unsafePointer, data.count, nil, COMPRESSION_LZ4)
 
                         if let previous = previous, enableDifference {
-
-                            let previousBytes = previous.data!.assumingMemoryBound(to: UInt64.self)
-
-                            let uint64Bs = self.bufferSize / 8
-
-                            address.withMemoryRebound(to: UInt64.self, capacity: uint64Bs, { address in
-                                var i = 0
-                                while i < uint64Bs {
-                                    address[i] = previousBytes[i] ^ address[i]
-                                    i &+= 1
-                                }
-                            })
-
+                            previous.withUnsafeBytes { pointer in
+                                let previousBytes = pointer.baseAddress!.assumingMemoryBound(to: UInt64.self)
+                                let uint64Bs = self.bufferSize / 8
+                                address.withMemoryRebound(to: UInt64.self, capacity: uint64Bs, { address in
+                                    var i = 0
+                                    while i < uint64Bs {
+                                        address[i] = previousBytes[i] ^ address[i]
+                                        i &+= 1
+                                    }
+                                })
+                            }
                         }
-                        return UnsafeRawPointer(address)
                     }
-                    
+                    rendered = Data(bytes: address, count: bufferSize)
+                    address.deallocate()
                 default:
                     rendered = nil
                 }
             }
         }
-        
         return rendered
     }
     

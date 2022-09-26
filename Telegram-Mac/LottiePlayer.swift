@@ -66,7 +66,7 @@ enum LottiePlayerState : Equatable {
 
 protocol RenderedFrame {
     var duration: TimeInterval { get }
-    var data: UnsafeRawPointer? { get }
+    var data: Data? { get }
     var image: CGImage? { get }
     var backingScale: Int { get }
     var size: NSSize { get }
@@ -102,7 +102,7 @@ final class RenderedWebpFrame : RenderedFrame, Equatable {
     var duration: TimeInterval {
         return webpData.duration
     }
-    var data: UnsafeRawPointer? {
+    var data: Data? {
         return nil
     }
     var mirror: Bool {
@@ -258,9 +258,9 @@ final class RenderedWebmFrame : RenderedFrame, Equatable {
     let size: NSSize
     let backingScale: Int
     let key: LottieAnimationEntryKey
-    private let _data: UnsafeRawPointer
+    private let _data: Data
     private let fps: Int
-    init(key: LottieAnimationEntryKey, frame: Int32, fps: Int, size: NSSize, data: UnsafeRawPointer, backingScale: Int) {
+    init(key: LottieAnimationEntryKey, frame: Int32, fps: Int, size: NSSize, data: Data, backingScale: Int) {
         self.key = key
         self.backingScale = backingScale
         self.size = size
@@ -279,19 +279,20 @@ final class RenderedWebmFrame : RenderedFrame, Equatable {
         if let data = data {
             let s:(w: Int, h: Int) = (w: Int(size.width) * backingScale, h: Int(size.height) * backingScale)
             
-            let bytes = data.assumingMemoryBound(to: UInt8.self)
+            return data.withUnsafeBytes { pointer in
+                let bytes = pointer.baseAddress!.assumingMemoryBound(to: UInt8.self)
 
-            let mutableBytes = UnsafeMutableRawPointer(mutating: bytes)
-            var buffer = vImage_Buffer(data: mutableBytes, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: bytesPerRow)
-                       
-            if self.key.mirror {
-                vImageHorizontalReflect_ARGB8888(&buffer, &buffer, vImage_Flags(kvImageDoNotTile))
+                let mutableBytes = UnsafeMutableRawPointer(mutating: bytes)
+                var buffer = vImage_Buffer(data: mutableBytes, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: bytesPerRow)
+                           
+                if self.key.mirror {
+                    vImageHorizontalReflect_ARGB8888(&buffer, &buffer, vImage_Flags(kvImageDoNotTile))
+                }
+                return generateImagePixel(size, scale: CGFloat(backingScale), pixelGenerator: { (_, pixelData, bytesPerRow) in
+                    memcpy(pixelData, mutableBytes, bufferSize)
+                })
             }
             
-            
-            return generateImagePixel(size, scale: CGFloat(backingScale), pixelGenerator: { (_, pixelData, bytesPerRow) in
-                memcpy(pixelData, mutableBytes, bufferSize)
-            })
         }
         return nil
     }
@@ -304,7 +305,7 @@ final class RenderedWebmFrame : RenderedFrame, Equatable {
 
         return s.h * bytesPerRow
     }
-    var data: UnsafeRawPointer? {
+    var data: Data? {
         return _data
     }
     var mirror: Bool {
@@ -315,25 +316,27 @@ final class RenderedWebmFrame : RenderedFrame, Equatable {
     }
     
     deinit {
-        _data.deallocate()
+        
     }
 }
 
 
 final class RenderedLottieFrame : RenderedFrame, Equatable {
     let frame: Int32
-    let data: UnsafeRawPointer?
+    let data: Data?
     let size: NSSize
     let backingScale: Int
     let key: LottieAnimationEntryKey
     let fps: Int
-    init(key: LottieAnimationEntryKey, fps: Int, frame: Int32, size: NSSize, data: UnsafeRawPointer, backingScale: Int) {
+    let initedOnMain: Bool
+    init(key: LottieAnimationEntryKey, fps: Int, frame: Int32, size: NSSize, data: Data, backingScale: Int) {
         self.key = key
         self.frame = frame
         self.size = size
         self.data = data
         self.backingScale = backingScale
         self.fps = fps
+        self.initedOnMain = Thread.isMainThread
     }
     static func ==(lhs: RenderedLottieFrame, rhs: RenderedLottieFrame) -> Bool {
         return lhs.frame == rhs.frame
@@ -356,31 +359,34 @@ final class RenderedLottieFrame : RenderedFrame, Equatable {
     }
     var image: CGImage? {
         if let data = data {
-           
-            
-            return generateImagePixel(size, scale: CGFloat(backingScale), pixelGenerator: { (_, pixelData, bytesPerRow) in
-                
-                let s:(w: Int, h: Int) = (w: Int(size.width) * backingScale, h: Int(size.height) * backingScale)
-                
-                let bytes = data.assumingMemoryBound(to: UInt8.self)
-
-                let mutableBytes = UnsafeMutableRawPointer(mutating: bytes)
-                var buffer = vImage_Buffer(data: mutableBytes, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: bytesPerRow)
-                
-                           
-                if self.key.mirror {
-                    vImageHorizontalReflect_ARGB8888(&buffer, &buffer, vImage_Flags(kvImageDoNotTile))
-                }
-                
-                memcpy(pixelData, mutableBytes, bufferSize)
+            return data.withUnsafeBytes({ pointer in
+                let bytes = pointer.baseAddress!.assumingMemoryBound(to: UInt8.self)
+                return generateImagePixel(size, scale: CGFloat(backingScale), pixelGenerator: { (_, pixelData, bytesPerRow) in
+                    
+                    let s:(w: Int, h: Int) = (w: Int(size.width) * backingScale, h: Int(size.height) * backingScale)
+                    let mutableBytes = UnsafeMutableRawPointer(mutating: bytes)
+                    var buffer = vImage_Buffer(data: mutableBytes, height: vImagePixelCount(s.h), width: vImagePixelCount(s.w), rowBytes: bytesPerRow)
+                               
+                    if self.key.mirror {
+                        vImageHorizontalReflect_ARGB8888(&buffer, &buffer, vImage_Flags(kvImageDoNotTile))
+                    }
+                    
+                    memcpy(pixelData, mutableBytes, bufferSize)
+                })
             })
+            
         }
         return nil
     }
     
     
     deinit {
-        data?.deallocate()
+        if initedOnMain {
+            if !Thread.isMainThread {
+                var bp = 0
+                bp += 1
+            }
+        }
     }
 }
 
@@ -1113,6 +1119,8 @@ private final class WebmRenderer : RenderContainer {
 
     func render(at frameIndex: Int32, frames: [RenderedFrame], previousFrame: RenderedFrame?) -> RenderedFrame? {
         
+        
+        
         let s:(w: Int, h: Int) = (w: Int(animation.size.width) * animation.backingScale, h: Int(animation.size.height) * animation.backingScale)
         let bytesPerRow = DeviceGraphicsContextSettings.shared.bytesPerRow(forWidth: s.w)
 
@@ -1120,7 +1128,7 @@ private final class WebmRenderer : RenderContainer {
         
         if let fileSupplyment = fileSupplyment {
             let previous = frameIndex == startFrame ? nil : frames.last ?? previousFrame
-            if let data = fileSupplyment.readFrame(previous: previous, frame: Int(frameIndex)) {
+            if let data = fileSupplyment.readFrame(previous: previous?.data, frame: Int(frameIndex)) {
                 return RenderedWebmFrame(key: animation.key, frame: frameIndex, fps: self.fps, size: animation.size, data: data, backingScale: animation.backingScale)
             }
             if fileSupplyment.isFinished {
@@ -1158,11 +1166,14 @@ private final class WebmRenderer : RenderContainer {
         
         CVPixelBufferUnlockBaseAddress(imageBuffer!, CVPixelBufferLockFlags(rawValue: 0))
         
-        return RenderedWebmFrame(key: animation.key, frame: frameIndex, fps: self.fps, size: animation.size, data: bytes, backingScale: animation.backingScale)
+        
+        let data = Data(bytes: bytes, count: bufferSize)
+        bytes.deallocate()
+        return RenderedWebmFrame(key: animation.key, frame: frameIndex, fps: self.fps, size: animation.size, data: data, backingScale: animation.backingScale)
     }
     func cacheFrame(_ previous: RenderedFrame?, _ current: RenderedFrame) {
         if let fileSupplyment = fileSupplyment {
-            fileSupplyment.addFrame(previous, current)
+            fileSupplyment.addFrame(previous?.data, (current.data!, current.frame))
         }
     }
     func markFinished() {
@@ -1216,7 +1227,7 @@ private final class LottieRenderer : RenderContainer {
     
     func cacheFrame(_ previous: RenderedFrame?, _ current: RenderedFrame) {
         if let fileSupplyment = fileSupplyment {
-            fileSupplyment.addFrame(previous, current)
+            fileSupplyment.addFrame(previous?.data, (current.data!, current.frame))
         }
     }
     func markFinished() {
@@ -1225,11 +1236,11 @@ private final class LottieRenderer : RenderContainer {
     func render(at frame: Int32, frames: [RenderedFrame], previousFrame: RenderedFrame?) -> RenderedFrame? {
         let s:(w: Int, h: Int) = (w: Int(animation.size.width) * animation.backingScale, h: Int(animation.size.height) * animation.backingScale)
         
-        var data: UnsafeRawPointer?
+        var data: Data?
 
         if let fileSupplyment = fileSupplyment {
             let previous = frame == startFrame ? nil : frames.last ?? previousFrame
-            if let frame = fileSupplyment.readFrame(previous: previous, frame: Int(frame)) {
+            if let frame = fileSupplyment.readFrame(previous: previous?.data, frame: Int(frame)) {
                 data = frame
             }
         }
@@ -1243,7 +1254,9 @@ private final class LottieRenderer : RenderContainer {
             let frameData = memoryData.assumingMemoryBound(to: UInt8.self)
             
             bridge?.renderFrame(with: frame, into: frameData, width: Int32(s.w), height: Int32(s.h), bytesPerRow: Int32(bytesPerRow))
-            data = UnsafeRawPointer(frameData)
+                        
+            data = Data(bytes: frameData, count: bufferSize)
+            frameData.deallocate()
         }
         
         
@@ -1727,40 +1740,40 @@ private final class MetalRenderer: View {
     
     func draw(frame: RenderedFrame, commandBuffer: MTLCommandBuffer) -> MTLDrawable? {
         
-        guard let drawable = metalLayer.nextDrawable(), let bytes = frame.data else {
+        guard let drawable = metalLayer.nextDrawable(), let data = frame.data else {
             return nil
         }
-        
-        let size: NSSize = frame.size
-        let backingScale: Int = frame.backingScale
-        
-        let region = MTLRegionMake2D(0, 0, Int(size.width) * backingScale, Int(size.height) * backingScale)
-        
-        self.texture.replace(region: region, mipmapLevel: 0, withBytes: bytes, bytesPerRow: Int(size.width) * backingScale * 4)
-        
-        let renderPassDescriptor = MTLRenderPassDescriptor()
-        renderPassDescriptor.colorAttachments[0].texture = drawable.texture
-        renderPassDescriptor.colorAttachments[0].loadAction = .clear
-        renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.0)
-               
-        let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor)!
-        
-        renderEncoder.setRenderPipelineState(self.context.pipelineState)
-        renderEncoder.setVertexBuffer(self.context.vertexBuffer, offset: 0, index: 0)
-        renderEncoder.setFragmentTexture(self.texture, index: 0)
-        renderEncoder.setFragmentSamplerState(self.context.sampler, index: 0)
-        
-        var mirror = frame.mirror
-        
-        renderEncoder.setFragmentBytes(&mirror, length: MemoryLayout<Bool>.size, index: 0)
-        
-        renderEncoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6, instanceCount: 1)
-        
-        
-
-        renderEncoder.endEncoding()
-                
-        return drawable
+        return data.withUnsafeBytes { pointer in
+            let bytes = pointer.baseAddress!.assumingMemoryBound(to: UInt8.self)
+            let size: NSSize = frame.size
+            let backingScale: Int = frame.backingScale
+            
+            let region = MTLRegionMake2D(0, 0, Int(size.width) * backingScale, Int(size.height) * backingScale)
+            
+            self.texture.replace(region: region, mipmapLevel: 0, withBytes: bytes, bytesPerRow: Int(size.width) * backingScale * 4)
+            
+            let renderPassDescriptor = MTLRenderPassDescriptor()
+            renderPassDescriptor.colorAttachments[0].texture = drawable.texture
+            renderPassDescriptor.colorAttachments[0].loadAction = .clear
+            renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 0.0)
+                   
+            let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor)!
+            
+            renderEncoder.setRenderPipelineState(self.context.pipelineState)
+            renderEncoder.setVertexBuffer(self.context.vertexBuffer, offset: 0, index: 0)
+            renderEncoder.setFragmentTexture(self.texture, index: 0)
+            renderEncoder.setFragmentSamplerState(self.context.sampler, index: 0)
+            
+            var mirror = frame.mirror
+            
+            renderEncoder.setFragmentBytes(&mirror, length: MemoryLayout<Bool>.size, index: 0)
+            
+            renderEncoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6, instanceCount: 1)
+            
+            renderEncoder.endEncoding()
+                    
+            return drawable
+        }
     }
 
     
