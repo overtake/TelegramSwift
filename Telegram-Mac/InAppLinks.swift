@@ -1007,11 +1007,11 @@ enum inAppLink {
     }
 }
 
-let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
-let actions_me:[String] = ["joinchat/","addstickers/","confirmphone","socks", "proxy", "setlanguage", "bg", "addtheme/"]
+let telegram_me:[String] = ["telegram.me/", "telegram.dog/", "t.me/"]
+let actions_me:[String] = ["joinchat/", "addstickers/", "confirmphone/", "socks/", "proxy/", "setlanguage/", "bg/", "addtheme/"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings"]
+let known_scheme:[String] = ["resolve", "msg_url", "join", "addstickers", "confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings"]
 
 let ton_scheme:String = "ton://"
 
@@ -1089,14 +1089,11 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         }
                     case actions_me[5]:
                         if let context = context, !value.isEmpty {
-                            return .applyLocalization(link: urlString, context: context, value: String(value[value.index(after: value.startIndex) ..< value.endIndex]))
-                        } else {
-                            
+                            return .applyLocalization(link: urlString, context: context, value: value)
                         }
                     case actions_me[6]:
                         if !value.isEmpty {
-                            var component = String(value[value.index(after: value.startIndex) ..< value.endIndex])
-                            component = component.components(separatedBy: "?")[0]
+                            var component = value.components(separatedBy: "?")[0]
                             
                             if let context = context {
                                 let (vars, emptyVars) = urlVars(with: value)
