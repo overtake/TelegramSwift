@@ -18,7 +18,7 @@ enum ChatListPinnedType {
     case some
     case last
     case none
-    case ad(AdditionalChatListItem)
+    case ad(EngineChatList.AdditionalItem)
 }
 
 
@@ -103,28 +103,17 @@ class ChatListRowItem: TableRowItem {
             self.size = mapped
         }
     }
-    
-    public private(set) var messages:[Message]
-    
-    var message: Message? {
-        var effective: Message?
         
-        let filtered = messages.filter { !$0.text.isEmpty }
-        if filtered.count == 1 {
-            effective = filtered[0]
-        }
-
-        if effective == nil {
-            effective = messages.first
-        }
-        return effective
+    private var messages:[Message]
+    var message: Message? {
+        return messages.first
     }
     
     let context: AccountContext
     let peer:Peer?
-    let renderedPeer:RenderedPeer?
-    let groupId: PeerGroupId
-    //let groupUnreadCounters: GroupReferenceUnreadCounters?
+    let renderedPeer:EngineRenderedPeer?
+    let groupId: EngineChatList.Group
+    let forumTopicTitle: String?
     let chatListIndex:ChatListIndex?
     var peerId:PeerId? {
         return renderedPeer?.peerId
@@ -138,16 +127,22 @@ class ChatListRowItem: TableRowItem {
     
     
     override var stableId: AnyHashable {
-        return entryId
+        return _stableId
     }
     
+    private var _stableId: UIChatListEntryId
     var entryId: UIChatListEntryId {
-        if groupId != .root {
-            return .groupId(groupId)
-        } else if let index = chatListIndex {
-            return .chatId(index.messageIndex.id.peerId, -1)
-        } else {
-            preconditionFailure()
+        return _stableId
+    }
+    var isForum: Bool {
+        return self.peer?.isForum ?? false
+    }
+    var isTopic: Bool {
+        switch self.mode {
+        case .topic:
+            return true
+        case .chat:
+            return false
         }
     }
     
@@ -187,13 +182,9 @@ class ChatListRowItem: TableRowItem {
     private var chatTitleAttributed: NSAttributedString?
     
     private(set) var peerNotificationSettings:PeerNotificationSettings?
-    private(set) var readState:CombinedPeerReadState?
+    private(set) var readState:EnginePeerReadCounters?
     
     
-    
-//    private var badge: Badge? = nil
-//    private var badgeSelected: Badge? = nil
-
     
     private var badgeNode:BadgeNode? = nil
     private var badgeSelectedNode:BadgeNode? = nil
@@ -201,10 +192,6 @@ class ChatListRowItem: TableRowItem {
     private var additionalBadgeNode:BadgeNode? = nil
     private var additionalBadgeSelectedNode:BadgeNode? = nil
 
-    
-    
-    private let clearHistoryDisposable = MetaDisposable()
-    private let deleteChatDisposable = MetaDisposable()
 
     private let _animateArchive:Atomic<Bool> = Atomic(value: false)
     
@@ -248,7 +235,7 @@ class ChatListRowItem: TableRowItem {
         return true
     }
     
-    let associatedGroupId: PeerGroupId
+    let associatedGroupId: EngineChatList.Group
     
     let isMuted:Bool
     
@@ -306,7 +293,7 @@ class ChatListRowItem: TableRowItem {
     
     var isSecret:Bool {
         if let renderedPeer = renderedPeer {
-            return renderedPeer.peers[renderedPeer.peerId] is TelegramSecretChat
+            return renderedPeer.peers[renderedPeer.peerId]?._asPeer() is TelegramSecretChat
         } else {
             return false
         }
@@ -335,7 +322,7 @@ class ChatListRowItem: TableRowItem {
     let hasDraft:Bool
     private let hasFailed: Bool
     let pinnedType:ChatListPinnedType
-    let activities: [ChatListInputActivity]
+    let activities: [PeerListState.InputActivities.Activity]
     
     var toolTip: String? {
         return messageText?.string
@@ -349,7 +336,7 @@ class ChatListRowItem: TableRowItem {
     
     let archiveStatus: HiddenArchiveStatus?
     
-    private var groupLatestPeers:[ChatListGroupReferencePeer] = []
+    private var groupItems:[EngineChatList.GroupItem.Item] = []
     
     private var textLeftCutout: CGFloat = 0.0
     let contentImageSize = CGSize(width: 16, height: 16)
@@ -359,22 +346,25 @@ class ChatListRowItem: TableRowItem {
 
 
     
-    init(_ initialSize:NSSize, context: AccountContext, pinnedType: ChatListPinnedType, groupId: PeerGroupId, peers: [ChatListGroupReferencePeer], messages: [Message], unreadState: PeerGroupUnreadCountersCombinedSummary, unreadCountDisplayCategory: TotalUnreadCountDisplayCategory, activities: [ChatListInputActivity] = [], animateGroup: Bool = false, archiveStatus: HiddenArchiveStatus = .normal, hasFailed: Bool = false, filter: ChatListFilter = .allChats) {
+    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, pinnedType: ChatListPinnedType, groupId: EngineChatList.Group, groupItems: [EngineChatList.GroupItem.Item], messages: [Message], unreadCount: Int, activities: [PeerListState.InputActivities.Activity] = [], animateGroup: Bool = false, archiveStatus: HiddenArchiveStatus = .normal, hasFailed: Bool = false, filter: ChatListFilter = .allChats) {
         self.groupId = groupId
         self.peer = nil
+        self.mode = .chat
         self.messages = messages
         self.chatListIndex = nil
         self.activities = activities
         self.context = context
         self.mentionsCount = nil
         self.reactionsCount = nil
+        self._stableId = stableId
         self.pinnedType = pinnedType
         self.renderedPeer = nil
+        self.forumTopicTitle = nil
         self.associatedGroupId = .root
         self.isMuted = false
         self.isOnline = nil
         self.archiveStatus = archiveStatus
-        self.groupLatestPeers = peers
+        self.groupItems = groupItems
         self.isVerified = false
         self.isPremium = false
         self.isScam = false
@@ -386,16 +376,6 @@ class ChatListRowItem: TableRowItem {
         titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
         
         
-        var message: Message?
-        
-        let filtered = messages.filter { !$0.text.isEmpty }
-        if filtered.count == 1 {
-            message = filtered[0]
-        }
-        if message == nil {
-            message = messages.first
-        }
-        
         self.titleText = titleText
         
         
@@ -404,7 +384,7 @@ class ChatListRowItem: TableRowItem {
     
 
         
-        if let message = message {
+        if let message = messages.first {
             let date:NSMutableAttributedString = NSMutableAttributedString()
             var time:TimeInterval = TimeInterval(message.timestamp)
             time -= context.timeDifference
@@ -417,10 +397,10 @@ class ChatListRowItem: TableRowItem {
         }
         
         
-        let mutedCount = unreadState.count(countingCategory: unreadCountDisplayCategory == .chats ? .chats : .messages, mutedCategory: .all)
+        let mutedCount = unreadCount
         
         self.highlightText = nil
-        self.embeddedState = nil
+        self.draft = nil
         
         photo = .ArchivedChats
         
@@ -434,30 +414,19 @@ class ChatListRowItem: TableRowItem {
         _ = _animateArchive.swap(animateGroup)
         
         if mutedCount > 0  {
-            
-//            var dynamicValue = DynamicCounterTextView.make(for: "\(mutedCount)", count: "\(mutedCount)", font: .medium(.small), textColor: theme.chatList.badgeTextColor, width: 100)
-//            badge = Badge(dynamicValue: dynamicValue, backgroundColor: theme.chatList.badgeMutedBackgroundColor, size: dynamicValue.size)
-//
-//            dynamicValue = DynamicCounterTextView.make(for: "\(mutedCount)", count: "\(mutedCount)", font: .medium(.small), textColor: theme.chatList.badgeSelectedTextColor, width: 100)
-//            badgeSelected = Badge(dynamicValue: dynamicValue, backgroundColor: theme.chatList.badgeSelectedBackgroundColor, size: dynamicValue.size)
-
-            
             badgeNode = BadgeNode(.initialize(string: "\(mutedCount)", color: theme.chatList.badgeTextColor, font: .medium(.small)), theme.chatList.badgeMutedBackgroundColor)
             badgeSelectedNode = BadgeNode(.initialize(string: "\(mutedCount)", color: theme.chatList.badgeSelectedTextColor, font: .medium(.small)), theme.chatList.badgeSelectedBackgroundColor)
         }
         
         
-        //theme.chatList.badgeBackgroundColor
         
-        
-        if peers.count == 1 {
-            self.messageText = chatListText(account: context.account, for: message, messagesCount: messages.count, folder: true)
-    
+        if groupItems.count == 1 {
+            self.messageText = chatListText(account: context.account, for: message, messagesCount: 1, folder: true)
         } else {
             let textString = NSMutableAttributedString(string: "")
             var isFirst = true
-            for peer in peers {
-                if let chatMainPeer = peer.peer.chatMainPeer {
+            for item in groupItems {
+                if let chatMainPeer = item.peer.chatMainPeer?._asPeer() {
                     let peerTitle = chatMainPeer.compactDisplayTitle
                     if !peerTitle.isEmpty {
                         if isFirst {
@@ -465,7 +434,7 @@ class ChatListRowItem: TableRowItem {
                         } else {
                             textString.append(.initialize(string: ", ", color: theme.chatList.textColor, font: .normal(.text)))
                         }
-                        textString.append(.initialize(string: peerTitle, color: peer.isUnread ? theme.chatList.textColor : theme.chatList.grayTextColor, font: .normal(.text)))
+                        textString.append(.initialize(string: peerTitle, color: item.isUnread ? theme.chatList.textColor : theme.chatList.grayTextColor, font: .normal(.text)))
                     }
                 }
             }
@@ -486,60 +455,59 @@ class ChatListRowItem: TableRowItem {
     
     private let highlightText: String?
     
-    private let embeddedState:StoredPeerChatInterfaceState?
+    private let draft:EngineChatList.Draft?
     
-    init(_ initialSize:NSSize,  context: AccountContext,  messages: [Message], index: ChatListIndex? = nil,  readState:CombinedPeerReadState? = nil,  isMuted:Bool = false, embeddedState:StoredPeerChatInterfaceState? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:RenderedPeer, peerPresence: PeerPresence? = nil, summaryInfo: [ChatListEntryMessageTagSummaryKey: ChatListMessageTagSummaryInfo] = [:], activities: [ChatListInputActivity] = [], highlightText: String? = nil, associatedGroupId: PeerGroupId = .root, hasFailed: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats) {
+    enum Mode {
+        case chat
+        case topic(Int64, EngineMessageHistoryThread.Info)
         
-        
-        var embeddedState = embeddedState
-        
-        if let peer = renderedPeer.chatMainPeer as? TelegramChannel {
-            if !peer.hasPermission(.sendMessages) {
-                embeddedState = nil
+        var threadId: Int64? {
+            switch self {
+            case let .topic(threadId, _):
+                return threadId
+            default:
+                return nil
             }
         }
-        let interfaceState = embeddedState.flatMap(_internal_decodeStoredChatInterfaceState).flatMap({
-            ChatInterfaceState.parse($0, peerId: nil, context: nil)
-        })
-        if let interfaceState = interfaceState {
-            if interfaceState.inputState.inputText.isEmpty {
-                embeddedState = nil
+    }
+    let mode: Mode
+    
+    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicTitle: String? = nil, activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats) {
+        
+        
+        var draft = draft
+        
+        if let peer = renderedPeer.chatMainPeer?._asPeer() as? TelegramChannel {
+            if !peer.hasPermission(.sendMessages) {
+                draft = nil
+            }
+        }
+        
+        if let value = draft {
+            if value.text.isEmpty {
+                draft = nil
             }
         }
         let supportId = PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(777000))
 
-        if let peerPresence = peerPresence, context.peerId != renderedPeer.peerId, renderedPeer.peerId != supportId {
-            if let peerPresence = peerPresence as? TelegramUserPresence {
-                let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-                let relative = relativeUserPresenceStatus(peerPresence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp))
-                switch relative {
-                case .online:
-                    self.isOnline = true
-                default:
-                    self.isOnline = false
-                }
-            } else {
-                self.isOnline = nil
+        if let peerPresence = peerPresence?._asPresence(), context.peerId != renderedPeer.peerId, renderedPeer.peerId != supportId {
+            let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
+            let relative = relativeUserPresenceStatus(peerPresence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp))
+            switch relative {
+            case .online:
+                self.isOnline = true
+            default:
+                self.isOnline = false
             }
         } else {
             self.isOnline = nil
         }
         
-        if let peer = renderedPeer.chatMainPeer as? TelegramChannel, peer.flags.contains(.hasActiveVoiceChat) {
+        if let peer = renderedPeer.chatMainPeer?._asPeer() as? TelegramChannel, peer.flags.contains(.hasActiveVoiceChat) {
             self.hasActiveGroupCall = true
         }
-        
-      
-        var message: Message?
-        
-        let filtered = messages.filter { !$0.text.isEmpty }
-        if filtered.count == 1 {
-            message = filtered[0]
-        }
-        if message == nil {
-            message = messages.first
-        }
-        
+    
+        self.mode = mode
         self.chatListIndex = index
         self.renderedPeer = renderedPeer
         self.context = context
@@ -547,14 +515,16 @@ class ChatListRowItem: TableRowItem {
         self.activities = activities
         self.pinnedType = pinnedType
         self.archiveStatus = nil
-        self.hasDraft = embeddedState != nil
-        self.embeddedState = embeddedState
-        self.peer = renderedPeer.chatMainPeer
+        self.forumTopicTitle = forumTopicTitle
+        self.hasDraft = draft != nil
+        self.draft = draft
+        self.peer = renderedPeer.chatMainPeer?._asPeer()
         self.groupId = .root
         self.hasFailed = hasFailed
         self.filter = filter
         self.associatedGroupId = associatedGroupId
         self.highlightText = highlightText
+        self._stableId = stableId
         if let peer = peer {
             self.isVerified = peer.isVerified
             self.isPremium = peer.isPremium && peer.id != context.peerId
@@ -573,16 +543,21 @@ class ChatListRowItem: TableRowItem {
         
         
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
-        let _ = titleText.append(string: peer?.id == context.peerId ? strings().peerSavedMessages : peer?.displayTitle, color: renderedPeer.peers[renderedPeer.peerId] is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
-        titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
+        switch mode {
+        case .chat:
+            let _ = titleText.append(string: peer?.id == context.peerId ? strings().peerSavedMessages : peer?.displayTitle, color: renderedPeer.peers[renderedPeer.peerId]?._asPeer() is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
 
+        case let .topic(_, info):
+            let _ = titleText.append(string: info.title, color: theme.chatList.textColor, font: .medium(.title))
+        }
+        titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
         self.titleText = titleText
     
         
-        if case let .ad(item) = pinnedType, let promo = item as? PromoChatListItem {
+        if case let .ad(item) = pinnedType {
             let sponsored:NSMutableAttributedString = NSMutableAttributedString()
             let range: NSRange
-            switch promo.kind {
+            switch item.promoInfo.content {
             case let .psa(type, _):
                 range = sponsored.append(string: localizedPsa("psa.chatlist", type: type), color: theme.colors.grayText, font: .normal(.short))
             case .proxy:
@@ -592,7 +567,7 @@ class ChatListRowItem: TableRowItem {
             self.date = sponsored
             dateLayout = TextNode.layoutText(maybeNode: nil,  sponsored, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, false, .left)
             dateSelectedLayout = TextNode.layoutText(maybeNode: nil,  sponsored, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, true, .left)
-        } else if let message = message {
+        } else if let message = messages.first {
             let date:NSMutableAttributedString = NSMutableAttributedString()
             var time:TimeInterval = TimeInterval(message.timestamp)
             time -= context.timeDifference
@@ -610,15 +585,19 @@ class ChatListRowItem: TableRowItem {
                     author = peer
                 } else if let signature = info.authorSignature {
                                         
-                    author = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil)
+                    author = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [])
                 }
             } else {
                 author = message.author
             }
             
-            if let author = author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, embeddedState == nil {
+            if let author = author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, draft == nil {
                 if !(message.effectiveMedia is TelegramMediaAction) {
-                    let peerText: String = (author.id == context.account.peerId ? "\(strings().chatListYou)" : author.displayTitle)
+                    var peerText: String = (author.id == context.account.peerId ? "\(strings().chatListYou)" : author.displayTitle)
+                    
+                    if let forumTopicTitle = forumTopicTitle, peer.isForum {
+                        peerText = "\(peerText) → \(forumTopicTitle)"
+                    }
                     
                     let attr = NSMutableAttributedString()
                     _ = attr.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
@@ -631,9 +610,9 @@ class ChatListRowItem: TableRowItem {
             let contentImageFillSize = CGSize(width: 8.0, height: contentImageSize.height)
             _ = contentImageFillSize
             let isSecret: Bool
-            isSecret = renderedPeer.peers[renderedPeer.peerId] is TelegramSecretChat
+            isSecret = renderedPeer.peers[renderedPeer.peerId]?._asPeer() is TelegramSecretChat
             
-            if embeddedState == nil, !isSecret {
+            if draft == nil, !isSecret {
                 for message in messages {
                     inner: for media in message.media {
                         if !message.containsSecretMedia {
@@ -668,46 +647,27 @@ class ChatListRowItem: TableRowItem {
             }
         }
         
-        let mentions = summaryInfo[ChatListEntryMessageTagSummaryKey(
-            tag: .unseenPersonalMessage,
-            actionType: .consumeUnseenPersonalMessage
-        )]
-        
-        let reactions = summaryInfo[ChatListEntryMessageTagSummaryKey(
-            tag: .unseenReaction,
-            actionType: .readReaction
-        )]
-        
-        if let mentions = mentions {
-            let tagSummaryCount = mentions.tagSummaryCount ?? 0
-            let actionsSummaryCount = mentions.actionsSummaryCount ?? 0
-            let totalMentionCount = tagSummaryCount - actionsSummaryCount
-            if totalMentionCount > 0 {
-                self.mentionsCount = totalMentionCount
-            } else {
-                self.mentionsCount = nil
-            }
+        if hasUnreadMentions {
+            self.mentionsCount = 1
         } else {
             self.mentionsCount = nil
         }
        
-        if let reactions = reactions {
-            let tagSummaryCount = reactions.tagSummaryCount ?? 0
-            let actionsSummaryCount = reactions.actionsSummaryCount ?? 0
-            let totalReactionsCount = tagSummaryCount - actionsSummaryCount
-            if totalReactionsCount > 0 {
-                self.reactionsCount = totalReactionsCount
-            } else {
-                self.reactionsCount = nil
-            }
+        if hasUnreadReactions {
+            self.reactionsCount = 1
         } else {
             self.reactionsCount = nil
         }
         
-        if let peer = peer, peer.id != context.peerId && peer.id != repliesPeerId {
-            self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, nil, nil)
-        } else {
+        switch mode {
+        case .topic:
             self.photo = .Empty
+        case .chat:
+            if let peer = peer, peer.id != context.peerId && peer.id != repliesPeerId {
+                self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, nil, nil, peer.isForum)
+            } else {
+                self.photo = .Empty
+            }
         }
         
         super.init(initialSize)
@@ -725,31 +685,28 @@ class ChatListRowItem: TableRowItem {
        
         
       
-        if let _ = self.isOnline, let presence = peerPresence as? TelegramUserPresence {
+        if let _ = self.isOnline, let presence = peerPresence?._asPresence() {
             presenceManager = PeerPresenceStatusManager(update: { [weak self] in
                 self?.isOnline = false
                 self?.redraw(animated: true)
             })
-            
             presenceManager?.reset(presence: presence, timeDifference: Int32(context.timeDifference))
         }
         
         if case let .ad(promo) = pinnedType, message == nil {
-            if let promo = promo as? PromoChatListItem {
-                switch promo.kind {
-                case let .psa(_, message):
-                    if let message = message {
-                        let attr = NSMutableAttributedString()
-                        _ = attr.append(string: message, color: theme.colors.grayText, font: .normal(.text))
-                        attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
-                        self.messageText = attr
-                    }
-                default:
-                    break
+            switch promo.promoInfo.content {
+            case let .psa(_, message):
+                if let message = message {
+                    let attr = NSMutableAttributedString()
+                    _ = attr.append(string: message, color: theme.colors.grayText, font: .normal(.text))
+                    attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
+                    self.messageText = attr
                 }
+            default:
+                break
             }
         } else {
-            let messageText = chatListText(account: context.account, for: message, messagesCount: messages.count, embeddedState: embeddedState, folder: false, applyUserName: false, isPremium: context.isPremium)
+            let messageText = chatListText(account: context.account, for: message, messagesCount: messages.count, draft: draft, folder: false, applyUserName: false, isPremium: context.isPremium)
             self.messageText = messageText
             var textCutout: TextViewCutout?
             if !textLeftCutout.isZero {
@@ -855,18 +812,26 @@ class ChatListRowItem: TableRowItem {
         return (max(300, size.width) - 50 - margin * 4) - (isPinned ? 20 : 0) - (mentionsCount != nil ? 24 : 0) - (reactionsCount != nil ? 24 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0) - (chatTitleAttributed != nil ? textLeftCutout : 0)
     }
     
-    let leftInset:CGFloat = 50 + (10 * 2.0);
+    var leftInset:CGFloat {
+        switch mode {
+        case .chat:
+            return 50 + (10 * 2.0);
+        case .topic:
+            return 30 + (10 * 2.0);
+        }
+    }
     
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         let result = super.makeSize(width, oldWidth: oldWidth)
         
         
+        
         if displayLayout == nil || !displayLayout!.0.isPerfectSized || self.oldWidth > width {
-            displayLayout = TextNode.layoutText(maybeNode: displayNode,  titleText, nil, 1, .end, NSMakeSize(titleWidth, size.height), nil, false, .left)
+            displayLayout = TextNode.layoutText(maybeNode: displayNode,  titleText, nil, isTopic ? 2 : 1, .end, NSMakeSize(titleWidth, size.height), nil, false, .left)
         }
         
         if displaySelectedLayout == nil || !displaySelectedLayout!.0.isPerfectSized || self.oldWidth > width {
-            displaySelectedLayout = TextNode.layoutText(maybeNode: displaySelectedNode,  titleText, nil, 1, .end, NSMakeSize(titleWidth, size.height), nil, true, .left)
+            displaySelectedLayout = TextNode.layoutText(maybeNode: displaySelectedNode,  titleText, nil, isTopic ? 2 : 1, .end, NSMakeSize(titleWidth, size.height), nil, true, .left)
         }
         
         if chatNameLayout == nil || !chatNameLayout!.0.isPerfectSized || self.oldWidth > width, let chatTitleAttributed = chatTitleAttributed {
@@ -913,13 +878,19 @@ class ChatListRowItem: TableRowItem {
     
     func toggleMuted() {
         if let peerId = peerId {
-            ChatListRowItem.toggleMuted(context: context, peerId: peerId, isMuted: isMuted)
+            ChatListRowItem.toggleMuted(context: context, peerId: peerId, isMuted: isMuted, threadId: self.mode.threadId)
+        }
+    }
+    func delete() {
+        if let peerId = peerId {
+            let signal = removeChatInteractively(context: context, peerId: peerId, threadId: self.mode.threadId, userId: peer?.id)
+            _ = signal.start()
         }
     }
     
-    static func toggleMuted(context: AccountContext, peerId: PeerId, isMuted: Bool) {
+    static func toggleMuted(context: AccountContext, peerId: PeerId, isMuted: Bool, threadId: Int64?) {
         if isMuted {
-            _ = context.engine.peers.togglePeerMuted(peerId: peerId).start()
+            _ = context.engine.peers.togglePeerMuted(peerId: peerId, threadId: threadId).start()
         } else {
             var options:[ModalOptionSet] = []
             
@@ -937,7 +908,7 @@ class ChatListRowItem: TableRowItem {
                 for (i, option) in result.enumerated() {
                     inner: switch option {
                     case .selected:
-                        _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, muteInterval: intervals[i]).start()
+                        _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, threadId: threadId, muteInterval: intervals[i]).start()
                         break
                     default:
                         break inner
@@ -952,21 +923,20 @@ class ChatListRowItem: TableRowItem {
         ChatListRowItem.togglePinned(context: context, chatLocation: chatLocation, filter: filter, associatedGroupId: associatedGroupId)
     }
     
-    static func togglePinned(context: AccountContext, chatLocation: ChatLocation?, filter: ChatListFilter, associatedGroupId: PeerGroupId) {
+    static func togglePinned(context: AccountContext, chatLocation: ChatLocation?, filter: ChatListFilter, associatedGroupId: EngineChatList.Group) {
         if let chatLocation = chatLocation {
             let location: TogglePeerChatPinnedLocation
             
             if case .filter = filter {
                 location = .filter(filter.id)
             } else {
-                location = .group(associatedGroupId)
+                location = .group(associatedGroupId._asGroup())
             }
             let context = context
             
             _ = (context.engine.peers.toggleItemPinned(location: location, itemId: chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
                 switch result {
                 case .limitExceeded:
-                    
                     if context.isPremium {
                         confirm(for: context.window, information: strings().chatListContextPinErrorNew2, okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().chatListContextPinErrorNewSetupFolders, successHandler: { result in
                             switch result {
@@ -981,7 +951,7 @@ class ChatListRowItem: TableRowItem {
                         if case .filter = filter {
                             showPremiumLimit(context: context, type: .pinInFolders(.group(filter.id)))
                         } else {
-                            if case .group = associatedGroupId {
+                            if case .archive = associatedGroupId {
                                 showPremiumLimit(context: context, type: .pinInArchive)
                             } else {
                                 showPremiumLimit(context: context, type: .pin)
@@ -1000,11 +970,11 @@ class ChatListRowItem: TableRowItem {
         ChatListRowItem.toggleArchive(context: context, associatedGroupId: associatedGroupId, peerId: peerId)
     }
     
-    static func toggleArchive(context: AccountContext, associatedGroupId: PeerGroupId?, peerId: PeerId?) {
+    static func toggleArchive(context: AccountContext, associatedGroupId: EngineChatList.Group?, peerId: PeerId?) {
         if let peerId = peerId {
             switch associatedGroupId {
             case .root:
-                context.bindings.mainController().chatList.setAnimateGroupNextTransition(Namespaces.PeerGroup.archive)
+                context.bindings.mainController().chatList.setAnimateGroupNextTransition(EngineChatList.Group.archive)
                 _ = context.engine.peers.updatePeersGroupIdInteractively(peerIds: [peerId], groupId: .archive).start()
             default:
                 _ = context.engine.peers.updatePeersGroupIdInteractively(peerIds: [peerId], groupId: .root).start()
@@ -1012,12 +982,7 @@ class ChatListRowItem: TableRowItem {
         }
     }
     
-    func delete() {
-        if let peerId = peerId {
-            let signal = removeChatInteractively(context: context, peerId: peerId, userId: peer?.id)
-            _ = signal.start()
-        }
-    }
+
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
 
@@ -1036,10 +1001,15 @@ class ChatListRowItem: TableRowItem {
         let isPinned = self.isPinned
         let archiveStatus = archiveStatus
         let isSecret = self.isSecret
-        let peerNotificationSettings = self.peerNotificationSettings as? TelegramPeerNotificationSettings
         let isUnread = badgeNode != nil || mentionsCount != nil || isUnreadMarked
-        let deleteChat:()->Void = { [weak self] in
-            self?.delete()
+        let threadId = self.mode.threadId
+        
+       
+        let deleteChat:()->Void = {
+            if let peerId = peerId {
+                let signal = removeChatInteractively(context: context, peerId: peerId, threadId: threadId, userId: peer?.id)
+                _ = signal.start()
+            }
         }
         
         let togglePin:()->Void = {
@@ -1054,8 +1024,31 @@ class ChatListRowItem: TableRowItem {
         
         let toggleMute:()->Void = {
             if let peerId = peerId {
-                ChatListRowItem.toggleMuted(context: context, peerId: peerId, isMuted: isMuted)
+                ChatListRowItem.toggleMuted(context: context, peerId: peerId, isMuted: isMuted, threadId: threadId)
             }
+        }
+        
+        if case let .topic(threadId, info) = self.mode, let peerId = peerId {
+            
+            var items:[ContextMenuItem] = []
+            
+            items.append(ContextMenuItem("Pin", handler: {
+                
+            }, itemImage: MenuAnimation.menu_pin.value))
+            
+            items.append(ContextMenuItem("Mute", handler: {
+                
+            }, itemImage: MenuAnimation.menu_mute.value))
+            
+            items.append(ContextMenuItem("Delete", handler: {
+                deleteChat()
+            }, itemImage: MenuAnimation.menu_delete.value))
+            
+            items.append(ContextMenuItem("Pause", handler: {
+                
+            }, itemImage: MenuAnimation.menu_pause.value))
+            
+            return .single(items)
         }
         
         let cachedData:Signal<CachedPeerData?, NoError>
@@ -1069,7 +1062,7 @@ class ChatListRowItem: TableRowItem {
         
         let soundsDataSignal = combineLatest(queue: .mainQueue(), appNotificationSettings(accountManager: context.sharedContext.accountManager), context.engine.peers.notificationSoundList(), context.account.postbox.transaction { transaction -> TelegramPeerNotificationSettings? in
             if let peerId = peerId {
-                return transaction.getPeerNotificationSettings(peerId) as? TelegramPeerNotificationSettings
+                return transaction.getPeerNotificationSettings(id: peerId) as? TelegramPeerNotificationSettings
             } else {
                 return nil
             }
@@ -1141,7 +1134,7 @@ class ChatListRowItem: TableRowItem {
                     
                     let updateSound:(PeerMessageSound)->Void = { tone in
                         playSound(tone)
-                        _ = context.engine.peers.updatePeerNotificationSoundInteractive(peerId: peerId, sound: tone).start()
+                        _ = context.engine.peers.updatePeerNotificationSoundInteractive(peerId: peerId, threadId: threadId, sound: tone).start()
 
                     }
                     
@@ -1200,15 +1193,15 @@ class ChatListRowItem: TableRowItem {
                     if !isMuted {
                         let submenu = ContextMenu()
                         submenu.addItem(ContextMenuItem(strings().chatListMute1Hour, handler: {
-                            _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, muteInterval: 60 * 60 * 1).start()
+                            _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, threadId: threadId, muteInterval: 60 * 60 * 1).start()
                         }, itemImage: MenuAnimation.menu_mute_for_1_hour.value))
                         
                         submenu.addItem(ContextMenuItem(strings().chatListMute3Days, handler: {
-                            _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, muteInterval: 60 * 60 * 24 * 3).start()
+                            _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, threadId: threadId, muteInterval: 60 * 60 * 24 * 3).start()
                         }, itemImage: MenuAnimation.menu_mute_for_2_days.value))
                         
                         submenu.addItem(ContextMenuItem(strings().chatListMuteForever, handler: {
-                            _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, muteInterval: Int32.max).start()
+                            _ = context.engine.peers.updatePeerMuteSetting(peerId: peerId, threadId: threadId, muteInterval: Int32.max).start()
                         }, itemImage: MenuAnimation.menu_mute.value))
                         
                         submenu.addItem(ContextSeparatorItem())
@@ -1230,7 +1223,7 @@ class ChatListRowItem: TableRowItem {
                 
                 if mainPeer is TelegramUser {
                     thirdGroup.append(ContextMenuItem(strings().chatListContextClearHistory, handler: {
-                        clearHistory(context: context, peer: peer, mainPeer: mainPeer, canDeleteForAll: canDeleteForAll)
+                        clearHistory(context: context, peer: peer._asPeer(), mainPeer: mainPeer, canDeleteForAll: canDeleteForAll)
                     }, itemImage: MenuAnimation.menu_clear_history.value))
                     thirdGroup.append(ContextMenuItem(strings().chatListContextDeleteChat, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                 }
@@ -1253,12 +1246,12 @@ class ChatListRowItem: TableRowItem {
                         context.bindings.mainController().chatList.hidePromoItem(peerId)
                     }, itemImage: MenuAnimation.menu_archive.value))
                 }
-                if let peer = peer as? TelegramGroup, !isAd {
+                if let peer = peer._asPeer() as? TelegramGroup, !isAd {
                     thirdGroup.append(ContextMenuItem(strings().chatListContextClearHistory, handler: {
                         clearHistory(context: context, peer: peer, mainPeer: mainPeer, canDeleteForAll: canDeleteForAll)
                     }, itemImage: MenuAnimation.menu_delete.value))
                     thirdGroup.append(ContextMenuItem(strings().chatListContextDeleteAndExit, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
-                } else if let peer = peer as? TelegramChannel, !isAd, !peer.flags.contains(.hasGeo) {
+                } else if let peer = peer._asPeer() as? TelegramChannel, !isAd, !peer.flags.contains(.hasGeo) {
                     
                     if case .broadcast = peer.info {
                         thirdGroup.append(ContextMenuItem(strings().chatListContextLeaveChannel, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_leave.value))
@@ -1425,8 +1418,6 @@ class ChatListRowItem: TableRowItem {
     }
 
     deinit {
-        clearHistoryDisposable.dispose()
-        deleteChatDisposable.dispose()
     }
     
     override func viewClass() -> AnyClass {
@@ -1442,7 +1433,16 @@ class ChatListRowItem: TableRowItem {
                 return 70
             }
         }
-        return 70
+        if context.layout == .minimisize {
+            return 70
+        }
+        
+        switch mode {
+        case .chat:
+            return 70
+        case .topic:
+            return 53 + (displayLayout?.0.size.height ?? 17)
+        }
     }
     
 }

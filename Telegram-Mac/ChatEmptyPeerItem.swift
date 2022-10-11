@@ -97,13 +97,16 @@ class ChatEmptyPeerItem: TableRowItem {
         case .scheduled:
             lineSpacing = nil
             _ = attr.append(string: strings().chatEmptyChat, color: theme.chatServiceItemTextColor, font: .medium(.text))
-        case let .replyThread(_, mode):
+        case let .thread(_, mode):
             lineSpacing = nil
             switch mode {
             case .comments:
                 _ = attr.append(string: strings().chatEmptyComments, color: theme.chatServiceItemTextColor, font: .medium(.text))
             case .replies:
                 _ = attr.append(string: strings().chatEmptyReplies, color: theme.chatServiceItemTextColor, font: .medium(.text))
+            case .topic:
+                //TODOLANG
+                _ = attr.append(string: "Send first message to start this topic.", color: theme.chatServiceItemTextColor, font: .medium(.text))
             }
         case .pinned:
             lineSpacing = nil

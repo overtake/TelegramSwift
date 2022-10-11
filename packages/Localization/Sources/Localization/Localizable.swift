@@ -1441,6 +1441,36 @@ public final class L10n {
   public static var channelTransferOwnerErrorText: String  { return L10n.tr("Localizable", "Channel.TransferOwner.Error.Text") }
   /// Security Check
   public static var channelTransferOwnerErrorTitle: String  { return L10n.tr("Localizable", "Channel.TransferOwner.Error.Title") }
+  /// Do you want to show this link on channel info page?
+  public static var channelUsernameActivateInfoChannel: String  { return L10n.tr("Localizable", "Channel.Username.Activate.Info.Channel") }
+  /// Do you want to show this link on group info page?
+  public static var channelUsernameActivateInfoGroup: String  { return L10n.tr("Localizable", "Channel.Username.Activate.Info.Group") }
+  /// Show
+  public static var channelUsernameActivateOkChannel: String  { return L10n.tr("Localizable", "Channel.Username.Activate.Ok.Channel") }
+  /// Show
+  public static var channelUsernameActivateOkGroup: String  { return L10n.tr("Localizable", "Channel.Username.Activate.Ok.Group") }
+  /// Activate Username
+  public static var channelUsernameActivateTitleChannel: String  { return L10n.tr("Localizable", "Channel.Username.Activate.Title.Channel") }
+  /// Activate Username
+  public static var channelUsernameActivateTitleGroup: String  { return L10n.tr("Localizable", "Channel.Username.Activate.Title.Group") }
+  /// Do you want to hide this link from channel info page?
+  public static var channelUsernameDeactivateInfoChannel: String  { return L10n.tr("Localizable", "Channel.Username.Deactivate.Info.Channel") }
+  /// Do you want to hide this link from group info page?
+  public static var channelUsernameDeactivateInfoGroup: String  { return L10n.tr("Localizable", "Channel.Username.Deactivate.Info.Group") }
+  /// Hide
+  public static var channelUsernameDeactivateOkChannel: String  { return L10n.tr("Localizable", "Channel.Username.Deactivate.Ok.Channel") }
+  /// Hide
+  public static var channelUsernameDeactivateOkGroup: String  { return L10n.tr("Localizable", "Channel.Username.Deactivate.Ok.Group") }
+  /// Deactivate Username
+  public static var channelUsernameDeactivateTitleChannel: String  { return L10n.tr("Localizable", "Channel.Username.Deactivate.Title.Channel") }
+  /// Deactivate Username
+  public static var channelUsernameDeactivateTitleGroup: String  { return L10n.tr("Localizable", "Channel.Username.Deactivate.Title.Group") }
+  /// LINKS ORDER
+  public static var channelUsernameListTitle: String  { return L10n.tr("Localizable", "Channel.Username.List.Title") }
+  /// Drag and drop links to change order in which they will be displayed on channel info page.
+  public static var channelUsernameListInfoChannel: String  { return L10n.tr("Localizable", "Channel.Username.List.Info.Channel") }
+  /// Drag and drop links to change order in which they will be displayed on group info page.
+  public static var channelUsernameListInfoGroup: String  { return L10n.tr("Localizable", "Channel.Username.List.Info.Group") }
   /// Recent Actions
   public static var channelAdminsRecentActions: String  { return L10n.tr("Localizable", "ChannelAdmins.RecentActions") }
   /// BLOCKED
@@ -2011,12 +2041,16 @@ public final class L10n {
   public static var chatContextCopyText: String  { return L10n.tr("Localizable", "Chat.Context.CopyText") }
   /// Create Group
   public static var chatContextCreateGroup: String  { return L10n.tr("Localizable", "Chat.Context.CreateGroup") }
+  /// Are you sure you want to delete this topic?
+  public static var chatContextDeleteTopic: String  { return L10n.tr("Localizable", "Chat.Context.DeleteTopic") }
   /// Unmute
   public static var chatContextDisableNotifications: String  { return L10n.tr("Localizable", "Chat.Context.DisableNotifications") }
   /// Edit
   public static var chatContextEdit1: String  { return L10n.tr("Localizable", "Chat.Context.Edit1") }
   /// click on date
   public static var chatContextEditHelp: String  { return L10n.tr("Localizable", "Chat.Context.EditHelp") }
+  /// Edit Topic
+  public static var chatContextEditTopic: String  { return L10n.tr("Localizable", "Chat.Context.EditTopic") }
   /// Mute
   public static var chatContextEnableNotifications: String  { return L10n.tr("Localizable", "Chat.Context.EnableNotifications") }
   /// Channels Info
@@ -3119,6 +3153,10 @@ public final class L10n {
   public static func chatServiceGroupTookScreenshot(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TookScreenshot", p1)
   }
+  /// %1$@ created topic "%2$@"
+  public static func chatServiceGroupTopicCreated(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.TopicCreated", p1, p2)
+  }
   /// %@ updated group photo
   public static func chatServiceGroupUpdatedPhoto(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.UpdatedPhoto", p1)
@@ -3135,6 +3173,48 @@ public final class L10n {
   public static func chatServiceGroupUpdatedVideo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.UpdatedVideo", p1)
   }
+  /// %1$@ created topic "%2$@" with icon %3$@
+  public static func chatServiceGroupTopicCreatedIcon(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.TopicCreated.Icon", p1, p2, p3)
+  }
+  /// You created topic "%1$@"
+  public static func chatServiceGroupTopicCreatedYou(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.TopicCreated.You", p1)
+  }
+  /// You created topic "%1$@" with icon %3$@
+  public static func chatServiceGroupTopicCreatedYouIcon(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.TopicCreated.You.Icon", p1, p2)
+  }
+  /// %1$@ changed topic icon to %2$@
+  public static func chatServiceGroupTopicEditedIcon(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.Icon", p1, p2)
+  }
+  /// %1$@ changed topic icon to %2$@ and name to "%3$@"
+  public static func chatServiceGroupTopicEditedMixed(_ p1: String, _ p2: String, _ p3: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.Mixed", p1, p2, p3)
+  }
+  /// %1$@ changed topic name to "%2$@"
+  public static func chatServiceGroupTopicEditedTitle(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.Title", p1, p2)
+  }
+  /// %1$@ removed icon
+  public static func chatServiceGroupTopicEditedIconRemoved(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.Icon.Removed", p1)
+  }
+  /// You changed topic icon to %1$@
+  public static func chatServiceGroupTopicEditedYouIcon(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Icon", p1)
+  }
+  /// You changed topic icon to %1$@ and name to "%2$@"
+  public static func chatServiceGroupTopicEditedYouMixed(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Mixed", p1, p2)
+  }
+  /// You changed topic name to "%1$@"
+  public static func chatServiceGroupTopicEditedYouTitle(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Title", p1)
+  }
+  /// You removed icon
+  public static var chatServiceGroupTopicEditedYouIconRemoved: String  { return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Icon.Removed") }
   /// %d
   public static func chatServicePremiumGiftInfoCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Service.PremiumGift.Info_countable", p1)
@@ -3295,6 +3375,10 @@ public final class L10n {
   public static var chatToastReportSuccess: String  { return L10n.tr("Localizable", "Chat.Toast.ReportSuccess") }
   /// The account was hidden by the user
   public static var chatTooltipHiddenForwardName: String  { return L10n.tr("Localizable", "Chat.Tooltip.HiddenForwardName") }
+  /// No messages here yet...
+  public static var chatTopicHeaderEmpty: String  { return L10n.tr("Localizable", "Chat.TopicHeader.Empty") }
+  /// Topic started
+  public static var chatTopicHeaderFull: String  { return L10n.tr("Localizable", "Chat.TopicHeader.Full") }
   /// %d
   public static func chatUndoManagerChannelDeletedCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.UndoManager.ChannelDeleted_countable", p1)
@@ -3537,6 +3621,8 @@ public final class L10n {
   public static var chatListDownloadsTag: String  { return L10n.tr("Localizable", "ChatList.DownloadsTag") }
   /// Draft:
   public static var chatListDraft: String  { return L10n.tr("Localizable", "ChatList.Draft") }
+  /// No Topics here yet
+  public static var chatListEmptyForum: String  { return L10n.tr("Localizable", "ChatList.EmptyForum") }
   /// **You have no conversations yet**\nStart messaging by tapping the pencil button in the top right corner or got to the Contacts section.
   public static var chatListEmptyText: String  { return L10n.tr("Localizable", "ChatList.EmptyText") }
   /// Channels
@@ -3603,6 +3689,10 @@ public final class L10n {
   public static var chatListContextUnpin: String  { return L10n.tr("Localizable", "ChatList.Context.Unpin") }
   /// Set Up Folders
   public static var chatListContextPinErrorNewSetupFolders: String  { return L10n.tr("Localizable", "ChatList.Context.PinErrorNew.SetupFolders") }
+  /// Create New Topic
+  public static var chatListEmptyCreateTopic: String  { return L10n.tr("Localizable", "ChatList.Empty.CreateTopic") }
+  /// Show as Messages
+  public static var chatListEmptyDisableForum: String  { return L10n.tr("Localizable", "ChatList.Empty.DisableForum") }
   /// Loading
   public static var chatListEmptyLoading: String  { return L10n.tr("Localizable", "ChatList.Empty.Loading") }
   /// Add Chats
@@ -5029,6 +5119,34 @@ public final class L10n {
   public static func fileSizeMB(_ p1: String) -> String {
     return L10n.tr("Localizable", "FileSize.MB", p1)
   }
+  /// Add Members
+  public static var forumTopicContextAddMember: String  { return L10n.tr("Localizable", "ForumTopic.Context.AddMember") }
+  /// Group Info
+  public static var forumTopicContextInfo: String  { return L10n.tr("Localizable", "ForumTopic.Context.Info") }
+  /// Create Topic
+  public static var forumTopicContextNew: String  { return L10n.tr("Localizable", "ForumTopic.Context.New") }
+  /// Show as Messages
+  public static var forumTopicContextShowAsMessages: String  { return L10n.tr("Localizable", "ForumTopic.Context.ShowAsMessages") }
+  /// Show as Topics
+  public static var forumTopicContextShowAsTopics: String  { return L10n.tr("Localizable", "ForumTopic.Context.ShowAsTopics") }
+  /// Done
+  public static var forumTopicDoneEdit: String  { return L10n.tr("Localizable", "ForumTopic.Done.Edit") }
+  /// Create
+  public static var forumTopicDoneNew: String  { return L10n.tr("Localizable", "ForumTopic.Done.New") }
+  /// TOPIC ICON
+  public static var forumTopicEditTopicIcon: String  { return L10n.tr("Localizable", "ForumTopic.Edit.TopicIcon") }
+  /// TOPIC NAME
+  public static var forumTopicEditTopicName: String  { return L10n.tr("Localizable", "ForumTopic.Edit.TopicName") }
+  /// Topic Name
+  public static var forumTopicNamePlaceholder: String  { return L10n.tr("Localizable", "ForumTopic.Name.Placeholder") }
+  /// SELECT TOPIC ICON
+  public static var forumTopicNewTopicIcon: String  { return L10n.tr("Localizable", "ForumTopic.New.TopicIcon") }
+  /// ENTER TOPIC NAME
+  public static var forumTopicNewTopicName: String  { return L10n.tr("Localizable", "ForumTopic.New.TopicName") }
+  /// New Topic
+  public static var forumTopicTitleCreate: String  { return L10n.tr("Localizable", "ForumTopic.Title.Create") }
+  /// Edit Topic
+  public static var forumTopicTitleEdit: String  { return L10n.tr("Localizable", "ForumTopic.Title.Edit") }
   /// forward messages here for quick access
   public static var forwardToSavedMessages: String  { return L10n.tr("Localizable", "Forward.ToSavedMessages") }
   /// %d %@
@@ -7233,6 +7351,8 @@ public final class L10n {
   public static var peerInfoFake: String  { return L10n.tr("Localizable", "PeerInfo.fake") }
   /// ⚠️ Warning: Many users reported that this account impersonates a famous person or organization.
   public static var peerInfoFakeWarning: String  { return L10n.tr("Localizable", "PeerInfo.FakeWarning") }
+  /// Topics
+  public static var peerInfoForum: String  { return L10n.tr("Localizable", "PeerInfo.Forum") }
   /// Groups In Common
   public static var peerInfoGroupsInCommon: String  { return L10n.tr("Localizable", "PeerInfo.GroupsInCommon") }
   /// Group Type
@@ -7479,6 +7599,8 @@ public final class L10n {
   public static var peerInfoDiscussionDesc: String  { return L10n.tr("Localizable", "PeerInfo.Discussion.Desc") }
   /// First Name
   public static var peerInfoFirstNamePlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.FirstName.Placeholder") }
+  /// The group chat will be devided into topics created by admins or users.
+  public static var peerInfoForumInfo: String  { return L10n.tr("Localizable", "PeerInfo.Forum.Info") }
   /// Auto-Delete Messages
   public static var peerInfoGroupAutoDeleteMessages: String  { return L10n.tr("Localizable", "PeerInfo.Group.AutoDeleteMessages") }
   /// Delete
@@ -7521,6 +7643,10 @@ public final class L10n {
   public static var peerInfoReportReactionSuccess: String  { return L10n.tr("Localizable", "PeerInfo.ReportReaction.Success") }
   /// Append names of the admins to the messages they post.
   public static var peerInfoSignMessagesDesc: String  { return L10n.tr("Localizable", "PeerInfo.SignMessages.Desc") }
+  /// %1$@\nalso %2$@
+  public static func peerInfoUsernamesList(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "PeerInfo.Usernames.List", p1, p2)
+  }
   /// Verified Account
   public static var peerInfoVerifiedTooltip: String  { return L10n.tr("Localizable", "PeerInfo.Verified.Tooltip") }
   /// Audio
@@ -11215,6 +11341,26 @@ public final class L10n {
   public static var updateAppUpdateTelegram: String  { return L10n.tr("Localizable", "UpdateApp.UpdateTelegram") }
   /// Sorry, you are a member of too many groups and channels. For technical reasons, you need to leave some first before changing this setting in your groups.
   public static var upgradeChannelsTooMuch: String  { return L10n.tr("Localizable", "Upgrade.ChannelsTooMuch") }
+  /// active
+  public static var usernameActive: String  { return L10n.tr("Localizable", "Username.Active") }
+  /// not active
+  public static var usernameNotActive: String  { return L10n.tr("Localizable", "Username.NotActive") }
+  /// Do you want to show this link on your profile page?
+  public static var usernameActivateInfo: String  { return L10n.tr("Localizable", "Username.Activate.Info") }
+  /// Show
+  public static var usernameActivateOk: String  { return L10n.tr("Localizable", "Username.Activate.Ok") }
+  /// Activate Username
+  public static var usernameActivateTitle: String  { return L10n.tr("Localizable", "Username.Activate.Title") }
+  /// Do you want to hide this link from your profile page?
+  public static var usernameDeactivateInfo: String  { return L10n.tr("Localizable", "Username.Deactivate.Info") }
+  /// Hide
+  public static var usernameDeactivateOk: String  { return L10n.tr("Localizable", "Username.Deactivate.Ok") }
+  /// Deactivate Username
+  public static var usernameDeactivateTitle: String  { return L10n.tr("Localizable", "Username.Deactivate.Title") }
+  /// Drag and drop links to change order in which they will be displayed on your info page.
+  public static var usernameListInfo: String  { return L10n.tr("Localizable", "Username.List.Info") }
+  /// USERNAMES ORDER
+  public static var usernameListTitle: String  { return L10n.tr("Localizable", "Username.List.Title") }
   /// %@ is available
   public static func usernameSettingsAvailable(_ p1: String) -> String {
     return L10n.tr("Localizable", "UsernameSettings.available", p1)

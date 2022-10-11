@@ -34,7 +34,7 @@ enum ChatHeaderState : Identifiable, Equatable {
     case shareInfo(ChatActiveGroupCallInfo?)
     case pinned(ChatActiveGroupCallInfo?, ChatPinnedMessage, doNotChangeTable: Bool)
     case report(ChatActiveGroupCallInfo?, autoArchived: Bool, status: PeerEmojiStatus?)
-    case promo(ChatActiveGroupCallInfo?, PromoChatListItem.Kind)
+    case promo(ChatActiveGroupCallInfo?, EngineChatList.AdditionalItem.PromoInfo.Content)
     case pendingRequests(ChatActiveGroupCallInfo?, Int, [PeerInvitationImportersState.Importer])
 
     var stableId:Int {
@@ -379,7 +379,7 @@ private class ChatSponsoredModel: ChatAccessoryModel {
     }
 }
 
-private extension PromoChatListItem.Kind {
+private extension EngineChatList.AdditionalItem.PromoInfo.Content {
     var title: String {
         switch self {
         case .proxy:
@@ -414,7 +414,7 @@ private final class ChatSponsoredView : Control, ChatHeaderProtocol {
     private let container:ChatAccessoryView = ChatAccessoryView()
     private let dismiss:ImageButton = ImageButton()
     private var node: ChatSponsoredModel?
-    private var kind: PromoChatListItem.Kind?
+    private var kind: EngineChatList.AdditionalItem.PromoInfo.Content?
     required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
         self.chatInteraction = chatInteraction
         super.init(frame: frame)

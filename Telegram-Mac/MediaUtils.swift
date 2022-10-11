@@ -3839,3 +3839,19 @@ func generateEmoji(_ emoji: NSAttributedString) -> Signal<CGImage, NoError> {
         }
     } |> runOn(.concurrentBackgroundQueue())
 }
+
+
+
+
+func makeTopicIcon(_ title: String, bgColors: [NSColor], strokeColors: [NSColor]) -> Signal<ImageDataTransformation, NoError> {
+    return Signal { subscriber in
+        let data: ImageRenderData = .init(nil, nil, false)
+        subscriber.putNext(ImageDataTransformation(data: data, execute: { arguments, data in
+            return generateTopicIcon(size: arguments.boundingSize, backgroundColors: bgColors, strokeColors: strokeColors, title: title)
+        }))
+        subscriber.putCompletion()
+        return ActionDisposable {
+            
+        }
+    } |> runOn(.concurrentBackgroundQueue())
+}

@@ -14,8 +14,8 @@ import Postbox
 
 class ChatListMessageRowItem: ChatListRowItem {
 
-    init(_ initialSize:NSSize,  context: AccountContext, message: Message, query: String, renderedPeer:RenderedPeer, readState: CombinedPeerReadState?) {
-        super.init(initialSize, context: context, messages: [message], readState: readState, renderedPeer: renderedPeer, highlightText: query, showBadge: false)
+    init(_ initialSize:NSSize, context: AccountContext, message: Message, query: String, renderedPeer:RenderedPeer, readState: CombinedPeerReadState?) {
+        super.init(initialSize, context: context, stableId: .chatId(.chatList(message.id.peerId), message.id.id), mode: .chat, messages: [message], readState: .init(state: readState), renderedPeer: .init(renderedPeer), highlightText: query, showBadge: false)
     }
     
     override var stableId: AnyHashable {

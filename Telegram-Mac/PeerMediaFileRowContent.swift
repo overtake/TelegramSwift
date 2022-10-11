@@ -28,7 +28,7 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
     
     private(set) var docIcon:CGImage?
     private(set) var docTitle:NSAttributedString?
-    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, gallery: GalleryAppearType = .history, viewType: GeneralViewType = .legacy) {
+    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, galleryType: GalleryAppearType = .history, gallery: @escaping(Message, GalleryAppearType)->Void, viewType: GeneralViewType = .legacy) {
         
         
         let message = object.message!
@@ -74,7 +74,7 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
             docTitle = NSAttributedString.initialize(string: fileExtension, color: theme.colors.text, font: .medium(.text))
 
         }
-        super.init(initialSize, interface, object, gallery: gallery, viewType: viewType)
+        super.init(initialSize, interface, object, galleryType: galleryType, gallery: gallery, viewType: viewType)
     }
     
     
@@ -133,7 +133,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
     
     func cancelFetching() {
         if let item = item as? PeerMediaFileRowItem, let file = item.file {
-            if item.gallery != .recentDownloaded {
+            if item.galleryType != .recentDownloaded {
                 messageMediaFileCancelInteractiveFetch(context: item.context, messageId: item.message.id, file: file)
             } else {
                 toggleInteractiveFetchPaused(context: item.context, file: file, isPaused: true)
@@ -144,7 +144,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
     func open() -> Void {
         if let item = item as? PeerMediaFileRowItem, let file = item.file {
             if file.isGraphicFile {
-                showChatGallery(context: item.interface.context, message: item.message, item.table, nil, type: item.gallery)
+                item.gallery(item.message, item.galleryType)
             } else {
                QuickLookPreview.current.show(context: item.interface.context, with: file, stableId:item.message.chatStableId, item.table)
             }
@@ -176,7 +176,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
                     open()
                 }
             case .Paused:
-                if item.gallery == .recentDownloaded {
+                if item.galleryType == .recentDownloaded {
                     toggleInteractiveFetchPaused(context: item.context, file: file, isPaused: false)
                 } else {
                     cancel()
@@ -268,13 +268,11 @@ class PeerMediaFileRowView : PeerMediaRowView {
             if let icon = item.icon, let arguments = item.iconArguments {
                 imageView.setSignal(signal: cachedMedia(media: icon, arguments: arguments, scale: System.backingScale), clearInstantly: previous?.message.id != item.message.id)
             }
+            if imageView.image == nil || previous?.message.id != item.message.id {
+                imageView.clear()
+            }
             
             if !imageView.isFullyLoaded {
-                
-                if imageView.image == nil || previous?.message.id != item.message.id {
-                    imageView.layer?.contents = item.docIcon
-                }
-                
                 imageView.setSignal(updateIconImageSignal, clearInstantly: false, animate: true, cacheImage: { result in
                     if let icon = item.icon, let arguments = item.iconArguments {
                         cacheMedia(result, media: icon, arguments: arguments, scale: System.backingScale, positionFlags: nil)

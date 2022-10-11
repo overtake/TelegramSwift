@@ -33,6 +33,11 @@ open class TransformImageView: NSView {
         layerContentsRedrawPolicy = .never
     }
     
+    func clear() {
+        self.isFullyLoaded = false
+        self.image = nil
+    }
+    
     open override var isFlipped: Bool {
         return true
     }

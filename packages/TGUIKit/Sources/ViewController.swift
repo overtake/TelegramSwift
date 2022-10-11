@@ -1040,6 +1040,7 @@ open class GenericViewController<T> : ViewController where T:NSView {
             centerBarView = getCenterBarViewOnce()
             rightBarView = getRightBarViewOnce()
 
+            
             _view = initializer()
             _view?.wantsLayer = true
             _view?.autoresizingMask = [.width,.height]

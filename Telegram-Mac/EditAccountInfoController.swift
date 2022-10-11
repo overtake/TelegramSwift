@@ -36,7 +36,10 @@ enum EditSettingsEntryTag: ItemListItemTag {
 private func valuesRequiringUpdate(state: EditInfoState, view: PeerView) -> ((fn: String, ln: String)?, about: String?) {
     if let peer = view.peers[view.peerId] as? TelegramUser {
         var names:(String, String)? = nil
-        if state.firstName != peer.firstName || state.lastName != peer.lastName {
+        let pf = peer.firstName ?? ""
+        let pl = peer.lastName ?? ""
+
+        if state.firstName != pf || state.lastName != pl {
             names = (state.firstName, state.lastName)
         }
         var about: String? = nil
@@ -450,7 +453,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
     }, logout: {
         showModal(with: LogoutViewController(context: context, f: f), for: context.window)
     }, username: {
-        f(UsernameSettingsViewController(context))
+        f(UsernameController(context))
     }, changeNumber: {
         let navigation = MajorNavigationController(PhoneNumberIntroController.self, PhoneNumberIntroController(context), context.window)
         navigation.alwaysAnimate = true

@@ -40,9 +40,7 @@ final class PremiumDemoLegacyPhoneView : View {
     func setup(context: AccountContext, video: TelegramMediaFile?, position: Position) {
         self.position = position
         if let video = video {
-                        
-            NSLog("\(context.account.postbox.mediaBox.resourcePath(video.resource))")
-            
+                                    
             let mediaPlayer = MediaPlayer(postbox: context.account.postbox, reference: .standalone(resource: video.resource), streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
             mediaPlayer.attachPlayerView(self.videoView)
             self.player = mediaPlayer

@@ -187,7 +187,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
         
-        let perline: Int = Int(floor(max(350, width) / itemSize.width))
+        let perline: Int = Int(floor(max(300, width) / itemSize.width))
         
         var mapped: [Item] = []
         var point = NSMakePoint(10, 0)
@@ -820,19 +820,22 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
     }
     
     @objc func updateAnimatableContent() -> Void {
-        for (_, value) in inlineStickerItemViews {
-            if let superview = value.superview {
-                var isKeyWindow: Bool = false
-                if let window = window {
-                    if !window.canBecomeKey {
-                        isKeyWindow = true
-                    } else {
-                        isKeyWindow = window.isKeyWindow
+        DispatchQueue.main.async {
+            for (_, value) in self.inlineStickerItemViews {
+                if let superview = value.superview {
+                    var isKeyWindow: Bool = false
+                    if let window = self.window {
+                        if !window.canBecomeKey {
+                            isKeyWindow = true
+                        } else {
+                            isKeyWindow = window.isKeyWindow
+                        }
                     }
+                    value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
                 }
-                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
             }
         }
+        
     }
     
     func updateInlineStickers(context: AccountContext, contentView: NSView, items: [EmojiesSectionRowItem.Item], selected: [EmojiesSectionRowItem.SelectedItem], animated: Bool) {

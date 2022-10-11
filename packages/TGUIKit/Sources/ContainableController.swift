@@ -121,6 +121,7 @@ public extension ContainedViewLayoutTransition {
             default:
                 
                 CATransaction.begin()
+                var ignoreSize: Bool = false
                 if let view = view as? TableView {
                     view.change(size: frame.size, animated: true, duration: duration, timingFunction: curve.timingFunction, completion: { completed in
                         completion?(completed)

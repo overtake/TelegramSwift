@@ -150,9 +150,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(theme.fontSize), coreText: false), update: false)
         textView.delegate = self
         
-        DispatchQueue.main.async { [weak self] in
-            self?.updateInput(interaction.presentation, prevState: ChatPresentationInterfaceState(chatLocation: interaction.chatLocation, chatMode: interaction.mode), animated: false, initial: true)
-        }
+        self.updateInput(interaction.presentation, prevState: ChatPresentationInterfaceState(chatLocation: interaction.chatLocation, chatMode: interaction.mode), animated: false, initial: true)
+
         
         updateAdditions(interaction.presentation, false)
         
@@ -164,12 +163,14 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     private var textPlaceholder: String {
         
-        if case let .replyThread(_, mode) = chatInteraction.mode {
+        if case let .thread(_, mode) = chatInteraction.mode {
             switch mode {
             case .comments:
                 return strings().messagesPlaceholderComment
             case .replies:
                 return strings().messagesPlaceholderReply
+            case .topic:
+                return strings().messagesPlaceholderSentMessage
             }
         }
         if chatInteraction.presentation.interfaceState.editState != nil {

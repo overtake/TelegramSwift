@@ -226,10 +226,12 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                 }
             }
             
+            let location = chatPresentationInterfaceState.chatLocation
+            
             let members: Signal<[Peer], NoError> = searchPeerMembers(context: context, peerId: global.id, chatLocation: chatPresentationInterfaceState.chatLocation, query: query)
             
             let participants = combineLatest(inlineSignal, members |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
-                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: global.id), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
+                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: global.id, threadId: location.threadId), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                     let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
                         if entry.message.effectiveMedia is TelegramMediaAction {
                             return nil
@@ -388,14 +390,14 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                     return botResult |> then(maybeDelayedContextResults)
                 } else {
                     let inputQuery = inputContextQueryForChatPresentationIntefaceState(chatPresentationInterfaceState, includeContext: false)
-                    
+                    let location = chatPresentationInterfaceState.chatLocation
                     switch inputQuery {
                     case let .mention(query: query, includeRecent: _):
                         let normalizedQuery = query.lowercased()
                         
                         if let global = chatPresentationInterfaceState.peer {
                             return searchPeerMembers(context: context, peerId: global.id, chatLocation: chatPresentationInterfaceState.chatLocation, query: normalizedQuery) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
-                                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: global.id), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
+                                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: global.id, threadId: location.threadId), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                                     let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
                                         if entry.message.effectiveMedia is TelegramMediaAction {
                                             return nil
@@ -474,7 +476,7 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
         
         let participants: Signal<[Peer], NoError> = combineLatest(chatLocations.map { chatLocation in
             searchPeerMembers(context: context, peerId: chatLocation.peerId, chatLocation: chatLocation, query: normalizedQuery) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
-                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: chatLocation.peerId), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
+                return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: chatLocation.peerId, threadId: chatLocation.threadId), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                     let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
                         if entry.message.effectiveMedia is TelegramMediaAction {
                             return nil

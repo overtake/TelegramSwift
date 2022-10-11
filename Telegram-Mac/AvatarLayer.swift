@@ -32,17 +32,16 @@ private class AvatarNodeParameters: NSObject {
 
 enum AvatarNodeState: Equatable {
     case Empty
-    case PeerAvatar(Peer, [String], TelegramMediaImageRepresentation?, Message?, NSSize?)
+    case PeerAvatar(Peer, [String], TelegramMediaImageRepresentation?, Message?, NSSize?, Bool)
     case ArchivedChats
-
 }
 
 func ==(lhs: AvatarNodeState, rhs: AvatarNodeState) -> Bool {
     switch (lhs, rhs) {
     case (.Empty, .Empty):
         return true
-    case let (.PeerAvatar(lhsPeer, lhsLetters, lhsPhotoRepresentations, _, lhsSize), .PeerAvatar(rhsPeer, rhsLetters, rhsPhotoRepresentations, _, rhsSize)):
-        return lhsPeer.isEqual(rhsPeer) && lhsLetters == rhsLetters && lhsPhotoRepresentations == rhsPhotoRepresentations && lhsSize == rhsSize
+    case let (.PeerAvatar(lhsPeer, lhsLetters, lhsPhotoRepresentations, _, lhsSize, lhsForum), .PeerAvatar(rhsPeer, rhsLetters, rhsPhotoRepresentations, _, rhsSize, rhsForum)):
+        return lhsPeer.isEqual(rhsPeer) && lhsLetters == rhsLetters && lhsPhotoRepresentations == rhsPhotoRepresentations && lhsSize == rhsSize && lhsForum == rhsForum
     case (.ArchivedChats, .ArchivedChats):
         return true
     default:
@@ -127,7 +126,7 @@ class AvatarControl: NSView {
         self.account = account
         let state: AvatarNodeState
         if let peer = peer {
-            state = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, message, size)
+            state = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, message, size, peer.isForum)
         } else {
             state = .Empty
         }
@@ -206,7 +205,7 @@ class AvatarControl: NSView {
                 let photo: PeerPhoto?
                 var updatedSize: NSSize = self.frame.size
                 switch state {
-                case let .PeerAvatar(peer, letters, representation, message, size):
+                case let .PeerAvatar(peer, letters, representation, message, size, _):
                     if let peer = peer as? TelegramUser, peer.firstName == nil && peer.lastName == nil {
                         photo = nil
                         self.setState(account: account, state: .Empty)

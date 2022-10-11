@@ -165,7 +165,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     private let termDisposable = MetaDisposable()
     private let someActionsDisposable = DisposableSet()
     private let clearReadNotifiesDisposable = MetaDisposable()
-    private let chatUndoManagerDisposable = MetaDisposable()
     private let appUpdateDisposable = MetaDisposable()
     private let updatesDisposable = MetaDisposable()
     private let updateFoldersDisposable = MetaDisposable()
@@ -516,6 +515,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            
+//            context.bindings.rootNavigation().push(ForumTopicInfoController(context: context, purpose: .create))
+            
 //            let rect = self!.window.contentView!.frame.focus(NSMakeSize(160, 160))
 //            self!.window.contentView!.addSubview(CustomReactionEffectView(frame: rect, context: context, fileId: 5415816441561619011))
             
@@ -677,13 +679,13 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 self.leftController.tabController.select(index: self.leftController.chatIndex)
                 self._ready.set(self.leftController.chatList.ready.get())
                 
-                let signal:Signal<ReplyThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: context, subject: .channelPost(threadId))
+                let signal:Signal<ThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: context, subject: .channelPost(threadId))
                 
                 _ = showModalProgress(signal: signal |> take(1), for: context.window).start(next: { [weak context] result in
                     guard let context = context else {
                         return
                     }
-                    let chatLocation: ChatLocation = .replyThread(result.message)
+                    let chatLocation: ChatLocation = .thread(result.message)
                     
                     let updatedMode: ReplyThreadMode
                     if result.isChannelPost {
@@ -692,7 +694,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                         updatedMode = .replies(origin: fromId)
                     }
                     
-                    let controller = ChatController.init(context: context, chatLocation: chatLocation, mode: .replyThread(data: result.message, mode: updatedMode), messageId: fromId, initialAction: nil, chatLocationContextHolder: result.contextHolder)
+                    let controller = ChatController.init(context: context, chatLocation: chatLocation, mode: .thread(data: result.message, mode: updatedMode), messageId: fromId, initialAction: nil, chatLocationContextHolder: result.contextHolder)
                     
                     context.bindings.rootNavigation().push(controller)
                     
@@ -716,7 +718,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             rightController.callHeader?.show(true, contextObject: groupCallContext)
         }
         
-        self.updateFoldersDisposable.set(combineLatest(queue: .mainQueue(), chatListFilterPreferences(engine: context.engine), context.layoutHandler.get()).start(next: { [weak self] value, layout in
+        self.updateFoldersDisposable.set(combineLatest(queue: .mainQueue(), chatListFilterPreferences(engine: context.engine), context.layoutValue).start(next: { [weak self] value, layout in
             self?.updateLeftSidebar(with: value, layout: layout, animated: true)
         }))
         
@@ -891,7 +893,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             break;
         }
         
-        context.layoutHandler.set(state)
+        context.layout = state
         updateMinMaxWindowSize(animated: false)
         self.view.splitView.layout()
 
@@ -927,7 +929,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         viewer?.close()
         someActionsDisposable.dispose()
         clearReadNotifiesDisposable.dispose()
-        chatUndoManagerDisposable.dispose()
         appUpdateDisposable.dispose()
         updatesDisposable.dispose()
         updateFoldersDisposable.dispose()

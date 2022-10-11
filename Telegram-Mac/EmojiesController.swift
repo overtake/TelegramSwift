@@ -332,6 +332,13 @@ private struct State : Equatable {
     
     var iconStatusEmoji: [TelegramMediaFile] = []
     var selectedItems: [EmojiesSectionRowItem.SelectedItem]
+    
+    struct ExternalTopic: Equatable {
+        let title: String
+        let iconColor: Int32
+    }
+    
+    var externalTopic: ExternalTopic = .init(title: "", iconColor: 0)
 }
 
 private func _id_section(_ id:Int64) -> InputDataIdentifier {
@@ -372,6 +379,8 @@ private func packEntries(_ state: State, arguments: Arguments) -> [InputDataEntr
     case .reactions:
         hasRecent = !state.recentReactionsItems.isEmpty || !state.topReactionsItems.isEmpty
     case .selectAvatar:
+        hasRecent = true
+    case .forumTopic:
         hasRecent = true
     }
     if hasRecent {
@@ -449,13 +458,18 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             return item.file.fileId
         })
     })
-    let recentAnimated:[StickerPackItem] = state.recent.animated.compactMap { mediaId in
+    var recentAnimated:[StickerPackItem] = state.recent.animated.compactMap { mediaId in
         if let item = recentDict[mediaId] {
             if !item.file.isPremiumEmoji || isPremium {
                 return item
             }
         }
         return nil
+    }
+    
+    if arguments.mode == .forumTopic {
+        let file = ForumUI.makeIconFile(title: state.externalTopic.title, iconColor: state.externalTopic.iconColor)
+        recentAnimated.insert(.init(index: .init(index: 0, id: 0), file: file, indexKeys: []), at: 0)
     }
     
     if let search = state.search {
@@ -695,7 +709,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 index += 1
             }
             
-            if key == .Recent, !recentAnimated.isEmpty, arguments.mode == .emoji {
+            
+            let hasAnimatedRecent = arguments.mode == .emoji || arguments.mode == .forumTopic || arguments.mode == .selectAvatar
+            if key == .Recent, !recentAnimated.isEmpty, hasAnimatedRecent {
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(recentAnimated), comparable: nil, item: { initialSize, stableId in
                     return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: recentAnimated, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send)
                 }))
@@ -846,6 +862,12 @@ final class AnimatedEmojiesView : View {
         
         self.updateSelectionState(animated: transition.isAnimated)
         
+    }
+    
+    override func viewDidEndLiveResize() {
+        super.viewDidEndLiveResize()
+        tableView.viewDidEndLiveResize()
+        packsView.viewDidEndLiveResize()
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -1044,7 +1066,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         case status
         case reactions
         case selectAvatar
-
+        case forumTopic
         var itemMode: EmojiesSectionRowItem.Mode {
             switch self {
             case .reactions:
@@ -1183,9 +1205,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 _ = scrollToOnNextAppear.swap(info)
             case .status:
                 self?.interactions?.sendAnimatedEmoji(item, nil, timeout, rect)
-            case .reactions:
-                self?.interactions?.sendAnimatedEmoji(item, nil, nil, rect)
-            case .selectAvatar:
+            default:
                 self?.interactions?.sendAnimatedEmoji(item, nil, nil, rect)
             }
             
@@ -1514,6 +1534,14 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 current.emojiState.selected = segment
                 return current
             }
+        }
+    }
+    
+    func setExternalForumTitle(_ title: String, iconColor: Int32 = 0) {
+        updateState? { current in
+            var current = current
+            current.externalTopic = .init(title: title, iconColor: iconColor)
+            return current
         }
     }
     

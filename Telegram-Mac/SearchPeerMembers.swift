@@ -73,7 +73,7 @@ func searchPeerMembers(context: AccountContext, peerId: PeerId, chatLocation: Ch
                         return ActionDisposable {
                             disposable.dispose()
                         }
-                    case let .replyThread(replyThreadMessage):
+                    case let .thread(replyThreadMessage):
                         let (disposable, _) = context.peerChannelMemberCategoriesContextsManager.mentions(peerId: peerId, threadMessageId: replyThreadMessage.messageId, searchQuery: query.isEmpty ? nil : query, updated: { state in
                             if case .ready = state.loadingState {
                                 subscriber.putNext((state.list.compactMap { participant in
@@ -95,6 +95,6 @@ func searchPeerMembers(context: AccountContext, peerId: PeerId, chatLocation: Ch
                  return .single(result)
         }
     } else {
-        return context.engine.peers.searchGroupMembers(peerId: peerId, query: query)
+        return context.engine.peers.searchGroupMembers(peerId: peerId, query: query) |> map { $0.map { $0._asPeer() }}
     }
 }

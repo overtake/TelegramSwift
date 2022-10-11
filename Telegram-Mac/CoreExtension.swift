@@ -291,6 +291,10 @@ extension TelegramMediaFile {
     func withUpdatedResource(_ resource: TelegramMediaResource) -> TelegramMediaFile {
         return TelegramMediaFile(fileId: self.fileId, partialReference: self.partialReference, resource: resource, previewRepresentations: self.previewRepresentations, videoThumbnails: self.videoThumbnails, immediateThumbnailData: self.immediateThumbnailData, mimeType: self.mimeType, size: self.size, attributes: self.attributes)
     }
+    
+    func withUpdatedFileId(_ fileId: MediaId) -> TelegramMediaFile {
+        return TelegramMediaFile(fileId: fileId, partialReference: self.partialReference, resource: self.resource, previewRepresentations: self.previewRepresentations, videoThumbnails: self.videoThumbnails, immediateThumbnailData: self.immediateThumbnailData, mimeType: self.mimeType, size: self.size, attributes: self.attributes)
+    }
 }
 
 extension ChatContextResult {
@@ -354,7 +358,7 @@ extension Media {
 
 enum ChatListIndexRequest :Equatable {
     case Initial(Int, TableScrollState?)
-    case Index(ChatListIndex, TableScrollState?)
+    case Index(EngineChatList.Item.Index, TableScrollState?)
 }
 
 
@@ -608,7 +612,7 @@ public extension Message {
         }
     }
     
-    var replyThread: ReplyThreadMessageAttribute? {
+    var threadAttr: ReplyThreadMessageAttribute? {
         for attr in attributes {
             if let attr = attr as? ReplyThreadMessageAttribute {
                 return attr
@@ -853,43 +857,7 @@ public extension Message {
     }
 }
 
-extension ChatLocation {
-    var unreadMessageCountsItem: UnreadMessageCountsItem {
-        switch self {
-        case let .peer(peerId):
-            return .peer(peerId)
-        case let .replyThread(data):
-            return .peer(data.messageId.peerId)
-        }
-    }
-    
-    var postboxViewKey: PostboxViewKey {
-        switch self {
-        case let .peer(peerId):
-            return .peer(peerId: peerId, components: [])
-        case let .replyThread(data):
-            return .peer(peerId: data.messageId.peerId, components: [])
-        }
-    }
-    
-    var pinnedItemId: PinnedItemId {
-        switch self {
-        case let .peer(peerId):
-            return .peer(peerId)
-        case let .replyThread(data):
-            return .peer(data.messageId.peerId)
-        }
-    }
-    
-    var peerId: PeerId {
-        switch self {
-        case let .peer(peerId):
-            return peerId
-        case let .replyThread(data):
-            return data.messageId.peerId
-        }
-    }
-}
+
 
 extension ChatLocation : Hashable {
 
@@ -1092,7 +1060,7 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode) -> Bool
                 return peer.canSendMessage(false)
             case .scheduled:
                 return false
-            case let .replyThread(data, mode):
+            case let .thread(data, mode):
                 switch mode {
                 case .comments:
                     if message.id == data.messageId {
@@ -1100,6 +1068,8 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode) -> Bool
                     }
                     return peer.canSendMessage(true)
                 case .replies:
+                    return peer.canSendMessage(true)
+                case .topic:
                     return peer.canSendMessage(true)
                 }
             case .pinned, .preview:
@@ -1464,7 +1434,7 @@ extension Peer {
         }
         return false
     }
-    
+
     var canCall:Bool {
         return isUser && !isBot && ((self as! TelegramUser).phone != "42777") && ((self as! TelegramUser).phone != "42470") && ((self as! TelegramUser).phone != "4240004")
     }
@@ -2470,7 +2440,7 @@ func mediaResourceName(from media:Media?, ext:String?) -> String {
 }
 
 
-func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: PeerId? = nil, deleteGroup: Bool = false) -> Signal<Bool, NoError> {
+func removeChatInteractively(context: AccountContext, peerId:PeerId, threadId: Int64? = nil, userId: PeerId? = nil, deleteGroup: Bool = false) -> Signal<Bool, NoError> {
     return context.account.postbox.peerView(id: peerId)
         |> take(1)
         |> map { peerViewMainPeer($0) }
@@ -2480,93 +2450,97 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, userId: Pee
         |> mapToSignal { peer -> Signal<Bool, NoError> in
         
         
-        let text:String
-        var okTitle: String? = nil
-        if let peer = peer as? TelegramChannel {
-            switch peer.info {
-            case .broadcast:
-                if peer.flags.contains(.isCreator) && deleteGroup {
-                    text = strings().confirmDeleteAdminedChannel
+            let text:String
+            var okTitle: String? = nil
+            var thridTitle: String? = nil
+            var canRemoveGlobally: Bool = false
+
+            if let _ = threadId {
+                okTitle = strings().confirmDelete
+                text = strings().chatContextDeleteTopic
+            } else {
+                if let peer = peer as? TelegramChannel {
+                    switch peer.info {
+                    case .broadcast:
+                        if peer.flags.contains(.isCreator) && deleteGroup {
+                            text = strings().confirmDeleteAdminedChannel
+                            okTitle = strings().confirmDelete
+                        } else {
+                            text = strings().peerInfoConfirmLeaveChannel
+                        }
+                    case .group:
+                        if deleteGroup && peer.flags.contains(.isCreator) {
+                            text = strings().peerInfoConfirmDeleteGroupConfirmation
+                            okTitle = strings().confirmDelete
+                        } else {
+                            text = strings().confirmLeaveGroup
+                            okTitle = strings().peerInfoConfirmLeave
+                        }
+                    }
+                } else if let peer = peer as? TelegramGroup {
+                    text = strings().peerInfoConfirmDeleteChat(peer.title)
                     okTitle = strings().confirmDelete
                 } else {
-                    text = strings().peerInfoConfirmLeaveChannel
-                }
-            case .group:
-                if deleteGroup && peer.flags.contains(.isCreator) {
-                    text = strings().peerInfoConfirmDeleteGroupConfirmation
+                    text = strings().peerInfoConfirmDeleteUserChat
                     okTitle = strings().confirmDelete
-                } else {
-                    text = strings().confirmLeaveGroup
-                    okTitle = strings().peerInfoConfirmLeave
+                }
+                
+                if peerId.namespace == Namespaces.Peer.CloudUser && peerId != context.account.peerId && !peer.isBot {
+                    if context.limitConfiguration.maxMessageRevokeIntervalInPrivateChats == LimitsConfiguration.timeIntervalForever {
+                        canRemoveGlobally = true
+                    }
+                }
+                if peerId.namespace == Namespaces.Peer.SecretChat {
+                    canRemoveGlobally = false
+                }
+                
+                if canRemoveGlobally {
+                    thridTitle = strings().chatMessageDeleteForMeAndPerson(peer.displayTitle)
+                } else if peer.isBot {
+                    thridTitle = strings().peerInfoStopBot
+                }
+                    
+                if peer.groupAccess.isCreator, deleteGroup {
+                    canRemoveGlobally = true
+                    thridTitle = strings().deleteChatDeleteGroupForAll
                 }
             }
-        } else if let peer = peer as? TelegramGroup {
-            text = strings().peerInfoConfirmDeleteChat(peer.title)
-            okTitle = strings().confirmDelete
-        } else {
-            text = strings().peerInfoConfirmDeleteUserChat
-            okTitle = strings().confirmDelete
-        }
-        
-        
-        let type: ChatUndoActionType
-        
-        if let peer = peer as? TelegramChannel {
-            switch peer.info {
-            case .broadcast:
-                if peer.flags.contains(.isCreator) && deleteGroup {
-                    type = .deleteChannel
-                } else {
-                    type = .leftChannel
-                }
-            case .group:
-                if peer.flags.contains(.isCreator) && deleteGroup {
-                    type = .deleteChat
-                } else {
-                    type = .leftChat
-                }
-            }
-        } else {
-            type = .deleteChat
-        }
-        
-        var thridTitle: String? = nil
-        
-        var canRemoveGlobally: Bool = false
-        if peerId.namespace == Namespaces.Peer.CloudUser && peerId != context.account.peerId && !peer.isBot {
-            if context.limitConfiguration.maxMessageRevokeIntervalInPrivateChats == LimitsConfiguration.timeIntervalForever {
-                canRemoveGlobally = true
-            }
-        }
-        if peerId.namespace == Namespaces.Peer.SecretChat {
-            canRemoveGlobally = false
-        }
-        
-        if canRemoveGlobally {
-            thridTitle = strings().chatMessageDeleteForMeAndPerson(peer.displayTitle)
-        } else if peer.isBot {
-            thridTitle = strings().peerInfoStopBot
-        }
             
-        if peer.groupAccess.isCreator, deleteGroup {
-            canRemoveGlobally = true
-            thridTitle = strings().deleteChatDeleteGroupForAll
-        }
+            
 
-        
-        return combineLatest(modernConfirmSignal(for: context.window, account: context.account, peerId: userId ?? peerId, information: text, okTitle: okTitle ?? strings().alertOK, thridTitle: thridTitle, thridAutoOn: false), context.globalPeerHandler.get() |> take(1)) |> mapToSignal { result, location -> Signal<Bool, NoError> in
             
-            context.chatUndoManager.removePeerChat(engine: context.engine, peerId: peerId, type: type, reportChatSpam: false, deleteGloballyIfPossible: deleteGroup || result == .thrid)
-            if peer.isBot && result == .thrid {
-                _ = context.blockedPeersContext.add(peerId: peerId).start()
+            return combineLatest(modernConfirmSignal(for: context.window, account: context.account, peerId: userId ?? peerId, information: text, okTitle: okTitle ?? strings().alertOK, thridTitle: thridTitle, thridAutoOn: false), context.globalPeerHandler.get() |> take(1)) |> map { result, location -> Bool in
+                
+                if let threadId = threadId {
+                    _ = context.engine.peers.removeForumChannelThread(id: peerId, threadId: threadId).start()
+                } else {
+                    _ = context.engine.peers.removePeerChat(peerId: peerId, reportChatSpam: false, deleteGloballyIfPossible: canRemoveGlobally).start()
+                    if peer.isBot && result == .thrid {
+                        _ = context.blockedPeersContext.add(peerId: peerId).start()
+                    }
+                }
+               
+                switch location {
+                case let .peer(id):
+                    if id == peerId {
+                        context.bindings.rootNavigation().close()
+                    }
+                case let .thread(data):
+                    if threadId == nil {
+                        if data.messageId.peerId == peerId {
+                            context.bindings.rootNavigation().close()
+                        }
+                    } else {
+                        if makeMessageThreadId(data.messageId) == threadId {
+                            context.bindings.rootNavigation().close()
+                        }
+                    }
+                case .none:
+                    break
+                }
+                
+                return true
             }
-
-            if location?.peerId == peerId {
-                context.bindings.rootNavigation().close()
-            }
-            
-            return .single(true)
-        }
     }
 
 }
@@ -3212,8 +3186,32 @@ struct PeerEquatable: Equatable {
     init(_ peer: Peer) {
         self.peer = peer
     }
+    init?(_ peer: Peer?) {
+        if let peer = peer {
+            self.peer = peer
+        } else {
+            return nil
+        }
+    }
     static func ==(lhs: PeerEquatable, rhs: PeerEquatable) -> Bool {
         return lhs.peer.isEqual(rhs.peer)
+    }
+}
+
+struct CachedDataEquatable: Equatable {
+    let data: CachedPeerData
+    init?(data: CachedPeerData?) {
+        if let data = data {
+            self.data = data
+        } else {
+            return nil
+        }
+    }
+    init?(_ data: CachedPeerData?) {
+        self.init(data: data)
+    }
+    static func ==(lhs: CachedDataEquatable, rhs: CachedDataEquatable) -> Bool {
+        return lhs.data.isEqual(to: rhs.data)
     }
 }
 
@@ -3494,7 +3492,7 @@ func clearHistory(context: AccountContext, peer: Peer, mainPeer: Peer, canDelete
     let information = mainPeer is TelegramUser || mainPeer is TelegramSecretChat ? peer.id == context.peerId ? strings().peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peer.id.namespace == Namespaces.Peer.SecretChat ? strings().peerInfoConfirmClearHistoryUserBothSides : strings().peerInfoConfirmClearHistoryUser : strings().peerInfoConfirmClearHistoryGroup
     
     modernConfirm(for: context.window, account: context.account, peerId: mainPeer.id, information:information , okTitle: strings().peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
-        context.chatUndoManager.clearHistoryInteractively(engine: context.engine, peerId: peer.id, type: result == .thrid ? .forEveryone : .forLocalPeer)
+        _ = context.engine.messages.clearHistoryInteractively(peerId: peer.id, threadId: nil, type: result == .thrid ? .forEveryone : .forLocalPeer).start()
     })
 }
 
@@ -3639,5 +3637,19 @@ extension NSAttributedString {
             attach.addAttribute(.init(rawValue: TGEmojiHolderAttributeName), value: tag, range: NSMakeRange(0, emoji.length))
         }
         return attach
+    }
+}
+
+
+extension String {
+    var isSavedMessagesText: Bool {
+        let query = self.lowercased()
+        if Telegram.strings().peerSavedMessages.lowercased().hasPrefix(query) {
+            return true
+        }
+        if NSLocalizedString("Peer.SavedMessages", comment: "nil").hasPrefix(query.lowercased()) {
+            return true
+        }
+        return false
     }
 }

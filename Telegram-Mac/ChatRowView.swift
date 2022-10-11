@@ -964,16 +964,18 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     @objc func updateAnimatableContent() -> Void {
         for (_, value) in inlineStickerItemViews {
-            if let superview = value.superview {
-                var isKeyWindow: Bool = false
-                if let window = window {
-                    if !window.canBecomeKey {
-                        isKeyWindow = true
-                    } else {
-                        isKeyWindow = window.isKeyWindow
+            DispatchQueue.main.async {
+                if let superview = value.superview {
+                    var isKeyWindow: Bool = false
+                    if let window = self.window {
+                        if !window.canBecomeKey {
+                            isKeyWindow = true
+                        } else {
+                            isKeyWindow = window.isKeyWindow
+                        }
                     }
+                    value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
                 }
-                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
             }
         }
     }

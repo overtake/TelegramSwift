@@ -42,15 +42,14 @@ class PeerPhotosMonthItem: GeneralRowItem {
     fileprivate private(set) var layoutItems:[LayoutItem] = []
     fileprivate private(set) var itemSize: NSSize = NSZeroSize
     fileprivate let chatInteraction: ChatInteraction
-    fileprivate let gallerySupplyment: InteractionContentViewProtocol
     fileprivate let galleryType: GalleryAppearType
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, context: AccountContext, chatInteraction: ChatInteraction, gallerySupplyment: InteractionContentViewProtocol, items: [Message], galleryType: GalleryAppearType) {
+    fileprivate let gallery: (Message, GalleryAppearType)->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, context: AccountContext, chatInteraction: ChatInteraction, items: [Message], galleryType: GalleryAppearType, gallery: @escaping(Message, GalleryAppearType)->Void) {
         self.items = items
         self.context = context
-        self.gallerySupplyment = gallerySupplyment
         self.chatInteraction = chatInteraction
         self.galleryType = galleryType
-        
+        self.gallery = gallery
         super.init(initialSize, stableId: stableId, viewType: viewType, inset: NSEdgeInsets())
     }
     
@@ -267,10 +266,8 @@ private class MediaCell : Control {
             
            
             if !self.imageView.isFullyLoaded {
-                self.imageView.setSignal(signal, animate: true, cacheImage: { [weak media, weak self] result in
-                    if let media = media {
-                        cacheMedia(result, media: media, arguments: cacheArguments, scale: System.backingScale)
-                    }
+                self.imageView.setSignal(signal, animate: true, cacheImage: { result in
+                    cacheMedia(result, media: media, arguments: cacheArguments, scale: System.backingScale)
                 })
             }
             self.imageView.set(arguments: cacheArguments)
@@ -644,12 +641,7 @@ private final class MediaGifCell : MediaCell {
 
 private final class PeerPhotosMonthView : TableRowView, Notifable {
     private let containerView = GeneralRowContainerView(frame: NSZeroRect)
-    private var contentViews:[Optional<MediaCell>] = [] {
-        didSet {
-            var bp:Int = 0
-            bp == 1
-        }
-    }
+    private var contentViews:[Optional<MediaCell>] = []
 
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -734,9 +726,7 @@ private final class PeerPhotosMonthView : TableRowView, Notifable {
                     if let view = view {
                         switch view.innerAction() {
                         case .gallery:
-                            showChatGallery(context: item.context, message: layoutItem.message, item.gallerySupplyment, ChatMediaGalleryParameters(showMedia: { _ in}, showMessage: { message in
-                                layoutItem.chatInteraction.focusMessageId(nil, message.id, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
-                            }, isWebpage: false, media: layoutItem.message.effectiveMedia!, automaticDownload: true), type: item.galleryType, reversed: true)
+                            item.gallery(layoutItem.message, item.galleryType)
                         case .nothing:
                             break
                         }
@@ -862,7 +852,6 @@ private final class PeerPhotosMonthView : TableRowView, Notifable {
     override func interactionContentView(for innerId: AnyHashable, animateIn: Bool) -> NSView {
         if let innerId = innerId.base as? MessageId {
             let view = contentViews.compactMap { $0 }.first(where: { $0.layoutItem?.message.id == innerId })
-            NSLog("\(view)")
             return view ?? NSView()
         }
         return self

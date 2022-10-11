@@ -408,6 +408,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.getColors = getColors
         self.shimmerColor = shimmerColor
         super.init()
+        self.frame = size.bounds
         self.initialize()
         self.file = file
         self.updateSize(size: size, sync: true)
@@ -641,6 +642,12 @@ final class InlineStickerItemLayer : SimpleLayer {
                 switch file.mimeType {
                 case "image/webp":
                     signal = chatMessageSticker(postbox: account.postbox, file: reference, small: aspectSize.width <= 5, scale: System.backingScale, fetched: true)
+                case "bundle/topic":
+                    if let resource = file.resource as? ForumTopicIconResource {
+                        signal = makeTopicIcon(resource.title, bgColors: resource.bgColors, strokeColors: resource.strokeColors)
+                    } else {
+                        signal = .complete()
+                    }
                 default:
                     signal = chatMessageAnimatedSticker(postbox: account.postbox, file: reference, small: aspectSize.width <= 5, scale: System.backingScale, size: aspectSize, fetched: true, thumbAtFrame: 0, isVideo: file.fileName == "webm-preview" || file.isVideoSticker)
                 }
@@ -659,7 +666,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                 }
                
                 
-                if self.preview == nil, self.playerState != .playing {
+                if self.preview == nil, self.playerState != .playing, !file.mimeType.hasPrefix("bundle") {
                     
                     let dataSignal = account.postbox.mediaBox.resourceData(mediaResource.resource)
                     |> map { $0.complete }

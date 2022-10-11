@@ -143,7 +143,7 @@ func AutoremoveMessagesController(context: AccountContext, peer: Peer, onlyDelet
             thridTitle = strings().chatMessageDeleteForMeAndPerson(peer.displayTitle)
         }
         modernConfirm(for: context.window, account: context.account, peerId: peer.id, information: peer is TelegramUser ? peer.id == context.peerId ? strings().peerInfoConfirmClearHistorySavedMesssages : canRemoveGlobally || peerId.namespace == Namespaces.Peer.SecretChat ? strings().peerInfoConfirmClearHistoryUserBothSides : strings().peerInfoConfirmClearHistoryUser : strings().peerInfoConfirmClearHistoryGroup, okTitle: strings().peerInfoConfirmClear, thridTitle: thridTitle, thridAutoOn: false, successHandler: { result in
-            context.chatUndoManager.clearHistoryInteractively(engine: context.engine, peerId: peerId, type: result == .thrid ? .forEveryone : .forLocalPeer)
+            _ = context.engine.messages.clearHistoryInteractively(peerId: peerId, threadId: nil, type: result == .thrid ? .forEveryone : .forLocalPeer).start()
             close?()
         })
     })

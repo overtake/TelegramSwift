@@ -79,7 +79,7 @@ class ChatFileContentView: ChatMediaContentView {
     override func open() {
         if let context = context, let media = media as? TelegramMediaFile, let parent = parent  {
             if media.isGraphicFile || media.isVideoFile {
-                showChatGallery(context: context, message: parent, table, parameters as? ChatMediaGalleryParameters, type: media.isVideoFile ? .alone : .history)
+                parameters?.showMedia(parent)
             } else {
                 if media.mimeType.contains("svg") || (media.fileName ?? "").hasSuffix(".svg") {
                     confirm(for: context.window, information: strings().chatFileQuickLookSvg, successHandler: { _ in

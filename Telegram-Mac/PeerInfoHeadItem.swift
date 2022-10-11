@@ -82,6 +82,7 @@ fileprivate final class ActionButton : Control {
         super.layout()
         imageView.centerX(y: 5)
         textView.centerX(y: frame.height - textView.frame.height - 11)
+        
     }
 }
 
@@ -109,7 +110,6 @@ extension TelegramPeerPhoto : Equatable {
     }
 }
 
-fileprivate let photoDimension:CGFloat = 120
 fileprivate let actionItemWidth: CGFloat = 135
 fileprivate let actionItemInsetWidth: CGFloat = 19
 
@@ -358,6 +358,16 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         default:
             break
         }
+    } else if let peer = item.peer as? TelegramChannel, let arguments = item.arguments as? TopicInfoArguments {
+        
+        let value = true
+        
+        items.append(ActionItem(text: value ? strings().peerInfoActionUnmute : strings().peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, animation: .menu_mute, action: {
+            arguments.toggleNotifications(value)
+        }))
+        
+        items.append(ActionItem(text: strings().peerInfoActionShare, image: theme.icons.profile_share, animation: .menu_share, action: arguments.share))
+
     }
     
     
@@ -379,6 +389,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     override var height: CGFloat {
         let insets = self.viewType.innerInset
         var height: CGFloat = 0
+        
         if !editing {
             height = photoDimension + insets.top + insets.bottom + nameLayout.layoutSize.height + statusLayout.layoutSize.height + insets.bottom
             
@@ -391,6 +402,11 @@ class PeerInfoHeadItem: GeneralRowItem {
         }
         return height
     }
+    
+    fileprivate var photoDimension:CGFloat {
+        return self.threadData != nil ? 60 : 120
+    }
+
     
     fileprivate var statusLayout: TextViewLayout
     fileprivate var nameLayout: TextViewLayout
@@ -421,17 +437,18 @@ class PeerInfoHeadItem: GeneralRowItem {
     fileprivate let updatingPhotoState:PeerInfoUpdatingPhotoState?
     fileprivate let updatePhoto:(NSImage?, Control?)->Void
     fileprivate let arguments: PeerInfoArguments
-    
+    fileprivate let threadData: MessageHistoryThreadData?
+
     let canEditPhoto: Bool
     
     
     let peerPhotosDisposable = MetaDisposable()
     
     var photos: [TelegramPeerPhoto] = []
-    
-    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping(NSImage?, Control?)->Void = { _, _ in }) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, threadData: MessageHistoryThreadData?, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping(NSImage?, Control?)->Void = { _, _ in }) {
         let peer = peerViewMainPeer(peerView)
         self.peer = peer
+        self.threadData = threadData
         self.peerView = peerView
         self.context = context
         self.editing = editing
@@ -460,7 +477,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         
         self.canEditPhoto = canEditPhoto && editing
         
-        if let peer = peer {
+        if let peer = peer, threadData == nil {
             if let peerReference = PeerReference(peer) {
                 if let largeProfileImage = peer.largeProfileImage {
                     fetchPeerAvatar.add(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .avatar(peer: peerReference, resource: largeProfileImage.resource)).start())
@@ -469,9 +486,15 @@ class PeerInfoHeadItem: GeneralRowItem {
                     fetchPeerAvatar.add(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .avatar(peer: peerReference, resource: smallProfileImage.resource)).start())
                 }
             }
-            
         }
-        self.result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge), highlightIfActivity: false), expanded: true)
+        var result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge), highlightIfActivity: false), expanded: true)
+        
+        if let threadData = threadData {
+            result = result.withUpdatedTitle(threadData.info.title)
+        }
+        
+        self.result = result
+        
         nameLayout = TextViewLayout(result.title, maximumNumberOfLines: 1)
         statusLayout = TextViewLayout(result.status, maximumNumberOfLines: 1, alwaysStaticItems: true)
         
@@ -490,7 +513,10 @@ class PeerInfoHeadItem: GeneralRowItem {
                 guard let `self` = self else {
                     return
                 }
-                let result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge)), onlineMemberCount: count)
+                var result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge)), onlineMemberCount: count)
+                if let threadData = threadData {
+                    result = result.withUpdatedTitle(threadData.info.title)
+                }
                 if result != self.result {
                     self.result = result
                     _ = self.makeSize(self.width, oldWidth: 0)
@@ -502,7 +528,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         _ = self.makeSize(initialSize.width, oldWidth: 0)
         
         
-        if let peer = peer {
+        if let peer = peer, threadData == nil {
             self.photos = syncPeerPhotos(peerId: peer.id)
             let signal = peerPhotos(context: context, peerId: peer.id, force: true) |> deliverOnMainQueue
             var first: Bool = true
@@ -516,7 +542,13 @@ class PeerInfoHeadItem: GeneralRowItem {
                 }
             }))
         }
-        
+    }
+   
+    var isForum: Bool {
+        return self.peer?.isForum == true
+    }
+    var isTopic: Bool {
+        return self.isForum && threadData != nil
     }
     
     deinit {
@@ -785,7 +817,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
-        photoView.setFrameSize(NSMakeSize(photoDimension, photoDimension))
+        
         
         addSubview(photoView)
         addSubview(nameView)
@@ -878,12 +910,15 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         super.viewDidMoveToWindow()
         updateListeners()
         updatePlayerIfNeeded()
+        updateAnimatableContent()
     }
     
     override func viewDidMoveToSuperview() {
         super.viewDidMoveToSuperview()
         updateListeners()
         updatePlayerIfNeeded()
+        updateAnimatableContent()
+
     }
     
     func updateListeners() {
@@ -923,6 +958,12 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         photoEditableView?.centerX(y: item.viewType.innerInset.top)
         
         photoVideoView?.frame = photoView.frame
+        
+        if let photo = self.inlineTopicPhotoLayer {
+            photo.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, containerView.frame.width - item.photoDimension) / 2, item.viewType.innerInset.top, item.photoDimension, item.photoDimension)
+
+        }
+
     }
     
     required init?(coder: NSCoder) {
@@ -971,8 +1012,12 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
             return
         }
         
-        
+        photoView.setFrameSize(NSMakeSize(item.photoDimension, item.photoDimension))
         photoView.setPeer(account: item.context.account, peer: item.peer)
+
+        updatePhoto(item, animated: animated)
+        
+        photoView.isHidden = item.isTopic
         
         if !item.photos.isEmpty {
             
@@ -986,7 +1031,6 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                     self.photoVideoView = nil
                     
                     self.photoVideoView = MediaPlayerView(backgroundThread: true)
-                    self.photoVideoView!.layer?.cornerRadius = self.photoView.frame.height / 2
                     if let photoEditableView = self.photoEditableView {
                         self.addSubview(self.photoVideoView!, positioned: .below, relativeTo: photoEditableView)
                     } else {
@@ -1022,6 +1066,8 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                     self.videoRepresentation = video
                     updatePlayerIfNeeded()
                 }
+                
+                
             } else {
                 self.photoVideoPlayer = nil
                 self.photoVideoView?.removeFromSuperview()
@@ -1034,6 +1080,10 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
             self.photoVideoView = nil
             self.videoRepresentation = nil
         }
+        
+        
+        self.photoVideoView?.layer?.cornerRadius = item.isForum ? 10 : self.photoView.frame.height / 2
+        
         nameView.change(size: item.nameSize, animated: animated)
         nameView.update(item, animated: animated)
         nameView.change(pos: NSMakePoint(containerView.focus(item.nameSize).minX, nameView.frame.minY), animated: animated)
@@ -1056,13 +1106,14 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         
         if item.canEditPhoto || self.activeDragging || item.updatingPhotoState != nil {
             if photoEditableView == nil {
-                photoEditableView = .init(frame: NSMakeRect(0, 0, photoDimension, photoDimension))
-                photoEditableView?.layer?.cornerRadius = photoDimension / 2
+                photoEditableView = .init(frame: NSMakeRect(0, 0, item.photoDimension, item.photoDimension))
                 addSubview(photoEditableView!)
                 if animated {
                     photoEditableView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
             }
+            photoEditableView?.layer?.cornerRadius = item.isForum ? 10 : item.photoDimension / 2
+            
             photoEditableView?.updateState(item.updatingPhotoState, animated: animated)
             photoEditableView?.setup = item.updatePhoto
         } else {
@@ -1087,6 +1138,8 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         updateListeners()
     }
     
+    
+    
     override func interactionContentView(for innerId: AnyHashable, animateIn: Bool ) -> NSView {
         return photoView
     }
@@ -1095,4 +1148,65 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         return photoView.copy()
     }
     
+    private var inlineTopicPhotoLayer: InlineStickerItemLayer?
+
+    private func updatePhoto(_ item: PeerInfoHeadItem, animated: Bool) {
+        let context = item.context
+        
+        if let threadData = item.threadData {
+            let size = NSMakeSize(item.photoDimension, item.photoDimension)
+            let current: InlineStickerItemLayer
+            if let layer = self.inlineTopicPhotoLayer, layer.file?.fileId.id == threadData.info.icon {
+                current = layer
+            } else {
+                if let layer = inlineTopicPhotoLayer {
+                    performSublayerRemoval(layer, animated: animated)
+                    self.inlineTopicPhotoLayer = nil
+                }
+                let info = threadData.info
+                if let fileId = info.icon {
+                    current = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .loop)
+                } else {
+                    let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor)
+                    current = .init(account: context.account, file: file, size: size, playPolicy: .loop)
+                }
+                current.superview = containerView
+                self.containerView.layer?.addSublayer(current)
+                self.inlineTopicPhotoLayer = current
+            }
+        } else {
+            if let layer = inlineTopicPhotoLayer {
+                performSublayerRemoval(layer, animated: animated)
+                self.inlineTopicPhotoLayer = nil
+            }
+        }
+        self.updateAnimatableContent()
+    }
+    
+
+
+
+    @objc func updateAnimatableContent() -> Void {
+        
+        let checkValue:(InlineStickerItemLayer)->Void = { value in
+            DispatchQueue.main.async {
+                if let superview = value.superview {
+                    var isKeyWindow: Bool = false
+                    if let window = superview.window {
+                        if !window.canBecomeKey {
+                            isKeyWindow = true
+                        } else {
+                            isKeyWindow = window.isKeyWindow
+                        }
+                    }
+                    value.isPlayable = superview.visibleRect != .zero && isKeyWindow
+                }
+            }
+        }
+     
+        if let value = inlineTopicPhotoLayer {
+            checkValue(value)
+        }
+    }
+        
 }

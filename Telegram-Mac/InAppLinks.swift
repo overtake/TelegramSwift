@@ -82,7 +82,7 @@ enum ChatInitialAction : Equatable {
     case inputText(text: String, behavior: ChatInitialActionBehavior)
     case files(list: [String], behavior: ChatInitialActionBehavior)
     case forward(messageIds: [MessageId], text: ChatTextInputState?, behavior: ChatInitialActionBehavior)
-    case ad(PromoChatListItem.Kind)
+    case ad(EngineChatList.AdditionalItem.PromoInfo.Content)
     case source(MessageId)
     case closeAfter(Int32)
     case selectToReport(reason: ReportReasonValue)
@@ -417,7 +417,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             }
         }
         
-        let signal:Signal<(ReplyThreadInfo, Peer), Error> = peerSignal |> mapToSignal { peer in
+        let signal:Signal<(ThreadInfo, Peer), Error> = peerSignal |> mapToSignal { peer in
             let messageId: MessageId = MessageId(peerId: peer.id, namespace: Namespaces.Message.Cloud, id: threadId)
             return fetchAndPreloadReplyThreadInfo(context: context, subject: peer.isChannel ? .channelPost(messageId) : .groupMessage(messageId))
                 |> map {
@@ -454,7 +454,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     commentMessageId = MessageId(peerId: result.message.messageId.peerId, namespace: Namespaces.Message.Cloud, id: commentId)
                 }
                 
-                navigation.push(ChatAdditionController(context: context, chatLocation: .replyThread(result.message), mode: .replyThread(data: result.message, mode: mode), messageId: commentMessageId, initialAction: nil, chatLocationContextHolder: result.contextHolder))
+                navigation.push(ChatAdditionController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: mode), messageId: commentMessageId, initialAction: nil, chatLocationContextHolder: result.contextHolder))
             }
         }, error: { error in
             switch error {
@@ -686,8 +686,8 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
     case let .joinchat(_, hash, context, interaction):
         _ = showModalProgress(signal: context.engine.peers.joinLinkInformation(hash), for: context.window).start(next: { (result) in
             switch result {
-            case let .alreadyJoined(peerId):
-                interaction(peerId, true, nil, nil)
+            case let .alreadyJoined(peer):
+                interaction(peer.id, true, nil, nil)
             case let .invite(state):
                 if state.flags.requestNeeded {
                     showModal(with: RequestJoinChatModalController(context: context, joinhash: hash, invite: result, interaction: { peerId in
@@ -702,8 +702,8 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         }
                     }), for: context.window)
                 }
-            case let .peek(peerId, peek):
-                 interaction(peerId, true, nil, .closeAfter(peek))
+            case let .peek(peer, peek):
+                interaction(peer.id, true, nil, .closeAfter(peek))
             case .invalidHash:
                 alert(for: context.window, info: strings().linkExpired)
             }
@@ -1092,7 +1092,7 @@ enum inAppLink {
 }
 
 let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
-let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage", "bg", "addtheme/","invoice/"]
+let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage", "bg/", "addtheme/","invoice/"]
 
 let telegram_scheme:String = "tg://"
 let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases"]

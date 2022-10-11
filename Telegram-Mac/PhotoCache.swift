@@ -48,8 +48,8 @@ enum AppearanceThumbSource : Int32 {
 }
 
 enum PhotoCacheKeyEntry : Hashable {
-    case avatar(PeerId, TelegramMediaImageRepresentation, NSSize, CGFloat)
-    case emptyAvatar(PeerId, String, NSColor, NSSize, CGFloat)
+    case avatar(PeerId, TelegramMediaImageRepresentation, NSSize, CGFloat, Bool)
+    case emptyAvatar(PeerId, String, NSColor, NSSize, CGFloat, Bool)
     case media(Media, TransformImageArguments, CGFloat, LayoutPositionFlags?)
     case slot(SlotMachineValue, TransformImageArguments, CGFloat)
     case platformTheme(TelegramThemeSettings, TransformImageArguments, CGFloat, LayoutPositionFlags?)
@@ -59,14 +59,15 @@ enum PhotoCacheKeyEntry : Hashable {
     func hash(into hasher: inout Hasher) {
         
         switch self {
-        case let .avatar(peerId, rep, size, scale):
+        case let .avatar(peerId, rep, size, scale, isForum):
             hasher.combine("avatar")
             hasher.combine(rep.resource.id.hashValue)
             hasher.combine(peerId.toInt64())
             hasher.combine(size.width)
             hasher.combine(size.height)
             hasher.combine(scale)
-        case let .emptyAvatar(peerId, letters, color, size, scale):
+            hasher.combine(isForum)
+        case let .emptyAvatar(peerId, letters, color, size, scale, isForum):
             hasher.combine("emptyAvatar")
             hasher.combine(peerId.toInt64())
             hasher.combine(color.hashValue)
@@ -74,6 +75,7 @@ enum PhotoCacheKeyEntry : Hashable {
             hasher.combine(size.width)
             hasher.combine(size.height)
             hasher.combine(scale)
+            hasher.combine(isForum)
         case let .media(media, transform, scale, layout):
             hasher.combine("media")
             
@@ -83,7 +85,7 @@ enum PhotoCacheKeyEntry : Hashable {
             }
             
             if let media = media as? TelegramMediaFile {
-                hasher.combine(media.resource.id.hashValue)
+                hasher.combine(media.resource.id.stringRepresentation)
                 if let size = media.resource.size {
                     hasher.combine(size)
                 }
@@ -156,8 +158,8 @@ enum PhotoCacheKeyEntry : Hashable {
     
     static func ==(lhs:PhotoCacheKeyEntry, rhs: PhotoCacheKeyEntry) -> Bool {
         switch lhs {
-        case let .avatar(lhsPeerId, lhsRepresentation, lhsSize, lhsScale):
-            if case let .avatar(rhsPeerId, rhsRepresentation, rhsSize, rhsScale) = rhs {
+        case let .avatar(lhsPeerId, lhsRepresentation, lhsSize, lhsScale, lhsIsForum):
+            if case let .avatar(rhsPeerId, rhsRepresentation, rhsSize, rhsScale, rhsIsForum) = rhs {
                 if lhsPeerId != rhsPeerId {
                     return false
                 }
@@ -170,12 +172,15 @@ enum PhotoCacheKeyEntry : Hashable {
                 if lhsRepresentation.resource.id == rhsRepresentation.resource.id  {
                     return false
                 }
+                if lhsIsForum != rhsIsForum {
+                    return false
+                }
                 return true
             } else {
                 return false
             }
-        case let .emptyAvatar(peerId, symbol, color, size, scale):
-            if case .emptyAvatar(peerId, symbol, color, size, scale) = rhs {
+        case let .emptyAvatar(peerId, symbol, color, size, scale, isForum):
+            if case .emptyAvatar(peerId, symbol, color, size, scale, isForum) = rhs {
                 return true
             } else {
                 return false
@@ -291,31 +296,31 @@ func clearImageCache() -> Signal<Void, NoError> {
     }
 }
 
-func cachedPeerPhoto(_ peerId:PeerId, representation: TelegramMediaImageRepresentation, size: NSSize, scale: CGFloat) -> Signal<CGImage?, NoError> {
-    let entry:PhotoCacheKeyEntry = .avatar(peerId, representation, size, scale)
+func cachedPeerPhoto(_ peerId:PeerId, representation: TelegramMediaImageRepresentation, size: NSSize, scale: CGFloat, isForum: Bool) -> Signal<CGImage?, NoError> {
+    let entry:PhotoCacheKeyEntry = .avatar(peerId, representation, size, scale, isForum)
     return .single(peerPhotoCache.cachedImage(for: entry))
 }
 
-func cachePeerPhoto(image:CGImage, peerId:PeerId, representation: TelegramMediaImageRepresentation, size: NSSize, scale: CGFloat) -> Signal <Void, NoError> {
-    let entry:PhotoCacheKeyEntry = .avatar(peerId, representation, size, scale)
+func cachePeerPhoto(image:CGImage, peerId:PeerId, representation: TelegramMediaImageRepresentation, size: NSSize, scale: CGFloat, isForum: Bool) -> Signal <Void, NoError> {
+    let entry:PhotoCacheKeyEntry = .avatar(peerId, representation, size, scale, isForum)
     return .single(peerPhotoCache.cacheImage(image, for: entry))
 }
 
-func cachedEmptyPeerPhoto(_ peerId:PeerId, symbol: String, color: NSColor, size: NSSize, scale: CGFloat) -> Signal<CGImage?, NoError> {
-    let entry:PhotoCacheKeyEntry = .emptyAvatar(peerId, symbol, color, size, scale)
+func cachedEmptyPeerPhoto(_ peerId:PeerId, symbol: String, color: NSColor, size: NSSize, scale: CGFloat, isForum: Bool) -> Signal<CGImage?, NoError> {
+    let entry:PhotoCacheKeyEntry = .emptyAvatar(peerId, symbol, color, size, scale, isForum)
     return .single(peerPhotoCache.cachedImage(for: entry))
 }
 
-func cacheEmptyPeerPhoto(image:CGImage, peerId:PeerId, symbol: String, color: NSColor, size: NSSize, scale: CGFloat) -> Signal <Void, NoError> {
-    let entry:PhotoCacheKeyEntry = .emptyAvatar(peerId, symbol, color, size, scale)
+func cacheEmptyPeerPhoto(image:CGImage, peerId:PeerId, symbol: String, color: NSColor, size: NSSize, scale: CGFloat, isForum: Bool) -> Signal <Void, NoError> {
+    let entry:PhotoCacheKeyEntry = .emptyAvatar(peerId, symbol, color, size, scale, isForum)
     return .single(peerPhotoCache.cacheImage(image, for: entry))
 }
-func cachedPeerPhotoImmediatly(_ peerId:PeerId, representation: TelegramMediaImageRepresentation, size: NSSize, scale: CGFloat) -> CGImage? {
-    let entry:PhotoCacheKeyEntry = .avatar(peerId, representation, size, scale)
+func cachedPeerPhotoImmediatly(_ peerId:PeerId, representation: TelegramMediaImageRepresentation, size: NSSize, scale: CGFloat, isForum: Bool) -> CGImage? {
+    let entry:PhotoCacheKeyEntry = .avatar(peerId, representation, size, scale, isForum)
     return peerPhotoCache.cachedImage(for: entry)
 }
-func cachedEmptyPeerPhotoImmediatly(_ peerId:PeerId, symbol: String, color: NSColor, size: NSSize, scale: CGFloat) -> CGImage? {
-    let entry:PhotoCacheKeyEntry = .emptyAvatar(peerId, symbol, color, size, scale)
+func cachedEmptyPeerPhotoImmediatly(_ peerId:PeerId, symbol: String, color: NSColor, size: NSSize, scale: CGFloat, isForum: Bool) -> CGImage? {
+    let entry:PhotoCacheKeyEntry = .emptyAvatar(peerId, symbol, color, size, scale, isForum)
     return peerPhotoCache.cachedImage(for: entry)
 }
 

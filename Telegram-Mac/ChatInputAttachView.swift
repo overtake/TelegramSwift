@@ -45,7 +45,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                 if let editState = chatInteraction.presentation.interfaceState.editState, let media = editState.originalMedia, media is TelegramMediaFile || media is TelegramMediaImage {
                     if editState.message.groupingKey == nil {
                         items.append(ContextMenuItem(strings().inputAttachPopoverPhotoOrVideo, handler: { [weak self] in
-                            self?.chatInteraction.updateEditingMessageMedia(mediaExts, true)
+                            self?.chatInteraction.updateEditingMessageMedia(nil, true)
                         }, itemImage: MenuAnimation.menu_shared_media.value))
                         
                         items.append(ContextMenuItem(strings().inputAttachPopoverFile, handler: { [weak self] in

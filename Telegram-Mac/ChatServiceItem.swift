@@ -64,9 +64,7 @@ class ChatServiceItem: ChatRowItem {
     
     override init(_ initialSize:NSSize, _ chatInteraction:ChatInteraction, _ context: AccountContext, _ entry: ChatHistoryEntry, _ downloadSettings: AutomaticMediaDownloadSettings, theme: TelegramPresentationTheme) {
         let message:Message = entry.message!
-        
-        
-        
+                
         
         let linkColor: NSColor = theme.controllerBackgroundMode.hasWallpaper ? theme.chatServiceItemTextColor : entry.renderType == .bubble ? theme.chat.linkColor(true, entry.renderType == .bubble) : theme.colors.link
         let grayTextColor: NSColor = theme.chatServiceItemTextColor
@@ -586,6 +584,106 @@ class ChatServiceItem: ChatRowItem {
                         attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
                         attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
                     }
+                case let .topicCreated(title, _, iconFileId):
+                    let text: String
+                    if authorId == context.peerId {
+                        if let iconFileId = iconFileId {
+                            text = strings().chatServiceGroupTopicCreatedYouIcon(title.prefixWithDots(30), "~~\(iconFileId)~~")
+                        } else {
+                            text = strings().chatServiceGroupTopicCreatedYou(title)
+                        }
+                    } else {
+                        if let iconFileId = iconFileId {
+                            text = strings().chatServiceGroupTopicCreatedIcon(authorName, title.prefixWithDots(30), "~~\(iconFileId)~~")
+                        } else {
+                            text = strings().chatServiceGroupTopicCreated(authorName, title.prefixWithDots(30))
+                        }
+                    }
+                    let _ =  attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    
+                    
+                    if let authorId = authorId {
+                        let range = attributedString.string.nsstring.range(of: authorName)
+                        attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                        attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                    }
+                    if let fileId = iconFileId {
+                        let range = text.nsstring.range(of: "~~\(fileId)~~")
+                        if range.location != NSNotFound {
+                            InlineStickerItem.apply(to: attributedString, associatedMedia: [:], entities: [.init(range: range.lowerBound ..< range.upperBound, type: .CustomEmoji(stickerPack: nil, fileId: fileId))], isPremium: context.isPremium)
+                        }
+                    }
+                case let .topicEdited(components):
+                    let text: String
+                    var fileId: Int64? = nil
+                    if components.count == 1 {
+                        let component = components[0]
+                        switch component {
+                        case let .title(title):
+                            if authorId == context.peerId {
+                                text = strings().chatServiceGroupTopicEditedYouTitle(title.prefixWithDots(30))
+                            } else {
+                                text = strings().chatServiceGroupTopicEditedTitle(authorName, title.prefixWithDots(30))
+                            }
+                        case let .iconFileId(iconFileId):
+                            fileId = iconFileId
+                            if let iconFileId = iconFileId {
+                                if authorId == context.peerId {
+                                    text = strings().chatServiceGroupTopicEditedYouIcon("~~\(iconFileId)~~")
+                                } else {
+                                    text = strings().chatServiceGroupTopicEditedIcon(authorName, "~~\(iconFileId)~~")
+                                }
+                            } else {
+                                if authorId == context.peerId {
+                                    text = strings().chatServiceGroupTopicEditedYouIconRemoved
+                                } else {
+                                    text = strings().chatServiceGroupTopicEditedIconRemoved(authorName)
+                                }
+                            }
+                        }
+                    } else {
+                        var title: String = ""
+                        var iconFileId: Int64?
+                        switch components[0] {
+                        case let .title(value):
+                            title = value.prefixWithDots(30)
+                        case let .iconFileId(value):
+                            iconFileId = value
+                        }
+                        switch components[1] {
+                        case let .title(value):
+                            title = value.prefixWithDots(30)
+                        case let .iconFileId(value):
+                            iconFileId = value
+                        }
+                        fileId = iconFileId
+                        if let iconFileId = iconFileId {
+                            if authorId == context.peerId {
+                                text = strings().chatServiceGroupTopicEditedYouMixed("~~\(iconFileId)~~", title)
+                            } else {
+                                text = strings().chatServiceGroupTopicEditedMixed(authorName, "~~\(iconFileId)~~", title)
+                            }
+                        } else {
+                            if authorId == context.peerId {
+                                text = strings().chatServiceGroupTopicEditedYouTitle(title)
+                            } else {
+                                text = strings().chatServiceGroupTopicEditedTitle(authorName, title)
+                            }
+                        }
+                    }
+                    let _ =  attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                    
+                    if let authorId = authorId {
+                        let range = attributedString.string.nsstring.range(of: authorName)
+                        attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                        attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                    }
+                    if let fileId = fileId {
+                        let range = text.nsstring.range(of: "~~\(fileId)~~")
+                        if range.location != NSNotFound {
+                            InlineStickerItem.apply(to: attributedString, associatedMedia: [:], entities: [.init(range: range.lowerBound ..< range.upperBound, type: .CustomEmoji(stickerPack: nil, fileId: fileId))], isPremium: context.isPremium)
+                        }
+                    }
                 default:
                     break
                 }
@@ -752,6 +850,8 @@ class ChatServiceRowView: TableRowView {
     
     private var giftView: GiftView?
     
+    private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
+    
     required init(frame frameRect: NSRect) {
         textView = TextView()
         textView.isSelectable = false
@@ -830,6 +930,7 @@ class ChatServiceRowView: TableRowView {
                 photoVideoPlayer.pause()
             }
         }
+        updateAnimatableContent()
     }
     
     override func addAccesoryOnCopiedView(innerId: AnyHashable, view: NSView) {
@@ -897,6 +998,8 @@ class ChatServiceRowView: TableRowView {
         guard let item = item as? ChatServiceItem else {
             return
         }
+        
+        
         
         if item.presentation.shouldBlurService {
             textView.blurBackground = item.presentation.blurServiceColor
@@ -998,9 +1101,87 @@ class ChatServiceRowView: TableRowView {
             self.giftView = nil
         }
         
+        updateInlineStickers(context: item.context, view: self.textView, textLayout: item.text)
+        
         
         self.needsLayout = true
         updateListeners()
     }
+    
+        
+    
+    @objc func updateAnimatableContent() -> Void {
+        for (_, value) in inlineStickerItemViews {
+            DispatchQueue.main.async {
+                if let superview = value.superview {
+                    var isKeyWindow: Bool = false
+                    if let window = self.window {
+                        if !window.canBecomeKey {
+                            isKeyWindow = true
+                        } else {
+                            isKeyWindow = window.isKeyWindow
+                        }
+                    }
+                    value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
+                }
+            }
+        }
+    }
+    
+    
+    func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
+        var validIds: [InlineStickerItemLayer.Key] = []
+        var index: Int = textView.hashValue
+
+        for item in textLayout.embeddedItems {
+            if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
+                
+                let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index)
+                validIds.append(id)
+                
+                
+                let rect: NSRect
+                if textLayout.isBigEmoji {
+                    rect = item.rect
+                } else {
+                    rect = item.rect.insetBy(dx: -2, dy: -2)
+                }
+                
+                let view: InlineStickerItemLayer
+                if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
+                    view = current
+                } else {
+                    self.inlineStickerItemViews[id]?.removeFromSuperlayer()
+                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size)
+                    self.inlineStickerItemViews[id] = view
+                    view.superview = textView
+                    textView.addEmbeddedLayer(view)
+                }
+                index += 1
+                var isKeyWindow: Bool = false
+                if let window = window {
+                    if !window.canBecomeKey {
+                        isKeyWindow = true
+                    } else {
+                        isKeyWindow = window.isKeyWindow
+                    }
+                }
+                view.isPlayable = NSIntersectsRect(rect, textView.visibleRect) && isKeyWindow
+                view.frame = rect
+            }
+        }
+        
+        var removeKeys: [InlineStickerItemLayer.Key] = []
+        for (key, itemLayer) in self.inlineStickerItemViews {
+            if !validIds.contains(key) {
+                removeKeys.append(key)
+                itemLayer.removeFromSuperlayer()
+            }
+        }
+        for key in removeKeys {
+            self.inlineStickerItemViews.removeValue(forKey: key)
+        }
+    }
+    
     
 }

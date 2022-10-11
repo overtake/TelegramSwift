@@ -344,9 +344,7 @@ private class PhoneCallWindowView : View {
         imageView.frame = bounds
         
         incomingVideoView.frame = bounds
-        
-        NSLog("frame \(self.outgoingVideoView.frame)")
-        
+                
         if self.outgoingVideoView.videoView == nil {
             self.outgoingVideoView.frame = bounds
         }

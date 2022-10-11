@@ -330,6 +330,15 @@ extension Peer {
         }
     }
     
+    var isForum: Bool {
+        if let channel = self as? TelegramChannel {
+            return channel.flags.contains(.isForum)
+        } else {
+            return false
+        }
+    }
+    
+    
 }
 
 extension PeerId {

@@ -11,7 +11,7 @@ import TGUIKit
 import TelegramCore
 import HackUtils
 import SwiftSignalKit
-
+import ObjcUtils
 
 public class InputDataModalController : ModalViewController {
     private let controller: InputDataController
@@ -636,7 +636,11 @@ class InputDataController: GenericViewController<InputDataView> {
         if let event = NSApp.currentEvent {
             switch returnKeyInvocation(self.currentFirstResponderIdentifier, event) {
             case .default:
-                self.validateInput(data: self.fetchData())
+                if FastSettings.checkSendingAbility(for: event) {
+                    self.validateInput(data: self.fetchData())
+                } else {
+                    return .invokeNext
+                }
                 return .invoked
             case .nextResponder:
                 _ = window?.makeFirstResponder(self.nextResponder())

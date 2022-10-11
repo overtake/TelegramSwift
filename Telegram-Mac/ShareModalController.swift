@@ -1415,14 +1415,19 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                     case let .Initial(count, _):
                         signal = context.account.viewTracker.tailChatListView(groupId: .root, filterPredicate: nil, count: count) |> take(1)
                     case let .Index(index, _):
-                        signal = context.account.viewTracker.aroundChatListView(groupId: .root, filterPredicate: nil, index: index, count: 30) |> take(1)
+                        switch index {
+                        case let .chatList(index):
+                            signal = context.account.viewTracker.aroundChatListView(groupId: .root, filterPredicate: nil, index: index, count: 30) |> take(1)
+                        case .forum:
+                            signal = .never()
+                        }
                     }
                     
                     return signal |> deliverOnPrepareQueue |> mapToSignal { value -> Signal<(ChatListView,ViewUpdateType, [PeerId: PeerStatusStringResult], Peer), NoError> in
                         var peerIds:[PeerId] = []
                         for entry in value.0.entries {
                             switch entry {
-                            case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _):
+                            case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _):
                                 peerIds.append(renderedPeer.peerId)
                             default:
                                 break
@@ -1478,7 +1483,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         
                         for entry in value.0.entries {
                             switch entry {
-                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _, _, _):
+                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _, _, _, _):
                                 if let main = renderedPeer.peer {
                                     if contains[main.id] == nil {
                                         if share.possibilityPerformTo(main) {

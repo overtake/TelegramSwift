@@ -18,10 +18,11 @@ class PeerMediaVoiceRowItem: PeerMediaRowItem {
     fileprivate let file:TelegramMediaFile
     fileprivate let titleLayout: TextViewLayout
     fileprivate let nameLayout: TextViewLayout
-    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, gallery: GalleryAppearType = .history, viewType: GeneralViewType = .legacy) {
+    fileprivate let music: (Message, GalleryAppearType)->Void
+    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, galleryType: GalleryAppearType = .history, gallery: @escaping(Message, GalleryAppearType)->Void, music: @escaping(Message, GalleryAppearType)->Void, viewType: GeneralViewType = .legacy) {
         let message = object.message!
-        file = message.media[0] as! TelegramMediaFile
-        
+        self.file = message.media[0] as! TelegramMediaFile
+        self.music = music
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         
@@ -40,7 +41,7 @@ class PeerMediaVoiceRowItem: PeerMediaRowItem {
         
         nameLayout = TextViewLayout(.initialize(string: title, color: theme.colors.grayText, font: .normal(.short)), maximumNumberOfLines: 1)
 
-        super.init(initialSize, interface, object, gallery: gallery, viewType: viewType)
+        super.init(initialSize, interface, object, galleryType: galleryType, gallery: gallery, viewType: viewType)
         
     }
     
@@ -124,12 +125,7 @@ final class PeerMediaVoiceRowView : PeerMediaRowView, APDelegate {
         
         guard let item = item as? PeerMediaVoiceRowItem else {return}
 
-        if let controller = item.context.audioPlayer, controller.playOrPause(item.message.id) {
-        } else {
-            let controller:APController = APChatVoiceController(context: item.interface.context, chatLocationInput: .peer(peerId: item.message.id.peerId), mode: .history, index: MessageIndex(item.message), baseRate: FastSettings.playingRate, volume: FastSettings.volumeRate)
-            item.interface.inlineAudioPlayer(controller)
-            controller.start()
-        }
+        item.music(item.message, item.galleryType)
     }
     
     

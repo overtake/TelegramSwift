@@ -89,13 +89,46 @@ final class FilterTabsView : View {
     }
 }
 
-private struct State : Equatable {
+struct PeerListState : Equatable {
+    struct InputActivities : Equatable {
+        struct Activity : Equatable {
+            let peer: PeerEquatable
+            let activity: PeerInputActivity
+            init(_ peer: Peer, _ activity: PeerInputActivity) {
+                self.peer = PeerEquatable(peer)
+                self.activity = activity
+            }
+        }
+        var activities: [PeerId: [Activity]]
+    }
+    struct ForumData : Equatable {
+        static func == (lhs: PeerListState.ForumData, rhs: PeerListState.ForumData) -> Bool {
+            if lhs.peer != rhs.peer {
+                return false
+            }
+            if let lhsCached = lhs.peerView.cachedData, let rhsCached = rhs.peerView.cachedData {
+                if !lhsCached.isEqual(to: rhsCached) {
+                    return false
+                }
+            } else if (lhs.peerView.cachedData != nil) != (rhs.peerView.cachedData != nil) {
+                return false
+            }
+            return true
+        }
+        
+        let peer: TelegramChannel
+        let peerView: PeerView
+        let online: Int32
+    }
+    
     var proxySettings: ProxySettings
     var connectionStatus: ConnectionStatus
     var splitState: SplitViewState
     var searchState: SearchFieldState = .None
     var peer: PeerEquatable?
+    var forumPeer: ForumData?
     var mode: PeerListMode
+    var activities: InputActivities
 }
 
 class PeerListContainerView : View {
@@ -337,6 +370,8 @@ class PeerListContainerView : View {
                 compose.isHidden = false
             case .filter:
                 compose.isHidden = true
+            case .forum:
+                compose.isHidden = true
             }
             updateLayout(self.frame.size, transition: .immediate)
         }
@@ -360,13 +395,13 @@ class PeerListContainerView : View {
         
     }
     
-    private var state: State?
+    private var state: PeerListState?
     
     
     var openProxy:((Control)->Void)? = nil
     var openStatus:((Control)->Void)? = nil
 
-    fileprivate func updateState(_ state: State, context: AccountContext, animated: Bool) {
+    fileprivate func updateState(_ state: PeerListState, context: AccountContext, animated: Bool) {
         
         let animated = animated && self.state?.splitState == state.splitState && self.state != nil
         self.state = state
@@ -444,12 +479,9 @@ class PeerListContainerView : View {
     }
     
     
-    fileprivate func searchStateChanged(_ state: State, context: AccountContext, animated: Bool, updateSearchTags: @escaping(SearchTags)->Void, updatePeerTag:@escaping(@escaping(Peer?)->Void)->Void, updateMessageTags: @escaping(@escaping(MessageTags?)->Void)->Void) {
-                        
+    private func updateTags(_ state: PeerListState,updateSearchTags: @escaping(SearchTags)->Void, updatePeerTag:@escaping(@escaping(Peer?)->Void)->Void, updateMessageTags: @escaping(@escaping(MessageTags?)->Void)->Void) {
         var currentTag: MessageTags?
         var currentPeerTag: Peer?
-        
-
         let tags:[(MessageTags?, String, CGImage)] = [(nil, strings().searchFilterClearFilter, theme.icons.search_filter),
                                             (.photo, strings().searchFilterPhotos, theme.icons.search_filter_media),
                                             (.video, strings().searchFilterVideos, theme.icons.search_filter_media),
@@ -486,11 +518,12 @@ class PeerListContainerView : View {
                 
                 var items: [ContextMenuItem] = []
 
-                
-                items.append(ContextMenuItem.init(strings().chatListDownloadsTag, handler: { [weak self] in
-                    updateSearchTags(SearchTags(messageTags: nil, peerTag: nil))
-                    self?.showDownloads?()
-                }, itemImage: MenuAnimation.menu_save_as.value))
+                if state.forumPeer == nil {
+                    items.append(ContextMenuItem(strings().chatListDownloadsTag, handler: { [weak self] in
+                        updateSearchTags(SearchTags(messageTags: nil, peerTag: nil))
+                        self?.showDownloads?()
+                    }, itemImage: MenuAnimation.menu_save_as.value))
+                }
                 
                 for tag in tags {
                     var append: Bool = false
@@ -584,7 +617,12 @@ class PeerListContainerView : View {
         case .None:
             searchView.customSearchControl = nil
         }
-        
+    }
+    
+    fileprivate func searchStateChanged(_ state: PeerListState, context: AccountContext, animated: Bool, updateSearchTags: @escaping(SearchTags)->Void, updatePeerTag:@escaping(@escaping(Peer?)->Void)->Void, updateMessageTags: @escaping(@escaping(MessageTags?)->Void)->Void) {
+                        
+        self.updateTags(state, updateSearchTags: updateSearchTags, updatePeerTag: updatePeerTag, updateMessageTags: updateMessageTags)
+
         self.updateState(state, context: context, animated: animated)
     }
     
@@ -629,7 +667,7 @@ class PeerListContainerView : View {
         
         if state.splitState == .minimisize {
             switch self.mode {
-            case .folder:
+            case .folder, .forum:
                 offset = 0
             default:
                 break
@@ -732,9 +770,9 @@ class PeerListContainerView : View {
 
 enum PeerListMode : Equatable {
     case plain
-    case folder(PeerGroupId)
+    case folder(EngineChatList.Group)
     case filter(Int32)
-    
+    case forum(PeerId)
     var isPlain:Bool {
         switch self {
         case .plain:
@@ -743,7 +781,7 @@ enum PeerListMode : Equatable {
             return false
         }
     }
-    var groupId: PeerGroupId {
+    var groupId: EngineChatList.Group {
         switch self {
         case let .folder(groupId):
             return groupId
@@ -759,6 +797,18 @@ enum PeerListMode : Equatable {
             return nil
         }
     }
+    var location: ChatListControllerLocation {
+        switch self {
+        case .plain:
+            return .chatList(groupId: .root)
+        case let .folder(group):
+            return .chatList(groupId: group._asGroup())
+        case let .forum(peerId):
+            return .forum(peerId: peerId)
+        case let .filter(filterId):
+            return .chatList(groupId: .group(filterId))
+        }
+    }
 }
 
 
@@ -769,9 +819,15 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         return nil
     }
     
+    private  let stateValue: Atomic<PeerListState?> = Atomic(value: nil)
+    private let stateSignal: ValuePromise<PeerListState?> = ValuePromise(nil, ignoreRepeated: true)
+    var stateUpdater: Signal<PeerListState?, NoError> {
+        return stateSignal.get()
+    }
+    
+    
     private let progressDisposable = MetaDisposable()
     private let createSecretChatDisposable = MetaDisposable()
-    private let layoutDisposable = MetaDisposable()
     private let actionsDisposable = DisposableSet()
     private let followGlobal:Bool
     private let searchOptions: AppSearchOptions
@@ -792,10 +848,18 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
     }
     
+    let topics: ForumChannelTopics?
+    
     init(_ context: AccountContext, followGlobal:Bool = true, mode: PeerListMode = .plain, searchOptions: AppSearchOptions = [.chats, .messages]) {
         self.followGlobal = followGlobal
         self.mode = mode
         self.searchOptions = searchOptions
+        switch mode {
+        case let .forum(peerId):
+            self.topics = ForumChannelTopics(account: context.account, peerId: peerId)
+        default:
+            self.topics = nil
+        }
         super.init(context)
         self.bar = .init(height: !mode.isPlain ? 50 : 0)
     }
@@ -811,7 +875,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     deinit {
         progressDisposable.dispose()
         createSecretChatDisposable.dispose()
-        layoutDisposable.dispose()
         actionsDisposable.dispose()
     }
     
@@ -868,19 +931,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             self?.hideDownloads(animated: true)
         }
         
-        layoutDisposable.set(context.layoutHandler.get().start(next: { [weak self] state in
-            if let strongSelf = self, case .minimisize = state {
-                if strongSelf.genericView.searchView.state == .Focus {
-                    strongSelf.genericView.searchView.change(state: .None,  false)
-                }
-            }
-            self?.checkSearchMedia()
-            self?.genericView.tableView.alwaysOpenRowsOnMouseUp = state == .single
-            self?.genericView.tableView.reloadData()
-            Queue.mainQueue().justDispatch {
-                self?.requestUpdateBackBar()
-            }
-        }))
         
         let actionsDisposable = self.actionsDisposable
         
@@ -912,14 +962,15 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
         genericView.tableView.delegate = self
         
-        let stateValue: Atomic<State?> = Atomic(value: nil)
-        let state: ValuePromise<State?> = ValuePromise(nil, ignoreRepeated: true)
-        let updateState:((State?)->State?) -> Void = { f in
+        let state = self.stateSignal
+        let stateValue = self.stateValue
+       
+        let updateState:((PeerListState?)->PeerListState?) -> Void = { f in
             state.set(stateValue.modify(f))
         }
         
 
-        let layoutSignal = context.layoutHandler.get()
+        let layoutSignal = context.layoutValue
         let proxy = proxySettings(accountManager: context.sharedContext.accountManager) |> mapToSignal { ps -> Signal<(ProxySettings, ConnectionStatus), NoError> in
             return context.account.network.connectionStatus |> map { status -> (ProxySettings, ConnectionStatus) in
                 return (ps, status)
@@ -932,10 +983,120 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 return nil
             }
         }
+        let forumPeer: Signal<PeerListState.ForumData?, NoError>
+        if case let .forum(peerId) = self.mode {
+            forumPeer = context.account.postbox.peerView(id: peerId) |> mapToSignal { view in
+                if let peer = peerViewMainPeer(view) as? TelegramChannel, let cachedData = view.cachedData as? CachedChannelData, peer.isForum {
+                    let membersCount = cachedData.participantsSummary.memberCount ?? 0
+                    let online: Signal<Int32, NoError>
+                    if membersCount < 200 {
+                        online = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(peerId: peerId)
+                    } else {
+                        online = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: peerId)
+                    }
+                    return online |> map {
+                        return .init(peer: peer, peerView: view, online: $0)
+                    }
+                } else {
+                    return .single(nil)
+                }
+            }
+        } else {
+            forumPeer = .single(nil)
+        }
+        let postbox = context.account.postbox
+        let previousPeerCache = Atomic<[PeerId: Peer]>(value: [:])
+        let previousActivities = Atomic<PeerListState.InputActivities?>(value: nil)
+        let inputActivities = context.account.allPeerInputActivities()
+                                           |> mapToSignal { activitiesByPeerId -> Signal<[PeerId: [PeerListState.InputActivities.Activity]], NoError> in
+                var foundAllPeers = true
+                var cachedResult: [PeerId: [PeerListState.InputActivities.Activity]] = [:]
+                previousPeerCache.with { dict -> Void in
+                    for (chatPeerId, activities) in activitiesByPeerId {
+                        guard case .global = chatPeerId.category else {
+                            continue
+                        }
+                        var cachedChatResult: [PeerListState.InputActivities.Activity] = []
+                        for (peerId, activity) in activities {
+                            if let peer = dict[peerId] {
+                                cachedChatResult.append(PeerListState.InputActivities.Activity(peer, activity))
+                            } else {
+                                foundAllPeers = false
+                                break
+                            }
+                            cachedResult[chatPeerId.peerId] = cachedChatResult
+                        }
+                    }
+                }
+                if foundAllPeers {
+                    return .single(cachedResult)
+                } else {
+                    return postbox.transaction { transaction -> [PeerId: [PeerListState.InputActivities.Activity]] in
+                        var result: [PeerId: [PeerListState.InputActivities.Activity]] = [:]
+                        var peerCache: [PeerId: Peer] = [:]
+                        for (chatPeerId, activities) in activitiesByPeerId {
+                            guard case .global = chatPeerId.category else {
+                                continue
+                            }
+
+                            var chatResult: [PeerListState.InputActivities.Activity] = []
+                            
+                            for (peerId, activity) in activities {
+                                if let peer = transaction.getPeer(peerId) {
+                                    chatResult.append(PeerListState.InputActivities.Activity(peer, activity))
+                                    peerCache[peerId] = peer
+                                }
+                            }
+                            
+                            result[chatPeerId.peerId] = chatResult
+                        }
+                        let _ = previousPeerCache.swap(peerCache)
+                        return result
+                    }
+                }
+            }
+            |> map { activities -> PeerListState.InputActivities in
+                return previousActivities.modify { current in
+                    var updated = false
+                    let currentList: [PeerId: [PeerListState.InputActivities.Activity]] = current?.activities ?? [:]
+                    if currentList.count != activities.count {
+                        updated = true
+                    } else {
+                        outer: for (peerId, currentValue) in currentList {
+                            if let value = activities[peerId] {
+                                if currentValue.count != value.count {
+                                    updated = true
+                                    break outer
+                                } else {
+                                    for i in 0 ..< currentValue.count {
+                                        if currentValue[i] != value[i] {
+                                            updated = true
+                                            break outer
+                                        }
+                                    }
+                                }
+                            } else {
+                                updated = true
+                                break outer
+                            }
+                        }
+                    }
+                    if updated {
+                        if activities.isEmpty {
+                            return .init(activities: [:])
+                        } else {
+                            return .init(activities: activities)
+                        }
+                    } else {
+                        return current
+                    }
+                } ?? .init(activities: [:])
+            }
         
-        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, appearanceSignal).start(next: { pref, layout, peer, _ in
+        
+        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, appearanceSignal).start(next: { pref, layout, peer, forumPeer, inputActivities, _ in
             updateState { state in
-                let state: State = .init(proxySettings: pref.0, connectionStatus: pref.1, splitState: layout, searchState: state?.searchState ?? .None, peer: peer, mode: mode)
+                let state: PeerListState = .init(proxySettings: pref.0, connectionStatus: pref.1, splitState: layout, searchState: state?.searchState ?? .None, peer: peer, forumPeer: forumPeer, mode: mode, activities: inputActivities)
                 return state
             }
         }))
@@ -999,7 +1160,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             return menu
         }
         
-        
         genericView.searchView.searchInteractions = SearchInteractions({ [weak self] state, animated in
             switch state.state {
             case .Focus:
@@ -1029,7 +1189,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         |> filter { $0 != nil }
         |> map { $0! }
         
+        let previousState: Atomic<PeerListState?> = Atomic(value: nil)
+        
         actionsDisposable.add(stateSignal.start(next: { [weak self] state in
+
+            self?.updateState(state, previous: previousState.swap(state))
+            
             self?.genericView.searchStateChanged(state, context: context, animated: true, updateSearchTags: { [weak self] tags in
                 self?.searchController?.updateSearchTags(tags)
                 self?.sharedMediaWithToken(tags)
@@ -1039,6 +1204,124 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 self?.updateSearchMessageTags = f
             })
         }))
+    }
+    
+    private var state: PeerListState? {
+        return self.stateValue.with { $0 }
+    }
+    
+    private func updateState(_ state: PeerListState, previous: PeerListState?) {
+        if previous?.forumPeer != state.forumPeer {
+            if state.forumPeer == nil {
+                switch self.mode {
+                case let .forum(peerId):
+                    if state.splitState == .single {
+                        let controller = ChatController(context: context, chatLocation: .peer(peerId))
+                        self.navigationController?.push(controller)
+                        self.navigationController?.removeImmediately(self, depencyReady: controller)
+                    } else {
+                        self.navigationController?.back()
+                    }
+                default:
+                    break
+                }
+                
+                return
+            }
+        }
+        if previous?.splitState != state.splitState {
+            if  case .minimisize = state.splitState {
+                if self.genericView.searchView.state == .Focus {
+                    self.genericView.searchView.change(state: .None,  false)
+                }
+            }
+            self.checkSearchMedia()
+            self.genericView.tableView.alwaysOpenRowsOnMouseUp = state.splitState == .single
+            self.genericView.tableView.reloadData()
+            DispatchQueue.main.async {
+                self.requestUpdateBackBar()
+            }
+        }
+                
+        setCenterTitle(self.defaultBarTitle)
+        if let forum = state.forumPeer {
+            let title = stringStatus(for: forum.peerView, context: context, onlineMemberCount: forum.online, expanded: true)
+            setCenterStatus(title.status.string)
+        } else {
+            setCenterStatus(nil)
+        }
+        
+    }
+    
+    private var topicRightBar: ImageButton?
+    
+    override func requestUpdateRightBar() {
+        super.requestUpdateRightBar()
+        topicRightBar?.style = navigationButtonStyle
+        topicRightBar?.set(image: theme.icons.chatActions, for: .Normal)
+        topicRightBar?.set(image: theme.icons.chatActionsActive, for: .Highlight)
+        topicRightBar?.setFrameSize(70, 50)
+        topicRightBar?.center()
+    }
+    
+    override func getRightBarViewOnce() -> BarView {
+        switch self.mode {
+        case .forum:
+            let bar = BarView(70, controller: self)
+            let button = ImageButton()
+            bar.addSubview(button)
+            let context = self.context
+                
+            self.topicRightBar = button
+            
+            button.contextMenu = { [weak self] in
+                let menu = ContextMenu()
+                
+                if let peer = self?.state?.forumPeer {
+                    var items: [ContextMenuItem] = []
+
+                    items.append(ContextMenuItem(strings().forumTopicContextInfo, handler: {
+                        ForumUI.openInfo(peer.peer.id, context: context)
+                    }, itemImage: MenuAnimation.menu_show_info.value))
+                    
+                    if peer.peer.groupAccess.canAddMembers {
+                        items.append(ContextMenuItem(strings().forumTopicContextShowAsMessages, handler: {
+                            ForumUI.addMembers(peer.peer.id, context: context)
+                        }, itemImage: MenuAnimation.menu_read.value))
+                    }
+                    if peer.peer.groupAccess.canEditGroupInfo {
+                        if !items.isEmpty {
+                            items.append(ContextSeparatorItem())
+                        }
+                        items.append(ContextMenuItem(strings().forumTopicContextNew, handler: {
+                            ForumUI.createTopic(peer.peer.id, context: context)
+                        }, itemImage: MenuAnimation.menu_edit.value))
+                    }
+                    if !items.isEmpty {
+                        for item in items {
+                            menu.addItem(item)
+                        }
+                    }
+                }
+                
+                return menu
+            }
+            return bar
+        default:
+            break
+        }
+        return super.getRightBarViewOnce()
+    }
+    
+    override var defaultBarTitle: String {
+        switch self.mode {
+        case .folder:
+            return strings().chatListArchivedChats
+        case .forum:
+            return state?.forumPeer?.peer.displayTitle ?? super.defaultBarTitle
+        default:
+            return super.defaultBarTitle
+        }
     }
     
     private func checkSearchMedia() {
@@ -1124,9 +1407,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         if let location = location {
             switch location {
             case .peer:
-                self.genericView.tableView.changeSelection(stableId: UIChatListEntryId.chatId(location.peerId, -1))
-            case .replyThread:
-                self.genericView.tableView.changeSelection(stableId: nil)
+                self.genericView.tableView.changeSelection(stableId: UIChatListEntryId.chatId(.chatList(location.peerId), -1))
+            case let .thread(data):
+                self.genericView.tableView.changeSelection(stableId: UIChatListEntryId.chatId(.forum(makeMessageThreadId(data.messageId)), -1))
             }
         } else {
             self.genericView.tableView.changeSelection(stableId: nil)
@@ -1134,44 +1417,50 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     private func showSearchController(animated: Bool) {
+      
+        
         if searchController == nil {
-           // delay(0.15, closure: {
-                let rect = self.genericView.tableView.frame
-                let searchController = SearchController(context: self.context, open:{ [weak self] (peerId, messageId, close) in
-                    if let peerId = peerId {
-                        self?.open(with: .chatId(peerId, -1), messageId: messageId, close:close)
-                    } else {
-                        self?.genericView.searchView.cancel(true)
-                    }
-                }, options: self.searchOptions, frame:NSMakeRect(rect.minX, rect.minY, self.frame.width, rect.height))
-                
-                searchController.pinnedItems = self.collectPinnedItems
-                
-                self.searchController = searchController
-//                self.genericView.tableView.change(opacity: 0, animated: animated, completion: { [weak self] _ in
-//                    self?.genericView.tableView.isHidden = true
-//                })
-                searchController.defaultQuery = self.genericView.searchView.query
-                searchController.navigationController = self.navigationController
-                searchController.viewWillAppear(true)
-                
-                
-                
-                if animated {
-                    searchController.view.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.25, completion:{ [weak self] complete in
-                        if complete {
-                            self?.searchController?.viewDidAppear(animated)
-                        //     self?.genericView.tableView.isHidden = true
-                        }
-                    })
-                    searchController.view.layer?.animateScaleSpring(from: 1.05, to: 1.0, duration: 0.4, bounce: false)
-                    searchController.view.layer?.animatePosition(from: NSMakePoint(rect.minX, rect.minY + 15), to: rect.origin, duration: 0.4, timingFunction: .spring)
-
+            
+            let initialTags: SearchTags
+            switch self.mode {
+            case let .forum(peerId):
+                initialTags = .init(messageTags: nil, peerTag: peerId)
+            default:
+                initialTags = .init(messageTags: nil, peerTag: nil)
+            }
+            
+            let rect = self.genericView.tableView.frame
+            let frame = NSMakeRect(rect.minX, rect.minY, self.frame.width, rect.height)
+            let searchController = SearchController(context: self.context, open:{ [weak self] (peerId, messageId, close) in
+                if let peerId = peerId {
+                    self?.open(with: .chatId(.chatList(peerId), -1), messageId: messageId, close:close)
                 } else {
-                    searchController.viewDidAppear(animated)
+                    self?.genericView.searchView.cancel(true)
                 }
-                self.addSubview(searchController.view)
-           // })
+            }, options: self.searchOptions, frame: frame, tags: initialTags)
+            
+            searchController.pinnedItems = self.collectPinnedItems
+            
+            self.searchController = searchController
+            searchController.defaultQuery = self.genericView.searchView.query
+            searchController.navigationController = self.navigationController
+            searchController.viewWillAppear(true)
+            
+            
+            
+            if animated {
+                searchController.view.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.25, completion:{ [weak self] complete in
+                    if complete {
+                        self?.searchController?.viewDidAppear(animated)
+                    }
+                })
+                searchController.view.layer?.animateScaleSpring(from: 1.05, to: 1.0, duration: 0.4, bounce: false)
+                searchController.view.layer?.animatePosition(from: NSMakePoint(rect.minX, rect.minY + 15), to: rect.origin, duration: 0.4, timingFunction: .spring)
+
+            } else {
+                searchController.viewDidAppear(animated)
+            }
+            self.addSubview(searchController.view)
         }
     }
     
@@ -1214,19 +1503,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         genericView.searchView.change(state: .Focus, animated)
         if let text = text {
             genericView.searchView.setString(text)
-         //   self?.searchController?.updateSearchTags(tag)
-            //genericView.searchView.updateTags(<#T##tags: [String]##[String]#>, <#T##image: CGImage##CGImage#>)
         }
     }
-    
-    override func navigationUndoHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> ()->Void  {
-        genericView.layer?.animatePosition(from: NSMakePoint(0, previous), to: NSMakePoint(0, current), removeOnCompletion: false)
-        return { [weak genericView] in
-            genericView?.layer?.removeAllAnimations()
-        }
-    }
-    
-   
    
     
     var collectPinnedItems:[PinnedItemId] {
@@ -1276,24 +1554,34 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
         
         switch entryId {
-        case let .chatId(peerId, _):
-            
-            if let modalAction = navigation.modalAction as? FWDNavigationAction, peerId == context.peerId {
-                _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, context: context, peerId: context.peerId).start()
-                _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
-                modalAction.afterInvoke()
-                navigation.removeModalAction()
-            } else {
-                
-                if let current = navigation.controller as? ChatController, peerId == current.chatInteraction.peerId, let messageId = messageId, current.mode == .history {
-                    current.chatInteraction.focusMessageId(nil, messageId, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
+        case let .chatId(type, _):
+            switch type {
+            case let .chatList(peerId):
+                if let modalAction = navigation.modalAction as? FWDNavigationAction, peerId == context.peerId {
+                    _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, context: context, peerId: context.peerId).start()
+                    _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
+                    modalAction.afterInvoke()
+                    navigation.removeModalAction()
                 } else {
-                    let chat:ChatController = addition ? ChatAdditionController(context: context, chatLocation: .peer(peerId), messageId: messageId) : ChatController(context: self.context, chatLocation: .peer(peerId), messageId: messageId, initialAction: initialAction)
-                    navigation.push(chat, context.layout == .single || forceAnimated)
+                    if let current = navigation.controller as? ChatController, peerId == current.chatInteraction.peerId, let messageId = messageId, current.mode == .history {
+                        current.chatInteraction.focusMessageId(nil, messageId, .center(id: 0, innerId: nil, animated: false, focus: .init(focus: true), inset: 0))
+                    } else {
+                        let chatLocation: ChatLocation = .peer(peerId)
+                        let chat: ChatController
+                        if addition {
+                            chat = ChatAdditionController(context: context, chatLocation: chatLocation, messageId: messageId)
+                        } else {
+                            chat = ChatController(context: self.context, chatLocation: chatLocation, messageId: messageId, initialAction: initialAction)
+                        }
+                        navigation.push(chat, context.layout == .single || forceAnimated)
+                    }
                 }
+                
+            case .forum:
+                break
             }
         case let .groupId(groupId):
-            self.navigationController?.push(ChatListController(context, modal: false, groupId: groupId))
+            self.navigationController?.push(ChatListController(context, modal: false, mode: .folder(groupId)))
         case .reveal:
             break
         case .empty:
@@ -1338,14 +1626,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
-        if animated {
-           // genericView.tableView.layoutItems()
-        }
         
         if context.layout == .single && animated {
             context.globalPeerHandler.set(.single(nil))
         }
-
         
         context.window.set(handler: { [weak self] _ in
             if let strongSelf = self {
@@ -1383,8 +1667,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             return .invoked
         }, with: self, for: .Tab, priority: .modal, modifierFlags: [.control, .shift])
         
-        
-        
     }
     
 
@@ -1394,5 +1676,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         context.window.removeAllHandlers(for: self)
 
     }
+    
     
 }

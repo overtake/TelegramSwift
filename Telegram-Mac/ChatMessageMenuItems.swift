@@ -111,7 +111,7 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
         |> map { view in
             return view.0.entries.compactMap { entry in
                 switch entry {
-                case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _):
+                case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _):
                     return renderedPeer.peer
                 default:
                     return nil
@@ -309,7 +309,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         }
         
         if data.chatMode.threadId == nil, let peer = peer, peer.isSupergroup {
-            if let attr = data.message.replyThread, attr.count > 0 {
+            if let attr = data.message.threadAttr, attr.count > 0 {
                 var messageId: MessageId = message.id
                 var modeIsReplies = true
                 if let source = message.sourceReference {

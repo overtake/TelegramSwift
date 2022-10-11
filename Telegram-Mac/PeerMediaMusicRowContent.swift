@@ -19,18 +19,11 @@ class PeerMediaMusicRowItem: PeerMediaRowItem {
     fileprivate let file:TelegramMediaFile
     fileprivate let thumbResource: TelegramMediaResource?
     fileprivate let isCompactPlayer: Bool
-    fileprivate let messages: [Message]
-    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, isCompactPlayer: Bool = false, gallery: GalleryAppearType = .history, viewType: GeneralViewType = .legacy) {
+    fileprivate let music:(Message, GalleryAppearType)->Void
+    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, isCompactPlayer: Bool = false, galleryType: GalleryAppearType = .history, gallery: @escaping(Message, GalleryAppearType)->Void = { _, _ in }, music: @escaping(Message, GalleryAppearType)->Void, viewType: GeneralViewType = .legacy) {
         self.isCompactPlayer = isCompactPlayer
-        
+        self.music = music
         file = object.message!.media[0] as! TelegramMediaFile
-        
-        switch object {
-        case let .messageEntry(_, messages, _, _):
-            self.messages = messages
-        default:
-            self.messages = []
-        }
         
         let music = file.musicText
         self.textLayout = TextViewLayout(.initialize(string: music.0, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1, truncationType: .end)
@@ -61,7 +54,7 @@ class PeerMediaMusicRowItem: PeerMediaRowItem {
         self.thumbResource = resource
         
         
-        super.init(initialSize, interface, object, gallery: gallery, viewType: viewType)
+        super.init(initialSize, interface, object, galleryType: galleryType, gallery: gallery, viewType: viewType)
         
     }
     
@@ -261,12 +254,7 @@ class PeerMediaMusicRowView : PeerMediaRowView, APDelegate {
     
     func open() {
         if let item = item as? PeerMediaMusicRowItem  {
-            if let controller = item.context.audioPlayer, controller.playOrPause(item.message.id) {
-            } else {
-                let controller = APChatMusicController(context: item.interface.context, chatLocationInput: .peer(peerId: item.message.id.peerId), mode: .history, index: MessageIndex(item.message), messages: item.messages)
-                item.interface.inlineAudioPlayer(controller)
-                controller.start()
-            }
+            item.music(item.message, item.galleryType)
         }
     }
     

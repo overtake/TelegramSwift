@@ -740,6 +740,13 @@ final class PremiumLimitController : ModalViewController {
         let savedGifsCount: Int?
         let savedStickersCount: Int?
         let publicLinksCount: Int?
+        init(pinnedCount: Int? = nil, foldersCount: Int? = nil, savedGifsCount: Int? = nil, savedStickersCount: Int? = nil, publicLinksCount: Int? = nil) {
+            self.pinnedCount = pinnedCount
+            self.foldersCount = foldersCount
+            self.savedGifsCount = savedGifsCount
+            self.savedStickersCount = savedStickersCount
+            self.publicLinksCount = publicLinksCount
+        }
     }
     
     private let context: AccountContext

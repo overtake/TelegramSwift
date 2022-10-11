@@ -185,7 +185,7 @@ class ChatGroupedItem: ChatRowItem {
                     if self.chatInteraction.mode.threadId?.peerId == message.id.peerId {
                         type = .messages(self.messages)
                     }
-                    showChatGallery(context: context, message: message, self.table, self.parameters[i], type: type, chatMode: self.chatInteraction.mode)
+                    showChatGallery(context: context, message: message, self.table, self.parameters[i], type: type, chatMode: self.chatInteraction.mode, contextHolder: self.chatInteraction.contextHolder())
                     
                     }, showMessage: { [weak self] message in
                         self?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
