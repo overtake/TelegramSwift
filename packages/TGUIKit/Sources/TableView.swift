@@ -1184,13 +1184,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         beginTableUpdates()
         enumerateItems { item in
-            if item.width != frame.width {
-                _ = item.makeSize(frame.width, oldWidth: item.width)
-                reloadData(row: item.index, animated: false)
-                NSAnimationContext.current.duration = 0.0
-                NSAnimationContext.current.timingFunction = nil
-                tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: item.index))
-            }
+            _ = item.makeSize(frame.width, oldWidth: item.width)
+            reloadData(row: item.index, animated: false)
             return true
         }
         
@@ -2667,9 +2662,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         switch state {
         case let .none(animation):
             // print("scroll do nothing")
-            animation?.animate(table:self, documentOffset: documentOffset, added: inserted.map{ $0.0 }, removed: removed, previousRange: visibleRange)
-            if let animation = animation, !animation.scrollBelow, !transition.isEmpty, contentView.bounds.minY > 0 {
-                saveVisible(.lower)
+            if !oldEmpty {
+                animation?.animate(table:self, documentOffset: documentOffset, added: inserted.map{ $0.0 }, removed: removed, previousRange: visibleRange)
+                if let animation = animation, !animation.scrollBelow, !transition.isEmpty, contentView.bounds.minY > 0 {
+                    saveVisible(.lower)
+                }
             }
             
         case .bottom, .top, .center:
@@ -3005,9 +3002,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                         layer.add(animation, forKey: "height")
                     }
                 }
-                
-              
-                
+                                
                 self.updateStickAfterScroll(animated)
                 return
             }

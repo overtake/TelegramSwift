@@ -795,7 +795,6 @@ final class ChatTextInputState: Codable, Equatable {
             
             for (i, attr) in attributes.enumerated() {
                 let updated: ChatTextInputAttribute
-                NSLog("\(attr.range.lowerBound), \(attr.range.upperBound)")
                 updated = attr.updateRange(attr.range.lowerBound ..< max(attr.range.upperBound - symbolLength, attr.range.lowerBound))
                 attributes[i] = updated
             }

@@ -452,7 +452,7 @@ class ChatRowItem: TableRowItem {
         } else {
             if let message = message, let peer = message.peers[message.id.peerId] {
                 switch chatInteraction.chatLocation {
-                case .peer, .replyThread:
+                case .peer, .thread:
                     if chatInteraction.mode.threadId == effectiveCommentMessage?.id {
                         return false
                     }
@@ -631,7 +631,7 @@ class ChatRowItem: TableRowItem {
                             chatInteraction.openReplyThread(threadMessageId, false, true, .comments(origin: attr.messageId))
                         } else {
                             switch chatInteraction.mode {
-                            case .replyThread:
+                            case .thread:
                                 chatInteraction.focusMessageId(nil, attr.messageId, .CenterEmpty)
                             default:
                                 chatInteraction.openInfo(attr.messageId.peerId, true, attr.messageId, nil)
@@ -909,7 +909,7 @@ class ChatRowItem: TableRowItem {
         var canFillAuthorName: Bool = true
         var disable: Bool = false
         switch chatInteraction.chatLocation {
-        case .peer, .replyThread:
+        case .peer, .thread:
             if renderType == .bubble, let peer = coreMessageMainPeer(message) {
                 canFillAuthorName = isIncoming && (peer.isGroup || peer.isSupergroup || message.id.peerId == chatInteraction.context.peerId || message.id.peerId == repliesPeerId || message.adAttribute != nil)
                 if let media = message.effectiveMedia {
@@ -1519,13 +1519,13 @@ class ChatRowItem: TableRowItem {
                     self.peer = author
                 } else if let signature = info.authorSignature {
                     
-                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil)
+                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [])
                 } else {
                     self.peer = message.chatPeer(context.peerId)
                 }
             } else if let info = message.forwardInfo, chatInteraction.peerId == context.account.peerId || (object.renderType == .list && info.psaType != nil) {
                 if info.author == nil, let signature = info.authorSignature {
-                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil)
+                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [])
                 } else if (object.renderType == .list && info.psaType != nil) {
                     self.peer = info.author ?? message.chatPeer(context.peerId)
                 } else {
@@ -2447,6 +2447,16 @@ class ChatRowItem: TableRowItem {
         if isBigEmoji {
             return rightSize.height
         }
+        if let message = message, let entities = message.textEntities {
+            for entity in entities.entities {
+                if case .CustomEmoji = entity.type {
+                    let range = NSMakeRange(0, message.text.length)
+                    if range == NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound) {
+                        return rightSize.height
+                    }
+                }
+            }
+        }
         
         if let lastLine = lastLineContentWidth {
             if lastLine.single && !isBubbleFullFilled {
@@ -2488,7 +2498,7 @@ class ChatRowItem: TableRowItem {
     
     func openInfo() {
         switch chatInteraction.chatLocation {
-        case .peer, .replyThread:
+        case .peer, .thread:
             if let peer = peer {
                 let messageId: MessageId?
                 if chatInteraction.isGlobalSearchMessage {

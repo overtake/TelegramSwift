@@ -25,9 +25,55 @@ protocol ChatLocationContextHolder: AnyObject {
 
 enum ChatLocation: Equatable {
     case peer(PeerId)
-    case replyThread(ChatReplyThreadMessage)
+    case thread(ChatReplyThreadMessage)
 }
 
+extension ChatLocation {
+    var unreadMessageCountsItem: UnreadMessageCountsItem {
+        switch self {
+        case let .peer(peerId):
+            return .peer(peerId)
+        case let .thread(data):
+            return .peer(data.messageId.peerId)
+        }
+    }
+    
+    var postboxViewKey: PostboxViewKey {
+        switch self {
+        case let .peer(peerId):
+            return .peer(peerId: peerId, components: [])
+        case let .thread(data):
+            return .peer(peerId: data.messageId.peerId, components: [])
+        }
+    }
+    
+    var pinnedItemId: PinnedItemId {
+        switch self {
+        case let .peer(peerId):
+            return .peer(peerId)
+        case let .thread(data):
+            return .peer(data.messageId.peerId)
+        }
+    }
+    
+    var peerId: PeerId {
+        switch self {
+        case let .peer(peerId):
+            return peerId
+        case let .thread(data):
+            return data.messageId.peerId
+        }
+    }
+    var threadId: Int64? {
+        switch self {
+        case .peer:
+            return nil
+        case let .thread(replyThreadMessage):
+            return makeMessageThreadId(replyThreadMessage.messageId) //Int64(replyThreadMessage.messageId.id)
+        }
+    }
+
+}
 
 
 struct TemporaryPasswordContainer {
@@ -94,7 +140,6 @@ final class AccountContext {
     var audioPlayer:APController?
     
     let peerChannelMemberCategoriesContextsManager: PeerChannelMemberCategoriesContextsManager
-    let chatUndoManager = ChatUndoManager()
     let blockedPeersContext: BlockedPeersContext
     let cacheCleaner: AccountClearCache
     let activeSessionsContext: ActiveSessionsContext
@@ -214,10 +259,19 @@ final class AccountContext {
         return _autoplayMedia.with { $0 }
     }
     
-    private(set) var layout:SplitViewState = .none
-    let layoutHandler:ValuePromise<SplitViewState> = ValuePromise(ignoreRepeated:true)
-    private let layoutDisposable = MetaDisposable()
-
+    var layout:SplitViewState = .none {
+        didSet {
+            layoutHandler.set(layout)
+        }
+    }
+    
+    
+    private let layoutHandler:ValuePromise<SplitViewState> = ValuePromise(ignoreRepeated:true)
+    var layoutValue: Signal<SplitViewState, NoError> {
+        return layoutHandler.get()
+    }
+    
+    
 
     var isInGlobalSearch: Bool = false
     
@@ -568,11 +622,6 @@ final class AccountContext {
             self?.isPremium = value
         }))
         
-        
-        
-        layoutDisposable.set(layoutHandler.get().start(next: { state in
-            self.layout = state
-        }))
     }
     
     @objc private func updateKeyWindow() {
@@ -663,7 +712,6 @@ final class AccountContext {
         preloadGifsDisposable.dispose()
         freeSpaceDisposable.dispose()
         premiumDisposable.dispose()
-        layoutDisposable.dispose()
         NotificationCenter.default.removeObserver(self)
         #if !SHARE
       //  self.walletPasscodeTimeoutContext.clear()
@@ -695,10 +743,14 @@ final class AccountContext {
     func chatLocationInput(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>) -> ChatLocationInput {
         switch location {
         case let .peer(peerId):
-            return .peer(peerId: peerId)
-        case let .replyThread(data):
-            let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
-            return .thread(peerId: data.messageId.peerId, threadId: makeMessageThreadId(data.messageId), data: context.state)
+            return .peer(peerId: peerId, threadId: nil)
+        case let .thread(data):
+            if data.isForumPost {
+                return .peer(peerId: data.messageId.peerId, threadId: makeMessageThreadId(data.messageId))
+            } else {
+                let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
+                return .thread(peerId: data.messageId.peerId, threadId: makeMessageThreadId(data.messageId), data: context.state)
+            }
         }
     }
     
@@ -706,9 +758,21 @@ final class AccountContext {
         switch location {
         case .peer:
             return .single(nil)
-        case let .replyThread(data):
-            let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
-            return context.maxReadOutgoingMessageId
+        case let .thread(data):
+            if data.isForumPost {
+                let viewKey: PostboxViewKey = .messageHistoryThreadInfo(peerId: data.messageId.peerId, threadId: Int64(data.messageId.id))
+                return self.account.postbox.combinedView(keys: [viewKey])
+                |> map { views -> MessageId? in
+                    if let threadInfo = views.views[viewKey] as? MessageHistoryThreadInfoView, let data = threadInfo.info?.get(MessageHistoryThreadData.self) {
+                        return MessageId(peerId: location.peerId, namespace: Namespaces.Message.Cloud, id: data.maxOutgoingReadId)
+                    } else {
+                        return nil
+                    }
+                }
+            } else {
+                let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
+                return context.maxReadOutgoingMessageId
+            }
         }
     }
 
@@ -728,9 +792,22 @@ final class AccountContext {
 
                 return Int(unreadCount)
             }
-        case let .replyThread(data):
-            let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
-            return context.unreadCount
+        case let .thread(data):
+            if data.isForumPost {
+                let viewKey: PostboxViewKey = .messageHistoryThreadInfo(peerId: data.messageId.peerId, threadId: Int64(data.messageId.id))
+                return self.account.postbox.combinedView(keys: [viewKey])
+                |> map { views -> Int in
+                    if let threadInfo = views.views[viewKey] as? MessageHistoryThreadInfoView, let data = threadInfo.info?.get(MessageHistoryThreadData.self) {
+                        return Int(data.incomingUnreadCount)
+                    } else {
+                        return 0
+                    }
+                }
+            } else {
+                let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
+                return context.unreadCount
+            }
+
         }
     }
 
@@ -740,7 +817,7 @@ final class AccountContext {
         switch location {
         case .peer:
             let _ = self.engine.messages.applyMaxReadIndexInteractively(index: messageIndex).start()
-        case let .replyThread(data):
+        case let .thread(data):
             let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
             context.applyMaxReadIndex(messageIndex: messageIndex)
         }

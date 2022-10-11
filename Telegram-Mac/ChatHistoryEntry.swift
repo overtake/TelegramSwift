@@ -461,9 +461,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
     }
     
     for (i, entry) in messagesEntries.enumerated() {
-        var message = entry.message
-        
-        
+        var message = entry.message        
         
         if message.media.isEmpty {
             if message.text.length <= 7 {
@@ -965,6 +963,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             sorted.remove(at: sorted.count - 2)
         }
     }
+    
 
     return sorted
 }

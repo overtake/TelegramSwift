@@ -130,7 +130,6 @@ final class ChatInteraction : InterfaceObserver  {
     var toggleSidebar:()->Void = {}
     var mentionPressed:()->Void = {}
     var jumpToDate:(Date)->Void = {_ in}
-    var openFeedInfo: (PeerGroupId)->Void = {_ in}
     var showNextPost:()->Void = {}
     var startRecording:(Bool, NSView?)->Void = {_,_ in}
     var openProxySettings: ()->Void = {}
@@ -178,7 +177,6 @@ final class ChatInteraction : InterfaceObserver  {
     var runReactionEffect:(MessageReaction.Reaction, MessageId)->Void = { _, _ in }
 
     var toggleSendAs: (PeerId)->Void = { _ in }
-    var getCachedData:()->CachedPeerData? = { return nil }
     
     var showDeleterSetup:(Control)->Void = { _ in }
     

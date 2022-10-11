@@ -494,9 +494,11 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
     }
     
     @objc func updateAnimatableContent() -> Void {
-        for (_, value) in inlineStickerItemViews {
-            if let superview = value.superview {
-                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && window != nil && window!.isKeyWindow
+        DispatchQueue.main.async {
+            for (_, value) in self.inlineStickerItemViews {
+                if let superview = value.superview {
+                    value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && self.window != nil && self.window!.isKeyWindow
+                }
             }
         }
     }

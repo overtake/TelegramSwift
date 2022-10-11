@@ -208,19 +208,30 @@ func convertEntries(from update: PeerMediaUpdate, tags: MessageTags, timeDiffere
     return converted
 }
 
-fileprivate func preparedMediaTransition(from fromView:[AppearanceWrapperEntry<PeerMediaSharedEntry>]?, to toView:[AppearanceWrapperEntry<PeerMediaSharedEntry>], account:Account, initialSize:NSSize, interaction:ChatInteraction, animated:Bool, scroll:TableScrollState, tags:MessageTags) -> TableUpdateTransition {
+private final class Arguments {
+    let context: AccountContext
+    let gallery:(Message, GalleryAppearType)->Void
+    let music:(Message, GalleryAppearType)->Void
+    init(context: AccountContext, gallery: @escaping(Message, GalleryAppearType) -> Void, music: @escaping(Message, GalleryAppearType)->Void) {
+        self.context = context
+        self.gallery = gallery
+        self.music = music
+    }
+}
+
+fileprivate func preparedMediaTransition(from fromView:[AppearanceWrapperEntry<PeerMediaSharedEntry>]?, to toView:[AppearanceWrapperEntry<PeerMediaSharedEntry>], arguments: Arguments, initialSize:NSSize, interaction:ChatInteraction, animated:Bool, scroll:TableScrollState, tags:MessageTags) -> TableUpdateTransition {
     let (removed,inserted,updated) = proccessEntries(fromView, right: toView, { entry -> TableRowItem in
         
         switch entry.entry {
         case let .messageEntry(message, _, _, viewType):
             if tags == .file, message.effectiveMedia is TelegramMediaFile {
-                return PeerMediaFileRowItem(initialSize, interaction, entry.entry, viewType: viewType)
+                return PeerMediaFileRowItem(initialSize, interaction, entry.entry, gallery: arguments.gallery, viewType: viewType)
             } else if tags == .webPage {
-                return PeerMediaWebpageRowItem(initialSize,interaction, entry.entry, viewType: viewType)
+                return PeerMediaWebpageRowItem(initialSize,interaction, entry.entry, gallery: arguments.gallery, viewType: viewType)
             } else if tags == .music, message.effectiveMedia is TelegramMediaFile {
-                return PeerMediaMusicRowItem(initialSize, interaction, entry.entry, viewType: viewType)
+                return PeerMediaMusicRowItem(initialSize, interaction, entry.entry, gallery: arguments.gallery, music: arguments.music, viewType: viewType)
             } else if tags == .voiceOrInstantVideo, message.effectiveMedia is TelegramMediaFile {
-                return PeerMediaVoiceRowItem(initialSize,interaction, entry.entry, viewType: viewType)
+                return PeerMediaVoiceRowItem(initialSize,interaction, entry.entry, gallery: arguments.gallery, music: arguments.music, viewType: viewType)
             } else {
                 return GeneralRowItem(initialSize, height: 1, stableId: entry.stableId)
             }
@@ -282,7 +293,7 @@ struct MediaSearchState : Equatable {
 
 class PeerMediaListController: TableViewController, PeerMediaSearchable {
     
-    private var chatLocation:ChatLocation
+    private var peerId:PeerId
     private var chatInteraction:ChatInteraction
     private let disposable: MetaDisposable = MetaDisposable()
     private let entires = Atomic<[AppearanceWrapperEntry<PeerMediaSharedEntry>]?>(value: nil)
@@ -317,10 +328,12 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
         let old = self.isSearch
         self.isSearch = !old
     }
+    private let threadInfo: ThreadInfo?
 
     
-    public init(context: AccountContext, chatLocation: ChatLocation, chatInteraction: ChatInteraction) {
-        self.chatLocation = chatLocation
+    public init(context: AccountContext, peerId: PeerId, threadInfo: ThreadInfo?, chatInteraction: ChatInteraction) {
+        self.peerId = peerId
+        self.threadInfo = threadInfo
         self.chatInteraction = chatInteraction
         super.init(context)
     }
@@ -371,6 +384,16 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
         }
     }
     
+    private var chatLocationInput: ChatLocationInput {
+        let location: ChatLocationInput
+        if let threadInfo = threadInfo {
+            location = context.chatLocationInput(for: .thread(threadInfo.message), contextHolder: threadInfo.contextHolder)
+        } else {
+            location = .peer(peerId: peerId, threadId: nil)
+        }
+        return location
+    }
+    
     public func load(with tagMask:MessageTags) -> Void {
      
         
@@ -392,6 +415,10 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
         
         let historyPromise: Promise<PeerMediaUpdate> = Promise()
         let context = self.context
+        let peerId = self.peerId
+        let threadId = self.threadInfo?.message.messageId
+        
+        let chatLocationInput = self.chatLocationInput
 
         
         let historyViewUpdate = combineLatest(location.get(), searchState.get(), externalSearch.get()) |> deliverOnMainQueue
@@ -400,7 +427,7 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
                 if let externalSearch = externalSearch {
                     return .single(PeerMediaUpdate(messages: externalSearch.messages, updateType: .history, laterId: nil, earlierId: nil, searchState: searchState, contentSettings: context.contentSettings))
                 } else if searchState.request.isEmpty {
-                    return combineLatest(queue: prepareQueue, chatHistoryViewForLocation(location, context: strongSelf.context, chatLocation: strongSelf.chatLocation, fixedCombinedReadStates: nil, tagMask: tagMask, additionalData: []), automaticDownloadSettings(postbox: strongSelf.context.account.postbox)) |> mapToQueue { view, settings -> Signal<PeerMediaUpdate, NoError> in
+                    return combineLatest(queue: prepareQueue, chatHistoryViewForLocation(location, context: context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: tagMask, additionalData: [], chatLocationInput: chatLocationInput), automaticDownloadSettings(postbox: context.account.postbox)) |> mapToQueue { view, settings -> Signal<PeerMediaUpdate, NoError> in
                         switch view {
                         case .Loading:
                             return .single(PeerMediaUpdate())
@@ -418,7 +445,7 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
                     }
                 } else {
                     let searchMessagesLocation: SearchMessagesLocation
-                    searchMessagesLocation = .peer(peerId: strongSelf.chatLocation.peerId, fromId: nil, tags: tagMask, topMsgId: nil, minDate: nil, maxDate: nil)
+                    searchMessagesLocation = .peer(peerId: peerId, fromId: nil, tags: tagMask, topMsgId: threadId, minDate: nil, maxDate: nil)
                     
                     let signal = context.engine.messages.searchMessages(location: searchMessagesLocation, query: searchState.request, state: nil) |> deliverOnMainQueue |> map {$0.0.messages} |> map { messages -> PeerMediaUpdate in
                         return PeerMediaUpdate(messages: messages, updateType: .search, laterId: nil, earlierId: nil, searchState: searchState, contentSettings: context.contentSettings)
@@ -448,6 +475,44 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
         let _entries = self.entires
         
         
+        let mode: ChatMode
+        let contextHolder: Atomic<ChatLocationContextHolder?>
+        if let threadInfo = threadInfo {
+            mode = .thread(data: threadInfo.message, mode: .topic(origin: threadInfo.message.messageId))
+            contextHolder = threadInfo.contextHolder
+        } else {
+            mode = .history
+            contextHolder = .init(value: nil)
+        }
+        
+        let arguments = Arguments(context: context, gallery: { [weak self] message, type in
+            showChatGallery(context: context, message: message, self?.genericView, nil, type: type, chatMode: mode, contextHolder: contextHolder)
+        }, music: { message, type in
+            
+            if let controller = context.audioPlayer, controller.playOrPause(message.id) {
+                return
+            }
+            let messages: [Message]
+            switch type {
+            case let .messages(value):
+                messages = value
+            default:
+                messages = []
+            }
+            
+            if let file = message.media.first as? TelegramMediaFile  {
+                let controller: APController
+                if file.isMusic {
+                    controller = APChatMusicController(context: context, chatLocationInput: chatLocationInput, mode: mode, index: MessageIndex(message), messages: messages)
+                } else {
+                    controller = APChatVoiceController(context: context, chatLocationInput: chatLocationInput, mode: mode, index: MessageIndex(message), baseRate: FastSettings.playingRate, volume: FastSettings.volumeRate)
+                }
+                chatInteraction.inlineAudioPlayer(controller)
+                controller.start()
+            }
+            
+        })
+        
         
         let historyViewTransition = combineLatest(queue: prepareQueue,historyPromise.get(), appearanceSignal) |> map { update, appearance -> (transition: TableUpdateTransition, previousUpdate: PeerMediaUpdate?, currentUpdate: PeerMediaUpdate) in
             let animated = animated.swap(true)
@@ -463,7 +528,7 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
                 scroll = .up(animated)
             }
             
-            let transition = preparedMediaTransition(from: previous, to: entries, account: context.account, initialSize: initialSize.modify({$0}), interaction: chatInteraction, animated: previousUpdate?.searchState.state != update.searchState.state, scroll:scroll, tags:tagMask)
+            let transition = preparedMediaTransition(from: previous, to: entries, arguments: arguments, initialSize: initialSize.modify({$0}), interaction: chatInteraction, animated: previousUpdate?.searchState.state != update.searchState.state, scroll:scroll, tags:tagMask)
             
             return (transition: transition, previousUpdate: previousUpdate, currentUpdate: update)
 

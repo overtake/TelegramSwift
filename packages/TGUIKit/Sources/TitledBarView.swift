@@ -37,11 +37,12 @@ private class TitledContainerView : View {
         }
     }
     
-    private func updateLayouts() {
+    func updateLayouts() {
         var additionalInset: CGFloat = 0
         if let (image,_) = titleImage {
             additionalInset += image.backingSize.width + 5
         }
+                
         self.titleNode = TextNode.layoutText(maybeNode: nil,  text, nil, 1, .end, NSMakeSize(frame.width - inset() - additionalInset, frame.height), nil,false, .left)
 
         self.statusNode = TextNode.layoutText(maybeNode: nil,  status, nil, 1, .end, NSMakeSize(frame.width - inset() - additionalInset, frame.height), nil,false, .left)
@@ -201,8 +202,13 @@ open class TitledBarView: BarView {
     open override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         containerView.setFrameSize(newSize)
-        containerView.setNeedsDisplay()
+        _containerView.updateLayouts()
     }
+    open func update() {
+        
+    }
+    
+    
     public init(controller: ViewController, _ text:NSAttributedString? = nil, _ status:NSAttributedString? = nil, textInset:CGFloat? = nil) {
         self.text = text
         self.status = status

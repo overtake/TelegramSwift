@@ -264,7 +264,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     private var messageTextView:TextView? = nil
     
     private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
-
+    
+    private var inlineTopicPhotoLayer: InlineStickerItemLayer?
         
     private var badgeView:View?
     private var additionalBadgeView:View?
@@ -336,7 +337,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             if let inputActivities = inputActivities, let item = item as? ChatListRowItem {
                 let oldValue = oldValue?.1.map {
-                    ChatListInputActivity($0, $1)
+                    PeerListState.InputActivities.Activity($0, $1)
                 }
                 
                 if inputActivities.1.isEmpty {
@@ -625,18 +626,28 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     }
     
     @objc func updateAnimatableContent() -> Void {
-        for (_, value) in inlineStickerItemViews {
-            if let superview = value.superview {
-                var isKeyWindow: Bool = false
-                if let window = window {
-                    if !window.canBecomeKey {
-                        isKeyWindow = true
-                    } else {
-                        isKeyWindow = window.isKeyWindow
+        
+        let checkValue:(InlineStickerItemLayer)->Void = { value in
+            DispatchQueue.main.async {
+                if let superview = value.superview {
+                    var isKeyWindow: Bool = false
+                    if let window = superview.window {
+                        if !window.canBecomeKey {
+                            isKeyWindow = true
+                        } else {
+                            isKeyWindow = window.isKeyWindow
+                        }
                     }
+                    value.isPlayable = superview.visibleRect != .zero && isKeyWindow
                 }
-                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
             }
+        }
+        
+        for (_, value) in inlineStickerItemViews {
+            checkValue(value)
+        }
+        if let value = inlineTopicPhotoLayer {
+            checkValue(value)
         }
         updatePlayerIfNeeded()
     }
@@ -730,7 +741,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  self.statusControl = nil
              }
              
-             if let messageText = item.ctxMessageText, !hiddenMessage {
+             if let messageText = item.ctxMessageText, !hiddenMessage, item.context.layout != .minimisize {
                  let current: TextView
                  if let view = self.messageTextView {
                      current = view
@@ -762,7 +773,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                          self.photoVideoView = nil
                          
                          self.photoVideoView = MediaPlayerView(backgroundThread: true)
-                         self.photoVideoView!.layer?.cornerRadius = self.photo.frame.height / 2
                          
                          
                          containerView.addSubview(self.photoVideoView!, positioned: .above, relativeTo: self.photo)
@@ -808,6 +818,10 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  self.photoVideoView = nil
                  self.videoRepresentation = nil
              }
+             
+             self.photoVideoView?.layer?.cornerRadius = item.isForum ? 10 : self.photo.frame.height / 2
+
+             
              updateListeners()
 
             
@@ -842,7 +856,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
 
             if item.isCollapsed != wasHidden {
                 expandView?.change(pos: NSMakePoint(0, item.isCollapsed ? 0 : item.height), animated: animated)
-                containerView.change(pos: NSMakePoint(0, item.isCollapsed ? -70 : 0), animated: !revealActionInvoked && animated)
+                containerView.change(pos: NSMakePoint(0, item.isCollapsed ? -item.height : 0), animated: !revealActionInvoked && animated)
             }
 
             if let isOnline = item.isOnline, item.context.layout != .minimisize {
@@ -922,6 +936,34 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 self.animatedView?.removeFromSuperview()
                 self.animatedView = nil
             }
+             
+             switch item.mode {
+             case let .topic(_, info):
+                 let size = NSMakeSize(30, 30)
+                 let current: InlineStickerItemLayer
+                 if let layer = self.inlineTopicPhotoLayer, layer.file?.fileId.id == info.icon {
+                     current = layer
+                 } else {
+                     if let layer = inlineTopicPhotoLayer {
+                         performSublayerRemoval(layer, animated: animated)
+                         self.inlineTopicPhotoLayer = nil
+                     }
+                     if let fileId = info.icon {
+                         current = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .playCount(2))
+                     } else {
+                         let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor)
+                         current = .init(account: item.context.account, file: file, size: size, playPolicy: .playCount(2))
+                     }
+                     current.superview = containerView
+                     self.containerView.layer?.addSublayer(current)
+                     self.inlineTopicPhotoLayer = current
+                 }
+             default:
+                 if let layer = inlineTopicPhotoLayer {
+                     performSublayerRemoval(layer, animated: animated)
+                     self.inlineTopicPhotoLayer = nil
+                 }
+             }
             
             
             photo.setState(account: item.context.account, state: item.photo)
@@ -1185,6 +1227,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         revealActionInvoked = false
         needsDisplay = true
         needsLayout = true
+        
+        updateListeners()
+        updateAnimatableContent()
     }
     
     func initRevealState() {
@@ -1305,7 +1350,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
 
             revealRightView.addSubview(delete)
             
-            if item.filter == .allChats {
+            if item.filter == .allChats, item.mode.threadId == nil {
                 revealRightView.addSubview(archive)
             }
             
@@ -1776,12 +1821,14 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         super.viewDidMoveToWindow()
         updateListeners()
         updatePlayerIfNeeded()
+        updateAnimatableContent()
     }
     
     override func viewDidMoveToSuperview() {
         super.viewDidMoveToSuperview()
         updateListeners()
         updatePlayerIfNeeded()
+        updateAnimatableContent()
     }
     
 
@@ -1799,6 +1846,12 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         
         photoVideoView?.frame = photo.frame
 
+        if item.context.layout == .minimisize {
+            self.inlineTopicPhotoLayer?.frame = NSMakeRect(20, 20, 30, 30)
+        } else {
+            self.inlineTopicPhotoLayer?.frame = NSMakeRect(10, 12, 30, 30)
+        }
+        
         animatedView?.frame = bounds
         
         expandView?.frame = NSMakeRect(0, item.isCollapsed ? 0 : item.height, frame.width - .borderSize, frame.height)
@@ -1820,7 +1873,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 additionalDelta = 0
             }
             
-            containerView.frame = NSMakeRect(-additionalDelta, item.isCollapsed ? -70 : 0, frame.width - .borderSize, 70)
+            containerView.frame = NSMakeRect(-additionalDelta, item.isCollapsed ? -item.height : 0, frame.width - .borderSize, item.height)
             revealLeftView.frame = NSMakeRect(-leftRevealWidth - additionalDelta, 0, leftRevealWidth, frame.height)
             revealRightView.frame = NSMakeRect(frame.width - additionalDelta, 0, rightRevealWidth, frame.height)
             
@@ -1856,9 +1909,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 messageTextView?.setFrameOrigin(NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 1 + messageOffset))
             }
             
-            
         }
     }
+    
     
     
 }

@@ -661,15 +661,17 @@ class AnimationLayerContainer : View {
     
     @objc func updateAnimatableContent() -> Void {
         if let value = self.imageLayer, let superview = value.superview {
-            var isKeyWindow: Bool = false
-            if let window = window {
-                if !window.canBecomeKey {
-                    isKeyWindow = true
-                } else {
-                    isKeyWindow = window.isKeyWindow
+            DispatchQueue.main.async {
+                var isKeyWindow: Bool = false
+                if let window = self.window {
+                    if !window.canBecomeKey {
+                        isKeyWindow = true
+                    } else {
+                        isKeyWindow = window.isKeyWindow
+                    }
                 }
+                value.isPlayable = !superview.visibleRect.isEmpty && isKeyWindow
             }
-            value.isPlayable = !superview.visibleRect.isEmpty && isKeyWindow
         }
     }
     

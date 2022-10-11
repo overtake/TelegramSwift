@@ -119,9 +119,7 @@ final class EmojiScreenEffect {
                         
                         if contentView.visibleRect != .zero {
                             success = true
-                        } else {
-                            NSLog("\(contentView.superview), \(contentView.visibleRect)")
-                        }
+                        } 
                     }
                 }
             }

@@ -86,7 +86,7 @@ class ContextSearchMessageItem: GeneralRowItem {
         
         var text = pullText(from: message) as String
         if text.isEmpty {
-            text = serviceMessageText(message, account: context.account)
+            text = serviceMessageText(message, account: context.account).0
         }
         _ = messageTitle.append(string: text, color: theme.colors.text, font: .normal(.text))
         
@@ -118,7 +118,7 @@ class ContextSearchMessageItem: GeneralRowItem {
         dateLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, false, .left)
         dateSelectedLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, true, .left)
         
-        self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, message, nil)
+        self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, message, nil, peer.isForum)
         
         super.init(initialSize, height: 44, action: action)
 

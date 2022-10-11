@@ -239,6 +239,12 @@ enum LocalAnimatedSticker : String {
     case menu_smile
     case menu_monogram
     case menu_gift
+    case menu_add_member
+    case menu_topics
+    case menu_pause
+    case menu_play
+
+    case forum_topic
     
     case custom_reaction
     

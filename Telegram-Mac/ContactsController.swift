@@ -299,7 +299,7 @@ class ContactsController: PeersListController {
             switch location {
             case let .peer(peerId):
                 genericView.tableView.changeSelection(stableId: ContactsControllerEntryId.peerId(peerId.toInt64()))
-            case .replyThread:
+            case .thread:
                 break
             }
         } else {

@@ -375,7 +375,7 @@ final class CustomReactionEffectView: View {
     private let disposable = MetaDisposable()
     private let context: AccountContext
     
-    required init(frame: CGRect, context: AccountContext, fileId: Int64) {
+    required init(frame: CGRect, context: AccountContext, fileId: Int64, file: TelegramMediaFile? = nil) {
         self.context = context
         super.init(frame: frame)
         addSubview(backgroundView)
@@ -413,8 +413,7 @@ final class CustomReactionEffectView: View {
                 return nil
             }
         } |> deliverOnMainQueue
-        
-        
+                
         let fileSignal: Signal<(TelegramMediaFile?, LottieAnimation?), NoError> = context.inlinePacksContext.load(fileId: fileId) |> mapToSignal { file in
             if let file = file, let emoji = file.customEmojiText {
                 return context.reactions.stateValue

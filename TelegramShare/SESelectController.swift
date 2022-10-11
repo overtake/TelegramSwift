@@ -233,9 +233,7 @@ class ShareObject {
                 }
             }
         }
-        
-        NSLog("\(entries), \(shareContext.inputItems)")
-        
+                
         for peerId in entries {
             for j in 0 ..< shareContext.inputItems.count {
                 if let item = shareContext.inputItems[j] as? NSExtensionItem {
@@ -534,7 +532,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
                         
                         for entry in value.0.entries {
                             switch entry {
-                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _, _, _):
+                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _, _, _, _):
                                 if let peer = renderedPeer.chatMainPeer {
                                     if !fromSetIds.contains(peer.id), contains[peer.id] == nil {
                                         if peer.canSendMessage(false) {

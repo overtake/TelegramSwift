@@ -442,7 +442,7 @@ enum UserInfoEntry: PeerInfoEntry {
     case bio(sectionId:Int, text: String, PeerEquatable, viewType: GeneralViewType)
     case scam(sectionId:Int, title: String, text: String, viewType: GeneralViewType)
     case phoneNumber(sectionId:Int, index: Int, value: PhoneNumberWithLabel, canCopy: Bool, viewType: GeneralViewType)
-    case userName(sectionId:Int, value: String, viewType: GeneralViewType)
+    case userName(sectionId:Int, value: [String], viewType: GeneralViewType)
     case reportReaction(sectionId: Int, value: MessageId, viewType: GeneralViewType)
     case sendMessage(sectionId:Int, viewType: GeneralViewType)
     case shareContact(sectionId:Int, viewType: GeneralViewType)
@@ -908,7 +908,7 @@ enum UserInfoEntry: PeerInfoEntry {
         
         switch self {
         case let .info(_, peerView, editable, viewType):
-            return PeerInfoHeadItem(initialSize, stableId:stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, viewType: viewType, editing: editable)
+            return PeerInfoHeadItem(initialSize, stableId:stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: nil, viewType: viewType, editing: editable)
         case let .setFirstName(_, text, viewType):
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoFirstNamePlaceholder, filter: { $0 }, updated: {
                 arguments.updateEditingNames(firstName: $0, lastName: state.editingState?.editingLastName)
@@ -938,10 +938,25 @@ enum UserInfoEntry: PeerInfoEntry {
                 arguments.copy("+\(value.number)")
             })
         case let .userName(_, value, viewType):
-            let link = "https://t.me/\(value)"
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoUsername, copyMenuText: strings().textCopyLabelUsername, text:"@\(value)", context: arguments.context, viewType: viewType, _copyToClipboard: {
+            let link = "https://t.me/\(value[0])"
+            
+            let text: String
+            if value.count > 1 {
+                text = strings().peerInfoUsernamesList("@\(value[0])", value.suffix(value.count - 1).map { "@\($0)" }.joined(separator: ", "))
+            } else {
+                text = "@\(value[0])"
+            }
+            
+            let interactions = TextViewInteractions()
+            interactions.processURL = { value in
+                if let value = value as? inAppLink {
+                    arguments.copy(value.link)
+                }
+            }
+            
+            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoUsername, copyMenuText: strings().textCopyLabelUsername, text: text, context: arguments.context, viewType: viewType, detectLinks: value.count > 1, _copyToClipboard: {
                 arguments.copy(link)
-            })
+            }, linkInteractions: interactions)
         case let .reportReaction(_, value, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReportReaction, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
                 arguments.reportReaction(value)
@@ -1102,8 +1117,15 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                 } else if view.peerIsContact {
                     infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: strings().peerInfoPhone, number: strings().newContactPhoneHidden), canCopy: false, viewType: .singleItem))
                 }
-                if let username = user.username, !username.isEmpty {
-                    infoBlock.append(.userName(sectionId: sectionId, value: username, viewType: .singleItem))
+                
+                var usernames = user.usernames.map {
+                    $0.username
+                }
+                if usernames.isEmpty, let address = user.addressName {
+                    usernames.append(address)
+                }
+                if !usernames.isEmpty {
+                    infoBlock.append(.userName(sectionId: sectionId, value: usernames, viewType: .singleItem))
                 }
                 
                 if !user.isBot {

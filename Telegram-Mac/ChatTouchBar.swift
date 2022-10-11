@@ -190,7 +190,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         self.customizationAllowedItemIdentifiers = self.defaultItemIdentifiers
         self.textView.updateTouchBarItemIdentifiers()
         self.customizationIdentifier = .windowBar
-        layoutStateDisposable.set(chatInteraction.context.layoutHandler.get().start(next: { [weak self] _ in
+        layoutStateDisposable.set(chatInteraction.context.layoutValue.start(next: { [weak self] _ in
             guard let `self` = self, let chatInteraction = self.chatInteraction else {return}
             self.notify(with: chatInteraction.presentation, oldValue: chatInteraction.presentation, animated: true)
         }))

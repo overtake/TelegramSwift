@@ -16,8 +16,10 @@ import RangeSet
 
 private final class PlayerListArguments {
     let chatInteraction: ChatInteraction
-    init(chatInteraction: ChatInteraction) {
+    let music:(Message, GalleryAppearType)->Void
+    init(chatInteraction: ChatInteraction, music:@escaping(Message, GalleryAppearType)->Void) {
         self.chatInteraction = chatInteraction
+        self.music = music
     }
 }
 
@@ -45,7 +47,7 @@ private enum PlayerListEntry: TableItemListNodeEntry {
     func item(_ arguments: PlayerListArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .message(_, message):
-            return PeerMediaMusicRowItem(initialSize, arguments.chatInteraction, .messageEntry(message, [], .defaultSettings, .singleItem),  isCompactPlayer: true)
+            return PeerMediaMusicRowItem(initialSize, arguments.chatInteraction, .messageEntry(message, [], .defaultSettings, .singleItem), isCompactPlayer: true, music: arguments.music)
         }
     }
     
@@ -674,7 +676,9 @@ class PlayerListController: TelegramGenericViewController<PlayerListView> {
         let updateView = Atomic<PeerMediaUpdate?>(value: nil)
         
         
-        let arguments = PlayerListArguments(chatInteraction: chatInteraction)
+        let arguments = PlayerListArguments(chatInteraction: chatInteraction, music: { message, _ in
+            context.audioPlayer?.playOrPause(message.id)
+        })
         
         let historyViewTransition: Signal<TableUpdateTransition, NoError>
         if messages.isEmpty {

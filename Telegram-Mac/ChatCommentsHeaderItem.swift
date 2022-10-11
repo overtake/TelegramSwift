@@ -31,11 +31,20 @@ class ChatCommentsHeaderItem : TableStickItem {
         let text: String
         switch entry {
         case let .commentsHeader(empty, _, _):
-            if empty {
-                text = strings().chatCommentsHeaderEmpty
+            if interaction.mode.isTopicMode {
+                if empty {
+                    text = strings().chatTopicHeaderEmpty
+                } else {
+                    text = strings().chatTopicHeaderFull
+                }
             } else {
-                text = strings().chatCommentsHeaderFull
+                if empty {
+                    text = strings().chatCommentsHeaderEmpty
+                } else {
+                    text = strings().chatCommentsHeaderFull
+                }
             }
+            
         default:
             text = ""
         }

@@ -597,6 +597,11 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         if style == .none {
             window.abortSwiping()
         }
+        defer {
+            CATransaction.commit()
+        }
+        
+        CATransaction.begin()
         
         
         let previous:ViewController = self.controller;
@@ -644,12 +649,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         let popInteractiveInset: CGFloat? = window.inLiveSwiping ? controller.frame.minX : nil
         
         controller.view.frame = NSMakeRect(0, contentInset , NSWidth(containerView.frame), NSHeight(containerView.frame) - contentInset)
-        if #available(OSX 10.12, *) {
-            
-        } else {
-            controller.view.needsLayout = true
-        }
-        
+       
         
         let reloadHeaders = { [weak self] in
             if let header = self?.header, header.needShown {
@@ -667,6 +667,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         var sto: CGFloat = 0
         
+        
+        
         switch style {
         case .push:
             
@@ -679,6 +681,10 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             nto = 0
             pfrom = previous.view.frame.minX
             pto = -round(NSWidth(self.frame)/3.0)
+            
+            previous.view.setFrameOrigin(NSMakePoint(pfrom, previous.frame.minY))
+            controller.view.setFrameOrigin(NSMakePoint(nfrom, controller.frame.minY))
+
             containerView.addSubview(controller.view, positioned: .above, relativeTo: previous.view)
             
             sto = -shadowView.frame.width
@@ -703,7 +709,10 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             nto = 0
             pfrom = previous.view.frame.minX
             pto = frame.width
-            previous.view.setFrameOrigin(NSMakePoint(pto, previous.frame.minY))
+            
+            previous.view.setFrameOrigin(NSMakePoint(pfrom, previous.frame.minY))
+            controller.view.setFrameOrigin(NSMakePoint(nfrom, controller.frame.minY))
+
             containerView.addSubview(controller.view, positioned: .below, relativeTo: previous.view)
             
             
@@ -780,14 +789,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         containerView.addSubview(navigationBar)
 
         reloadHeaders()
-        
-       
-        
-       
-        
-        
-        CATransaction.begin()
-        
+                
+              
         shadowView.change(opacity: shadowView.direction == .left ? 0.2 : 1, animated: true, duration: previous.animationStyle.duration, timingFunction: previous.animationStyle.function)
         
         shadowView.change(pos: NSMakePoint(sto, shadowView.frame.minY), animated: true, duration: previous.animationStyle.duration, timingFunction: previous.animationStyle.function, completion: { [weak self] completed in
@@ -800,17 +803,17 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         }
 
         
-         previous.view.layer?.animate(from: pfrom as NSNumber, to: pto as NSNumber, keyPath: "position.x", timingFunction: CAMediaTimingFunctionName.spring, duration: previous.animationStyle.duration, removeOnCompletion: false, additive: false, completion: { [weak prevBackgroundView] completed in
+        
+        previous.view._change(pos: NSMakePoint(pto, previous.frame.minY), animated: true, duration: controller.animationStyle.duration, timingFunction: .spring, completion: { [weak prevBackgroundView] completed in
             if completed {
                 previous.view.removeFromSuperview()
-                previous.view.layer?.removeAnimation(forKey: "position.x")
                 previous.viewDidDisappear(true);
                 prevBackgroundView?.removeFromSuperview()
             }
         });
         
 
-        controller.view.layer?.animate(from: nfrom as NSNumber, to: nto as NSNumber, keyPath: "position.x", timingFunction: CAMediaTimingFunctionName.spring, duration: controller.animationStyle.duration, removeOnCompletion: true, additive: false, completion: { [weak nextBackgroundView, weak self] completed in
+        controller.view._change(pos: NSMakePoint(nto, controller.frame.minY), animated: true, duration: controller.animationStyle.duration, timingFunction: .spring, completion: { [weak nextBackgroundView, weak self] completed in
             guard let `self` = self else { return }
             if completed {
                 controller.viewDidAppear(true);
@@ -821,10 +824,23 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             self.lock = false
             controller.view.restoreHierarchyDynamicContent()
 
-        });
-        
-        
-        CATransaction.commit()
+        })
+
+        /*
+         
+         controller.view.layer?.animate(from: nfrom as NSNumber, to: nto as NSNumber, keyPath: "position.x", timingFunction: CAMediaTimingFunctionName.spring, duration: controller.animationStyle.duration, removeOnCompletion: true, additive: false, completion: { [weak nextBackgroundView, weak self] completed in
+             guard let `self` = self else { return }
+             if completed {
+                 controller.viewDidAppear(true);
+                 _ = controller.becomeFirstResponder()
+                 nextBackgroundView?.removeFromSuperview()
+             }
+             self.navigationRightBorder.frame = NSMakeRect(self.frame.width - .borderSize, 0, .borderSize, controller.bar.height)
+             self.lock = false
+             controller.view.restoreHierarchyDynamicContent()
+
+         });
+         */
         
     }
     
@@ -952,6 +968,10 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             self.stack.remove(at: index)
             controller.didRemovedFromStack()
         }
+    }
+    
+    public func index(of controller: ViewController) -> Int? {
+        return self.stack.firstIndex(of: controller)
     }
     
     private let depencyReadyDisposable = MetaDisposable()

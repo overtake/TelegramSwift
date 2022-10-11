@@ -392,3 +392,62 @@ public class LocalBundleResource: TelegramMediaResource {
     }
 
 }
+
+
+public struct ForumTopicIconResourceId {
+    public let title: String
+    public let bgColors: [NSColor]
+    public let strokeColors: [NSColor]
+    public let iconColor: Int32
+    public var uniqueId: String {
+        return "forum-topic-icon-\(self.title)-\(self.bgColors.map { $0.hexString })-\(self.strokeColors.map { $0.hexString })"
+    }
+    
+
+}
+public class ForumTopicIconResource: TelegramMediaResource {
+    
+    
+    public let title: String
+    public let iconColor: Int32
+    public let bgColors: [NSColor]
+    public let strokeColors: [NSColor]
+
+    public init(title: String, bgColors: [NSColor], strokeColors: [NSColor], iconColor: Int32) {
+        self.title = title
+        self.bgColors = bgColors
+        self.strokeColors = strokeColors
+        self.iconColor = iconColor
+    }
+    
+    public var size: Int64? {
+        return nil
+    }
+    
+    public required init(decoder: PostboxDecoder) {
+        self.title = decoder.decodeStringForKey("t", orElse: "")
+        self.iconColor = decoder.decodeInt32ForKey("i", orElse: 0)
+        self.bgColors = decoder.decodeStringArrayForKey("b").compactMap {
+            .init(hexString: $0)
+        }
+        self.strokeColors = decoder.decodeStringArrayForKey("s").compactMap {
+            .init(hexString: $0)
+        }
+    }
+    
+    public func encode(_ encoder: PostboxEncoder) {
+        encoder.encodeString(self.title, forKey: "t")
+        encoder.encodeInt32(self.iconColor, forKey: "i")
+        encoder.encodeStringArray(self.bgColors.map { $0.hexString }, forKey: "b")
+        encoder.encodeStringArray(self.strokeColors.map { $0.hexString }, forKey: "s")
+    }
+    
+    public var id: MediaResourceId {
+        return .init(ForumTopicIconResourceId(title: title, bgColors: bgColors, strokeColors: self.strokeColors, iconColor: iconColor).uniqueId)
+    }
+    
+    public func isEqual(to: MediaResource) -> Bool {
+        return to.id == self.id
+    }
+
+}

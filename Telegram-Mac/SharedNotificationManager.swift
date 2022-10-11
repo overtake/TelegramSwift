@@ -416,7 +416,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
             return account.postbox.loadedPeerWithId(account.peerId) |> mapToSignal { peer in
                     if let message = values.0.first?.messages.first {
                         return account.postbox.transaction { transaction -> Signal<([Source], [MessageId:NSImage], InAppNotificationSettings, Bool, Peer, String?), NoError> in
-                            let notifications = transaction.getPeerNotificationSettings(message.id.peerId) as? TelegramPeerNotificationSettings
+                            let notifications = transaction.getPeerNotificationSettings(id: message.id.peerId) as? TelegramPeerNotificationSettings
                             
                             if notifications == nil || !notifications!.isMuted {
                                 if let messageSound = notifications?.messageSound {

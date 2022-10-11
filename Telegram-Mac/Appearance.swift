@@ -1080,10 +1080,14 @@ func generateChatGroupToggleUnselected(foregroundColor: NSColor, backgroundColor
     }, scale: 2)!
 }
 
-func generateAvatarPlaceholder(foregroundColor: NSColor, size: NSSize) -> CGImage {
+func generateAvatarPlaceholder(foregroundColor: NSColor, size: NSSize, cornerRadius: CGFloat = -1) -> CGImage {
     return generateImage(size, contextGenerator: { size, ctx in
         ctx.clear(NSMakeRect(0, 0, size.width, size.height))
-        ctx.round(size, size.width/2)
+        if cornerRadius == -1 {
+            ctx.round(size, size.width/2)
+        } else {
+            ctx.round(size, min(cornerRadius, size.width / 2))
+        }
         ctx.setFillColor(foregroundColor.cgColor)
         ctx.fill(NSMakeRect(0, 0, size.width, size.height))
     }, scale: 1.0)!
@@ -2426,6 +2430,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                profile_channel_sign: {NSImage(named: "Icon_Profile_ChannelSign")!.precomposed(flipVertical: true)},
                                                profile_channel_type: {NSImage(named: "Icon_Profile_ChannelType")!.precomposed(flipVertical: true)},
                                                profile_group_type: {NSImage(named: "Icon_Profile_GroupType")!.precomposed(flipVertical: true)},
+                                                profile_group_topics: {NSImage(named: "Icon_Profile_Topics")!.precomposed(flipVertical: true)},
                                                profile_group_destruct: {NSImage(named: "Icon_Profile_Destruct")!.precomposed(flipVertical: true)},
                                                profile_group_discussion: {NSImage(named: "Icon_Profile_Discussion")!.precomposed(flipVertical: true)},
                                                profile_requests: {NSImage(named: "Icon_Profile_Requests")!.precomposed(palette.accent, flipVertical: true)},

@@ -570,7 +570,7 @@ final class MessageReadMenuItem : ContextMenuItem {
             if case .broadcast = channel.info {
                 return false
             } else {
-                if let cachedData = chatInteraction.getCachedData() as? CachedChannelData {
+                if let cachedData = chatInteraction.presentation.cachedData as? CachedChannelData {
                     let members = cachedData.participantsSummary.memberCount ?? 0
                     if members > maxParticipantCount {
                         return false

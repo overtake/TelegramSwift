@@ -326,7 +326,7 @@ open class AppMenuRowView: AppMenuBasicItemView {
                 return
             }
             item.interaction?.action(item.item)
-        }, for: .Click)
+        }, for: .SingleClick)
         
         containerView.set(handler: { [weak self] _ in
             guard let item = self?.item as? AppMenuRowItem else {

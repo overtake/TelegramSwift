@@ -513,12 +513,17 @@ struct AppSearchOptions : OptionSet {
         if flags.contains(AppSearchOptions.chats) {
             rawValue |= AppSearchOptions.chats.rawValue
         }
+        if flags.contains(AppSearchOptions.topics) {
+            rawValue |= AppSearchOptions.topics.rawValue
+        }
         
         self.rawValue = rawValue
     }
     
     static let messages = AppSearchOptions(rawValue: 1)
     static let chats = AppSearchOptions(rawValue: 2)
+    static let topics = AppSearchOptions(rawValue: 4)
+
 }
 
 
@@ -563,7 +568,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     
     private let isRevealed: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
     
-    private let globalTagsValue: ValuePromise<SearchTags> = ValuePromise(SearchTags(messageTags: nil, peerTag: nil), ignoreRepeated: true)
+    private let globalTagsValue: ValuePromise<SearchTags> = ValuePromise(ignoreRepeated: true)
 
     
     var setPeerAsTag: ((Peer?)->Void)? = nil
@@ -665,7 +670,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         var entries: [ChatListSearchEntry] = []
                         
                         
-                        if strings().peerSavedMessages.lowercased().hasPrefix(query.lowercased()) || NSLocalizedString("Peer.SavedMessages", comment: "nil").lowercased().hasPrefix(query.lowercased()) {
+                        if query.isSavedMessagesText {
                             entries.append(.savedMessages(accountPeer))
                             ids[accountPeer.id] = accountPeer.id
                         }
@@ -786,8 +791,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 searchMessagesState.set(nil)
                 
                 
-                let remoteSearch = searchMessagesState.get() |> mapToSignal { state in
-                    return context.engine.messages.searchMessages(location: location , query: query, state: state)
+                let remoteSearch = searchMessagesState.get() |> mapToSignal { state -> Signal<([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?), NoError> in
+                    
+                    return context.engine.messages.searchMessages(location: location, query: query, state: state)
                         |> delay(0.2, queue: prepareQueue)
                         |> map { result -> ([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?) in
                             
@@ -801,14 +807,13 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             return (entries, false, result.1, result.0)
                     }
                 }
-                //cachedData.with { $0.cachedMessages(for: .key(query: query, tags: globalTags)) }
                 
                 let foundRemoteMessages: Signal<([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?), NoError> = !options.contains(.messages) ? .single(([], false, nil, nil)) : .single(([], true, nil, nil)) |> then(remoteSearch)
                 
                 return combineLatest(queue: prepareQueue, foundLocalPeers, foundRemotePeers, foundRemoteMessages, isRevealed)
                     |> map { localPeers, remotePeers, remoteMessages, isRevealed -> ([ChatListSearchEntry], Bool, SearchMessagesState?, SearchMessagesResult?) in
                         
-                        _ = cachedData.with { value -> Void in
+                        cachedData.with { value -> Void in
                             value.cacheMessages(remoteMessages.0, for: .key(query: query, tags: globalTags))
                             value.cacheLocalPeers(remotePeers.0, for: query)
                             value.cacheRemotePeers(remotePeers.1, for: query)
@@ -859,7 +864,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         return (value.0, value.1, false, value.2, value.3)
                     }
                 
-            } else {
+            } else if options.contains(.chats) {
 
                 let recently = context.engine.peers.recentlySearchedPeers() |> mapToSignal { recently -> Signal<[PeerView], NoError> in
                     return combineLatest(recently.map {context.account.viewTracker.peerView($0.peer.peerId)})
@@ -959,6 +964,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 } |> map {value in
                     return (value.0, value.1, true, nil, nil)
                 }
+            } else if options.contains(.topics) {
+                return .complete()
+            } else {
+                return .complete()
             }
         }
         
@@ -994,7 +1003,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         if let item = item {
                             _ = self.genericView.select(item: item, notify: false, byClick: false)
                         }
-                    case .replyThread:
+                    case .thread:
                         break
                     }
                 }
@@ -1138,12 +1147,12 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         disposable.dispose()
     }
     
-    init(context: AccountContext, open:@escaping(PeerId?, MessageId?, Bool) ->Void, options: AppSearchOptions = [.chats, .messages], frame:NSRect = NSZeroRect, groupId: PeerGroupId = .root) {
+    init(context: AccountContext, open:@escaping(PeerId?, MessageId?, Bool) ->Void, options: AppSearchOptions = [.chats, .messages], frame:NSRect = NSZeroRect, groupId: PeerGroupId = .root, tags: SearchTags = .init(messageTags: nil, peerTag: nil)) {
         self.context = context
         self.open = open
         self.options = options
         self.groupId = groupId
-        
+        self.globalTagsValue.set(tags)
         var setPeerAsTag:((Peer?)->Void)? = nil
         
         self.arguments = SearchControllerArguments(context: context, removeRecentPeerId: { peerId in

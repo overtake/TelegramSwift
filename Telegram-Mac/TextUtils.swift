@@ -163,21 +163,17 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
     
 }
 
-func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:RenderedPeer? = nil, embeddedState:StoredPeerChatInterfaceState? = nil, folder: Bool = false, applyUserName: Bool = false, isPremium: Bool = false, isReplied: Bool = false) -> NSAttributedString {
+func chatListText(account:Account, for message:Message?, messagesCount: Int = 1, renderedPeer:RenderedPeer? = nil, draft:EngineChatList.Draft? = nil, folder: Bool = false, applyUserName: Bool = false, isPremium: Bool = false, isReplied: Bool = false) -> NSAttributedString {
     
-    let interfaceState = embeddedState.flatMap(_internal_decodeStoredChatInterfaceState).flatMap({
-        ChatInterfaceState.parse($0, peerId: nil, context: nil)
-    })
     
-    if let embeddedState = interfaceState, !embeddedState.inputState.inputText.isEmpty {
+    if let draft = draft, !draft.text.isEmpty {
         let mutableAttributedText = NSMutableAttributedString()
         _ = mutableAttributedText.append(string: "\(strings().chatListDraft) ", color: theme.colors.redUI, font: .normal(.text))
         
-                
         let textAttr = NSMutableAttributedString()
-        _ = textAttr.append(string: embeddedState.inputState.inputText, color: theme.chatList.grayTextColor, font: .normal(.text))
+        _ = textAttr.append(string: draft.text, color: theme.chatList.grayTextColor, font: .normal(.text))
         
-        InlineStickerItem.apply(to: textAttr, associatedMedia: [:], entities:  embeddedState.inputState.messageTextEntities(), isPremium: isPremium, ignoreSpoiler: true)
+        InlineStickerItem.apply(to: textAttr, associatedMedia: [:], entities:  draft.entities, isPremium: isPremium, ignoreSpoiler: true)
 
         mutableAttributedText.append(textAttr)
         
@@ -281,8 +277,13 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             attributedText.setSelected(color: theme.colors.underSelectedColor, range: attributedText.range)
            
         } else if message.effectiveMedia is TelegramMediaAction {
-            _ = attributedText.append(string: serviceMessageText(message, account:account, isReplied: isReplied), color: theme.chatList.grayTextColor, font: .normal(.text))
+            let service = serviceMessageText(message, account:account, isReplied: isReplied)
+            _ = attributedText.append(string: service.0, color: theme.chatList.grayTextColor, font: .normal(.text))
+            attributedText.detectBoldColorInString(with: .normal(.text))
             attributedText.setSelected(color: theme.colors.underSelectedColor, range: attributedText.range)
+            
+            InlineStickerItem.apply(to: attributedText, associatedMedia: service.2, entities: service.1, isPremium: isPremium)
+            
         } else if let media = message.effectiveMedia as? TelegramMediaExpiredContent {
             let text:String
             switch media.data {
@@ -325,7 +326,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
     return NSAttributedString()
 }
 
-func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = false) -> String {
+func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = false) -> (String, [MessageTextEntity], [MediaId : Media]) {
     
     var authorName:String = ""
     if let displayTitle = message.author?.displayTitle {
@@ -336,13 +337,19 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
         }
     }
     
+    
+    var text: String = ""
+    var entities: [MessageTextEntity] = []
+    var media: [MediaId : Media] = [:]
+    
     if let media = message.effectiveMedia as? TelegramMediaExpiredContent {
         switch media.data {
         case .image:
-            return strings().chatListPhoto
+            text = strings().chatListPhoto
         case .file:
-            return strings().chatListVideo
+            text = strings().chatListVideo
         }
+        return (text, [], [:])
     }
    
     
@@ -352,49 +359,47 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
         switch action.action {
         case let .addedMembers(peerIds: peerIds):
             if peerIds.first == authorId {
-                return strings().chatServiceGroupAddedSelf(authorName)
+                text = strings().chatServiceGroupAddedSelf(authorName)
             } else {
-                return strings().chatServiceGroupAddedMembers1(authorName, peerDebugDisplayTitles(peerIds, message.peers))
+                text = strings().chatServiceGroupAddedMembers1(authorName, peerDebugDisplayTitles(peerIds, message.peers))
             }
         case .phoneNumberRequest:
-            return "phone number request"
+            text = "phone number request"
         case .channelMigratedFromGroup:
-            return ""
+            text = ""
         case let .groupCreated(title: title):
             if peer.isChannel {
-                return strings().chatServiceChannelCreated
+                text = strings().chatServiceChannelCreated
             } else {
-                return strings().chatServiceGroupCreated1(authorName, title)
+                text = strings().chatServiceGroupCreated1(authorName, title)
             }
         case .groupMigratedToChannel:
-            return ""
+            text = ""
         case .historyCleared:
-            return ""
+            text = ""
         case .historyScreenshot:
-            return strings().chatServiceGroupTookScreenshot(authorName)
+            text = strings().chatServiceGroupTookScreenshot(authorName)
         case let .joinedByLink(inviter: peerId):
             if peerId == authorId {
-                return strings().chatServiceGroupJoinedByLink(strings().chatServiceYou)
+                text = strings().chatServiceGroupJoinedByLink(strings().chatServiceYou)
             } else {
-                return strings().chatServiceGroupJoinedByLink(authorName)
+                text = strings().chatServiceGroupJoinedByLink(authorName)
             }
         case let .messageAutoremoveTimeoutUpdated(seconds):
             if seconds > 0 {
-                return strings().chatServiceSecretChatSetTimer1(authorName, autoremoveLocalized(Int(seconds)))
+                text = strings().chatServiceSecretChatSetTimer1(authorName, autoremoveLocalized(Int(seconds)))
             } else {
-                return strings().chatServiceSecretChatDisabledTimer1(authorName)
+                text = strings().chatServiceSecretChatDisabledTimer1(authorName)
             }
         case let .photoUpdated(image: image):
             if let image = image {
-                let text: String
                 if image.videoRepresentations.isEmpty {
                     text = peer.isChannel ? strings().chatServiceChannelUpdatedPhoto : strings().chatServiceGroupUpdatedPhoto(authorName)
                 } else {
                     text = peer.isChannel ? strings().chatServiceChannelUpdatedVideo : strings().chatServiceGroupUpdatedVideo(authorName)
                 }
-                return text
             } else {
-                return peer.isChannel ? strings().chatServiceChannelRemovedPhoto : strings().chatServiceGroupRemovedPhoto(authorName)
+                text = peer.isChannel ? strings().chatServiceChannelRemovedPhoto : strings().chatServiceGroupRemovedPhoto(authorName)
             }
         case .pinnedMessageUpdated:
             if !isReplied {
@@ -412,27 +417,27 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                         replyMessageText = pullText(from: message) as String
                     }
                 }
-                return strings().chatServiceGroupUpdatedPinnedMessage1(authorName, replyMessageText.prefixWithDots(15))
+                text = strings().chatServiceGroupUpdatedPinnedMessage1(authorName, replyMessageText.prefixWithDots(15))
             } else {
-                return strings().chatServicePinnedMessage
+                text = strings().chatServicePinnedMessage
             }
             
         case let .removedMembers(peerIds: peerIds):
             if peerIds.first == authorId {
-                return strings().chatServiceGroupRemovedSelf(authorName)
+                text = strings().chatServiceGroupRemovedSelf(authorName)
             } else {
-                return strings().chatServiceGroupRemovedMembers1(authorName, peerCompactDisplayTitles(peerIds, message.peers))
+                text = strings().chatServiceGroupRemovedMembers1(authorName, peerCompactDisplayTitles(peerIds, message.peers))
             }
 
         case let .titleUpdated(title: title):
-            return peer.isChannel ? strings().chatServiceChannelUpdatedTitle(title) : strings().chatServiceGroupUpdatedTitle1(authorName, title)
+            text = peer.isChannel ? strings().chatServiceChannelUpdatedTitle(title) : strings().chatServiceGroupUpdatedTitle1(authorName, title)
         case let .phoneCall(callId: _, discardReason: reason, duration: duration, isVideo):
             
             if let duration = duration, duration > 0 {
                 if message.author?.id == account.peerId {
-                    return isVideo ? strings().chatListServiceVideoCallOutgoing(.stringForShortCallDurationSeconds(for: duration)) : strings().chatListServiceCallOutgoing(.stringForShortCallDurationSeconds(for: duration))
+                    text = isVideo ? strings().chatListServiceVideoCallOutgoing(.stringForShortCallDurationSeconds(for: duration)) : strings().chatListServiceCallOutgoing(.stringForShortCallDurationSeconds(for: duration))
                 } else {
-                    return isVideo ? strings().chatListServiceVideoCallIncoming(.stringForShortCallDurationSeconds(for: duration)) : strings().chatListServiceCallIncoming(.stringForShortCallDurationSeconds(for: duration))
+                    text = isVideo ? strings().chatListServiceVideoCallIncoming(.stringForShortCallDurationSeconds(for: duration)) : strings().chatListServiceCallIncoming(.stringForShortCallDurationSeconds(for: duration))
                 }
             }
             
@@ -441,13 +446,13 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                 
                 switch reason {
                 case .busy:
-                    return outgoing ? (isVideo ? strings().chatListServiceVideoCallCancelled : strings().chatListServiceCallCancelled) : (isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed)
+                    text = outgoing ? (isVideo ? strings().chatListServiceVideoCallCancelled : strings().chatListServiceCallCancelled) : (isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed)
                 case .disconnect:
-                    return isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed
+                    text = isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed
                 case .hangup:
-                    return outgoing ? (isVideo ? strings().chatListServiceVideoCallCancelled : strings().chatListServiceCallCancelled) : (isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed)
+                    text = outgoing ? (isVideo ? strings().chatListServiceVideoCallCancelled : strings().chatListServiceCallCancelled) : (isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed)
                 case .missed:
-                    return outgoing ? (isVideo ? strings().chatListServiceVideoCallCancelled : strings().chatListServiceCallCancelled) : (isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed)
+                    text = outgoing ? (isVideo ? strings().chatListServiceVideoCallCancelled : strings().chatListServiceCallCancelled) : (isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed)
                 }
             }
         case let .gameScore(gameId: _, score: score):
@@ -459,37 +464,35 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                     }
                 }
             }
-            var text = strings().chatListServiceGameScored1Countable(Int(score), gameName)
+            text = strings().chatListServiceGameScored1Countable(Int(score), gameName)
             if let peer = coreMessageMainPeer(message) {
                 if peer.isGroup || peer.isSupergroup {
                     text = (message.author?.compactDisplayTitle ?? "") + " " + text
                 }
             }
-            return text
         case let .paymentSent(currency, totalAmount, _,  _, _):
-            return strings().chatListServicePaymentSent(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency))
+            text = strings().chatListServicePaymentSent(TGCurrencyFormatter.shared().formatAmount(totalAmount, currency: currency))
         case .unknown:
             break
-        case .customText(let text, _):
-            return text
+        case .customText(let value, _):
+            text = value
         case let .botDomainAccessGranted(domain):
-            return strings().chatServiceBotPermissionAllowed(domain)
+            text = strings().chatServiceBotPermissionAllowed(domain)
         case let .botSentSecureValues(types):
             let permissions = types.map({$0.rawValue}).joined(separator: ", ")
-            return strings().chatServiceSecureIdAccessGranted(peer.displayTitle, permissions)
+            text = strings().chatServiceSecureIdAccessGranted(peer.displayTitle, permissions)
         case .peerJoined:
-            return strings().chatServicePeerJoinedTelegram(authorName)
+            text = strings().chatServicePeerJoinedTelegram(authorName)
         case let .geoProximityReached(fromId, toId, distance):
             let distanceString = stringForDistance(distance: Double(distance))
             if toId == account.peerId {
-                return strings().notificationProximityReachedYou1(message.peers[fromId]?.displayTitle ?? "", distanceString)
+                text = strings().notificationProximityReachedYou1(message.peers[fromId]?.displayTitle ?? "", distanceString)
             } else if fromId == account.peerId {
-                return strings().notificationProximityYouReached1(message.peers[toId]?.displayTitle ?? "", distanceString)
+                text = strings().notificationProximityYouReached1(message.peers[toId]?.displayTitle ?? "", distanceString)
             } else {
-                return strings().notificationProximityReached1(message.peers[fromId]?.displayTitle ?? "", distanceString, message.peers[toId]?.displayTitle ?? "")
+                text = strings().notificationProximityReached1(message.peers[fromId]?.displayTitle ?? "", distanceString, message.peers[toId]?.displayTitle ?? "")
             }
         case let .groupPhoneCall(_, _, scheduledDate, duration):
-            let text: String
             if let duration = duration {
                 if peer.isChannel {
                     text = strings().chatServiceVoiceChatFinishedChannel1(autoremoveLocalized(Int(duration)))
@@ -519,9 +522,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                     }
                 }
             }
-            return text
         case  let .inviteToGroupPhoneCall(_, _, peerIds):
-            let text: String
             
             var list = ""
             for peerId in peerIds {
@@ -533,17 +534,15 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                 }
             }
             
-            if message.author?.id == account.peerId {
+            if authorId == account.peerId {
                 text = strings().chatListServiceVoiceChatInvitationByYou(list)
             } else if peerIds.first == account.peerId {
                 text = strings().chatListServiceVoiceChatInvitationForYou(authorName)
             } else {
                 text = strings().chatListServiceVoiceChatInvitation(authorName, list)
             }
-            return text
         case let .setChatTheme(emoji):
-            let text: String
-            if message.author?.id == account.peerId {
+            if authorId == account.peerId {
                 if emoji.isEmpty {
                     text = strings().chatServiceDisabledThemeYou
                 } else {
@@ -556,10 +555,8 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                     text = strings().chatServiceUpdateTheme(authorName, emoji)
                 }
             }
-            return text
         case .joinedByRequest:
-            let text: String
-            if message.author?.id == account.peerId {
+            if authorId == account.peerId {
                 if message.peers[message.id.peerId]?.isChannel == true {
                     text = strings().chatServiceJoinedChannelByRequest
                 } else {
@@ -572,21 +569,108 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                     text = strings().chatServiceUserJoinedGroupByRequest(authorName)
                 }
             }
-            return text
         case let .webViewData(data):
-            return strings().chatServiceWebData(data)
+            text = strings().chatServiceWebData(data)
         case let .giftPremium(currency, amount, _):
-            let text: String
-            if message.author?.id == account.peerId {
+            if authorId == account.peerId {
                 text = strings().chatServicePremiumGiftSentYou(formatCurrencyAmount(amount, currency: currency))
             } else {
                 text = strings().chatServicePremiumGiftSent(authorName, formatCurrencyAmount(amount, currency: currency))
             }
-            return text
+        case let .topicEdited(components):
+            var fileId: Int64?
+            if components.count == 1 {
+                let component = components[0]
+                switch component {
+                case let .title(title):
+                    if authorId == account.peerId {
+                        text = strings().chatServiceGroupTopicEditedYouTitle(title)
+                    } else {
+                        text = strings().chatServiceGroupTopicEditedTitle(authorName, title)
+                    }
+                case let .iconFileId(iconFileId):
+                    fileId = iconFileId
+                    if let iconFileId = iconFileId {
+                        if authorId == account.peerId {
+                            text = strings().chatServiceGroupTopicEditedYouIcon("~~\(iconFileId)~~")
+                        } else {
+                            text = strings().chatServiceGroupTopicEditedIcon(authorName, "~~\(iconFileId)~~")
+                        }
+                    } else {
+                        if authorId == account.peerId {
+                            text = strings().chatServiceGroupTopicEditedYouIconRemoved
+                        } else {
+                            text = strings().chatServiceGroupTopicEditedIconRemoved(authorName)
+                        }
+                    }
+                    
+                }
+            } else {
+                var title: String = ""
+                var iconFileId: Int64?
+                switch components[0] {
+                case let .title(value):
+                    title = value
+                case let .iconFileId(value):
+                    iconFileId = value
+                    fileId = value
+                }
+                switch components[1] {
+                case let .title(value):
+                    title = value
+                case let .iconFileId(value):
+                    iconFileId = value
+                    fileId = value
+                }
+                if let fileId = fileId {
+                    if authorId == account.peerId {
+                        text = strings().chatServiceGroupTopicEditedYouMixed("~~\(fileId)~~", title)
+                    } else {
+                        text = strings().chatServiceGroupTopicEditedMixed(authorName, "~~\(fileId)~~", title)
+                    }
+                } else {
+                    if authorId == account.peerId {
+                        text = strings().chatServiceGroupTopicEditedYouTitle(title)
+                    } else {
+                        text = strings().chatServiceGroupTopicEditedTitle(authorName, title)
+                    }
+                }
+            }
+            let range = text.nsstring.range(of: "~~\(fileId ?? 0)~~")
+            if range.location != NSNotFound, let fileId = fileId {
+                entities.append(.init(range: range.lowerBound ..< range.upperBound, type: .CustomEmoji(stickerPack: nil, fileId: fileId)))
+            }
+        case let .topicCreated(title, _, iconFileId):
+            let iconText: String?
+            if let iconFileId = iconFileId {
+                iconText = "~~\(iconFileId)~~"
+            } else {
+                iconText = nil
+            }
+            if message.author?.id == account.peerId {
+                if let iconText = iconText {
+                    text = strings().chatServiceGroupTopicCreatedYouIcon(title, iconText)
+                } else {
+                    text = strings().chatServiceGroupTopicCreatedYou(title)
+                }
+            } else {
+                if let iconText = iconText {
+                    text = strings().chatServiceGroupTopicCreatedIcon(authorName, title, iconText)
+                } else {
+                    text = strings().chatServiceGroupTopicCreated(authorName, title)
+                }
+            }
+            if let iconText = iconText, let iconFileId = iconFileId {
+                let range = text.nsstring.range(of: iconText)
+                if range.location != NSNotFound {
+                    entities.append(.init(range: range.lowerBound ..< range.upperBound, type: .CustomEmoji(stickerPack: nil, fileId: iconFileId)))
+                }
+            }
+            
+            
         }
     }
-    
-    return strings().chatMessageUnsupported
+    return (text, entities, media)
 }
 
 struct PeerStatusStringTheme {

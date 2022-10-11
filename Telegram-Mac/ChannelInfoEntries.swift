@@ -613,7 +613,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case info(sectionId: ChannelInfoSection, peerView: PeerView, editable:Bool, updatingPhotoState:PeerInfoUpdatingPhotoState?, viewType: GeneralViewType)
     case scam(sectionId: ChannelInfoSection, title: String, text: String, viewType: GeneralViewType)
     case about(sectionId: ChannelInfoSection, text: String, viewType: GeneralViewType)
-    case userName(sectionId: ChannelInfoSection, value: String, viewType: GeneralViewType)
+    case userName(sectionId: ChannelInfoSection, value: [String], viewType: GeneralViewType)
     case setTitle(sectionId: ChannelInfoSection, text: String, viewType: GeneralViewType)
     case admins(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
     case blocked(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
@@ -1007,7 +1007,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         let arguments = arguments as! ChannelInfoArguments
         switch self {
         case let .info(_, peerView, editable, updatingPhotoState, viewType):
-            return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView:peerView, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: arguments.updateChannelPhoto)
+            return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: nil, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: arguments.updateChannelPhoto)
         case let .scam(_, title, text, viewType):
             return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: title, copyMenuText: strings().textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
         case let .about(_, text, viewType):
@@ -1019,9 +1019,23 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 }
             }, hashtag: arguments.context.bindings.globalSearch)
         case let .userName(_, value, viewType):
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoSharelink, copyMenuText: strings().textCopyLabelShareLink, text: value, context: arguments.context, viewType: viewType, isTextSelectable:false, callback: arguments.share, selectFullWord: true, _copyToClipboard: {
-                arguments.copy(value)
-            })
+            let link = "https://t.me/\(value[0])"
+            
+            let text: String
+            if value.count > 1 {
+                text = strings().peerInfoUsernamesList("https://t.me/\(value[0])", value.suffix(value.count - 1).map { "@\($0)" }.joined(separator: ", "))
+            } else {
+                text = "@\(value[0])"
+            }
+            let interactions = TextViewInteractions()
+            interactions.processURL = { value in
+                if let value = value as? inAppLink {
+                    arguments.copy(value.link)
+                }
+            }
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoSharelink, copyMenuText: strings().textCopyLabelShareLink, text: text, context: arguments.context, viewType: viewType, detectLinks: true, isTextSelectable:false, callback: arguments.share, selectFullWord: true, _copyToClipboard: {
+                arguments.copy(link)
+            }, linkInteractions: interactions)
         case let .report(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReport, type: .none, viewType: viewType, action: { () in
                 arguments.report()
@@ -1210,10 +1224,14 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                 }
             }
             
-            if let username = channel.username, !username.isEmpty {
-                aboutBlock.append(.userName(sectionId: .desc, value: "https://t.me/\(username)", viewType: .singleItem))
-            } else if let cachedData = view.cachedData as? CachedChannelData, let invitation = cachedData.exportedInvitation?._invitation {
-                aboutBlock.append(.userName(sectionId: .desc, value: invitation.link, viewType: .singleItem))
+            var usernames = channel.usernames.map {
+                $0.username
+            }
+            if usernames.isEmpty, let address = channel.addressName {
+                usernames.append(address)
+            }
+            if !usernames.isEmpty {
+                aboutBlock.append(.userName(sectionId: .desc, value: usernames, viewType: .singleItem))
             }
             
             applyBlock(aboutBlock)

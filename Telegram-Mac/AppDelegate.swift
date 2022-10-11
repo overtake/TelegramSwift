@@ -723,10 +723,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                         controller?.scrollup()
                     } else {
                         
-                        let signal:Signal<ReplyThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: contextValue.context, subject: .channelPost(threadId))
+                        let signal:Signal<ThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: contextValue.context, subject: .channelPost(threadId))
                         
                         _ = showModalProgress(signal: signal |> take(1), for: contextValue.context.window).start(next: { result in
-                            let chatLocation: ChatLocation = .replyThread(result.message)
+                            let chatLocation: ChatLocation = .thread(result.message)
                             
                             let updatedMode: ReplyThreadMode
                             if result.isChannelPost {
@@ -734,7 +734,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                             } else {
                                 updatedMode = .replies(origin: fromId)
                             }
-                            pushController(chatLocation, .replyThread(data: result.message, mode: updatedMode), fromId, result.contextHolder, currentInChat)
+                            pushController(chatLocation, .thread(data: result.message, mode: updatedMode), fromId, result.contextHolder, currentInChat)
                             
                         }, error: { error in
                             

@@ -139,7 +139,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
     
     let account = context.account
     
-    let chatLocation = chatLocationInput ?? context.chatLocationInput(for: _chatLocation, contextHolder: chatLocationContextHolder)
+    let chatLocationInput = chatLocationInput ?? context.chatLocationInput(for: _chatLocation, contextHolder: chatLocationContextHolder)
     
     
     switch location {
@@ -149,19 +149,19 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
         let signal: Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
         
         switch mode {
-        case .history, .replyThread, .pinned, .preview:
+        case .history, .thread, .pinned, .preview:
             if let tagMask = tagMask {
-                signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocation, index: .upperBound, anchorIndex: .upperBound, count: count, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: orderStatistics)
+                signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: .upperBound, anchorIndex: .upperBound, count: count, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: orderStatistics)
             } else {
-                signal = account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(chatLocation, count: count, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
+                signal = account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(chatLocationInput, count: count, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
             }
         case .scheduled:
-            signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocation)
+            signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocationInput)
         }
         
         
         return signal |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
-            let (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings) = extractAdditionalData(view: view, chatLocation: chatLocation)
+            let (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings) = extractAdditionalData(view: view, chatLocation: _chatLocation)
             let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData, limitsConfiguration: limitsConfiguration, autoplayMedia: autoplayMedia, autodownloadSettings: autodownloadSettings)
 
             
@@ -201,7 +201,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
                                     incomingCount += 1
                                 }
                             }
-                            if case let .peer(peerId) = chatLocation, let combinedReadStates = view.fixedReadStates, case let .peer(readStates) = combinedReadStates, let readState = readStates[peerId], readState.count == incomingCount {
+                            if case let .peer(peerId) = _chatLocation, let combinedReadStates = view.fixedReadStates, case let .peer(readStates) = combinedReadStates, let readState = readStates[peerId], readState.count == incomingCount {
                             } else {
                                 fadeIn = true
                                 return .Loading(initialData: combinedInitialData, type: .Generic(type: updateType))
@@ -233,21 +233,21 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
         let signal: Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
         
         switch mode {
-        case .history, .replyThread, .pinned, .preview:
+        case .history, .thread, .pinned, .preview:
             switch searchLocation {
             case let .index(index):
-                signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocation, index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: count, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
+                signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: count, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
             case let .id(id):
-                signal = account.viewTracker.aroundIdMessageHistoryViewForLocation(chatLocation, count: count, ignoreRelatedChats: false, messageId: id, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
+                signal = account.viewTracker.aroundIdMessageHistoryViewForLocation(chatLocationInput, count: count, ignoreRelatedChats: false, messageId: id, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
             }
         case .scheduled:
-            signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocation)
+            signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocationInput)
         }
         
         
         
         return signal |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
-            let (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings) = extractAdditionalData(view: view, chatLocation: chatLocation)
+            let (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings) = extractAdditionalData(view: view, chatLocation: _chatLocation)
             let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData, limitsConfiguration: limitsConfiguration, autoplayMedia: autoplayMedia, autodownloadSettings: autodownloadSettings)
 
             
@@ -313,15 +313,15 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
         
         let signal:Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
         switch mode {
-        case .history, .replyThread, .pinned, .preview:
-            signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocation, index: index, anchorIndex: anchorIndex, count: count, fixedCombinedReadStates: fixedCombinedReadStates?(), tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
+        case .history, .thread, .pinned, .preview:
+            signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: index, anchorIndex: anchorIndex, count: count, fixedCombinedReadStates: fixedCombinedReadStates?(), tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
         case .scheduled:
-            signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocation)
+            signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocationInput)
         }
         
         return signal |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
             
-            let (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings) = extractAdditionalData(view: view, chatLocation: chatLocation)
+            let (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings) = extractAdditionalData(view: view, chatLocation: _chatLocation)
             let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData, limitsConfiguration: limitsConfiguration, autoplayMedia: autoplayMedia, autodownloadSettings: autodownloadSettings)
             
             let genericType: ViewUpdateType
@@ -340,14 +340,14 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
         
         let signal:Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
         switch mode {
-        case .history, .replyThread, .pinned, .preview:
-            signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocation, index: index, anchorIndex: anchorIndex, count: count, fixedCombinedReadStates: fixedCombinedReadStates?(), tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
+        case .history, .thread, .pinned, .preview:
+            signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: index, anchorIndex: anchorIndex, count: count, fixedCombinedReadStates: fixedCombinedReadStates?(), tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
         case .scheduled:
-            signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocation)
+            signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocationInput)
         }
         
         return signal |> map { view, updateType, initialData -> ChatHistoryViewUpdate in
-            let (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings) = extractAdditionalData(view: view, chatLocation: chatLocation)
+            let (cachedData, cachedDataMessages, readStateData, limitsConfiguration, autoplayMedia, autodownloadSettings) = extractAdditionalData(view: view, chatLocation: _chatLocation)
             let combinedInitialData = ChatHistoryCombinedInitialData(initialData: initialData, buttonKeyboardMessage: view.topTaggedMessages.first, cachedData: cachedData, cachedDataMessages: cachedDataMessages, readStateData: readStateData, limitsConfiguration: limitsConfiguration, autoplayMedia: autoplayMedia, autodownloadSettings: autodownloadSettings)
             
             let genericType: ViewUpdateType
@@ -363,7 +363,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
     }
 }
 
-private func extractAdditionalData(view: MessageHistoryView, chatLocation: ChatLocationInput) -> (
+private func extractAdditionalData(view: MessageHistoryView, chatLocation: ChatLocation) -> (
     cachedData: CachedPeerData?,
     cachedDataMessages: [MessageId: [Message]]?,
     readStateData: [PeerId: ChatHistoryCombinedInitialReadStateData]?,
@@ -454,66 +454,100 @@ func preloadedChatHistoryViewForLocation(_ location: ChatHistoryLocation, contex
 
 
 
-struct ReplyThreadInfo {
+struct ThreadInfo {
     var message: ChatReplyThreadMessage
     var isChannelPost: Bool
     var isEmpty: Bool
+    var scrollToLowerBoundMessage: MessageIndex?
     var contextHolder: Atomic<ChatLocationContextHolder?>
 }
 
-enum ReplyThreadSubject {
+enum ThreadSubject {
     case channelPost(MessageId)
     case groupMessage(MessageId)
 }
 
 
-func fetchAndPreloadReplyThreadInfo(context: AccountContext, subject: ReplyThreadSubject, atMessageId: MessageId? = nil) -> Signal<ReplyThreadInfo, FetchChannelReplyThreadMessageError> {
+func fetchAndPreloadReplyThreadInfo(context: AccountContext, subject: ThreadSubject, atMessageId: MessageId? = nil, preload: Bool = true) -> Signal<ThreadInfo, FetchChannelReplyThreadMessageError> {
     let message: Signal<ChatReplyThreadMessage, FetchChannelReplyThreadMessageError>
     switch subject {
-    case let .channelPost(messageId):
-        message = context.engine.messages.fetchChannelReplyThreadMessage(messageId: messageId, atMessageId: atMessageId)
-    case let .groupMessage(messageId):
+    case .channelPost(let messageId), .groupMessage(let messageId):
         message = context.engine.messages.fetchChannelReplyThreadMessage(messageId: messageId, atMessageId: atMessageId)
     }
     
     return message
-        |> mapToSignal { replyThreadMessage -> Signal<ReplyThreadInfo, FetchChannelReplyThreadMessageError> in
-            let chatLocationContextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
-            
+    |> mapToSignal { replyThreadMessage -> Signal<ThreadInfo, FetchChannelReplyThreadMessageError> in
+        let chatLocationContextHolder = Atomic<ChatLocationContextHolder?>(value: nil)
+        
+        let input: ChatHistoryLocation
+        var scrollToLowerBoundMessage: MessageIndex?
+        switch replyThreadMessage.initialAnchor {
+        case .automatic:
+            if let atMessageId = atMessageId {
+                input = .InitialSearch(location: .id(atMessageId), count: 40)
+            } else {
+                input = .Initial(count: 40)
+            }
+        case let .lowerBoundMessage(index):
+            input = .Navigation(index: .message(index), anchorIndex: .message(index), count: 40, side: .upper)
+            scrollToLowerBoundMessage = index
+        }
+        
+        if replyThreadMessage.isNotAvailable {
+            return .single(ThreadInfo(
+                message: replyThreadMessage,
+                isChannelPost: replyThreadMessage.isChannelPost,
+                isEmpty: false,
+                scrollToLowerBoundMessage: nil,
+                contextHolder: chatLocationContextHolder
+            ))
+        }
+        
+        if preload {
             let preloadSignal = preloadedChatHistoryViewForLocation(
-                .Initial(count: 60),
+                input,
                 context: context,
-                chatLocation: .replyThread(replyThreadMessage),
+                chatLocation: .thread(replyThreadMessage),
                 chatLocationContextHolder: chatLocationContextHolder,
                 tagMask: nil,
                 additionalData: []
             )
             return preloadSignal
-                |> map { historyView -> Bool? in
-                    switch historyView {
-                    case .Loading:
-                        return nil
-                    case let .HistoryView(values):
-                        return values.view.entries.isEmpty
-                    }
+            |> map { historyView -> Bool? in
+                switch historyView {
+                case .Loading:
+                    return nil
+                case let .HistoryView(view, _, _, _):
+                    return view.entries.isEmpty
                 }
-                |> mapToSignal { value -> Signal<Bool, NoError> in
-                    if let value = value {
-                        return .single(value)
-                    } else {
-                        return .complete()
-                    }
+            }
+            |> mapToSignal { value -> Signal<Bool, NoError> in
+                if let value = value {
+                    return .single(value)
+                } else {
+                    return .complete()
                 }
-                |> take(1)
-                |> map { isEmpty -> ReplyThreadInfo in
-                    return ReplyThreadInfo(
-                        message: replyThreadMessage,
-                        isChannelPost: replyThreadMessage.isChannelPost,
-                        isEmpty: isEmpty,
-                        contextHolder: chatLocationContextHolder
-                    )
-                }
-                |> castError(FetchChannelReplyThreadMessageError.self)
+            }
+            |> take(1)
+            |> map { isEmpty -> ThreadInfo in
+                return ThreadInfo(
+                    message: replyThreadMessage,
+                    isChannelPost: replyThreadMessage.isChannelPost,
+                    isEmpty: isEmpty,
+                    scrollToLowerBoundMessage: scrollToLowerBoundMessage,
+                    contextHolder: chatLocationContextHolder
+                )
+            }
+            |> castError(FetchChannelReplyThreadMessageError.self)
+        } else {
+            return .single(ThreadInfo(
+                message: replyThreadMessage,
+                isChannelPost: replyThreadMessage.isChannelPost,
+                isEmpty: false,
+                scrollToLowerBoundMessage: scrollToLowerBoundMessage,
+                contextHolder: chatLocationContextHolder
+            ))
+        }
     }
 }
 

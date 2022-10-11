@@ -10,10 +10,11 @@ public func roundImage(_ data:Data, _ s:NSSize, cornerRadius:CGFloat = -1, rever
         let image:CGImageSource? = CGImageSourceCreateWithData(data as CFData, nil)
         
         let size = NSMakeSize(s.width * scale, s.height * scale)
-
-        let context:CGContext? = CGContext(data: nil, width: Int(size.width), height: Int(size.height), bitsPerComponent: 8, bytesPerRow: Int(4*size.width), space: NSColorSpace.genericRGB.cgColorSpace!, bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue)
         
-        if let ctx = context {
+        let context = DrawingContext(size: size, scale: 1)
+        
+        context.withContext { ctx in
+            ctx.clear(size.bounds)
             if let img = image {
                 let cimage = CGImageSourceCreateImageAtIndex(img, 0, nil)
                 if let c = cimage {
@@ -53,15 +54,10 @@ public func roundImage(_ data:Data, _ s:NSSize, cornerRadius:CGFloat = -1, rever
 
                     }
                     ctx.draw(c, in: NSMakeRect(0, 0, size.width, size.height))
-                    
-
-                    return ctx.makeImage()
-                    
                 }
-        
             }
         }
-        return nil
+        return context.generateImage()
     }
 }
 

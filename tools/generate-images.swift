@@ -635,6 +635,7 @@ func initialize() -> [String] {
     array.append("profile_channel_sign")
     array.append("profile_channel_type")
     array.append("profile_group_type")
+    array.append("profile_group_topics")
     array.append("profile_group_destruct")
     array.append("profile_group_discussion")
     

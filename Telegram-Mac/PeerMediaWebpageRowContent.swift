@@ -24,8 +24,8 @@ class PeerMediaWebpageRowItem: PeerMediaRowItem {
     private(set) var iconArguments:TransformImageArguments?
     private(set) var thumb:CGImage? = nil
     //, gallery: GalleryAppearType = .history
-    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, gallery: GalleryAppearType = .history, viewType: GeneralViewType = .legacy) {
-        super.init(initialSize, interface, object, gallery: gallery, viewType: viewType)
+    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, galleryType: GalleryAppearType = .history, gallery: @escaping(Message, GalleryAppearType)->Void, viewType: GeneralViewType = .legacy) {
+        super.init(initialSize, interface, object, galleryType: galleryType, gallery: gallery, viewType: viewType)
 
         
         var linkLayouts:[TextViewLayout] = []

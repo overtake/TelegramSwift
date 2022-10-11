@@ -58,9 +58,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 func PaymentMethodController(context: AccountContext, methods: [BotCheckoutPaymentMethod], newCard: @escaping()->Void, newByUrl:@escaping(String)->Void) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
-    
-    NSLog("\(methods)")
-    
+        
     var close:(()->Void)? = nil
 
     let initialState = State(methods: methods)

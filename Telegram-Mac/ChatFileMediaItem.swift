@@ -88,7 +88,8 @@ class ChatFileMediaItem: ChatMediaItem {
             } else if message.containsSecretMedia {
                 type = .secret
             }
-            showChatGallery(context: context, message: message, self.table, self.parameters as? ChatMediaGalleryParameters, type: type)
+                        
+            showChatGallery(context: context, message: message, self.table, self.parameters as? ChatMediaGalleryParameters, type: type, chatMode: self.chatInteraction.mode, contextHolder: self.chatInteraction.contextHolder())
         }
             
         (self.parameters as? ChatFileLayoutParameters)?.showMessage = { [weak self] message in
