@@ -259,9 +259,10 @@ final class UpdateTabController: GenericViewController<UpdateTabView> {
 
 class MainViewController: TelegramViewController {
 
+    let chatList: ChatListController
+    let navigation: NavigationViewController
     let tabController:TabBarController = TabBarController()
     let contacts:ContactsController
-    let chatListNavigation:NavigationViewController
     let settings:AccountViewController
     private let phoneCalls:RecentCallsViewController
     private let layoutDisposable:MetaDisposable = MetaDisposable()
@@ -270,14 +271,6 @@ class MainViewController: TelegramViewController {
     #if !APP_STORE
     private let updateController: UpdateTabController
     #endif
-    var isUpChatList: Bool = false {
-        didSet {
-            if isUpChatList != oldValue {
-                tabController.replace(tab: tabController.tab(at: chatIndex).withUpdatedImages(theme.icons.tab_chats, isUpChatList ? theme.icons.tab_chats_active_filters : theme.icons.tab_chats_active), at: chatIndex)
-            }
-        }
-    }
-
     
     override var navigationController: NavigationViewController? {
         didSet {
@@ -288,6 +281,7 @@ class MainViewController: TelegramViewController {
     override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
         tabController.view.frame = bounds
+        self.navigation.frame = bounds
         #if !APP_STORE
         updateController.updateLayout(context.layout, parentSize: size, isChatList: true)
         #endif
@@ -298,10 +292,16 @@ class MainViewController: TelegramViewController {
         
         let context = self.context
         
+        navigation.hasBarRightBorder = true
+        
         tabController._frameRect = self._frameRect
-        self.bar = NavigationBarStyle(height: 0)
+        self.navigation._frameRect = self._frameRect
+        self.bar = .init(height: 0)
+        self.tabController.bar = .init(height: 0)
+        
         backgroundColor = theme.colors.background
-        addSubview(tabController.view)
+        addSubview(self.navigation.view)
+        
         if !context.isSupport {
         #if !APP_STORE
             addSubview(updateController.view)
@@ -312,7 +312,7 @@ class MainViewController: TelegramViewController {
         
         tabController.add(tab: TabItem(image: theme.icons.tab_calls, selectedImage: theme.icons.tab_calls_active, controller: phoneCalls))
         
-        tabController.add(tab: TabBadgeItem(context, controller: chatListNavigation, image: theme.icons.tab_chats, selectedImage: isUpChatList ? theme.icons.tab_chats_active_filters : theme.icons.tab_chats_active, longHoverHandler: { [weak self] control in
+        tabController.add(tab: TabBadgeItem(context, controller: chatList, image: theme.icons.tab_chats, selectedImage: theme.icons.tab_chats_active, longHoverHandler: { [weak self] control in
             self?.showFastChatSettings(control)
         }))
         
@@ -322,23 +322,6 @@ class MainViewController: TelegramViewController {
         
         
         tabController.updateLocalizationAndTheme(theme: theme)
-
-//        let s:Signal<Bool, NoError> = Signal<Bool, NoError>.single(arc4random() % 2 == 5) |> then(deferred {
-//            return Signal<Bool, NoError>.single(arc4random() % 2 == 5)
-//        } |> delay(10 * 10, queue: .mainQueue()) |> restart)
-//        |> filter { $0 }
-//        |> deliverOnMainQueue
-//
-//        tooltipDisposable.set(s.start(next: { [weak self] show in
-//
-//            self?.showFilterTooltip()
-//
-//        }))
-        
-//        account.postbox.transaction ({ transaction -> Void in
-//          
-//
-//        }).start()
         
         self.ready.set(combineLatest(queue: prepareQueue, self.chatList.ready.get(), self.settings.ready.get()) |> map { $0 && $1 })
         
@@ -378,9 +361,7 @@ class MainViewController: TelegramViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        
-        chatListNavigation.hasBarRightBorder = true
-        
+                
         prefDisposable.set((baseAppSettings(accountManager: context.sharedContext.accountManager) |> deliverOnMainQueue).start(next: { [weak self] settings in
             guard let `self` = self else {return}
             if settings.showCallsTab != self.showCallTabs {
@@ -406,7 +387,7 @@ class MainViewController: TelegramViewController {
             }, itemImage: MenuAnimation.menu_read.value))
         }
         
-        if self.tabController.current == chatListNavigation, !items.isEmpty, let event = NSApp.currentEvent {
+        if self.tabController.current == chatList, !items.isEmpty, let event = NSApp.currentEvent {
             let menu = ContextMenu(betterInside: true)
             for item in items {
                 menu.addItem(item)
@@ -539,7 +520,7 @@ class MainViewController: TelegramViewController {
     }
     
     private func updateTabsIfNeeded() {
-        if !tabController.isEmpty && (previousTheme?.colors != theme.colors ||  previousIconColor != theme.colors.accentIcon || self.isUpChatList != self.previousIsUpChatList) {
+        if !tabController.isEmpty && (previousTheme?.colors != theme.colors ||  previousIconColor != theme.colors.accentIcon) {
             var index: Int = 0
             tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.icons.tab_contacts, theme.icons.tab_contacts_active), at: index)
             index += 1
@@ -548,13 +529,12 @@ class MainViewController: TelegramViewController {
                 index += 1
             }
             
-            tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.icons.tab_chats, isUpChatList ? theme.icons.tab_chats_active_filters : theme.icons.tab_chats_active), at: index)
+            tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.icons.tab_chats, theme.icons.tab_chats_active), at: index)
             index += 1
             tabController.replace(tab: tabController.tab(at: index).withUpdatedImages(theme.icons.tab_settings, theme.icons.tab_settings_active), at: index)
         }
         self.previousTheme = theme
         self.previousIconColor = theme.colors.accentIcon
-        self.previousIsUpChatList = self.isUpChatList
     }
     
     private var previousIndex: Int? = nil
@@ -614,7 +594,6 @@ class MainViewController: TelegramViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         if firstTime {
-        //    self.tabController.select(index: chatIndex)
             firstTime = false
         }
         self.tabController.current?.viewDidAppear(animated)
@@ -623,7 +602,6 @@ class MainViewController: TelegramViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         self.tabController.current?.viewWillAppear(animated)
-       // loadViewIfNeeded()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -647,23 +625,13 @@ class MainViewController: TelegramViewController {
         }
     }
     
-    override func navigationUndoHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> ()->Void  {
-        if let controller = self.tabController.current {
-            return controller.navigationUndoHeaderDidNoticeAnimation(current, previous, animated)
-        }
-        return {}
-    }
     
     func openChat(_ index: Int, force: Bool = false) {
-        if self.tabController.current == chatListNavigation {
+        if self.tabController.current == chatList {
             chatList.openChat(index, force: force)
         }
     }
-    
-    var chatList: ChatListController {
-        return chatListNavigation.controller as! ChatListController
-    }
-    
+
     func showPreferences() {
         context.bindings.switchSplitLayout(.dual)
         if self.context.layout != .minimisize {
@@ -671,6 +639,14 @@ class MainViewController: TelegramViewController {
                 self.navigationController?.close()
             }
             self.tabController.select(index:settingsIndex)
+        }
+    }
+    
+    var effectiveNavigation: NavigationViewController? {
+        if self.context.layout == .single {
+            return self.navigationController
+        } else {
+            return self.navigation
         }
     }
     
@@ -683,7 +659,8 @@ class MainViewController: TelegramViewController {
     }
     
     func isCanMinimisize() -> Bool{
-        return self.tabController.current == chatListNavigation || self.tabController.current == contacts || self.tabController.current == self.phoneCalls
+        let current = self.tabController.current
+        return current == chatList || current == contacts || current == phoneCalls
     }
     
     override func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
@@ -693,16 +670,16 @@ class MainViewController: TelegramViewController {
     
     override init(_ context: AccountContext) {
         
-        chatListNavigation = NavigationViewController(ChatListController(context, mode: .plain), context.window)
-        contacts = ContactsController(context)
-        settings = AccountViewController(context)
-        phoneCalls = RecentCallsViewController(context)
+        self.chatList = ChatListController(context, mode: .plain)
+        self.contacts = ContactsController(context)
+        self.settings = AccountViewController(context)
+        self.phoneCalls = RecentCallsViewController(context)
+        self.navigation = NavigationViewController(self.tabController, context.window)
+        
         #if !APP_STORE
             updateController = UpdateTabController(context.sharedContext)
         #endif
         super.init(context)
-        bar = NavigationBarStyle(height: 0)
-       // chatListNavigation.alwaysAnimate = true
     }
 
     deinit {

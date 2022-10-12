@@ -446,7 +446,7 @@ class ChatListRowItem: TableRowItem {
             let selectedText:NSMutableAttributedString = messageText.mutableCopy() as! NSMutableAttributedString
             if let color = selectedText.attribute(.selectedColor, at: 0, effectiveRange: nil) {
                 selectedText.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedText.range)
-            self.messageSelectedLayout = .init(selectedText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2)
+                self.messageSelectedLayout = .init(selectedText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2)
             }
         }
 
@@ -504,7 +504,7 @@ class ChatListRowItem: TableRowItem {
         }
         
         if let peer = renderedPeer.chatMainPeer?._asPeer() as? TelegramChannel, peer.flags.contains(.hasActiveVoiceChat) {
-            self.hasActiveGroupCall = true
+            self.hasActiveGroupCall = mode.threadId == nil
         }
     
         self.mode = mode
@@ -1028,25 +1028,24 @@ class ChatListRowItem: TableRowItem {
             }
         }
         
-        if case let .topic(threadId, info) = self.mode, let peerId = peerId {
+        if case .topic = self.mode {
             
             var items:[ContextMenuItem] = []
             
-            items.append(ContextMenuItem("Pin", handler: {
-                
-            }, itemImage: MenuAnimation.menu_pin.value))
+            items.append(ContextMenuItem(!isPinned ? strings().chatListContextPin : strings().chatListContextUnpin, handler: togglePin, itemImage: !isPinned ? MenuAnimation.menu_pin.value : MenuAnimation.menu_unpin.value))
+
             
-            items.append(ContextMenuItem("Mute", handler: {
-                
-            }, itemImage: MenuAnimation.menu_mute.value))
+            items.append(ContextMenuItem(isMuted ? strings().chatListContextUnmute : strings().chatListContextMute, handler: toggleMute, itemImage: isMuted ? MenuAnimation.menu_unmuted.value : MenuAnimation.menu_mute.value))
             
-            items.append(ContextMenuItem("Delete", handler: {
-                deleteChat()
-            }, itemImage: MenuAnimation.menu_delete.value))
             
             items.append(ContextMenuItem("Pause", handler: {
                 
             }, itemImage: MenuAnimation.menu_pause.value))
+            
+            
+            items.append(ContextSeparatorItem())
+            
+            items.append(ContextMenuItem(strings().chatListContextDelete, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
             
             return .single(items)
         }
@@ -1068,8 +1067,6 @@ class ChatListRowItem: TableRowItem {
             }
         })
 
-        
-        
         return combineLatest(queue: .mainQueue(), chatListFilterPreferences(engine: context.engine), cachedData, soundsDataSignal) |> take(1) |> map { filters, cachedData, soundsData -> [ContextMenuItem] in
             
             var items:[ContextMenuItem] = []

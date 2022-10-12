@@ -46,7 +46,7 @@ class ChatEmptyPeerItem: TableRowItem {
         let attr = NSMutableAttributedString()
         var lineSpacing: CGFloat? = 5
         switch chatInteraction.mode {
-        case .history, .preview:
+        case .history:
             if  chatInteraction.peerId.namespace == Namespaces.Peer.SecretChat {
                 _ = attr.append(string: strings().chatSecretChatEmptyHeader, color: theme.chatServiceItemTextColor, font: .medium(.text))
                 _ = attr.append(string: "\n")

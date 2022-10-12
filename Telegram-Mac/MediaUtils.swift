@@ -2133,7 +2133,7 @@ private func tailContext(_ tail: Tail, scale:CGFloat) -> DrawingContext {
 
 
 
-private func addCorners(_ context: DrawingContext, arguments: TransformImageArguments, scale:CGFloat) {
+func addCorners(_ context: DrawingContext, arguments: TransformImageArguments, scale:CGFloat) {
     let corners = arguments.corners
     let drawingRect = arguments.drawingRect
     

@@ -1319,7 +1319,7 @@ class ChatListController : PeersListController {
                     }
                     controller.clearReplyStack()
                     controller.scrollUpOrToUnread()
-                case .scheduled, .pinned, .preview:
+                case .scheduled, .pinned:
                     navigation.back()
                 }
                 

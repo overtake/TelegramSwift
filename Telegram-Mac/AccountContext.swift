@@ -261,7 +261,7 @@ final class AccountContext {
     
     var layout:SplitViewState = .none {
         didSet {
-            layoutHandler.set(layout)
+            self.layoutHandler.set(self.layout)
         }
     }
     

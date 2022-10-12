@@ -636,7 +636,7 @@ class InputDataController: GenericViewController<InputDataView> {
         if let event = NSApp.currentEvent {
             switch returnKeyInvocation(self.currentFirstResponderIdentifier, event) {
             case .default:
-                if FastSettings.checkSendingAbility(for: event) {
+                if event.type != .keyDown || FastSettings.checkSendingAbility(for: event) {
                     self.validateInput(data: self.fetchData())
                 } else {
                     return .invokeNext

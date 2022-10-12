@@ -30,15 +30,16 @@ final class TopicInfoArguments : PeerInfoArguments {
     func share() {
         let peer = context.account.postbox.peerView(id: peerId) |> take(1) |> deliverOnMainQueue
         let context = self.context
-        
+        let state = self.state as! TopicInfoState
+        let threadId = state.threadId
         _ = peer.start(next: { peerView in
             if let peer = peerViewMainPeer(peerView) {
-                var link: String = "https://t.me/\(peer.id.id)"
+                var link: String = "https://t.me/c/\(peer.id.id)"
                 if let address = peer.addressName, !address.isEmpty {
                     link = "https://t.me/\(address)"
-                } else if let cachedData = peerView.cachedData as? CachedChannelData, let invitation = cachedData.exportedInvitation?._invitation {
-                    link = invitation.link
                 }
+                link += "?topic=\(threadId)"
+                
                 showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: context.window)
             }
            
@@ -278,7 +279,7 @@ func topicInfoEntries(view: PeerView, threadData: MessageHistoryThreadData, argu
         if addressName.isEmpty {
             addressName = "c/\(group.id.id._internalGetInt64Value())"
         }
-        aboutBlock.append(.addressName(section: TopicInfoSection.desc.rawValue, name: "\(addressName)/\(state.threadId)", viewType: .singleItem))
+        aboutBlock.append(.addressName(section: TopicInfoSection.desc.rawValue, name: "\(addressName)?topic=\(state.threadId)", viewType: .singleItem))
         
         applyBlock(aboutBlock)
 

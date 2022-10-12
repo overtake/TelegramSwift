@@ -200,7 +200,7 @@ class LeftSidebarController: TelegramGenericViewController<LeftSidebarView> {
             let rootNavigation = context.bindings.rootNavigation()
             
             let leftController = context.bindings.mainController()
-            leftController.chatListNavigation.close(animated: context.layout != .single || rootNavigation.stackCount == 1)
+            leftController.navigation.close(animated: context.layout != .single || rootNavigation.stackCount == 1)
             
             if context.layout == .single {
                 rootNavigation.close(animated: true)

@@ -149,7 +149,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
         let signal: Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
         
         switch mode {
-        case .history, .thread, .pinned, .preview:
+        case .history, .thread, .pinned:
             if let tagMask = tagMask {
                 signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: .upperBound, anchorIndex: .upperBound, count: count, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: orderStatistics)
             } else {
@@ -233,7 +233,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
         let signal: Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
         
         switch mode {
-        case .history, .thread, .pinned, .preview:
+        case .history, .thread, .pinned:
             switch searchLocation {
             case let .index(index):
                 signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: MessageHistoryAnchorIndex.message(index), anchorIndex: MessageHistoryAnchorIndex.message(index), count: count, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
@@ -313,7 +313,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
         
         let signal:Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
         switch mode {
-        case .history, .thread, .pinned, .preview:
+        case .history, .thread, .pinned:
             signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: index, anchorIndex: anchorIndex, count: count, fixedCombinedReadStates: fixedCombinedReadStates?(), tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
         case .scheduled:
             signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocationInput)
@@ -340,7 +340,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
         
         let signal:Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
         switch mode {
-        case .history, .thread, .pinned, .preview:
+        case .history, .thread, .pinned:
             signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: index, anchorIndex: anchorIndex, count: count, fixedCombinedReadStates: fixedCombinedReadStates?(), tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
         case .scheduled:
             signal = account.viewTracker.scheduledMessagesViewForLocation(chatLocationInput)

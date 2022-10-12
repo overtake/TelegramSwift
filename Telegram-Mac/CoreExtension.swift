@@ -1072,7 +1072,7 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode) -> Bool
                 case .topic:
                     return peer.canSendMessage(true)
                 }
-            case .pinned, .preview:
+            case .pinned:
                 return false
             }
         }
@@ -3652,4 +3652,24 @@ extension String {
         }
         return false
     }
+}
+
+
+func joinChannel(context: AccountContext, peerId: PeerId) {
+    _ = showModalProgress(signal: context.engine.peers.joinChannel(peerId: peerId, hash: nil) |> deliverOnMainQueue, for: context.window).start(error: { error in
+        let text: String
+        switch error {
+        case .generic:
+            text = strings().unknownError
+        case .tooMuchJoined:
+            showInactiveChannels(context: context, source: .join)
+            return
+        case .tooMuchUsers:
+            text = strings().groupUsersTooMuchError
+        case .inviteRequestSent:
+            showModalText(for: context.window, text: strings().chatSendJoinRequestInfo, title: strings().chatSendJoinRequestTitle)
+            return
+        }
+        alert(for: context.window, info: text)
+    })
 }

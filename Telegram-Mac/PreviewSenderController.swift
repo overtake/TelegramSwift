@@ -922,7 +922,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             }
         case .history, .thread:
             sendCurrentMedia?(silent, atDate)
-        case .pinned, .preview:
+        case .pinned:
             break
         }
     }

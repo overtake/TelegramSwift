@@ -3667,6 +3667,8 @@ public final class L10n {
   public static var chatListContextCall: String  { return L10n.tr("Localizable", "ChatList.Context.Call") }
   /// Clear History
   public static var chatListContextClearHistory: String  { return L10n.tr("Localizable", "ChatList.Context.ClearHistory") }
+  /// Delete
+  public static var chatListContextDelete: String  { return L10n.tr("Localizable", "ChatList.Context.Delete") }
   /// Delete And Exit
   public static var chatListContextDeleteAndExit: String  { return L10n.tr("Localizable", "ChatList.Context.DeleteAndExit") }
   /// Delete Chat
@@ -3683,6 +3685,8 @@ public final class L10n {
   public static var chatListContextMaskAsUnread: String  { return L10n.tr("Localizable", "ChatList.Context.MaskAsUnread") }
   /// Mute
   public static var chatListContextMute: String  { return L10n.tr("Localizable", "ChatList.Context.Mute") }
+  /// Pause
+  public static var chatListContextPause: String  { return L10n.tr("Localizable", "ChatList.Context.Pause") }
   /// Pin
   public static var chatListContextPin: String  { return L10n.tr("Localizable", "ChatList.Context.Pin") }
   /// Sorry, you can pin no more than 5 chats to the top.
@@ -3695,6 +3699,8 @@ public final class L10n {
   public static var chatListContextReturnGroup: String  { return L10n.tr("Localizable", "ChatList.Context.ReturnGroup") }
   /// Sound
   public static var chatListContextSound: String  { return L10n.tr("Localizable", "ChatList.Context.Sound") }
+  /// Start
+  public static var chatListContextStart: String  { return L10n.tr("Localizable", "ChatList.Context.Start") }
   /// Unmute
   public static var chatListContextUnmute: String  { return L10n.tr("Localizable", "ChatList.Context.Unmute") }
   /// Unpin

@@ -10,7 +10,7 @@ import Foundation
 import TGUIKit
 import TelegramCore
 import SwiftSignalKit
-
+import ColorPalette
 
 enum QRTokenState {
     case qr(CGImage)
@@ -80,6 +80,7 @@ final class Auth_TokenView : View {
     private let helpView = View()
     
     private let shimmeringView = ShimmerEffectView()
+    private let animationContainer = View()
 
     fileprivate var cancel:(()->Void)?
 
@@ -93,7 +94,8 @@ final class Auth_TokenView : View {
         self.imageView.isHidden = true
         
         containerView.addSubview(self.imageView)
-        containerView.addSubview(self.animation)
+        animationContainer.addSubview(self.animation)
+        containerView.addSubview(self.animationContainer)
         containerView.addSubview(self.logoView)
         containerView.addSubview(self.titleView)
         containerView.addSubview(self.cancelButton)
@@ -134,11 +136,12 @@ final class Auth_TokenView : View {
         let theme = theme as! TelegramPresentationTheme
         super.updateLocalizationAndTheme(theme: theme)
         self.backgroundColor = theme.colors.background
-        
+        animationContainer.background = dayClassicPalette.background
+        animationContainer.layer?.cornerRadius = 10
         measure()
         
         if let data = LocalAnimatedSticker.qrcode_matrix.data, imageView.isHidden {
-            let colors:[LottieColor] = [.init(keyPath: "", color: theme.colors.text)]
+            let colors:[LottieColor] = [.init(keyPath: "", color: dayClassicPalette.text)]
             self.animation.set(LottieAnimation(compressed: data, key: .init(key: .bundle("qrcode_matrix"), size: Auth_Insets.qrAnimSize, backingScale: Int(System.backingScale), fitzModifier: nil), playPolicy: .loop, colors: colors))
         }
         
@@ -185,7 +188,7 @@ final class Auth_TokenView : View {
             delay(timeout, closure: { [weak self] in
                 self?.imageView.isHidden = false
                 self?.imageView.change(opacity: 1, animated: true, duration: 1.2, timingFunction: .spring)
-                self?.animation.change(opacity: 0, animated: true, duration: 1.2, timingFunction: .spring, completion: { [weak self] _ in
+                self?.animationContainer.change(opacity: 0, animated: true, duration: 1.2, timingFunction: .spring, completion: { [weak self] _ in
                     self?.animation.set(nil)
                 })
             })
@@ -208,8 +211,11 @@ final class Auth_TokenView : View {
         containerView.setFrameSize(NSMakeSize(frame.width, imageView.frame.height + Auth_Insets.betweenHeader + self.titleView.frame.height + Auth_Insets.betweenHeader + helpView.frame.height + Auth_Insets.betweenHeader + cancelButton.frame.height))
         containerView.center()
         
+        animationContainer.setFrameSize(Auth_Insets.qrSize)
+        
+        animationContainer.centerX(y: 0)
         imageView.centerX(y: 0)
-        animation.centerX(y: 12)
+        animation.center()
         logoView.centerX(y: floor((imageView.frame.height - logoView.frame.height) / 2))
         titleView.updateWithNewWidth(containerView.frame.width)
         titleView.centerX(y: imageView.frame.maxY + Auth_Insets.betweenHeader)
@@ -232,6 +238,7 @@ final class Auth_TokenController : GenericViewController<Auth_TokenView> {
         self.temp = data
         super.init(frame: frame)
     }
+    private var token: AuthTransferExportedToken?
     
     func update(_ token: AuthTransferExportedToken?, cancel:@escaping()->Void) {
         
@@ -240,20 +247,30 @@ final class Auth_TokenController : GenericViewController<Auth_TokenView> {
         tokenString = tokenString.replacingOccurrences(of: "/", with: "_")
         let urlString = "tg://login?token=\(tokenString)"
         
-        let signal = (qrCode(string: urlString, color: theme.colors.text, backgroundColor: theme.colors.background, icon: .custom(theme.icons.login_qr_empty_cap))
+        self.token = token
+        
+        let signal = (qrCode(string: urlString, color: dayClassicPalette.text, backgroundColor: dayClassicPalette.background, icon: .custom(theme.icons.login_qr_empty_cap))
                       |> deliverOnMainQueue)
         
         let _ = signal.start(next: { [weak self] _, generate in
                 guard let strongSelf = self else {
                     return
                 }
-                let context = generate(TransformImageArguments(corners: ImageCorners(), imageSize: Auth_Insets.qrSize, boundingSize: Auth_Insets.qrSize, intrinsicInsets: NSEdgeInsets(), scale: 2.0))
+                let context = generate(TransformImageArguments(corners: ImageCorners(radius: 10), imageSize: Auth_Insets.qrSize, boundingSize: Auth_Insets.qrSize, intrinsicInsets: NSEdgeInsets(), scale: 2.0))
                 if let image = context?.generateImage() {
                     strongSelf.genericView.update(state: .qr(image), isLoading: token == nil)
                 }
             })
         
         genericView.cancel = cancel
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        
+        if let cancel = genericView.cancel {
+            self.update(self.token, cancel: cancel)
+        }
     }
     
     
