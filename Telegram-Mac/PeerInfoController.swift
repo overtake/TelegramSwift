@@ -25,7 +25,7 @@ class PeerInfoArguments {
     let mediaController: ()->PeerMediaController?
     
     
-    private let toggleNotificationsDisposable = MetaDisposable()
+    let toggleNotificationsDisposable = MetaDisposable()
     private let deleteDisposable = MetaDisposable()
     private let _statePromise = Promise<PeerInfoState>()
     
@@ -68,7 +68,7 @@ class PeerInfoArguments {
         
         toggleNotificationsDisposable.set(context.engine.peers.togglePeerMuted(peerId: peerId, threadId: nil).start())
         
-        pullNavigation()?.controller.show(toaster: ControllerToaster.init(text: currentlyMuted ? strings().toastUnmuted : strings().toastMuted))
+        pullNavigation()?.controller.show(toaster: ControllerToaster(text: currentlyMuted ? strings().toastUnmuted : strings().toastMuted))
     }
     
     func delete() {
