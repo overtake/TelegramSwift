@@ -14,7 +14,7 @@ import SwiftSignalKit
 
 final class TopicInfoArguments : PeerInfoArguments {
     
-    fileprivate var threadData: MessageHistoryThreadData?
+    fileprivate(set) var threadData: MessageHistoryThreadData?
     
     override func updateEditable(_ editable: Bool, peerView: PeerView, controller: PeerInfoController) -> Bool {
         
@@ -43,7 +43,14 @@ final class TopicInfoArguments : PeerInfoArguments {
             }
            
         })
+    }
+    
+    override func toggleNotifications(_ currentlyMuted: Bool) {
+        let state = state as! TopicInfoState
         
+        toggleNotificationsDisposable.set(context.engine.peers.togglePeerMuted(peerId: peerId, threadId: state.threadId).start())
+        
+        pullNavigation()?.controller.show(toaster: ControllerToaster(text: currentlyMuted ? strings().toastUnmuted : strings().toastMuted))
     }
 }
 

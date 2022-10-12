@@ -358,9 +358,9 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         default:
             break
         }
-    } else if let peer = item.peer as? TelegramChannel, let arguments = item.arguments as? TopicInfoArguments {
+    } else if let arguments = item.arguments as? TopicInfoArguments, let data = arguments.threadData {
         
-        let value = true
+        let value = data.notificationSettings.isMuted
         
         items.append(ActionItem(text: value ? strings().peerInfoActionUnmute : strings().peerInfoActionMute, image: value ? theme.icons.profile_unmute : theme.icons.profile_mute, animation: .menu_mute, action: {
             arguments.toggleNotifications(value)
