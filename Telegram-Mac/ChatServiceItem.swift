@@ -640,21 +640,33 @@ class ChatServiceItem: ChatRowItem {
                                     text = strings().chatServiceGroupTopicEditedIconRemoved(authorName)
                                 }
                             }
+                        case let .isClosed(closed):
+                            if authorId == context.peerId {
+                                if closed {
+                                    text = strings().chatServiceGroupTopicEditedYouPaused
+                                } else {
+                                    text = strings().chatServiceGroupTopicEditedYouResumed
+                                }
+                            } else {
+                                if closed {
+                                    text = strings().chatServiceGroupTopicEditedPaused(authorName)
+                                } else {
+                                    text = strings().chatServiceGroupTopicEditedResumed(authorName)
+                                }
+                            }
                         }
                     } else {
                         var title: String = ""
                         var iconFileId: Int64?
-                        switch components[0] {
-                        case let .title(value):
-                            title = value.prefixWithDots(30)
-                        case let .iconFileId(value):
-                            iconFileId = value
-                        }
-                        switch components[1] {
-                        case let .title(value):
-                            title = value.prefixWithDots(30)
-                        case let .iconFileId(value):
-                            iconFileId = value
+                        for component in components {
+                            switch component {
+                            case let .title(value):
+                                title = value.prefixWithDots(30)
+                            case let .iconFileId(value):
+                                iconFileId = value
+                            case .isClosed:
+                                break
+                            }
                         }
                         fileId = iconFileId
                         if let iconFileId = iconFileId {
