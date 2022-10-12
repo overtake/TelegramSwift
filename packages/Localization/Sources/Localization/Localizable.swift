@@ -3193,6 +3193,14 @@ public final class L10n {
   public static func chatServiceGroupTopicEditedMixed(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.Mixed", p1, p2, p3)
   }
+  /// %1$@ paused topic
+  public static func chatServiceGroupTopicEditedPaused(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.Paused", p1)
+  }
+  /// %1$@ resumed topic
+  public static func chatServiceGroupTopicEditedResumed(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.Resumed", p1)
+  }
   /// %1$@ changed topic name to "%2$@"
   public static func chatServiceGroupTopicEditedTitle(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.Title", p1, p2)
@@ -3209,6 +3217,10 @@ public final class L10n {
   public static func chatServiceGroupTopicEditedYouMixed(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Mixed", p1, p2)
   }
+  /// You paused topic
+  public static var chatServiceGroupTopicEditedYouPaused: String  { return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Paused") }
+  /// You resumed topic
+  public static var chatServiceGroupTopicEditedYouResumed: String  { return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Resumed") }
   /// You changed topic name to "%1$@"
   public static func chatServiceGroupTopicEditedYouTitle(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Title", p1)
