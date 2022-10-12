@@ -542,7 +542,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         
         _ = peer.start(next: { peerView in
             if let peer = peerViewMainPeer(peerView) {
-                var link: String = "https://t.me/\(peer.id.id)"
+                var link: String = "https://t.me/c/\(peer.id.id)"
                 if let address = peer.addressName, !address.isEmpty {
                     link = "https://t.me/\(address)"
                 } else if let cachedData = peerView.cachedData as? CachedChannelData, let invitation = cachedData.exportedInvitation?._invitation {

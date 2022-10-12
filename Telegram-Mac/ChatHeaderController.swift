@@ -20,7 +20,6 @@ import TGModernGrowingTextView
 
 protocol ChatHeaderProtocol {
     func update(with state: ChatHeaderState, animated: Bool)
-    init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect)
 }
 
 
@@ -333,7 +332,7 @@ class ChatHeaderController {
         }
         if let _ = self._headerState.voiceChat {
             if s_v == nil || s_v?.className != NSStringFromClass(_headerState.secondaryClass ?? NSView.self) {
-                secondary = ChatGroupCallView(chatInteraction, state: _headerState, frame: secondaryRect)
+                secondary = ChatGroupCallView(chatInteraction.joinGroupCall, context: chatInteraction.context, state: _headerState, frame: secondaryRect)
                 secondary?.autoresizingMask = [.width]
             } else {
                 secondary = s_v
@@ -1815,7 +1814,7 @@ private final class TimerButtonView : Control {
 }
 
 
-private final class ChatGroupCallView : Control, ChatHeaderProtocol {
+final class ChatGroupCallView : Control, ChatHeaderProtocol {
     
     struct Avatar : Comparable, Identifiable {
         static func < (lhs: Avatar, rhs: Avatar) -> Bool {
@@ -1843,7 +1842,6 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
 
     private let joinButton = TitleButton()
     private var data: ChatActiveGroupCallInfo?
-    private let chatInteraction: ChatInteraction
     private let headerView = TextView()
     private let membersCountView = DynamicCounterTextView()
     private let button = Control()
@@ -1853,9 +1851,12 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
     private var audioLevelGenerators: [PeerId: FakeAudioLevelGenerator] = [:]
     private var audioLevelGeneratorTimer: SwiftSignalKit.Timer?
 
+    private let context: AccountContext
+    private let join:(CachedChannelData.ActiveCall, String?) -> Void
 
-    required init(_ chatInteraction: ChatInteraction, state: ChatHeaderState, frame: NSRect) {
-        self.chatInteraction = chatInteraction
+    required init(_ join: @escaping (CachedChannelData.ActiveCall, String?) -> Void, context: AccountContext, state: ChatHeaderState, frame: NSRect) {
+        self.context = context
+        self.join = join
         super.init(frame: frame)
         addSubview(headerView)
         addSubview(membersCountView)
@@ -1871,14 +1872,14 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
 
         joinButton.set(handler: { [weak self] _ in
             if let `self` = self, let data = self.data {
-                self.chatInteraction.joinGroupCall(data.activeCall, data.joinHash)
+                join(data.activeCall, data.joinHash)
             }
         }, for: .SingleClick)
         
         
         button.set(handler: { [weak self] _ in
             if let `self` = self, let data = self.data {
-                self.chatInteraction.joinGroupCall(data.activeCall, data.joinHash)
+                join(data.activeCall, data.joinHash)
             }
         }, for: .SingleClick)
         
@@ -1917,7 +1918,7 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
 
     func update(_ data: ChatActiveGroupCallInfo, animated: Bool) {
         
-        let context = self.chatInteraction.context
+        let context = self.context
         
         let activeCall = data.data?.groupCall != nil
         joinButton.change(opacity: activeCall ? 0 : 1, animated: animated)
@@ -2057,7 +2058,7 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
                 
                 current.set(handler: { [weak self] _ in
                     if let `self` = self, let data = self.data {
-                        self.chatInteraction.joinGroupCall(data.activeCall, data.joinHash)
+                        self.join(data.activeCall, data.joinHash)
                     }
                 }, for: .SingleClick)
 
@@ -2094,9 +2095,8 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         
         var title: String = data.activeCall.scheduleTimestamp != nil ? strings().chatGroupCallScheduledTitle : strings().chatGroupCallTitle
         
-        
-        if data.activeCall.scheduleTimestamp == nil, let peer = self.chatInteraction.presentation.peer as? TelegramChannel {
-            if peer.flags.contains(.isGigagroup) || peer.isChannel {
+        if data.activeCall.scheduleTimestamp == nil {
+            if data.isLive {
                 title = strings().chatGroupCallLiveTitle
             }
         }

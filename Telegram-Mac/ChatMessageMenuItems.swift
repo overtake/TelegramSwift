@@ -240,7 +240,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             return items
         }
         
-        if data.disableSelectAbility, data.isLogInteraction || data.chatState == .selecting || data.chatMode == .preview {
+        if data.disableSelectAbility, data.isLogInteraction || data.chatState == .selecting {
             return []
         }
         

@@ -882,6 +882,17 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             if rightController.controller is ForwardChatListController {
                 rightController.back(animated:false)
             }
+            var controllers:[ViewController] = []
+            rightController.enumerateControllers({ controller, index in
+                if controller is ChatListController {
+                    controllers.append(controller)
+                }
+                return true
+            })
+            for controller in controllers {
+                rightController.removeImmediately(controller)
+                leftController.navigation.push(controller, style: ViewControllerStyle.none)
+            }
             self.view.splitView.addController(controller: leftController, proportion: SplitProportion(min:w, max:w))
             self.view.splitView.addController(controller: rightController, proportion: SplitProportion(min:380, max:CGFloat.greatestFiniteMagnitude))
         case .minimisize:
@@ -893,10 +904,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             break;
         }
         
-        context.layout = state
         updateMinMaxWindowSize(animated: false)
         self.view.splitView.layout()
-
+        context.layout = state
     }
     
 

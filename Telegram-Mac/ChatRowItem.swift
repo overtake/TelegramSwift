@@ -585,21 +585,11 @@ class ChatRowItem: TableRowItem {
     }
     
     override var isSelectable: Bool {
-        switch chatInteraction.mode {
-        case .preview:
-            return false
-        default:
-            return chatInteraction.mode.threadId != effectiveCommentMessage?.id
-        }
+        return chatInteraction.mode.threadId != effectiveCommentMessage?.id
     }
     
     var disableInteractions: Bool {
-        switch chatInteraction.mode {
-        case .preview:
-            return true
-        default:
-            return false
-        }
+        return false
     }
     
     

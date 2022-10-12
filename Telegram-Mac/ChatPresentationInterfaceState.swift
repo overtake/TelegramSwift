@@ -135,25 +135,26 @@ struct ChatActiveGroupCallInfo: Equatable {
     let data: GroupCallPanelData?
     let callJoinPeerId: PeerId?
     let joinHash: String?
-    
-    init(activeCall: CachedChannelData.ActiveCall, data: GroupCallPanelData?, callJoinPeerId: PeerId?, joinHash: String?) {
+    let isLive: Bool
+    init(activeCall: CachedChannelData.ActiveCall, data: GroupCallPanelData?, callJoinPeerId: PeerId?, joinHash: String?, isLive: Bool) {
         self.activeCall = activeCall
         self.data = data
         self.callJoinPeerId = callJoinPeerId
         self.joinHash = joinHash
+        self.isLive = isLive
     }
     
     func withUpdatedData(_ data: GroupCallPanelData?) -> ChatActiveGroupCallInfo {
-        return ChatActiveGroupCallInfo(activeCall: self.activeCall, data: data, callJoinPeerId: self.callJoinPeerId, joinHash: self.joinHash)
+        return ChatActiveGroupCallInfo(activeCall: self.activeCall, data: data, callJoinPeerId: self.callJoinPeerId, joinHash: self.joinHash, isLive: self.isLive)
     }
     func withUpdatedActiveCall(_ activeCall: CachedChannelData.ActiveCall) -> ChatActiveGroupCallInfo {
-        return ChatActiveGroupCallInfo(activeCall: activeCall, data: self.data, callJoinPeerId: self.callJoinPeerId, joinHash: self.joinHash)
+        return ChatActiveGroupCallInfo(activeCall: activeCall, data: self.data, callJoinPeerId: self.callJoinPeerId, joinHash: self.joinHash, isLive: self.isLive)
     }
     func withUpdatedCallJoinPeerId(_ callJoinPeerId: PeerId?) -> ChatActiveGroupCallInfo {
-        return ChatActiveGroupCallInfo(activeCall: activeCall, data: self.data, callJoinPeerId: callJoinPeerId, joinHash: self.joinHash)
+        return ChatActiveGroupCallInfo(activeCall: activeCall, data: self.data, callJoinPeerId: callJoinPeerId, joinHash: self.joinHash, isLive: self.isLive)
     }
     func withUpdatedJoinHash(_ joinHash: String?) -> ChatActiveGroupCallInfo {
-        return ChatActiveGroupCallInfo(activeCall: self.activeCall, data: self.data, callJoinPeerId: self.callJoinPeerId, joinHash: joinHash)
+        return ChatActiveGroupCallInfo(activeCall: self.activeCall, data: self.data, callJoinPeerId: self.callJoinPeerId, joinHash: joinHash, isLive: self.isLive)
     }
 }
 
@@ -545,9 +546,6 @@ struct ChatPresentationInterfaceState: Equatable {
             if self.interfaceState.editState != nil {
                 return .editing
             }
-            if self.chatMode == .preview {
-                return .block("")
-            }
             if self.interfaceState.themeEditing {
                 return .block("")
             }
@@ -612,7 +610,7 @@ struct ChatPresentationInterfaceState: Equatable {
                     if let permissionText = permissionText(from: peer, for: .banSendMessages) {
                         return .restricted(permissionText)
                     } else if peer.participationStatus == .left {
-                        if peer.flags.contains(.joinToSend) {
+                        if peer.flags.contains(.joinToSend) || chatMode.isTopicMode {
                             return .action(strings().chatInputJoin, { chatInteraction in
                                 chatInteraction.joinChannel()
                             }, nil)

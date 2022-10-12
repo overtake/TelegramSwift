@@ -605,9 +605,6 @@ open class ViewController : NSObject {
         return {}
     }
     
-    open func navigationUndoHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> ()->Void  {
-        return {}
-    }
     
     @available(OSX 10.12.2, *)
     open func makeTouchBar() -> NSTouchBar? {
