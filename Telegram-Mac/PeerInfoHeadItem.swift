@@ -1186,24 +1186,20 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
 
 
 
-    @objc func updateAnimatableContent() -> Void {
-        
+    override func updateAnimatableContent() -> Void {
         let checkValue:(InlineStickerItemLayer)->Void = { value in
-            DispatchQueue.main.async {
-                if let superview = value.superview {
-                    var isKeyWindow: Bool = false
-                    if let window = superview.window {
-                        if !window.canBecomeKey {
-                            isKeyWindow = true
-                        } else {
-                            isKeyWindow = window.isKeyWindow
-                        }
+            if let superview = value.superview {
+                var isKeyWindow: Bool = false
+                if let window = superview.window {
+                    if !window.canBecomeKey {
+                        isKeyWindow = true
+                    } else {
+                        isKeyWindow = window.isKeyWindow
                     }
-                    value.isPlayable = superview.visibleRect != .zero && isKeyWindow
                 }
+                value.isPlayable = superview.visibleRect != .zero && isKeyWindow
             }
         }
-     
         if let value = inlineTopicPhotoLayer {
             checkValue(value)
         }

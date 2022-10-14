@@ -508,41 +508,12 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 return .doesntExists
             }
         }
-        
-        let signal:Signal<(ThreadInfo, Peer), Error> = peerSignal |> mapToSignal { peer in
-            let messageId: MessageId = MessageId(peerId: peer.id, namespace: Namespaces.Message.Cloud, id: threadId)
-            return fetchAndPreloadReplyThreadInfo(context: context, subject: .groupMessage(messageId), preload: false)
-                |> map {
-                    return ($0, peer)
-                } |> mapError { error in
-                    switch error {
-                    case .generic:
-                        return .generic
-                    }
+        _ = peerSignal.start(next: { peer in
+            var toMessageId: MessageId? = nil
+            if let commentId = commentId {
+                toMessageId = MessageId(peerId: peer.id, namespace: Namespaces.Message.Cloud, id: commentId)
             }
-        } |> deliverOnMainQueue
-
-        
-        _ = showModalProgress(signal: signal |> take(1), for: context.window).start(next: { values in
-            let (result, peer) = values
-            let threadMessageId: MessageId = MessageId(peerId: peer.id, namespace: Namespaces.Message.Cloud, id: threadId)
-            let navigation = context.bindings.rootNavigation()
-            let current = navigation.controller as? ChatController
-            
-            let mode: ReplyThreadMode = .topic(origin: threadMessageId)
-
-            if let current = current, current.chatInteraction.mode.threadMode == mode {
-                if let commentId = commentId {
-                    let commentMessageId = MessageId(peerId: result.message.messageId.peerId, namespace: Namespaces.Message.Cloud, id: commentId)
-                    current.chatInteraction.focusMessageId(nil, commentMessageId, .CenterEmpty)
-                }
-            } else {
-                var commentMessageId: MessageId? = nil
-                if let commentId = commentId {
-                    commentMessageId = MessageId(peerId: result.message.messageId.peerId, namespace: Namespaces.Message.Cloud, id: commentId)
-                }
-                navigation.push(ChatAdditionController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: mode), messageId: commentMessageId, initialAction: nil, chatLocationContextHolder: result.contextHolder))
-            }
+            ForumUI.openTopic(Int64(threadId), peerId: peer.id, context: context, messageId: toMessageId, animated: true, addition: true)
         }, error: { error in
             switch error {
             case .doesntExists:
@@ -553,7 +524,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 break
             }
         })
-        
+
         afterComplete(true)
     case let .followResolvedName(_, username, postId, context, action, callback):
         

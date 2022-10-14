@@ -288,37 +288,8 @@ private final class StickerPackRowView : HorizontalRowView {
     override var backdorColor: NSColor {
         return .clear
     }
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        self.updateListeners()
-        self.updateAnimatableContent()
-    }
-    
-    override func viewDidMoveToSuperview() {
-        super.viewDidMoveToSuperview()
-        self.updateListeners()
-        self.updateAnimatableContent()
-    }
-    
-    private func updateListeners() {
-        let center = NotificationCenter.default
-        if let window = window {
-            center.removeObserver(self)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didBecomeKeyNotification, object: window)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self)
-        } else {
-            center.removeObserver(self)
-        }
-    }
 
-    @objc func updateAnimatableContent() -> Void {
+    override func updateAnimatableContent() -> Void {
         if let value = self.inlineSticker, let superview = value.superview {
             var isKeyWindow: Bool = false
             if let window = window {
@@ -384,8 +355,6 @@ private final class StickerPackRowView : HorizontalRowView {
             
             self.set(locked: (!item.context.isPremium && item.isPremium) || (item.installed != nil && !item.installed!), unlock: unlock, animated: animated)
 
-            self.updateAnimatableContent()
-            self.updateListeners()
         }
         
         

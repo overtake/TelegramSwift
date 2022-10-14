@@ -849,6 +849,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         if let status = item.status(self.statusControl, animated: animated) {
             rowView.addSubview(status)
+            if self.statusControl == nil {
+                status.setFrameOrigin(statusPoint(item))
+            }
             self.statusControl = status
             
             status.userInteractionEnabled = true
@@ -861,25 +864,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             performSubviewRemoval(view, animated: animated)
             self.statusControl = nil
         }
-        
-//        if item.isScam || item.isFake, item.canFillAuthorName {
-//            if scamButton == nil {
-//                let text: String = !item.isScam ? strings().peerInfoFakeWarning : strings().peerInfoScamWarning
-//                scamButton = ImageButton(frame: CGRect(origin: statusPoint(item), size: item.badIcon.backingSize))
-//                scamButton?.autohighlight = false
-//                rowView.addSubview(scamButton!)
-//                scamButton?.set(handler: { control in
-//                    tooltip(for: control, text: text)
-//                }, for: .Click)
-//            }
-//            scamButton?.set(image: item.badIcon, for: .Normal)
-//
-//        } else {
-//            if let view = scamButton {
-//                performSubviewRemoval(view, animated: animated, scale: true)
-//                scamButton = nil
-//            }
-//        }
     }
     
     func fillForwardStatus(_ item: ChatRowItem, animated: Bool) -> Void {
@@ -944,38 +928,21 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             }
         }
     }
+
     
     
-    
-    private func updateListeners() {
-        let center = NotificationCenter.default
-        if let window = window {
-            center.removeObserver(self)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didBecomeKeyNotification, object: window)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self)
-        } else {
-            center.removeObserver(self)
-        }
-    }
-    
-    
-    @objc func updateAnimatableContent() -> Void {
+    override func updateAnimatableContent() -> Void {
         for (_, value) in inlineStickerItemViews {
-            DispatchQueue.main.async {
-                if let superview = value.superview {
-                    var isKeyWindow: Bool = false
-                    if let window = self.window {
-                        if !window.canBecomeKey {
-                            isKeyWindow = true
-                        } else {
-                            isKeyWindow = window.isKeyWindow
-                        }
+            if let superview = value.superview {
+                var isKeyWindow: Bool = false
+                if let window = self.window {
+                    if !window.canBecomeKey {
+                        isKeyWindow = true
+                    } else {
+                        isKeyWindow = window.isKeyWindow
                     }
-                    value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
                 }
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
             }
         }
     }
@@ -1760,7 +1727,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             item.chatInteraction.remove(observer: self)
         }
         contentView.removeAllSubviews()
-        NotificationCenter.default.removeObserver(self)
     }
     
     override func convertWindowPointToContent(_ point: NSPoint) -> NSPoint {
@@ -1776,8 +1742,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 item.chatInteraction.add(observer: self)
             }
         }
-        self.updateListeners()
-        self.updateAnimatableContent()
 
     }
     

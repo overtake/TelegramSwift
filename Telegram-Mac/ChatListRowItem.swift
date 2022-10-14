@@ -113,7 +113,7 @@ class ChatListRowItem: TableRowItem {
     let peer:Peer?
     let renderedPeer:EngineRenderedPeer?
     let groupId: EngineChatList.Group
-    let forumTopicTitle: String?
+    let forumTopicData: EngineChatList.ForumTopicData?
     let chatListIndex:ChatListIndex?
     var peerId:PeerId? {
         return renderedPeer?.peerId
@@ -359,7 +359,7 @@ class ChatListRowItem: TableRowItem {
         self._stableId = stableId
         self.pinnedType = pinnedType
         self.renderedPeer = nil
-        self.forumTopicTitle = nil
+        self.forumTopicData = nil
         self.associatedGroupId = .root
         self.isMuted = false
         self.isOnline = nil
@@ -459,7 +459,7 @@ class ChatListRowItem: TableRowItem {
     
     enum Mode {
         case chat
-        case topic(Int64, EngineMessageHistoryThread.Info)
+        case topic(Int64, MessageHistoryThreadData)
         
         var threadId: Int64? {
             switch self {
@@ -472,7 +472,14 @@ class ChatListRowItem: TableRowItem {
     }
     let mode: Mode
     
-    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicTitle: String? = nil, activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats) {
+    
+    enum TitleMode {
+        case normal
+        case forumInfo
+    }
+    
+    
+    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, titleMode: TitleMode = .normal) {
         
         
         var draft = draft
@@ -515,7 +522,7 @@ class ChatListRowItem: TableRowItem {
         self.activities = activities
         self.pinnedType = pinnedType
         self.archiveStatus = nil
-        self.forumTopicTitle = forumTopicTitle
+        self.forumTopicData = forumTopicData
         self.hasDraft = draft != nil
         self.draft = draft
         self.peer = renderedPeer.chatMainPeer?._asPeer()
@@ -547,8 +554,14 @@ class ChatListRowItem: TableRowItem {
         case .chat:
             let _ = titleText.append(string: peer?.id == context.peerId ? strings().peerSavedMessages : peer?.displayTitle, color: renderedPeer.peers[renderedPeer.peerId]?._asPeer() is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
 
-        case let .topic(_, info):
-            let _ = titleText.append(string: info.title, color: theme.chatList.textColor, font: .medium(.title))
+        case let .topic(_, data):
+            switch titleMode {
+            case .normal:
+                let _ = titleText.append(string: data.info.title, color: theme.chatList.textColor, font: .medium(.title))
+            case .forumInfo:
+                let title = peer?.displayTitle ?? ""
+                let _ = titleText.append(string: strings().textArrow(title, data.info.title), color: theme.chatList.textColor, font: .medium(.title))
+            }
         }
         titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
         self.titleText = titleText
@@ -595,8 +608,8 @@ class ChatListRowItem: TableRowItem {
                 if !(message.effectiveMedia is TelegramMediaAction) {
                     var peerText: String = (author.id == context.account.peerId ? "\(strings().chatListYou)" : author.displayTitle)
                     
-                    if let forumTopicTitle = forumTopicTitle, peer.isForum {
-                        peerText = "\(peerText) → \(forumTopicTitle)"
+                    if let forumTopicData = forumTopicData, peer.isForum {
+                        peerText = strings().textArrow(peerText, forumTopicData.title)
                     }
                     
                     let attr = NSMutableAttributedString()
@@ -749,6 +762,14 @@ class ChatListRowItem: TableRowItem {
         case .last:
             return true
         default:
+            return false
+        }
+    }
+    var isClosedTopic: Bool {
+        switch self.mode {
+        case let .topic(_, threadData):
+            return threadData.isClosed
+        case .chat:
             return false
         }
     }
@@ -920,13 +941,20 @@ class ChatListRowItem: TableRowItem {
     }
     
     func togglePinned() {
-        ChatListRowItem.togglePinned(context: context, chatLocation: chatLocation, filter: filter, associatedGroupId: associatedGroupId)
+        if let peerId = peerId {
+            ChatListRowItem.togglePinned(context: context, peerId: peerId, isPinned: self.isPinned, mode: self.mode, filter: filter, associatedGroupId: associatedGroupId)
+        }
     }
     
-    static func togglePinned(context: AccountContext, chatLocation: ChatLocation?, filter: ChatListFilter, associatedGroupId: EngineChatList.Group) {
-        if let chatLocation = chatLocation {
+    static func togglePinned(context: AccountContext, peerId: PeerId, isPinned: Bool, mode: ChatListRowItem.Mode, filter: ChatListFilter, associatedGroupId: EngineChatList.Group) {
+        
+        
+        switch mode {
+        case let .topic(threadId, _):
+            _ = context.engine.peers.setForumChannelTopicPinned(id: peerId, threadId: threadId, isPinned: !isPinned).start()
+        case .chat:
             let location: TogglePeerChatPinnedLocation
-            
+            let itemId: PinnedItemId = .peer(peerId)
             if case .filter = filter {
                 location = .filter(filter.id)
             } else {
@@ -934,7 +962,7 @@ class ChatListRowItem: TableRowItem {
             }
             let context = context
             
-            _ = (context.engine.peers.toggleItemPinned(location: location, itemId: chatLocation.pinnedItemId) |> deliverOnMainQueue).start(next: { result in
+            _ = (context.engine.peers.toggleItemPinned(location: location, itemId: itemId) |> deliverOnMainQueue).start(next: { result in
                 switch result {
                 case .limitExceeded:
                     if context.isPremium {
@@ -963,7 +991,6 @@ class ChatListRowItem: TableRowItem {
                 }
             })
         }
-        
     }
     
     func toggleArchive() {
@@ -982,7 +1009,9 @@ class ChatListRowItem: TableRowItem {
         }
     }
     
-
+    static func toggleTopic(context: AccountContext, peerId: PeerId, threadId: Int64, isClosed: Bool) {
+        _ = context.engine.peers.setForumChannelTopicClosed(id: peerId, threadId: threadId, isClosed: !isClosed).start()
+    }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
 
@@ -991,7 +1020,6 @@ class ChatListRowItem: TableRowItem {
         let peer = self.peer
         let filter = self.filter
         let isMuted = self.isMuted
-        let chatLocation = self.chatLocation
         let associatedGroupId = self.associatedGroupId
         let isAd = self.isAd
         let renderedPeer = self.renderedPeer
@@ -1003,6 +1031,8 @@ class ChatListRowItem: TableRowItem {
         let isSecret = self.isSecret
         let isUnread = badgeNode != nil || mentionsCount != nil || isUnreadMarked
         let threadId = self.mode.threadId
+        let mode = self.mode
+        let isClosedTopic = self.isClosedTopic
         
        
         let deleteChat:()->Void = {
@@ -1013,7 +1043,9 @@ class ChatListRowItem: TableRowItem {
         }
         
         let togglePin:()->Void = {
-           ChatListRowItem.togglePinned(context: context, chatLocation: chatLocation, filter: filter, associatedGroupId: associatedGroupId)
+            if let peerId = peerId {
+                ChatListRowItem.togglePinned(context: context, peerId: peerId, isPinned: isPinned, mode: mode, filter: filter, associatedGroupId: associatedGroupId)
+            }
         }
         
         let toggleArchive:()->Void = {
@@ -1027,6 +1059,11 @@ class ChatListRowItem: TableRowItem {
                 ChatListRowItem.toggleMuted(context: context, peerId: peerId, isMuted: isMuted, threadId: threadId)
             }
         }
+        let toggleTopic:()->Void = {
+            if let peerId = peerId, let threadId = threadId {
+                ChatListRowItem.toggleTopic(context: context, peerId: peerId, threadId: threadId, isClosed: isClosedTopic)
+            }
+        }
         
         if case .topic = self.mode {
             
@@ -1038,10 +1075,7 @@ class ChatListRowItem: TableRowItem {
             items.append(ContextMenuItem(isMuted ? strings().chatListContextUnmute : strings().chatListContextMute, handler: toggleMute, itemImage: isMuted ? MenuAnimation.menu_unmuted.value : MenuAnimation.menu_mute.value))
             
             
-            items.append(ContextMenuItem("Pause", handler: {
-                
-            }, itemImage: MenuAnimation.menu_pause.value))
-            
+            items.append(ContextMenuItem(!isClosedTopic ? strings().chatListContextPause : strings().chatListContextStart, handler: toggleTopic, itemImage: !isClosedTopic ? MenuAnimation.menu_pause.value : MenuAnimation.menu_play.value))
             
             items.append(ContextSeparatorItem())
             
@@ -1264,9 +1298,7 @@ class ChatListRowItem: TableRowItem {
                 
             } else {
                 if !isAd, groupId == .root {
-                    firstGroup.append(ContextMenuItem(!isPinned ? strings().chatListContextPin : strings().chatListContextUnpin, handler: {
-                        ChatListRowItem.togglePinned(context: context, chatLocation: chatLocation, filter: filter, associatedGroupId: associatedGroupId)
-                    }, itemImage: isPinned ? MenuAnimation.menu_unpin.value : MenuAnimation.menu_pin.value))
+                    firstGroup.append(ContextMenuItem(!isPinned ? strings().chatListContextPin : strings().chatListContextUnpin, handler: togglePin, itemImage: isPinned ? MenuAnimation.menu_unpin.value : MenuAnimation.menu_pin.value))
                 }
             }
             

@@ -117,10 +117,16 @@ func ForumTopicInfoController(context: AccountContext, purpose: ForumTopicInfoPu
     let interactions = EntertainmentInteractions(.emoji, peerId: peerId)
     
     interactions.sendAnimatedEmoji = { sticker, _, _, fromRect in
-        updateState { current in
-            var current = current
-            current.icon = .init(file: sticker.file, fileId: sticker.file.fileId.id, fromRect: fromRect)
-            return current
+        if !context.isPremium, !(sticker.file.resource is ForumTopicIconResource) {
+            showModalText(for: context.window, text: strings().customEmojiPremiumAlert, callback: { _ in
+                showModal(with: PremiumBoardingController(context: context, source: .premium_emoji), for: context.window)
+            })
+        } else {
+            updateState { current in
+                var current = current
+                current.icon = .init(file: sticker.file, fileId: sticker.file.fileId.id, fromRect: fromRect)
+                return current
+            }
         }
     }
     

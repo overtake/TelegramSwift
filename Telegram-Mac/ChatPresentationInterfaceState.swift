@@ -607,6 +607,11 @@ struct ChatPresentationInterfaceState: Equatable {
                 
                 switch chatMode {
                 case .thread:
+                    if let data = threadInfo {
+                        if data.isClosed {
+                            return .restricted(strings().chatInputTopicClosed)
+                        }
+                    }
                     if let permissionText = permissionText(from: peer, for: .banSendMessages) {
                         return .restricted(permissionText)
                     } else if peer.participationStatus == .left {

@@ -110,8 +110,15 @@ class UNUserNotifications : NSObject {
                     _ = enqueueMessages(account: account, peerId: messageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: replyToMessageId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
                 }
             } else {
-                if let threadId = getNotificationMessageId(userInfo: userInfo, for: "thread"), let fromId = getNotificationMessageId(userInfo: userInfo, for: "source") {
-                    self.bindings.navigateToThread(account, threadId, fromId)
+                let fromId = getNotificationMessageId(userInfo: userInfo, for: "source")
+                let threadData: MessageHistoryThreadData?
+                if let data = userInfo["thread_data"] as? Data {
+                    threadData = CodableEntry(data: data).get(MessageHistoryThreadData.self)
+                } else {
+                    threadData = nil
+                }
+                if let threadId = getNotificationMessageId(userInfo: userInfo, for: "thread") {
+                    self.bindings.navigateToThread(account, threadId, fromId, threadData)
                 } else {
                     self.bindings.navigateToChat(account, messageId.peerId)
                 }

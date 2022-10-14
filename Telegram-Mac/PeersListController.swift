@@ -1534,12 +1534,15 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     
     func changeSelection(_ location: ChatLocation?) {
         if let location = location {
+            let id: UIChatListEntryId
             switch location {
             case .peer:
-                self.genericView.tableView.changeSelection(stableId: UIChatListEntryId.chatId(.chatList(location.peerId), -1))
+                id = .chatId(.chatList(location.peerId), location.peerId, -1)
             case let .thread(data):
-                self.genericView.tableView.changeSelection(stableId: UIChatListEntryId.chatId(.forum(makeMessageThreadId(data.messageId)), -1))
+                let threadId = makeMessageThreadId(data.messageId)
+                id = .chatId(.forum(threadId), location.peerId, -1)
             }
+            self.genericView.tableView.changeSelection(stableId: id)
         } else {
             self.genericView.tableView.changeSelection(stableId: nil)
         }
@@ -1551,45 +1554,55 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         if searchController == nil {
             
             let initialTags: SearchTags
+            let target: SearchController.Target
             switch self.mode {
             case let .forum(peerId):
-                initialTags = .init(messageTags: nil, peerTag: peerId)
+                initialTags = .init(messageTags: nil, peerTag: nil)
+                target = .forum(peerId)
             default:
                 initialTags = .init(messageTags: nil, peerTag: nil)
+                target = .common(.root)
             }
             
             let rect = self.genericView.tableView.frame
             let frame = NSMakeRect(rect.minX, rect.minY, self.frame.width, rect.height)
-            let searchController = SearchController(context: self.context, open:{ [weak self] (peerId, messageId, close) in
-                if let peerId = peerId {
-                    self?.open(with: .chatId(.chatList(peerId), -1), messageId: messageId, close:close)
+            let searchController = SearchController(context: self.context, open: { [weak self] (id, messageId, close) in
+                if let id = id {
+                    self?.open(with: id, messageId: messageId, close: close)
                 } else {
                     self?.genericView.searchView.cancel(true)
                 }
-            }, options: self.searchOptions, frame: frame, tags: initialTags)
+            }, options: self.searchOptions, frame: frame, target: target, tags: initialTags)
             
             searchController.pinnedItems = self.collectPinnedItems
             
             self.searchController = searchController
+            
+            
             searchController.defaultQuery = self.genericView.searchView.query
             searchController.navigationController = self.navigationController
             searchController.viewWillAppear(true)
+            searchController.loadViewIfNeeded()
             
-            
-            
-            if animated {
-                searchController.view.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.25, completion:{ [weak self] complete in
-                    if complete {
-                        self?.searchController?.viewDidAppear(animated)
-                    }
-                })
-                searchController.view.layer?.animateScaleSpring(from: 1.05, to: 1.0, duration: 0.4, bounce: false)
-                searchController.view.layer?.animatePosition(from: NSMakePoint(rect.minX, rect.minY + 15), to: rect.origin, duration: 0.4, timingFunction: .spring)
+            let signal = searchController.ready.get() |> take(1)
+            _ = signal.start(next: { [weak searchController, weak self] _ in
+                if let searchController = searchController {
+                    if animated {
+                        searchController.view.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.25, completion:{ [weak self] complete in
+                            if complete {
+                                self?.searchController?.viewDidAppear(animated)
+                            }
+                        })
+                        searchController.view.layer?.animateScaleSpring(from: 1.05, to: 1.0, duration: 0.4, bounce: false)
+                        searchController.view.layer?.animatePosition(from: NSMakePoint(rect.minX, rect.minY + 15), to: rect.origin, duration: 0.4, timingFunction: .spring)
 
-            } else {
-                searchController.viewDidAppear(animated)
-            }
-            self.addSubview(searchController.view)
+                    } else {
+                        searchController.viewDidAppear(animated)
+                    }
+                    self?.addSubview(searchController.view)
+                }
+            })
+            
         }
     }
     
@@ -1607,6 +1620,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
         
         if let searchController = self.searchController {
+            
+            let animated = animated && searchController.didSetReady
+            
             searchController.viewWillDisappear(animated)
             searchController.view.layer?.opacity = animated ? 1.0 : 0.0
         
@@ -1619,8 +1635,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             searchController.view._change(opacity: 0, animated: animated, duration: 0.25, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak view] completed in
                 view?.removeFromSuperview()
             })
-            searchController.view.layer?.animateScaleSpring(from: 1.0, to: 1.05, duration: 0.4, removeOnCompletion: false, bounce: false)
-            genericView.tableView.layer?.animateScaleSpring(from: 0.95, to: 1.00, duration: 0.4, removeOnCompletion: false, bounce: false)
+            if animated {
+                searchController.view.layer?.animateScaleSpring(from: 1.0, to: 1.05, duration: 0.4, removeOnCompletion: false, bounce: false)
+                genericView.tableView.layer?.animateScaleSpring(from: 0.95, to: 1.00, duration: 0.4, removeOnCompletion: false, bounce: false)
+            }
 
         }
         if let controller = mediaSearchController {
@@ -1683,7 +1701,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
         
         switch entryId {
-        case let .chatId(type, _):
+        case let .chatId(type, peerId, _):
             switch type {
             case let .chatList(peerId):
                 if let modalAction = navigation.modalAction as? FWDNavigationAction, peerId == context.peerId {
@@ -1705,12 +1723,15 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                         navigation.push(chat, context.layout == .single || forceAnimated)
                     }
                 }
-                
-            case .forum:
-                break
+            case let .forum(threadId):
+                ForumUI.openTopic(threadId, peerId: peerId, context: context, messageId: messageId)
             }
         case let .groupId(groupId):
             self.navigationController?.push(ChatListController(context, modal: false, mode: .folder(groupId)))
+        case let .forum(peerId):
+            if let navigation = self.navigationController {
+                ForumUI.open(peerId, navigation: navigation, context: context)
+            }
         case .reveal:
             break
         case .empty:

@@ -35,7 +35,7 @@ enum ChatHeaderState : Identifiable, Equatable {
     case report(ChatActiveGroupCallInfo?, autoArchived: Bool, status: PeerEmojiStatus?)
     case promo(ChatActiveGroupCallInfo?, EngineChatList.AdditionalItem.PromoInfo.Content)
     case pendingRequests(ChatActiveGroupCallInfo?, Int, [PeerInvitationImportersState.Importer])
-
+    case restartTopic(ChatActiveGroupCallInfo?)
     var stableId:Int {
         switch self {
         case .none:
@@ -56,6 +56,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             return 7
         case .requestChat:
             return 8
+        case .restartTopic:
+            return 9
         }
     }
 
@@ -79,6 +81,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             return voiceChat
         case let .requestChat(voiceChat, _, _):
             return voiceChat
+        case let .restartTopic(voiceChat):
+            return voiceChat
         }
     }
     
@@ -100,6 +104,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             return ChatPendingRequests.self
         case .requestChat:
             return ChatRequestChat.self
+        case .restartTopic:
+            return ChatRestartTopic.self
         case .none:
             return nil
         }
@@ -138,7 +144,9 @@ enum ChatHeaderState : Identifiable, Equatable {
         case .pendingRequests:
             height += 44
         case .requestChat:
-            return 44
+            height += 44
+        case .restartTopic:
+            height += 44
         }
         return height
     }
@@ -322,6 +330,8 @@ class ChatHeaderController {
                 primary = ChatPendingRequests(chatInteraction, state: _headerState, frame: primaryRect)
             case .requestChat:
                 primary = ChatRequestChat(chatInteraction, state: _headerState, frame: primaryRect)
+            case .restartTopic:
+                primary = ChatRestartTopic(chatInteraction, state: _headerState, frame: primaryRect)
             case .none:
                 primary = nil
             }
@@ -2431,6 +2441,80 @@ private final class ChatPendingRequests : Control, ChatHeaderProtocol {
         textView.resize(frame.width - 60)
         textView.center()
         self.avatarsContainer.centerY(x: 22)
+    }
+    
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
+
+
+private final class ChatRestartTopic : Control, ChatHeaderProtocol {
+    private let chatInteraction:ChatInteraction
+    private let textView = TextView()
+    
+    
+    private var _state: ChatHeaderState?
+    
+    required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
+        self.chatInteraction = chatInteraction
+        self._state = state
+        super.init(frame: frame)
+        
+        self.set(handler: { [weak self] control in
+            self?.chatInteraction.restartTopic()
+        }, for: .SingleClick)
+        
+        self.set(handler: { [weak self] _ in
+            self?.textView.alphaValue = 0.8
+        }, for: .Highlight)
+        
+        self.set(handler: { [weak self] _ in
+            self?.textView.alphaValue = 1
+        }, for: .Normal)
+        
+        self.set(handler: { [weak self] _ in
+            self?.textView.alphaValue = 1
+        }, for: .Hover)
+        
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        
+        addSubview(textView)
+        self.style = ControlStyle(backgroundColor: theme.colors.background)
+
+        self.border = [.Bottom]
+        
+        update(with: state, animated: false)
+
+    }
+
+    func update(with state: ChatHeaderState, animated: Bool) {
+        _state = state
+        let attr = NSMutableAttributedString()
+        _ = attr.append(string: strings().chatHeaderRestartTopic, color: theme.colors.accent, font: .normal(.text))
+        let layout = TextViewLayout(attr)
+        textView.update(layout)
+        updateLocalizationAndTheme(theme: theme)
+        needsLayout = true
+
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        self.backgroundColor = theme.colors.background
+    }
+    
+    override func layout() {
+        super.layout()
+        textView.resize(frame.width - 40)
+        textView.center()
     }
     
     

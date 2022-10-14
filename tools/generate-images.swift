@@ -784,7 +784,10 @@ func initialize() -> [String] {
 
     
     array.append("extend_content_lock")
-
+    
+    array.append("chatlist_forum_closed_topic")
+    array.append("chatlist_forum_closed_topic_active")
+    
     return array
 }
 //swift ./tools/generate-images.swift

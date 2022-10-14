@@ -775,67 +775,29 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
         self.updateLayout(size: frame.size, transition: transition)
         
         
- 
-
         self.updateInlineStickers(context: item.context, contentView: contentView, items: item.items, selected: item.selectedItems, animated: animated)
 
         while !appearanceViews.isEmpty {
             appearanceViews.removeLast().value?.removeFromSuperview()
         }
-        
-        self.updateListeners()
-        
     }
     
+   
     
-    
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        self.updateListeners()
-        self.updateAnimatableContent()
-    }
-    
-    override func viewDidMoveToSuperview() {
-        super.viewDidMoveToSuperview()
-        self.updateListeners()
-        self.updateAnimatableContent()
-    }
-    
-    private func updateListeners() {
-        let center = NotificationCenter.default
-        if let window = window {
-            center.removeObserver(self)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didBecomeKeyNotification, object: window)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self)
-        } else {
-            center.removeObserver(self)
-        }
-    }
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
-    
-    @objc func updateAnimatableContent() -> Void {
-        DispatchQueue.main.async {
-            for (_, value) in self.inlineStickerItemViews {
-                if let superview = value.superview {
-                    var isKeyWindow: Bool = false
-                    if let window = self.window {
-                        if !window.canBecomeKey {
-                            isKeyWindow = true
-                        } else {
-                            isKeyWindow = window.isKeyWindow
-                        }
+    override func updateAnimatableContent() -> Void {
+        for (_, value) in self.inlineStickerItemViews {
+            if let superview = value.superview {
+                var isKeyWindow: Bool = false
+                if let window = self.window {
+                    if !window.canBecomeKey {
+                        isKeyWindow = true
+                    } else {
+                        isKeyWindow = window.isKeyWindow
                     }
-                    value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
                 }
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
             }
         }
-        
     }
     
     func updateInlineStickers(context: AccountContext, contentView: NSView, items: [EmojiesSectionRowItem.Item], selected: [EmojiesSectionRowItem.SelectedItem], animated: Bool) {

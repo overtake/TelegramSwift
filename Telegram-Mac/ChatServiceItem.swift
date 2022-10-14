@@ -933,7 +933,7 @@ class ChatServiceRowView: TableRowView {
     }
     
     
-    @objc func updatePlayerIfNeeded() {
+    func updatePlayerIfNeeded() {
         let accept = window != nil && window!.isKeyWindow && !NSIsEmptyRect(visibleRect) && !self.isDynamicContentLocked
         if let photoVideoPlayer = photoVideoPlayer {
             if accept {
@@ -942,50 +942,12 @@ class ChatServiceRowView: TableRowView {
                 photoVideoPlayer.pause()
             }
         }
-        updateAnimatableContent()
     }
     
     override func addAccesoryOnCopiedView(innerId: AnyHashable, view: NSView) {
         photoVideoPlayer?.seek(timestamp: 0)
     }
-    
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        updateListeners()
-        updatePlayerIfNeeded()
-    }
-    
-    override func viewDidMoveToSuperview() {
-        super.viewDidMoveToSuperview()
-        updateListeners()
-        updatePlayerIfNeeded()
-    }
-    
-    override func viewDidUpdatedDynamicContent() {
-        super.viewDidUpdatedDynamicContent()
-        updatePlayerIfNeeded()
-    }
-    
-    func updateListeners() {
-        if let window = window {
-            NotificationCenter.default.removeObserver(self)
-            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSWindow.didBecomeKeyNotification, object: window)
-            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSWindow.didResignKeyNotification, object: window)
-            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSView.boundsDidChangeNotification, object: item?.table?.clipView)
-            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSView.boundsDidChangeNotification, object: self)
-            NotificationCenter.default.addObserver(self, selector: #selector(updatePlayerIfNeeded), name: NSView.frameDidChangeNotification, object: item?.table?.view)
-        } else {
-            removeNotificationListeners()
-        }
-    }
-    
-    func removeNotificationListeners() {
-        NotificationCenter.default.removeObserver(self)
-    }
-    
-    deinit {
-        removeNotificationListeners()
-    }
+
     
     
     override func mouseUp(with event: NSEvent) {
@@ -1117,27 +1079,25 @@ class ChatServiceRowView: TableRowView {
         
         
         self.needsLayout = true
-        updateListeners()
     }
     
         
     
-    @objc func updateAnimatableContent() -> Void {
+    override func updateAnimatableContent() -> Void {
         for (_, value) in inlineStickerItemViews {
-            DispatchQueue.main.async {
-                if let superview = value.superview {
-                    var isKeyWindow: Bool = false
-                    if let window = self.window {
-                        if !window.canBecomeKey {
-                            isKeyWindow = true
-                        } else {
-                            isKeyWindow = window.isKeyWindow
-                        }
+            if let superview = value.superview {
+                var isKeyWindow: Bool = false
+                if let window = self.window {
+                    if !window.canBecomeKey {
+                        isKeyWindow = true
+                    } else {
+                        isKeyWindow = window.isKeyWindow
                     }
-                    value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
                 }
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
             }
         }
+        self.updatePlayerIfNeeded()
     }
     
     

@@ -76,37 +76,8 @@ private final class GifKeyboardTabRowView: HorizontalRowView {
         addSubview(control)
         
     }
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        self.updateListeners()
-        self.updateAnimatableContent()
-    }
-    
-    override func viewDidMoveToSuperview() {
-        super.viewDidMoveToSuperview()
-        self.updateListeners()
-        self.updateAnimatableContent()
-    }
-    
-    private func updateListeners() {
-        let center = NotificationCenter.default
-        if let window = window {
-            center.removeObserver(self)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didBecomeKeyNotification, object: window)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self)
-        } else {
-            center.removeObserver(self)
-        }
-    }
 
-    @objc func updateAnimatableContent() -> Void {
+    override func updateAnimatableContent() -> Void {
         if let value = self.animationLayer, let superview = value.superview {
             var isKeyWindow: Bool = false
             if let window = window {
@@ -182,8 +153,6 @@ private final class GifKeyboardTabRowView: HorizontalRowView {
         selectView.frame = bounds
         selectView.center()
         
-        updateAnimatableContent()
-        updateListeners()
     }
     
     required init?(coder: NSCoder) {

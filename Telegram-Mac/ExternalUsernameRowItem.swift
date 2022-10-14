@@ -136,7 +136,7 @@ private final class ExternalUsernameRowView: GeneralContainableRowView {
             imageView.background = theme.colors.accent
             imageView.image = NSImage(named: "Icon_ExportedInvitation_Link")?.precomposed(.white)
         } else {
-            imageView.background = theme.colors.grayBackground
+            imageView.background = theme.colors.grayBackground.darker()
             imageView.image = NSImage(named: "Icon_ExportedInvitation_Expired")?.precomposed(.white)
         }
         if animated {

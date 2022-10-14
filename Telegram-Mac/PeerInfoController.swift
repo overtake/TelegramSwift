@@ -481,7 +481,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                 let key: PostboxViewKey = .messageHistoryThreadInfo(peerId: peerId, threadId: makeMessageThreadId(threadId))
                 threadData = context.account.postbox.combinedView(keys: [key]) |> map { views in
                     let view = views.views[key] as? MessageHistoryThreadInfoView
-                    let data = view?.info?.get(MessageHistoryThreadData.self)
+                    let data = view?.info?.data.get(MessageHistoryThreadData.self)
                     return data
                 }
             } else {

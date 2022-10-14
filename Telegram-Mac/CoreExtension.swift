@@ -890,8 +890,8 @@ extension SuggestedLocalizationInfo {
 }
 
 public extension MessageId {
-    func toInt64() -> Int64 {
-        return (Int64(id) << 32) | peerId.id._internalGetInt64Value()
+    var string: String  {
+        return "_id_\(id)_\(peerId.id._internalGetInt64Value())"
     }
 }
 
@@ -3671,5 +3671,7 @@ func joinChannel(context: AccountContext, peerId: PeerId) {
             return
         }
         alert(for: context.window, info: text)
+    }, completed: {
+        _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
     })
 }

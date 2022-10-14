@@ -18,6 +18,7 @@ let graphicsThreadPool = ThreadPool(threadCount: 5, threadPriority: 1)
 
 enum PeerPhoto {
     case peer(Peer, TelegramMediaImageRepresentation?, [String], Message?)
+    case topic(EngineMessageHistoryThread.Info)
 }
 
 private let capHolder:Atomic<[String : CGImage]> = Atomic(value: [:])
@@ -180,13 +181,60 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
     }
 }
 
-func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0, font:NSFont = .medium(.title), genCap: Bool = true, synchronousLoad: Bool = false) -> Signal<(CGImage?, Bool), NoError> {
+func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0, font:NSFont = .medium(17), genCap: Bool = true, synchronousLoad: Bool = false) -> Signal<(CGImage?, Bool), NoError> {
    
     switch photo {
     case let .peer(peer, representation, displayLetters, message):
         return peerImage(account: account, peer: peer, displayDimensions: displayDimensions, representation: representation, message: message, displayLetters: displayLetters, font: font, scale: scale, genCap: genCap, synchronousLoad: synchronousLoad)
+    case let .topic(info):
+        #if !SHARE
+      
+        let file: Signal<TelegramMediaFile, NoError>
+        
+        if let fileId = info.icon {
+            file = TelegramEngine(account: account).stickers.resolveInlineStickers(fileIds: [fileId]) |> map {
+                return $0[fileId]
+            }
+            |> filter { $0 != nil }
+            |> map { $0! }
+        } else {
+            file = .single(ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor))
+        }
+        
+        return file |> mapToSignal { file in
+            let reference = FileMediaReference.standalone(media: file)
+            let signal:Signal<ImageDataTransformation, NoError>
+            
+            let aspectSize = file.dimensions?.size.aspectFilled(displayDimensions) ?? displayDimensions
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: aspectSize, boundingSize: displayDimensions, intrinsicInsets: NSEdgeInsets(), emptyColor: nil)
+            
+            switch file.mimeType {
+            case "image/webp":
+                signal = chatMessageSticker(postbox: account.postbox, file: reference, small: false, scale: System.backingScale, fetched: true)
+            case "bundle/topic":
+                if let resource = file.resource as? ForumTopicIconResource {
+                    signal = makeTopicIcon(resource.title, bgColors: resource.bgColors, strokeColors: resource.strokeColors)
+                } else {
+                    signal = .complete()
+                }
+            default:
+                signal = chatMessageAnimatedSticker(postbox: account.postbox, file: reference, small: false, scale: System.backingScale, size: aspectSize, fetched: true, thumbAtFrame: 0, isVideo: file.fileName == "webm-preview" || file.isVideoSticker)
+            }
+            return signal |> map { data -> (CGImage?, Bool) in
+                let context = data.execute(arguments, data.data)
+                let image = context?.generateImage()
+                return (image, true)
+            }
+        }
+        #else
+        return .complete()
+        #endif
     }
 }
+
+/*
+
+ */
 
 enum EmptyAvatartType {
     case peer(colors:(top:NSColor, bottom: NSColor), letter: [String], font: NSFont, cornerRadius: CGFloat?)
