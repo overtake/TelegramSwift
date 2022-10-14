@@ -34,7 +34,7 @@ enum InputContextEntry : Comparable, Identifiable {
         case .switchPeer:
             return -1
         case let .message(_, message, _):
-            return message.id.toInt64()
+            return Int64(message.id.string.hashValue)
         case let .peer(_,_, stableId):
             return stableId
         case let .contextResult(_,_,index):

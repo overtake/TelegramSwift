@@ -153,6 +153,7 @@ func chatHistoryViewForLocation(_ location: ChatHistoryLocation, context: Accoun
             if let tagMask = tagMask {
                 signal = account.viewTracker.aroundMessageHistoryViewForLocation(chatLocationInput, index: .upperBound, anchorIndex: .upperBound, count: count, fixedCombinedReadStates: nil, tagMask: tagMask, orderStatistics: orderStatistics)
             } else {
+                //aroundMessageHistoryViewForLocation
                 signal = account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(chatLocationInput, count: count, tagMask: tagMask, orderStatistics: orderStatistics, additionalData: additionalData)
             }
         case .scheduled:
@@ -437,12 +438,12 @@ func preloadedChatHistoryViewForLocation(_ location: ChatHistoryLocation, contex
         |> castError(Bool.self)
         |> mapToSignal { update -> Signal<ChatHistoryViewUpdate, Bool> in
             switch update {
-            case let .Loading(value):
-                if case .Generic(.FillHole) = value.type {
+            case let .Loading(_, value):
+                if case .Generic(.FillHole) = value {
                     return .fail(true)
                 }
-            case let .HistoryView(value):
-                if case .Generic(.FillHole) = value.type {
+            case let .HistoryView(_, value, _, _):
+                if case .Generic(.FillHole) = value {
                     return .fail(true)
                 }
             }

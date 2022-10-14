@@ -233,7 +233,7 @@ enum TopicInfoEntry: PeerInfoEntry {
             return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: threadData, viewType: viewType, editing: editable)
         case let .addressName(_, value, viewType):
             let link = "https://t.me/\(value)"
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoSharelink, copyMenuText: strings().textCopyLabelShareLink, text: link, context: arguments.context, viewType: viewType, isTextSelectable:false, callback:{
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoSharelink, copyMenuText: strings().textCopyLabelShareLink, text: link, context: arguments.context, viewType: viewType, isTextSelectable: false, callback:{
                 showModal(with: ShareModalController(ShareLinkObject(arguments.context, link: link)), for: arguments.context.window)
             }, selectFullWord: true, _copyToClipboard: {
                 arguments.copy(link)
@@ -275,11 +275,11 @@ func topicInfoEntries(view: PeerView, threadData: MessageHistoryThreadData, argu
         
         applyBlock(infoBlock)
         
-        var addressName: String = group.addressName ?? ""
-        if addressName.isEmpty {
-            addressName = "c/\(group.id.id._internalGetInt64Value())"
+        let addressName: String = group.addressName ?? ""
+        
+        if !addressName.isEmpty {
+            aboutBlock.append(.addressName(section: TopicInfoSection.desc.rawValue, name: "\(addressName)?topic=\(state.threadId)", viewType: .singleItem))
         }
-        aboutBlock.append(.addressName(section: TopicInfoSection.desc.rawValue, name: "\(addressName)?topic=\(state.threadId)", viewType: .singleItem))
         
         applyBlock(aboutBlock)
 

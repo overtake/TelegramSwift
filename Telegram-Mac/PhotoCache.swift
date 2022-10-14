@@ -249,7 +249,7 @@ private class PhotoCache {
     let maxCount:Int = 50
     private var values:NSCache<NSNumber, PhotoCachedRecord> = NSCache()
     
-    init(_ memoryLimit:Int = 15) {
+    init(_ memoryLimit:Int = 100) {
         self.memoryLimit = memoryLimit
         self.values.countLimit = memoryLimit
     }
@@ -278,9 +278,9 @@ private class PhotoCache {
 
 
 private let peerPhotoCache = PhotoCache(100)
-private let photosCache = PhotoCache(50)
-private let photoThumbsCache = PhotoCache(50)
-private let themeThums = PhotoCache(100)
+private let photosCache = PhotoCache(100)
+private let photoThumbsCache = PhotoCache(500)
+private let themeThums = PhotoCache(500)
 
 private let stickersCache = PhotoCache(1000)
 

@@ -155,8 +155,8 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
                         self?.updateTags(titles, image)
                     })
                 }, for: .Click)
-                search.set(image: customSearchControl.icon, for: .Normal)
             }
+            updateLocalizationAndTheme(theme: presentation)
         }
     }
     

@@ -675,33 +675,15 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                     _ready.set(leftController.chatList.ready.get())
                     self.leftController.tabController.select(index: self.leftController.chatIndex)
                 }
-            case let .thread(threadId, fromId, _):
+            case let .thread(threadId, fromId, threadData, _):
                 self.leftController.tabController.select(index: self.leftController.chatIndex)
                 self._ready.set(self.leftController.chatList.ready.get())
                 
-                let signal:Signal<ThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: context, subject: .channelPost(threadId))
-                
-                _ = showModalProgress(signal: signal |> take(1), for: context.window).start(next: { [weak context] result in
-                    guard let context = context else {
-                        return
-                    }
-                    let chatLocation: ChatLocation = .thread(result.message)
-                    
-                    let updatedMode: ReplyThreadMode
-                    if result.isChannelPost {
-                        updatedMode = .comments(origin: fromId)
-                    } else {
-                        updatedMode = .replies(origin: fromId)
-                    }
-                    
-                    let controller = ChatController.init(context: context, chatLocation: chatLocation, mode: .thread(data: result.message, mode: updatedMode), messageId: fromId, initialAction: nil, chatLocationContextHolder: result.contextHolder)
-                    
-                    context.bindings.rootNavigation().push(controller)
-                    
-                }, error: { error in
-                    
-                })
-                
+                if let fromId = fromId {
+                    context.navigateToThread(threadId, fromId: fromId)
+                } else if let _ = threadData {
+                    ForumUI.openTopic(makeMessageThreadId(threadId), peerId: threadId.peerId, context: context)
+                }
             }
         } else {
            // self._ready.set(.single(true))

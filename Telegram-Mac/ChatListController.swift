@@ -32,8 +32,9 @@ private final class Arguments {
 }
 
 enum UIChatListEntryId : Hashable {
-    case chatId(EngineChatList.Item.Id, Int32)
+    case chatId(EngineChatList.Item.Id, PeerId, Int32)
     case groupId(EngineChatList.Group)
+    case forum(PeerId)
     case reveal
     case empty
     case loading
@@ -104,8 +105,15 @@ enum UIChatListEntry : Identifiable, Comparable {
             switch entry.index {
             case let .chatList(index):
                 return index
-            case let .forum(timestamp, _, namespace, id):
-                return ChatListIndex(pinningIndex: nil, messageIndex: .init(id: MessageId(peerId: entry.renderedPeer.peerId, namespace: namespace, id: id), timestamp: timestamp))
+            case let .forum(pinnedIndex, timestamp, _, namespace, id):
+                let index: UInt16?
+                switch pinnedIndex {
+                case .none:
+                    index = nil
+                case let .index(value):
+                    index = UInt16(value)
+                }
+                return ChatListIndex(pinningIndex: index, messageIndex: .init(id: MessageId(peerId: entry.renderedPeer.peerId, namespace: namespace, id: id), timestamp: timestamp))
             }
         case .reveal:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound())
@@ -129,7 +137,7 @@ enum UIChatListEntry : Identifiable, Comparable {
     var stableId: UIChatListEntryId {
         switch self {
         case let .chat(entry, _, _, filterId):
-            return .chatId(entry.id, filterId.id)
+            return .chatId(entry.id, entry.renderedPeer.peerId, filterId.id)
         case let .group(_, group, _, _):
             return .groupId(group.id)
         case .reveal:
@@ -162,12 +170,12 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                     $0._asMessage()
                 }
                 let mode: ChatListRowItem.Mode
-                if let info = item.threadInfo, case let .forum(id) = item.id {
-                    mode = .topic(id, info)
+                if let data = item.threadData, case let .forum(id) = item.id {
+                    mode = .topic(id, data)
                 } else {
                     mode = .chat
                 }
-                return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, mode: mode, messages: messages, index: entry.entry.index, readState: item.readCounters, draft: item.draft, pinnedType: pinnedType, renderedPeer: item.renderedPeer, peerPresence: item.presence, forumTopicTitle: item.forumTopicTitle, activities: activities, associatedGroupId: groupId, isMuted: item.isMuted, hasFailed: item.hasFailed, hasUnreadMentions: item.hasUnseenMentions, hasUnreadReactions: item.hasUnseenReactions, filter: filter)
+                return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, mode: mode, messages: messages, index: entry.entry.index, readState: item.readCounters, draft: item.draft, pinnedType: pinnedType, renderedPeer: item.renderedPeer, peerPresence: item.presence, forumTopicData: item.forumTopicData, activities: activities, associatedGroupId: groupId, isMuted: item.isMuted, hasFailed: item.hasFailed, hasUnreadMentions: item.hasUnseenMentions, hasUnreadReactions: item.hasUnseenReactions, filter: filter)
 
             case let .group(_, item, animated, archiveStatus):
                 var messages:[Message] = []
@@ -477,6 +485,8 @@ class ChatListController : PeersListController {
             if mapped.isEmpty {
                 if !update.list.isLoading {
                     mapped.append(.empty(filterData.filter, mode, state?.splitState ?? .none, .init(state?.forumPeer?.peer)))
+                } else {
+                    mapped.append(.loading(filterData.filter))
                 }
             } else {
                 if update.list.isLoading {
@@ -629,7 +639,7 @@ class ChatListController : PeersListController {
         let downloadArguments: DownloadsControlArguments = DownloadsControlArguments(open: { [weak self] in
             self?.showDownloads(animated: true)
         }, navigate: { [weak self] messageId in
-            self?.open(with: .chatId(.chatList(messageId.peerId), -1), messageId: messageId, initialAction: nil, close: false, forceAnimated: true)
+            self?.open(with: .chatId(.chatList(messageId.peerId), messageId.peerId, -1), messageId: messageId, initialAction: nil, close: false, forceAnimated: true)
         })
         
         downloadsDisposable.set(self.downloadsSummary.state.start(next: { [weak self] state in
@@ -1249,12 +1259,7 @@ class ChatListController : PeersListController {
         self.downloadsSummary = DownloadsSummary(context.fetchManager as! FetchManagerImpl, context: context)
         
         let searchOptions:AppSearchOptions
-        switch mode {
-        case .forum:
-            searchOptions = [.messages, .topics]
-        default:
-            searchOptions = [.messages, .chats]
-        }
+        searchOptions = [.messages, .chats]
         super.init(context, followGlobal: !modal, mode: mode, searchOptions: searchOptions)
         
         if mode.filterId != nil {
@@ -1293,9 +1298,9 @@ class ChatListController : PeersListController {
                 }
                 return false
             } else if item.isForum {
-                if byClick, let navigation = self.navigationController {
+                if byClick {
                     item.view?.focusAnimation(nil)
-                    ForumUI.open(peerId, navigation: navigation, context: context)
+                    open(with: .forum(peerId), initialAction: nil, addition: false)
                 }
                 return false
             }

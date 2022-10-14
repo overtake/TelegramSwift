@@ -416,89 +416,11 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         return nil
     }
     
-//    override func mouseDown(with event: NSEvent) {
-//        super.mouseDown(with: event)
-//
-//        self.isMouseDown = true
-//
-//        guard event.clickCount == 1 else {
-//            return
-//        }
-//
-//        let point = convert(event.locationInWindow, from: nil)
-//        for subview in self.subviews {
-//            if NSPointInRect(point, subview.frame) {
-//                if subview is ChatMediaContentView {
-//                    let signal = Signal<Never, NoError>.complete() |> delay(0.2, queue: .mainQueue())
-//                    longDisposable.set(signal.start(completed: { [weak self] in
-//                        if let `self` = self, self.mouseInside(),
-//                            let item = self.item as? StickerPackPanelRowItem,
-//                            let table = item.table,
-//                            let window = self.window as? Window {
-//                            startModalPreviewHandle(table, window: window, context: item.context)
-//                        }
-//                    }))
-//                }
-//                return
-//            }
-//        }
-//
-//    }
-//
-//    override func mouseMoved(with event: NSEvent) {
-//        super.mouseMoved(with: event)
-//
-//        let point = convert(event.locationInWindow, from: nil)
-//        for subview in self.subviews {
-//            if NSPointInRect(point, subview.frame) {
-//                if let subview = subview as? StickerMediaContentView {
-//                    subview.play()
-//                }
-//                return
-//            }
-//        }
-//    }
-//
-//    override func mouseUp(with event: NSEvent) {
-//        //super.mouseUp(with: event)
-//        longDisposable.set(nil)
-//        if isMouseDown, mouseInside(), event.clickCount == 1 {
-//            let point = convert(event.locationInWindow, from: nil)
-//
-//            if let item = item as? StickerPackPanelRowItem {
-//                if self.packNameView.mouseInside() {
-//                    if let reference = item.packReference {
-//                        item.arguments.showPack(reference)
-//                    }
-//                } else {
-//                    for subview in self.subviews {
-//                        if NSPointInRect(point, subview.frame) {
-//                            if let contentView = subview as? ChatMediaContentView, let media = contentView.media {
-//                                if let reference = item.packReference, item.packInfo.featured {
-//                                    item.arguments.showPack(reference)
-//                                } else {
-//                                    item.arguments.sendMedia(media, contentView, false, false)
-//                                }
-//                            }
-//                            break
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        isMouseDown = false
-//    }
-    
-    deinit {
-        NotificationCenter.default.removeObserver(self)
-    }
-    
-    @objc func updateAnimatableContent() -> Void {
-        DispatchQueue.main.async {
-            for (_, value) in self.inlineStickerItemViews {
-                if let superview = value.superview {
-                    value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && self.window != nil && self.window!.isKeyWindow
-                }
+
+    override func updateAnimatableContent() -> Void {
+        for (_, value) in self.inlineStickerItemViews {
+            if let superview = value.superview {
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && self.window != nil && self.window!.isKeyWindow
             }
         }
     }
@@ -561,28 +483,6 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         }
         for key in removeKeys {
             self.inlineStickerItemViews.removeValue(forKey: key)
-        }
-    }
-
-    
-    
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        self.updateListeners()
-        self.updateAnimatableContent()
-    }
-    
-    private func updateListeners() {
-        let center = NotificationCenter.default
-        if let window = window {
-            center.removeObserver(self)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didBecomeKeyNotification, object: window)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self)
-        } else {
-            center.removeObserver(self)
         }
     }
     
@@ -662,7 +562,6 @@ private final class StickerPackPanelRowView : TableRowView, ModalPreviewRowViewP
         self.layout()
         
         self.updateInlineStickers(context: item.context, contentView: contentView, items: item.files)
-        self.updateListeners()
         
     }
     

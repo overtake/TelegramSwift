@@ -2539,7 +2539,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 chat_premium_status_cyan: { generatePremium(false, color: palette.groupPeerNameCyan, small: true) },
                                                 chat_premium_status_light_blue: { generatePremium(false, color: palette.groupPeerNameLightBlue, small: true) },
                                                 chat_premium_status_blue: { generatePremium(false, color: palette.groupPeerNameBlue, small: true) },
-                                                extend_content_lock: { NSImage(named: "Icon_Premium_Lock")!.precomposed(.white) }
+                                                extend_content_lock: { NSImage(named: "Icon_Premium_Lock")!.precomposed(.white) },
+                                                chatlist_forum_closed_topic: { NSImage(named: "Icon_Forum_ClosedTopic")!.precomposed(palette.grayIcon, flipVertical: true) },
+                                                chatlist_forum_closed_topic_active: { NSImage(named: "Icon_Forum_ClosedTopic")!.precomposed(palette.underSelectedColor, flipVertical: true) }
 
     )
 

@@ -181,6 +181,7 @@ final class ChatInteraction : InterfaceObserver  {
     var showDeleterSetup:(Control)->Void = { _ in }
     
     var showEmojiUseTooltip:()->Void = { }
+    var restartTopic: ()->Void = { }
 
     var openPendingRequests:()->Void = { }
     var dismissPendingRequests:([PeerId])->Void = { _ in }

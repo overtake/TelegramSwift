@@ -117,7 +117,7 @@ final class AudioCommandCenter : NSObject, APDelegate {
 
                         let arguments = TransformImageArguments(corners: .init(), imageSize: iconSize, boundingSize: iconSize, intrinsicInsets: NSEdgeInsets())
                                                 
-                        let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: message.id.toInt64()), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(iconSize), resource: resource, progressiveSizes: [], immediateThumbnailData: nil)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                        let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: Int64(message.id.id)), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(iconSize), resource: resource, progressiveSizes: [], immediateThumbnailData: nil)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                         
                         
                         let signal = chatMessagePhotoThumbnail(account: controller.context.account, imageReference: .message(message: MessageReference(message), media: image)) |> deliverOnMainQueue

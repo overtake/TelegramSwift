@@ -18,6 +18,9 @@ import Reactions
 import FetchManager
 import InAppPurchaseManager
 import ApiCredentials
+
+
+
 protocol ChatLocationContextHolder: AnyObject {
 }
 
@@ -763,7 +766,7 @@ final class AccountContext {
                 let viewKey: PostboxViewKey = .messageHistoryThreadInfo(peerId: data.messageId.peerId, threadId: Int64(data.messageId.id))
                 return self.account.postbox.combinedView(keys: [viewKey])
                 |> map { views -> MessageId? in
-                    if let threadInfo = views.views[viewKey] as? MessageHistoryThreadInfoView, let data = threadInfo.info?.get(MessageHistoryThreadData.self) {
+                    if let threadInfo = views.views[viewKey] as? MessageHistoryThreadInfoView, let data = threadInfo.info?.data.get(MessageHistoryThreadData.self) {
                         return MessageId(peerId: location.peerId, namespace: Namespaces.Message.Cloud, id: data.maxOutgoingReadId)
                     } else {
                         return nil
@@ -797,7 +800,7 @@ final class AccountContext {
                 let viewKey: PostboxViewKey = .messageHistoryThreadInfo(peerId: data.messageId.peerId, threadId: Int64(data.messageId.id))
                 return self.account.postbox.combinedView(keys: [viewKey])
                 |> map { views -> Int in
-                    if let threadInfo = views.views[viewKey] as? MessageHistoryThreadInfoView, let data = threadInfo.info?.get(MessageHistoryThreadData.self) {
+                    if let threadInfo = views.views[viewKey] as? MessageHistoryThreadInfoView, let data = threadInfo.info?.data.get(MessageHistoryThreadData.self) {
                         return Int(data.incomingUnreadCount)
                     } else {
                         return 0
@@ -824,10 +827,36 @@ final class AccountContext {
     }
 
 
-
+   
 
     
     #if !SHARE
+    
+    func navigateToThread(_ threadId: MessageId, fromId: MessageId) {
+        let signal:Signal<ThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: self, subject: .channelPost(threadId))
+        
+        _ = showModalProgress(signal: signal |> take(1), for: self.window).start(next: { [weak self] result in
+            guard let context = self else {
+                return
+            }
+            let chatLocation: ChatLocation = .thread(result.message)
+            
+            let updatedMode: ReplyThreadMode
+            if result.isChannelPost {
+                updatedMode = .comments(origin: fromId)
+            } else {
+                updatedMode = .replies(origin: fromId)
+            }
+            let controller = ChatController(context: context, chatLocation: chatLocation, mode: .thread(data: result.message, mode: updatedMode), messageId: fromId, initialAction: nil, chatLocationContextHolder: result.contextHolder)
+            
+            context.bindings.rootNavigation().push(controller)
+            
+        }, error: { error in
+            
+        })
+    }
+
+    
     func composeCreateGroup(selectedPeers:Set<PeerId> = Set()) {
         createGroup(with: self, selectedPeers: selectedPeers)
     }
@@ -1092,12 +1121,3 @@ private final class ChatLocationContextHolderImpl: ChatLocationContextHolder {
     }
 }
 
-
-/*
- _ = (strongSelf.postbox.messageAtId(messageId) |> filter { $0?.isCopyProtected() == false } |> map { $0?.effectiveMedia as? TelegramMediaFile} |> filter {$0 != nil} |> map {$0!} |> mapToSignal { file -> Signal<Void, NoError> in
-     if !file.isMusic && !file.isAnimated && !file.isVideo && !file.isVoice && !file.isInstantVideo && !file.isAnimatedSticker && !file.isStaticSticker {
-         return copyToDownloads(file, postbox: postbox) |> map { _ in }
-     }
-     return .single(Void())
- }).start()
- */

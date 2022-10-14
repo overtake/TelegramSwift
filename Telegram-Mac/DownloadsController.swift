@@ -58,10 +58,10 @@ private struct State : Equatable {
 }
 
 private func _id_recent(_ messageId: MessageId) -> InputDataIdentifier {
-    return .init("_id_recent_\(messageId.toInt64())")
+    return .init("_id_recent_\(messageId.string)")
 }
 private func _id_downloading(_ messageId: MessageId) -> InputDataIdentifier {
-    return .init("_id_downloading\(messageId.toInt64())")
+    return .init("_id_downloading\(messageId.string)")
 }
 
 private let _id_recent_separator = InputDataIdentifier("_id_recent_separator")

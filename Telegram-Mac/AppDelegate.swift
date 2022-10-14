@@ -700,10 +700,10 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                 }
                 NSApp.activate(ignoringOtherApps: true)
                 window.deminiaturize(nil)
-            }, navigateToThread: { account, threadId, fromId in
+            }, navigateToThread: { account, threadId, fromId, threadData in
                 if let contextValue = self.contextValue, contextValue.context.account.id == account.id {
                     
-                    let pushController: (ChatLocation, ChatMode, MessageId, Atomic<ChatLocationContextHolder?>, Bool) -> Void = { chatLocation, mode, messageId, contextHolder, addition in
+                    let pushController: (ChatLocation, ChatMode, MessageId?, Atomic<ChatLocationContextHolder?>, Bool) -> Void = { chatLocation, mode, messageId, contextHolder, addition in
                         let navigation = contextValue.context.bindings.rootNavigation()
                         let controller: ChatController
                         if addition {
@@ -723,26 +723,30 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                         controller?.scrollup()
                     } else {
                         
-                        let signal:Signal<ThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: contextValue.context, subject: .channelPost(threadId))
-                        
-                        _ = showModalProgress(signal: signal |> take(1), for: contextValue.context.window).start(next: { result in
-                            let chatLocation: ChatLocation = .thread(result.message)
+                        if let _ = threadData {
+                            ForumUI.openTopic(makeMessageThreadId(threadId), peerId: threadId.peerId, context: contextValue.context)
+                        } else if let fromId = fromId {
+                            let signal:Signal<ThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: contextValue.context, subject: .channelPost(threadId))
                             
-                            let updatedMode: ReplyThreadMode
-                            if result.isChannelPost {
-                                updatedMode = .comments(origin: fromId)
-                            } else {
-                                updatedMode = .replies(origin: fromId)
-                            }
-                            pushController(chatLocation, .thread(data: result.message, mode: updatedMode), fromId, result.contextHolder, currentInChat)
-                            
-                        }, error: { error in
-                            
-                        })
+                            _ = showModalProgress(signal: signal |> take(1), for: contextValue.context.window).start(next: { result in
+                                let chatLocation: ChatLocation = .thread(result.message)
+                                
+                                let updatedMode: ReplyThreadMode
+                                if result.isChannelPost {
+                                    updatedMode = .comments(origin: fromId)
+                                } else {
+                                    updatedMode = .replies(origin: fromId)
+                                }
+                                pushController(chatLocation, .thread(data: result.message, mode: updatedMode), fromId, result.contextHolder, currentInChat)
+                                
+                            }, error: { error in
+                                
+                            })
+                        }
                     }
                     
                 } else {
-                    sharedContext.switchToAccount(id: account.id, action: .thread(threadId, fromId, necessary: true))
+                    sharedContext.switchToAccount(id: account.id, action: .thread(threadId, fromId, threadData, necessary: true))
                 }
                 NSApp.activate(ignoringOtherApps: true)
                 window.deminiaturize(nil)

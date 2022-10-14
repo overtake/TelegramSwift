@@ -54,7 +54,7 @@ struct ForumUI {
     static func open(_ peerId: PeerId, navigation: NavigationViewController, context: AccountContext) {
         navigation.push(ChatListController(context, modal: false, mode: .forum(peerId)))
     }
-    static func openTopic(_ threadId: Int64, peerId: PeerId, context: AccountContext, animated: Bool = false) {
+    static func openTopic(_ threadId: Int64, peerId: PeerId, context: AccountContext, messageId: MessageId? = nil, animated: Bool = false, addition: Bool = false) {
         let threadMessageId = makeThreadIdMessageId(peerId: peerId, threadId: threadId)
         let context = context
         let signal = fetchAndPreloadReplyThreadInfo(context: context, subject: .groupMessage(threadMessageId), preload: false)
@@ -64,7 +64,12 @@ struct ForumUI {
             
             let updatedMode: ReplyThreadMode = .topic(origin: threadMessageId)
             
-            let controller = ChatController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: updatedMode), chatLocationContextHolder: result.contextHolder)
+            let controller: ChatController
+            if addition {
+                controller = ChatAdditionController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: updatedMode), messageId: messageId, chatLocationContextHolder: result.contextHolder)
+            } else {
+                controller = ChatController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: updatedMode), messageId: messageId, chatLocationContextHolder: result.contextHolder)
+            }
             
             context.bindings.rootNavigation().push(controller, style: animated ? .push : nil)
         }, error: { error in

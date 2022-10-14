@@ -529,24 +529,31 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         let dateX = frame.width - dateLayout.0.size.width - item.margin
                         dateLayout.1.draw(NSMakeRect(dateX, item.margin, dateLayout.0.size.width, dateLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                         
-                        if !item.isFailed {
-                            if item.isSending {
-                                let outX = dateX - theme.icons.sendingImage.backingSize.width - 4
-                                ctx.draw(highlighted ? theme.icons.sendingImageSelected : theme.icons.sendingImage, in: NSMakeRect(outX,item.margin + 2, theme.icons.sendingImage.backingSize.width, theme.icons.sendingImage.backingSize.height))
-                            } else {
-                                if item.isOutMessage {
-                                    let outX = dateX - theme.icons.outgoingMessageImage.backingSize.width - (item.isRead ? 4.0 : 0.0) - 2
-                                    ctx.draw(highlighted ? theme.icons.outgoingMessageImageSelected : theme.icons.outgoingMessageImage, in: NSMakeRect(outX, item.margin + 2, theme.icons.outgoingMessageImage.backingSize.width, theme.icons.outgoingMessageImage.backingSize.height))
-                                    if item.isRead {
-                                        ctx.draw(highlighted ? theme.icons.readMessageImageSelected : theme.icons.readMessageImage, in: NSMakeRect(outX + 4, item.margin + 2, theme.icons.readMessageImage.backingSize.width, theme.icons.readMessageImage.backingSize.height))
+                        
+                        if item.isClosedTopic {
+                            let icon = theme.icons.chatlist_forum_closed_topic
+                            let iconActive = theme.icons.chatlist_forum_closed_topic_active
+                            let outX = dateX - icon.backingSize.width - 4
+                            ctx.draw(highlighted ? iconActive : icon, in: NSMakeRect(outX, item.margin + 2, icon.backingSize.width, icon.backingSize.height))
+                        } else {
+                            if !item.isFailed {
+                                if item.isSending {
+                                    let outX = dateX - theme.icons.sendingImage.backingSize.width - 4
+                                    ctx.draw(highlighted ? theme.icons.sendingImageSelected : theme.icons.sendingImage, in: NSMakeRect(outX,item.margin + 2, theme.icons.sendingImage.backingSize.width, theme.icons.sendingImage.backingSize.height))
+                                } else {
+                                    if item.isOutMessage {
+                                        let outX = dateX - theme.icons.outgoingMessageImage.backingSize.width - (item.isRead ? 4.0 : 0.0) - 2
+                                        ctx.draw(highlighted ? theme.icons.outgoingMessageImageSelected : theme.icons.outgoingMessageImage, in: NSMakeRect(outX, item.margin + 2, theme.icons.outgoingMessageImage.backingSize.width, theme.icons.outgoingMessageImage.backingSize.height))
+                                        if item.isRead {
+                                            ctx.draw(highlighted ? theme.icons.readMessageImageSelected : theme.icons.readMessageImage, in: NSMakeRect(outX + 4, item.margin + 2, theme.icons.readMessageImage.backingSize.width, theme.icons.readMessageImage.backingSize.height))
+                                        }
                                     }
                                 }
+                            } else {
+                                let outX = dateX - theme.icons.errorImageSelected.backingSize.width - 4
+                                ctx.draw(highlighted ? theme.icons.errorImageSelected : theme.icons.errorImage, in: NSMakeRect(outX,item.margin, theme.icons.errorImage.backingSize.width, theme.icons.errorImage.backingSize.height))
                             }
-                        } else {
-                            let outX = dateX - theme.icons.errorImageSelected.backingSize.width - 4
-                            ctx.draw(highlighted ? theme.icons.errorImageSelected : theme.icons.errorImage, in: NSMakeRect(outX,item.margin, theme.icons.errorImage.backingSize.width, theme.icons.errorImage.backingSize.height))
                         }
-                        
                     }
                 }
             }
@@ -611,35 +618,20 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     }
     
     
-    private func updateListeners() {
-        let center = NotificationCenter.default
-        if let window = window {
-            center.removeObserver(self)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didBecomeKeyNotification, object: window)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
-            center.addObserver(self, selector: #selector(updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self)
-        } else {
-            center.removeObserver(self)
-        }
-    }
     
-    @objc func updateAnimatableContent() -> Void {
+    override func updateAnimatableContent() -> Void {
         
         let checkValue:(InlineStickerItemLayer)->Void = { value in
-            DispatchQueue.main.async {
-                if let superview = value.superview {
-                    var isKeyWindow: Bool = false
-                    if let window = superview.window {
-                        if !window.canBecomeKey {
-                            isKeyWindow = true
-                        } else {
-                            isKeyWindow = window.isKeyWindow
-                        }
+            if let superview = value.superview {
+                var isKeyWindow: Bool = false
+                if let window = superview.window {
+                    if !window.canBecomeKey {
+                        isKeyWindow = true
+                    } else {
+                        isKeyWindow = window.isKeyWindow
                     }
-                    value.isPlayable = superview.visibleRect != .zero && isKeyWindow
                 }
+                value.isPlayable = superview.visibleRect != .zero && isKeyWindow
             }
         }
         
@@ -822,8 +814,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              self.photoVideoView?.layer?.cornerRadius = item.isForum ? 10 : self.photo.frame.height / 2
 
              
-             updateListeners()
-
             
             self.currentMediaPreviewSpecs = item.contentImageSpecs
             
@@ -938,31 +928,33 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             }
              
              switch item.mode {
-             case let .topic(_, info):
+             case let .topic(_, data):
                  let size = NSMakeSize(30, 30)
                  let current: InlineStickerItemLayer
-                 if let layer = self.inlineTopicPhotoLayer, layer.file?.fileId.id == info.icon {
+                 if let layer = self.inlineTopicPhotoLayer, layer.file?.fileId.id == data.info.icon {
                      current = layer
                  } else {
                      if let layer = inlineTopicPhotoLayer {
                          performSublayerRemoval(layer, animated: animated)
                          self.inlineTopicPhotoLayer = nil
                      }
-                     if let fileId = info.icon {
+                     if let fileId = data.info.icon {
                          current = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .playCount(2))
                      } else {
-                         let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor)
+                         let file = ForumUI.makeIconFile(title: data.info.title, iconColor: data.info.iconColor)
                          current = .init(account: item.context.account, file: file, size: size, playPolicy: .playCount(2))
                      }
                      current.superview = containerView
                      self.containerView.layer?.addSublayer(current)
                      self.inlineTopicPhotoLayer = current
                  }
+                 photo.isHidden = true
              default:
                  if let layer = inlineTopicPhotoLayer {
                      performSublayerRemoval(layer, animated: animated)
                      self.inlineTopicPhotoLayer = nil
                  }
+                 photo.isHidden = false
              }
             
             
@@ -1228,8 +1220,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         needsDisplay = true
         needsLayout = true
         
-        updateListeners()
-        updateAnimatableContent()
     }
     
     func initRevealState() {
@@ -1798,7 +1788,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     deinit {
         peerInputActivitiesDisposable.dispose()
-        self.removeNotificationListeners()
     }
     
     @objc func updatePlayerIfNeeded() {
@@ -1811,33 +1800,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             }
         }
     }
-    
-    override func viewDidUpdatedDynamicContent() {
-        super.viewDidUpdatedDynamicContent()
-        updatePlayerIfNeeded()
-    }
-    
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        updateListeners()
-        updatePlayerIfNeeded()
-        updateAnimatableContent()
-    }
-    
-    override func viewDidMoveToSuperview() {
-        super.viewDidMoveToSuperview()
-        updateListeners()
-        updatePlayerIfNeeded()
-        updateAnimatableContent()
-    }
-    
-
-    
-    func removeNotificationListeners() {
-        NotificationCenter.default.removeObserver(self)
-    }
-    
-    
     
     override func layout() {
         super.layout()

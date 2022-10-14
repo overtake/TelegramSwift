@@ -115,6 +115,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     arguments.activate(tuple.username)
                 })
             }))
+            index += 1
         }
         index += 1
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().usernameListInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
@@ -135,6 +136,8 @@ func UsernameController(_ context: AccountContext) -> InputDataController {
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
+    
+    let nextTransactionNonAnimated = Atomic(value: false)
 
     let arguments = Arguments(context: context, activate: { username in
         
@@ -188,7 +191,7 @@ func UsernameController(_ context: AccountContext) -> InputDataController {
     }))
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
-        return InputDataSignalValue(entries: entries(state, arguments: arguments))
+        return InputDataSignalValue(entries: entries(state, arguments: arguments), animated: !nextTransactionNonAnimated.swap(false))
     }
     
     let controller = InputDataController(dataSignal: signal, title: strings().telegramUsernameSettingsViewController)
@@ -290,6 +293,7 @@ func UsernameController(_ context: AccountContext) -> InputDataController {
                 let toValue = to - range.location
                 var names = stateValue.with { $0.usernames.usernames }
                 names.move(at: fromValue, to: toValue)
+                nextTransactionNonAnimated.swap(true)
                 updateState { current in
                     var current = current
                     current.usernames.usernames = names

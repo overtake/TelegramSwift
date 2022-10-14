@@ -2391,6 +2391,8 @@ public final class L10n {
   public static var chatInputReturn: String  { return L10n.tr("Localizable", "Chat.Input.Return") }
   /// Start
   public static var chatInputStartBot: String  { return L10n.tr("Localizable", "Chat.Input.StartBot") }
+  /// The topic closed by admin
+  public static var chatInputTopicClosed: String  { return L10n.tr("Localizable", "Chat.Input.TopicClosed") }
   /// Unblock
   public static var chatInputUnblock: String  { return L10n.tr("Localizable", "Chat.Input.Unblock") }
   /// Unmute
@@ -3193,11 +3195,11 @@ public final class L10n {
   public static func chatServiceGroupTopicEditedMixed(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.Mixed", p1, p2, p3)
   }
-  /// %1$@ paused topic
+  /// %1$@ closed topic
   public static func chatServiceGroupTopicEditedPaused(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.Paused", p1)
   }
-  /// %1$@ resumed topic
+  /// %1$@ restarted topic
   public static func chatServiceGroupTopicEditedResumed(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.Resumed", p1)
   }
@@ -3217,9 +3219,9 @@ public final class L10n {
   public static func chatServiceGroupTopicEditedYouMixed(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Mixed", p1, p2)
   }
-  /// You paused topic
+  /// You closed topic
   public static var chatServiceGroupTopicEditedYouPaused: String  { return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Paused") }
-  /// You resumed topic
+  /// You restarted topic
   public static var chatServiceGroupTopicEditedYouResumed: String  { return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Resumed") }
   /// You changed topic name to "%1$@"
   public static func chatServiceGroupTopicEditedYouTitle(_ p1: String) -> String {
@@ -3619,6 +3621,8 @@ public final class L10n {
   public static func chatWebpageMediaCount1(_ p1: Int, _ p2: Int) -> String {
     return L10n.tr("Localizable", "Chat.Webpage.MediaCount1", p1, p2)
   }
+  /// Restart Topic
+  public static var chatHeaderRestartTopic: String  { return L10n.tr("Localizable", "ChatHeader.RestartTopic") }
   /// Menu
   public static var chatInputBotMenu: String  { return L10n.tr("Localizable", "ChatInput.BotMenu") }
   /// Show Next
@@ -3685,7 +3689,7 @@ public final class L10n {
   public static var chatListContextMaskAsUnread: String  { return L10n.tr("Localizable", "ChatList.Context.MaskAsUnread") }
   /// Mute
   public static var chatListContextMute: String  { return L10n.tr("Localizable", "ChatList.Context.Mute") }
-  /// Pause
+  /// Close
   public static var chatListContextPause: String  { return L10n.tr("Localizable", "ChatList.Context.Pause") }
   /// Pin
   public static var chatListContextPin: String  { return L10n.tr("Localizable", "ChatList.Context.Pin") }
@@ -3699,7 +3703,7 @@ public final class L10n {
   public static var chatListContextReturnGroup: String  { return L10n.tr("Localizable", "ChatList.Context.ReturnGroup") }
   /// Sound
   public static var chatListContextSound: String  { return L10n.tr("Localizable", "ChatList.Context.Sound") }
-  /// Start
+  /// Restart
   public static var chatListContextStart: String  { return L10n.tr("Localizable", "ChatList.Context.Start") }
   /// Unmute
   public static var chatListContextUnmute: String  { return L10n.tr("Localizable", "ChatList.Context.Unmute") }
@@ -4381,6 +4385,8 @@ public final class L10n {
   public static var createGroupNameHolder: String  { return L10n.tr("Localizable", "CreateGroup.NameHolder") }
   /// Artists are welcome to add their own emoji sets using our [@stickers]() bot.
   public static var customEmojiInfo: String  { return L10n.tr("Localizable", "CustomEmoji.Info") }
+  /// Subscribe to Telegram Premium to unlock this emoji. [Read More]()
+  public static var customEmojiPremiumAlert: String  { return L10n.tr("Localizable", "CustomEmoji.PremiumAlert") }
   /// Suggest Animated Emoji
   public static var customEmojiSuggest: String  { return L10n.tr("Localizable", "CustomEmoji.Suggest") }
   /// Subscribe to Telegram Premium to unlock this reaction. [Read More]()
@@ -9081,6 +9087,8 @@ public final class L10n {
   public static var searchSeparatorPopular: String  { return L10n.tr("Localizable", "Search.Separator.Popular") }
   /// Recent
   public static var searchSeparatorRecent: String  { return L10n.tr("Localizable", "Search.Separator.Recent") }
+  /// Topics
+  public static var searchSeparatorTopics: String  { return L10n.tr("Localizable", "Search.Separator.Topics") }
   /// Search
   public static var searchFieldSearch: String  { return L10n.tr("Localizable", "SearchField.Search") }
   /// Off
@@ -10507,6 +10515,10 @@ public final class L10n {
   public static var termsOfServiceDisagreeTextLast: String  { return L10n.tr("Localizable", "TermsOfService.Disagree.Text.Last") }
   /// Delete Now
   public static var termsOfServiceDisagreeTextLastOK: String  { return L10n.tr("Localizable", "TermsOfService.Disagree.Text.Last.OK") }
+  /// %1$@ → %2$@
+  public static func textArrow(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Text.Arrow", p1, p2)
+  }
   /// Copy Selected Text
   public static var textCopy: String  { return L10n.tr("Localizable", "Text.Copy") }
   /// Copy About
