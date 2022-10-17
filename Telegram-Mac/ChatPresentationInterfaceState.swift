@@ -608,7 +608,7 @@ struct ChatPresentationInterfaceState: Equatable {
                 switch chatMode {
                 case .thread:
                     if let data = threadInfo {
-                        if data.isClosed {
+                        if data.isClosed, peer.adminRights == nil && !peer.flags.contains(.isCreator) && !data.isOwnedByMe {
                             return .restricted(strings().chatInputTopicClosed)
                         }
                     }

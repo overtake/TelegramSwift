@@ -1449,6 +1449,14 @@ extension Peer {
         }
         return false
     }
+    
+    var isAdmin: Bool {
+        if let peer = self as? TelegramChannel {
+            return peer.adminRights != nil || peer.flags.contains(.isCreator)
+        }
+        return false
+    }
+    
     var isGigagroup:Bool {
         if let peer = self as? TelegramChannel {
             return peer.flags.contains(.isGigagroup)

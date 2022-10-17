@@ -469,6 +469,14 @@ class ChatListRowItem: TableRowItem {
                 return nil
             }
         }
+        var threadData: MessageHistoryThreadData? {
+            switch self {
+            case let .topic(_, data):
+                return data
+            default:
+                return nil
+            }
+        }
     }
     let mode: Mode
     
@@ -1065,7 +1073,7 @@ class ChatListRowItem: TableRowItem {
             }
         }
         
-        if case .topic = self.mode {
+        if case let .topic(_, data) = self.mode, let peer = peer as? TelegramChannel {
             
             var items:[ContextMenuItem] = []
             
@@ -1074,12 +1082,13 @@ class ChatListRowItem: TableRowItem {
             
             items.append(ContextMenuItem(isMuted ? strings().chatListContextUnmute : strings().chatListContextMute, handler: toggleMute, itemImage: isMuted ? MenuAnimation.menu_unmuted.value : MenuAnimation.menu_mute.value))
             
+            if data.isOwnedByMe || peer.isAdmin {
+                items.append(ContextMenuItem(!isClosedTopic ? strings().chatListContextPause : strings().chatListContextStart, handler: toggleTopic, itemImage: !isClosedTopic ? MenuAnimation.menu_pause.value : MenuAnimation.menu_play.value))
+                
+                items.append(ContextSeparatorItem())
+                items.append(ContextMenuItem(strings().chatListContextDelete, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+            }
             
-            items.append(ContextMenuItem(!isClosedTopic ? strings().chatListContextPause : strings().chatListContextStart, handler: toggleTopic, itemImage: !isClosedTopic ? MenuAnimation.menu_pause.value : MenuAnimation.menu_play.value))
-            
-            items.append(ContextSeparatorItem())
-            
-            items.append(ContextMenuItem(strings().chatListContextDelete, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
             
             return .single(items)
         }

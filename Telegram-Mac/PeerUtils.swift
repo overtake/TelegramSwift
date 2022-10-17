@@ -145,14 +145,21 @@ extension Peer {
     
     
     
-    func canSendMessage(_ isThreadMode: Bool = false) -> Bool {
+    func canSendMessage(_ isThreadMode: Bool = false, threadData: MessageHistoryThreadData? = nil) -> Bool {
         if self.id == repliesPeerId {
             return false
         }
         if let channel = self as? TelegramChannel {
             if case .broadcast(_) = channel.info {
                 return channel.hasPermission(.sendMessages)
-            } else if case .group = channel.info  {
+            } else if case .group = channel.info {
+                
+                if let data = threadData {
+                    if data.isClosed, channel.adminRights == nil && !channel.flags.contains(.isCreator) && !data.isOwnedByMe {
+                        return false
+                    }
+                }
+                
                 switch channel.participationStatus {
                 case .member:
                     return !channel.hasBannedRights(.banSendMessages)

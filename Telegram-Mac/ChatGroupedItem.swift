@@ -170,8 +170,22 @@ class ChatGroupedItem: ChatRowItem {
                 
                // self.parameters.append(ChatMediaLayoutParameters.layout(for: (message.effectiveMedia as! TelegramMediaFile), isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType), automaticDownload: downloadSettings.isDownloable(message), isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), isFile: true, autoplayMedia: entry.autoplayMedia, isChatRelated: true))
 
+                let parameters = ChatMediaLayoutParameters.layout(for: (message.effectiveMedia as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(message), isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), autoplayMedia: entry.autoplayMedia)
                 
-                self.parameters.append(ChatMediaLayoutParameters.layout(for: (message.effectiveMedia as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(message), isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), autoplayMedia: entry.autoplayMedia))
+                parameters.showMedia = { [weak self] message in
+                    guard let `self` = self else {return}
+                    
+                    var type:GalleryAppearType = .history
+                    if let parameters = self.parameters[i] as? ChatMediaGalleryParameters, parameters.isWebpage {
+                        type = .alone
+                    } else if message.containsSecretMedia {
+                        type = .secret
+                    }
+                                
+                    showChatGallery(context: context, message: message, self.table, self.parameters as? ChatMediaGalleryParameters, type: type, chatMode: self.chatInteraction.mode, contextHolder: self.chatInteraction.contextHolder())
+                }
+                
+                self.parameters.append(parameters)
             case .photoOrVideo:
                 self.parameters.append(ChatMediaGalleryParameters(showMedia: { [weak self] message in
                     guard let `self` = self else {return}

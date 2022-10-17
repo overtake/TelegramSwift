@@ -648,7 +648,7 @@ class ChatControllerView : View, ChatInputDelegate {
         var state:ChatHeaderState
         if interfaceState.isSearchMode.0 {
            state = .search(voiceChat, searchInteractions, interfaceState.isSearchMode.1, interfaceState.isSearchMode.2)
-        } else if let threadData = interfaceState.threadInfo, threadData.isClosed {
+        } else if let threadData = interfaceState.threadInfo, threadData.isClosed, let peer = interfaceState.peer as? TelegramChannel, peer.adminRights != nil || peer.flags.contains(.isCreator) || threadData.isOwnedByMe {
             state = .restartTopic(voiceChat)
         } else if let count = interfaceState.inviteRequestsPending, let inviteRequestsPendingPeers = interfaceState.inviteRequestsPendingPeers, !inviteRequestsPendingPeers.isEmpty {
             state = .pendingRequests(voiceChat, Int(count), inviteRequestsPendingPeers)
@@ -2736,7 +2736,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.sendPlainText = { [weak self] text in
-            if let strongSelf = self, let peer = self?.chatInteraction.presentation.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
+            if let strongSelf = self, let peer = self?.chatInteraction.presentation.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
                 
                 let chatInteraction = strongSelf.chatInteraction
                 let presentation = chatInteraction.presentation
@@ -3553,7 +3553,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         chatInteraction.sendMedia = { [weak self] media in
-            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
+            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
                 let currentSendAsPeerId = strongSelf.chatInteraction.presentation.currentSendAsPeerId
                 switch strongSelf.mode {
                 case .scheduled:
@@ -3662,7 +3662,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.sendAppFile = { [weak self] file, silent, query, schedule, collectionId in
-            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
+            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
                 func apply(_ controller: ChatController, atDate: Date?) {
                     let _ = (Sender.enqueue(media: file, context: context, peerId: controller.chatInteraction.peerId, chatInteraction: controller.chatInteraction, silent: silent, atDate: atDate, query: query, collectionId: collectionId) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                     controller.nextTransaction.set(handler: {})
@@ -3689,7 +3689,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.sendMedias = { [weak self] medias, caption, isCollage, additionText, silent, atDate in
-            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
+            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
                 func apply(_ controller: ChatController, atDate: Date?) {
                     let _ = (Sender.enqueue(media: medias, caption: caption, context: context, peerId: controller.chatInteraction.peerId, chatInteraction: controller.chatInteraction, isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                     controller.nextTransaction.set(handler: {})
@@ -3719,7 +3719,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.shareSelfContact = { [weak self] replyId in
-            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
+            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
                 strongSelf.shareContactDisposable.set((context.account.viewTracker.peerView(context.account.peerId) |> take(1)).start(next: { [weak strongSelf] peerView in
                     if let strongSelf = strongSelf, let peer = peerViewMainPeer(peerView) as? TelegramUser {
                         _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil)), replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: strongSelf.chatInteraction.peerId).start()
@@ -3744,7 +3744,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.sendCommand = { [weak self] command in
-            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
+            if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
                 func apply(_ controller: ChatController, atDate: Date?) {
                     var commandText = "/" + command.command.text
                     if controller.chatInteraction.peerId.namespace != Namespaces.Peer.CloudUser {
@@ -3818,7 +3818,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             guard let strongSelf = self else {
                 return
             }
-            if let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode) {
+            if let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
                 _ = context.engine.peers.setChatMessageAutoremoveTimeoutInteractively(peerId: peer.id, timeout: seconds).start()
             }
             scrollAfterSend()
@@ -4038,7 +4038,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.shareContact = { [weak self] peer in
-            if let strongSelf = self, let main = strongSelf.chatInteraction.peer, main.canSendMessage(strongSelf.mode.isThreadMode) {
+            if let strongSelf = self, let main = strongSelf.chatInteraction.peer, main.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
                 _ = Sender.shareContact(context: context, peerId: strongSelf.chatInteraction.peerId, contact: peer).start()
             }
         }
@@ -6557,10 +6557,24 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             return .Initial(count: 30)
         })
-        _ = (self.location.get() |> take(1) |> deliverOnMainQueue).start(next: { [weak self] location in
-            _ = self?._locationValue.swap(location)
-        })
         
+        let initialLocation = peerView.get()
+        |> take(1)
+        |> deliverOnMainQueue
+        
+        _ = initialLocation.start(next: { [weak self] view in
+            if let strongSelf = self {
+                let count = Int(round(strongSelf.view.frame.height / 28)) + 2
+                let location:ChatHistoryLocation
+                if let messageId = messageId {
+                    location = .InitialSearch(location: .id(messageId), count: max(count, 50))
+                } else {
+                    location = .Initial(count: count)
+                }
+                strongSelf.setLocation(location)
+            }
+        })
+            
         chatInteraction.contextHolder = { [weak self] in
             return self?.chatLocationContextHolder ?? Atomic(value: nil)
         }
@@ -6955,7 +6969,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         if let types = pasteboard.types, types.contains(.kFilenames) {
             let list = pasteboard.propertyList(forType: .kFilenames) as? [String]
             
-            if let list = list, list.count > 0, let peer = chatInteraction.peer, peer.canSendMessage(chatInteraction.mode.isThreadMode) {
+            if let list = list, list.count > 0, let peer = chatInteraction.peer, peer.canSendMessage(chatInteraction.mode.isThreadMode, threadData: chatInteraction.presentation.threadInfo) {
                 
                 if let text = permissionText(from: peer, for: .banSendMedia) {
                     return [DragItem(title: "", desc: text, handler: {

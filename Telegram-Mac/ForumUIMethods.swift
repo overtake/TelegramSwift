@@ -81,6 +81,11 @@ struct ForumUI {
     }
     static func openInfo(_ peerId: PeerId, context: AccountContext) {
         let navigation = context.bindings.rootNavigation()
+        if let current = navigation.controller as? PeerInfoController {
+            if current.peerId == peerId {
+                return
+            }
+        }
         navigation.push(PeerInfoController(context: context, peerId: peerId))
     }
     static func openTopicInfo(_ threadId: Int64, peerId: PeerId, context: AccountContext) {
