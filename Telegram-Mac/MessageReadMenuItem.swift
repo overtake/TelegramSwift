@@ -598,7 +598,23 @@ final class MessageReadMenuItem : ContextMenuItem {
 
 }
 
-
+extension ContextMenuItem {
+    static func makeItemAvatar(_ item: ContextMenuItem, account: Account, peer: Peer, source: PeerPhoto) {
+        let signal:Signal<(CGImage?, Bool), NoError>
+        
+        if peer.id == account.peerId {
+            let icon = theme.icons.searchSaved
+            signal = generateEmptyPhoto(NSMakeSize(18, 18), type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(10, 10)), cornerRadius: nil)) |> deliverOnMainQueue |> map { ($0, true) }
+        } else {
+            signal = peerAvatarImage(account: account, photo: source, displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
+        }
+        _ = signal.start(next: { [weak item] image, _ in
+            if let image = image {
+                item?.image = NSImage(cgImage: image, size: NSMakeSize(18, 18))
+            }
+        })
+    }
+}
 
 
 final class ReactionPeerMenu : ContextMenuItem {
@@ -606,15 +622,54 @@ final class ReactionPeerMenu : ContextMenuItem {
         case builtin(TelegramMediaFile)
         case custom(Int64, TelegramMediaFile?)
     }
+    enum Destination : Equatable {
+        case common
+        case forward
+    }
     private let context: AccountContext
     private let reaction: Source?
     private let peer: Peer
-    init(title: String, handler:@escaping()->Void, peer: Peer, context: AccountContext, reaction: Source?) {
+    private let destination: Destination
+    
+    private let disposable = MetaDisposable()
+    
+    init(title: String, handler:@escaping()->Void, peer: Peer, context: AccountContext, reaction: Source?, destination: Destination = .common) {
         self.reaction = reaction
         self.peer = peer
         self.context = context
+        self.destination = destination
+        
         super.init(title, handler: handler)
+        
+        if peer.isForum, destination == .forward {
+            let signal = chatListViewForLocation(chatListLocation: .forum(peerId: peer.id), location: .Initial(100, nil), filter: nil, account: context.account) |> filter {
+                !$0.list.isLoading
+            } |> map {
+                $0.list.items
+            } |> deliverOnMainQueue
+            disposable.set(signal.start(next: { [weak self] list in
+                let menu = ContextMenu()
+                for item in list {
+                    if let threadData = item.threadData {
+                        if peer.canSendMessage(true, threadData: threadData) {
+                            let menuItem = ContextMenuItem(threadData.info.title, handler: {
+                                
+                            })
+                            ContextMenuItem.makeItemAvatar(menuItem, account: context.account, peer: peer, source: .topic(threadData.info))
+                            menu.addItem(menuItem)
+                        }
+                       
+                    }
+                }
+                self?.submenu = menu
+            }))
+        }
     }
+    
+    deinit {
+        disposable.dispose()
+    }
+    
     override var id: Int64 {
         var value: Hasher = Hasher()
         value.combine(peer.id.toInt64())

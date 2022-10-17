@@ -509,10 +509,10 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             if let peer = message.peers[message.id.peerId] {
                                 if peer.isSupergroup || peer.isGroup {
                                     title = peer.displayTitle
-                                    hasReplyButton = peer.canSendMessage(false)
+                                    hasReplyButton = peer.canSendMessage(false, threadData: source.threadData)
                                 } else if message.id.peerId == repliesPeerId {
                                     if let peerId = message.sourceReference?.messageId.peerId, let sourcePeer = message.peers[peerId] {
-                                        hasReplyButton = sourcePeer.canSendMessage(true)
+                                        hasReplyButton = sourcePeer.canSendMessage(true, threadData: source.threadData)
                                     }
                                 } else if peer.isChannel {
                                     hasReplyButton = false
@@ -520,9 +520,6 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             }
                             
                             if message.wasScheduled {
-                                hasReplyButton = false
-                            }
-                            if let data = source.threadData, data.isClosed {
                                 hasReplyButton = false
                             }
                             

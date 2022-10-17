@@ -59,7 +59,7 @@ private class ChatListDraggingContainerView : View {
     }
     
     override public func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        if let item = item, let peer = item.peer, peer.canSendMessage(false), mouseInside() {
+        if let item = item, let peer = item.peer, peer.canSendMessage(false, threadData: item.mode.threadData), mouseInside() {
             activeDragging = true
             needsDisplay = true
         }

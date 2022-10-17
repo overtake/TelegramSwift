@@ -445,7 +445,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         let source = self.source
         
         
-        let transition: Signal<(PeerView, TableUpdateTransition), NoError> = arguments.get() |> mapToSignal { arguments in
+        let transition: Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> = arguments.get() |> mapToSignal { arguments in
             
             let inviteLinksCount: Signal<Int32, NoError>
             if let arguments = arguments as? GroupInfoArguments {
@@ -489,18 +489,18 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
             }
             
             return combineLatest(queue: prepareQueue, context.account.viewTracker.peerView(peerId, updateData: true), arguments.statePromise, appearanceSignal, inputActivityState.get(), channelMembersPromise.get(), mediaTabsData, mediaReady, inviteLinksCount, joinRequestsCount, availableReactions, threadData)
-                |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData, _, inviteLinksCount, joinRequestsCount, availableReactions, threadData -> Signal<(PeerView, TableUpdateTransition), NoError> in
+                |> mapToQueue { view, state, appearance, inputActivities, channelMembers, mediaTabsData, _, inviteLinksCount, joinRequestsCount, availableReactions, threadData -> Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> in
                     
                     let entries:[AppearanceWrapperEntry<PeerInfoSortableEntry>] = peerInfoEntries(view: view, threadData: threadData, arguments: arguments, inputActivities: inputActivities, channelMembers: channelMembers, mediaTabsData: mediaTabsData, inviteLinksCount: inviteLinksCount, joinRequestsCount: joinRequestsCount, availableReactions: availableReactions, source: source).map({PeerInfoSortableEntry(entry: $0)}).map({AppearanceWrapperEntry(entry: $0, appearance: appearance)})
                     let previous = previousEntries.swap(entries)
-                    return prepareEntries(from: previous, to: entries, account: context.account, initialSize: initialSize.modify({$0}), peerId: peerId, arguments:arguments, animated: previous != nil) |> runOn(onMainQueue.swap(false) ? .mainQueue() : prepareQueue) |> map { (view, $0) }
+                    return prepareEntries(from: previous, to: entries, account: context.account, initialSize: initialSize.modify({$0}), peerId: peerId, arguments:arguments, animated: previous != nil) |> runOn(onMainQueue.swap(false) ? .mainQueue() : prepareQueue) |> map { (view, $0, threadData) }
                     
             } |> deliverOnMainQueue
             } |> afterDisposed {
                 actionsDisposable.dispose()
             }
                 
-        disposable.set(transition.start(next: { [weak self] (peerView, transition) in
+        disposable.set(transition.start(next: { [weak self] (peerView, transition, threadData) in
             
             _ = self?.peerView.swap(peerView)
             
@@ -511,7 +511,11 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                     case .broadcast:
                         editable = peer.adminRights != nil || peer.flags.contains(.isCreator)
                     case .group:
-                        editable = peer.adminRights != nil || peer.flags.contains(.isCreator)
+                        if let threadData = threadData {
+                            editable = (peer.isAdmin && !peer.hasBannedRights(.banPinMessages)) || threadData.isOwnedByMe
+                        } else {
+                            editable = peer.adminRights != nil || peer.flags.contains(.isCreator)
+                        }
                     }
                 } else if let group = peer as? TelegramGroup {
                     switch group.role {

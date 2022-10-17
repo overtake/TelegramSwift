@@ -83,7 +83,7 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                             return .single((image, false))
                         } else {
                             let size = NSMakeSize(max(15, displayDimensions.width), max(15, displayDimensions.height))
-                            let image = generateAvatarPlaceholder(foregroundColor: theme.colors.grayBackground, size: size, cornerRadius: isForum ? 10 : -1)
+                            let image = generateAvatarPlaceholder(foregroundColor: theme.colors.grayBackground, size: size, cornerRadius: isForum ? floor(size.height / 3) : -1)
                             _ = capHolder.modify { current in
                                 var current = current
                                 current[key] = image
@@ -116,7 +116,7 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                             let rounded = DrawingContext(size: img.size, scale: 1.0)
                             rounded.withContext { c in
                                 c.clear(size.bounds)
-                                c.round(size, isForum ? min(10, size.height / 2) : size.height / 2)
+                                c.round(size, isForum ? min(floor(size.height / 3), size.height / 2) : size.height / 2)
                                 c.clear(size.bounds)
                                 c.draw(ctx.generateImage()!, in: size.bounds)
                             }
@@ -166,7 +166,7 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
             if let cached = cached {
                 return .single((cached, false))
             } else {
-                return generateEmptyPhoto(displayDimensions, type: .peer(colors: color, letter: letters, font: font, cornerRadius: isForum ? 10 : nil)) |> runOn(graphicsThreadPool) |> mapToSignal { image -> Signal<(CGImage?, Bool), NoError> in
+                return generateEmptyPhoto(displayDimensions, type: .peer(colors: color, letter: letters, font: font, cornerRadius: isForum ? floor(displayDimensions.height / 3) : nil)) |> runOn(graphicsThreadPool) |> mapToSignal { image -> Signal<(CGImage?, Bool), NoError> in
                     if let image = image {
                         return cacheEmptyPeerPhoto(image: image, peerId: peer.id, symbol: symbol, color: color.top, size: displayDimensions, scale: scale, isForum: isForum) |> map {
                             return (image, false)

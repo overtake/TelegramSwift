@@ -515,20 +515,10 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 let title = peer.id == context.peerId ? strings().peerSavedMessages : peer.displayTitle.prefixWithDots(20)
                 let item = ReactionPeerMenu(title: title, handler: {
                     _ = forwardObject.perform(to: [peer.id]).start()
-                }, peer: peer, context: context, reaction: nil)
+                }, peer: peer, context: context, reaction: nil, destination: .forward)
 
-                let signal:Signal<(CGImage?, Bool), NoError>
-                if peer.id == context.peerId {
-                    let icon = theme.icons.searchSaved
-                    signal = generateEmptyPhoto(NSMakeSize(18, 18), type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(10, 10)), cornerRadius: nil)) |> deliverOnMainQueue |> map { ($0, true) }
-                } else {
-                    signal = peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
-                }
-                _ = signal.start(next: { [weak item] image, _ in
-                    if let image = image {
-                        item?.image = NSImage(cgImage: image, size: NSMakeSize(18, 18))
-                    }
-                })
+                ContextMenuItem.makeItemAvatar(item, account: context.account, peer: peer, source: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil))
+                
                 return item
             }
             

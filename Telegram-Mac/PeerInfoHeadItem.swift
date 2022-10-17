@@ -1082,7 +1082,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         }
         
         
-        self.photoVideoView?.layer?.cornerRadius = item.isForum ? 10 : self.photoView.frame.height / 2
+        self.photoVideoView?.layer?.cornerRadius = item.isForum ? self.photoView.frame.height / 3 : self.photoView.frame.height / 2
         
         nameView.change(size: item.nameSize, animated: animated)
         nameView.update(item, animated: animated)
@@ -1112,7 +1112,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                     photoEditableView?.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                 }
             }
-            photoEditableView?.layer?.cornerRadius = item.isForum ? 10 : item.photoDimension / 2
+            photoEditableView?.layer?.cornerRadius = item.isForum ? item.photoDimension / 3 : item.photoDimension / 2
             
             photoEditableView?.updateState(item.updatingPhotoState, animated: animated)
             photoEditableView?.setup = item.updatePhoto

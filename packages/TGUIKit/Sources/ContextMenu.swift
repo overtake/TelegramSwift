@@ -74,7 +74,7 @@ open class ContextMenuItem : NSMenuItem {
         self.keyEquivalentValue = keyEquivalent
         super.init(title: title, action: nil, keyEquivalent: "")
         
-        self.title = title
+        self.title = title.prefix(30)
         self.action = #selector(click)
         self.target = self
         self.isEnabled = true

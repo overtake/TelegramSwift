@@ -1327,6 +1327,15 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         actionsDisposable.add(stateSignal.start(next: { [weak self] state in
             self?.updateState(state, previous: previousState.swap(state), arguments: arguments)
         }))
+        
+        centerBarView.set(handler: { [weak self] _ in
+            switch mode {
+            case let .forum(peerId):
+                ForumUI.openInfo(peerId, context: context)
+            default:
+                break
+            }
+        }, for: .Click)
     }
     
     private var state: PeerListState? {
@@ -1418,7 +1427,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                             ForumUI.addMembers(peer.peer.id, context: context)
                         }, itemImage: MenuAnimation.menu_read.value))
                     }
-                    if peer.peer.groupAccess.canEditGroupInfo {
+                    if peer.peer.isAdmin && !peer.peer.hasBannedRights(.banPinMessages) {
                         if !items.isEmpty {
                             items.append(ContextSeparatorItem())
                         }
