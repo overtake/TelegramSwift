@@ -1954,10 +1954,10 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
     }
     
     private func cancelForum(animated: Bool) {
-        self.genericView.cancelForum(animated: animated)
         self.forumPeerId.set(nil)
-        self.genericView.basicSearchView.cancel(animated)
         self.forumDisposable.set(nil)
+        self.genericView.cancelForum(animated: animated)
+        self.genericView.basicSearchView.cancel(animated)
     }
     
     override func escapeKeyAction() -> KeyHandlerResult {
