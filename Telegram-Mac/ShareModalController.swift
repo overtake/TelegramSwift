@@ -844,7 +844,11 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
         case let .plain(peer, _, presence, drawSeparator, multiple):
             let color = presence?.status.string.isEmpty == false ? presence?.status.attribute(NSAttributedString.Key.foregroundColor, at: 0, effectiveRange: nil) as? NSColor : nil
             return  ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: peer.id == context.peerId ? theme.colors.grayText : color ?? theme.colors.grayText, highlightColor:.white), status: peer.id == context.peerId ? (multipleSelection ? nil : strings().forwardToSavedMessages) : presence?.status.string, drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction) : .plain, action: {
-               selectInteraction.action(peer.id)
+                if peer.isForum {
+                    selectInteraction.openForum(peer.id)
+                } else {
+                    selectInteraction.action(peer.id)
+                }
             }, contextMenuItems: {
                 return .single([
                     .init(strings().shareModalSelect, handler: {
@@ -1263,11 +1267,17 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         
         selectInteraction.action = { [weak self] peerId in
             guard let `self` = self else { return }
+            
             _ = share.perform(to: [peerId], comment: self.contextChatInteraction.presentation.interfaceState.inputState).start(error: { error in
                alert(for: context.window, info: error)
             }, completed: { [weak self] in
                 self?.close()
             })
+        }
+        
+        selectInteraction.openForum = { [weak self] peerId in
+            var bp = 0
+            bp += 1
         }
         
         genericView.share.contextMenu = { [weak self] in

@@ -358,7 +358,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         }
     }
     
-    private let getColors:((TelegramMediaFile)->[LottieColor])?
+    private var getColors:((TelegramMediaFile)->[LottieColor])?
     
     struct Shimmer {
         let color: NSColor
@@ -419,6 +419,15 @@ final class InlineStickerItemLayer : SimpleLayer {
     private func initialize() {
         if playPolicy != .loop {
             unique = Int(arc4random64())
+        }
+        if self.getColors == nil {
+            self.getColors = { file in
+                var colors: [LottieColor] = []
+                if isDefaultStatusesPackId(file.emojiReference) {
+                    colors.append(.init(keyPath: "", color: theme.colors.accent))
+                }
+                return colors
+            }
         }
         self.contentsGravity = .center
 //        self.isOpaque = true

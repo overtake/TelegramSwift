@@ -54,7 +54,7 @@ struct ForumUI {
     static func open(_ peerId: PeerId, navigation: NavigationViewController, context: AccountContext) {
         navigation.push(ChatListController(context, modal: false, mode: .forum(peerId)))
     }
-    static func openTopic(_ threadId: Int64, peerId: PeerId, context: AccountContext, messageId: MessageId? = nil, animated: Bool = false, addition: Bool = false) {
+    static func openTopic(_ threadId: Int64, peerId: PeerId, context: AccountContext, messageId: MessageId? = nil, animated: Bool = false, addition: Bool = false, initialAction: ChatInitialAction? = nil) {
         let threadMessageId = makeThreadIdMessageId(peerId: peerId, threadId: threadId)
         let context = context
         let signal = fetchAndPreloadReplyThreadInfo(context: context, subject: .groupMessage(threadMessageId), preload: false)
@@ -66,9 +66,9 @@ struct ForumUI {
             
             let controller: ChatController
             if addition {
-                controller = ChatAdditionController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: updatedMode), messageId: messageId, chatLocationContextHolder: result.contextHolder)
+                controller = ChatAdditionController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: updatedMode), messageId: messageId, initialAction: initialAction, chatLocationContextHolder: result.contextHolder)
             } else {
-                controller = ChatController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: updatedMode), messageId: messageId, chatLocationContextHolder: result.contextHolder)
+                controller = ChatController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: updatedMode), messageId: messageId, initialAction: initialAction, chatLocationContextHolder: result.contextHolder)
             }
             
             context.bindings.rootNavigation().push(controller, style: animated ? .push : nil)
