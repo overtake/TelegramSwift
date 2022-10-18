@@ -1728,7 +1728,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let chatLocation = self.chatLocation
         let mode = self.mode
         let peerId = self.chatInteraction.peerId
-        
+        let threadId = chatInteraction.mode.threadId
+
+        let takeReplyId:()->MessageId? = { [weak self] in
+            return self?.chatInteraction.presentation.interfaceState.replyMessage?.id ?? threadId
+        }
         
         if chatInteraction.peerId.namespace == Namespaces.Peer.CloudChannel {
             slowModeInProgressDisposable.set((context.account.postbox.unsentMessageIdsView() |> mapToSignal { view -> Signal<[MessageId], NoError> in
@@ -2518,7 +2522,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             return
                         } else  if !presentation.effectiveInput.inputText.trimmed.isEmpty {
                             setNextToTransaction = true
-                            invokeSignal = Sender.enqueue(input: presentation.effectiveInput, context: context, peerId: controller.chatInteraction.peerId, replyId: presentation.interfaceState.replyMessageId ?? threadId, disablePreview: presentation.interfaceState.composeDisableUrlPreview != nil, silent: silent, atDate: atDate, sendAsPeerId: currentSendAsPeerId, mediaPreview: presentation.urlPreview?.1, emptyHandler: { [weak strongSelf] in
+                            invokeSignal = Sender.enqueue(input: presentation.effectiveInput, context: context, peerId: controller.chatInteraction.peerId, replyId: takeReplyId(), disablePreview: presentation.interfaceState.composeDisableUrlPreview != nil, silent: silent, atDate: atDate, sendAsPeerId: currentSendAsPeerId, mediaPreview: presentation.urlPreview?.1, emptyHandler: { [weak strongSelf] in
                                 _ = strongSelf?.nextTransaction.execute()
                             }) |> deliverOnMainQueue |> ignoreValues
                             
@@ -2570,7 +2574,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     return .complete()
                                 }
                                 
-                                return Sender.forwardMessages(messageIds: messages.map {$0.id}, context: context, peerId: peerId, hideNames: hideNames, hideCaptions: hideCaptions, silent: silent, atDate: atDate, sendAsPeerId: currentSendAsPeerId)
+                                return Sender.forwardMessages(messageIds: messages.map {$0.id}, context: context, peerId: peerId, replyId: takeReplyId(), hideNames: hideNames, hideCaptions: hideCaptions, silent: silent, atDate: atDate, sendAsPeerId: currentSendAsPeerId)
                             }
                             
                             invokeSignal = invokeSignal |> then(fwd |> ignoreValues)
@@ -2740,7 +2744,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 
                 let chatInteraction = strongSelf.chatInteraction
                 let presentation = chatInteraction.presentation
-                let _ = (Sender.enqueue(input: ChatTextInputState(inputText: text), context: context, peerId: chatInteraction.peerId, replyId: presentation.interfaceState.replyMessageId, sendAsPeerId: presentation.currentSendAsPeerId) |> deliverOnMainQueue).start(completed: scrollAfterSend)
+                let _ = (Sender.enqueue(input: ChatTextInputState(inputText: text), context: context, peerId: chatInteraction.peerId, replyId: takeReplyId(), sendAsPeerId: presentation.currentSendAsPeerId) |> deliverOnMainQueue).start(completed: scrollAfterSend)
             }
         }
         
@@ -3061,7 +3065,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let strongSelf = self {
                 func apply(_ controller: ChatController, atDate: Int32?) {
                     let chatInteraction = controller.chatInteraction
-                    let value = context.engine.messages.enqueueOutgoingMessageWithChatContextResult(to: chatInteraction.peerId, botId: results.botId, result: result, replyToMessageId: chatInteraction.presentation.interfaceState.replyMessageId ?? chatInteraction.mode.threadId)
+                    let value = context.engine.messages.enqueueOutgoingMessageWithChatContextResult(to: chatInteraction.peerId, botId: results.botId, result: result, replyToMessageId: takeReplyId())
                     if value {
                         controller.nextTransaction.set(handler: afterSentTransition)
                     }
@@ -3559,12 +3563,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 case .scheduled:
                     showModal(with: DateSelectorModalController(context: strongSelf.context, mode: .schedule(peer.id), selectedAt: { [weak strongSelf] date in
                         if let strongSelf = strongSelf {
-                            let _ = (Sender.enqueue(media: media, context: context, peerId: strongSelf.chatInteraction.peerId, chatInteraction: strongSelf.chatInteraction, atDate: date, sendAsPeerId: currentSendAsPeerId) |> deliverOnMainQueue).start(completed: scrollAfterSend)
+                            let _ = (Sender.enqueue(media: media, context: context, peerId: peerId, replyId: takeReplyId(), atDate: date, sendAsPeerId: currentSendAsPeerId) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                             strongSelf.nextTransaction.set(handler: {})
                         }
                     }), for: strongSelf.context.window)
                 case .history, .thread:
-                    let _ = (Sender.enqueue(media: media, context: context, peerId: strongSelf.chatInteraction.peerId, chatInteraction: strongSelf.chatInteraction, sendAsPeerId: currentSendAsPeerId) |> deliverOnMainQueue).start(completed: scrollAfterSend)
+                    let _ = (Sender.enqueue(media: media, context: context, peerId: peerId, replyId: takeReplyId(), sendAsPeerId: currentSendAsPeerId) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                     strongSelf.nextTransaction.set(handler: {})
                 case .pinned:
                     break
@@ -3664,7 +3668,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.sendAppFile = { [weak self] file, silent, query, schedule, collectionId in
             if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
                 func apply(_ controller: ChatController, atDate: Date?) {
-                    let _ = (Sender.enqueue(media: file, context: context, peerId: controller.chatInteraction.peerId, chatInteraction: controller.chatInteraction, silent: silent, atDate: atDate, query: query, collectionId: collectionId) |> deliverOnMainQueue).start(completed: scrollAfterSend)
+                    let _ = (Sender.enqueue(media: file, context: context, peerId: peerId, replyId: takeReplyId(), silent: silent, atDate: atDate, query: query, collectionId: collectionId) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                     controller.nextTransaction.set(handler: {})
                 }
                 
@@ -3691,7 +3695,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.sendMedias = { [weak self] medias, caption, isCollage, additionText, silent, atDate in
             if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
                 func apply(_ controller: ChatController, atDate: Date?) {
-                    let _ = (Sender.enqueue(media: medias, caption: caption, context: context, peerId: controller.chatInteraction.peerId, chatInteraction: controller.chatInteraction, isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate) |> deliverOnMainQueue).start(completed: scrollAfterSend)
+                    
+                    let _ = (Sender.enqueue(media: medias, caption: caption, context: context, peerId: controller.chatInteraction.peerId, replyId: takeReplyId(), isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                     controller.nextTransaction.set(handler: {})
                 }
                 switch strongSelf.mode {
@@ -3750,7 +3755,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     if controller.chatInteraction.peerId.namespace != Namespaces.Peer.CloudUser {
                         commandText += "@" + (command.peer.username ?? "")
                     }
-                    _ = Sender.enqueue(input: ChatTextInputState(inputText: commandText), context: context, peerId: controller.chatLocation.peerId, replyId: controller.chatInteraction.presentation.interfaceState.replyMessageId, atDate: atDate).start(completed: scrollAfterSend)
+                    _ = Sender.enqueue(input: ChatTextInputState(inputText: commandText), context: context, peerId: controller.chatLocation.peerId, replyId: takeReplyId(), atDate: atDate).start(completed: scrollAfterSend)
                     controller.chatInteraction.updateInput(with: "")
                     controller.nextTransaction.set(handler: afterSentTransition)
                 }
@@ -4039,7 +4044,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.shareContact = { [weak self] peer in
             if let strongSelf = self, let main = strongSelf.chatInteraction.peer, main.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
-                _ = Sender.shareContact(context: context, peerId: strongSelf.chatInteraction.peerId, contact: peer).start()
+                _ = Sender.shareContact(context: context, peerId: strongSelf.chatInteraction.peerId, contact: peer, replyId: takeReplyId()).start()
             }
         }
         
@@ -6362,7 +6367,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         let peerId = self.chatLocation.peerId
-
         
       
         

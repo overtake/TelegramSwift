@@ -513,7 +513,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             if let commentId = commentId {
                 toMessageId = MessageId(peerId: peer.id, namespace: Namespaces.Message.Cloud, id: commentId)
             }
-            ForumUI.openTopic(Int64(threadId), peerId: peer.id, context: context, messageId: toMessageId, animated: true, addition: true)
+            _ = ForumUI.openTopic(Int64(threadId), peerId: peer.id, context: context, messageId: toMessageId, animated: true, addition: true).start()
         }, error: { error in
             switch error {
             case .doesntExists:

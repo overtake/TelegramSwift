@@ -487,13 +487,7 @@ final class CustomReactionEffectView: View {
             
 
             
-            let sublayer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: size, checkStatus: true, getColors: { file in
-                var colors: [LottieColor] = []
-                if isDefaultStatusesPackId(file.emojiReference) {
-                    colors.append(.init(keyPath: "", color: theme.colors.accent))
-                }
-                return colors
-            })
+            let sublayer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: file, emoji: ""), size: size, checkStatus: true)
            
             sublayer.isPlayable = true
             

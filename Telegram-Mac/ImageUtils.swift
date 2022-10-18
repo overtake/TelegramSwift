@@ -205,8 +205,15 @@ func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSi
             let reference = FileMediaReference.standalone(media: file)
             let signal:Signal<ImageDataTransformation, NoError>
             
+            let emptyColor: TransformImageEmptyColor?
+            if isDefaultStatusesPackId(file.emojiReference) {
+                emptyColor = .fill(theme.colors.accent)
+            } else {
+                emptyColor = nil
+            }
+            
             let aspectSize = file.dimensions?.size.aspectFilled(displayDimensions) ?? displayDimensions
-            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: aspectSize, boundingSize: displayDimensions, intrinsicInsets: NSEdgeInsets(), emptyColor: nil)
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: aspectSize, boundingSize: displayDimensions, intrinsicInsets: NSEdgeInsets(), emptyColor: emptyColor)
             
             switch file.mimeType {
             case "image/webp":

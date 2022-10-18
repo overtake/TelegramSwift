@@ -646,7 +646,7 @@ final class ReactionPeerMenu : ContextMenuItem {
                 !$0.list.isLoading
             } |> map {
                 $0.list.items
-            } |> deliverOnMainQueue
+            } |> take(1) |> deliverOnMainQueue
             disposable.set(signal.start(next: { [weak self] list in
                 let menu = ContextMenu()
                 for item in list {

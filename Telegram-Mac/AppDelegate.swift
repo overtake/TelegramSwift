@@ -724,7 +724,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                     } else {
                         
                         if let _ = threadData {
-                            ForumUI.openTopic(makeMessageThreadId(threadId), peerId: threadId.peerId, context: contextValue.context)
+                            _ = ForumUI.openTopic(makeMessageThreadId(threadId), peerId: threadId.peerId, context: contextValue.context).start()
                         } else if let fromId = fromId {
                             let signal:Signal<ThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: contextValue.context, subject: .channelPost(threadId))
                             

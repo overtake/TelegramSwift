@@ -238,7 +238,7 @@ class SelectCallbackObject : ShareObject {
     }
     
     
-    override func perform(to peerIds:[PeerId], comment: ChatTextInputState? = nil) -> Signal<Never, String> {
+    override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil) -> Signal<Never, String> {
         return callback(peerIds) |> castError(String.self)
     }
     override func limitReached() {

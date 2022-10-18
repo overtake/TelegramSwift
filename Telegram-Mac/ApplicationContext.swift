@@ -682,7 +682,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 if let fromId = fromId {
                     context.navigateToThread(threadId, fromId: fromId)
                 } else if let _ = threadData {
-                    ForumUI.openTopic(makeMessageThreadId(threadId), peerId: threadId.peerId, context: context)
+                    _ = ForumUI.openTopic(makeMessageThreadId(threadId), peerId: threadId.peerId, context: context).start()
                 }
             }
         } else {

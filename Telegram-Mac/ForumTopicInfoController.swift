@@ -180,7 +180,7 @@ func ForumTopicInfoController(context: AccountContext, purpose: ForumTopicInfoPu
                 let iconColor = ForumUI.randomTopicColor()
                 let signal = context.engine.peers.createForumChannelTopic(id: peerId, title: state.name, iconColor: iconColor, iconFileId: fileId)
                 _ = showModalProgress(signal: signal, for: context.window).start(next: { threadId in
-                    ForumUI.openTopic(threadId, peerId: peerId, context: context)
+                    _ = ForumUI.openTopic(threadId, peerId: peerId, context: context).start()
                 }, error: { error in
                     alert(for: context.window, info: "create topic error: \(error)")
                 })

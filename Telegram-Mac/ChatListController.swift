@@ -1277,7 +1277,7 @@ class ChatListController : PeersListController {
             
             if let modalAction = modalAction as? FWDNavigationAction {
                 if item.peerId == context.peerId {
-                    _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, context: context, peerId: context.peerId).start()
+                    _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, context: context, peerId: context.peerId, replyId: nil).start()
                     _ = showModalSuccess(for: item.context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
                     navigationController?.removeModalAction()
                     return false
@@ -1294,7 +1294,7 @@ class ChatListController : PeersListController {
                 return false
             } else if case let .topic(threadId, _) = item.mode {
                 if byClick {
-                    ForumUI.openTopic(threadId, peerId: peerId, context: context)
+                    _ = ForumUI.openTopic(threadId, peerId: peerId, context: context).start()
                 }
                 return false
             } else if item.isForum {
