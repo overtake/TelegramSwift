@@ -1430,11 +1430,20 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                         ForumUI.openInfo(peer.peer.id, context: context)
                     }, itemImage: MenuAnimation.menu_show_info.value))
                     
-                    if peer.peer.groupAccess.canAddMembers {
-                        items.append(ContextMenuItem(strings().forumTopicContextShowAsMessages, handler: {
-                            ForumUI.addMembers(peer.peer.id, context: context)
-                        }, itemImage: MenuAnimation.menu_read.value))
+                    items.append(ContextMenuItem(strings().forumTopicContextShowAsMessages, handler: { [weak self] in
+                        self?.open(with: .chatId(.chatList(peer.peer.id), peer.peer.id, -1))
+                    }, itemImage: MenuAnimation.menu_read.value))
+                    
+                    if let call = self?.state?.forumPeer?.call {
+                        if call.data?.groupCall == nil {
+                            if let data = call.data, data.participantCount == 0 && call.activeCall.scheduleTimestamp == nil {
+                                items.append(ContextMenuItem(strings().peerInfoActionVoiceChat, handler: { [weak self] in
+                                    self?.takeArguments()?.joinGroupCall(call)
+                                }, itemImage: MenuAnimation.menu_video_chat.value))
+                            }
+                        }
                     }
+                    
                     if peer.peer.isAdmin && !peer.peer.hasBannedRights(.banPinMessages) {
                         if !items.isEmpty {
                             items.append(ContextSeparatorItem())
@@ -1443,20 +1452,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                             ForumUI.createTopic(peer.peer.id, context: context)
                         }, itemImage: MenuAnimation.menu_edit.value))
                     }
-                    
-                    if let call = self?.state?.forumPeer?.call {
-                        if call.data?.groupCall == nil {
-                            if let data = call.data, data.participantCount == 0 && call.activeCall.scheduleTimestamp == nil {
-                                if !items.isEmpty {
-                                    items.append(ContextSeparatorItem())
-                                }
-                                items.append(ContextMenuItem(strings().peerInfoActionVoiceChat, handler: { [weak self] in
-                                    self?.takeArguments()?.joinGroupCall(call)
-                                }, itemImage: MenuAnimation.menu_video_chat.value))
-                            }
-                        }
-                    }
-                    
                     
                     if !items.isEmpty {
                         for item in items {

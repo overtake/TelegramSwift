@@ -52,6 +52,11 @@ struct ForumUI {
     
     
     static func open(_ peerId: PeerId, navigation: NavigationViewController, context: AccountContext) {
+        if let controller = navigation.controller as? ChatListController {
+            if controller.mode == .forum(peerId) {
+                return
+            }
+        }
         navigation.push(ChatListController(context, modal: false, mode: .forum(peerId)))
     }
     static func openTopic(_ threadId: Int64, peerId: PeerId, context: AccountContext, messageId: MessageId? = nil, animated: Bool = false, addition: Bool = false, initialAction: ChatInitialAction? = nil) -> Signal<Bool, NoError> {
