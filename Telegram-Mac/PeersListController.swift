@@ -124,6 +124,12 @@ struct PeerListState : Equatable {
             } else if (lhs.peerView.cachedData != nil) != (rhs.peerView.cachedData != nil) {
                 return false
             }
+            if lhs.call != rhs.call {
+                return false
+            }
+            if lhs.online != rhs.online {
+                return false
+            }
             return true
         }
         
@@ -304,13 +310,7 @@ class PeerListContainerView : View {
                 window.addChildWindow(panel, ordered: .above)
             }
             if let fromRect = status.rect {
-                let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: control.frame.size, getColors: { file in
-                    var colors: [LottieColor] = []
-                    if isDefaultStatusesPackId(file.emojiReference) {
-                        colors.append(.init(keyPath: "", color: theme.colors.accent))
-                    }
-                    return colors
-                })
+                let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: control.frame.size)
                 
                 let toRect = control.convert(control.frame.size.bounds, to: nil)
                 
@@ -1324,6 +1324,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             joinChannel(context: context, peerId: peerId)
         })
         
+        self.takeArguments = { [weak arguments] in
+            return arguments
+        }
+        
         actionsDisposable.add(stateSignal.start(next: { [weak self] state in
             self?.updateState(state, previous: previousState.swap(state), arguments: arguments)
         }))
@@ -1402,6 +1406,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         topicRightBar?.center()
     }
     
+    private var takeArguments:()->Arguments? = {
+        return nil
+    }
+    
     override func getRightBarViewOnce() -> BarView {
         switch self.mode {
         case .forum:
@@ -1435,6 +1443,21 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                             ForumUI.createTopic(peer.peer.id, context: context)
                         }, itemImage: MenuAnimation.menu_edit.value))
                     }
+                    
+                    if let call = self?.state?.forumPeer?.call {
+                        if call.data?.groupCall == nil {
+                            if let data = call.data, data.participantCount == 0 && call.activeCall.scheduleTimestamp == nil {
+                                if !items.isEmpty {
+                                    items.append(ContextSeparatorItem())
+                                }
+                                items.append(ContextMenuItem(strings().peerInfoActionVoiceChat, handler: { [weak self] in
+                                    self?.takeArguments()?.joinGroupCall(call)
+                                }, itemImage: MenuAnimation.menu_video_chat.value))
+                            }
+                        }
+                    }
+                    
+                    
                     if !items.isEmpty {
                         for item in items {
                             menu.addItem(item)
@@ -1714,7 +1737,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             switch type {
             case let .chatList(peerId):
                 if let modalAction = navigation.modalAction as? FWDNavigationAction, peerId == context.peerId {
-                    _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, context: context, peerId: context.peerId).start()
+                    _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, context: context, peerId: context.peerId, replyId: nil).start()
                     _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
                     modalAction.afterInvoke()
                     navigation.removeModalAction()
@@ -1733,7 +1756,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     }
                 }
             case let .forum(threadId):
-                ForumUI.openTopic(threadId, peerId: peerId, context: context, messageId: messageId)
+                _ = ForumUI.openTopic(threadId, peerId: peerId, context: context, messageId: messageId).start()
             }
         case let .groupId(groupId):
             self.navigationController?.push(ChatListController(context, modal: false, mode: .folder(groupId)))

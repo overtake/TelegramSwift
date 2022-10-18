@@ -207,13 +207,7 @@ private final class PremiumBoardingHeaderView : TableRowView {
                 self.premiumView = nil
             }
             if self.statusView == nil {
-                let status = InlineStickerView(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: status.fileId, file: nil, emoji: ""), size: NSMakeSize(100, 100), getColors: { file in
-                    var colors: [LottieColor] = []
-                    if isDefaultStatusesPackId(file.emojiReference) {
-                        colors.append(.init(keyPath: "", color: theme.colors.accent))
-                    }
-                    return colors
-                })
+                let status = InlineStickerView(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: status.fileId, file: nil, emoji: ""), size: NSMakeSize(100, 100))
                 self.statusView = status
                 addSubview(status)
                 

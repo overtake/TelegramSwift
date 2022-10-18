@@ -1041,6 +1041,7 @@ class ChatListRowItem: TableRowItem {
         let threadId = self.mode.threadId
         let mode = self.mode
         let isClosedTopic = self.isClosedTopic
+        let isForum = self.isForum
         
        
         let deleteChat:()->Void = {
@@ -1268,7 +1269,7 @@ class ChatListRowItem: TableRowItem {
                     thirdGroup.append(ContextMenuItem(strings().chatListContextDeleteChat, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                 }
                 
-                if !isSecret {
+                if !isSecret && !isForum {
                     if markAsUnread {
                         firstGroup.append(ContextMenuItem(strings().chatListContextMaskAsUnread, handler: {
                             _ = context.engine.messages.togglePeersUnreadMarkInteractively(peerIds: [peerId], setToValue: true).start()

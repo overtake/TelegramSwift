@@ -14,11 +14,14 @@ final class SearchTopicRowItem: GeneralRowItem {
     let item: EngineChatList.Item
     fileprivate let context: AccountContext
     fileprivate let nameLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, item: EngineChatList.Item, context: AccountContext) {
+    fileprivate let nameSelectedLayout: TextViewLayout
+
+    init(_ initialSize: NSSize, stableId: AnyHashable, item: EngineChatList.Item, context: AccountContext, action: @escaping()->Void = {}) {
         self.item = item
         self.context = context
-        self.nameLayout = .init(.initialize(string: item.threadData?.info.title, color: theme.colors.text, font: .medium(.text)))
-        super.init(initialSize, height: 50, stableId: stableId, type: .none, viewType: .legacy, border: [.Bottom])
+        self.nameLayout = .init(.initialize(string: item.threadData?.info.title, color: theme.colors.text, font: .medium(.text)), maximumNumberOfLines: 1)
+        self.nameSelectedLayout = .init(.initialize(string: item.threadData?.info.title, color: theme.colors.underSelectedColor, font: .medium(.text)), maximumNumberOfLines: 1)
+        super.init(initialSize, height: 50, stableId: stableId, type: .none, viewType: .legacy, action: action, border: [.Bottom])
         _ = makeSize(initialSize.width)
     }
     
@@ -26,8 +29,14 @@ final class SearchTopicRowItem: GeneralRowItem {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
         self.nameLayout.measure(width: width - 50 - 10)
-        
+        self.nameSelectedLayout.measure(width: width - 50 - 10)
+
         return true
+    }
+    
+    deinit {
+        var bp = 0
+        bp += 1
     }
     
     override func viewClass() -> AnyClass {
@@ -39,12 +48,48 @@ private class SearchTopicRowView : TableRowView {
     private var inlineTopicPhotoLayer: InlineStickerItemLayer?
     private let nameView = TextView()
     private let borderView = View()
+    private let containerView = Control()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        addSubview(nameView)
+        addSubview(containerView)
+        self.addSubview(nameView)
         nameView.userInteractionEnabled = false
         nameView.isSelectable = false
-        addSubview(borderView)
+        self.addSubview(borderView)
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.invokeIfNeededDown()
+        }, for: .Down)
+        
+        containerView.set(handler: { [weak self] _ in
+            self?.invokeIfNeededUp()
+        }, for: .Up)
+    }
+    
+    private func invokeIfNeededUp() {
+        if let event = NSApp.currentEvent {
+            super.mouseUp(with: event)
+            if let item = item as? GeneralRowItem, let table = item.table, table.alwaysOpenRowsOnMouseUp, mouseInside() {
+                invokeAction(item, clickCount: event.clickCount)
+            }
+        }
+    }
+    
+    func invokeAction(_ item: GeneralRowItem, clickCount: Int) {
+        if clickCount <= 1 {
+            item.action()
+        }
+    }
+    
+    private func invokeIfNeededDown() {
+        if let event = NSApp.currentEvent {
+            super.mouseDown(with: event)
+            if let item = item as? GeneralRowItem, let table = item.table, !table.alwaysOpenRowsOnMouseUp, let event = NSApp.currentEvent, mouseInside() {
+                if item.enabled {
+                    invokeAction(item, clickCount: event.clickCount)
+                }
+            }
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -67,7 +112,8 @@ private class SearchTopicRowView : TableRowView {
             return
         }
         
-        self.nameView.update(item.nameLayout)
+        
+        self.nameView.update(item.isSelected ? item.nameSelectedLayout : item.nameLayout)
         
         borderView.isHidden = isSelect
         
@@ -87,7 +133,7 @@ private class SearchTopicRowView : TableRowView {
                     let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor)
                     current = .init(account: item.context.account, file: file, size: size, playPolicy: .playCount(2))
                 }
-                current.superview = self
+                current.superview = containerView
                 self.layer?.addSublayer(current)
                 self.inlineTopicPhotoLayer = current
                 
@@ -99,7 +145,7 @@ private class SearchTopicRowView : TableRowView {
     
     override func layout() {
         super.layout()
-        
+        containerView.frame = bounds
         nameView.centerY(x: 50)
         borderView.frame = NSMakeRect(50, frame.height - .borderSize, frame.width - 50, .borderSize)
     }

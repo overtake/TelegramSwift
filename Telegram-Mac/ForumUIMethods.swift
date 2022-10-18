@@ -54,11 +54,13 @@ struct ForumUI {
     static func open(_ peerId: PeerId, navigation: NavigationViewController, context: AccountContext) {
         navigation.push(ChatListController(context, modal: false, mode: .forum(peerId)))
     }
-    static func openTopic(_ threadId: Int64, peerId: PeerId, context: AccountContext, messageId: MessageId? = nil, animated: Bool = false, addition: Bool = false, initialAction: ChatInitialAction? = nil) {
+    static func openTopic(_ threadId: Int64, peerId: PeerId, context: AccountContext, messageId: MessageId? = nil, animated: Bool = false, addition: Bool = false, initialAction: ChatInitialAction? = nil) -> Signal<Bool, NoError> {
         let threadMessageId = makeThreadIdMessageId(peerId: peerId, threadId: threadId)
         let context = context
         let signal = fetchAndPreloadReplyThreadInfo(context: context, subject: .groupMessage(threadMessageId), preload: false)
         |> deliverOnMainQueue
+        
+        let ready: Promise<Bool> = Promise()
         
         _ = signal.start(next: { result in
             
@@ -72,9 +74,13 @@ struct ForumUI {
             }
             
             context.bindings.rootNavigation().push(controller, style: animated ? .push : nil)
-        }, error: { error in
             
+            ready.set(controller.ready.get())
+        }, error: { error in
+            ready.set(.single(false))
         })
+        
+        return ready.get()
     }
     static func addMembers(_ peerId: PeerId, context: AccountContext) {
         

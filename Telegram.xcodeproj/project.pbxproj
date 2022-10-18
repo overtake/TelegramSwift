@@ -134,6 +134,7 @@
 		2747969128F5A5C500A891F3 /* anim_play.json in Resources */ = {isa = PBXBuildFile; fileRef = 2747968F28F5A5C400A891F3 /* anim_play.json */; };
 		2747969228F5A5C500A891F3 /* anim_pause.json in Resources */ = {isa = PBXBuildFile; fileRef = 2747969028F5A5C500A891F3 /* anim_pause.json */; };
 		2747969828F9645900A891F3 /* SearchTopicRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2747969728F9645900A891F3 /* SearchTopicRowItem.swift */; };
+		2747969928FEB00700A891F3 /* InlineStickersContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2726BDD42869DCB00044D260 /* InlineStickersContext.swift */; };
 		2748C56127BA477900F05503 /* Auth_Token.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748C56027BA477900F05503 /* Auth_Token.swift */; };
 		2748C56327BA53C800F05503 /* Auth_Loading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748C56227BA53C800F05503 /* Auth_Loading.swift */; };
 		2748C56527BA959F00F05503 /* Auth_PhoneNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748C56427BA959F00F05503 /* Auth_PhoneNumber.swift */; };
@@ -6287,6 +6288,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2747969928FEB00700A891F3 /* InlineStickersContext.swift in Sources */,
 				278926CC27550CD300923087 /* ChatPresentationInputQueryResult.swift in Sources */,
 				273BE6C926136D4C00AAFE4E /* ImageCompression.swift in Sources */,
 				D06C69532539E30200DD9005 /* SlotMachineValue.swift in Sources */,

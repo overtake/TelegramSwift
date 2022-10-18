@@ -514,10 +514,9 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             func makeItem(_ peer: Peer) -> ContextMenuItem {
                 let title = peer.id == context.peerId ? strings().peerSavedMessages : peer.displayTitle.prefixWithDots(20)
                 let item = ReactionPeerMenu(title: title, handler: {
-                    _ = forwardObject.perform(to: [peer.id]).start()
+                    _ = forwardObject.perform(to: [peer.id], threadId: nil).start()
                 }, peer: peer, context: context, reaction: nil, destination: .forward(callback: { threadId in
-                    let initialAction: ChatInitialAction = .forward(messageIds: [message.id], text: nil, behavior: .none)
-                    ForumUI.openTopic(threadId, peerId: peer.id, context: context, animated: true, addition: true, initialAction: initialAction)
+                    _ = forwardObject.perform(to: [peer.id], threadId: makeThreadIdMessageId(peerId: peer.id, threadId: threadId)).start()
                 }))
 
                 ContextMenuItem.makeItemAvatar(item, account: context.account, peer: peer, source: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil))
