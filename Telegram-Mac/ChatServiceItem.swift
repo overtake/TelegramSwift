@@ -1112,12 +1112,13 @@ class ChatServiceRowView: TableRowView {
                 validIds.append(id)
                 
                 
-                let rect: NSRect
+                var rect: NSRect
                 if textLayout.isBigEmoji {
                     rect = item.rect
                 } else {
                     rect = item.rect.insetBy(dx: -2, dy: -2)
                 }
+                rect = rect.offsetBy(dx: 9, dy: 2)
                 
                 let view: InlineStickerItemLayer
                 if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {

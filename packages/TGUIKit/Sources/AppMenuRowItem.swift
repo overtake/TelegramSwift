@@ -285,8 +285,16 @@ open class AppMenuRowView: AppMenuBasicItemView {
         containerView.layer?.cornerRadius = .cornerRadius
         containerView.scaleOnClick = true
         
+        let CheckWindow:() -> Bool = { [weak self] in
+            let wNumber = NSWindow.windowNumber(at: NSEvent.mouseLocation, belowWindowWithWindowNumber: 0)
+            guard wNumber == self?.window?.windowNumber else {
+                return false
+            }
+            return true
+        }
+        
         containerView.set(handler: { [weak self] _ in
-            guard let item = self?.item as? AppMenuRowItem else {
+            guard let item = self?.item as? AppMenuRowItem, CheckWindow() else {
                 return
             }
             item.interaction?.presentSubmenu(item.item)
@@ -294,6 +302,9 @@ open class AppMenuRowView: AppMenuBasicItemView {
         
         
         containerView.set(handler: { [weak self] _ in
+            if !CheckWindow() {
+                return
+            }
             self?.drawable?.updateState(.Hover)
             self?.updateState(.Hover)
             
@@ -306,22 +317,34 @@ open class AppMenuRowView: AppMenuBasicItemView {
             
         }, for: .Hover)
         containerView.set(handler: { [weak self] _ in
+            if !CheckWindow() {
+                return
+            }
             self?.drawable?.updateState(.Highlight)
             self?.updateState(.Highlight)
             self?.hoverDisposable.set(nil)
         }, for: .Highlight)
         containerView.set(handler: { [weak self] _ in
+            if !CheckWindow() {
+                return
+            }
             self?.drawable?.updateState(.Normal)
             self?.updateState(.Normal)
             self?.hoverDisposable.set(nil)
         }, for: .Normal)
         containerView.set(handler: { [weak self] _ in
+            if !CheckWindow() {
+                return
+            }
             self?.drawable?.updateState(.Other)
             self?.updateState(.Other)
             self?.hoverDisposable.set(nil)
         }, for: .Other)
            
         containerView.set(handler: { [weak self] _ in
+            if !CheckWindow() {
+                return
+            }
             guard let item = self?.item as? AppMenuRowItem else {
                 return
             }

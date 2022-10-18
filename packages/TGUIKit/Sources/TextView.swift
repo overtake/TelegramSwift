@@ -2063,7 +2063,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         if let blurBackground = blurBackground {
             if self.visualEffect == nil {
                 self.visualEffect = VisualEffect(frame: self.bounds)
-                addSubview(self.visualEffect!)
+                addSubview(self.visualEffect!, positioned: .below, relativeTo: self.embeddedContainer)
                 
                 self.textView = View(frame: self.bounds)
                 addSubview(self.textView!)

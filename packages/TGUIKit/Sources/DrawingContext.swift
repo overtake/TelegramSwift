@@ -9,6 +9,8 @@
 import Cocoa
 import SwiftSignalKit
 
+//canRepresent(<#T##displayGamut: NSDisplayGamut##NSDisplayGamut#>)
+
 public func generateImage(_ size: CGSize, contextGenerator: (CGSize, CGContext) -> Void, opaque: Bool = false, scale: CGFloat = 2.0) -> CGImage? {
     if size.width.isZero || size.height.isZero {
         return nil

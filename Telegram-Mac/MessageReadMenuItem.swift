@@ -622,9 +622,9 @@ final class ReactionPeerMenu : ContextMenuItem {
         case builtin(TelegramMediaFile)
         case custom(Int64, TelegramMediaFile?)
     }
-    enum Destination : Equatable {
+    enum Destination {
         case common
-        case forward
+        case forward(callback: (Int64)->Void)
     }
     private let context: AccountContext
     private let reaction: Source?
@@ -641,7 +641,7 @@ final class ReactionPeerMenu : ContextMenuItem {
         
         super.init(title, handler: handler)
         
-        if peer.isForum, destination == .forward {
+        if peer.isForum, case let .forward(callback) = destination {
             let signal = chatListViewForLocation(chatListLocation: .forum(peerId: peer.id), location: .Initial(100, nil), filter: nil, account: context.account) |> filter {
                 !$0.list.isLoading
             } |> map {
@@ -653,7 +653,12 @@ final class ReactionPeerMenu : ContextMenuItem {
                     if let threadData = item.threadData {
                         if peer.canSendMessage(true, threadData: threadData) {
                             let menuItem = ContextMenuItem(threadData.info.title, handler: {
-                                
+                                switch item.id {
+                                case let .forum(threadId):
+                                    callback(threadId)
+                                default:
+                                    break
+                                }
                             })
                             ContextMenuItem.makeItemAvatar(menuItem, account: context.account, peer: peer, source: .topic(threadData.info))
                             menu.addItem(menuItem)

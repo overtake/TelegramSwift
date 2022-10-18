@@ -100,6 +100,7 @@ final class MenuView: View, TableViewDelegate {
     
     weak var controller: AppMenuController?
     
+    
     let tableView: TableView = TableView(frame: .zero)
     private var contextItems: [Entry] = []
     private let backgroundView: View
@@ -300,6 +301,7 @@ final class MenuView: View, TableViewDelegate {
     
     var submenuId: Int64?
     weak var parentView: Window?
+    weak var childView: Window?
 }
 
 final class AppMenuController : NSObject  {
@@ -709,6 +711,10 @@ final class AppMenuController : NSObject  {
             $0.key.submenuId != submenu.view.submenuId
         })
         submenu.view.parentView?.view.tableView.cancelSelection()
+        
+        submenu.view.parentView = nil
+        submenu.view.childView = nil
+        
         submenu.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak submenu] _ in
             if let submenu = submenu {
                 submenu.orderOut(nil)
@@ -725,7 +731,7 @@ final class AppMenuController : NSObject  {
             let tableItem = submenu?.view.parentView?.view.tableView.item(stableId: AnyHashable(item.id))
             let insideItem = tableItem?.view?.mouseInside() ?? false
             
-            if let submenu = submenu, (!submenu.view.mouseInside() && !insideItem) {
+            if let submenu = submenu, submenu.view.childView == nil, (!submenu.view.mouseInside() && !insideItem) {
                 self.cancelSubmenuNow(submenu)
             }
         })
@@ -733,23 +739,27 @@ final class AppMenuController : NSObject  {
     }
     
     private func presentSubmenu(_ menu: ContextMenu, parentView: Window, for id: Int64) {
-        
-        guard findSubmenu(id) == nil, let screen = self.parent?.screen else {
+        guard self.findSubmenu(id) == nil, let screen = self.parent?.screen else {
             return
         }
         
         if let active = self.activeMenu, active.submenuId != nil {
             if active.parentView == parentView, let window = active.kitWindow {
-                cancelSubmenuNow(window)
+                self.cancelSubmenuNow(window)
+                parentView.view.childView = nil
             }
         }
+        if parentView.view.childView != nil {
+            return
+        }
         
-        let view = getView(for: menu, screen: screen, parentView: parentView, submenuId: id)
+        let view = self.getView(for: menu, screen: screen, parentView: parentView, submenuId: id)
         guard let parentItem = parentView.view.item(for: id), let parentItemView = parentItem.view else {
             return
         }
         _ = parentView.view.tableView.select(item: parentItem)
         
+        parentView.view.childView = view
 
         
         var point = parentItemView.convert(NSMakePoint(parentItemView.frame.width - 5, -parentItemView.frame.height), to: nil)
@@ -758,7 +768,7 @@ final class AppMenuController : NSObject  {
         point.y -= view.frame.height
         point.x -= 20
         
-        let rect = adjust(CGRect(origin: point, size: view.frame.size), parent: parentView)
+        let rect = self.adjust(CGRect(origin: point, size: view.frame.size), parent: parentView)
         
         view.setFrame(rect, display: true)
         view.makeKeyAndOrderFront(nil)
