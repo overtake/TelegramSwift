@@ -137,7 +137,11 @@ enum UIChatListEntry : Identifiable, Comparable {
     var stableId: UIChatListEntryId {
         switch self {
         case let .chat(entry, _, _, filterId):
-            return .chatId(entry.id, entry.renderedPeer.peerId, filterId.id)
+            if entry.renderedPeer.peer?._asPeer().isForum == true, entry.threadData == nil {
+                return .forum(entry.renderedPeer.peerId)
+            } else {
+                return .chatId(entry.id, entry.renderedPeer.peerId, filterId.id)
+            }
         case let .group(_, group, _, _):
             return .groupId(group.id)
         case .reveal:
@@ -470,8 +474,15 @@ class ChatListController : PeersListController {
                     prepare.append((current.item, UIChatAdditionalItem(item: current, index: i + update.list.groupItems.count)))
                 }
             }
-            var mapped: [UIChatListEntry] = prepare.map {
-                return .chat($0, state?.activities.activities[$0.renderedPeer.peerId] ?? [], $1, filter: filterData.filter)
+            var mapped: [UIChatListEntry] = prepare.map { item in
+                let space: PeerActivitySpace
+                switch item.0.id {
+                case let .forum(threadId):
+                    space = .init(peerId: item.0.renderedPeer.peerId, category: .thread(threadId))
+                case let .chatList(peerId):
+                    space = .init(peerId: peerId, category: .global)
+                }
+                return .chat(item.0, state?.activities.activities[space] ?? [], item.1, filter: filterData.filter)
             }
             
             if case .filter = filterData.filter, mapped.isEmpty {} else {
@@ -495,7 +506,7 @@ class ChatListController : PeersListController {
             }
             
             
-            if !filterData.isEmpty && !filterData.sidebar {
+            if !filterData.isEmpty && !filterData.sidebar && state?.forumPeer == nil {
                 mapped.append(.reveal(filterData.tabs, filterData.filter, filtersCounter))
             }
             
@@ -749,14 +760,6 @@ class ChatListController : PeersListController {
             context.account.viewTracker.chatListPreloadItems.set(.single([]))
         }
         
-        let selectedItem = self.genericView.tableView.selectedItem() as? ChatListRowItem
-        
-        if let selectedItem = selectedItem, selectedItem.isForum == true, !selectedItem.isTopic {
-            if let peerId = selectedItem.peerId, let navigation = self.navigationController {
-                ForumUI.open(peerId, navigation: navigation, context: context)
-                genericView.tableView.cancelSelection()
-            }
-        }
     }
     
     private func resortPinned(_ from: Int, _ to: Int) {
@@ -1285,24 +1288,15 @@ class ChatListController : PeersListController {
             }
             
         }
-        if let item = item as? ChatListRowItem, let peerId = item.peerId {
+        if let item = item as? ChatListRowItem {
             if item.groupId != .root {
                 if byClick {
                     item.view?.focusAnimation(nil)
                     open(with: item.entryId, initialAction: nil, addition: false)
                 }
                 return false
-            } else if case let .topic(threadId, _) = item.mode {
-                if byClick {
-                    _ = ForumUI.openTopic(threadId, peerId: peerId, context: context).start()
-                }
-                return false
-            } else if item.isForum {
-                if byClick {
-                    item.view?.focusAnimation(nil)
-                    open(with: .forum(peerId), initialAction: nil, addition: false)
-                }
-                return false
+            } else if item.isForum && !item.isTopic {
+                item.view?.focusAnimation(nil)
             }
         }
         if item is ChatListRevealItem {
@@ -1316,7 +1310,7 @@ class ChatListController : PeersListController {
     override  func selectionDidChange(row:Int, item:TableRowItem, byClick:Bool, isNew:Bool) -> Void {
         let navigation = context.bindings.rootNavigation()
         if let item = item as? ChatListRowItem {
-            if !isNew, let controller = navigation.controller as? ChatController {
+            if !isNew, let controller = navigation.controller as? ChatController, !(item.isForum && !item.isTopic) {
                 switch controller.mode {
                 case .history, .thread:
                     if let modalAction = navigation.modalAction {

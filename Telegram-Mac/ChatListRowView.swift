@@ -450,6 +450,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             if item.isFixedItem && !item.isSelected {
                 return theme.chatList.pinnedBackgroundColor
             }
+            if item.isSelected && item.isForum && !item.isTopic {
+                return theme.colors.grayBackground
+            }
             return item.isSelected ? theme.chatList.selectedBackgroundColor : contextMenu != nil ? theme.chatList.contextMenuBackgroundColor : theme.colors.background
         }
         return theme.colors.background
@@ -492,7 +495,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             if layer == containerView.layer {
                 
-                let highlighted = item.isSelected && item.context.layout != .single
+                let highlighted = item.isSelected && item.context.layout != .single && !(item.isForum && !item.isTopic)
                 
                 
                 if item.ctxBadgeNode == nil && item.mentionsCount == nil && (item.isPinned || item.isLastPinned) {
@@ -929,26 +932,34 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              
              switch item.mode {
              case let .topic(_, data):
-                 let size = NSMakeSize(30, 30)
-                 let current: InlineStickerItemLayer
-                 if let layer = self.inlineTopicPhotoLayer, layer.file?.fileId.id == data.info.icon {
-                     current = layer
+                 if item.titleMode == .normal {
+                     let size = NSMakeSize(30, 30)
+                     let current: InlineStickerItemLayer
+                     if let layer = self.inlineTopicPhotoLayer, layer.file?.fileId.id == data.info.icon {
+                         current = layer
+                     } else {
+                         if let layer = inlineTopicPhotoLayer {
+                             performSublayerRemoval(layer, animated: animated)
+                             self.inlineTopicPhotoLayer = nil
+                         }
+                         if let fileId = data.info.icon {
+                             current = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .playCount(2))
+                         } else {
+                             let file = ForumUI.makeIconFile(title: data.info.title, iconColor: data.info.iconColor)
+                             current = .init(account: item.context.account, file: file, size: size, playPolicy: .playCount(2))
+                         }
+                         current.superview = containerView
+                         self.containerView.layer?.addSublayer(current)
+                         self.inlineTopicPhotoLayer = current
+                     }
+                     photo.isHidden = true
                  } else {
                      if let layer = inlineTopicPhotoLayer {
                          performSublayerRemoval(layer, animated: animated)
                          self.inlineTopicPhotoLayer = nil
                      }
-                     if let fileId = data.info.icon {
-                         current = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .playCount(2))
-                     } else {
-                         let file = ForumUI.makeIconFile(title: data.info.title, iconColor: data.info.iconColor)
-                         current = .init(account: item.context.account, file: file, size: size, playPolicy: .playCount(2))
-                     }
-                     current.superview = containerView
-                     self.containerView.layer?.addSublayer(current)
-                     self.inlineTopicPhotoLayer = current
+                     photo.isHidden = false
                  }
-                 photo.isHidden = true
              default:
                  if let layer = inlineTopicPhotoLayer {
                      performSublayerRemoval(layer, animated: animated)
