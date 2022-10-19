@@ -260,25 +260,35 @@ class ChatListRowItem: TableRowItem {
         return false
     }
     var isRead:Bool {
-        if let peer = peer as? TelegramUser {
-            if let _ = peer.botInfo {
-                return !peer.flags.contains(.isSupport)
+        switch mode {
+        case let .topic(_, data):
+            if let message = message {
+                if data.maxOutgoingReadId >= message.id.id {
+                    return true
+                }
             }
-            if peer.id == context.peerId {
-                return true
+        default:
+            if let peer = peer as? TelegramUser {
+                if let _ = peer.botInfo {
+                    return !peer.flags.contains(.isSupport)
+                }
+                if peer.id == context.peerId {
+                    return true
+                }
             }
-        }
-        if let peer = peer as? TelegramChannel {
-            if case .broadcast = peer.info {
-                return true
+            if let peer = peer as? TelegramChannel {
+                if case .broadcast = peer.info {
+                    return true
+                }
+            }
+            
+            if let readState = readState {
+                if let message = message {
+                    return readState.isOutgoingMessageIndexRead(MessageIndex(message))
+                }
             }
         }
         
-        if let readState = readState {
-            if let message = message {
-                return readState.isOutgoingMessageIndexRead(MessageIndex(message))
-            }
-        }
         
         return false
     }
@@ -403,6 +413,7 @@ class ChatListRowItem: TableRowItem {
         self.draft = nil
         
         photo = .ArchivedChats
+        self.titleMode = .normal
         
         super.init(initialSize)
         
@@ -478,13 +489,15 @@ class ChatListRowItem: TableRowItem {
             }
         }
     }
-    let mode: Mode
-    
-    
     enum TitleMode {
         case normal
         case forumInfo
     }
+    
+    let mode: Mode
+    let titleMode: TitleMode
+    
+  
     
     
     init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, titleMode: TitleMode = .normal) {
@@ -523,6 +536,7 @@ class ChatListRowItem: TableRowItem {
         }
     
         self.mode = mode
+        self.titleMode = titleMode
         self.chatListIndex = index
         self.renderedPeer = renderedPeer
         self.context = context
@@ -563,13 +577,7 @@ class ChatListRowItem: TableRowItem {
             let _ = titleText.append(string: peer?.id == context.peerId ? strings().peerSavedMessages : peer?.displayTitle, color: renderedPeer.peers[renderedPeer.peerId]?._asPeer() is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
 
         case let .topic(_, data):
-            switch titleMode {
-            case .normal:
-                let _ = titleText.append(string: data.info.title, color: theme.chatList.textColor, font: .medium(.title))
-            case .forumInfo:
-                let title = peer?.displayTitle ?? ""
-                let _ = titleText.append(string: strings().textArrow(title, data.info.title), color: theme.chatList.textColor, font: .medium(.title))
-            }
+            let _ = titleText.append(string: data.info.title, color: theme.chatList.textColor, font: .medium(.title))
         }
         titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
         self.titleText = titleText
@@ -618,6 +626,8 @@ class ChatListRowItem: TableRowItem {
                     
                     if let forumTopicData = forumTopicData, peer.isForum {
                         peerText = strings().textArrow(peerText, forumTopicData.title)
+                    } else if peer.isForum, titleMode == .forumInfo, case let .topic(_, data) = mode {
+                        peerText = strings().textArrow(peerText, data.info.title)
                     }
                     
                     let attr = NSMutableAttributedString()
@@ -680,15 +690,18 @@ class ChatListRowItem: TableRowItem {
             self.reactionsCount = nil
         }
         
+        let isEmpty: Bool
+        
         switch mode {
         case .topic:
-            self.photo = .Empty
+            isEmpty = titleMode == .normal
         case .chat:
-            if let peer = peer, peer.id != context.peerId && peer.id != repliesPeerId {
-                self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, nil, nil, peer.isForum)
-            } else {
-                self.photo = .Empty
-            }
+            isEmpty = false
+        }
+        if let peer = peer, peer.id != context.peerId && peer.id != repliesPeerId, !isEmpty {
+            self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, nil, nil, peer.isForum)
+        } else {
+            self.photo = .Empty
         }
         
         super.init(initialSize)
@@ -846,7 +859,11 @@ class ChatListRowItem: TableRowItem {
         case .chat:
             return 50 + (10 * 2.0);
         case .topic:
-            return 30 + (10 * 2.0);
+            if titleMode == .forumInfo {
+                return 50 + (10 * 2.0);
+            } else {
+                return 30 + (10 * 2.0);
+            }
         }
     }
     
@@ -1399,14 +1416,14 @@ class ChatListRowItem: TableRowItem {
     }
     
     var ctxDisplayLayout:(TextNodeLayout, TextNode)? {
-        if isSelected && context.layout != .single {
+        if isSelected && context.layout != .single, !(isForum && !isTopic) {
             return displaySelectedLayout
         }
         return displayLayout
     }
     
     var ctxChatNameLayout:(TextNodeLayout, TextNode)? {
-        if isSelected && context.layout != .single {
+        if isSelected && context.layout != .single, !(isForum && !isTopic) {
             return chatNameSelectedLayout
         }
         return chatNameLayout
@@ -1415,7 +1432,7 @@ class ChatListRowItem: TableRowItem {
     
     var ctxMessageText:TextViewLayout? {
         if self.activities.isEmpty {
-            if isSelected && context.layout != .single {
+            if isSelected && context.layout != .single, !(isForum && !isTopic) {
                 return messageSelectedLayout
             }
             return messageLayout
@@ -1424,14 +1441,14 @@ class ChatListRowItem: TableRowItem {
     }
     
     var ctxDateLayout:(TextNodeLayout, TextNode)? {
-        if isSelected && context.layout != .single {
+        if isSelected && context.layout != .single, !(isForum && !isTopic) {
             return dateSelectedLayout
         }
         return dateLayout
     }
     
     var ctxBadgeNode:BadgeNode? {
-        if isSelected && context.layout != .single {
+        if isSelected && context.layout != .single, !(isForum && !isTopic) {
             return badgeSelectedNode
         }
         return badgeNode
@@ -1445,7 +1462,7 @@ class ChatListRowItem: TableRowItem {
 //    }
     
     var ctxAdditionalBadgeNode:BadgeNode? {
-        if isSelected && context.layout != .single {
+        if isSelected && context.layout != .single, !(isForum && !isTopic) {
             return additionalBadgeSelectedNode
         }
         return additionalBadgeNode

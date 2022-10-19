@@ -110,7 +110,7 @@ struct PeerListState : Equatable {
                 self.activity = activity
             }
         }
-        var activities: [PeerId: [Activity]]
+        var activities: [PeerActivitySpace: [Activity]]
     }
     struct ForumData : Equatable {
         static func == (lhs: PeerListState.ForumData, rhs: PeerListState.ForumData) -> Bool {
@@ -1116,14 +1116,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         let previousPeerCache = Atomic<[PeerId: Peer]>(value: [:])
         let previousActivities = Atomic<PeerListState.InputActivities?>(value: nil)
         let inputActivities = context.account.allPeerInputActivities()
-                                           |> mapToSignal { activitiesByPeerId -> Signal<[PeerId: [PeerListState.InputActivities.Activity]], NoError> in
+                                           |> mapToSignal { activitiesByPeerId -> Signal<[PeerActivitySpace: [PeerListState.InputActivities.Activity]], NoError> in
                 var foundAllPeers = true
-                var cachedResult: [PeerId: [PeerListState.InputActivities.Activity]] = [:]
+                var cachedResult: [PeerActivitySpace: [PeerListState.InputActivities.Activity]] = [:]
                 previousPeerCache.with { dict -> Void in
                     for (chatPeerId, activities) in activitiesByPeerId {
-                        guard case .global = chatPeerId.category else {
-                            continue
-                        }
+                        
                         var cachedChatResult: [PeerListState.InputActivities.Activity] = []
                         for (peerId, activity) in activities {
                             if let peer = dict[peerId] {
@@ -1132,31 +1130,26 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                                 foundAllPeers = false
                                 break
                             }
-                            cachedResult[chatPeerId.peerId] = cachedChatResult
+                            cachedResult[chatPeerId] = cachedChatResult
                         }
                     }
                 }
                 if foundAllPeers {
                     return .single(cachedResult)
                 } else {
-                    return postbox.transaction { transaction -> [PeerId: [PeerListState.InputActivities.Activity]] in
-                        var result: [PeerId: [PeerListState.InputActivities.Activity]] = [:]
+                    return postbox.transaction { transaction -> [PeerActivitySpace: [PeerListState.InputActivities.Activity]] in
+                        var result: [PeerActivitySpace: [PeerListState.InputActivities.Activity]] = [:]
                         var peerCache: [PeerId: Peer] = [:]
                         for (chatPeerId, activities) in activitiesByPeerId {
-                            guard case .global = chatPeerId.category else {
-                                continue
-                            }
-
-                            var chatResult: [PeerListState.InputActivities.Activity] = []
                             
+                            var chatResult: [PeerListState.InputActivities.Activity] = []
                             for (peerId, activity) in activities {
                                 if let peer = transaction.getPeer(peerId) {
                                     chatResult.append(PeerListState.InputActivities.Activity(peer, activity))
                                     peerCache[peerId] = peer
                                 }
                             }
-                            
-                            result[chatPeerId.peerId] = chatResult
+                            result[chatPeerId] = chatResult
                         }
                         let _ = previousPeerCache.swap(peerCache)
                         return result
@@ -1166,12 +1159,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             |> map { activities -> PeerListState.InputActivities in
                 return previousActivities.modify { current in
                     var updated = false
-                    let currentList: [PeerId: [PeerListState.InputActivities.Activity]] = current?.activities ?? [:]
+                    let currentList: [PeerActivitySpace: [PeerListState.InputActivities.Activity]] = current?.activities ?? [:]
                     if currentList.count != activities.count {
                         updated = true
                     } else {
-                        outer: for (peerId, currentValue) in currentList {
-                            if let value = activities[peerId] {
+                        outer: for (space, currentValue) in currentList {
+                            if let value = activities[space] {
                                 if currentValue.count != value.count {
                                     updated = true
                                     break outer
@@ -1431,7 +1424,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     }, itemImage: MenuAnimation.menu_show_info.value))
                     
                     items.append(ContextMenuItem(strings().forumTopicContextShowAsMessages, handler: { [weak self] in
-                        self?.open(with: .chatId(.chatList(peer.peer.id), peer.peer.id, -1))
+                        self?.open(with: .chatId(.chatList(peer.peer.id), peer.peer.id, -1), forceAnimated: true)
                     }, itemImage: MenuAnimation.menu_read.value))
                     
                     if let call = self?.state?.forumPeer?.call {
@@ -1567,7 +1560,13 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 id = .chatId(.chatList(location.peerId), location.peerId, -1)
             case let .thread(data):
                 let threadId = makeMessageThreadId(data.messageId)
-                id = .chatId(.forum(threadId), location.peerId, -1)
+                
+                switch self.mode {
+                case .plain, .filter, .folder:
+                    id = .forum(location.peerId)
+                case .forum:
+                    id = .chatId(.forum(threadId), location.peerId, -1)
+                }
             }
             self.genericView.tableView.changeSelection(stableId: id)
         } else {
@@ -1747,7 +1746,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                         } else {
                             chat = ChatController(context: self.context, chatLocation: chatLocation, messageId: messageId, initialAction: initialAction)
                         }
-                        navigation.push(chat, context.layout == .single || forceAnimated)
+                        let animated = context.layout == .single || forceAnimated
+                        navigation.push(chat, context.layout == .single || forceAnimated, style: animated ? .push : ViewControllerStyle.none)
                     }
                 }
             case let .forum(threadId):

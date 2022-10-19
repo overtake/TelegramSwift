@@ -77,6 +77,23 @@ final class PhoneNumberCodeConfirmView : View {
     }
 }
 
+private extension SentAuthorizationCodeType {
+    var lenght: Int32 {
+        switch self {
+        case let .call(length):
+            return length
+        case let .email(_, length, _, _, _):
+            return length
+        case let .otherSession(length):
+            return length
+        case let .sms(length):
+            return length
+        default:
+            return 5
+        }
+    }
+}
+
 final class PhoneNumberCodeConfirmController : GenericViewController<PhoneNumberCodeConfirmView> {
 
     private let context: AccountContext
@@ -138,20 +155,12 @@ final class PhoneNumberCodeConfirmController : GenericViewController<PhoneNumber
         let sharedContext = self.context.sharedContext
         let engine = context.engine
         
-        switch self.data.type {
-        case let .sms(length):
-            self.genericView.update(with: Int(length), locked: false, takeNext: { [weak self] _ in
-                self?.checkCode()
-            }, takeError: {
-                
-            })
-        default:
-            self.genericView.update(with: 6, locked: false, takeNext: { [weak self] _ in
-                self?.checkCode()
-            }, takeError: {
-                
-            })
-        }
+        self.genericView.update(with: Int(self.data.type.lenght), locked: false, takeNext: { [weak self] _ in
+            self?.checkCode()
+        }, takeError: {
+            
+        })
+        
         
         self.readyOnce()
         

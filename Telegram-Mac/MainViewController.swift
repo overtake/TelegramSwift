@@ -593,6 +593,7 @@ class MainViewController: TelegramViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        navigation.viewDidAppear(animated)
         if firstTime {
             firstTime = false
         }
@@ -601,12 +602,19 @@ class MainViewController: TelegramViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        navigation.viewWillAppear(animated)
         self.tabController.current?.viewWillAppear(animated)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        navigation.viewWillDisappear(animated)
         self.tabController.current?.viewWillDisappear(animated)
+    }
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        navigation.viewDidDisappear(animated)
+        self.tabController.current?.viewDidDisappear(animated)
     }
     
     var chatIndex: Int {
