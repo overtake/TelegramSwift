@@ -605,7 +605,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                         let maximumFps: Int = 30
                         var cache: ASCachePurpose = .temporaryLZ4(.effect)
                         let colors = self?.getColors?(file) ?? []
-                        if file.isVideo && file.isCustomEmoji || !colors.isEmpty {
+                        if file.isVideo && file.isCustomEmoji || !colors.isEmpty || size.width < 80 {
                             cache = .none
                         }
                         let type: LottieAnimationType
