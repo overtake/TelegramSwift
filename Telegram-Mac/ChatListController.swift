@@ -506,7 +506,7 @@ class ChatListController : PeersListController {
             }
             
             
-            if !filterData.isEmpty && !filterData.sidebar && state?.forumPeer == nil {
+            if !filterData.isEmpty && !filterData.sidebar {
                 mapped.append(.reveal(filterData.tabs, filterData.filter, filtersCounter))
             }
             
@@ -608,7 +608,7 @@ class ChatListController : PeersListController {
         
         let filterView = chatListFilterPreferences(engine: context.engine) |> deliverOnMainQueue
         switch mode {
-        case .folder:
+        case .folder, .forum:
             self.updateFilter( {
                 $0.withUpdatedTabs([]).withUpdatedFilter(nil)
             } )

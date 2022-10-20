@@ -557,9 +557,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                             }
                         }
                         if peer.isForum {
-                            let navigation = context.bindings.mainController().effectiveNavigation
-                            let controller = ChatListController(context, mode: .forum(peer.id))
-                            navigation?.push(controller)
+                            ForumUI.open(peer.id, context: context)
                         } else {
                             callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
                         }
@@ -649,9 +647,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         }
                     } else {
                         if peer.isForum {
-                            let navigation = context.bindings.mainController().effectiveNavigation
-                            let controller = ChatListController(context, mode: .forum(peer.id))
-                            navigation?.push(controller)
+                            ForumUI.open(peer.id, context: context)
                         } else {
                             callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
                         }
@@ -754,26 +750,43 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         interaction(hashtag)
         afterComplete(true)
     case let .joinchat(_, hash, context, interaction):
+        
+        let openForum:(PeerId)->Void = { peerId in
+            ForumUI.open(peerId, context: context)
+        }
+        
         _ = showModalProgress(signal: context.engine.peers.joinLinkInformation(hash), for: context.window).start(next: { (result) in
             switch result {
             case let .alreadyJoined(peer):
-                interaction(peer.id, true, nil, nil)
+                if peer._asPeer().isForum {
+                    openForum(peer.id)
+                } else {
+                    interaction(peer.id, true, nil, nil)
+                }
             case let .invite(state):
                 if state.flags.requestNeeded {
-                    showModal(with: RequestJoinChatModalController(context: context, joinhash: hash, invite: result, interaction: { peerId in
-                        if let peerId = peerId {
-                            interaction(peerId, true, nil, nil)
+                    showModal(with: RequestJoinChatModalController(context: context, joinhash: hash, invite: result, interaction: { peer in
+                        if peer.isForum {
+                            openForum(peer.id)
+                        } else {
+                            interaction(peer.id, true, nil, nil)
                         }
                     }), for: context.window)
                 } else {
-                    showModal(with: JoinLinkPreviewModalController(context, hash: hash, join: result, interaction: { peerId in
-                        if let peerId = peerId {
-                            interaction(peerId, true, nil, nil)
+                    showModal(with: JoinLinkPreviewModalController(context, hash: hash, join: result, interaction: { peer in
+                        if peer.isForum {
+                            openForum(peer.id)
+                        } else {
+                            interaction(peer.id, true, nil, nil)
                         }
                     }), for: context.window)
                 }
             case let .peek(peer, peek):
-                interaction(peer.id, true, nil, .closeAfter(peek))
+                if peer._asPeer().isForum {
+                    openForum(peer.id)
+                } else {
+                    interaction(peer.id, true, nil, .closeAfter(peek))
+                }
             case .invalidHash:
                 alert(for: context.window, info: strings().linkExpired)
             }

@@ -213,6 +213,15 @@ class ChatListRowItem: TableRowItem {
         return false
     }
     
+    var canDeleteTopic: Bool {
+        if isTopic, let peer = peer, peer.isAdmin {
+            if !peer.hasBannedRights(.banPinMessages) {
+                return true
+            }
+        }
+        return false
+    }
+    
     var hasRevealState: Bool {
         return canArchive || (groupId != .root && !isCollapsed)
     }
@@ -846,6 +855,12 @@ class ChatListRowItem: TableRowItem {
         }
         return max(300, size.width) - 50 - margin * 4 - dateSize - (isOutMessage ? isRead ? 14 : 8 : 0) - offset
     }
+    
+    var chatNameWidth:CGFloat {
+        var dateSize:CGFloat = 0
+        return max(300, size.width) - 50 - margin * 4 - dateSize - (isOutMessage ? isRead ? 14 : 8 : 0)
+    }
+    
     var messageWidth:CGFloat {
         if let badgeNode = badgeNode {
             return (max(300, size.width) - 50 - margin * 3) - (badgeNode.size.width + 5) - (mentionsCount != nil ? 30 : 0) - (reactionsCount != nil ? 30 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0) - (chatTitleAttributed != nil ? textLeftCutout : 0)
@@ -881,11 +896,11 @@ class ChatListRowItem: TableRowItem {
         }
         
         if chatNameLayout == nil || !chatNameLayout!.0.isPerfectSized || self.oldWidth > width, let chatTitleAttributed = chatTitleAttributed {
-            chatNameLayout = TextNode.layoutText(maybeNode: chatNameNode, chatTitleAttributed, nil, 1, .end, NSMakeSize(titleWidth, size.height), nil, false, .left)
+            chatNameLayout = TextNode.layoutText(maybeNode: chatNameNode, chatTitleAttributed, nil, 1, .end, NSMakeSize(chatNameWidth, size.height), nil, false, .left)
         }
         
         if chatNameSelectedLayout == nil || !chatNameSelectedLayout!.0.isPerfectSized || self.oldWidth > width, let chatTitleAttributed = chatTitleAttributed {
-            chatNameSelectedLayout = TextNode.layoutText(maybeNode: chatNameSelectedNode, chatTitleAttributed, nil, 1, .end, NSMakeSize(titleWidth, size.height), nil, true, .left)
+            chatNameSelectedLayout = TextNode.layoutText(maybeNode: chatNameSelectedNode, chatTitleAttributed, nil, 1, .end, NSMakeSize(chatNameWidth, size.height), nil, true, .left)
         }
     
         messageLayout?.measure(width: messageWidth)

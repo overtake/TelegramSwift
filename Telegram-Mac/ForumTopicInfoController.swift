@@ -116,11 +116,22 @@ func ForumTopicInfoController(context: AccountContext, purpose: ForumTopicInfoPu
     
     let interactions = EntertainmentInteractions(.emoji, peerId: peerId)
     
+    let showPremiumAlert:()->Void = {
+        showModalText(for: context.window, text: strings().customEmojiPremiumAlert, callback: { _ in
+            showModal(with: PremiumBoardingController(context: context, source: .premium_emoji), for: context.window)
+        })
+    }
+    
     interactions.sendAnimatedEmoji = { sticker, _, _, fromRect in
-        if !context.isPremium, !(sticker.file.resource is ForumTopicIconResource) {
-            showModalText(for: context.window, text: strings().customEmojiPremiumAlert, callback: { _ in
-                showModal(with: PremiumBoardingController(context: context, source: .premium_emoji), for: context.window)
-            })
+        let pass: Bool
+        switch purpose {
+        case let .edit(info, _):
+            pass = info.icon == sticker.file.fileId.id
+        default:
+            pass = false
+        }
+        if !context.isPremium, sticker.file.isPremiumEmoji && !pass {
+            showPremiumAlert()
         } else {
             updateState { current in
                 var current = current
@@ -153,51 +164,68 @@ func ForumTopicInfoController(context: AccountContext, purpose: ForumTopicInfoPu
         return InputDataSignalValue(entries: entries(state, arguments: arguments))
     }
     
+    let CheckEdited:()->Bool = {
+        let state = stateValue.with { $0}
+        switch purpose {
+        case .create:
+            return true
+        case let .edit(info, _):
+            return info.title != state.name || info.icon != state.icon?.fileId
+        }
+    }
+    
     let controller = InputDataController(dataSignal: signal, title: title, updateDoneValue: { data in
         return { f in
             let title = purpose == .create ? strings().forumTopicDoneNew : strings().forumTopicDoneEdit
             if data[_id_name]?.stringValue == "" {
                 f(.disabled(title))
             } else {
-                f(.enabled(title))
+                if CheckEdited() {
+                    f(.enabled(title))
+                } else {
+                    f(.disabled(title))
+                }
             }
         }
-    }, hasDone: true)
+    }, hasDone: true, identifier: "ForumTopic")
     
     controller.validateData = { data in
         
         let state = stateValue.with { $0 }
-        
-        if !state.name.isEmpty {
-            let fileId: Int64?
-            if state.icon?.file?.mimeType == "bundle/topic" {
-                fileId = nil
+        return .fail(.doSomething(next: { f in
+            if !state.name.isEmpty && CheckEdited() {
+                let fileId: Int64?
+                if state.icon?.file?.mimeType == "bundle/topic" {
+                    fileId = nil
+                } else {
+                    fileId = state.icon?.fileId
+                }
+                switch purpose {
+                case .create:
+                    let iconColor = ForumUI.randomTopicColor()
+                    let signal = context.engine.peers.createForumChannelTopic(id: peerId, title: state.name, iconColor: iconColor, iconFileId: fileId)
+                    _ = showModalProgress(signal: signal, for: context.window).start(next: { threadId in
+                        _ = ForumUI.openTopic(threadId, peerId: peerId, context: context).start()
+                    }, error: { error in
+                        alert(for: context.window, info: "create topic error: \(error)")
+                    })
+                case let .edit(_, threadId):
+                    let signal = context.engine.peers.editForumChannelTopic(id: peerId, threadId: threadId, title: state.name, iconFileId: fileId)
+                    
+                    _ = showModalProgress(signal: signal, for: context.window).start(error: { error in
+                        alert(for: context.window, info: "edit topic error: \(error)")
+                    }, completed: {
+                        context.bindings.rootNavigation().back()
+                    })
+                }
+                f(.fail(.none))
+            } else if !CheckEdited() {
+                f(.fail(.none))
             } else {
-                fileId = state.icon?.fileId
+                f(.fail(.fields([_id_name : .shake])))
             }
-            switch purpose {
-            case .create:
-                let iconColor = ForumUI.randomTopicColor()
-                let signal = context.engine.peers.createForumChannelTopic(id: peerId, title: state.name, iconColor: iconColor, iconFileId: fileId)
-                _ = showModalProgress(signal: signal, for: context.window).start(next: { threadId in
-                    _ = ForumUI.openTopic(threadId, peerId: peerId, context: context).start()
-                }, error: { error in
-                    alert(for: context.window, info: "create topic error: \(error)")
-                })
-            case let .edit(_, threadId):
-                let signal = context.engine.peers.editForumChannelTopic(id: peerId, threadId: threadId, title: state.name, iconFileId: fileId)
-                
-                _ = showModalProgress(signal: signal, for: context.window).start(error: { error in
-                    alert(for: context.window, info: "edit topic error: \(error)")
-                }, completed: {
-                    context.bindings.rootNavigation().back()
-                })
-            }
+        }))
             
-            return .fail(.none)
-        } else {
-            return .fail(.fields([_id_name : .shake]))
-        }
         
     }
     

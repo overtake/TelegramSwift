@@ -325,6 +325,14 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         return true
     }
     
+    private var highlighed: Bool {
+        if let item = item as? ChatListRowItem {
+            let highlighted = item.isSelected && item.context.layout != .single && !(item.isForum && !item.isTopic)
+            return highlighted
+        }
+        return false
+    }
+    
     
     var inputActivities:(PeerId, [(Peer, PeerInputActivity)])? {
         didSet {
@@ -353,16 +361,20 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 
                 
                 let activity:ActivitiesTheme
-                if item.isSelected && item.context.layout != .single {
+                
+                let highlighted = self.highlighed
+
+                
+                if highlighted {
                     activity = theme.activity(key: 10, foregroundColor: theme.chatList.activitySelectedColor, backgroundColor: theme.chatList.selectedBackgroundColor)
-                } else if item.isSelected {
-                    activity = theme.activity(key: 11, foregroundColor: theme.chatList.activityPinnedColor, backgroundColor: theme.chatList.singleLayoutSelectedBackgroundColor)
+                } else if (item.isForum && !item.isTopic), item.isSelected {
+                    activity = theme.activity(key: 12, foregroundColor: theme.chatList.activityColor, backgroundColor: theme.chatList.activeDraggingBackgroundColor)
                 } else if self.containerView.activeDragging || item.isHighlighted {
                     activity = theme.activity(key: 13, foregroundColor: theme.chatList.activityColor, backgroundColor: theme.chatList.activeDraggingBackgroundColor)
                 } else if item.isFixedItem {
-                    activity = theme.activity(key: 12, foregroundColor: theme.chatList.activityPinnedColor, backgroundColor: theme.chatList.pinnedBackgroundColor)
+                    activity = theme.activity(key: 14, foregroundColor: theme.chatList.activityPinnedColor, backgroundColor: theme.chatList.pinnedBackgroundColor)
                 } else {
-                    activity = theme.activity(key: 14, foregroundColor: theme.chatList.activityColor, backgroundColor: theme.colors.background)
+                    activity = theme.activity(key: 15, foregroundColor: theme.chatList.activityColor, backgroundColor: theme.colors.background)
                 }
                 if oldValue != item.activities || activity != activitiesModel?.theme {
                     activitiesModel?.update(with: inputActivities, for: item.messageWidth, theme:  activity, layout: { [weak self] show in
@@ -451,7 +463,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 return theme.chatList.pinnedBackgroundColor
             }
             if item.isSelected && item.isForum && !item.isTopic {
-                return theme.colors.grayBackground
+                return theme.chatList.activeDraggingBackgroundColor
             }
             return item.isSelected ? theme.chatList.selectedBackgroundColor : contextMenu != nil ? theme.chatList.contextMenuBackgroundColor : theme.colors.background
         }
@@ -495,7 +507,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             if layer == containerView.layer {
                 
-                let highlighted = item.isSelected && item.context.layout != .single && !(item.isForum && !item.isTopic)
+                let highlighted = self.highlighed
                 
                 
                 if item.ctxBadgeNode == nil && item.mentionsCount == nil && (item.isPinned || item.isLastPinned) {
@@ -523,7 +535,18 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     }
                     
                     if item.isMuted {
-                        ctx.draw(highlighted ? theme.icons.dialogMuteImageSelected : theme.icons.dialogMuteImage, in: NSMakeRect(item.leftInset + displayLayout.0.size.width + 4 + addition, item.margin + round((displayLayout.0.size.height - theme.icons.dialogMuteImage.backingSize.height) / 2.0) - 1, theme.icons.dialogMuteImage.backingSize.width, theme.icons.dialogMuteImage.backingSize.height))
+                        let icon = theme.icons.dialogMuteImage
+                        let activeIcon = theme.icons.dialogMuteImageSelected
+                        let y: CGFloat
+                        let x: CGFloat
+                        if displayLayout.0.numberOfLines > 1 {
+                            x = item.leftInset + displayLayout.0.firstLineWidth + 4 + addition
+                            y = item.margin + 4
+                        } else {
+                            x = item.leftInset + displayLayout.0.size.width + 4 + addition
+                            y = item.margin + round((displayLayout.0.size.height - icon.backingSize.height) / 2.0) - 1
+                        }
+                        ctx.draw(highlighted ? activeIcon : icon, in: NSMakeRect(x, y, icon.backingSize.width, icon.backingSize.height))
                     }
                     
                    
@@ -722,7 +745,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
          if let item = item as? ChatListRowItem {
              
              if let peer = item.peer, peer.id != item.context.peerId {
-                 let highlighted = item.isSelected && item.context.layout != .single
+                 let highlighted = self.highlighed
                  let control = PremiumStatusControl.control(peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: highlighted, cached: self.statusControl, animated: animated)
                  if let control = control {
                      self.statusControl = control
@@ -935,7 +958,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  if item.titleMode == .normal {
                      let size = NSMakeSize(30, 30)
                      let current: InlineStickerItemLayer
-                     if let layer = self.inlineTopicPhotoLayer, layer.file?.fileId.id == data.info.icon {
+                     let forumIconFile = ForumUI.makeIconFile(title: data.info.title, iconColor: data.info.iconColor)
+                     let checkFileId = data.info.icon ?? forumIconFile.fileId.id
+                     if let layer = self.inlineTopicPhotoLayer, layer.fileId == checkFileId {
                          current = layer
                      } else {
                          if let layer = inlineTopicPhotoLayer {
@@ -945,9 +970,15 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                          if let fileId = data.info.icon {
                              current = .init(account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .playCount(2))
                          } else {
-                             let file = ForumUI.makeIconFile(title: data.info.title, iconColor: data.info.iconColor)
-                             current = .init(account: item.context.account, file: file, size: size, playPolicy: .playCount(2))
+                             current = .init(account: item.context.account, file: forumIconFile, size: size, playPolicy: .playCount(2))
                          }
+                         
+                         if item.context.layout == .minimisize {
+                             current.frame = CGRect(origin: NSMakePoint(20, 20), size: size)
+                         } else {
+                             current.frame = CGRect(origin: NSMakePoint(10, 12), size: size)
+                         }
+                         
                          current.superview = containerView
                          self.containerView.layer?.addSublayer(current)
                          self.inlineTopicPhotoLayer = current
@@ -1087,7 +1118,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              
              if let _ = item.mentionsCount, item.context.layout != .minimisize {
                  
-                 let highlighted = item.isSelected && item.context.layout != .single
+                 let highlighted = self.highlighed
                  let icon: CGImage
                  if item.associatedGroupId == .root {
                      icon = highlighted ? theme.icons.chatListMentionActive : theme.icons.chatListMention
@@ -1132,7 +1163,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              
              if let _ = item.reactionsCount, item.context.layout != .minimisize {
                  
-                 let highlighted = item.isSelected && item.context.layout != .single
+                 let highlighted = self.highlighed
                  let icon: CGImage
                  if item.associatedGroupId == .root && !item.isMuted {
                      icon = highlighted ? theme.icons.reactions_badge_active : theme.icons.reactions_badge
@@ -1349,21 +1380,35 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             revealRightView.addSubview(pin)
 
-            revealRightView.addSubview(delete)
+            if (item.isTopic && item.canDeleteTopic) || !item.isTopic {
+                revealRightView.addSubview(delete)
+            }
             
-            if item.filter == .allChats, item.mode.threadId == nil {
+            if item.filter == .allChats, !item.isTopic {
                 revealRightView.addSubview(archive)
+            } else if item.isTopic {
+                revealRightView.addSubview(mute, positioned: .below, relativeTo: revealRightView.subviews.first)
             }
             
             
             
-            revealLeftView.addSubview(mute)
             revealLeftView.addSubview(unread)
             
             
             
             revealLeftView.backgroundColor = unreadBackground
-            revealRightView.backgroundColor = item.filter == .allChats ? theme.colors.revealAction_inactive_background : theme.colors.revealAction_destructive_background
+            
+            let revealBackgroundColor: NSColor
+            if item.isTopic && !item.canDeleteTopic {
+                revealBackgroundColor = theme.colors.revealAction_constructive_background
+            } else if item.filter == .allChats && !item.isTopic {
+                revealBackgroundColor = theme.colors.revealAction_inactive_background
+            } else {
+                revealBackgroundColor = theme.colors.revealAction_destructive_background
+            }
+            //item.mode.threadId == nil
+            
+            revealRightView.backgroundColor = revealBackgroundColor
             
             
             unread.setFrameSize(frame.height, frame.height)

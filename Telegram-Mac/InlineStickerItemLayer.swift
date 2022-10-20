@@ -341,6 +341,8 @@ final class InlineStickerItemLayer : SimpleLayer {
             self.fileDidUpdate?(file)
         }
     }
+    let fileId: Int64
+    
     var fileDidUpdate:((TelegramMediaFile?)->Void)?
     
     private var preview: CGImage?
@@ -377,6 +379,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.playPolicy = playPolicy
         self.getColors = getColors
         self.shimmerColor = shimmerColor
+        self.fileId = emoji.fileId
         super.init()
         self.frame = size.bounds
         self.initialize()
@@ -407,6 +410,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.playPolicy = playPolicy
         self.getColors = getColors
         self.shimmerColor = shimmerColor
+        self.fileId = file.fileId.id
         super.init()
         self.frame = size.bounds
         self.initialize()

@@ -111,13 +111,13 @@ private final class CtxInstallLayer : SimpleLayer {
     }
     
     override func draw(in ctx: CGContext) {
-        if FastSettings.useNativeGraphicContext {
-        #if !APP_STORE
-            DeviceGraphicsContextSettings.install(ctx)
-        #endif
-        } else {
-            DeviceGraphicsContextSettings.install(nil)
-        }
+//        if FastSettings.useNativeGraphicContext {
+//        #if !APP_STORE
+//            DeviceGraphicsContextSettings.install(ctx)
+//        #endif
+//        } else {
+//            DeviceGraphicsContextSettings.install(nil)
+//        }
     }
 }
 

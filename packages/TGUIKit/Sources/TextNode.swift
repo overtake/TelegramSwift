@@ -64,8 +64,16 @@ public final class TextNodeLayout: NSObject {
         self.isPerfectSized = isPerfectSized
     }
     
-    var numberOfLines: Int {
+    public var numberOfLines: Int {
         return self.lines.count
+    }
+    
+    public var firstLineWidth: CGFloat {
+        if let first = self.lines.first {
+            return first.frame.width
+        } else {
+            return 0.0
+        }
     }
     
     var trailingLineWidth: CGFloat {

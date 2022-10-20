@@ -956,10 +956,21 @@
             showModal(with: ShareModalController(ForwardMessagesObject(context, messageIds: messageIds)), for: context.window)
         }
         
-        interactions.focusMessageId = { [weak self] _, focusMessageId, animated in
-            if let strongSelf = self {
-                strongSelf.navigationController?.push(ChatController(context: context, chatLocation: .peer(strongSelf.peerId), messageId: focusMessageId))
+        let openChat:(MessageId?)->Void = { [weak self] messageId in
+            let location: ChatLocation
+            let mode: ChatMode
+            if let threadInfo = threadInfo {
+                location = .thread(threadInfo.message)
+                mode = .thread(data: threadInfo.message, mode: .topic(origin: threadInfo.message.messageId))
+            } else {
+                location = .peer(peerId)
+                mode = .history
             }
+            self?.navigationController?.push(ChatController(context: context, chatLocation: location, mode: mode, messageId: messageId, chatLocationContextHolder: threadInfo?.contextHolder))
+        }
+        
+        interactions.focusMessageId = { _, focusMessageId, _ in
+            openChat(focusMessageId)
         }
         
         interactions.inlineAudioPlayer = { [weak self] controller in
@@ -974,9 +985,9 @@
         interactions.openInfo = { [weak self] (peerId, toChat, postId, action) in
             if let strongSelf = self {
                 if toChat {
-                    strongSelf.navigationController?.push(ChatController(context: context, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
+                    openChat(nil)
                 } else {
-                    strongSelf.navigationController?.push(PeerInfoController(context: context, peerId: peerId))
+                    strongSelf.navigationController?.push(PeerInfoController(context: context, peerId: peerId, threadInfo: threadInfo))
                 }
             }
         }

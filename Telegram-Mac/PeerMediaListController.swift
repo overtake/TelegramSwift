@@ -485,8 +485,15 @@ class PeerMediaListController: TableViewController, PeerMediaSearchable {
             contextHolder = .init(value: nil)
         }
         
+        
         let arguments = Arguments(context: context, gallery: { [weak self] message, type in
-            showChatGallery(context: context, message: message, self?.genericView, nil, type: type, chatMode: mode, contextHolder: contextHolder)
+            if let media = message.media.first {
+                let interactions = ChatMediaLayoutParameters(presentation: .Empty, media: media)
+                interactions.showMedia = { message in
+                    self?.chatInteraction.focusMessageId(nil, message.id, .none(nil))
+                }
+                showChatGallery(context: context, message: message, self?.genericView, interactions, type: type, chatMode: mode, contextHolder: contextHolder)
+            }
         }, music: { message, type in
             
             if let controller = context.audioPlayer, controller.playOrPause(message.id) {

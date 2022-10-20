@@ -476,9 +476,15 @@ class Sender: NSObject {
         if let sendAsPeerId = sendAsPeerId {
             attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
         }
-        
+        let threadId: Int64?
+
+        if let replyId = replyId {
+            threadId = makeMessageThreadId(replyId)
+        } else {
+            threadId = nil
+        }
         for msgId in sorted {
-            fwdMessages.append(EnqueueMessage.forward(source: msgId, grouping: messageIds.count > 1 ? .auto : .none, attributes: attributes, correlationId: nil))
+            fwdMessages.append(EnqueueMessage.forward(source: msgId, threadId: threadId, grouping: messageIds.count > 1 ? .auto : .none, attributes: attributes, correlationId: nil))
         }
         return enqueueMessages(account: context.account, peerId: peerId, messages: fwdMessages.reversed())
     }

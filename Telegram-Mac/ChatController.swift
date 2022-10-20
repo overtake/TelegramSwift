@@ -2959,7 +2959,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 } else {
                     
                     let threadInfo: ThreadInfo?
-                    if strongSelf.mode.isTopicMode {
+                    if strongSelf.mode.isTopicMode, peerId == strongSelf.chatInteraction.peerId {
                         switch strongSelf.mode {
                         case let .thread(data, _):
                             threadInfo = .init(message: data, isChannelPost: false, isEmpty: false, contextHolder: strongSelf.chatLocationContextHolder)
@@ -3564,12 +3564,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     showModal(with: DateSelectorModalController(context: strongSelf.context, mode: .schedule(peer.id), selectedAt: { [weak strongSelf] date in
                         if let strongSelf = strongSelf {
                             let _ = (Sender.enqueue(media: media, context: context, peerId: peerId, replyId: takeReplyId(), atDate: date, sendAsPeerId: currentSendAsPeerId) |> deliverOnMainQueue).start(completed: scrollAfterSend)
-                            strongSelf.nextTransaction.set(handler: {})
+                            strongSelf.nextTransaction.set(handler: afterSentTransition)
                         }
                     }), for: strongSelf.context.window)
                 case .history, .thread:
                     let _ = (Sender.enqueue(media: media, context: context, peerId: peerId, replyId: takeReplyId(), sendAsPeerId: currentSendAsPeerId) |> deliverOnMainQueue).start(completed: scrollAfterSend)
-                    strongSelf.nextTransaction.set(handler: {})
+                    strongSelf.nextTransaction.set(handler: afterSentTransition)
                 case .pinned:
                     break
                 }
@@ -3697,7 +3697,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 func apply(_ controller: ChatController, atDate: Date?) {
                     
                     let _ = (Sender.enqueue(media: medias, caption: caption, context: context, peerId: controller.chatInteraction.peerId, replyId: takeReplyId(), isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate) |> deliverOnMainQueue).start(completed: scrollAfterSend)
-                    controller.nextTransaction.set(handler: {})
+                    controller.nextTransaction.set(handler: afterSentTransition)
                 }
                 switch strongSelf.mode {
                 case .history, .thread:
@@ -6491,10 +6491,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let messageId: MessageId?
     let mode: ChatMode
     
-    public init(context: AccountContext, chatLocation:ChatLocation, mode: ChatMode = .history, messageId:MessageId? = nil, initialAction: ChatInitialAction? = nil, chatLocationContextHolder: Atomic<ChatLocationContextHolder?> = Atomic<ChatLocationContextHolder?>(value: nil)) {
+    public init(context: AccountContext, chatLocation:ChatLocation, mode: ChatMode = .history, messageId:MessageId? = nil, initialAction: ChatInitialAction? = nil, chatLocationContextHolder: Atomic<ChatLocationContextHolder?>? = nil) {
         self.chatLocation = chatLocation
         self.messageId = messageId
-        self.chatLocationContextHolder = chatLocationContextHolder
+        self.chatLocationContextHolder = chatLocationContextHolder ?? Atomic<ChatLocationContextHolder?>(value: nil)
         self.mode = mode
         self.chatInteraction = ChatInteraction(chatLocation: chatLocation, context: context, mode: mode)
         if let action = initialAction {
@@ -6887,8 +6887,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
             }
             
-            if let value = value.mainPeer, let oldValue = oldValue.mainPeer {
-                if value.isForum && !oldValue.isForum {
+            if let peer = value.mainPeer, let oldPeer = oldValue.mainPeer {
+                if peer.isForum && !oldPeer.isForum || (oldValue.threadInfo != nil && value.threadInfo == nil) {
                     self.navigationController?.removeImmediately(self)
                 }
             }

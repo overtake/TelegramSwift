@@ -266,7 +266,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
     
     private let mediaController: PeerMediaController
     
-    private let threadInfo: ThreadInfo?
+    let threadInfo: ThreadInfo?
     
     let source: Source
     

@@ -187,7 +187,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
         
-        let perline: Int = Int(floor(max(300, width) / itemSize.width))
+        let perline: Int = Int(floor(max(300, width - 20) / itemSize.width))
         
         var mapped: [Item] = []
         var point = NSMakePoint(10, 0)
