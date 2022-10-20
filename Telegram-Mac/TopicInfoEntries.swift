@@ -34,7 +34,7 @@ final class TopicInfoArguments : PeerInfoArguments {
         let threadId = state.threadId
         _ = peer.start(next: { peerView in
             if let peer = peerViewMainPeer(peerView) {
-                var link: String = "https://t.me/c/\(peer.id.id)"
+                var link: String = "https://t.me/c/\(peer.id.id._internalGetInt64Value())"
                 if let address = peer.addressName, !address.isEmpty {
                     link = "https://t.me/\(address)"
                 }

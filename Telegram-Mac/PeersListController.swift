@@ -618,85 +618,86 @@ class PeerListContainerView : View {
         
         switch state.searchState {
         case .Focus:
-            searchView.customSearchControl = CustomSearchController(clickHandler: { [weak self] control, updateTitle in
-                
-                
-                var items: [ContextMenuItem] = []
+            if searchView.customSearchControl == nil {
+                searchView.customSearchControl = CustomSearchController(clickHandler: { [weak self] control, updateTitle in
+                    
+                    var items: [ContextMenuItem] = []
 
-                if state.forumPeer == nil {
-                    items.append(ContextMenuItem(strings().chatListDownloadsTag, handler: { [weak self] in
-                        updateSearchTags(SearchTags(messageTags: nil, peerTag: nil))
-                        self?.showDownloads?()
-                    }, itemImage: MenuAnimation.menu_save_as.value))
-                }
-                
-                for tag in tags {
-                    var append: Bool = false
-                    if currentTag != tag.0 {
-                        append = true
+                    if state.forumPeer == nil {
+                        items.append(ContextMenuItem(strings().chatListDownloadsTag, handler: { [weak self] in
+                            updateSearchTags(SearchTags(messageTags: nil, peerTag: nil))
+                            self?.showDownloads?()
+                        }, itemImage: MenuAnimation.menu_save_as.value))
                     }
                     
-                    if append {
-                        if let messagetag = tag.0 {
-                            let itemImage: MenuAnimation?
-                            switch messagetag {
-                            case .photo:
-                                itemImage = .menu_shared_media
-                            case .video:
-                                itemImage = .menu_video
-                            case .webPage:
-                                itemImage = .menu_copy_link
-                            case .voiceOrInstantVideo:
-                                itemImage = .menu_voice
-                            case .gif:
-                                itemImage = .menu_add_gif
-                            case .file:
-                                itemImage = .menu_file
-                            default:
-                                itemImage = nil
-                            }
-                            if let itemImage = itemImage {
-                                items.append(ContextMenuItem(tag.1, handler: { [weak self] in
-                                    currentTag = tag.0
-                                    updateSearchTags(SearchTags(messageTags: currentTag, peerTag: currentPeerTag?.id))
-                                    let collected = collectTags()
-                                    updateTitle(collected.0, collected.1)
-                                    self?.hideDownloads?()
-                                }, itemImage: itemImage.value))
-                            }
+                    for tag in tags {
+                        var append: Bool = false
+                        if currentTag != tag.0 {
+                            append = true
                         }
                         
+                        if append {
+                            if let messagetag = tag.0 {
+                                let itemImage: MenuAnimation?
+                                switch messagetag {
+                                case .photo:
+                                    itemImage = .menu_shared_media
+                                case .video:
+                                    itemImage = .menu_video
+                                case .webPage:
+                                    itemImage = .menu_copy_link
+                                case .voiceOrInstantVideo:
+                                    itemImage = .menu_voice
+                                case .gif:
+                                    itemImage = .menu_add_gif
+                                case .file:
+                                    itemImage = .menu_file
+                                default:
+                                    itemImage = nil
+                                }
+                                if let itemImage = itemImage {
+                                    items.append(ContextMenuItem(tag.1, handler: { [weak self] in
+                                        currentTag = tag.0
+                                        updateSearchTags(SearchTags(messageTags: currentTag, peerTag: currentPeerTag?.id))
+                                        let collected = collectTags()
+                                        updateTitle(collected.0, collected.1)
+                                        self?.hideDownloads?()
+                                    }, itemImage: itemImage.value))
+                                }
+                            }
+                            
+                        }
                     }
-                }
-                
-                let menu = ContextMenu()
-                for item in items {
-                    menu.addItem(item)
-                }
-                
-                let value = AppMenu(menu: menu)
-                if let event = NSApp.currentEvent {
-                    value.show(event: event, view: control)
-                }
-            }, deleteTag: { [weak self] index in
-                var count: Int = 0
-                if currentTag != nil {
-                    count += 1
-                }
-                if currentPeerTag != nil {
-                    count += 1
-                }
-                if index == 1 || count == 1 {
-                    currentTag = nil
-                }
-                if index == 0 {
-                    currentPeerTag = nil
-                }
-                let collected = collectTags()
-                updateSearchTags(SearchTags(messageTags: currentTag, peerTag: currentPeerTag?.id))
-                self?.searchView.updateTags(collected.0, collected.1)
-                self?.hideDownloads?()
-            }, icon: theme.icons.search_filter)
+                    
+                    let menu = ContextMenu()
+                    for item in items {
+                        menu.addItem(item)
+                    }
+                    
+                    let value = AppMenu(menu: menu)
+                    if let event = NSApp.currentEvent {
+                        value.show(event: event, view: control)
+                    }
+                }, deleteTag: { [weak self] index in
+                    var count: Int = 0
+                    if currentTag != nil {
+                        count += 1
+                    }
+                    if currentPeerTag != nil {
+                        count += 1
+                    }
+                    if index == 1 || count == 1 {
+                        currentTag = nil
+                    }
+                    if index == 0 {
+                        currentPeerTag = nil
+                    }
+                    let collected = collectTags()
+                    updateSearchTags(SearchTags(messageTags: currentTag, peerTag: currentPeerTag?.id))
+                    self?.searchView.updateTags(collected.0, collected.1)
+                    self?.hideDownloads?()
+                }, icon: theme.icons.search_filter)
+            }
             
             updatePeerTag( { [weak self] updatedPeerTag in
                 guard let `self` = self else {
@@ -934,8 +935,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     private(set) var searchController:SearchController? {
         didSet {
             if let controller = searchController {
-                genericView.customHandler.size = { [weak controller] size in
-                    controller?.view.setFrameSize(NSMakeSize(size.width, size.height - 49))
+                genericView.customHandler.size = { [weak controller, weak self] size in
+                    let frame = self?.genericView.tableView.frame ?? size.bounds
+                    controller?.view.frame = frame
                 }
                 progressDisposable.set((controller.isLoading.get() |> deliverOnMainQueue).start(next: { [weak self] isLoading in
                     self?.genericView.searchView.isLoading = isLoading
@@ -1325,7 +1327,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             self?.updateState(state, previous: previousState.swap(state), arguments: arguments)
         }))
         
-        centerBarView.set(handler: { [weak self] _ in
+        centerBarView.set(handler: { _ in
             switch mode {
             case let .forum(peerId):
                 ForumUI.openInfo(peerId, context: context)
@@ -1368,7 +1370,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             self.genericView.tableView.reloadData()
             self.requestUpdateBackBar()
         }
-                
+              
         setCenterTitle(self.defaultBarTitle)
         if let forum = state.forumPeer {
             let title = stringStatus(for: forum.peerView, context: context, onlineMemberCount: forum.online, expanded: true)
@@ -1386,6 +1388,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             self?.updateSearchMessageTags = f
         })
         
+        if let forum = state.forumPeer {
+            if forum.peer.participationStatus == .left && previous?.forumPeer?.peer.participationStatus == .member {
+                self.navigationController?.back()
+            }
+        }
     }
     
     private var topicRightBar: ImageButton?
@@ -1418,14 +1425,22 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 
                 if let peer = self?.state?.forumPeer {
                     var items: [ContextMenuItem] = []
-
-                    items.append(ContextMenuItem(strings().forumTopicContextInfo, handler: {
-                        ForumUI.openInfo(peer.peer.id, context: context)
-                    }, itemImage: MenuAnimation.menu_show_info.value))
                     
-                    items.append(ContextMenuItem(strings().forumTopicContextShowAsMessages, handler: { [weak self] in
-                        self?.open(with: .chatId(.chatList(peer.peer.id), peer.peer.id, -1), forceAnimated: true)
-                    }, itemImage: MenuAnimation.menu_read.value))
+                    let chatController = context.bindings.rootNavigation().controller as? ChatController
+                    let infoController = context.bindings.rootNavigation().controller as? PeerInfoController
+                    let topicController = context.bindings.rootNavigation().controller as? InputDataController
+
+                    if infoController == nil || (infoController?.peerId != peer.peer.id || infoController?.threadInfo != nil) {
+                        items.append(ContextMenuItem(strings().forumTopicContextInfo, handler: {
+                            ForumUI.openInfo(peer.peer.id, context: context)
+                        }, itemImage: MenuAnimation.menu_show_info.value))
+                    }
+                    
+                    if chatController == nil || (chatController?.chatInteraction.chatLocation != .peer(peer.peer.id)) {
+                        items.append(ContextMenuItem(strings().forumTopicContextShowAsMessages, handler: { [weak self] in
+                            self?.open(with: .chatId(.chatList(peer.peer.id), peer.peer.id, -1), forceAnimated: true)
+                        }, itemImage: MenuAnimation.menu_read.value))
+                    }
                     
                     if let call = self?.state?.forumPeer?.call {
                         if call.data?.groupCall == nil {
@@ -1438,12 +1453,14 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     }
                     
                     if peer.peer.isAdmin && !peer.peer.hasBannedRights(.banPinMessages) {
-                        if !items.isEmpty {
-                            items.append(ContextSeparatorItem())
+                        if topicController?.identifier != "ForumTopic" {
+                            if !items.isEmpty {
+                                items.append(ContextSeparatorItem())
+                            }
+                            items.append(ContextMenuItem(strings().forumTopicContextNew, handler: {
+                                ForumUI.createTopic(peer.peer.id, context: context)
+                            }, itemImage: MenuAnimation.menu_edit.value))
                         }
-                        items.append(ContextMenuItem(strings().forumTopicContextNew, handler: {
-                            ForumUI.createTopic(peer.peer.id, context: context)
-                        }, itemImage: MenuAnimation.menu_edit.value))
                     }
                     
                     if !items.isEmpty {
@@ -1554,7 +1571,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     
     func changeSelection(_ location: ChatLocation?) {
         if let location = location {
-            let id: UIChatListEntryId
+            var id: UIChatListEntryId
             switch location {
             case .peer:
                 id = .chatId(.chatList(location.peerId), location.peerId, -1)
@@ -1566,6 +1583,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     id = .forum(location.peerId)
                 case .forum:
                     id = .chatId(.forum(threadId), location.peerId, -1)
+                }
+            }
+            if self.genericView.tableView.item(stableId: id) == nil {
+                let fId = UIChatListEntryId.forum(location.peerId)
+                if self.genericView.tableView.item(stableId: fId) != nil {
+                    id = fId
                 }
             }
             self.genericView.tableView.changeSelection(stableId: id)
@@ -1591,7 +1614,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
             
             let rect = self.genericView.tableView.frame
-            let frame = NSMakeRect(rect.minX, rect.minY, self.frame.width, rect.height)
+            let frame = rect
             let searchController = SearchController(context: self.context, open: { [weak self] (id, messageId, close) in
                 if let id = id {
                     self?.open(with: id, messageId: messageId, close: close)
@@ -1756,9 +1779,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         case let .groupId(groupId):
             self.navigationController?.push(ChatListController(context, modal: false, mode: .folder(groupId)))
         case let .forum(peerId):
-            if let navigation = self.navigationController {
-                ForumUI.open(peerId, navigation: navigation, context: context)
-            }
+            ForumUI.open(peerId, context: context)
         case .reveal:
             break
         case .empty:

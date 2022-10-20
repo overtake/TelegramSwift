@@ -83,7 +83,7 @@ class ChatMediaLayoutParameters : Equatable {
     var automaticDownloadFunc:(Message)->Bool
     
     
-    init(presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool, autoplayMedia: AutoplayMediaPreferences) {
+    init(presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool = true, autoplayMedia: AutoplayMediaPreferences = .defaultSettings) {
         self.automaticDownloadFunc = { _ in
             return automaticDownload
         }

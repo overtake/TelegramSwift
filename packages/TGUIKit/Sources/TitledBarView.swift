@@ -18,7 +18,7 @@ private class TitledContainerView : View {
         }
     }
     
-    var inset:()->CGFloat = { 50 }
+    var inset:()->CGFloat = { 0 }
     
     var text:NSAttributedString? {
         didSet {
@@ -187,7 +187,7 @@ open class TitledBarView: BarView {
     }
     
     open var inset:CGFloat {
-        return 50
+        return 0
     }
 
     public var textInset:CGFloat? {

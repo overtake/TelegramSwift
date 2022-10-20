@@ -51,7 +51,9 @@ struct ForumUI {
     }
     
     
-    static func open(_ peerId: PeerId, navigation: NavigationViewController, context: AccountContext) {
+    static func open(_ peerId: PeerId, context: AccountContext) {
+        let navigation = context.bindings.mainController().effectiveNavigation
+
         if let controller = navigation.controller as? ChatListController {
             if controller.mode == .forum(peerId) {
                 return
@@ -93,7 +95,7 @@ struct ForumUI {
     static func openInfo(_ peerId: PeerId, context: AccountContext) {
         let navigation = context.bindings.rootNavigation()
         if let current = navigation.controller as? PeerInfoController {
-            if current.peerId == peerId {
+            if current.peerId == peerId, current.threadInfo == nil {
                 return
             }
         }

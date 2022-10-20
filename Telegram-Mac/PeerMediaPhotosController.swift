@@ -420,10 +420,10 @@ class PeerMediaPhotosController: TableViewController, PeerMediaSearchable {
             contextHolder = .init(value: nil)
         }
         
-        let arguments = PeerMediaPhotosArguments(context: context, chatInteraction: chatInteraction, gallerySupplyment: supplyment, gallery: { message, type in
+        let arguments = PeerMediaPhotosArguments(context: context, chatInteraction: chatInteraction, gallerySupplyment: supplyment, gallery: { [weak self] message, type in
             
             let parameters = ChatMediaGalleryParameters(showMedia: { _ in }, showMessage: { message in
-                
+                self?.chatInteraction.focusMessageId(nil, message.id, .none(nil))
             }, isWebpage: false, media: message.effectiveMedia!, automaticDownload: true)
             
             showChatGallery(context: context, message: message, supplyment, parameters, type: type, reversed: true, chatMode: mode, contextHolder: contextHolder)

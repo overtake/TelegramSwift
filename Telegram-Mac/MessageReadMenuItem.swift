@@ -649,7 +649,7 @@ final class ReactionPeerMenu : ContextMenuItem {
             } |> take(1) |> deliverOnMainQueue
             disposable.set(signal.start(next: { [weak self] list in
                 let menu = ContextMenu()
-                for item in list {
+                for item in list.prefix(20) {
                     if let threadData = item.threadData {
                         if peer.canSendMessage(true, threadData: threadData) {
                             let menuItem = ContextMenuItem(threadData.info.title, handler: {

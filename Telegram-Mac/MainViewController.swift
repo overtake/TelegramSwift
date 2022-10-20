@@ -650,9 +650,9 @@ class MainViewController: TelegramViewController {
         }
     }
     
-    var effectiveNavigation: NavigationViewController? {
+    var effectiveNavigation: NavigationViewController {
         if self.context.layout == .single {
-            return self.navigationController
+            return context.bindings.rootNavigation()
         } else {
             return self.navigation
         }

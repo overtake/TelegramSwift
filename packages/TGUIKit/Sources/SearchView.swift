@@ -155,8 +155,8 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
                         self?.updateTags(titles, image)
                     })
                 }, for: .Click)
+                search.set(image: customSearchControl.icon, for: .Normal)
             }
-            updateLocalizationAndTheme(theme: presentation)
         }
     }
     
@@ -210,6 +210,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         self.backgroundColor = presentation.search.backgroundColor
         placeholder.sizeToFit()
         search.frame = NSMakeRect(0, 0, 20, 20)
+        
         if let custom = customSearchControl {
             search.set(image: custom.icon, for: .Normal)
         } else {

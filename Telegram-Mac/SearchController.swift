@@ -1325,7 +1325,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     }
     
     override func scrollup(force: Bool = false) {
-        genericView.clipView.scroll(to: NSMakePoint(0, 50), animated: false)
+        genericView.clipView.scroll(to: NSMakePoint(0, frame.minY), animated: false)
     }
     
     private var closeNext: Bool = false
@@ -1464,13 +1464,8 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             peer = item.peer
         } else if let item = item as? ShortPeerRowItem {
             peer = item.peer
-        } else if let item = item as? SeparatorRowItem {
-            switch item.state {
-            case .none:
-                return false
-            default:
-                return true
-            }
+        } else if let _ = item as? SeparatorRowItem {
+            return false
         }
         
         if let peer = peer, let modalAction = navigationController?.modalAction {
