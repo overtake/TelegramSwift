@@ -77,7 +77,6 @@ private final class VideoAvatarContainer : View {
         addSubview(circle)
         circle.frame = bounds
         
-        circle.layer?.cornerRadius = bounds.width / 2
         circle.layer?.borderWidth = 1
         circle.layer?.borderColor = theme.colors.accent.cgColor
         
@@ -93,12 +92,18 @@ private final class VideoAvatarContainer : View {
        // circle.layer?.animateScaleCenter(from: 1.0, to: 0.2, duration: 0.2)
     }
     
-    func updateWith(file: TelegramMediaFile, seekTo: TimeInterval?, reference: PeerReference?, context: AccountContext) {
+    func updateWith(file: TelegramMediaFile, seekTo: TimeInterval?, peer: Peer, reference: PeerReference?, context: AccountContext) {
        // player.update(FileMediaReference.standalone(media: file), context: context)
         if let reference = reference {
             fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.avatar(peer: reference, resource: file.resource)).start())
         } else {
             fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: file.resource)).start())
+        }
+        
+        if peer.isForum {
+            circle.layer?.cornerRadius = bounds.width / 3
+        } else {
+            circle.layer?.cornerRadius = bounds.width / 2
         }
         
         let mediaReference: MediaResourceReference
@@ -468,7 +473,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 control.animateIn()
                 self.videoAvatarView = control
             }
-            control.updateWith(file: file, seekTo: seekTo, reference: PeerReference(peer), context: chatInteraction.context)
+            control.updateWith(file: file, seekTo: seekTo, peer: peer, reference: PeerReference(peer), context: chatInteraction.context)
             
         } else {
             if let view = self.videoAvatarView {
