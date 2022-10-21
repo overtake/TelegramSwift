@@ -1452,7 +1452,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                         }
                     }
                     
-                    if peer.peer.isAdmin && !peer.peer.hasBannedRights(.banPinMessages) {
+                    if peer.peer.isAdmin && peer.peer.hasPermission(.pinMessages) {
                         if topicController?.identifier != "ForumTopic" {
                             if !items.isEmpty {
                                 items.append(ContextSeparatorItem())

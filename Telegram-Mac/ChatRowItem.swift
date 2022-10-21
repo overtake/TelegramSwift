@@ -443,6 +443,11 @@ class ChatRowItem: TableRowItem {
     }
     
     var hasPhoto: Bool {
+        if let adAttribute = message?.adAttribute {
+            if adAttribute.displayAvatar {
+                return true
+            }
+        }
         if !isBubbled {
             if case .Full = itemType {
                 return true
@@ -451,20 +456,17 @@ class ChatRowItem: TableRowItem {
             }
         } else {
             if let message = message, let peer = message.peers[message.id.peerId] {
-                switch chatInteraction.chatLocation {
-                case .peer, .thread:
-                    if chatInteraction.mode.threadId == effectiveCommentMessage?.id {
-                        return false
-                    }
-                    if (isIncoming && message.id.peerId == context.peerId) {
-                        return true
-                    }
-                    if message.id.peerId == repliesPeerId && message.author?.id != context.peerId {
-                        return true
-                    }
-                    if !peer.isUser && !peer.isSecretChat && !peer.isChannel && isIncoming {
-                        return true
-                    }
+                if chatInteraction.mode.threadId == effectiveCommentMessage?.id {
+                    return false
+                }
+                if (isIncoming && message.id.peerId == context.peerId) {
+                    return true
+                }
+                if message.id.peerId == repliesPeerId && message.author?.id != context.peerId {
+                    return true
+                }
+                if !peer.isUser && !peer.isSecretChat && !peer.isChannel && isIncoming {
+                    return true
                 }
             }
         }

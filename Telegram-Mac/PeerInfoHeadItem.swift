@@ -490,10 +490,13 @@ class PeerInfoHeadItem: GeneralRowItem {
         var result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge), highlightIfActivity: false), expanded: true)
         
         if let threadData = threadData {
-            result = result.withUpdatedTitle(threadData.info.title)
+            result = result
+                .withUpdatedTitle(threadData.info.title)
+                .withUpdatedStatus(strings().peerInfoTopicStatusIn(peer?.displayTitle ?? ""))
         }
-        
+
         self.result = result
+        
         
         nameLayout = TextViewLayout(result.title, maximumNumberOfLines: 1)
         statusLayout = TextViewLayout(result.status, maximumNumberOfLines: 1, alwaysStaticItems: true)
@@ -502,7 +505,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         super.init(initialSize, stableId: stableId, viewType: viewType)
         
         
-        if let cachedData = peerView.cachedData as? CachedChannelData {
+        if let cachedData = peerView.cachedData as? CachedChannelData, threadData == nil {
             let onlineMemberCount:Signal<Int32?, NoError>
             if (cachedData.participantsSummary.memberCount ?? 0) > 200 {
                 onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: peerView.peerId) |> map(Optional.init) |> deliverOnMainQueue
@@ -516,6 +519,7 @@ class PeerInfoHeadItem: GeneralRowItem {
                 var result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge)), onlineMemberCount: count)
                 if let threadData = threadData {
                     result = result.withUpdatedTitle(threadData.info.title)
+                    result = result.withUpdatedStatus(strings().peerInfoTopicStatusIn(peer?.displayTitle ?? ""))
                 }
                 if result != self.result {
                     self.result = result

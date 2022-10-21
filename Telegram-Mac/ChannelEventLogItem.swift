@@ -753,6 +753,14 @@ class ServiceEventLogItem: TableRowItem {
                     text = strings().channelAdminLogReactionsDisabled(peer.displayTitle)
                 }
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .createTopic(info):
+                let text = strings().channelEventLogServiceTopicCreated(peer.displayTitle, info.title)
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+            case let .editTopic(prevInfo, newInfo):
+                if prevInfo.title != newInfo.title {
+                    let text = strings().channelEventLogServiceTopicEdited(peer.displayTitle, newInfo.title)
+                    serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
+                }
             default:
                 break
             }

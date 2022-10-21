@@ -66,7 +66,7 @@ private enum ChannelPermissionsEntry: TableItemListNodeEntry {
     case kicked(Int32, Int32, String, String, GeneralViewType)
     case exceptionsHeader(Int32, Int32, String, GeneralViewType)
     case add(Int32, Int32, String, GeneralViewType)
-    case peerItem(Int32, Int32, RenderedChannelParticipant, ShortPeerDeleting?, Bool, Bool, TelegramChatBannedRightsFlags, GeneralViewType)
+    case peerItem(Int32, Int32, RenderedChannelParticipant, PeerEquatable, ShortPeerDeleting?, Bool, Bool, TelegramChatBannedRightsFlags, GeneralViewType)
     case slowModeHeader(Int32, GeneralViewType)
     case slowMode(Int32, Int32?, GeneralViewType)
     case slowDesc(Int32, Int32?, GeneralViewType)
@@ -96,7 +96,7 @@ private enum ChannelPermissionsEntry: TableItemListNodeEntry {
             return .index(1008)
         case let .section(section):
             return .section(section)
-        case let .peerItem( _, _, participant, _, _, _, _, _):
+        case let .peerItem( _, _, participant, _, _, _, _, _, _):
             return .peer(participant.peer.id)
         }
     }
@@ -127,7 +127,7 @@ private enum ChannelPermissionsEntry: TableItemListNodeEntry {
             return (section * 1000) + index
         case let .section(section):
             return (section + 1) * 1000 - section
-        case let .peerItem(section, index, _, _, _, _, _, _):
+        case let .peerItem(section, index, _, _, _, _, _, _, _):
              return (section * 1000) + index
         }
     }
@@ -169,7 +169,7 @@ private enum ChannelPermissionsEntry: TableItemListNodeEntry {
                 arguments.addPeer()
             }, thumb: GeneralThumbAdditional(thumb: theme.icons.peerInfoAddMember, textInset: 52, thumbInset: 5))
           
-        case let .peerItem(_, _, participant, _, enabled, canOpen, defaultBannedRights, viewType):
+        case let .peerItem(_, _, participant, peer, _, enabled, canOpen, defaultBannedRights, viewType):
             var text: String?
             switch participant.participant {
             case let .member(_, _, _, banInfo, _):
@@ -180,7 +180,7 @@ private enum ChannelPermissionsEntry: TableItemListNodeEntry {
                             if !exceptionsString.isEmpty {
                                 exceptionsString.append(", ")
                             }
-                            exceptionsString.append(compactStringForGroupPermission(right: rights))
+                            exceptionsString.append(compactStringForGroupPermission(right: rights, channel: peer.peer as? TelegramChannel))
                         }
                     }
                     text = exceptionsString
@@ -230,7 +230,7 @@ private struct ChannelPermissionsControllerState: Equatable {
     var modifiedRightsFlags: TelegramChatBannedRightsFlags?
 }
 
-func stringForGroupPermission(right: TelegramChatBannedRightsFlags) -> String {
+func stringForGroupPermission(right: TelegramChatBannedRightsFlags, channel: TelegramChannel?) -> String {
     if right.contains(.banSendMessages) {
         return strings().channelBanUserPermissionSendMessages
     } else if right.contains(.banSendMedia) {
@@ -246,13 +246,17 @@ func stringForGroupPermission(right: TelegramChatBannedRightsFlags) -> String {
     } else if right.contains(.banAddMembers) {
         return strings().channelBanUserPermissionAddMembers
     } else if right.contains(.banPinMessages) {
-        return strings().channelEditAdminPermissionPinMessages
+        if let channel = channel, channel.isForum {
+            return strings().channelEditAdminPermissionCreateTopics
+        } else {
+            return strings().channelEditAdminPermissionPinMessages
+        }
     } else {
         return ""
     }
 }
 
-func compactStringForGroupPermission(right: TelegramChatBannedRightsFlags) -> String {
+func compactStringForGroupPermission(right: TelegramChatBannedRightsFlags, channel: TelegramChannel?) -> String {
     if right.contains(.banSendMessages) {
         return strings().groupPermissionNoSendMessages
     } else if right.contains(.banSendMedia) {
@@ -268,7 +272,11 @@ func compactStringForGroupPermission(right: TelegramChatBannedRightsFlags) -> St
     } else if right.contains(.banAddMembers) {
         return strings().groupPermissionNoAddMembers
     } else if right.contains(.banPinMessages) {
-        return strings().groupPermissionNoPinMessages
+        if let channel = channel, channel.isForum {
+            return strings().groupPermissionNoTopics
+        } else {
+            return strings().groupPermissionNoPinMessages
+        }
     } else {
         return ""
     }
@@ -361,7 +369,7 @@ private func channelPermissionsControllerEntries(view: PeerView, state: ChannelP
             if channel.addressName != nil && publicGroupRestrictedPermissions.contains(rights) {
                 enabled = nil
             }
-            entries.append(.permission(sectionId, index, stringForGroupPermission(right: rights), !effectiveRightsFlags.contains(rights), rights, enabled, bestGeneralViewType(permissionList, for: i)))
+            entries.append(.permission(sectionId, index, stringForGroupPermission(right: rights, channel: channel), !effectiveRightsFlags.contains(rights), rights, enabled, bestGeneralViewType(permissionList, for: i)))
             index += 1
         }
         
@@ -408,7 +416,7 @@ private func channelPermissionsControllerEntries(view: PeerView, state: ChannelP
             entries.append(.add(sectionId, index, strings().groupInfoPermissionsAddException, participants.isEmpty ? .singleItem : .firstItem))
             index += 1
             for (i, participant) in participants.enumerated() {
-                entries.append(.peerItem(sectionId, index, participant, ShortPeerDeleting(editable: true), state.removingPeerId != participant.peer.id, true, effectiveRightsFlags, i == 0 ? .innerItem : bestGeneralViewType(participants, for: i)))
+                entries.append(.peerItem(sectionId, index, participant, .init(channel), ShortPeerDeleting(editable: true), state.removingPeerId != participant.peer.id, true, effectiveRightsFlags, i == 0 ? .innerItem : bestGeneralViewType(participants, for: i)))
                 index += 1
             }
         }        
@@ -425,7 +433,7 @@ private func channelPermissionsControllerEntries(view: PeerView, state: ChannelP
         index += 1
         
         for (i, rights) in allGroupPermissionList.enumerated() {
-            entries.append(.permission(sectionId, index, stringForGroupPermission(right: rights), !effectiveRightsFlags.contains(rights), rights, true, bestGeneralViewType(allGroupPermissionList, for: i)))
+            entries.append(.permission(sectionId, index, stringForGroupPermission(right: rights, channel: nil), !effectiveRightsFlags.contains(rights), rights, true, bestGeneralViewType(allGroupPermissionList, for: i)))
             index += 1
         }
         

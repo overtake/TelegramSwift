@@ -321,8 +321,8 @@ class ContactsController: PeersListController {
     
     override func selectionDidChange(row:Int, item:TableRowItem, byClick:Bool, isNew:Bool) -> Void {
         
-        if let item = item as? ShortPeerRowItem, let navigation = navigationController {
-            
+        if let item = item as? ShortPeerRowItem {
+            let navigation = context.bindings.rootNavigation()
             if !isNew {
                 if let modalAction = navigation.modalAction {
                     navigation.controller.invokeNavigation(action: modalAction)

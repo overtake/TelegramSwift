@@ -48,7 +48,7 @@ private struct DstData : Codable {
 }
 
 
-private let version = 64
+private let version = 65
 
 final class TRLotData {
     
@@ -333,13 +333,13 @@ final class TRLotFileSupplyment {
                                 return body
                             })
                             
-                            length = compression_encode_buffer(dst, self.bufferSize, ui8, self.bufferSize, nil, COMPRESSION_LZ4)
+                            length = compression_encode_buffer(dst, self.bufferSize, ui8, self.bufferSize, nil, COMPRESSION_LZFSE)
                             dstDelta.deallocate()
                         }
                         
                         
                     } else {
-                        length = compression_encode_buffer(dst, self.bufferSize, address, self.bufferSize, nil, COMPRESSION_LZ4)
+                        length = compression_encode_buffer(dst, self.bufferSize, address, self.bufferSize, nil, COMPRESSION_LZFSE)
                     }
                     let _ = self.data.writeFrame(frame: Int(current.1), data: Data(bytes: dst, count: length))
                     dst.deallocate()
@@ -361,7 +361,7 @@ final class TRLotFileSupplyment {
                         let unsafeBufferPointer = dataBytes.bindMemory(to: UInt8.self)
                         let unsafePointer = unsafeBufferPointer.baseAddress!
 
-                        let _ = compression_decode_buffer(address, bufferSize, unsafePointer, data.count, nil, COMPRESSION_LZ4)
+                        let _ = compression_decode_buffer(address, bufferSize, unsafePointer, data.count, nil, COMPRESSION_LZFSE)
 
                         if let previous = previous, enableDifference {
                             previous.withUnsafeBytes { pointer in
