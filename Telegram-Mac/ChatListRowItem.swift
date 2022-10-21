@@ -656,9 +656,8 @@ class ChatListRowItem: TableRowItem {
                         self.forumTopicNameLayout = .init(topicNameAttributed, maximumNumberOfLines: 1)
                         
                         let selectedText:NSMutableAttributedString = topicNameAttributed.mutableCopy() as! NSMutableAttributedString
-                        if let color = selectedText.attribute(.selectedColor, at: 0, effectiveRange: nil) {
-                            selectedText.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedText.range)
-                        }
+                        selectedText.addAttribute(.foregroundColor, value: theme.colors.underSelectedColor, range: selectedText.range)
+
                         self.forumTopicNameSelectedLayout = .init(selectedText, maximumNumberOfLines: 1)
                     }
                     
@@ -883,7 +882,7 @@ class ChatListRowItem: TableRowItem {
         if isSecret {
             offset += 10
         }
-        if isTopic {
+        if isTopic && titleMode == .normal {
             offset += 30
         } else {
             offset += 50
@@ -905,7 +904,7 @@ class ChatListRowItem: TableRowItem {
         if let additionalBadgeNode = additionalBadgeNode {
             w += additionalBadgeNode.size.width + 15
         }
-        if isTopic {
+        if isTopic && titleMode == .normal {
             w += 30
         } else {
             w += 50
@@ -930,7 +929,7 @@ class ChatListRowItem: TableRowItem {
         if isPinned && badgeNode == nil {
             w += 15
         }
-        if isTopic {
+        if isTopic && titleMode == .normal {
             w += 30
         } else {
             w += 50
@@ -1507,30 +1506,34 @@ class ChatListRowItem: TableRowItem {
     }
     
     var ctxDisplayLayout:(TextNodeLayout, TextNode)? {
-        if isSelected && context.layout != .single, !(isForum && !isTopic) {
+        if isActiveSelected {
             return displaySelectedLayout
         }
         return displayLayout
     }
     
+    var isActiveSelected: Bool {
+        return isSelected && context.layout != .single && !(isForum && !isTopic)
+    }
+    
     var ctxChatNameLayout:TextViewLayout? {
-        if isSelected && context.layout != .single, !(isForum && !isTopic) {
+        if isActiveSelected {
             return chatNameSelectedLayout
         }
         return chatNameLayout
     }
     
     var ctxForumTopicNameLayout:TextViewLayout? {
-        if isSelected && context.layout != .single, !(isForum && !isTopic) {
-            return forumTopicNameLayout
+        if isActiveSelected {
+            return forumTopicNameSelectedLayout
         }
-        return forumTopicNameSelectedLayout
+        return forumTopicNameLayout
     }
     
     
     var ctxMessageText:TextViewLayout? {
         if self.activities.isEmpty {
-            if isSelected && context.layout != .single, !(isForum && !isTopic) {
+            if isActiveSelected {
                 return messageSelectedLayout
             }
             return messageLayout
@@ -1539,14 +1542,14 @@ class ChatListRowItem: TableRowItem {
     }
     
     var ctxDateLayout:(TextNodeLayout, TextNode)? {
-        if isSelected && context.layout != .single, !(isForum && !isTopic) {
+        if isActiveSelected {
             return dateSelectedLayout
         }
         return dateLayout
     }
     
     var ctxBadgeNode:BadgeNode? {
-        if isSelected && context.layout != .single, !(isForum && !isTopic) {
+        if isActiveSelected {
             return badgeSelectedNode
         }
         return badgeNode
@@ -1560,7 +1563,7 @@ class ChatListRowItem: TableRowItem {
 //    }
     
     var ctxAdditionalBadgeNode:BadgeNode? {
-        if isSelected && context.layout != .single, !(isForum && !isTopic) {
+        if isActiveSelected {
             return additionalBadgeSelectedNode
         }
         return additionalBadgeNode

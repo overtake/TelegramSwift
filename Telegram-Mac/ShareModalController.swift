@@ -1368,7 +1368,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         } |> take(1)
         filter = showModalProgress(signal: filter, for: context.window)
         let signal: Signal<[EngineChatList.Item], NoError> = combineLatest(filter, self.search.get()) |> map { update, query in
-            let items = update.list.items.filter {
+            let items = update.list.items.reversed().filter {
                 $0.renderedPeer.peer?._asPeer().canSendMessage(true, threadData: $0.threadData) ?? true
             }
             if query.request.isEmpty {

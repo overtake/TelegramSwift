@@ -1036,7 +1036,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
             interactions.localizeLinkCopy = globalLinkExecutor.localizeLinkCopy
 
             
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoSharelink, copyMenuText: strings().textCopyLabelShareLink, text: text, context: arguments.context, viewType: viewType, detectLinks: true, isTextSelectable: value.count > 1, callback: arguments.share, selectFullWord: true, _copyToClipboard: {
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoSharelink, copyMenuText: strings().textCopyLabelShareLink, labelColor: value.count > 1 ? theme.colors.text : theme.colors.accent, text: text, context: arguments.context, viewType: viewType, detectLinks: true, isTextSelectable: value.count > 1, callback: arguments.share, selectFullWord: true, _copyToClipboard: {
                 arguments.copy(link)
             }, linkInteractions: interactions)
         case let .report(_, viewType):

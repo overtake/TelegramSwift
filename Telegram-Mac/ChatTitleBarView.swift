@@ -815,7 +815,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     }
     
     private func updateTitle(_ force: Bool = false, presentation: ChatPresentationInterfaceState) {
-        if let peerView = self.peerView {
+        if let peerView = self.peerView, let peer = peerViewMainPeer(peerView) {
             var result = stringStatus(for: peerView, context: chatInteraction.context, theme: PeerStatusStringTheme(titleFont: .medium(.title)), onlineMemberCount: self.counters.online)
             
             if chatInteraction.mode == .pinned {
@@ -836,7 +836,9 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 case .replies:
                     result = result.withUpdatedTitle(strings().chatTitleRepliesCountable(Int(self.counters.replies ?? 0)))
                 case .topic:
-                    result = result.withUpdatedTitle(presentation.threadInfo?.info.title ?? "")
+                    result = result
+                        .withUpdatedTitle(presentation.threadInfo?.info.title ?? "")
+                        .withUpdatedStatus(strings().peerInfoTopicStatusIn(peer.displayTitle))
                 }
                 switch mode {
                 case .topic:

@@ -265,12 +265,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             updateLocalizationAndTheme(theme: theme)
         }
         
-        override func updateLocalizationAndTheme(theme: PresentationTheme) {
-            super.updateLocalizationAndTheme(theme: theme)
-            let theme = theme as! TelegramPresentationTheme
-            imageView.image = theme.icons.chatlist_arrow
-            imageView.sizeToFit()
-        }
         
         override func layout() {
             super.layout()
@@ -278,7 +272,10 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         }
         
         func update(_ item: ChatListRowItem, animated: Bool) {
-            
+            imageView.image = item.isActiveSelected ? theme.icons.chatlist_arrow_active : theme.icons.chatlist_arrow
+
+            imageView.sizeToFit()
+            needsLayout = true
         }
         
         required init?(coder: NSCoder) {
