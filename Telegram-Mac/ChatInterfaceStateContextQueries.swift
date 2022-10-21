@@ -145,7 +145,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                 }))
             } else {
                 return (inputQuery, combineLatest(signal, recentUsedEmoji(postbox: context.account.postbox), animated) |> map { matches, emojies, animated -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
-                    var sorted = matches.sorted(by: { lhs, rhs in
+                    let sorted = matches.sorted(by: { lhs, rhs in
                         let lhsIndex = emojies.emojies.firstIndex(of: lhs) ?? Int.max
                         let rhsIndex = emojies.emojies.firstIndex(of: rhs) ?? Int.max
                         return lhsIndex < rhsIndex
@@ -155,7 +155,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                     
                     var selected: [TelegramMediaFile] = []
                     for sort in sorted {
-                        let files = animated.filter({ $0.customEmojiText?.fixed == sort.fixed})
+                        let files = animated.prefix(200).filter({ $0.customEmojiText?.fixed == sort.fixed})
                         for file in files {
                             selected.append(file)
                             toRemove.append(sort)
@@ -187,7 +187,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                     var toRemove: [String] = []
                     var selected: [TelegramMediaFile] = []
                     for sort in emojis.animated {
-                        let file = animated.filter({ $0.fileId == sort}).first
+                        let file = animated.prefix(200).filter({ $0.fileId == sort}).first
                         if let file = file {
                             selected.append(file)
                             if let text = file.customEmojiText {
@@ -591,7 +591,7 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
             
             if firstWord {
                 return (inputQuery, .single({ _ in return nil }) |> then(combineLatest(signal, recentUsedEmoji(postbox: context.account.postbox), animated) |> map { matches, emojies, animated -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
-                    var sorted = matches.sorted(by: { lhs, rhs in
+                    let sorted = matches.sorted(by: { lhs, rhs in
                         let lhsIndex = emojies.emojies.firstIndex(of: lhs) ?? Int.max
                         let rhsIndex = emojies.emojies.firstIndex(of: rhs) ?? Int.max
                         return lhsIndex < rhsIndex
@@ -601,7 +601,7 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
                     
                     var selected: [TelegramMediaFile] = []
                     for sort in sorted {
-                        let file = animated.filter({ $0.customEmojiText?.fixed == sort.fixed}).first
+                        let file = animated.prefix(200).filter({ $0.customEmojiText?.fixed == sort.fixed}).first
                         if let file = file {
                             selected.append(file)
                             toRemove.append(sort)
@@ -632,7 +632,7 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
                     
                     var selected: [TelegramMediaFile] = []
                     for sort in sorted {
-                        let file = animated.filter({ $0.customEmojiText?.fixed == sort.fixed}).first
+                        let file = animated.prefix(200).filter({ $0.customEmojiText?.fixed == sort.fixed}).first
                         if let file = file {
                             selected.append(file)
                             toRemove.append(sort)
@@ -663,7 +663,7 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
                     var toRemove: [String] = []
                     var selected: [TelegramMediaFile] = []
                     for sort in emojis.animated {
-                        let file = animated.filter({ $0.fileId == sort}).first
+                        let file = animated.prefix(200).filter({ $0.fileId == sort}).first
                         if let file = file {
                             selected.append(file)
                             if let text = file.customEmojiText {

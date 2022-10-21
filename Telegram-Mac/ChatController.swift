@@ -1582,7 +1582,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.grouppedFloatingPhotos = []
             return
         }
-        guard peer.isGroup || peer.isSupergroup || peer.id == context.peerId || peer.id == repliesPeerId, theme.bubbled else {
+        guard peer.isGroup || peer.isChannel || peer.isSupergroup || peer.id == context.peerId || peer.id == repliesPeerId, theme.bubbled else {
             self.grouppedFloatingPhotos = []
             return
         }
@@ -1603,7 +1603,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         for i in visibleItems.lowerBound ..< visibleItems.upperBound {
             let item = self.genericView.tableView.item(at: i)
             var skipOrFill = true
-            if let item = item as? ChatRowItem {
+            if let item = item as? ChatRowItem, item.hasPhoto {
                 if item.canHasFloatingPhoto {
                     let prev = current.last
                     let sameAuthor = prev?.lastMessage?.author?.id == item.lastMessage?.author?.id
@@ -2193,13 +2193,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         self.historyDisposable.set(appliedTransition.start())
         
-        let canRead: Signal<Bool, NoError>
+        var canRead: Signal<Bool, NoError>
         if let isLocked = appDelegate?.isLocked() {
             canRead = isLocked
             |> map { !$0 }
         } else {
             canRead = .single(true)
         }
+        canRead = combineLatest(canRead, self.isKeyWindow.get()) |> map { $0 && $1 }
+        
         
         let previousMaxIncomingMessageIdByNamespace = Atomic<[MessageId.Namespace: MessageIndex]>(value: [:])
         let readHistory = combineLatest(self.maxVisibleIncomingMessageIndex.get(), canRead)
@@ -4335,53 +4337,57 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         
+        let getPinned:()-> Signal<ChatPinnedMessage?, NoError> = { [weak self] in
+            guard let `self` = self else {
+                return .single(nil)
+            }
+            let replyHistory: Signal<ChatHistoryViewUpdate, NoError> = preloadedChatHistoryViewForLocation(.Initial(count: 100), context: self.context, chatLocation: self.chatLocation, chatLocationContextHolder: self.chatLocationContextHolder, tagMask: MessageTags.pinned, additionalData: [])
+            
+            return combineLatest(queue: prepareQueue,
+                replyHistory,
+                self.topVisibleMessageRange.get(), self.dismissedPinnedIds.get()
+                )
+                |> map { update, topVisibleMessageRange, dismissed -> ChatPinnedMessage? in
+                    var message: ChatPinnedMessage?
+                    switch update {
+                    case .Loading:
+                        break
+                    case let .HistoryView(view, _, _, _):
+                        for i in 0 ..< view.entries.count {
+                            let entry = view.entries[i]
+                            var matches = false
+                            if message == nil {
+                                matches = !dismissed.ids.contains(entry.message.id)
+                            } else if let topVisibleMessageRange = topVisibleMessageRange {
+                                if entry.message.id <= topVisibleMessageRange.lowerBound {
+                                    matches = !dismissed.ids.contains(entry.message.id)
+                                }
+                            }
+                            if let tempMaxId = dismissed.tempMaxId {
+                                var effectiveMatches = matches && entry.message.id < tempMaxId
+                                
+                                if matches, message == nil, i == view.entries.count - 1 {
+                                    effectiveMatches = true
+                                }
+                                matches = effectiveMatches
+                            }
+                            if matches {
+                                message = ChatPinnedMessage(messageId: entry.message.id, message: entry.message, others: view.entries.map { $0.message.id }, isLatest: i == view.entries.count - 1, index: view.entries.count - 1 - i, totalCount: view.entries.count)
+                            }
+                        }
+                        break
+                    }
+                    return message
+                }
+                |> distinctUntilChanged
+        }
+        
         let topPinnedMessage: Signal<ChatPinnedMessage?, NoError>
         switch mode {
         case .history:
-            switch self.chatLocation {
-            case let .peer(peerId):
-                let replyHistory: Signal<ChatHistoryViewUpdate, NoError> = preloadedChatHistoryViewForLocation(.Initial(count: 100), context: self.context, chatLocation: .peer(peerId), chatLocationContextHolder: self.chatLocationContextHolder, tagMask: MessageTags.pinned, additionalData: [])
-                
-                topPinnedMessage = combineLatest(queue: prepareQueue,
-                    replyHistory,
-                    self.topVisibleMessageRange.get(), self.dismissedPinnedIds.get()
-                    )
-                    |> map { update, topVisibleMessageRange, dismissed -> ChatPinnedMessage? in
-                        var message: ChatPinnedMessage?
-                        switch update {
-                        case .Loading:
-                            break
-                        case let .HistoryView(view, _, _, _):
-                            for i in 0 ..< view.entries.count {
-                                let entry = view.entries[i]
-                                var matches = false
-                                if message == nil {
-                                    matches = !dismissed.ids.contains(entry.message.id)
-                                } else if let topVisibleMessageRange = topVisibleMessageRange {
-                                    if entry.message.id <= topVisibleMessageRange.lowerBound {
-                                        matches = !dismissed.ids.contains(entry.message.id)
-                                    }
-                                }
-                                if let tempMaxId = dismissed.tempMaxId {
-                                    var effectiveMatches = matches && entry.message.id < tempMaxId
-                                    
-                                    if matches, message == nil, i == view.entries.count - 1 {
-                                        effectiveMatches = true
-                                    }
-                                    matches = effectiveMatches
-                                }
-                                if matches {
-                                    message = ChatPinnedMessage(messageId: entry.message.id, message: entry.message, others: view.entries.map { $0.message.id }, isLatest: i == view.entries.count - 1, index: view.entries.count - 1 - i, totalCount: view.entries.count)
-                                }
-                            }
-                            break
-                        }
-                        return message
-                    }
-                    |> distinctUntilChanged
-            default:
-                topPinnedMessage = .single(nil)
-            }
+            let replyHistory: Signal<ChatHistoryViewUpdate, NoError> = preloadedChatHistoryViewForLocation(.Initial(count: 100), context: self.context, chatLocation: self.chatLocation, chatLocationContextHolder: self.chatLocationContextHolder, tagMask: MessageTags.pinned, additionalData: [])
+            
+            topPinnedMessage = getPinned()
         case .pinned:
             let replyHistory: Signal<ChatHistoryViewUpdate, NoError> = (chatHistoryViewForLocation(.Initial(count: 100), context: self.context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: MessageTags.pinned, additionalData: [])
                 |> castError(Bool.self)
@@ -4423,7 +4429,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                 }
             } else {
-                topPinnedMessage = .single(nil)
+                topPinnedMessage = getPinned()
             }
             
         default:
@@ -4985,8 +4991,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             guard let `self` = self else {return}
             let tableView = self.genericView.tableView
             let chatInteraction = self.chatInteraction
-            switch self.mode {
-            case .thread:
+            if self.mode.isThreadMode {
                 if let pinnedMessageId = chatInteraction.presentation.pinnedMessageId, position.visibleRows.location != NSNotFound {
                     var hidden: Bool = false
                     for row in position.visibleRows.min ..< position.visibleRows.max {
@@ -4997,8 +5002,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                     chatInteraction.update({$0.withUpdatedHidePinnedMessage(hidden)})
                 }
-            default:
-                break
             }
         }))
         
@@ -6547,20 +6550,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             context.account.viewTracker.updateReactionsForMessageIds(messageIds: messageIds.filter({$0.namespace == Namespaces.Message.Cloud}))
         }
         
-        self.location.set(peerView.get() |> take(1) |> deliverOnMainQueue |> map { [weak self] view -> ChatHistoryLocation in
-            
-            if let strongSelf = self {
-                let count = Int(round(strongSelf.view.frame.height / 28)) + 2
-                let location:ChatHistoryLocation
-                if let messageId = messageId {
-                    location = .InitialSearch(location: .id(messageId), count: count + 10)
-                } else {
-                    location = .Initial(count: count)
-                }
-                return location
-            }
-            return .Initial(count: 30)
-        })
         
         let initialLocation = peerView.get()
         |> take(1)
@@ -6570,10 +6559,25 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let strongSelf = self {
                 let count = Int(round(strongSelf.view.frame.height / 28)) + 2
                 let location:ChatHistoryLocation
-                if let messageId = messageId {
-                    location = .InitialSearch(location: .id(messageId), count: max(count, 50))
-                } else {
-                    location = .Initial(count: count)
+                
+                switch mode {
+                case let .thread(data, _):
+                    switch data.initialAnchor {
+                    case .automatic:
+                        if let messageId = messageId {
+                            location = .InitialSearch(location: .id(messageId), count: count + 10)
+                        } else {
+                            location = .Initial(count: count + 10)
+                        }
+                    case let .lowerBoundMessage(index):
+                        location = .Scroll(index: .message(index), anchorIndex: .message(index), sourceIndex: .message(index), scrollPosition: .up(false), count: count + 10, animated: false)
+                    }
+                default:
+                    if let messageId = messageId {
+                        location = .InitialSearch(location: .id(messageId), count: count + 10)
+                    } else {
+                        location = .Initial(count: count)
+                    }
                 }
                 strongSelf.setLocation(location)
             }

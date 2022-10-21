@@ -214,8 +214,8 @@ class ChatListRowItem: TableRowItem {
     }
     
     var canDeleteTopic: Bool {
-        if isTopic, let peer = peer, peer.isAdmin {
-            if !peer.hasBannedRights(.banPinMessages) {
+        if isTopic, let peer = peer as? TelegramChannel, peer.isAdmin {
+            if peer.hasPermission(.pinMessages) {
                 return true
             }
         }

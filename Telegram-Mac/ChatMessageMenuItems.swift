@@ -85,7 +85,7 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
     let pinnedMessage = chatInteraction.presentation.pinnedMessageId
     let peerId = chatInteraction.peerId
     let peer = chatInteraction.peer
-    let canPinMessage = chatInteraction.presentation.canPinMessage && peerId.namespace != Namespaces.Peer.SecretChat && !chatInteraction.mode.isTopicMode && !chatInteraction.mode.isThreadMode
+    let canPinMessage = chatInteraction.presentation.canPinMessage && peerId.namespace != Namespaces.Peer.SecretChat
     let additionalData = entry?.additionalData ?? MessageEntryAdditionalData()
     
     

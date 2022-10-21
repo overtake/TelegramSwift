@@ -1223,6 +1223,8 @@ public final class L10n {
   public static var channelEditAdminPermissionBanUsers: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.BanUsers") }
   /// Change Channel Info
   public static var channelEditAdminPermissionChangeInfo: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.ChangeInfo") }
+  /// Create Topics
+  public static var channelEditAdminPermissionCreateTopics: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.CreateTopics") }
   /// Delete Messages
   public static var channelEditAdminPermissionDeleteMessages: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.DeleteMessages") }
   /// Edit Messages
@@ -1326,6 +1328,14 @@ public final class L10n {
   /// %@ edited this channel's title:
   public static func channelEventLogServiceTitleUpdated(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.Service.TitleUpdated", p1)
+  }
+  /// %1$@ created topic "%2$@"
+  public static func channelEventLogServiceTopicCreated(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.Service.TopicCreated", p1, p2)
+  }
+  /// %1$@ edited topic name to "%2$@"
+  public static func channelEventLogServiceTopicEdited(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.Service.TopicEdited", p1, p2)
   }
   /// %@ joined the channel
   public static func channelEventLogServiceUpdateJoin(_ p1: String) -> String {
@@ -5577,6 +5587,8 @@ public final class L10n {
   public static var groupPermissionNoSendPolls: String  { return L10n.tr("Localizable", "GroupPermission.NoSendPolls") }
   /// This permission is not available in public groups.
   public static var groupPermissionNotAvailableInPublicGroups: String  { return L10n.tr("Localizable", "GroupPermission.NotAvailableInPublicGroups") }
+  /// no topics
+  public static var groupPermissionNoTopics: String  { return L10n.tr("Localizable", "GroupPermission.NoTopics") }
   /// WHAT CAN THIS MEMBER DO?
   public static var groupPermissionSectionTitle: String  { return L10n.tr("Localizable", "GroupPermission.SectionTitle") }
   /// Exception
@@ -7667,6 +7679,10 @@ public final class L10n {
   public static var peerInfoReportReactionSuccess: String  { return L10n.tr("Localizable", "PeerInfo.ReportReaction.Success") }
   /// Append names of the admins to the messages they post.
   public static var peerInfoSignMessagesDesc: String  { return L10n.tr("Localizable", "PeerInfo.SignMessages.Desc") }
+  /// in %1$@
+  public static func peerInfoTopicStatusIn(_ p1: String) -> String {
+    return L10n.tr("Localizable", "PeerInfo.TopicStatus.In", p1)
+  }
   /// %1$@\nalso %2$@
   public static func peerInfoUsernamesList(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "PeerInfo.Usernames.List", p1, p2)

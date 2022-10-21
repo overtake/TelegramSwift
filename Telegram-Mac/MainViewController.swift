@@ -600,6 +600,11 @@ class MainViewController: TelegramViewController {
         self.tabController.current?.viewDidAppear(animated)
     }
     
+    func globalSearch(_ query: String) {
+        let controller = navigation.controller as? ChatListController
+        controller?.globalSearch(query)
+    }
+    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigation.viewWillAppear(animated)
