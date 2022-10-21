@@ -635,7 +635,7 @@ class ChatControllerView : View, ChatInputDelegate {
 
     
         var voiceChat: ChatActiveGroupCallInfo?
-        if interfaceState.groupCall?.data?.groupCall == nil {
+        if interfaceState.groupCall?.data?.groupCall == nil, interfaceState.threadInfo == nil {
             if let data = interfaceState.groupCall?.data, data.participantCount == 0 && interfaceState.groupCall?.activeCall.scheduleTimestamp == nil {
                 voiceChat = nil
             } else {

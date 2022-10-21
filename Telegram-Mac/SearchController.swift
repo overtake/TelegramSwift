@@ -842,9 +842,11 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     location = .peer(peerId: peerId, fromId: nil, tags: globalTags.messageTags, topMsgId: nil, minDate: nil, maxDate: nil)
                     foundRemotePeers = .single(([], [], false))
                     
-                    let topics: Signal<[EngineChatList.Item], NoError> = chatListViewForLocation(chatListLocation: .forum(peerId: peerId), location: .Initial(0, nil), filter: nil, account: context.account) |> map { view in
+                    let topics: Signal<[EngineChatList.Item], NoError> = chatListViewForLocation(chatListLocation: .forum(peerId: peerId), location: .Initial(0, nil), filter: nil, account: context.account) |> filter { view in
+                        return !view.list.isLoading
+                    } |> take(1) |> map { view in
                         
-                        return view.list.items.filter { item in
+                        return view.list.items.reversed().filter { item in
                             let string = item.threadData?.info.title ?? ""
                             
                             var all = query.lowercased().transformKeyboard
@@ -889,8 +891,10 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             var entries: [ChatListSearchEntry] = []
                             var index = 20001
                             for message in result.0.messages {
-                                entries.append(.message(message, query, result.0.readStates[message.id.peerId], result.0.threadInfo[message.id], index))
-                                index += 1
+                                if let threadInfo = result.0.threadInfo[message.id] {
+                                    entries.append(.message(message, query, result.0.readStates[message.id.peerId], threadInfo, index))
+                                    index += 1
+                                }
                             }
                             
                             return (entries, false, result.1, result.0)
@@ -1065,7 +1069,39 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     return (value.0, value.1, true, nil, nil)
                 }
             } else {
-                return .single(([], false, true, nil, nil))
+                switch target {
+                case let .forum(peerId):
+                    let topics: Signal<[EngineChatList.Item], NoError> = chatListViewForLocation(chatListLocation: .forum(peerId: peerId), location: .Initial(0, nil), filter: nil, account: context.account) |> filter { view in
+                        return !view.list.isLoading
+                    } |> map { view in
+                        return view.list.items.reversed()
+                    } |> take(1)
+                    let foundLocalPeers: Signal<[ChatListSearchEntry], NoError> = topics |> map { items in
+                        var local: [ChatListSearchEntry] = []
+                        var index = 1000
+                        for item in items {
+                            let badge: UnreadSearchBadge
+                            if let count = item.readCounters?.count, count > 0 {
+                                if item.isMuted {
+                                    badge = .muted(count)
+                                } else {
+                                    badge = .unmuted(count)
+                                }
+                            } else {
+                                badge = .none
+                            }
+                            local.append(.topic(item, index, badge, true, false))
+                            index += 1
+                        }
+                        return local
+                    }
+                    
+                    return foundLocalPeers |> map {
+                        return ($0, false, true, nil, nil)
+                    }
+                default:
+                    return .single(([], false, true, nil, nil))
+                }
             }
         }
         
