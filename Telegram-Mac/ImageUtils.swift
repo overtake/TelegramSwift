@@ -99,7 +99,7 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                             
                         var image:CGImage?
                         if let data = data {
-                            image = roundImage(data, displayDimensions, cornerRadius: isForum ? displayDimensions.width / 3 * 2 : -1, scale: scale)
+                            image = roundImage(data, displayDimensions, cornerRadius: isForum ? displayDimensions.width / 3 : -1, scale: scale)
                         } else {
                             image = nil
                         }

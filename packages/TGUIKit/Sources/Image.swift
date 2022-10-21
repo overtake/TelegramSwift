@@ -29,11 +29,14 @@ public func roundImage(_ data:Data, _ s:NSSize, cornerRadius:CGFloat = -1, rever
                         endAngle = endAngle - Float(Double.pi / 2)
                         ctx.addArc(center: center, radius: CGFloat(radius), startAngle: CGFloat(startAngle), endAngle: CGFloat(endAngle), clockwise: false)
                     } else if cornerRadius > 0 {
-                        
+                        var cornerRadius = cornerRadius * 2
                         let minx:CGFloat = 0, midx = size.width/2.0, maxx = size.width
                         let miny:CGFloat = 0, midy = size.height/2.0, maxy = size.height
                         
-                    
+                        if size.width < 40, cornerRadius / 2 == size.width / 3 {
+                            cornerRadius = size.width / 3
+                        }
+                        
                         ctx.move(to: NSMakePoint(minx, midy))
                         ctx.addArc(tangent1End: NSMakePoint(minx, miny), tangent2End: NSMakePoint(midx, miny), radius: cornerRadius)
                         ctx.addArc(tangent1End: NSMakePoint(maxx, miny), tangent2End: NSMakePoint(maxx, midy), radius: cornerRadius)

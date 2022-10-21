@@ -530,7 +530,9 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 items.append(ContextSeparatorItem())
             }
             for peer in recent {
-                items.append(makeItem(peer))
+                if peer.id.namespace != Namespaces.Peer.SecretChat {
+                    items.append(makeItem(peer))
+                }
             }
             if !recent.isEmpty {
                 items.append(ContextSeparatorItem())
@@ -542,7 +544,9 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 items.append(ContextSeparatorItem())
             }
             for peer in dialogs {
-                items.append(makeItem(peer))
+                if peer.id.namespace != Namespaces.Peer.SecretChat {
+                    items.append(makeItem(peer))
+                }
             }
             if !items.isEmpty {
                 items.append(ContextSeparatorItem())

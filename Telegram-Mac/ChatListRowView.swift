@@ -255,14 +255,50 @@ private final class GroupCallActivity : View {
 
 class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
+    private final class ForumTopicArrow : View {
+        private let imageView = ImageView()
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(imageView)
+            self.isEventLess = true
+            self.imageView.isEventLess = true
+            updateLocalizationAndTheme(theme: theme)
+        }
+        
+        override func updateLocalizationAndTheme(theme: PresentationTheme) {
+            super.updateLocalizationAndTheme(theme: theme)
+            let theme = theme as! TelegramPresentationTheme
+            imageView.image = theme.icons.chatlist_arrow
+            imageView.sizeToFit()
+        }
+        
+        override func layout() {
+            super.layout()
+            imageView.centerY(x: 0)
+        }
+        
+        func update(_ item: ChatListRowItem, animated: Bool) {
+            
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
+    
     private let revealLeftView: View = View()
     
     private var internalDelta: CGFloat?
     
     private let revealRightView: View = View()
-    private var titleText:TextNode = TextNode()
-    private var messageTextView:TextView? = nil
     
+    private var messageTextView:TextView? = nil
+    private var chatNameTextView: TextView? = nil
+    
+    
+    private var forumTopicTextView: TextView? = nil
+    private var forumTopicNameIcon: ForumTopicArrow?
+
     private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
     
     private var inlineTopicPhotoLayer: InlineStickerItemLayer?
@@ -527,13 +563,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     if let statusControl = statusControl {
                         addition += statusControl.frame.width + 1
                     }
-                    
-                    var messageOffset: CGFloat = 0
-                    if let chatNameLayout = item.ctxChatNameLayout, !hiddenMessage {
-                        chatNameLayout.1.draw(NSMakeRect(item.leftInset, displayLayout.0.size.height + item.margin + 2, chatNameLayout.0.size.width, chatNameLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
-                        messageOffset += chatNameLayout.0.size.height + 2
-                    }
-                    
+
                     if item.isMuted {
                         let icon = theme.icons.dialogMuteImage
                         let activeIcon = theme.icons.dialogMuteImageSelected
@@ -775,6 +805,57 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  
              } else if let view = self.messageTextView {
                  self.messageTextView = nil
+                 performSubviewRemoval(view, animated: false)
+             }
+             
+             if let nameText = item.ctxChatNameLayout, !hiddenMessage, item.context.layout != .minimisize {
+                 let current: TextView
+                 if let view = self.chatNameTextView {
+                     current = view
+                 } else {
+                     current = TextView()
+                     current.userInteractionEnabled = false
+                     current.isSelectable = false
+                     self.chatNameTextView = current
+                     self.containerView.addSubview(current)
+                 }
+                 current.update(nameText)
+                 
+             } else if let view = self.chatNameTextView {
+                 self.chatNameTextView = nil
+                 performSubviewRemoval(view, animated: false)
+             }
+             
+             if let nameText = item.ctxForumTopicNameLayout, !hiddenMessage, item.context.layout != .minimisize {
+                 let current: TextView
+                 if let view = self.forumTopicTextView {
+                     current = view
+                 } else {
+                     current = TextView()
+                     current.userInteractionEnabled = false
+                     current.isSelectable = false
+                     self.forumTopicTextView = current
+                     self.containerView.addSubview(current)
+                 }
+                 current.update(nameText)
+                 
+             } else if let view = self.forumTopicTextView {
+                 self.forumTopicTextView = nil
+                 performSubviewRemoval(view, animated: false)
+             }
+             
+             if item.hasForumIcon, !hiddenMessage, item.context.layout != .minimisize {
+                 let current: ForumTopicArrow
+                 if let view = self.forumTopicNameIcon {
+                     current = view
+                 } else {
+                     current = ForumTopicArrow(frame: NSMakeRect(0, 0, 8, 18))
+                     self.forumTopicNameIcon = current
+                     self.containerView.addSubview(current)
+                 }
+                 current.update(item, animated: animated)
+             } else if let view = self.forumTopicNameIcon {
+                 self.forumTopicNameIcon = nil
                  performSubviewRemoval(view, animated: false)
              }
              
@@ -1899,7 +1980,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             if let displayLayout = item.ctxDisplayLayout {
                 var offset: CGFloat = 0
                 if let chatName = item.ctxChatNameLayout {
-                    offset += chatName.0.size.height + 1
+                    offset += chatName.layoutSize.height + 1
                 }
                 
                 if let statusControl = statusControl {
@@ -1922,9 +2003,21 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
 
                 var messageOffset: CGFloat = 0
                 if let chatNameLayout = item.ctxChatNameLayout {
-                    messageOffset += chatNameLayout.0.size.height + 2
+                    messageOffset += chatNameLayout.layoutSize.height + 2
                 }
-                messageTextView?.setFrameOrigin(NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 1 + messageOffset))
+                if let messageTextView = messageTextView {
+                    messageTextView.setFrameOrigin(NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 1 + messageOffset))
+                }
+                
+                if let chatNameTextView = chatNameTextView {
+                    chatNameTextView.setFrameOrigin(NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 2))
+                    if let forumTopicNameIcon = forumTopicNameIcon {
+                        forumTopicNameIcon.setFrameOrigin(NSMakePoint(chatNameTextView.frame.maxX + 2, displayLayout.0.size.height + item.margin + 2))
+                    }
+                    if let forumTopicTextView = forumTopicTextView {
+                        forumTopicTextView.setFrameOrigin(NSMakePoint(chatNameTextView.frame.maxX + 12, displayLayout.0.size.height + item.margin + 2))
+                    }
+                }
             }
             
         }
