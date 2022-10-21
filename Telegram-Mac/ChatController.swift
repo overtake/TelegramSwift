@@ -1302,10 +1302,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let startSecretChatDisposable = MetaDisposable()
     private let inputSwapDisposable = MetaDisposable()
     private let searchState: ValuePromise<SearchMessagesResultState> = ValuePromise(SearchMessagesResultState("", []), ignoreRepeated: true)
-    
-    private let pollAnswersLoading: ValuePromise<[MessageId : ChatPollStateData]> = ValuePromise([:], ignoreRepeated: true)
-    private let pollAnswersLoadingValue: Atomic<[MessageId : ChatPollStateData]> = Atomic(value: [:])
 
+    
     private let topVisibleMessageRange = ValuePromise<ChatTopVisibleMessageRange?>(nil, ignoreRepeated: true)
     private let dismissedPinnedIds = ValuePromise<ChatDismissedPins>(ChatDismissedPins(ids: [], tempMaxId: nil), ignoreRepeated: true)
 
@@ -1316,12 +1314,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let chatThemeValue: Promise<(String?, TelegramPresentationTheme)> = Promise((nil, theme))
     private let chatThemeTempValue: Promise<TelegramPresentationTheme?> = Promise(nil)
 
-    private var pollAnswersLoadingSignal: Signal<[MessageId : ChatPollStateData], NoError> {
-        return pollAnswersLoading.get()
-    }
-    private func updatePoll(_ f:([MessageId : ChatPollStateData])-> [MessageId : ChatPollStateData]) -> Void {
-        pollAnswersLoading.set(pollAnswersLoadingValue.modify(f))
-    }
     
     private let threadLoading: ValuePromise<MessageId?> = ValuePromise(nil, ignoreRepeated: true)
     private let threadLoadingValue: Atomic<MessageId?> = Atomic(value: nil)
@@ -1400,11 +1392,25 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
    
     private var themeSelector: ChatThemeSelectorController? = nil
     
+    
+    
     private let transribeState: Atomic<[MessageId: TranscribeAudioState]> = Atomic(value: [:])
     private let transribeStateValue: ValuePromise<[MessageId: TranscribeAudioState]> = ValuePromise([:], ignoreRepeated: true)
     private func updateTransribe(_ f:([MessageId: TranscribeAudioState])->[MessageId: TranscribeAudioState]) -> Void {
         transribeStateValue.set(transribeState.modify(f))
     }
+    
+    private let pollAnswersLoading: ValuePromise<[MessageId : ChatPollStateData]> = ValuePromise([:], ignoreRepeated: true)
+    private let pollAnswersLoadingValue: Atomic<[MessageId : ChatPollStateData]> = Atomic(value: [:])
+
+    private var pollAnswersLoadingSignal: Signal<[MessageId : ChatPollStateData], NoError> {
+        return pollAnswersLoading.get()
+    }
+    private func updatePoll(_ f:([MessageId : ChatPollStateData])-> [MessageId : ChatPollStateData]) -> Void {
+        pollAnswersLoading.set(pollAnswersLoadingValue.modify(f))
+    }
+    
+    
     private let transcribeDisposable = DisposableDict<MessageId>()
     
     private let messageProcessingManager = ChatMessageThrottledProcessingManager()

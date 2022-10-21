@@ -8884,6 +8884,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var chatlist_arrow: CGImage {
+      if let image = cached.with({ $0["chatlist_arrow"] }) {
+          return image
+      } else {
+          let image = _chatlist_arrow()
+          _ = cached.modify { current in 
+              var current = current
+              current["chatlist_arrow"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -9568,6 +9581,7 @@ public final class TelegramIconsTheme {
   private let _extend_content_lock: ()->CGImage
   private let _chatlist_forum_closed_topic: ()->CGImage
   private let _chatlist_forum_closed_topic_active: ()->CGImage
+  private let _chatlist_arrow: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -10252,7 +10266,8 @@ public final class TelegramIconsTheme {
       chat_premium_status_blue: @escaping()->CGImage,
       extend_content_lock: @escaping()->CGImage,
       chatlist_forum_closed_topic: @escaping()->CGImage,
-      chatlist_forum_closed_topic_active: @escaping()->CGImage
+      chatlist_forum_closed_topic_active: @escaping()->CGImage,
+      chatlist_arrow: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -10937,5 +10952,6 @@ public final class TelegramIconsTheme {
       self._extend_content_lock = extend_content_lock
       self._chatlist_forum_closed_topic = chatlist_forum_closed_topic
       self._chatlist_forum_closed_topic_active = chatlist_forum_closed_topic_active
+      self._chatlist_arrow = chatlist_arrow
   }
 }

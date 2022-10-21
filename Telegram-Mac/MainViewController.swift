@@ -641,7 +641,8 @@ class MainViewController: TelegramViewController {
     
     func openChat(_ index: Int, force: Bool = false) {
         if self.tabController.current == chatList {
-            chatList.openChat(index, force: force)
+            let current = navigation.controller as? ChatListController
+            current?.openChat(index, force: force)
         }
     }
 

@@ -788,6 +788,8 @@ func initialize() -> [String] {
     array.append("chatlist_forum_closed_topic")
     array.append("chatlist_forum_closed_topic_active")
     
+    array.append("chatlist_arrow")
+    
     return array
 }
 //swift ./tools/generate-images.swift

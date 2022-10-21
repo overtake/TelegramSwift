@@ -1161,7 +1161,9 @@ class ChatListController : PeersListController {
     }
     
     func openChat(_ index: Int, force: Bool = false) {
-        if case .folder = self.mode {
+        if case .forum = self.mode {
+            _openChat(index)
+        } else if case .folder = self.mode {
             _openChat(index)
         } else if force  {
             _openChat(index)

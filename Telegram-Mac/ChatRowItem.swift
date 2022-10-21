@@ -1714,10 +1714,10 @@ class ChatRowItem: TableRowItem {
             }
             
             let fillName: Bool
-            let rank: String?
+            var rank: String?
             switch itemType {
             case let .Full(r, header):
-                rank = r
+                rank = r 
                 fillName = header == .normal
             case let .Short(r, header):
                 rank = r

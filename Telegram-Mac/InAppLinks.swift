@@ -1498,10 +1498,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 if userAndPost.count >= 2 {
                     let name = userAndPost[0]
                     if name == "c" {
-                        let username = username.suffix(username.length - 2)
                         
                         if let context = context {
                             var post = userAndPost.count >= 3 ? (userAndPost[2].isEmpty ? nil : Int32(userAndPost[2])) : nil
+                            let username = userAndPost[1]
                             if userAndPost.count >= 3, let range = userAndPost[2].range(of: "?") {
                                 post = Int32(userAndPost[2][..<range.lowerBound])
                             }

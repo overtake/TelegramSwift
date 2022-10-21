@@ -114,6 +114,16 @@ class ChatListRowItem: TableRowItem {
     let renderedPeer:EngineRenderedPeer?
     let groupId: EngineChatList.Group
     let forumTopicData: EngineChatList.ForumTopicData?
+    
+    var hasForumIcon: Bool {
+        if forumTopicData != nil {
+            return true
+        } else if let peer = peer, peer.isForum, titleMode == .forumInfo, case let .topic(_, data) = mode {
+            return true
+        }
+        return false
+    }
+    
     let chatListIndex:ChatListIndex?
     var peerId:PeerId? {
         return renderedPeer?.peerId
@@ -159,28 +169,29 @@ class ChatListRowItem: TableRowItem {
     private var date:NSAttributedString?
 
     private var displayLayout:(TextNodeLayout, TextNode)?
-    private var chatNameLayout:(TextNodeLayout, TextNode)?
 
     private var messageLayout:TextViewLayout?
     private var messageSelectedLayout:TextViewLayout?
     
     
     
+    private var chatNameLayout:TextViewLayout?
+    private var chatNameSelectedLayout:TextViewLayout?
+
+    private var forumTopicNameLayout:TextViewLayout?
+    private var forumTopicNameSelectedLayout:TextViewLayout?
+
     
     private var displaySelectedLayout:(TextNodeLayout, TextNode)?
     private var dateLayout:(TextNodeLayout, TextNode)?
     private var dateSelectedLayout:(TextNodeLayout, TextNode)?
-    private var chatNameSelectedLayout:(TextNodeLayout, TextNode)?
 
     private var displayNode:TextNode = TextNode()
     private var displaySelectedNode:TextNode = TextNode()
-    private var chatNameSelectedNode:TextNode = TextNode()
-    private var chatNameNode:TextNode = TextNode()
 
-    private var messageText:NSAttributedString?
-    private let titleText:NSAttributedString?
-    private var chatTitleAttributed: NSAttributedString?
     
+    private let titleText:NSAttributedString?
+        
     private(set) var peerNotificationSettings:PeerNotificationSettings?
     private(set) var readState:EnginePeerReadCounters?
     
@@ -344,7 +355,7 @@ class ChatListRowItem: TableRowItem {
     let activities: [PeerListState.InputActivities.Activity]
     
     var toolTip: String? {
-        return messageText?.string
+        return messageLayout?.attributedString.string
     }
     
     private(set) var isOnline: Bool?
@@ -439,9 +450,9 @@ class ChatListRowItem: TableRowItem {
         }
         
         
-        
+        let messageText: NSAttributedString
         if groupItems.count == 1 {
-            self.messageText = chatListText(account: context.account, for: message, messagesCount: 1, folder: true)
+            messageText = chatListText(account: context.account, for: message, messagesCount: 1, folder: true)
         } else {
             let textString = NSMutableAttributedString(string: "")
             var isFirst = true
@@ -458,15 +469,15 @@ class ChatListRowItem: TableRowItem {
                     }
                 }
             }
-            self.messageText = textString
+            messageText = textString
         }
-        if let messageText = messageText?.mutableCopy() as? NSMutableAttributedString, !messageText.string
+        if let messageText = messageText.mutableCopy() as? NSMutableAttributedString, !messageText.string
             .isEmpty {
-            self.messageLayout = .init(messageText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2)
+            self.messageLayout = .init(messageText, maximumNumberOfLines: 2)
             let selectedText:NSMutableAttributedString = messageText.mutableCopy() as! NSMutableAttributedString
             if let color = selectedText.attribute(.selectedColor, at: 0, effectiveRange: nil) {
                 selectedText.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedText.range)
-                self.messageSelectedLayout = .init(selectedText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2)
+                self.messageSelectedLayout = .init(selectedText, maximumNumberOfLines: 2)
             }
         }
 
@@ -631,19 +642,39 @@ class ChatListRowItem: TableRowItem {
             
             if let author = author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, draft == nil {
                 if !(message.effectiveMedia is TelegramMediaAction) {
-                    var peerText: String = (author.id == context.account.peerId ? "\(strings().chatListYou)" : author.displayTitle)
+                    let peerText: String = (author.id == context.account.peerId ? "\(strings().chatListYou)" : author.displayTitle)
                     
+                    let topicNameAttributed = NSMutableAttributedString()
+
                     if let forumTopicData = forumTopicData, peer.isForum {
-                        peerText = strings().textArrow(peerText, forumTopicData.title)
+                        _ = topicNameAttributed.append(string: forumTopicData.title, color: theme.chatList.peerTextColor, font: .normal(.text))
                     } else if peer.isForum, titleMode == .forumInfo, case let .topic(_, data) = mode {
-                        peerText = strings().textArrow(peerText, data.info.title)
+                        _ = topicNameAttributed.append(string: data.info.title, color: theme.chatList.peerTextColor, font: .normal(.text))
+                    }
+
+                    if !topicNameAttributed.string.isEmpty {
+                        self.forumTopicNameLayout = .init(topicNameAttributed, maximumNumberOfLines: 1)
+                        
+                        let selectedText:NSMutableAttributedString = topicNameAttributed.mutableCopy() as! NSMutableAttributedString
+                        if let color = selectedText.attribute(.selectedColor, at: 0, effectiveRange: nil) {
+                            selectedText.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedText.range)
+                        }
+                        self.forumTopicNameSelectedLayout = .init(selectedText, maximumNumberOfLines: 1)
                     }
                     
                     let attr = NSMutableAttributedString()
                     _ = attr.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
                     attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
                     
-                    self.chatTitleAttributed = attr
+                    if !attr.string.isEmpty {
+                        self.chatNameLayout = .init(attr, maximumNumberOfLines: 1)
+                        
+                        let selectedText:NSMutableAttributedString = attr.mutableCopy() as! NSMutableAttributedString
+                        if let color = selectedText.attribute(.selectedColor, at: 0, effectiveRange: nil) {
+                            selectedText.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedText.range)
+                        }
+                        self.chatNameSelectedLayout = .init(selectedText, maximumNumberOfLines: 1)
+                    }
                 }
             }
             
@@ -736,6 +767,8 @@ class ChatListRowItem: TableRowItem {
             presenceManager?.reset(presence: presence, timeDifference: Int32(context.timeDifference))
         }
         
+        var messageText: NSAttributedString?
+        var textCutout: TextViewCutout?
         if case let .ad(promo) = pinnedType, message == nil {
             switch promo.promoInfo.content {
             case let .psa(_, message):
@@ -743,28 +776,25 @@ class ChatListRowItem: TableRowItem {
                     let attr = NSMutableAttributedString()
                     _ = attr.append(string: message, color: theme.colors.grayText, font: .normal(.text))
                     attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
-                    self.messageText = attr
+                    messageText = attr
                 }
             default:
                 break
             }
         } else {
-            let messageText = chatListText(account: context.account, for: message, messagesCount: messages.count, draft: draft, folder: false, applyUserName: false, isPremium: context.isPremium)
-            self.messageText = messageText
-            var textCutout: TextViewCutout?
+            messageText = chatListText(account: context.account, for: message, messagesCount: messages.count, draft: draft, folder: false, applyUserName: false, isPremium: context.isPremium)
             if !textLeftCutout.isZero {
                 textCutout = TextViewCutout(topLeft: CGSize(width: textLeftCutout, height: 14))
             }
+        }
+        if let messageText = messageText, !messageText.string.isEmpty {
+            self.messageLayout = .init(messageText, maximumNumberOfLines: chatNameLayout != nil ? 1 : 2, cutout: textCutout)
             
-            if !messageText.string.isEmpty {
-                self.messageLayout = .init(messageText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2, cutout: textCutout)
-                
-                let selectedText:NSMutableAttributedString = messageText.mutableCopy() as! NSMutableAttributedString
-                if let color = selectedText.attribute(.selectedColor, at: 0, effectiveRange: nil) {
-                    selectedText.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedText.range)
-                }
-                self.messageSelectedLayout = .init(selectedText, maximumNumberOfLines: chatTitleAttributed != nil ? 1 : 2, cutout: textCutout)
+            let selectedText:NSMutableAttributedString = messageText.mutableCopy() as! NSMutableAttributedString
+            if let color = selectedText.attribute(.selectedColor, at: 0, effectiveRange: nil) {
+                selectedText.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedText.range)
             }
+            self.messageSelectedLayout = .init(selectedText, maximumNumberOfLines: chatNameLayout != nil ? 1 : 2, cutout: textCutout)
         }
         
         _ = makeSize(initialSize.width, oldWidth: 0)
@@ -853,20 +883,60 @@ class ChatListRowItem: TableRowItem {
         if isSecret {
             offset += 10
         }
-        return max(300, size.width) - 50 - margin * 4 - dateSize - (isOutMessage ? isRead ? 14 : 8 : 0) - offset
+        if isTopic {
+            offset += 30
+        } else {
+            offset += 50
+        }
+        return max(300, size.width) - margin * 4 - dateSize - (isOutMessage ? isRead ? 14 : 8 : 0) - offset
     }
     
     var chatNameWidth:CGFloat {
-        var dateSize:CGFloat = 0
-        return max(300, size.width) - 50 - margin * 4 - dateSize - (isOutMessage ? isRead ? 14 : 8 : 0)
+        var w:CGFloat = 0
+        if let badgeNode = badgeNode {
+            w += badgeNode.size.width + 5
+        }
+        if let _ = mentionsCount {
+            w += 30
+        }
+        if let _ = reactionsCount {
+            w += 30
+        }
+        if let additionalBadgeNode = additionalBadgeNode {
+            w += additionalBadgeNode.size.width + 15
+        }
+        if isTopic {
+            w += 30
+        } else {
+            w += 50
+        }
+        return max(300, size.width) - margin * 4 - w - (isOutMessage ? isRead ? 14 : 8 : 0)
     }
     
     var messageWidth:CGFloat {
+        var w: CGFloat = 0
         if let badgeNode = badgeNode {
-            return (max(300, size.width) - 50 - margin * 3) - (badgeNode.size.width + 5) - (mentionsCount != nil ? 30 : 0) - (reactionsCount != nil ? 30 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0) - (chatTitleAttributed != nil ? textLeftCutout : 0)
+            w += badgeNode.size.width + 5
+        }
+        if let _ = mentionsCount {
+            w += 30
+        }
+        if let _ = reactionsCount {
+            w += 30
+        }
+        if let additionalBadgeNode = additionalBadgeNode {
+            w += additionalBadgeNode.size.width + 15
+        }
+        if isPinned && badgeNode == nil {
+            w += 15
+        }
+        if isTopic {
+            w += 30
+        } else {
+            w += 50
         }
         
-        return (max(300, size.width) - 50 - margin * 4) - (isPinned ? 20 : 0) - (mentionsCount != nil ? 24 : 0) - (reactionsCount != nil ? 24 : 0) - (additionalBadgeNode != nil ? additionalBadgeNode!.size.width + 15 : 0) - (chatTitleAttributed != nil ? textLeftCutout : 0)
+        return (max(300, size.width) - margin * 4) - w - (chatNameLayout != nil ? textLeftCutout : 0)
     }
     
     var leftInset:CGFloat {
@@ -895,14 +965,20 @@ class ChatListRowItem: TableRowItem {
             displaySelectedLayout = TextNode.layoutText(maybeNode: displaySelectedNode,  titleText, nil, isTopic ? 2 : 1, .end, NSMakeSize(titleWidth, size.height), nil, true, .left)
         }
         
-        if chatNameLayout == nil || !chatNameLayout!.0.isPerfectSized || self.oldWidth > width, let chatTitleAttributed = chatTitleAttributed {
-            chatNameLayout = TextNode.layoutText(maybeNode: chatNameNode, chatTitleAttributed, nil, 1, .end, NSMakeSize(chatNameWidth, size.height), nil, false, .left)
+        if let forumTopicNameLayout = forumTopicNameLayout, let chatNameLayout = self.chatNameLayout {
+            var width = chatNameWidth / 2 - 20
+            chatNameLayout.measure(width: width)
+            chatNameSelectedLayout?.measure(width: width)
+            
+            width = chatNameWidth - chatNameLayout.layoutSize.width - 20
+            forumTopicNameLayout.measure(width: width)
+            forumTopicNameSelectedLayout?.measure(width: width)
+        } else {
+            chatNameLayout?.measure(width: chatNameWidth)
+            chatNameSelectedLayout?.measure(width: chatNameWidth)
         }
         
-        if chatNameSelectedLayout == nil || !chatNameSelectedLayout!.0.isPerfectSized || self.oldWidth > width, let chatTitleAttributed = chatTitleAttributed {
-            chatNameSelectedLayout = TextNode.layoutText(maybeNode: chatNameSelectedNode, chatTitleAttributed, nil, 1, .end, NSMakeSize(chatNameWidth, size.height), nil, true, .left)
-        }
-    
+
         messageLayout?.measure(width: messageWidth)
         messageSelectedLayout?.measure(width: messageWidth)
 
@@ -1437,11 +1513,18 @@ class ChatListRowItem: TableRowItem {
         return displayLayout
     }
     
-    var ctxChatNameLayout:(TextNodeLayout, TextNode)? {
+    var ctxChatNameLayout:TextViewLayout? {
         if isSelected && context.layout != .single, !(isForum && !isTopic) {
             return chatNameSelectedLayout
         }
         return chatNameLayout
+    }
+    
+    var ctxForumTopicNameLayout:TextViewLayout? {
+        if isSelected && context.layout != .single, !(isForum && !isTopic) {
+            return forumTopicNameLayout
+        }
+        return forumTopicNameSelectedLayout
     }
     
     
