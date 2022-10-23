@@ -1445,12 +1445,6 @@ func chatWebpageSnippetPhotoData(account: Account, imageRefence: ImageMediaRefer
         return Signal { subscriber in
             let disposable = DisposableSet()
             
-            if let tiny = imageRefence.media.immediateThumbnailData.flatMap(decodeTinyThumbnail) {
-                var bp = 0
-                bp += 1
-            }
-
-            
             disposable.add(resourceData.start(next: { data in
                 subscriber.putNext(data)
                 }, completed: {

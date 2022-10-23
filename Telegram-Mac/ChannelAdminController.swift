@@ -273,6 +273,9 @@ func stringForRight(right: TelegramChatAdminRightsFlags, isGroup: Bool, defaultB
         return strings().channelEditAdminPermissionAnonymous
     } else if right.contains(.canManageCalls) {
         return strings().channelEditAdminManageCalls
+    } else if right.contains(.canManageTopics) {
+        return strings().channelEditAdminManageTopics
+
     } else {
         return ""
     }
@@ -351,7 +354,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
         switch channel.info {
         case .broadcast:
             isGroup = false
-            maskRightsFlags = .broadcastSpecific
+            maskRightsFlags = .internal_broadcastSpecific
             rightsOrder = [
                 .canChangeInfo,
                 .canPostMessages,
@@ -363,13 +366,14 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             ]
         case .group:
             isGroup = true
-            maskRightsFlags = .groupSpecific
+            maskRightsFlags = .internal_groupSpecific
             rightsOrder = [
                 .canChangeInfo,
                 .canDeleteMessages,
                 .canBanUsers,
                 .canInviteUsers,
                 .canPinMessages,
+                .canManageTopics,
                 .canManageCalls,
                 .canBeAnonymous,
                 .canAddAdmins
@@ -536,7 +540,7 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             descId += 1
             
             let isGroup = true
-            let maskRightsFlags: TelegramChatAdminRightsFlags = .groupSpecific
+            let maskRightsFlags: TelegramChatAdminRightsFlags = .internal_groupSpecific
             let rightsOrder: [TelegramChatAdminRightsFlags] = [
                 .canChangeInfo,
                 .canDeleteMessages,
@@ -916,16 +920,16 @@ class ChannelAdminController: TableModalViewController {
                             switch initialParticipant {
                             case let .creator(_, info, _):
                                 if stateValue.with ({ $0.rank != $0.initialRank }) {
-                                    updateFlags = info?.rights.rights ?? .groupSpecific
+                                    updateFlags = info?.rights.rights ?? .internal_groupSpecific
                                 }
                             case let .member(member):
                                 if member.adminInfo?.rights == nil {
                                     let maskRightsFlags: TelegramChatAdminRightsFlags
                                     switch channel.info {
                                     case .broadcast:
-                                        maskRightsFlags = .broadcastSpecific
+                                        maskRightsFlags = .internal_broadcastSpecific
                                     case .group:
-                                        maskRightsFlags = .groupSpecific
+                                        maskRightsFlags = .internal_groupSpecific
                                     }
                                     
                                     if channel.flags.contains(.isCreator) {
@@ -967,9 +971,9 @@ class ChannelAdminController: TableModalViewController {
                             let maskRightsFlags: TelegramChatAdminRightsFlags
                             switch channel.info {
                             case .broadcast:
-                                maskRightsFlags = .broadcastSpecific
+                                maskRightsFlags = .internal_broadcastSpecific
                             case .group:
-                                maskRightsFlags = .groupSpecific
+                                maskRightsFlags = .internal_groupSpecific
                             }
                             
                             if channel.flags.contains(.isCreator) {
@@ -1043,7 +1047,7 @@ class ChannelAdminController: TableModalViewController {
                         return current
                     }
                     
-                    let maskRightsFlags: TelegramChatAdminRightsFlags = .groupSpecific
+                    let maskRightsFlags: TelegramChatAdminRightsFlags = .internal_groupSpecific
                     let defaultFlags = maskRightsFlags.subtracting(.canAddAdmins)
                     
                     if updateFlags == nil {

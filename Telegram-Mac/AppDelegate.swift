@@ -1358,10 +1358,6 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     @IBAction func preferencesAction(_ sender: Any) {
         
         if let context = contextValue?.context {
-            if context.isSupport {
-                var bp = 0
-                bp += 1
-            }
             context.bindings.mainController().showPreferences()
         }
         window.makeKeyAndOrderFront(sender)

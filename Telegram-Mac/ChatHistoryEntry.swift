@@ -446,7 +446,7 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 }
 
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil, addRepliesHeader: Bool = false, addTopThreadInset: CGFloat? = nil, updatingMedia: [MessageId: ChatUpdatingMessageMedia] = [:], adMessages:[Message] = [], chatTheme: TelegramPresentationTheme = theme, reactions: AvailableReactions? = nil, transribeState: [MessageId : TranscribeAudioState] = [:], threadData: MessageHistoryThreadData? = nil) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil, addRepliesHeader: Bool = false, addTopThreadInset: CGFloat? = nil, updatingMedia: [MessageId: ChatUpdatingMessageMedia] = [:], adMessages:[Message] = [], chatTheme: TelegramPresentationTheme = theme, reactions: AvailableReactions? = nil, transribeState: [MessageId : TranscribeAudioState] = [:], topicCreatorId: PeerId? = nil) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
 
     
@@ -625,6 +625,10 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 rank = strings().chatOwnerBadge
             case let .custom(string):
                 rank = string
+            }
+        } else if let topicCreatorId = topicCreatorId {
+            if message.author?.id == topicCreatorId {
+                rank = strings().chatTopicBadge
             }
         }
         

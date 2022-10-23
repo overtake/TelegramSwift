@@ -428,17 +428,26 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes {
             let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
 
+            if !state.effectiveInput.attributes.isEmpty {
+                var bp = 0
+                bp += 1
+            }
+            
             let current = textView.attributedString().copy() as! NSAttributedString
             let currentRange = textView.selectedRange()
 
             let item = SimpleUndoItem(attributedString: current, be: state.effectiveInput.attributedString, wasRange: currentRange, be: range)
-            self.textView.addSimpleItem(item)
+            if !initial {
+                self.textView.addSimpleItem(item)
+            } else {
+                self.textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
+                if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length {
+                    textView.setSelectedRange(range)
+                }
+            }
 
-//            self.textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
         }
-//        if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length {
-//            textView.setSelectedRange(range)
-//        }
+
         if prevState.effectiveInput.inputText.isEmpty {
             self.textView.scrollToCursor()
         }
@@ -754,7 +763,12 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     public func textViewTextDidChangeSelectedRange(_ range: NSRange) {
         let attributed = self.textView.attributedString()
         
-        let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.min ..< range.max, attributes: chatTextAttributes(from: attributed))
+        let attrs = chatTextAttributes(from: attributed)
+        if attrs.isEmpty {
+            var bp = 0
+            bp += 1
+        }
+        let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.min ..< range.max, attributes: attrs)
         
         chatInteraction.update({ current in
             var current = current

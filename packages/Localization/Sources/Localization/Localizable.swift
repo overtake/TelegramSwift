@@ -1015,6 +1015,8 @@ public final class L10n {
   public static var channelAdminLogCanInviteUsersViaLink: String  { return L10n.tr("Localizable", "Channel.AdminLog.CanInviteUsersViaLink") }
   /// Manage Voice Chats
   public static var channelAdminLogCanManageCalls: String  { return L10n.tr("Localizable", "Channel.AdminLog.CanManageCalls") }
+  /// Manage Topics
+  public static var channelAdminLogCanManageTopics: String  { return L10n.tr("Localizable", "Channel.AdminLog.CanManageTopics") }
   /// %1$@ created invite link %2$@
   public static func channelAdminLogCreatedInviteLink(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Channel.AdminLog.CreatedInviteLink", p1, p2)
@@ -1209,6 +1211,8 @@ public final class L10n {
   public static var channelCommentsShortLeaveComment: String  { return L10n.tr("Localizable", "Channel.Comments.Short.LeaveComment") }
   /// Manage Voice Chats
   public static var channelEditAdminManageCalls: String  { return L10n.tr("Localizable", "Channel.EditAdmin.ManageCalls") }
+  /// Manage Topics
+  public static var channelEditAdminManageTopics: String  { return L10n.tr("Localizable", "Channel.EditAdmin.ManageTopics") }
   /// Remain Anonymous
   public static var channelEditAdminPermissionAnonymous: String  { return L10n.tr("Localizable", "Channel.EditAdmin.PermissionAnonymous") }
   /// Add Members
@@ -1719,6 +1723,8 @@ public final class L10n {
   public static var chatShareInlineResultActionHeader: String  { return L10n.tr("Localizable", "Chat.ShareInlineResultActionHeader") }
   /// Feed
   public static var chatTitleFeed: String  { return L10n.tr("Localizable", "Chat.TitleFeed") }
+  /// topic creator
+  public static var chatTopicBadge: String  { return L10n.tr("Localizable", "Chat.TopicBadge") }
   /// %d
   public static func chatUnpinAllMessagesConfirmationCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.UnpinAllMessagesConfirmation_countable", p1)
@@ -2395,6 +2401,8 @@ public final class L10n {
   public static var chatInputJoin: String  { return L10n.tr("Localizable", "Chat.Input.Join") }
   /// Mute
   public static var chatInputMute: String  { return L10n.tr("Localizable", "Chat.Input.Mute") }
+  /// Reply to message in topics
+  public static var chatInputReplyToAnswer: String  { return L10n.tr("Localizable", "Chat.Input.ReplyToAnswer") }
   /// Restart
   public static var chatInputRestart: String  { return L10n.tr("Localizable", "Chat.Input.Restart") }
   /// Return to the group

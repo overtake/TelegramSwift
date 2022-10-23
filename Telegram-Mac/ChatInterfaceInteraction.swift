@@ -773,7 +773,7 @@ final class ChatInteraction : InterfaceObserver  {
         
         let updatedOpaqueData = try? EngineEncoder.encode(interfaceState)
 
-        var s:Signal<Never, NoError> =         context.engine.peers.setOpaqueChatInterfaceState(peerId: peerId, threadId: mode.threadId64, state: .init(opaqueData: updatedOpaqueData, historyScrollMessageIndex: interfaceState.historyScrollMessageIndex, synchronizeableInputState: interfaceState.synchronizeableInputState))
+        var s:Signal<Never, NoError> = context.engine.peers.setOpaqueChatInterfaceState(peerId: peerId, threadId: mode.threadId64, state: .init(opaqueData: updatedOpaqueData, historyScrollMessageIndex: interfaceState.historyScrollMessageIndex, synchronizeableInputState: interfaceState.synchronizeableInputState))
 
         if !force && !interfaceState.inputState.inputText.isEmpty {
             s = s |> delay(10, queue: Queue.mainQueue())

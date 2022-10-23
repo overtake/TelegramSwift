@@ -1624,7 +1624,7 @@ enum GroupInfoEntry: PeerInfoEntry {
             }
             interactions.localizeLinkCopy = globalLinkExecutor.localizeLinkCopy
             
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoSharelink, copyMenuText: strings().textCopyLabelShareLink, labelColor: value.count > 1 ? theme.colors.text : theme.colors.accent, text: text, context: arguments.context, viewType: viewType, detectLinks: true, isTextSelectable: value.count > 1, callback:{
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoSharelink, copyMenuText: strings().textCopyLabelShareLink, labelColor: theme.colors.text, text: text, context: arguments.context, viewType: viewType, detectLinks: true, isTextSelectable: value.count > 1, callback:{
                 showModal(with: ShareModalController(ShareLinkObject(arguments.context, link: link)), for: arguments.context.window)
             }, selectFullWord: true, _copyToClipboard: {
                 arguments.copy(link)

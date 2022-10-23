@@ -2272,9 +2272,8 @@ public extension NSAttributedString {
                     let tag = TGInputTextTag(uniqueId: arc4random64(), attachment: string, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
                     modified.addAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), value: tag, range: range)
                 }
-            } else if let attach = attr[.init(rawValue: TGAnimatedEmojiAttributeName)] {
-                var bp = 0
-                bp += 1
+            } else if let _ = attr[.init(rawValue: TGAnimatedEmojiAttributeName)] {
+               
             } else if let font = attr[.font] as? NSFont {
                 let newFont: NSFont
                 if font.fontDescriptor.symbolicTraits.contains(.bold) && font.fontDescriptor.symbolicTraits.contains(.italic) {

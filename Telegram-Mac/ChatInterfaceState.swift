@@ -1119,21 +1119,14 @@ struct ChatInterfaceState: Codable, Equatable {
         guard let state = state else {
             return nil
         }
+
         guard let opaqueData = state.opaqueData else {
-            return ChatInterfaceState().withUpdatedSynchronizeableInputState(state.synchronizeableInputState).updatedEditState({ _ in
-                return context?.getChatInterfaceTempState(peerId)?.editState
-            })
+            return ChatInterfaceState().withUpdatedSynchronizeableInputState(state.synchronizeableInputState)
         }
         guard var decodedState = try? EngineDecoder.decode(ChatInterfaceState.self, from: opaqueData) else {
-            return ChatInterfaceState().withUpdatedSynchronizeableInputState(state.synchronizeableInputState).updatedEditState({ _ in
-                return context?.getChatInterfaceTempState(peerId)?.editState
-            })
+            return ChatInterfaceState().withUpdatedSynchronizeableInputState(state.synchronizeableInputState)
         }
-        decodedState = decodedState
-            .withUpdatedSynchronizeableInputState(state.synchronizeableInputState)
-            .updatedEditState({ _ in
-                return context?.getChatInterfaceTempState(peerId)?.editState
-            })
+        decodedState = decodedState.withUpdatedSynchronizeableInputState(state.synchronizeableInputState)
         return decodedState
     }
 
@@ -1204,6 +1197,13 @@ struct ChatInterfaceState: Codable, Equatable {
     func withUpdatedSynchronizeableInputState(_ state: SynchronizeableChatInputState?) -> ChatInterfaceState {
         var result = self
         if let state = state {
+            if !state.entities.isEmpty {
+                var bp = 0
+                bp += 1
+            } else {
+                var bp = 0
+                bp += 1
+            }
             let selectRange = state.textSelection ?? state.text.length ..< state.text.length
             result = result.withUpdatedInputState(ChatTextInputState(inputText: state.text, selectionRange: selectRange, attributes: chatTextAttributes(from: TextEntitiesMessageAttribute(entities: state.entities))))
                 .withUpdatedReplyMessageId(state.replyToMessageId)

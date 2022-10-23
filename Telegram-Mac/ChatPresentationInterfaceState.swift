@@ -414,10 +414,6 @@ struct SlowMode : Equatable {
         return SlowMode(validUntil: validUntil, timeout: self.timeout, sendingIds: self.sendingIds)
     }
     func withUpdatedTimeout(_ timeout: Int32?) -> SlowMode {
-        if timeout == nil {
-            var bp:Int = 0
-            bp += 1
-        }
         return SlowMode(validUntil: self.validUntil, timeout: timeout, sendingIds: self.sendingIds)
     }
     func withUpdatedSendingIds(_ sendingIds: [MessageId]) -> SlowMode {
@@ -626,6 +622,12 @@ struct ChatPresentationInterfaceState: Equatable {
                         return .restricted(strings().chatCommentsKicked)
                     } else if peer.participationStatus == .member {
                         return .normal
+                    }
+                case .history:
+                    if peer.isForum {
+                        if interfaceState.replyMessage == nil {
+                            return .restricted(strings().chatInputReplyToAnswer)
+                        }
                     }
                 default:
                     break

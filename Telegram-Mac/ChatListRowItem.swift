@@ -116,10 +116,12 @@ class ChatListRowItem: TableRowItem {
     let forumTopicData: EngineChatList.ForumTopicData?
     
     var hasForumIcon: Bool {
-        if forumTopicData != nil {
-            return true
-        } else if let peer = peer, peer.isForum, titleMode == .forumInfo, case let .topic(_, data) = mode {
-            return true
+        if chatNameLayout != nil, forumTopicNameLayout != nil {
+            if forumTopicData != nil {
+                return true
+            } else if let peer = peer, peer.isForum, titleMode == .forumInfo, case .topic = mode {
+                return true
+            }
         }
         return false
     }
@@ -137,7 +139,12 @@ class ChatListRowItem: TableRowItem {
     
     
     override var stableId: AnyHashable {
-        return _stableId
+        switch _stableId {
+        case let .chatId(id, peerId, _):
+            return UIChatListEntryId.chatId(id, peerId, -1)
+        default:
+            return _stableId
+        }
     }
     
     private var _stableId: UIChatListEntryId
@@ -226,7 +233,7 @@ class ChatListRowItem: TableRowItem {
     
     var canDeleteTopic: Bool {
         if isTopic, let peer = peer as? TelegramChannel, peer.isAdmin {
-            if peer.hasPermission(.pinMessages) {
+            if peer.hasPermission(.manageTopics) {
                 return true
             }
         }
@@ -642,7 +649,7 @@ class ChatListRowItem: TableRowItem {
             
             if let author = author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, draft == nil {
                 if !(message.effectiveMedia is TelegramMediaAction) {
-                    let peerText: String = (author.id == context.account.peerId ? "\(strings().chatListYou)" : author.displayTitle)
+                    let peerText: String = (author.id == context.account.peerId ? "\(strings().chatListYou)" : author.compactDisplayTitle)
                     
                     let topicNameAttributed = NSMutableAttributedString()
 
