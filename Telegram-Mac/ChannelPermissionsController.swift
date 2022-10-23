@@ -246,11 +246,9 @@ func stringForGroupPermission(right: TelegramChatBannedRightsFlags, channel: Tel
     } else if right.contains(.banAddMembers) {
         return strings().channelBanUserPermissionAddMembers
     } else if right.contains(.banPinMessages) {
-        if let channel = channel, channel.isForum {
-            return strings().channelEditAdminPermissionCreateTopics
-        } else {
-            return strings().channelEditAdminPermissionPinMessages
-        }
+        return strings().channelEditAdminPermissionPinMessages
+    } else if right.contains(.banManageTopics) {
+        return strings().channelEditAdminPermissionCreateTopics
     } else {
         return ""
     }
@@ -272,11 +270,9 @@ func compactStringForGroupPermission(right: TelegramChatBannedRightsFlags, chann
     } else if right.contains(.banAddMembers) {
         return strings().groupPermissionNoAddMembers
     } else if right.contains(.banPinMessages) {
-        if let channel = channel, channel.isForum {
-            return strings().groupPermissionNoTopics
-        } else {
-            return strings().groupPermissionNoPinMessages
-        }
+        return strings().groupPermissionNoPinMessages
+    } else if right.contains(.banManageTopics) {
+        return strings().groupPermissionNoTopics
     } else {
         return ""
     }
@@ -360,7 +356,9 @@ private func channelPermissionsControllerEntries(view: PeerView, state: ChannelP
         if channel.flags.contains(.isGigagroup) {
             permissionList = [.banAddMembers]
         }
-
+        if channel.isForum {
+            permissionList.append(.banManageTopics)
+        }
         
         entries.append(.permissionsHeader(sectionId, index, strings().groupInfoPermissionsSectionTitle, .textTopItem))
         index += 1

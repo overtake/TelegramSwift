@@ -201,6 +201,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             .canBanUsers,
             .canInviteUsers,
             .canPinMessages,
+            .canManageTopics,
             .canBeAnonymous
         ]
         

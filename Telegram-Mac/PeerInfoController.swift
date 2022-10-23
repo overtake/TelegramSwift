@@ -512,7 +512,7 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
                         editable = peer.adminRights != nil || peer.flags.contains(.isCreator)
                     case .group:
                         if let threadData = threadData {
-                            editable = (peer.isAdmin && peer.hasPermission(.pinMessages)) || threadData.isOwnedByMe
+                            editable = (peer.isAdmin && peer.hasPermission(.manageTopics)) || threadData.isOwnedByMe
                         } else {
                             editable = peer.adminRights != nil || peer.flags.contains(.isCreator)
                         }

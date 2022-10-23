@@ -57,7 +57,6 @@ extension ChannelParticipant {
 extension TelegramChatAdminRightsFlags {
     var localizedString:String {
         switch self {
-            //EventLog.Service.Restriction.AddNewAdmins
         case TelegramChatAdminRightsFlags.canAddAdmins:
             return strings().eventLogServicePromoteAddNewAdmins
         case TelegramChatAdminRightsFlags.canBanUsers:
@@ -78,6 +77,8 @@ extension TelegramChatAdminRightsFlags {
             return strings().eventLogServicePromoteRemainAnonymous
         case TelegramChatAdminRightsFlags.canManageCalls:
             return strings().channelAdminLogCanManageCalls
+        case TelegramChatAdminRightsFlags.canManageTopics:
+            return strings().channelAdminLogCanManageTopics
         default:
             return "Undefined Promotion"
         }

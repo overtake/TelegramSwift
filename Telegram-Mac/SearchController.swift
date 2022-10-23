@@ -920,20 +920,14 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             switch target {
                             case .forum:
                                 entries.append(.separator(text: strings().searchSeparatorTopics, index: 0, state: .none))
-                            case .common:
-                                let state: SeparatorBlockState
-                                if localPeers.count > 5 {
-                                    if isRevealed {
-                                        state = .all
-                                    } else {
-                                        state = .short
-                                    }
-                                } else {
-                                    state = .none
-                                }
-                                entries.append(.separator(text: strings().searchSeparatorChatsAndContacts, index: 0, state: state))
+                            default:
+                                entries.append(.separator(text: strings().searchSeparatorChatsAndContacts, index: 0, state: .none))
                             }
-                            entries += peers
+                            if !remoteMessages.0.isEmpty {
+                                entries += peers
+                            } else {
+                                entries += peers
+                            }
                         }
                         if !remotePeers.1.isEmpty {
                             
@@ -963,6 +957,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         if entries.isEmpty && !remotePeers.2 && !remoteMessages.1 {
                             entries.append(.emptySearch)
                         }
+
                         return (entries, remotePeers.2 || remoteMessages.1, remoteMessages.2, remoteMessages.3)
                     } |> map { value in
                         return (value.0, value.1, false, value.2, value.3)
@@ -1500,8 +1495,17 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             peer = item.peer
         } else if let item = item as? ShortPeerRowItem {
             peer = item.peer
-        } else if let _ = item as? SeparatorRowItem {
-            return false
+        } else if let item = item as? SeparatorRowItem {
+            if byClick {
+                switch item.state {
+                case .none:
+                    return false
+                default:
+                    return true
+                }
+            } else {
+                return false
+            }
         }
         
         if let peer = peer, let modalAction = navigationController?.modalAction {

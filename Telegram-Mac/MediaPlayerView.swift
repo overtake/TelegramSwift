@@ -27,13 +27,7 @@ private final class MediaPlayerViewLayer: AVSampleBufferDisplayLayer {
         return NSNull()
     }
     deinit {
-        if !Thread.isMainThread {
-            var bp = 0
-            bp += 1
-        } else {
-            var bp = 0
-            bp += 1
-        }
+    
     }
 }
 

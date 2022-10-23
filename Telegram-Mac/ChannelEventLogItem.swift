@@ -28,12 +28,12 @@ private var banHelp:[TelegramChatBannedRightsFlags] {
     return order
 }
 
-func rightsHelp(_ isGroup: Bool) -> (specific: TelegramChatAdminRightsFlags, order: [TelegramChatAdminRightsFlags]) {
+func rightsHelp(_ peer: Peer) -> (specific: TelegramChatAdminRightsFlags, order: [TelegramChatAdminRightsFlags]) {
     let maskRightsFlags: TelegramChatAdminRightsFlags
     let rightsOrder: [TelegramChatAdminRightsFlags]
     
-    if isGroup {
-        maskRightsFlags = .broadcastSpecific
+    if peer.isGroup || peer.isSupergroup || peer.isGigagroup {
+        maskRightsFlags = .peerSpecific(peer: .init(peer))
         rightsOrder = [
             .canChangeInfo,
             .canPostMessages,
@@ -43,13 +43,14 @@ func rightsHelp(_ isGroup: Bool) -> (specific: TelegramChatAdminRightsFlags, ord
             .canBeAnonymous
         ]
     } else {
-        maskRightsFlags = .groupSpecific
+        maskRightsFlags = .peerSpecific(peer: .init(peer))
         rightsOrder = [
             .canChangeInfo,
             .canDeleteMessages,
             .canBanUsers,
             .canInviteUsers,
             .canPinMessages,
+            .canManageTopics,
             .canManageCalls,
             .canAddAdmins,
             .canBeAnonymous
@@ -400,13 +401,13 @@ class ServiceEventLogItem: TableRowItem {
                                 _ = message.append(string: prevAdminInfo != nil ? strings().eventLogServicePromotedChanged1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "") : strings().eventLogServicePromoted1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : ""), color: theme.colors.text)
                                 
                                 
-                                for right in rightsHelp(isGroup).order {
+                                for right in rightsHelp(peer).order {
                                     if addedRights.contains(right) {
                                         _ = message.append(string: "\n+ \(right.localizedString)", color: theme.colors.text)
                                     }
                                 }
                                 if !removedRights.isEmpty {
-                                    for right in rightsHelp(isGroup).order {
+                                    for right in rightsHelp(peer).order {
                                         if removedRights.contains(right) {
                                             _ = message.append(string: "\n- \(right.localizedString)", color: theme.colors.text)
                                         }
@@ -473,13 +474,13 @@ class ServiceEventLogItem: TableRowItem {
                                 _ = message.append(string: prevAdminInfo != nil ? strings().eventLogServicePromotedChanged1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : "") : strings().eventLogServicePromoted1(memberPeer.displayTitle, memberPeer.addressName != nil ? "(@\(memberPeer.addressName!))" : ""), color: theme.colors.text)
                                 
                                 
-                                for right in rightsHelp(isGroup).order {
+                                for right in rightsHelp(peer).order {
                                     if addedRights.contains(right) {
                                         _ = message.append(string: "\n+ \(right.localizedString)", color: theme.colors.text)
                                     }
                                 }
                                 if !removedRights.isEmpty {
-                                    for right in rightsHelp(isGroup).order {
+                                    for right in rightsHelp(peer).order {
                                         if removedRights.contains(right) {
                                             _ = message.append(string: "\n- \(right.localizedString)", color: theme.colors.text)
                                         }
