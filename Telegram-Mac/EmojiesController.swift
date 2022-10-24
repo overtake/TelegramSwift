@@ -312,6 +312,7 @@ private struct State : Equatable {
     struct Section : Equatable {
         var info: StickerPackCollectionInfo
         var items:[StickerPackItem]
+        var dict:[MediaId: StickerPackItem]
         var installed: Bool
     }
     var sections:[Section]
@@ -454,9 +455,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     let isPremium = state.peer?.peer.isPremium == true
     
     let recentDict:[MediaId: StickerPackItem] = state.sections.reduce([:], { current, value in
-        return current + value.items.toDictionary(with: { item in
-            return item.file.fileId
-        })
+        return current + value.dict
     })
     var recentAnimated:[StickerPackItem] = state.recent.animated.compactMap { mediaId in
         if let item = recentDict[mediaId] {
@@ -1268,7 +1267,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         
         let combined = statePromise.get()
         
-        let signal:Signal<(sections: InputDataSignalValue, packs: InputDataSignalValue, state: State), NoError> = combined |> deliverOnPrepareQueue |> map { state in
+        let signal:Signal<(sections: InputDataSignalValue, packs: InputDataSignalValue, state: State), NoError> = combined |> deliverOnResourceQueue |> map { state in
             let sections = InputDataSignalValue(entries: entries(state, arguments: arguments))
             let packs = InputDataSignalValue(entries: packEntries(state, arguments: arguments))
             return (sections: sections, packs: packs, state: state)
@@ -1453,24 +1452,30 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 var sections: [State.Section] = []
                 for (_, info, _) in view.collectionInfos {
                     var files: [StickerPackItem] = []
+                    var dict: [MediaId: StickerPackItem] = [:]
+                    
                     if let info = info as? StickerPackCollectionInfo {
                         let items = view.entries
                         for (i, entry) in items.enumerated() {
                             if entry.index.collectionId == info.id {
                                 if let item = view.entries[i].item as? StickerPackItem {
                                     files.append(item)
+                                    dict[item.file.fileId] = item
                                 }
                             }
                         }
                         if !files.isEmpty {
-                            sections.append(.init(info: info, items: files, installed: true))
+                            sections.append(.init(info: info, items: files, dict: dict, installed: true))
                         }
                     }
                 }
                 for item in featured {
                     let contains = sections.contains(where: { $0.info.id == item.info.id })
                     if !contains {
-                        sections.append(.init(info: item.info, items: item.topItems, installed: false))
+                        let dict = item.topItems.toDictionary(with: {
+                            $0.file.fileId
+                        })
+                        sections.append(.init(info: item.info, items: item.topItems, dict: dict, installed: false))
                     }
                 }
                 if let peer = peerView.peers[peerView.peerId] {
