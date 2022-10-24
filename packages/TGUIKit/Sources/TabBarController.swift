@@ -69,6 +69,10 @@ public class TabBarController: ViewController, TabViewDelegate {
         }
     }
     
+    public override var redirectUserInterfaceCalls: Bool {
+        return true
+    }
+    
     private var genericView:TabBarViewController {
         return view as! TabBarViewController
     }
