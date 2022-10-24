@@ -5167,10 +5167,8 @@ public final class L10n {
   public static var forumTopicContextInfo: String  { return L10n.tr("Localizable", "ForumTopic.Context.Info") }
   /// Create Topic
   public static var forumTopicContextNew: String  { return L10n.tr("Localizable", "ForumTopic.Context.New") }
-  /// Show as Messages
+  /// View as Messages
   public static var forumTopicContextShowAsMessages: String  { return L10n.tr("Localizable", "ForumTopic.Context.ShowAsMessages") }
-  /// Show as Topics
-  public static var forumTopicContextShowAsTopics: String  { return L10n.tr("Localizable", "ForumTopic.Context.ShowAsTopics") }
   /// Done
   public static var forumTopicDoneEdit: String  { return L10n.tr("Localizable", "ForumTopic.Done.Edit") }
   /// Create

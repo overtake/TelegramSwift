@@ -3056,7 +3056,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             if let strongSelf = self {
                 func apply(_ controller: ChatController, atDate: Int32?) {
                     let chatInteraction = controller.chatInteraction
-                    let value = context.engine.messages.enqueueOutgoingMessageWithChatContextResult(to: chatInteraction.peerId, botId: results.botId, result: result, replyToMessageId: takeReplyId())
+                    let value = context.engine.messages.enqueueOutgoingMessageWithChatContextResult(to: chatInteraction.peerId, threadId: chatInteraction.mode.threadId64, botId: results.botId, result: result, replyToMessageId: takeReplyId())
                     if value {
                         controller.nextTransaction.set(handler: afterSentTransition)
                     }

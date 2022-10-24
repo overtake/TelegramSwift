@@ -63,6 +63,12 @@ public class TabBarController: ViewController, TabViewDelegate {
         }
     }
     
+    public override var navigationController: NavigationViewController? {
+        didSet {
+            current?.navigationController = self.navigationController
+        }
+    }
+    
     private var genericView:TabBarViewController {
         return view as! TabBarViewController
     }

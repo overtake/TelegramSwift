@@ -1875,5 +1875,4 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
 
     }
     
-    
 }

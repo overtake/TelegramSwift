@@ -240,9 +240,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         leftController = MainViewController(context);
 
-        
-        leftController.navigationController = rightController
-        
+                
         
         super.init()
         
@@ -863,17 +861,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             rightController.empty = emptyController
             if rightController.controller is ForwardChatListController {
                 rightController.back(animated:false)
-            }
-            var controllers:[ViewController] = []
-            rightController.enumerateControllers({ controller, index in
-                if controller is ChatListController {
-                    controllers.append(controller)
-                }
-                return true
-            })
-            for controller in controllers {
-                rightController.removeImmediately(controller)
-                leftController.navigation.push(controller, style: ViewControllerStyle.none)
             }
             self.view.splitView.addController(controller: leftController, proportion: SplitProportion(min:w, max:w))
             self.view.splitView.addController(controller: rightController, proportion: SplitProportion(min:380, max:CGFloat.greatestFiniteMagnitude))
