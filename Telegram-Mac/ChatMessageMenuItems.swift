@@ -277,7 +277,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         }
         
         
-        if canReplyMessage(data.message, peerId: data.peerId, mode: data.chatMode)  {
+        if canReplyMessage(data.message, peerId: data.peerId, mode: data.chatMode, threadData: chatInteraction.presentation.threadInfo)  {
             firstBlock.append(ContextMenuItem(strings().messageContextReply1, handler: {
                 data.chatInteraction.setupReplyMessage(data.message.id)
             }, itemImage: MenuAnimation.menu_reply.value, keyEquivalent: .cmdr))
@@ -438,8 +438,10 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             let pinText = data.message.tags.contains(.pinned) ? strings().messageContextUnpin : strings().messageContextPin
             
             let pinImage = data.message.tags.contains(.pinned) ? MenuAnimation.menu_unpin.value : MenuAnimation.menu_pin.value
+            
+            let canSendMessage = peer.canSendMessage(data.chatMode.isThreadMode || data.chatMode.isTopicMode, threadData: data.chatInteraction.presentation.threadInfo)
 
-            if let peer = peer as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
+            if let peer = peer as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)), canSendMessage {
                 if isNotFailed {
                     if !data.chatMode.isThreadMode, (needUnpin || data.chatMode != .pinned) {
                         secondBlock.append(ContextMenuItem(pinText, handler: {
