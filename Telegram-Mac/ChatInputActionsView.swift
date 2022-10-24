@@ -170,9 +170,9 @@ class ChatInputActionsView: View {
             if let sidebarEnabled = chatInteraction.presentation.sidebarEnabled {
                 enabled = sidebarEnabled
             }
-            let window = chatInteraction.context.window
             let context = chatInteraction.context
-            if !((window.frame.width >= 1030 && context.layout == .dual) || (window.frame.width >= 880 && context.layout == .minimisize)) || !enabled {
+            let navigation = context.bindings.rootNavigation()
+            if !(navigation.frame.width >= 730 && context.layout == .dual) || !enabled {
                 self.showEntertainment()
             }
         }, for: .Hover)
@@ -189,10 +189,9 @@ class ChatInputActionsView: View {
         entertaiments.set(handler: { [weak self] (state) in
             if let strongSelf = self {
                 let chatInteraction = strongSelf.chatInteraction
-                let window = chatInteraction.context.window
+                let navigation = chatInteraction.context.bindings.rootNavigation()
                 if let sidebarEnabled = chatInteraction.presentation.sidebarEnabled, sidebarEnabled {
-                    if window.frame.width > 1030 && chatInteraction.context.layout == .dual || window.frame.width > 880 && chatInteraction.context.layout == .minimisize {
-                        
+                    if navigation.frame.width > 730 && chatInteraction.context.layout == .dual {
                         chatInteraction.toggleSidebar()
                     }
                 }

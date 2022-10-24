@@ -272,11 +272,6 @@ class MainViewController: TelegramViewController {
     private let updateController: UpdateTabController
     #endif
     
-    override var navigationController: NavigationViewController? {
-        didSet {
-            tabController.navigationController = navigationController
-        }
-    }
     
     override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
@@ -361,6 +356,7 @@ class MainViewController: TelegramViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        tabController.navigationController = navigation
                 
         prefDisposable.set((baseAppSettings(accountManager: context.sharedContext.accountManager) |> deliverOnMainQueue).start(next: { [weak self] settings in
             guard let `self` = self else {return}
@@ -597,12 +593,15 @@ class MainViewController: TelegramViewController {
         if firstTime {
             firstTime = false
         }
-        self.tabController.current?.viewDidAppear(animated)
     }
     
     func globalSearch(_ query: String) {
-        let controller = navigation.controller as? ChatListController
-        controller?.globalSearch(query)
+        let controller = navigation.controller
+        if let controller = controller as? ChatListController {
+            controller.globalSearch(query)
+        } else if let controller = controller as? TabBarController {
+            (controller.current as? ChatListController)?.globalSearch(query)
+        }
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -641,8 +640,12 @@ class MainViewController: TelegramViewController {
     
     func openChat(_ index: Int, force: Bool = false) {
         if self.tabController.current == chatList {
-            let current = navigation.controller as? ChatListController
-            current?.openChat(index, force: force)
+            let controller = navigation.controller
+            if let controller = controller as? ChatListController {
+                controller.openChat(index, force: force)
+            } else if let controller = controller as? TabBarController {
+                (controller.current as? ChatListController)?.openChat(index, force: force)
+            }
         }
     }
 

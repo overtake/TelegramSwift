@@ -891,10 +891,17 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                             var entries: [ChatListSearchEntry] = []
                             var index = 20001
                             for message in result.0.messages {
-                                if let threadInfo = result.0.threadInfo[message.id] {
-                                    entries.append(.message(message, query, result.0.readStates[message.id.peerId], threadInfo, index))
+                                switch target {
+                                case .forum:
+                                    if let threadInfo = result.0.threadInfo[message.id] {
+                                        entries.append(.message(message, query, result.0.readStates[message.id.peerId], threadInfo, index))
+                                        index += 1
+                                    }
+                                case .common:
+                                    entries.append(.message(message, query, result.0.readStates[message.id.peerId], result.0.threadInfo[message.id], index))
                                     index += 1
                                 }
+                                
                             }
                             
                             return (entries, false, result.1, result.0)

@@ -758,8 +758,8 @@ class ServiceEventLogItem: TableRowItem {
                 let text = strings().channelEventLogServiceTopicCreated(peer.displayTitle, info.title)
                 serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             case let .editTopic(prevInfo, newInfo):
-                if prevInfo.title != newInfo.title {
-                    let text = strings().channelEventLogServiceTopicEdited(peer.displayTitle, newInfo.title)
+                if prevInfo.info.title != newInfo.info.title {
+                    let text = strings().channelEventLogServiceTopicEdited(peer.displayTitle, newInfo.info.title)
                     serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
                 }
             default:
