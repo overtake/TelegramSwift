@@ -1118,7 +1118,8 @@ class ChatServiceRowView: TableRowView {
                 } else {
                     rect = item.rect.insetBy(dx: -2, dy: -2)
                 }
-                rect = rect.offsetBy(dx: 9, dy: 2)
+                
+                //rect = rect.offsetBy(dx: 9, dy: 2)
                 
                 let view: InlineStickerItemLayer
                 if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
