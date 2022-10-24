@@ -4386,8 +4386,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let topPinnedMessage: Signal<ChatPinnedMessage?, NoError>
         switch mode {
         case .history:
-            let replyHistory: Signal<ChatHistoryViewUpdate, NoError> = preloadedChatHistoryViewForLocation(.Initial(count: 100), context: self.context, chatLocation: self.chatLocation, chatLocationContextHolder: self.chatLocationContextHolder, tagMask: MessageTags.pinned, additionalData: [])
-            
             topPinnedMessage = getPinned()
         case .pinned:
             let replyHistory: Signal<ChatHistoryViewUpdate, NoError> = (chatHistoryViewForLocation(.Initial(count: 100), context: self.context, chatLocation: .peer(peerId), fixedCombinedReadStates: nil, tagMask: MessageTags.pinned, additionalData: [])
@@ -4457,7 +4455,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 present = present.updatedInterfaceState({ value in
                     return interfaceState ?? value
                 })
-                switch self.chatInteraction.mode {
+                switch mode {
                 case .history, .thread:
                     let isLiveCall: Bool
                     if let peer = present.peer {
@@ -4697,7 +4695,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         var sendAsPeerId: PeerId? = nil
                         var isNotAccessible: Bool = false
                         switch mode {
-                        case .history:
+                        case .history, .thread:
                             if let cachedData = peerView.cachedData as? CachedChannelData {
                                 activeCall = cachedData.activeCall
                                 callJoinPeerId = cachedData.callJoinPeerId

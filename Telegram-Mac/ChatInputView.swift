@@ -764,10 +764,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         let attributed = self.textView.attributedString()
         
         let attrs = chatTextAttributes(from: attributed)
-        if attrs.isEmpty {
-            var bp = 0
-            bp += 1
-        }
         let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.min ..< range.max, attributes: attrs)
         
         chatInteraction.update({ current in
