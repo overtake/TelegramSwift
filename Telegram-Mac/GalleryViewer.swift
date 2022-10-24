@@ -585,7 +585,7 @@ class GalleryViewer: NSResponder {
                     signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(peerId: message.id.peerId, threadId: nil), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
                 case let .thread(data, _):
                     if data.messageId == message.id {
-                        signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(peerId: message.id.peerId, threadId: makeMessageThreadId(data.messageId)), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
+                        signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(peerId: message.id.peerId, threadId: nil), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
                     } else {
                         signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(context.chatLocationInput(for: .thread(data), contextHolder: contextHolder), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
                     }
