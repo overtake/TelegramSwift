@@ -1049,7 +1049,7 @@ func mustDeleteForEveryoneMessage(_ message:Message) -> Bool {
     return false
 }
 
-func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode) -> Bool {
+func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode, threadData: MessageHistoryThreadData? = nil) -> Bool {
     if let peer = coreMessageMainPeer(message) {
         if message.isScheduledMessage {
             return false
@@ -1058,7 +1058,7 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode) -> Bool
             
             switch mode {
             case .history:
-                return peer.canSendMessage(false)
+                return peer.canSendMessage(false, threadData: threadData)
             case .scheduled:
                 return false
             case let .thread(data, mode):
@@ -1067,11 +1067,11 @@ func canReplyMessage(_ message: Message, peerId: PeerId, mode: ChatMode) -> Bool
                     if message.id == data.messageId {
                         return false
                     }
-                    return peer.canSendMessage(true)
+                    return peer.canSendMessage(true, threadData: threadData)
                 case .replies:
-                    return peer.canSendMessage(true)
+                    return peer.canSendMessage(true, threadData: threadData)
                 case .topic:
-                    return peer.canSendMessage(true)
+                    return peer.canSendMessage(true, threadData: threadData)
                 }
             case .pinned:
                 return false
