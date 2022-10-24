@@ -460,8 +460,23 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         topMessageIndex = topMessages.count - 1
     }
     
+    messagesEntries = messagesEntries.filter { entry in
+        if topicCreatorId != nil {
+            if let action = entry.message.media.first as? TelegramMediaAction {
+                switch action.action {
+                case .topicCreated:
+                    return false
+                default:
+                    return true
+                }
+            }
+        }
+        return true
+    }
+    
     for (i, entry) in messagesEntries.enumerated() {
-        var message = entry.message        
+        var message = entry.message
+        
         
         if message.media.isEmpty {
             if message.text.length <= 7 {

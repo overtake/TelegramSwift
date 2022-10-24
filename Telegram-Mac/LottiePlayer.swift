@@ -575,7 +575,7 @@ private final class PlayerRenderer {
         
         let maximum_renderer_frames: Int = Thread.isMainThread ? 2 : maximum_rendered_frames
         
-        let fps: Int = min(player.fps, max(30, maxRefreshRate))
+        let fps: Int = max(1, min(player.fps, max(30, maxRefreshRate)))
         let mainFps: Int = player.mainFps
         
         let maxFrames:Int32 = 180
