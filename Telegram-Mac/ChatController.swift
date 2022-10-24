@@ -5263,7 +5263,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let hasEntries = self.previousView.with { $0?.filteredEntries.count ?? 0 } > 1
         let checkScroll = self.historyState.isDownOfHistory && scroll.rect.minY == genericView.tableView.frame.height && hasEntries
         let screenIsLocked = appDelegate?.isLockedValue() ?? false
-        if checkScroll, SystemIdleTime() < 30, !screenIsLocked {
+        if checkScroll, SystemIdleTime() < 30, !screenIsLocked, context.window.isKeyWindow {
             return true
         } else {
             return false
@@ -6308,7 +6308,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         
         self.context.window.add(swipe: { [weak self] direction, _ -> SwipeHandlerResult in
-            guard let `self` = self, let window = self.window, self.chatInteraction.presentation.state == .normal else {return .failed}
+            guard let `self` = self, let window = self.window, self.chatInteraction.presentation.canReplyInRestrictedMode else {return .failed}
             let swipeState: SwipeState?
             switch direction {
             case .left:

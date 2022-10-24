@@ -527,6 +527,15 @@ struct ChatPresentationInterfaceState: Equatable {
         }
     }
     
+    var canReplyInRestrictedMode: Bool {
+        if state == .normal {
+            return true
+        } else if case .restricted = state, let peer = self.peer, peer.isForum, case .history = self.chatMode {
+            return true
+        }
+        return false
+    }
+    
     var state:ChatState {
         if self.selectionState == nil {
             if let initialAction = initialAction, case .start = initialAction  {
