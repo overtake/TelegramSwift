@@ -99,7 +99,8 @@ public class InputDataModalController : ModalViewController {
     }
     
     public override func returnKeyAction() -> KeyHandlerResult {
-        return controller.returnKeyAction()
+        let result = controller.returnKeyAction()
+        return result
     }
     
     public override var haveNextResponder: Bool {
@@ -639,7 +640,14 @@ class InputDataController: GenericViewController<InputDataView> {
                 if event.type != .keyDown || FastSettings.checkSendingAbility(for: event) {
                     self.validateInput(data: self.fetchData())
                 } else {
-                    return .invokeNext
+                    let containsString = fetchData().compactMap {
+                        $0.value.stringValue
+                    }
+                    if event.type == .keyDown, containsString.isEmpty {
+                        self.validateInput(data: self.fetchData())
+                    } else {
+                        return .invokeNext
+                    }
                 }
                 return .invoked
             case .nextResponder:
