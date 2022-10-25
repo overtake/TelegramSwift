@@ -239,6 +239,8 @@ func ForumTopicInfoController(context: AccountContext, purpose: ForumTopicInfoPu
         }
         if let file = value.icon?.file, let resource = file.resource as? ForumTopicIconResource {
             emojis?.setExternalForumTitle(value.name, iconColor: resource.iconColor)
+        } else if let fileId = value.icon?.fileId {
+            emojis?.setSelectedItem(.init(source: .custom(fileId), type: .normal))
         }
     }
     

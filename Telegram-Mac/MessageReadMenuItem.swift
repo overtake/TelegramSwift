@@ -822,6 +822,10 @@ final class MessageContainsPacksMenuItem : ContextMenuItem {
         super.init(title, handler: handler, itemImage: MenuAnimation.menu_smile.value)
     }
     
+    override var cuttail: Int? {
+        return nil
+    }
+    
     override func rowItem(presentation: AppMenu.Presentation, interaction: AppMenuBasicItem.Interaction) -> TableRowItem {
         return MessageContainsPacksItem(item: self, packs: packs, interaction: interaction, presentation: presentation, context: context)
     }

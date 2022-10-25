@@ -1227,7 +1227,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                 }
             }
             
-            var usernames = channel.usernames.map {
+            var usernames = channel.usernames.filter { $0.isActive }.map {
                 $0.username
             }
             if usernames.isEmpty, let address = channel.addressName {
