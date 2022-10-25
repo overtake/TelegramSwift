@@ -2196,7 +2196,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let readHistory = combineLatest(self.maxVisibleIncomingMessageIndex.get(), canRead)
             |> map { [weak self] messageIndex, canRead in
                 guard let `self` = self else {return}
-                if canRead && SystemIdleTime() < 30 {
+                if canRead {
                     var apply = false
                     let _ = previousMaxIncomingMessageIdByNamespace.modify { dict in
                         let previousIndex = dict[messageIndex.id.namespace]
@@ -5263,7 +5263,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let hasEntries = self.previousView.with { $0?.filteredEntries.count ?? 0 } > 1
         let checkScroll = self.historyState.isDownOfHistory && scroll.rect.minY == genericView.tableView.frame.height && hasEntries
         let screenIsLocked = appDelegate?.isLockedValue() ?? false
-        if checkScroll, SystemIdleTime() < 30, !screenIsLocked, context.window.isKeyWindow {
+        if checkScroll, !screenIsLocked, context.window.isKeyWindow {
             return true
         } else {
             return false

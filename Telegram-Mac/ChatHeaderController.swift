@@ -1908,6 +1908,7 @@ final class ChatGroupCallView : Control, ChatHeaderProtocol {
         joinButton.scaleOnClick = true
 
         self.avatarsContainer.center()
+        border = [.Bottom]
 
         self.update(with: state, animated: false)
         updateLocalizationAndTheme(theme: theme)
@@ -2105,7 +2106,6 @@ final class ChatGroupCallView : Control, ChatHeaderProtocol {
             }
         }
         
-        
         let headerLayout = TextViewLayout(.initialize(string: title, color: theme.colors.text, font: .medium(.text)))
         headerLayout.measure(width: frame.width - 100)
         headerView.update(headerLayout)
@@ -2133,7 +2133,6 @@ final class ChatGroupCallView : Control, ChatHeaderProtocol {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         backgroundColor = theme.colors.background
-        border = [.Bottom]
         borderColor = theme.colors.border
         joinButton.set(font: .medium(.text), for: .Normal)
         joinButton.set(text: strings().chatGroupCallJoin, for: .Normal)
@@ -2143,7 +2142,6 @@ final class ChatGroupCallView : Control, ChatHeaderProtocol {
         joinButton.set(background: theme.colors.accent, for: .Normal)
         joinButton.set(background: theme.colors.accent.highlighted, for: .Highlight)
         
-
     }
     
     override func layout() {
@@ -2164,12 +2162,11 @@ final class ChatGroupCallView : Control, ChatHeaderProtocol {
             self.avatarsContainer.centerY(x: floorToScreenPixels(backingScaleFactor, (frame.width - avatarSize) / 2))
         }
         
-        headerView.textLayout?.measure(width: frame.width - 100)
-        headerView.update(headerView.textLayout)
+        headerView.resize(frame.width - 100)
 
         
-        headerView.setFrameOrigin(.init(x: 22, y: frame.midY - headerView.frame.height))
-        membersCountView.setFrameOrigin(.init(x: 22, y: frame.midY))
+        headerView.setFrameOrigin(.init(x: 22, y: bounds.midY - headerView.frame.height))
+        membersCountView.setFrameOrigin(.init(x: 22, y: bounds.midY))
                 
         button.frame = bounds
     }

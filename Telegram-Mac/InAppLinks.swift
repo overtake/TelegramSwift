@@ -446,6 +446,8 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 let mode: ReplyThreadMode
                 if peer.isChannel {
                     mode = .comments(origin: threadMessageId)
+                } else if peer.isForum {
+                    mode = .topic(origin: threadMessageId)
                 } else {
                     mode = .replies(origin: threadMessageId)
                 }

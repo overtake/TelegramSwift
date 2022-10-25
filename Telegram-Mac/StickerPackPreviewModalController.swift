@@ -35,12 +35,12 @@ private final class StickerPackArguments {
     let setEmoji:(TelegramMediaFile)->Void
 
     let addpack:(State.Source, State.Collection, Bool)->Void
-    let addAll:(State.Source, [State.Collection])->Void
+    let addAll:(State.Source, [State.Collection], Bool)->Void
 
     let share:(String)->Void
     let close:()->Void
     let previewPremium: (TelegramMediaFile, NSView)->Void
-    init(context: AccountContext, send:@escaping(Media, NSView, Bool, Bool)->Void, setEmoji:@escaping(TelegramMediaFile)->Void, addpack:@escaping(State.Source, State.Collection, Bool)->Void, addAll:@escaping(State.Source, [State.Collection])->Void, share:@escaping(String)->Void, close:@escaping()->Void, previewPremium: @escaping(TelegramMediaFile, NSView)->Void) {
+    init(context: AccountContext, send:@escaping(Media, NSView, Bool, Bool)->Void, setEmoji:@escaping(TelegramMediaFile)->Void, addpack:@escaping(State.Source, State.Collection, Bool)->Void, addAll:@escaping(State.Source, [State.Collection], Bool)->Void, share:@escaping(String)->Void, close:@escaping()->Void, previewPremium: @escaping(TelegramMediaFile, NSView)->Void) {
         self.context = context
         self.send = send
         self.setEmoji = setEmoji
@@ -362,7 +362,7 @@ private class StickersModalView : View {
                 if collections.count == 1 {
                     arguments.addpack(source, collections[0], true)
                 } else {
-                    arguments.addAll(source, collections)
+                    arguments.addAll(source, collections, true)
                 }
             }
             
@@ -503,12 +503,27 @@ class StickerPackPreviewModalController: ModalViewController {
             }
             self?.onAdd?()
             
-        }, addAll: { [weak self] source, collections in
+        }, addAll: { [weak self] source, collections, close in
             
             let signals = collections.map {
                 context.engine.stickers.addStickerPackInteractively(info: $0.info, items: $0.items)
             }
             _ = combineLatest(signals).start()
+            
+            if close {
+                self?.close()
+                self?.disposable.dispose()
+            } else {
+                for collection in collections {
+                    switch source {
+                    case .emoji:
+                        self?.installed.insert(.emoji(.name(collection.info.shortName)))
+                    case .stickers:
+                        self?.installed.insert(.emoji(.name(collection.info.shortName)))
+                    }
+                }
+                
+            }
             
             self?.onAdd?()
 
