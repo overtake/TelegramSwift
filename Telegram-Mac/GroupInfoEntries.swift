@@ -327,7 +327,7 @@ final class GroupInfoArguments : PeerInfoArguments {
             case .discussion:
                 text = strings().peerInfoTopicsLimitedDiscussionGroups
             }
-            alert(for: context.window, info: text)
+            showModalText(for: context.window, text: text)
         } else {
             if convert {
                 let upgrade = upgradeToSupergroup()

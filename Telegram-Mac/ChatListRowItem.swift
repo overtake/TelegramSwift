@@ -843,6 +843,12 @@ class ChatListRowItem: TableRowItem {
         }
     }
     
+    var badgeMuted: Bool {
+        let isMuted = isMuted || (readState?.isMuted ?? false)
+
+        return isMuted
+    }
+    
     var isLastPinned: Bool {
         switch pinnedType {
         case .last:
