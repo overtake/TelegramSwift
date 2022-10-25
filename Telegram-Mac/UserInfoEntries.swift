@@ -1119,7 +1119,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                     infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: strings().peerInfoPhone, number: strings().newContactPhoneHidden), canCopy: false, viewType: .singleItem))
                 }
                 
-                var usernames = user.usernames.map {
+                var usernames = user.usernames.filter { $0.isActive }.map {
                     $0.username
                 }
                 if usernames.isEmpty, let address = user.addressName {

@@ -395,6 +395,7 @@ class PeerListContainerView : View {
     }
 
     private var callView: ChatGroupCallView?
+    private var header: NSView?
     
     private let backgroundView = BackgroundView(frame: NSZeroRect)
     

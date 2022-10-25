@@ -471,6 +471,11 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         recentAnimated.insert(.init(index: .init(index: 0, id: 0), file: file, indexKeys: []), at: 0)
     }
     
+    struct Tuple : Equatable {
+        let items: [StickerPackItem]
+        let selected: [EmojiesSectionRowItem.SelectedItem]
+    }
+    
     if let search = state.search {
         
         if !search.isEmpty {
@@ -529,7 +534,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 index += 1
                 
                                 
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_ae"), equatable: InputDataEquatable(animatedEmoji), comparable: nil, item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("search_ae"), equatable: InputDataEquatable(Tuple(items: animatedEmoji, selected: state.selectedItems)), comparable: nil, item: { initialSize, stableId in
                     return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: false, info: nil, items: animatedEmoji, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send)
                 }))
                 index += 1
@@ -627,7 +632,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 reactionsRecent.append(contentsOf: recent.compactMap(transform))
                 
                 
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(reactionsPopular), comparable: nil, item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(Tuple(items: reactionsPopular, selected: state.selectedItems)), comparable: nil, item: { initialSize, stableId in
                     return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: reactionsPopular, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send)
                 }))
                 index += 1
@@ -650,7 +655,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                     }
                     
                     
-                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(-1), equatable: InputDataEquatable(reactionsRecent), comparable: nil, item: { initialSize, stableId in
+                    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(-1), equatable: InputDataEquatable(Tuple(items: reactionsRecent, selected: state.selectedItems)), comparable: nil, item: { initialSize, stableId in
                         return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: reactionsRecent, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send)
                     }))
                     index += 1
@@ -711,7 +716,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             
             let hasAnimatedRecent = arguments.mode == .emoji || arguments.mode == .forumTopic || arguments.mode == .selectAvatar
             if key == .Recent, !recentAnimated.isEmpty, hasAnimatedRecent {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(recentAnimated), comparable: nil, item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(Tuple.init(items: recentAnimated, selected: state.selectedItems)), comparable: nil, item: { initialSize, stableId in
                     return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: recentAnimated, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send)
                 }))
                 index += 1
@@ -746,9 +751,10 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 let section: State.Section
                 let isPremium: Bool
                 let revealed: Bool
+                let selectedItems:[EmojiesSectionRowItem.SelectedItem]
             }
             
-            let tuple = Tuple(section: section, isPremium: state.peer?.peer.isPremium ?? false, revealed: state.revealed[section.info.id.id] != nil)
+            let tuple = Tuple(section: section, isPremium: state.peer?.peer.isPremium ?? false, revealed: state.revealed[section.info.id.id] != nil, selectedItems: state.selectedItems)
             
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_section(section.info.id.id), equatable: InputDataEquatable(tuple), comparable: nil, item: { initialSize, stableId in
                 return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: tuple.revealed, installed: section.installed, info: section.info, items: section.items, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send, viewSet: { info in
@@ -1542,10 +1548,26 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         }
     }
     
-    func setExternalForumTitle(_ title: String, iconColor: Int32 = 0) {
+    func setExternalForumTitle(_ title: String, iconColor: Int32 = 0, selectedItem: EmojiesSectionRowItem.SelectedItem? = nil) {
         updateState? { current in
             var current = current
             current.externalTopic = .init(title: title, iconColor: iconColor)
+            if let selectedItem = selectedItem {
+                current.selectedItems = [selectedItem]
+            } else {
+                current.selectedItems = []
+            }
+            return current
+        }
+    }
+    func setSelectedItem(_ selectedItem: EmojiesSectionRowItem.SelectedItem? = nil) {
+        updateState? { current in
+            var current = current
+            if let selectedItem = selectedItem {
+                current.selectedItems = [selectedItem]
+            } else {
+                current.selectedItems = []
+            }
             return current
         }
     }

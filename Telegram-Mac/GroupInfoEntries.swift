@@ -13,6 +13,12 @@ import TelegramCore
 import SwiftSignalKit
 import TGUIKit
 
+enum TopicsLimitedReason : Equatable {
+    case participants(Int)
+    case discussion
+}
+
+
 
 let minumimUsersBlock: Int = 5
 
@@ -311,27 +317,38 @@ final class GroupInfoArguments : PeerInfoArguments {
         })
         pushViewController(setup)
     }
-    func toggleForum(_ enabled: Bool, _ convert: Bool) {
+    func toggleForum(_ enabled: Bool, _ convert: Bool, _ limit: TopicsLimitedReason?) {
         let context = self.context
-        if convert {
-            let upgrade = upgradeToSupergroup()
-            
-            _ = showModalProgress(signal: context.engine.peers.convertGroupToSupergroup(peerId: peerId), for: context.window).start(next: { peerId in
-                upgrade(peerId, {
-                    _ = context.engine.peers.setChannelForumMode(id: peerId, isForum: enabled).start()
-                })
-            }, error: { error in
-                switch error {
-                case .tooManyChannels:
-                    showInactiveChannels(context: context, source: .upgrade)
-                case .generic:
-                    alert(for: context.window, info: strings().unknownError)
-                }
-            })
-            
-            
+        if let limit = limit {
+            let text: String
+            switch limit {
+            case let .participants(minimum):
+                text = strings().peerInfoTopicsLimitedParticipantCountTextCountable(minimum)
+            case .discussion:
+                text = strings().peerInfoTopicsLimitedDiscussionGroups
+            }
+            alert(for: context.window, info: text)
         } else {
-            _ = context.engine.peers.setChannelForumMode(id: peerId, isForum: enabled).start()
+            if convert {
+                let upgrade = upgradeToSupergroup()
+                
+                _ = showModalProgress(signal: context.engine.peers.convertGroupToSupergroup(peerId: peerId), for: context.window).start(next: { peerId in
+                    upgrade(peerId, {
+                        _ = showModalProgress(signal: context.engine.peers.setChannelForumMode(id: peerId, isForum: enabled), for: context.window).start()
+                    })
+                }, error: { error in
+                    switch error {
+                    case .tooManyChannels:
+                        showInactiveChannels(context: context, source: .upgrade)
+                    case .generic:
+                        alert(for: context.window, info: strings().unknownError)
+                    }
+                })
+                
+                
+            } else {
+                _ = showModalProgress(signal: context.engine.peers.setChannelForumMode(id: peerId, isForum: enabled), for: context.window).start()
+            }
         }
     }
     
@@ -1049,7 +1066,7 @@ enum GroupInfoEntry: PeerInfoEntry {
     case groupAboutDescription(section:Int, viewType: GeneralViewType)
     case groupStickerset(section:Int, packName: String, viewType: GeneralViewType)
     case preHistory(section:Int, enabled: Bool, viewType: GeneralViewType)
-    case toggleForum(section:Int, enabled: Bool, convert: Bool, viewType: GeneralViewType)
+    case toggleForum(section:Int, enabled: Bool, convert: Bool, limit: TopicsLimitedReason?, viewType: GeneralViewType)
     case forumInfo(section:Int, text: String, viewType: GeneralViewType)
     case groupManagementInfoLabel(section:Int, text: String, viewType: GeneralViewType)
     case administrators(section:Int, count: String, viewType: GeneralViewType)
@@ -1082,7 +1099,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .groupAboutDescription(section, _): return .groupAboutDescription(section: section, viewType: viewType)
         case let .groupStickerset(section, packName, _): return .groupStickerset(section: section, packName: packName, viewType: viewType)
         case let .preHistory(section, enabled, _): return .preHistory(section: section, enabled: enabled, viewType: viewType)
-        case let .toggleForum(section, enabled, convert, _): return .toggleForum(section: section, enabled: enabled, convert: convert, viewType: viewType)
+        case let .toggleForum(section, enabled, convert, limit, _): return .toggleForum(section: section, enabled: enabled, convert: convert, limit: limit, viewType: viewType)
         case let .forumInfo(section, text, _): return .forumInfo(section: section, text: text, viewType: viewType)
         case let .groupManagementInfoLabel(section, text, _): return .groupManagementInfoLabel(section: section, text: text, viewType: viewType)
         case let .administrators(section, count, _): return .administrators(section: section, count: count, viewType: viewType)
@@ -1189,8 +1206,8 @@ enum GroupInfoEntry: PeerInfoEntry {
             } else {
                 return false
             }
-        case let .toggleForum(sectionId, enabled, convert, viewType):
-            if case .toggleForum(sectionId, enabled, convert, viewType) = entry {
+        case let .toggleForum(sectionId, enabled, convert, limit, viewType):
+            if case .toggleForum(sectionId, enabled, convert, limit, viewType) = entry {
                 return true
             } else {
                 return false
@@ -1486,7 +1503,7 @@ enum GroupInfoEntry: PeerInfoEntry {
             return sectionId
         case let .preHistory(sectionId, _, _):
             return sectionId
-        case let .toggleForum(sectionId, _, _, _):
+        case let .toggleForum(sectionId, _, _, _, _):
             return sectionId
         case let .forumInfo(sectionId, _, _):
             return sectionId
@@ -1551,7 +1568,7 @@ enum GroupInfoEntry: PeerInfoEntry {
             return (sectionId * 100000) + stableIndex
         case let .preHistory(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
-        case let .toggleForum(sectionId, _, _, _):
+        case let .toggleForum(sectionId, _, _, _, _):
             return (sectionId * 100000) + stableIndex
         case let .forumInfo(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
@@ -1640,9 +1657,11 @@ enum GroupInfoEntry: PeerInfoEntry {
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoAboutPlaceholder, filter: { $0 }, updated: arguments.updateEditingDescriptionText, limit: 255)
         case let .preHistory(_, enabled, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoPreHistory, icon: theme.icons.profile_group_discussion, type: .context(enabled ? strings().peerInfoPreHistoryVisible : strings().peerInfoPreHistoryHidden), viewType: viewType, action: arguments.preHistorySetup)
-        case let .toggleForum(_, enabled, convert, viewType):
+        case let .toggleForum(_, enabled, convert, limit, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoForum, icon: theme.icons.profile_group_topics, type: .switchable(enabled), viewType: viewType, action: {
-                arguments.toggleForum(!enabled, convert)
+                arguments.toggleForum(!enabled, convert, limit)
+            }, enabled: limit == nil, autoswitch: false, disabledAction: {
+                arguments.toggleForum(!enabled, convert, limit)
             })
         case let .forumInfo(_, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId.hashValue, text: text, viewType: viewType)
@@ -1869,8 +1888,18 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     actionBlock.append(.permissions(section: GroupInfoSection.type.rawValue, count: activePermissionCount.flatMap({ "\($0)/\(allGroupPermissionList.count)" }) ?? "", viewType: .innerItem))
                     actionBlock.append(.administrators(section: GroupInfoSection.type.rawValue, count: "", viewType: .lastItem))
                     
-                    if access.isCreator {
-                        actionBlock.append(.toggleForum(section: GroupInfoSection.type.rawValue, enabled: false, convert: true, viewType: .singleItem))
+                    if access.isCreator, let cachedData = view.cachedData as? CachedGroupData {
+                        
+                        var minParticipants = 200
+                        if let data = arguments.context.appConfiguration.data, let value = data["forum_upgrade_participants_min"] as? Double {
+                            minParticipants = Int(value)
+                        }
+                        var topicsLimitedReason: TopicsLimitedReason?
+                        let count = cachedData.participants?.participants.count ?? 0
+                        if count < minParticipants {
+                            topicsLimitedReason = .participants(minParticipants)
+                        }
+                        actionBlock.append(.toggleForum(section: GroupInfoSection.type.rawValue, enabled: false, convert: true, limit: topicsLimitedReason, viewType: .singleItem))
                     }
                     
                 }
@@ -1921,12 +1950,32 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                 if cachedChannelData.flags.contains(.canSetStickerSet) && access.canEditGroupInfo {
                     actionBlock.append(.groupStickerset(section: GroupInfoSection.type.rawValue, packName: cachedChannelData.stickerPack?.title ?? "", viewType: .singleItem))
                 }
-                if access.isCreator {
-                    actionBlock.append(.toggleForum(section: GroupInfoSection.type.rawValue, enabled: channel.isForum, convert: false, viewType: .singleItem))
+                var minParticipants = 200
+                if let data = arguments.context.appConfiguration.data, let value = data["forum_upgrade_participants_min"] as? Double {
+                    minParticipants = Int(value)
+                }
+
+                var canSetupTopics = false
+                var topicsLimitedReason: TopicsLimitedReason?
+                if channel.flags.contains(.isForum) {
+                    canSetupTopics = true
+                } else if case let .known(value) = cachedChannelData.linkedDiscussionPeerId, value != nil {
+                    canSetupTopics = true
+                    topicsLimitedReason = .discussion
+                } else if let memberCount = cachedChannelData.participantsSummary.memberCount {
+                    canSetupTopics = true
+                    if Int(memberCount) < minParticipants {
+                        topicsLimitedReason = .participants(minParticipants)
+                    }
+                }
+
+                
+                if access.isCreator, canSetupTopics {
+                    actionBlock.append(.toggleForum(section: GroupInfoSection.type.rawValue, enabled: channel.isForum, convert: false, limit: topicsLimitedReason, viewType: .singleItem))
                 }
                 applyBlock(actionBlock)
                 
-                if access.isCreator {
+                if access.isCreator, canSetupTopics {
                     entries.append(.forumInfo(section: GroupInfoSection.type.rawValue, text: strings().peerInfoForumInfo, viewType: .textBottomItem))
                 }
                 
@@ -1999,7 +2048,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     aboutBlock.append(GroupInfoEntry.about(section: GroupInfoSection.desc.rawValue, text: about, viewType: .singleItem))
                 }
             }
-            var usernames = group.usernames.map {
+            var usernames = group.usernames.filter { $0.isActive }.map {
                 $0.username
             }
             if usernames.isEmpty, let address = group.addressName {

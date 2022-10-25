@@ -7501,6 +7501,36 @@ public final class L10n {
   public static var peerInfoStopBot: String  { return L10n.tr("Localizable", "PeerInfo.StopBot") }
   /// Subscribers
   public static var peerInfoSubscribers: String  { return L10n.tr("Localizable", "PeerInfo.Subscribers") }
+  /// Topics are currently unavailable in groups connected to channels.
+  public static var peerInfoTopicsLimitedDiscussionGroups: String  { return L10n.tr("Localizable", "PeerInfo.TopicsLimitedDiscussionGroups") }
+  /// %d
+  public static func peerInfoTopicsLimitedParticipantCountTextCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.TopicsLimitedParticipantCountText_countable", p1)
+  }
+  /// Only groups with more than %d members can have topics enabled.
+  public static func peerInfoTopicsLimitedParticipantCountTextFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.TopicsLimitedParticipantCountText_few", p1)
+  }
+  /// Only groups with more than %d members can have topics enabled.
+  public static func peerInfoTopicsLimitedParticipantCountTextMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.TopicsLimitedParticipantCountText_many", p1)
+  }
+  /// Only groups with more than %d member can have topics enabled.
+  public static func peerInfoTopicsLimitedParticipantCountTextOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.TopicsLimitedParticipantCountText_one", p1)
+  }
+  /// Only groups with more than %d members can have topics enabled.
+  public static func peerInfoTopicsLimitedParticipantCountTextOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.TopicsLimitedParticipantCountText_other", p1)
+  }
+  /// Only groups with more than %d members can have topics enabled.
+  public static func peerInfoTopicsLimitedParticipantCountTextTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.TopicsLimitedParticipantCountText_two", p1)
+  }
+  /// Only groups with more than %d members can have topics enabled.
+  public static func peerInfoTopicsLimitedParticipantCountTextZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "PeerInfo.TopicsLimitedParticipantCountText_zero", p1)
+  }
   /// Unarchive
   public static var peerInfoUnarchive: String  { return L10n.tr("Localizable", "PeerInfo.Unarchive") }
   /// Unblock User
