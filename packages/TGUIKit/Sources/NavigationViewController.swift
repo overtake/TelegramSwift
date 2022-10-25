@@ -924,12 +924,12 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     
     public func gotoEmpty(_ animated:Bool = true) -> Void {
         if controller != empty {
-            let range = 1 ..< stackCount - 1
-            let copy = stack[range]
-            stack.removeSubrange(1 ..< stackCount - 1)
-            for controller in copy {
+            for controller in stack {
+                controller.viewWillDisappear(false)
                 controller.didRemovedFromStack()
+                controller.viewDidDisappear(false)
             }
+            stack.removeAll()
             show(empty, animated ? .pop : .none)
         }
     }

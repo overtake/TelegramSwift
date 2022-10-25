@@ -648,13 +648,14 @@ class ChatListRowItem: TableRowItem {
             
             if let author = author as? TelegramUser, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, draft == nil {
                 if !(message.effectiveMedia is TelegramMediaAction) {
-                    let peerText: String = (author.id == context.account.peerId ? "\(strings().chatListYou)" : author.compactDisplayTitle)
+                    var peerText: String = (author.id == context.account.peerId ? "\(strings().chatListYou)" : author.displayTitle)
                     
                     let topicNameAttributed = NSMutableAttributedString()
 
                     if let forumTopicData = forumTopicData, peer.isForum {
                         _ = topicNameAttributed.append(string: forumTopicData.title, color: theme.chatList.peerTextColor, font: .normal(.text))
                     } else if peer.isForum, titleMode == .forumInfo, case let .topic(_, data) = mode {
+                        peerText = author.compactDisplayTitle
                         _ = topicNameAttributed.append(string: data.info.title, color: theme.chatList.peerTextColor, font: .normal(.text))
                     }
 

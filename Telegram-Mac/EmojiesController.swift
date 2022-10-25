@@ -322,6 +322,7 @@ private struct State : Equatable {
     var search: [String]? = nil
     var reactions: AvailableReactions? = nil
     var recentStatusItems: [RecentMediaItem] = []
+    var forumTopicItems: [StickerPackItem] = []
     var featuredStatusItems: [RecentMediaItem] = []
     
     var recentReactionsItems: [RecentReactionItem] = []
@@ -469,6 +470,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     if arguments.mode == .forumTopic {
         let file = ForumUI.makeIconFile(title: state.externalTopic.title, iconColor: state.externalTopic.iconColor)
         recentAnimated.insert(.init(index: .init(index: 0, id: 0), file: file, indexKeys: []), at: 0)
+        recentAnimated.append(contentsOf: state.forumTopicItems)
     }
     
     struct Tuple : Equatable {
@@ -1374,11 +1376,28 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
         } else if mode == .reactions {
             orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudRecentReactions)
             orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudTopReactions)
+        } else if mode == .forumTopic {
+            
         }
 
         
  
         let emojies = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: orderedItemListCollectionIds, namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000)
+        
+        
+        let forumTopic: Signal<[StickerPackItem], NoError>
+        if mode == .forumTopic {
+            forumTopic = context.engine.stickers.loadedStickerPack(reference: .iconTopicEmoji, forceActualized: false) |> map { result in
+                switch result {
+                case let .result(_, items, _):
+                    return items
+                default:
+                    return []
+                }
+            }
+        } else {
+            forumTopic = .single([])
+        }
 
         
         let reactions = context.reactions.stateValue
@@ -1395,7 +1414,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
            }
         
         
-        actionsDisposable.add(combineLatest(emojies, context.account.viewTracker.featuredEmojiPacks(), context.account.postbox.peerView(id: context.peerId), search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji).start(next: { view, featured, peerView, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji in
+        actionsDisposable.add(combineLatest(emojies, context.account.viewTracker.featuredEmojiPacks(), context.account.postbox.peerView(id: context.peerId), search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji, forumTopic).start(next: { view, featured, peerView, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji, forumTopic in
             
             
             var featuredStatusEmoji: OrderedItemListView?
@@ -1489,6 +1508,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                 }
                 current.featuredStatusItems = featuredStatusItems
                 current.recentStatusItems = recentStatusItems
+                current.forumTopicItems = forumTopic
                 current.sections = sections
                 current.search = search
                 current.reactions = reactions

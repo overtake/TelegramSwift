@@ -348,13 +348,12 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
         entries.append(.info(sectionId, admin, adminView.peerPresences[admin.id] as? TelegramUserPresence, .singleItem))
         
         let isGroup: Bool
-        let maskRightsFlags: TelegramChatAdminRightsFlags
+        let maskRightsFlags: TelegramChatAdminRightsFlags = .peerSpecific(peer: .init(channel))
         let rightsOrder: [TelegramChatAdminRightsFlags]
         
         switch channel.info {
         case .broadcast:
             isGroup = false
-            maskRightsFlags = .internal_broadcastSpecific
             rightsOrder = [
                 .canChangeInfo,
                 .canPostMessages,
@@ -366,7 +365,6 @@ private func channelAdminControllerEntries(state: ChannelAdminControllerState, a
             ]
         case .group:
             isGroup = true
-            maskRightsFlags = .internal_groupSpecific
             rightsOrder = [
                 .canChangeInfo,
                 .canDeleteMessages,
