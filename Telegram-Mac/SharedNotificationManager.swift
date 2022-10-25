@@ -639,6 +639,9 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 dict["source.peer.id"] = sourceReference.messageId.peerId.id._internalGetInt64Value()
                                 dict["source.peer.namespace"] = sourceReference.messageId.peerId.namespace._internalGetInt32Value()
                             }
+                            if message.sourceReference != nil || source.threadData != nil {
+                                dict["is_thread"] = true
+                            }
                             if let threadId = message.replyAttribute?.threadMessageId {
                                 dict["thread.message.id"] = threadId.id
                                 dict["thread.message.namespace"] = threadId.namespace

@@ -117,7 +117,8 @@ class UNUserNotifications : NSObject {
                 } else {
                     threadData = nil
                 }
-                if let threadId = getNotificationMessageId(userInfo: userInfo, for: "thread") {
+                let isThread = userInfo["is_thread"] as? Bool
+                if let threadId = getNotificationMessageId(userInfo: userInfo, for: "thread"), isThread == true {
                     self.bindings.navigateToThread(account, threadId, fromId, threadData)
                 } else {
                     self.bindings.navigateToChat(account, messageId.peerId)
