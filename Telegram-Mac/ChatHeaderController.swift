@@ -327,7 +327,7 @@ class ChatHeaderController {
             case .promo:
                 primary = ChatSponsoredView(chatInteraction, state: _headerState, frame: primaryRect)
             case .pendingRequests:
-                primary = ChatPendingRequests(chatInteraction, state: _headerState, frame: primaryRect)
+                primary = ChatPendingRequests(context: chatInteraction.context, openAction: chatInteraction.openPendingRequests, dismissAction: chatInteraction.dismissPendingRequests, state: _headerState, frame: primaryRect)
             case .requestChat:
                 primary = ChatRequestChat(chatInteraction, state: _headerState, frame: primaryRect)
             case .restartTopic:
@@ -2276,8 +2276,7 @@ private final class ChatRequestChat : Control, ChatHeaderProtocol {
     }
 }
 
-private final class ChatPendingRequests : Control, ChatHeaderProtocol {
-    private let chatInteraction:ChatInteraction
+final class ChatPendingRequests : Control, ChatHeaderProtocol {
     private let dismiss:ImageButton = ImageButton()
     private let textView = TextView()
     private var avatars:[AvatarContentView] = []
@@ -2307,9 +2306,10 @@ private final class ChatPendingRequests : Control, ChatHeaderProtocol {
     }
 
     private var peers:[Avatar] = []
+    private let context: AccountContext
     
-    required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
-        self.chatInteraction = chatInteraction
+    required init(context: AccountContext, openAction:@escaping()->Void, dismissAction:@escaping([PeerId])->Void, state: ChatHeaderState, frame: NSRect) {
+        self.context = context
         super.init(frame: frame)
         addSubview(avatarsContainer)
         avatarsContainer.isEventLess = true
@@ -2318,15 +2318,15 @@ private final class ChatPendingRequests : Control, ChatHeaderProtocol {
         self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
         _ = self.dismiss.sizeToFit()
         
-        self.set(handler: { [weak self] _ in
-            self?.chatInteraction.openPendingRequests()
+        self.set(handler: { _ in
+            openAction()
         }, for: .Click)
         
         dismiss.set(handler: { [weak self] _ in
             guard let `self` = self else {
                 return
             }
-            self.chatInteraction.dismissPendingRequests(self.peers.map { $0.peer.id })
+            dismissAction(self.peers.map { $0.peer.id })
         }, for: .SingleClick)
 
         textView.userInteractionEnabled = false
@@ -2381,7 +2381,7 @@ private final class ChatPendingRequests : Control, ChatHeaderProtocol {
                 }
             }
             for inserted in inserted {
-                let control = AvatarContentView(context: chatInteraction.context, peer: inserted.1.peer, message: nil, synchronousLoad: false, size: NSMakeSize(30, 30))
+                let control = AvatarContentView(context: context, peer: inserted.1.peer, message: nil, synchronousLoad: false, size: NSMakeSize(30, 30))
                 control.updateLayout(size: NSMakeSize(30, 30), isClipped: inserted.0 != 0, animated: animated)
                 control.userInteractionEnabled = false
                 control.setFrameSize(NSMakeSize(30, 30))

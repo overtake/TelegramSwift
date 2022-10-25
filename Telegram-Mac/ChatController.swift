@@ -650,7 +650,7 @@ class ChatControllerView : View, ChatInputDelegate {
            state = .search(voiceChat, searchInteractions, interfaceState.isSearchMode.1, interfaceState.isSearchMode.2)
         } else if let threadData = interfaceState.threadInfo, threadData.isClosed, let peer = interfaceState.peer as? TelegramChannel, peer.adminRights != nil || peer.flags.contains(.isCreator) || threadData.isOwnedByMe {
             state = .restartTopic(voiceChat)
-        } else if let count = interfaceState.inviteRequestsPending, let inviteRequestsPendingPeers = interfaceState.inviteRequestsPendingPeers, !inviteRequestsPendingPeers.isEmpty {
+        } else if let count = interfaceState.inviteRequestsPending, let inviteRequestsPendingPeers = interfaceState.inviteRequestsPendingPeers, !inviteRequestsPendingPeers.isEmpty, interfaceState.threadInfo == nil {
             state = .pendingRequests(voiceChat, Int(count), inviteRequestsPendingPeers)
         } else if interfaceState.reportMode != nil {
             state = .none(nil)
@@ -6881,7 +6881,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             dismissedPinnedIds.set(ChatDismissedPins(ids: value.interfaceState.dismissedPinnedMessageId, tempMaxId: value.tempPinnedMaxId))
            
             
-            if value.inviteRequestsPending != oldValue.inviteRequestsPending, let value = value.inviteRequestsPending, value > 0 {
+            if value.inviteRequestsPending != oldValue.inviteRequestsPending, let value = value.inviteRequestsPending, value > 0, !self.mode.isTopicMode {
                 let peerId = self.chatLocation.peerId
                 let importersContext = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .requests(query: nil))
                 importersContext.loadMore()

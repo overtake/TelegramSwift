@@ -320,7 +320,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 var needConfirm = needConfirm || url.host != URL(string: urlValue)?.host
                 
                 if needConfirm {
-                    let allowed = ["telegram.org", "telegram.dog", "telegram.me", "telesco.pe"]
+                    let allowed = ["telegram.org", "telegram.dog", "telegram.me", "telesco.pe", "fragment.com"]
                     if let url = URL(string: urlValue) {
                         if let host = url.host, allowed.contains(host) {
                             needConfirm = false
