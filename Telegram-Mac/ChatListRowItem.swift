@@ -752,6 +752,9 @@ class ChatListRowItem: TableRowItem {
         super.init(initialSize)
         
         if showBadge {
+            
+            let isMuted = isMuted || (readState?.isMuted ?? false)
+            
             if let unreadCount = readState?.count, unreadCount > 0, mentionsCount == nil || (unreadCount > 1 || mentionsCount! != unreadCount)  {
 
                 badgeNode = BadgeNode(.initialize(string: "\(unreadCount)", color: theme.chatList.badgeTextColor, font: .medium(.small)), isMuted ? theme.chatList.badgeMutedBackgroundColor : theme.chatList.badgeBackgroundColor)
