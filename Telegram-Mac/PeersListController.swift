@@ -17,10 +17,15 @@ private final class Arguments {
     let context: AccountContext
     let joinGroupCall:(ChatActiveGroupCallInfo)->Void
     let joinGroup:(PeerId)->Void
-    init(context: AccountContext, joinGroupCall:@escaping(ChatActiveGroupCallInfo)->Void, joinGroup:@escaping(PeerId)->Void) {
+    let openPendingRequests:()->Void
+    let dismissPendingRequests:([PeerId])->Void
+
+    init(context: AccountContext, joinGroupCall:@escaping(ChatActiveGroupCallInfo)->Void, joinGroup:@escaping(PeerId)->Void, openPendingRequests:@escaping()->Void, dismissPendingRequests: @escaping([PeerId])->Void) {
         self.context = context
         self.joinGroupCall = joinGroupCall
         self.joinGroup = joinGroup
+        self.openPendingRequests = openPendingRequests
+        self.dismissPendingRequests = dismissPendingRequests
     }
 }
 
@@ -130,13 +135,17 @@ struct PeerListState : Equatable {
             if lhs.online != rhs.online {
                 return false
             }
+            if lhs.invitationState != rhs.invitationState {
+                return false
+            }
             return true
         }
         
-        let peer: TelegramChannel
-        let peerView: PeerView
-        let online: Int32
-        let call: ChatActiveGroupCallInfo?
+        var peer: TelegramChannel
+        var peerView: PeerView
+        var online: Int32
+        var call: ChatActiveGroupCallInfo?
+        var invitationState: PeerInvitationImportersState?
     }
     
     var proxySettings: ProxySettings
@@ -472,9 +481,17 @@ class PeerListContainerView : View {
             voiceChat = nil
         }
         
+        self.updateAdditionHeader(state, size: frame.size, arguments: arguments, animated: animated)
+
+        
         if let info = voiceChat, state.splitState != .minimisize {
             let current: ChatGroupCallView
-            let rect = NSMakeRect(0, -44, frame.width, 44)
+            var offset: CGFloat = -44
+            if let header = header {
+                offset += header.frame.height
+            }
+            
+            let rect = NSMakeRect(0, offset, frame.width, 44)
             if let view = self.callView {
                 current = view
             } else {
@@ -482,7 +499,7 @@ class PeerListContainerView : View {
                     arguments.joinGroupCall(info)
                 }, context: arguments.context, state: .none(info), frame: rect)
                 self.callView = current
-                containerView.addSubview(current)
+                containerView.addSubview(current, positioned: .below, relativeTo: header)
                 
             }
             current.border = [.Right, .Bottom]
@@ -492,6 +509,7 @@ class PeerListContainerView : View {
             performSubviewRemoval(view, animated: animated)
             self.callView = nil
         }
+        
         
         if let peer = state.forumPeer?.peer, peer.participationStatus == .left, state.splitState != .minimisize {
             let current: ActionView
@@ -582,6 +600,48 @@ class PeerListContainerView : View {
         }
   
         self.updateLayout(self.frame.size, transition: transition)
+    }
+    
+
+    
+    private func updateAdditionHeader(_ state: PeerListState, size: NSSize, arguments: Arguments, animated: Bool) {
+        
+        let inviteRequestsPending = state.forumPeer?.invitationState?.waitingCount ?? 0
+        
+        let hasInvites: Bool = state.forumPeer != nil && inviteRequestsPending > 0 && state.splitState != .minimisize
+        if let state = state.forumPeer?.invitationState, hasInvites {
+            self.updatePendingRequests(state, arguments: arguments, animated: animated)
+        } else {
+            self.updatePendingRequests(nil, arguments: arguments, animated: animated)
+        }
+    }
+    
+    private func updatePendingRequests(_ state: PeerInvitationImportersState?, arguments: Arguments, animated: Bool) {
+        if let state = state {
+            let current: ChatPendingRequests
+            let headerState: ChatHeaderState = .pendingRequests(nil, Int(state.count), state.importers)
+            if let view = self.header as? ChatPendingRequests {
+                current = view
+            } else {
+                if let view = self.header {
+                    performSubviewRemoval(view, animated: animated)
+                    self.header = nil
+                }
+                
+                
+                current = .init(context: arguments.context, openAction: arguments.openPendingRequests, dismissAction: arguments.dismissPendingRequests, state: headerState, frame: NSMakeRect(0, 0, frame.width, 44))
+                
+                current.border = [.Right, .Bottom]
+                self.header = current
+                containerView.addSubview(current)
+            }
+            current.update(with: headerState, animated: animated)
+        } else {
+            if let view = self.header {
+                performSubviewRemoval(view, animated: animated)
+                self.header = nil
+            }
+        }
     }
     
     
@@ -780,11 +840,21 @@ class PeerListContainerView : View {
                 break
             }
         }
+        
         var inset: CGFloat = 0
+        
+        if let header = self.header {
+            offset += header.frame.height
+            transition.updateFrame(view: header, frame: NSMakeRect(0, inset, size.width, header.frame.height))
+            inset += header.frame.height
+        }
+        
         if let callView = self.callView {
             offset += callView.frame.height
-            inset = callView.frame.height
-            transition.updateFrame(view: callView, frame: NSMakeRect(0, 0, size.width, callView.frame.height))
+            transition.updateFrame(view: callView, frame: NSMakeRect(0, inset, size.width, callView.frame.height))
+            
+            inset += callView.frame.height
+
         }
         
         let componentSize = NSMakeSize(40, 30)
@@ -931,6 +1001,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     private let searchOptions: AppSearchOptions
     
     private var downloadsController: ViewController?
+    
+    private var tempImportersContext: PeerInvitationImportersContext? = nil
+
     
     let mode:PeerListMode
     private(set) var searchController:SearchController? {
@@ -1085,9 +1158,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         let forumPeer: Signal<PeerListState.ForumData?, NoError>
 
         if case let .forum(peerId) = self.mode {
+            let tempImportersContext = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .requests(query: nil))
             
-            let signal = combineLatest(context.account.postbox.peerView(id: peerId), getGroupCallPanelData(context: context, peerId: peerId))
-            forumPeer = signal |> mapToSignal { view, call in
+            self.tempImportersContext = tempImportersContext
+
+            let signal = combineLatest(context.account.postbox.peerView(id: peerId), getGroupCallPanelData(context: context, peerId: peerId), tempImportersContext.state)
+            forumPeer = signal |> mapToSignal { view, call, invitationState in
                 if let peer = peerViewMainPeer(view) as? TelegramChannel, let cachedData = view.cachedData as? CachedChannelData, peer.isForum {
                     
                     let info: ChatActiveGroupCallInfo?
@@ -1105,7 +1181,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                         online = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: peerId)
                     }
                     return online |> map {
-                        return .init(peer: peer, peerView: view, online: $0, call: info)
+                        return .init(peer: peer, peerView: view, online: $0, call: info, invitationState: invitationState)
                     }
                 } else {
                     return .single(nil)
@@ -1318,6 +1394,23 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
         }, joinGroup: { peerId in
             joinChannel(context: context, peerId: peerId)
+        }, openPendingRequests: { [weak self] in
+            if let importersContext = self?.tempImportersContext, case let .forum(peerId) = mode {
+                let navigation = context.bindings.rootNavigation()
+                navigation.push(RequestJoinMemberListController(context: context, peerId: peerId, manager: importersContext, openInviteLinks: { [weak navigation] in
+                    navigation?.push(InviteLinksController(context: context, peerId: peerId, manager: nil))
+                }))
+            }
+        }, dismissPendingRequests: { peerIds in
+            if case let .forum(peerId) = mode {
+                FastSettings.dismissPendingRequests(peerIds, for: peerId)
+                updateState { current in
+                    var current = current
+                    current?.forumPeer?.invitationState = nil
+                    return current
+                }
+            }
+
         })
         
         self.takeArguments = { [weak arguments] in
