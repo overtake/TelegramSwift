@@ -586,18 +586,10 @@ class ChatServiceItem: ChatRowItem {
                     }
                 case let .topicCreated(title, _, iconFileId):
                     let text: String
-                    if authorId == context.peerId {
-                        if let iconFileId = iconFileId {
-                            text = strings().chatServiceGroupTopicCreatedYouIcon(title.prefixWithDots(30), "~~\(iconFileId)~~")
-                        } else {
-                            text = strings().chatServiceGroupTopicCreatedYou(title)
-                        }
+                    if let iconFileId = iconFileId {
+                        text = strings().chatServiceGroupTopicCreatedIcon("~~\(iconFileId)~~", title.prefixWithDots(30))
                     } else {
-                        if let iconFileId = iconFileId {
-                            text = strings().chatServiceGroupTopicCreatedIcon(authorName, title.prefixWithDots(30), "~~\(iconFileId)~~")
-                        } else {
-                            text = strings().chatServiceGroupTopicCreated(authorName, title.prefixWithDots(30))
-                        }
+                        text = strings().chatServiceGroupTopicCreated(title)
                     }
                     let _ =  attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                     

@@ -656,18 +656,10 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 iconText = nil
             }
-            if message.author?.id == account.peerId {
-                if let iconText = iconText {
-                    text = strings().chatServiceGroupTopicCreatedYouIcon(title, iconText)
-                } else {
-                    text = strings().chatServiceGroupTopicCreatedYou(title)
-                }
+            if let iconText = iconText {
+                text = strings().chatServiceGroupTopicCreatedIcon(iconText, title)
             } else {
-                if let iconText = iconText {
-                    text = strings().chatServiceGroupTopicCreatedIcon(authorName, title, iconText)
-                } else {
-                    text = strings().chatServiceGroupTopicCreated(authorName, title)
-                }
+                text = strings().chatServiceGroupTopicCreated(title)
             }
             if let iconText = iconText, let iconFileId = iconFileId {
                 let range = text.nsstring.range(of: iconText)

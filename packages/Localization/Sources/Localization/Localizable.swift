@@ -3173,9 +3173,9 @@ public final class L10n {
   public static func chatServiceGroupTookScreenshot(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TookScreenshot", p1)
   }
-  /// %1$@ created topic "%2$@"
-  public static func chatServiceGroupTopicCreated(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "Chat.Service.Group.TopicCreated", p1, p2)
+  /// "%2$@" was created
+  public static func chatServiceGroupTopicCreated(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.TopicCreated", p1)
   }
   /// %@ updated group photo
   public static func chatServiceGroupUpdatedPhoto(_ p1: String) -> String {
@@ -3193,17 +3193,9 @@ public final class L10n {
   public static func chatServiceGroupUpdatedVideo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.UpdatedVideo", p1)
   }
-  /// %1$@ created topic "%2$@" with icon %3$@
-  public static func chatServiceGroupTopicCreatedIcon(_ p1: String, _ p2: String, _ p3: String) -> String {
-    return L10n.tr("Localizable", "Chat.Service.Group.TopicCreated.Icon", p1, p2, p3)
-  }
-  /// You created topic "%1$@"
-  public static func chatServiceGroupTopicCreatedYou(_ p1: String) -> String {
-    return L10n.tr("Localizable", "Chat.Service.Group.TopicCreated.You", p1)
-  }
-  /// You created topic "%1$@" with icon %3$@
-  public static func chatServiceGroupTopicCreatedYouIcon(_ p1: String, _ p2: String) -> String {
-    return L10n.tr("Localizable", "Chat.Service.Group.TopicCreated.You.Icon", p1, p2)
+  /// %1$@ "%2$@" was created
+  public static func chatServiceGroupTopicCreatedIcon(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.TopicCreated.Icon", p1, p2)
   }
   /// %1$@ changed topic icon to %2$@
   public static func chatServiceGroupTopicEditedIcon(_ p1: String, _ p2: String) -> String {
