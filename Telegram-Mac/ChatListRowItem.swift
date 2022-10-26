@@ -903,6 +903,9 @@ class ChatListRowItem: TableRowItem {
         } else {
             offset += 50
         }
+        if isClosedTopic {
+            offset += 10
+        }
         return max(300, size.width) - margin * 4 - dateSize - (isOutMessage ? isRead ? 14 : 8 : 0) - offset
     }
     
@@ -1024,7 +1027,12 @@ class ChatListRowItem: TableRowItem {
 
     func toggleUnread() {
         if let peerId = peerId {
-            _ = context.engine.messages.togglePeersUnreadMarkInteractively(peerIds: [peerId], setToValue: nil).start()
+            switch mode {
+            case .chat:
+                _ = context.engine.messages.togglePeersUnreadMarkInteractively(peerIds: [peerId], setToValue: nil).start()
+            case .topic:
+                break
+            }
         }
     }
     
@@ -1392,7 +1400,7 @@ class ChatListRowItem: TableRowItem {
                     thirdGroup.append(ContextMenuItem(strings().chatListContextDeleteChat, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                 }
                 
-                if !isSecret && !isForum {
+                if !isSecret {
                     if markAsUnread {
                         firstGroup.append(ContextMenuItem(strings().chatListContextMaskAsUnread, handler: {
                             _ = context.engine.messages.togglePeersUnreadMarkInteractively(peerIds: [peerId], setToValue: true).start()

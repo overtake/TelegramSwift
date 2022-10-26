@@ -1186,12 +1186,7 @@ class ChatListController : PeersListController {
     }
     
     override var removeAfterDisapper: Bool {
-        switch self.mode {
-        case .plain:
-            return false
-        default:
-            return true
-        }
+        return false
     }
     
 
