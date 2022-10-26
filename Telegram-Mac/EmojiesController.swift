@@ -633,6 +633,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
                 reactionsPopular.append(contentsOf: popular.compactMap(transform))
                 reactionsRecent.append(contentsOf: recent.compactMap(transform))
                 
+                reactionsRecent = reactionsRecent.filter { item in
+                    return !reactionsPopular.contains(where: { $0.file.fileId == item.file.fileId })
+                }
                 
                 entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_emoji_block(EmojiSegment.RecentAnimated.rawValue), equatable: InputDataEquatable(Tuple(items: reactionsPopular, selected: state.selectedItems)), comparable: nil, item: { initialSize, stableId in
                     return EmojiesSectionRowItem(initialSize, stableId: stableId, context: arguments.context, revealed: true, installed: true, info: nil, items: reactionsPopular, mode: arguments.mode.itemMode, selectedItems: state.selectedItems, callback: arguments.send)
