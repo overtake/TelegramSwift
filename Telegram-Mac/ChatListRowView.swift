@@ -1469,12 +1469,10 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             }
             
             
-            
-            revealLeftView.addSubview(unread)
-            
-            
-            
-            revealLeftView.backgroundColor = unreadBackground
+            if !item.isTopic {
+                revealLeftView.addSubview(unread)
+                revealLeftView.backgroundColor = unreadBackground
+            }
             
             let revealBackgroundColor: NSColor
             if item.isTopic && !item.canDeleteTopic {
