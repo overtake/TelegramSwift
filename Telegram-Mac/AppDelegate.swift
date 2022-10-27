@@ -1289,13 +1289,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
     func applicationWillBecomeActive(_ notification: Notification) {
-        if contextValue != nil {
+        if contextValue != nil, !self.window.isMiniaturized {
             if !self.window.isVisible {
                 self.window.makeKeyAndOrderFront(self)
                 self.window.orderFrontRegardless()
             }
-            if viewer != nil {
-                viewer?.windowDidResignKey()
+            if let viewer = viewer {
+                viewer.windowDidResignKey()
             }
             self.activeValue.set(true)
             
@@ -1341,6 +1341,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     func windowDidMiniaturize(_ notification: Notification) {
         window.resignMain()
     }
+    
     
     
     var hasAuthorized: Bool {

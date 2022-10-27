@@ -868,6 +868,10 @@ open class Window: NSWindow {
         return _canBecomeMain
     }
     
+    open override func deminiaturize(_ sender: Any?) {
+        super.deminiaturize(sender)
+    }
+    
     
     public var isFullScreen: Bool {
         return styleMask.contains(.fullScreen)
