@@ -332,7 +332,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             if let textLayout = data.textLayout?.0 {
                 
                 if !textLayout.selectedRange.hasSelectText {
-                    let text = textLayout.attributedString.string
+                    let text = message.text
                     let language = Translate.detectLanguage(for: text)
                     let toLang = appAppearance.language.baseLanguageCode
                     if language != toLang {
@@ -353,7 +353,17 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         text = copyContextText(from: linkType)
                         thirdBlock.append(ContextMenuItem(text, handler: { [weak textLayout] in
                             if let textLayout = textLayout {
-                                let attr = textLayout.attributedString
+                                let attr = textLayout.attributedString.mutableCopy() as! NSMutableAttributedString
+                                attr.enumerateAttributes(in: attr.range, options: [], using: { data, range, _ in
+                                    if let value = data[.init("Attribute__EmbeddedItem")] as? InlineStickerItem {
+                                        switch value.source {
+                                        case let .attribute(value):
+                                            attr.replaceCharacters(in: range, with: value.attachment.text)
+                                        default:
+                                            break
+                                        }
+                                    }
+                                })
                                 var effectiveRange = textLayout.selectedRange.range
                                 let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
                                 let pb = NSPasteboard.general
@@ -369,7 +379,17 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                             
                         }, itemImage: MenuAnimation.menu_copy.value))
                     } else {
-                        let attr = textLayout.attributedString
+                        let attr = textLayout.attributedString.mutableCopy() as! NSMutableAttributedString
+                        attr.enumerateAttributes(in: attr.range, options: [], using: { data, range, _ in
+                            if let value = data[.init("Attribute__EmbeddedItem")] as? InlineStickerItem {
+                                switch value.source {
+                                case let .attribute(value):
+                                    attr.replaceCharacters(in: range, with: value.attachment.text)
+                                default:
+                                    break
+                                }
+                            }
+                        })
                         let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
                         let text = selectedText.string
                         let language = Translate.detectLanguage(for: text)
