@@ -123,7 +123,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
 
             if firstWord {
                 return (inputQuery, .single({ _ in return nil }) |> then(combineLatest(signal, recentUsedEmoji(postbox: context.account.postbox), animated) |> map { matches, emojies, animated -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
-                    var sorted = matches.sorted(by: { lhs, rhs in
+                    let sorted = matches.sorted(by: { lhs, rhs in
                         let lhsIndex = emojies.emojies.firstIndex(of: lhs) ?? Int.max
                         let rhsIndex = emojies.emojies.firstIndex(of: rhs) ?? Int.max
                         return lhsIndex < rhsIndex
@@ -139,11 +139,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                             toRemove.append(sort)
                         }
                     }
-                    
-//                    sorted = sorted.filter { value in
-//                        return !toRemove.contains(value)
-//                    }
-                    
+
                     selected = selected.sorted(by: { lhs, rhs in
                         let lhsIndex = emojies.animated.firstIndex(of: lhs.fileId) ?? Int.max
                         let rhsIndex = emojies.animated.firstIndex(of: rhs.fileId) ?? Int.max

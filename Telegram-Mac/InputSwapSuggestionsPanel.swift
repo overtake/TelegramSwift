@@ -329,9 +329,15 @@ func InputSwapSuggestionsPanelItems(_ query: String, peerId: PeerId, context: Ac
         return .single([])
     }
     
-    let animated = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000) |> map {
-        $0.entries.compactMap({ $0.item as? StickerPackItem}).map { $0 }
+    let boxKey = ValueBoxKey(query)
+    let searchQuery: ItemCollectionSearchQuery = .exact(boxKey)
+    
+    let animated = context.account.postbox.transaction { transaction in
+        return transaction.searchItemCollection(namespace: Namespaces.ItemCollection.CloudEmojiPacks, query: searchQuery)
+    } |> map {
+        $0.compactMap({ $0 as? StickerPackItem })
     }
+        
     let featured: Signal<[StickerPackItem], NoError> = context.account.viewTracker.featuredEmojiPacks() |> map {
         $0.reduce([], { current, value in
             return current + value.topItems
@@ -343,9 +349,7 @@ func InputSwapSuggestionsPanelItems(_ query: String, peerId: PeerId, context: Ac
 
         var foundItems: [StickerPackItem] = []
         
-        foundItems.append(contentsOf: animated.filter { item in
-            return item.file.customEmojiText?.fixed == query.fixed
-        })
+        foundItems.append(contentsOf: animated)
         foundItems.append(contentsOf: featured.filter { item in
             return item.file.customEmojiText?.fixed == query.fixed
         })
