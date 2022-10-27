@@ -103,6 +103,16 @@ class ChatInvoiceItem: ChatRowItem {
     }
     
     override var isBubbleFullFilled: Bool {
+        
+        if let extended = media.extendedMedia {
+            switch extended {
+            case .preview:
+                return true
+            case .full:
+                break
+            }
+        }
+        
         if let _ = media.photo {
             return true
         } else {
@@ -198,7 +208,7 @@ class ChatInvoiceItem: ChatRowItem {
             switch extended {
             case .preview(let dimensions, _, _):
                 if let dimensions = dimensions {
-                    contentSize = dimensions.size.aspectFitted(NSMakeSize(width, 200))
+                    contentSize = dimensions.size.aspectFitted(NSMakeSize(width, 300))
                     self.arguments = TransformImageArguments(corners: corners, imageSize: dimensions.size, boundingSize: contentSize, intrinsicInsets: NSEdgeInsets())
                 }
             case .full:
