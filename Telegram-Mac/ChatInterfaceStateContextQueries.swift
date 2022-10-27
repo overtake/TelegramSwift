@@ -90,9 +90,18 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
 //            return { _ in return .stickers(stickers) }
 //        })
     case let .emoji(query, firstWord):
-        let animated = combineLatest(context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000) |> map {
-            $0.entries.compactMap({ $0.item as? StickerPackItem}).map { $0.file }
-        }, context.account.viewTracker.featuredEmojiPacks()) |> map {
+        
+        
+        let boxKey = ValueBoxKey(query)
+        let searchQuery: ItemCollectionSearchQuery = firstWord ? .exact(boxKey) : .matching([boxKey])
+        
+        let find = context.account.postbox.transaction { transaction in
+            return transaction.searchItemCollection(namespace: Namespaces.ItemCollection.CloudEmojiPacks, query: searchQuery)
+        } |> map {
+            $0.compactMap({ $0 as? StickerPackItem }).map { $0.file }
+        }
+        
+        let animated = combineLatest(find, context.account.viewTracker.featuredEmojiPacks()) |> map {
             $0 + $1.reduce([], { current, value in
                 return current + value.topItems.map { $0.file }
             })
@@ -568,9 +577,16 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
         return (inputQuery, signal |> then(result))
     case let .emoji(query, firstWord):
         
-        let animated: Signal<[TelegramMediaFile], NoError> = combineLatest(context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [], namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000) |> map {
-            $0.entries.compactMap({ $0.item as? StickerPackItem}).map { $0.file }
-        }, context.account.viewTracker.featuredEmojiPacks()) |> map {
+        let boxKey = ValueBoxKey(query)
+        let searchQuery: ItemCollectionSearchQuery = firstWord ? .exact(boxKey) : .matching([boxKey])
+        
+        let find = context.account.postbox.transaction { transaction in
+            return transaction.searchItemCollection(namespace: Namespaces.ItemCollection.CloudEmojiPacks, query: searchQuery)
+        } |> map {
+            $0.compactMap({ $0 as? StickerPackItem }).map { $0.file }
+        }
+        
+        let animated: Signal<[TelegramMediaFile], NoError> = combineLatest(find, context.account.viewTracker.featuredEmojiPacks()) |> map {
             $0 + $1.reduce([], { current, value in
                 return current + value.topItems.map { $0.file }
             })
