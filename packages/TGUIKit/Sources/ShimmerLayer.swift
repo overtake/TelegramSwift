@@ -206,7 +206,7 @@ public class ShimmerLayer: SimpleLayer {
         self.effectView.update(backgroundColor: backgroundColor == nil ? .clear : foregroundColor, foregroundColor: shimmeringColor)
         
         
-        let signal: Signal<CGImage, NoError> = Signal { subscriber in
+        let signal: Signal<CGImage?, NoError> = Signal { subscriber in
             
             let image = generateImage(size, rotatedContext: { size, context in
                 if let backgroundColor = backgroundColor {
@@ -240,7 +240,7 @@ public class ShimmerLayer: SimpleLayer {
                     context.addPath(path)
                     context.fillPath()
                 }
-            })!
+            })
             
             subscriber.putNext(image)
             subscriber.putCompletion()
