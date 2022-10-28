@@ -115,7 +115,16 @@ class InstantVideoPIP: GenericViewController<InstantVideoPIPView>, APDelegate {
                         if let stableId = item.stableId.base as? ChatHistoryEntryId {
                             if case .message(let message) = stableId {
                                 if message.id == currentMessage.id, view.visibleRect.size == view.frame.size {
-                                    needShow = false
+                                    if let state = item.entry.additionalData.transribeState {
+                                        loop: switch state {
+                                        case .collapsed:
+                                            needShow = false
+                                        default:
+                                            break loop
+                                        }
+                                    } else {
+                                        needShow = false
+                                    }
                                 }
                             }
                         }

@@ -530,6 +530,22 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         afterComplete(true)
     case let .followResolvedName(_, username, postId, context, action, callback):
         
+        let invokeCallback:(Peer, MessageId?, ChatInitialAction?) -> Void = { peer, messageId, action in
+            if peer.isForum {
+                if let messageId = messageId {
+                    _ = ForumUI.openTopic(makeMessageThreadId(messageId), peerId: peer.id, context: context, animated: true, addition: true).start(next: { result in
+                        if !result {
+                            ForumUI.open(peer.id, context: context)
+                        }
+                    })
+                } else {
+                    ForumUI.open(peer.id, context: context)
+                }
+            } else {
+                callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
+            }
+        }
+        
         if username.hasPrefix(_private_), let range = username.range(of: _private_) {
             if let channelId = Int64(username[range.upperBound...]), let id = PeerId._optionalInternalFromInt64Value(channelId) {
                 let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: id)
@@ -558,11 +574,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                 return
                             }
                         }
-                        if peer.isForum {
-                            ForumUI.open(peer.id, context: context)
-                        } else {
-                            callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
-                        }
+                        invokeCallback(peer, messageId, action)
                     } else {
                         alert(for: context.window, info: strings().alertPrivateChannelAccessError)
                     }
@@ -642,17 +654,13 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                     invoke(peer)
                                 }
                             default:
-                                callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
+                                invokeCallback(peer, messageId, action)
                             }
                         } else {
-                            callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
+                            invokeCallback(peer, messageId, action)
                         }
                     } else {
-                        if peer.isForum {
-                            ForumUI.open(peer.id, context: context)
-                        } else {
-                            callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
-                        }
+                        invokeCallback(peer, messageId, action)
                     }
                 } else {
                     alert(for: context.window, info: strings().alertUserDoesntExists)
