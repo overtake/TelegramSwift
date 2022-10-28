@@ -96,11 +96,13 @@ class ChatInputAttachView: ImageButton, Notifable {
                         self?.chatInteraction.attachPhotoOrVideo()
                     }, itemImage: MenuAnimation.menu_shared_media.value))
                     
-                    let replyTo = chatInteraction.presentation.interfaceState.replyMessageId
+                    let chatMode = chatInteraction.presentation.chatMode
+
+                    let replyTo = chatInteraction.presentation.interfaceState.replyMessageId ?? chatMode.threadId
                     
-  
+                    let acceptMode = chatMode == .history || (chatMode.isThreadMode || chatMode.isTopicMode)
                     
-                    if chatInteraction.presentation.chatMode == .history, let peer = chatInteraction.presentation.peer {
+                    if acceptMode, let peer = chatInteraction.presentation.peer {
                         for attach in chatInteraction.presentation.attachItems {
                             
                             let thumbFile: TelegramMediaFile
