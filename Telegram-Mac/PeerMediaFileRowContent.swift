@@ -67,7 +67,7 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
         
         if let iconImageRepresentation = iconImageRepresentation {
             iconArguments = TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: iconImageRepresentation.dimensions.size.aspectFilled(PeerMediaIconSize), boundingSize: PeerMediaIconSize, intrinsicInsets: NSEdgeInsets())
-            icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+            icon = TelegramMediaImage(imageId: file.fileId, representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
         } else {
            
             
@@ -265,14 +265,18 @@ class PeerMediaFileRowView : PeerMediaRowView {
             } else {
                 updateIconImageSignal = .complete()
             }
+            
+            
             if let icon = item.icon, let arguments = item.iconArguments {
                 imageView.setSignal(signal: cachedMedia(media: icon, arguments: arguments, scale: System.backingScale), clearInstantly: previous?.message.id != item.message.id)
-            }
-            if imageView.image == nil || previous?.message.id != item.message.id {
+            } else {
                 imageView.clear()
             }
             
             if !imageView.isFullyLoaded {
+                if !imageView.hasImage {
+                    imageView.layer?.contents = item.docIcon
+                }
                 imageView.setSignal(updateIconImageSignal, clearInstantly: false, animate: true, cacheImage: { result in
                     if let icon = item.icon, let arguments = item.iconArguments {
                         cacheMedia(result, media: icon, arguments: arguments, scale: System.backingScale, positionFlags: nil)
@@ -282,8 +286,6 @@ class PeerMediaFileRowView : PeerMediaRowView {
             
             if let arguments = item.iconArguments {
                 imageView.set(arguments: arguments)
-            } else {
-                imageView.layer?.contents = item.docIcon
             }
             
             
