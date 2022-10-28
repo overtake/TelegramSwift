@@ -485,7 +485,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             rect.origin = NSMakePoint((hasBubble ? bubbleFrame.maxX : contentFrame.maxX) - rightSize.width - item.bubbleContentInset - (item.isIncoming ? 0 : item.additionBubbleInset), bubbleFrame.maxY - rightSize.height - 6 - (item.isStateOverlayLayout && !hasBubble ? 2 : 0))
             
             if item.isStateOverlayLayout {
-                if item.isInstantVideo {
+                if item is ChatVideoMessageItem {
                     rect.origin.y = contentFrame.maxY - rect.height - 3
                 } else {
                     rect.origin.x += 5
@@ -493,8 +493,12 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     rect.origin.x = max(20, rect.origin.x)
                 }
             }
-            if item is ChatVideoMessageItem {
-                rect.origin.x = item.isIncoming ? contentFrame.maxX - 40 : contentFrame.maxX - rightSize.width
+            if let item = item as? ChatVideoMessageItem {
+                if item.canTranscribe, item.isIncoming {
+                    rect.origin.x = contentFrame.maxX + 5
+                } else {
+                    rect.origin.x = item.isIncoming ? contentFrame.maxX - 40 : contentFrame.maxX - rightSize.width
+                }
                 rect.origin.y += 3
             }
             if let item = item as? ChatMessageItem {

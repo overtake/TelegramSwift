@@ -372,6 +372,16 @@ class ChatRowItem: TableRowItem {
             if isSticker {
                 return isBubbled
             }
+            if let media = media as? TelegramMediaFile, media.isInstantVideo {
+                if let data = entry.additionalData.transribeState {
+                    switch data {
+                    case .loading, .revealed:
+                        return false
+                    default:
+                        break
+                    }
+                }
+            }
             if media is TelegramMediaDice {
                 return isBubbled
             }
@@ -984,6 +994,14 @@ class ChatRowItem: TableRowItem {
                     return false
                 }
                 if file.isInstantVideo {
+                    if let data = entry.additionalData.transribeState {
+                        switch data {
+                        case .loading, .revealed:
+                            return true
+                        default:
+                            break
+                        }
+                    }
                     return false //!message.text.isEmpty || (message.replyAttribute != nil && !file.isInstantVideo) || (message.forwardInfo != nil && !file.isInstantVideo)
                 }
             }
@@ -1413,6 +1431,14 @@ class ChatRowItem: TableRowItem {
                         return renderType == .bubble
                     }
                     if file.isInstantVideo {
+                        if let data = object.additionalData.transribeState {
+                            switch data {
+                            case .loading, .revealed:
+                                return false
+                            default:
+                                break
+                            }
+                        }
                         return renderType == .bubble
                     }
                     
@@ -2033,6 +2059,14 @@ class ChatRowItem: TableRowItem {
                     if file.isVideoSticker {
                         return ChatGIFMediaItem(initialSize, interaction, interaction.context,entry, downloadSettings, theme: theme)
                     } else if file.isInstantVideo {
+                        if let data = entry.additionalData.transribeState {
+                            switch data {
+                            case .loading, .revealed:
+                                return ChatVoiceRowItem(initialSize,interaction, interaction.context,entry, downloadSettings, theme: theme)
+                            default:
+                                break
+                            }
+                        }
                         return ChatVideoMessageItem(initialSize, interaction, interaction.context,entry, downloadSettings, theme: theme)
                     } else if file.isVideo && !file.isAnimated {
                         return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)

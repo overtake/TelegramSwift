@@ -696,11 +696,11 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 } |> mapToSignal { peers in
                     return combineLatest(peers.map { context.account.viewTracker.peerView($0.peerId) |> take(1) }) |> map { ($0, peers) }
                 } |> mapToSignal { peerViews, peers in
-                     return context.account.postbox.unreadMessageCountsView(items: peers.map {.peer($0.peerId)}) |> take(1) |> map { values in
+                    return context.account.postbox.unreadMessageCountsView(items: peers.map {.peer(id: $0.peerId, handleThreads: false)}) |> take(1) |> map { values in
                         var unread:[PeerId: UnreadSearchBadge] = [:]
                         for peerView in peerViews {
                             let isMuted = peerView.isMuted
-                            let unreadCount = values.count(for: .peer(peerView.peerId))
+                            let unreadCount = values.count(for: .peer(id: peerView.peerId, handleThreads: false))
                             if let unreadCount = unreadCount, unreadCount > 0 {
                                 unread[peerView.peerId] = isMuted ? .muted(unreadCount) : .unmuted(unreadCount)
                             }
@@ -787,11 +787,11 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                 |> mapToSignal { peers -> Signal<([FoundPeer], [FoundPeer], [PeerId : UnreadSearchBadge]), NoError> in
                                     let all = peers.0 + peers.1
                                     return combineLatest(all.map { context.account.viewTracker.peerView($0.peer.id) |> take(1) }) |> mapToSignal { peerViews in
-                                        return context.account.postbox.unreadMessageCountsView(items: all.map {.peer($0.peer.id)}) |> take(1) |> map { values in
+                                        return context.account.postbox.unreadMessageCountsView(items: all.map {.peer(id: $0.peer.id, handleThreads: false)}) |> take(1) |> map { values in
                                             var unread:[PeerId: UnreadSearchBadge] = [:]
                                             outer: for peerView in peerViews {
                                                 let isMuted = peerView.isMuted
-                                                let unreadCount = values.count(for: .peer(peerView.peerId))
+                                                let unreadCount = values.count(for: .peer(id: peerView.peerId, handleThreads: false))
                                                 if let unreadCount = unreadCount, unreadCount > 0 {
                                                     if let peer = peerViewMainPeer(peerView) {
                                                         if let peer = peer as? TelegramChannel {
@@ -982,12 +982,12 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         return true
                     }
                 } |> mapToSignal { peerViews -> Signal<([PeerView], [PeerId: UnreadSearchBadge]), NoError> in
-                        return context.account.postbox.unreadMessageCountsView(items: peerViews.map {.peer($0.peerId)}) |> map { values in
+                    return context.account.postbox.unreadMessageCountsView(items: peerViews.map {.peer(id: $0.peerId, handleThreads: false)}) |> map { values in
                             
                             var unread:[PeerId: UnreadSearchBadge] = [:]
                             for peerView in peerViews {
                                 let isMuted = peerView.isMuted
-                                let unreadCount = values.count(for: .peer(peerView.peerId))
+                                let unreadCount = values.count(for: .peer(id: peerView.peerId, handleThreads: false))
                                 if let unreadCount = unreadCount, unreadCount > 0 {
                                     unread[peerView.peerId] = isMuted ? .muted(unreadCount) : .unmuted(unreadCount)
                                 }
@@ -1003,7 +1003,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                         return .single(([], [:], [:]))
                     case let .peers(peers):
                         return combineLatest(peers.map {context.account.viewTracker.peerView($0.id)}) |> mapToSignal { peerViews -> Signal<([Peer], [PeerId: UnreadSearchBadge], [PeerId : Bool]), NoError> in
-                                return context.account.postbox.unreadMessageCountsView(items: peerViews.map {.peer($0.peerId)}) |> map { values in
+                            return context.account.postbox.unreadMessageCountsView(items: peerViews.map {.peer(id: $0.peerId, handleThreads: false)}) |> map { values in
                                     
                                     var peers:[Peer] = []
                                     var unread:[PeerId: UnreadSearchBadge] = [:]
@@ -1016,7 +1016,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                                 (_, isActive, _) = stringAndActivityForUserPresence(presence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp))
                                             }
                                             let isMuted = peerView.isMuted
-                                            let unreadCount = values.count(for: .peer(peerView.peerId))
+                                            let unreadCount = values.count(for: .peer(id: peerView.peerId, handleThreads: false))
                                             if let unreadCount = unreadCount, unreadCount > 0 {
                                                 unread[peerView.peerId] = isMuted ? .muted(unreadCount) : .unmuted(unreadCount)
                                             }

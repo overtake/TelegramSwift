@@ -52,7 +52,7 @@ final class TelegramFilterCategory : Peer {
     
     init(category: ChatListFilterPeerCategories) {
         self.id = PeerId(namespace: Namespaces.Peer.Empty, id: PeerId.Id._internalFromInt64Value(Int64(category.rawValue)))
-        self.indexName = .title(title: "", addressName: "")
+        self.indexName = .title(title: "", addressNames: [""])
         self.notificationSettingsPeerId = nil
         self.category = category
     }
@@ -116,7 +116,7 @@ final class TelegramFilterCategory : Peer {
     
     init(decoder: PostboxDecoder) {
         self.id = PeerId(0)
-        self.indexName = .title(title: "", addressName: "")
+        self.indexName = .title(title: "", addressNames: [""])
         self.notificationSettingsPeerId = nil
         self.category = []
     }

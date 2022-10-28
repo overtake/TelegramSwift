@@ -16,8 +16,8 @@ import TelegramIconsTheme
 
 final class ChatMediaPresentation : Equatable {
     
-    private let isIncoming: Bool
-    private let isBubble: Bool
+    let isIncoming: Bool
+    let isBubble: Bool
     
     let activityBackground: NSColor
     let activityForeground: NSColor

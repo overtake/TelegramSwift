@@ -183,7 +183,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
     }
     private var hasBackButton: Bool {
         if let controller = controller {
-            return controller is ChatAdditionController || layoutState == .single
+            return controller is ChatAdditionController || controller is ChatScheduleController || layoutState == .single
         }
         return false
     }
@@ -697,9 +697,11 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             }
             let mode = chatInteraction.mode
             
-            self.avatarControl.isHidden = self.controller is ChatScheduleController || mode.isThreadMode || mode == .pinned || mode.isTopicMode
 
-            self.hasPhoto = !(mode.isThreadMode || mode == .pinned)
+            self.hasPhoto = !(mode.isThreadMode || mode == .pinned || mode == .scheduled)
+            
+            self.avatarControl.isHidden = !hasPhoto
+
             
             self.textInset = !hasPhoto ? 24 : hasBackButton ? 66 : 46
             

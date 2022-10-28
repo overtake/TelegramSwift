@@ -9,6 +9,7 @@
 import Foundation
 import TGUIKit
 import QuartzCore
+import AppKit
 
 final class VoiceTranscriptionControl: Control {
     
@@ -38,6 +39,30 @@ final class VoiceTranscriptionControl: Control {
             return false
         }
     }
+    
+    private var visualEffect: VisualEffect? = nil
+    public var blurBackground: NSColor? = nil {
+        didSet {
+            updateBackgroundBlur()
+            if blurBackground != nil {
+                self.backgroundColor = .clear
+            }
+        }
+    }
+    
+    private func updateBackgroundBlur() {
+        if let blurBackground = blurBackground {
+            if self.visualEffect == nil {
+                self.visualEffect = VisualEffect(frame: self.bounds)
+                addSubview(self.visualEffect!, positioned: .below, relativeTo: self.subviews.first)
+            }
+            self.visualEffect?.bgColor = blurBackground
+        } else {
+            self.visualEffect?.removeFromSuperview()
+            self.visualEffect = nil
+        }
+        needsLayout = true
+    }
 
     
     private var inProgressLayer: CAShapeLayer?
@@ -59,9 +84,16 @@ final class VoiceTranscriptionControl: Control {
     
     private var state: TranscriptionState?
     
-    func update(state: TranscriptionState, color: NSColor, parameters: ChatMediaVoiceLayoutParameters, transition: ContainedViewLayoutTransition) {
+    func update(state: TranscriptionState, color: NSColor, activityBackground: NSColor, blurBackground: NSColor?, transition: ContainedViewLayoutTransition) {
         
-        self.backgroundColor = color
+        
+        self.blurBackground = blurBackground
+        
+        if blurBackground == nil {
+            self.backgroundColor = color
+        } else {
+            self.backgroundColor = .clear
+        }
         let previousState = self.state
         self.state = state
         
@@ -128,14 +160,14 @@ final class VoiceTranscriptionControl: Control {
         case .possible:
             animation = .voice_to_text
         case .collapsed:
-            animation = .text_to_voice
+            animation = previousState == nil ? .voice_to_text : .text_to_voice
         case .expanded:
-            animation = .voice_to_text
+            animation = previousState == nil ? .text_to_voice : .voice_to_text
         }
         
-        let colors:[LottieColor] = [.init(keyPath: "", color: parameters.presentation.activityBackground)]
+        let colors:[LottieColor] = [.init(keyPath: "", color: activityBackground)]
 
-        self.inProgressLayer?.strokeColor = parameters.presentation.activityBackground.cgColor
+        self.inProgressLayer?.strokeColor = activityBackground.cgColor
 
         
         if let data = animation.data, !state.isSameState(to: previousState) {

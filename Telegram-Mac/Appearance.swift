@@ -1709,7 +1709,7 @@ class TelegramPresentationTheme : PresentationTheme {
             if bubbled {
                 switch backgroundMode {
                 case .background:
-                    chatServiceItemTextColor = .white
+                    chatServiceItemTextColor = NSColor(rgb: 0xffffff)
                 case let .color(color):
                     if color != colors.background {
                         chatServiceItemTextColor = chatServiceItemColor.brightnessAdjustedColor

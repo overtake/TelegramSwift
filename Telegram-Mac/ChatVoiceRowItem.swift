@@ -110,70 +110,94 @@ class ChatVoiceRowItem: ChatMediaItem {
         
         let isIncoming = object.message!.isIncoming(context.account, object.renderType == .bubble)
         
-        self.parameters = ChatMediaLayoutParameters.layout(for: media as! TelegramMediaFile, isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(object.message!), isIncoming: isIncoming, autoplayMedia: object.autoplayMedia)
+        let file = media as! TelegramMediaFile
+
+        var waveform:AudioWaveform? = nil
+        var duration:Int = 0
+        for attr in file.attributes {
+            switch attr {
+            case let .Audio(_, _duration, _, _, _data):
+                if let data = _data {
+                    waveform = AudioWaveform(bitstream: data, bitsPerSample: 5)
+                }
+                duration = _duration
+            default:
+                break
+            }
+        }
+        let parameters = ChatMediaVoiceLayoutParameters(showPlayer:chatInteraction.inlineAudioPlayer, waveform: waveform, duration:duration, isMarked: true, isWebpage: false, resource: file.resource, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType, theme: theme), media: media, automaticDownload: downloadSettings.isDownloable(object.message!))
+
+        
+        self.parameters = parameters
         
         
         let canTranscribe = context.isPremium
 
-        if let parameters = parameters as? ChatMediaVoiceLayoutParameters {
-            if canTranscribe, let message = object.message {
-                var pending: Bool
-                if let transcribe = message.audioTranscription {
-                    pending = transcribe.isPending
-                } else {
-                    pending = false
-                }
-                let bgColor: NSColor
-                if renderType == .list {
+        if canTranscribe, let message = object.message {
+            var pending: Bool
+            if let transcribe = message.audioTranscription {
+                pending = transcribe.isPending
+            } else {
+                pending = false
+            }
+            let bgColor: NSColor
+            if renderType == .list {
+                bgColor = theme.colors.accent.withAlphaComponent(0.1)
+            } else {
+                if isIncoming {
                     bgColor = theme.colors.accent.withAlphaComponent(0.1)
                 } else {
-                    if isIncoming {
-                        bgColor = theme.colors.accent.withAlphaComponent(0.1)
-                    } else {
-                        bgColor = theme.chat.grayText(false, true).withAlphaComponent(0.1)
-                    }
-                }
-
-                
-                var transcribtedColor = theme.chat.textColor(isIncoming, object.renderType == .bubble)
-                if let state = entry.additionalData.transribeState {
-                    
-                    
-                    var transcribed: String?
-                    switch state {
-                    case let .revealed(success):
-                        if !success {
-                            transcribed = strings().chatVoiceTransribeError
-                            transcribtedColor = parameters.presentation.grayText
-                        } else {
-                            if let result = entry.message?.audioTranscription, !result.text.isEmpty {
-                                transcribed = result.text
-                            }
-                        }
-                    case .loading:
-                        pending = true
-                    default:
-                        break
-                    }
-                    
-                    let textLayout: TextViewLayout?
-                    if let transcribed = transcribed {
-                        let caption: NSAttributedString = .initialize(string: transcribed, color: transcribtedColor, font: .normal(theme.fontSize))
-                        
-                        textLayout = TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected())
-                    } else {
-                        textLayout = nil
-                    }
-                    
-                    parameters.transcribeData = .init(state: .state(state), text: textLayout, isPending: pending, fontColor: transcribtedColor, backgroundColor: bgColor)
-                } else {
-                    parameters.transcribeData = .init(state: .possible, text: nil, isPending: pending, fontColor: transcribtedColor, backgroundColor: bgColor)
-                }
-                parameters.transcribe = { [weak self] in
-                    self?.chatInteraction.transcribeAudio(message)
+                    bgColor = theme.chat.grayText(false, true).withAlphaComponent(0.1)
                 }
             }
+
+            
+            var transcribtedColor = theme.chat.textColor(isIncoming, object.renderType == .bubble)
+            if let state = entry.additionalData.transribeState {
+                
+                
+                var transcribed: String?
+                switch state {
+                case let .revealed(success):
+                    if !success {
+                        transcribed = strings().chatVoiceTransribeError
+                        transcribtedColor = parameters.presentation.grayText
+                    } else {
+                        if let result = entry.message?.audioTranscription, !result.text.isEmpty {
+                            transcribed = result.text
+                        }
+                    }
+                case .loading:
+                    pending = true
+                default:
+                    break
+                }
+                
+                let textLayout: TextViewLayout?
+                if let transcribed = transcribed {
+                    let caption: NSAttributedString = .initialize(string: transcribed, color: transcribtedColor, font: .normal(theme.fontSize))
+                    
+                    textLayout = TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected())
+                } else {
+                    textLayout = nil
+                }
+                
+                parameters.transcribeData = .init(state: .state(state), text: textLayout, isPending: pending, fontColor: transcribtedColor, backgroundColor: bgColor)
+            } else {
+                parameters.transcribeData = .init(state: .possible, text: nil, isPending: pending, fontColor: transcribtedColor, backgroundColor: bgColor)
+            }
+            parameters.transcribe = { [weak self] in
+                self?.chatInteraction.transcribeAudio(message)
+            }
         }
+    }
+    
+    public override func contentNode() -> ChatMediaContentView.Type {
+        return ChatVoiceContentView.self
+    }
+    
+    override var isBubbleFullFilled: Bool {
+        return false
     }
     
     override func canMultiselectTextIn(_ location: NSPoint) -> Bool {

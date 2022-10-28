@@ -106,7 +106,7 @@ class GlobalBadgeNode: Node {
         
         
         if let peerId = excludePeerId {
-            items.append(.peer(peerId))
+            items.append(.peer(id: peerId, handleThreads: true))
             let notificationKeyView: PostboxViewKey = .peerNotificationSettings(peerIds: Set([peerId]))
             peerSignal = combineLatest(account.postbox.loadedPeerWithId(peerId), account.postbox.combinedView(keys: [notificationKeyView]) |> map { view in
                 return ((view.views[notificationKeyView] as? PeerNotificationSettingsView)?.notificationSettings[peerId])?.isRemovedFromTotalUnreadCount(default: false) ?? false
