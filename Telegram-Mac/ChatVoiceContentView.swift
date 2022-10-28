@@ -303,7 +303,7 @@ class ChatVoiceContentView: ChatAudioContentView {
                         }
                     }, for: .Click)
                 }
-                control.update(state: controlState, color: data.backgroundColor, parameters: parameters, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+                control.update(state: controlState, color: data.backgroundColor, activityBackground: parameters.presentation.activityBackground, blurBackground: nil, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
             }
             
             if removeTransribeControl, let view = transcribeControl {

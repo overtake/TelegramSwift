@@ -166,7 +166,7 @@ public func chatListFilterItems(engine: TelegramEngine, accountManager: AccountM
             }
             if !additionalPeerIds.isEmpty {
                 for peerId in additionalPeerIds {
-                    unreadCountItems.append(.peer(peerId))
+                    unreadCountItems.append(.peer(id: peerId, handleThreads: true))
                 }
             }
             for groupId in additionalGroupIds {

@@ -300,6 +300,13 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
             if rect.minX == self.frame.minX && rect.minY == self.frame.minY {
                 rect.origin = NSMakePoint(screen.frame.maxX - convert_s.width - 30, screen.frame.maxY - convert_s.height - 50)
             }
+            
+            if rect.maxX > screen.visibleFrame.width {
+                rect.origin.x = screen.visibleFrame.width - rect.width - 30
+            }
+            if rect.maxY > screen.visibleFrame.height {
+                rect.origin.x = screen.visibleFrame.height - rect.height - 30
+            }
                         
             self.setFrame(NSMakeRect(saver.rect.minX, saver.rect.minY, convert_s.width, convert_s.height), display: true, animate: true)
            

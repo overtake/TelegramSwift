@@ -66,8 +66,6 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                 } else {
                     messageText = strings().chatListVoice
                 }
-            } else if fileMedia.isMusic  {
-                messageText = ("🎵 " + fileMedia.musicText.0 + " - " + fileMedia.musicText.1)
             } else if fileMedia.isInstantVideo {
                 messageText = strings().chatListInstantVideo
             } else if fileMedia.isVideo {
@@ -98,6 +96,8 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
                 }
                 
                 
+            } else if fileMedia.isMusic  {
+                messageText = ("🎵 " + fileMedia.musicText.0 + " - " + fileMedia.musicText.1)
             } else {
                 if !message.text.isEmpty {
                     switch mediaViewType {
