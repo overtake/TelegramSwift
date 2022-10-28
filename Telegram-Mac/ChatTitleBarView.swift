@@ -698,12 +698,12 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             let mode = chatInteraction.mode
             
 
-            self.hasPhoto = !(mode.isThreadMode || mode == .pinned || mode == .scheduled)
+            self.hasPhoto = (!mode.isTopicMode && !mode.isThreadMode && mode != .pinned && mode != .scheduled)
             
             self.avatarControl.isHidden = !hasPhoto
 
             
-            self.textInset = !hasPhoto ? 24 : hasBackButton ? 66 : 46
+            self.textInset = !hasPhoto && !mode.isTopicMode ? 24 : hasBackButton ? 66 : 46
             
             switch chatInteraction.mode {
             case .history:
