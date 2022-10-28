@@ -1057,24 +1057,34 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     func showDownloads(animated: Bool) {
         
         self.genericView.searchView.change(state: .Focus,  true)
-
-        let controller: ViewController
-        if let current = self.downloadsController {
-            controller = current
-        } else {
-            controller = DownloadsController(context: context, searchValue: self.genericView.searchView.searchValue |> map { $0.request })
-            self.downloadsController = controller
+        let context = self.context
+        if let controller = self.searchController {
+            let ready = controller.ready.get()
+            |> filter { $0 }
+            |> take(1)
             
-            controller.frame = genericView.tableView.frame
-            addSubview(controller.view)
-            
-            if animated {
-                controller.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
-                controller.view.layer?.animateScaleSpring(from: 1.1, to: 1, duration: 0.2)
-            }
+            _ = ready.start(next: { [weak self] _ in
+                guard let `self` = self else {
+                    return
+                }
+                let controller: ViewController
+                if let current = self.downloadsController {
+                    controller = current
+                } else {
+                    controller = DownloadsController(context: context, searchValue: self.genericView.searchView.searchValue |> map { $0.request })
+                    self.downloadsController = controller
+                    
+                    controller.frame = self.genericView.tableView.frame
+                    self.addSubview(controller.view)
+                    
+                    if animated {
+                        controller.view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                        controller.view.layer?.animateScaleSpring(from: 1.1, to: 1, duration: 0.2)
+                    }
+                }
+                self.genericView.searchView.updateTags([strings().chatListDownloadsTag], theme.icons.search_filter_downloads)
+            })
         }
-        self.genericView.searchView.updateTags([strings().chatListDownloadsTag], theme.icons.search_filter_downloads)
-
     }
     
     private func hideDownloads(animated: Bool) {
