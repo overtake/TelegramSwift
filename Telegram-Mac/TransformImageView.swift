@@ -36,6 +36,7 @@ open class TransformImageView: NSView {
     func clear() {
         self.isFullyLoaded = false
         self.image = nil
+        self.disposable.set(nil)
     }
     
     open override var isFlipped: Bool {
