@@ -712,8 +712,8 @@ final class AppMenuController : NSObject  {
         })
         submenu.view.parentView?.view.tableView.cancelSelection()
         
+        submenu.view.parentView?.view.childView = nil
         submenu.view.parentView = nil
-        submenu.view.childView = nil
         
         submenu.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak submenu] _ in
             if let submenu = submenu {

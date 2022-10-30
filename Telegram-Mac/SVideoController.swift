@@ -467,9 +467,14 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         if let screen = NSScreen.main {
             if let window = fullScreenWindow, let state = fullScreenRestoreState {
                 
+                var topInset: CGFloat = 0
+                
+                if #available(macOS 12.0, *) {
+                    topInset = screen.safeAreaInsets.top
+                }
                 
                 
-                window.setFrame(NSMakeRect(screen.frame.minX + state.rect.minX, screen.frame.minY + screen.frame.height - state.rect.maxY, state.rect.width, state.rect.height), display: true, animate: true)
+                window.setFrame(NSMakeRect(screen.frame.minX + state.rect.minX, screen.frame.minY + screen.frame.height - state.rect.maxY - topInset, state.rect.width, state.rect.height), display: true, animate: true)
                 window.orderOut(nil)
                 view.frame = state.rect
                 state.view.addSubview(view)

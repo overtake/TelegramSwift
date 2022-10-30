@@ -95,7 +95,7 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         _window = Window(contentRect: newRect, styleMask: [.resizable], backing: .buffered, defer: true)
         _window.name = "pip"
         self.saver = .find(for: _window)
-        _window.setFrame(saver.rect, display: true)
+        _window.setFrame(NSMakeRect(3000, 3000, saver.rect.width, saver.rect.height), display: true)
         super.init(contentRect: newRect, styleMask: [.resizable, .nonactivatingPanel], backing: .buffered, defer: true)
 
         //self.isOpaque = false
@@ -296,18 +296,9 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
             
             self.maxSize = self.rect.size.aspectFitted(frame.size)
             
-            var rect = saver.rect
-            if rect.minX == self.frame.minX && rect.minY == self.frame.minY {
-                rect.origin = NSMakePoint(screen.frame.maxX - convert_s.width - 30, screen.frame.maxY - convert_s.height - 50)
-            }
-            
-            if rect.maxX > screen.visibleFrame.width {
-                rect.origin.x = screen.visibleFrame.width - rect.width - 30
-            }
-            if rect.maxY > screen.visibleFrame.height {
-                rect.origin.x = screen.visibleFrame.height - rect.height - 30
-            }
-                        
+            var rect = saver.rect.size.bounds
+            rect.origin = NSMakePoint(screen.frame.maxX - convert_s.width - 30, screen.frame.maxY - convert_s.height - 50)
+
             self.setFrame(NSMakeRect(saver.rect.minX, saver.rect.minY, convert_s.width, convert_s.height), display: true, animate: true)
            
         }
