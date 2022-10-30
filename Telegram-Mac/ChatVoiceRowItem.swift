@@ -125,6 +125,10 @@ class ChatVoiceRowItem: ChatMediaItem {
                 break
             }
         }
+        if waveform == nil, file.isInstantVideo {
+            let waveformBase64 = "DAAOAAkACQAGAAwADwAMABAADQAPABsAGAALAA0AGAAfABoAHgATABgAGQAYABQADAAVABEAHwANAA0ACQAWABkACQAOAAwACQAfAAAAGQAVAAAAEwATAAAACAAfAAAAHAAAABwAHwAAABcAGQAAABQADgAAABQAHwAAAB8AHwAAAAwADwAAAB8AEwAAABoAFwAAAB8AFAAAAAAAHwAAAAAAHgAAAAAAHwAAAAAAHwAAAAAAHwAAAAAAHwAAAAAAHwAAAAAAAAA="
+            waveform = AudioWaveform(bitstream: Data(base64Encoded: waveformBase64)!, bitsPerSample: 5)
+        }
         let parameters = ChatMediaVoiceLayoutParameters(showPlayer:chatInteraction.inlineAudioPlayer, waveform: waveform, duration:duration, isMarked: true, isWebpage: false, resource: file.resource, presentation: .make(for: object.message!, account: context.account, renderType: object.renderType, theme: theme), media: media, automaticDownload: downloadSettings.isDownloable(object.message!))
 
         
@@ -238,7 +242,7 @@ class ChatVoiceRowItem: ChatMediaItem {
             if let height = parameters.transcribeData?.makeSize(width)?.height {
                 
                 addition += height + 5
-                if captionLayouts.isEmpty, renderType == .bubble {
+                if captionLayouts.isEmpty, renderType == .bubble, reactionsLayout == nil {
                     addition += rightSize.height
                 }
             }

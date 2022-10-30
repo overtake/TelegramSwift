@@ -1837,11 +1837,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             let item = self.item(at: row)
             
             if view.isKind(of: item.viewClass()) && !presentAsNew {
-                if view.frame.height != item.heightValue {
-                    NSAnimationContext.current.duration = animated ? duration : 0.0
-                    NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
-                    tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
-                }
                 
                 
                 let height:CGFloat = item.heightValue
@@ -1852,6 +1847,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 view.set(item: item, animated: animated && view.visibleRect != .zero)
                 view.updateLayout(size: size, transition: transition)
                 transition.updateFrame(view: view, frame: CGRect(origin: view.frame.origin, size: size))
+                
+               // if view.frame.height != item.heightValue {
+                    NSAnimationContext.current.duration = animated ? duration : 0.0
+                    NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                    tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
+               // }
             } else {
                 NSAnimationContext.current.duration = animated ? duration : 0.0
                 NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
@@ -2736,11 +2737,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
         }
         
-//        self.tableView.beginUpdates()
-//        self.tableView.setFrameSize(NSMakeSize(frame.width, listHeight))
-//        self.tableView.tile()
-//        self.reflectScrolledClipView(clipView)
-//        self.tableView.endUpdates()
+        self.tableView.beginUpdates()
+        self.tableView.setFrameSize(NSMakeSize(frame.width, listHeight))
+        self.tableView.tile()
+        self.reflectScrolledClipView(clipView)
+        self.tableView.endUpdates()
 
         self.endUpdates()
         

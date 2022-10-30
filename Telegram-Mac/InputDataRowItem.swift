@@ -326,14 +326,12 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         
     //    textView.max_height = 34
       // .isSingleLine = true
-        textView.delegate = self
         placeholderTextView.userInteractionEnabled = false
         placeholderTextView.isSelectable = false
         
         secureField.isBordered = false
         secureField.isBezeled = false
         secureField.focusRingType = .none
-        secureField.delegate = self
         secureField.drawsBackground = true
         secureField.isEditable = true
         secureField.isSelectable = true
@@ -343,7 +341,10 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         secureField.font = .normal(.text)
         secureField.textView?.insertionPointColor = theme.colors.text
         secureField.sizeToFit()
-        
+                
+    }
+    
+    deinit {
     }
     
     override func shakeView() {
@@ -622,7 +623,6 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
     }
     
     
-    
     func controlTextDidChange(_ obj: Notification) {
         if let item = item as? InputDataRowItem {
             let string = secureField.stringValue
@@ -761,6 +761,12 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         }
     }
     
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        self.secureField.delegate = self
+        self.textView.delegate = self
+    }
+    
     override func set(item: TableRowItem, animated: Bool) {
         
         guard let item = item as? InputDataRowItem else {return}
@@ -768,6 +774,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         self.textView.animates = false
         super.set(item: item, animated: animated)
         self.textView.animates = true
+
         
         placeholderTextView.isHidden = item.placeholderLayout == nil
         placeholderTextView.update(item.placeholderLayout)

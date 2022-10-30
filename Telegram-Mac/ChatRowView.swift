@@ -1015,7 +1015,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         var frame = NSMakeRect(contentFrame.minX + item.elementsContentInset, contentFrame.maxY + item.defaultReplyMarkupInset, reactionsLayout.size.width, reactionsLayout.size.height)
         
-        if let captionLayout = item.captionLayouts.first?.layout {
+        if let captionLayout = item.captionLayouts.first?.layout, !(item is ChatGroupedItem) || item.hasBubble {
             frame.origin.y += captionLayout.layoutSize.height + item.defaultContentInnerInset
         }
         

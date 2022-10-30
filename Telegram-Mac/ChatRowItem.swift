@@ -487,10 +487,7 @@ class ChatRowItem: TableRowItem {
     }
     
     var isInstantVideo: Bool {
-        if let media = message?.effectiveMedia as? TelegramMediaFile {
-            return media.isInstantVideo
-        }
-        return false
+        return self is ChatVideoMessageItem
     }
     
     var contentOffset:NSPoint {
@@ -1690,6 +1687,16 @@ class ChatRowItem: TableRowItem {
                     
                     var isInstantVideo: Bool {
                         if let media = message.effectiveMedia as? TelegramMediaFile {
+                            if media.isInstantVideo {
+                                if let data = object.additionalData.transribeState {
+                                    switch data {
+                                    case .loading, .revealed:
+                                        return false
+                                    default:
+                                        break
+                                    }
+                                }
+                            }
                             return media.isInstantVideo
                         }
                         return false
