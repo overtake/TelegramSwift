@@ -1198,7 +1198,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  
                  let highlighted = self.highlighed
                  let icon: CGImage
-                 if item.associatedGroupId == .root && !item.badgeMuted {
+                 if item.associatedGroupId == .root {
                      icon = highlighted ? theme.icons.chatListMentionActive : theme.icons.chatListMention
                  } else {
                      icon = highlighted ? theme.icons.chatListMentionArchivedActive : theme.icons.chatListMentionArchived
@@ -1243,7 +1243,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  
                  let highlighted = self.highlighed
                  let icon: CGImage
-                 if item.associatedGroupId == .root && !item.badgeMuted {
+                 if item.associatedGroupId == .root {
                      icon = highlighted ? theme.icons.reactions_badge_active : theme.icons.reactions_badge
                  } else {
                      icon = highlighted ? theme.icons.reactions_badge_archive_active : theme.icons.reactions_badge_archive
