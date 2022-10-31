@@ -4860,7 +4860,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             })
         
         switch mode {
-        case .history:
+        case .history, .thread:
             
             let unreadCount = context.chatLocationUnreadCount(for: chatLocation, contextHolder: self.chatLocationContextHolder)
             |> deliverOnMainQueue
