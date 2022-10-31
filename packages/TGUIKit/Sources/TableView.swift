@@ -1182,8 +1182,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
         let visibleItems = self.visibleItems()
         
-        beginTableUpdates()
-        enumerateItems { item in
+        self.beginTableUpdates()
+        self.enumerateItems { item in
             _ = item.makeSize(frame.width, oldWidth: item.width)
             reloadData(row: item.index, animated: false)
             NSAnimationContext.current.duration = 0.0
@@ -1191,12 +1191,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: item.index))
             return true
         }
+        self.reloadData()
+        self.endTableUpdates()
         
-        endTableUpdates()
+        self.saveScrollState(visibleItems)
         
-        saveScrollState(visibleItems)
-        
-        needsLayouItemsOnNextTransition = false
+        self.needsLayouItemsOnNextTransition = false
     }
     
     public override var _mouseDownCanMoveWindow: Bool {
@@ -1835,7 +1835,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     
     public func reloadData(row:Int, animated:Bool = false, options: NSTableView.AnimationOptions = .effectFade, presentAsNew: Bool = false) -> Void {
-        beginTableUpdates()
         if let view = self.viewNecessary(at: row) {
             let item = self.item(at: row)
             
@@ -1851,11 +1850,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 view.updateLayout(size: size, transition: transition)
                 transition.updateFrame(view: view, frame: CGRect(origin: view.frame.origin, size: size))
                 
-               // if view.frame.height != item.heightValue {
-                    NSAnimationContext.current.duration = animated ? duration : 0.0
-                    NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
-                    tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
-               // }
+                NSAnimationContext.current.duration = animated ? duration : 0.0
+                NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
+
             } else {
                 NSAnimationContext.current.duration = animated ? duration : 0.0
                 NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
@@ -1868,7 +1866,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             NSAnimationContext.current.timingFunction = nil
             tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
         }
-        endTableUpdates()
         //self.moveItem(from: row, to: row)
     }
     
