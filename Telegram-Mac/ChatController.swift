@@ -2053,9 +2053,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                                   adMessages,
                                                   effectiveTheme,
                                                   reactions,
-                                                  stateValue.get(),
-                                                  visibility.get()
-    ) |> filter { $0.12 } |> mapToQueue { update, appearance, maxReadIndex, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia, adMessages, chatTheme, reactions, uiState, _ -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool, ChatHistoryView), NoError> in
+                                                  stateValue.get()
+    ) |> mapToQueue { update, appearance, maxReadIndex, searchState, animatedEmojiStickers, customChannelDiscussionReadState, customThreadOutgoingReadState, updatingMedia, adMessages, chatTheme, reactions, uiState -> Signal<(TableUpdateTransition, MessageHistoryView?, ChatHistoryCombinedInitialData, Bool, ChatHistoryView), NoError> in
                         
             let pollAnswersLoading = uiState.pollAnswers
             let threadLoading = uiState.threadLoading
@@ -4697,7 +4696,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         switch mode {
                         case .history, .thread:
                             if let cachedData = peerView.cachedData as? CachedChannelData {
-                                activeCall = cachedData.activeCall
+                                if !mode.isThreadMode {
+                                    activeCall = cachedData.activeCall
+                                }
                                 callJoinPeerId = cachedData.callJoinPeerId
                                 inviteRequestsPending = cachedData.inviteRequestsPending
                                 sendAsPeerId = cachedData.sendAsPeerId

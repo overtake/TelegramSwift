@@ -310,10 +310,10 @@ extension OngoingCallThreadLocalContext: OngoingCallThreadLocalContextProtocol {
     func nativeRequestVideo(_ capturer: OngoingCallVideoCapturer) {
     }
     func nativeSwitchAudioOutput(_ deviceId: String) {
-        
+        self.switchAudioOutput(deviceId)
     }
     func nativeSwitchAudioInput(_ deviceId: String) {
-        
+        self.switchAudioInput(deviceId)
     }
     func nativeAcceptVideo(_ capturer: OngoingCallVideoCapturer) {
     }

@@ -437,11 +437,11 @@ class ChatRowItem: TableRowItem {
         var inset: CGFloat = leftInset
         if isBubbled {
             if hasPhoto {
-                inset += 36 + 4
+                inset += 36
             } else if self.isIncoming, let message = message {
                 if let peer = message.peers[message.id.peerId] {
                     if peer.isGroup || peer.isSupergroup {
-                        inset += 36 + 4
+                        inset += 36
                     }
                 }
             }

@@ -400,10 +400,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 
                 if highlighted {
                     activity = theme.activity(key: 10, foregroundColor: theme.chatList.activitySelectedColor, backgroundColor: theme.chatList.selectedBackgroundColor)
-                } else if (item.isForum && !item.isTopic), item.isSelected {
-                    activity = theme.activity(key: 12, foregroundColor: theme.chatList.activityColor, backgroundColor: theme.chatList.activeDraggingBackgroundColor)
-                } else if self.containerView.activeDragging || item.isHighlighted {
-                    activity = theme.activity(key: 13, foregroundColor: theme.chatList.activityColor, backgroundColor: theme.chatList.activeDraggingBackgroundColor)
                 } else if item.isFixedItem {
                     activity = theme.activity(key: 14, foregroundColor: theme.chatList.activityPinnedColor, backgroundColor: theme.chatList.pinnedBackgroundColor)
                 } else {
@@ -1998,19 +1994,20 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
 
                 var messageOffset: CGFloat = 0
                 if let chatNameLayout = item.ctxChatNameLayout {
-                    messageOffset += chatNameLayout.layoutSize.height + 2
+                    messageOffset += min(chatNameLayout.layoutSize.height, 17) + 2
                 }
+                let displayHeight = min(displayLayout.0.size.height, 17)
                 if let messageTextView = messageTextView {
-                    messageTextView.setFrameOrigin(NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 1 + messageOffset))
+                    messageTextView.setFrameOrigin(NSMakePoint(item.leftInset, displayHeight + item.margin + 1 + messageOffset))
                 }
                 
                 if let chatNameTextView = chatNameTextView {
-                    chatNameTextView.setFrameOrigin(NSMakePoint(item.leftInset, displayLayout.0.size.height + item.margin + 2))
+                    chatNameTextView.setFrameOrigin(NSMakePoint(item.leftInset, displayHeight + item.margin + 2))
                     if let forumTopicNameIcon = forumTopicNameIcon {
-                        forumTopicNameIcon.setFrameOrigin(NSMakePoint(chatNameTextView.frame.maxX + 2, displayLayout.0.size.height + item.margin + 2))
+                        forumTopicNameIcon.setFrameOrigin(NSMakePoint(chatNameTextView.frame.maxX + 2, displayHeight + item.margin + 2))
                     }
                     if let forumTopicTextView = forumTopicTextView {
-                        forumTopicTextView.setFrameOrigin(NSMakePoint(chatNameTextView.frame.maxX + 12, displayLayout.0.size.height + item.margin + 2))
+                        forumTopicTextView.setFrameOrigin(NSMakePoint(chatNameTextView.frame.maxX + 12, displayHeight + item.margin + 2))
                     }
                 }
             }

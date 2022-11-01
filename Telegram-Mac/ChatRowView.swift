@@ -1648,7 +1648,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         if let view = replyMarkupView {
             transition.updateFrame(view: view, frame: replyMarkupFrame(item))
-            item.replyMarkupModel?.layout()
+            item.replyMarkupModel?.layout(transition: transition)
         }
         
         if let view = selectingView {
