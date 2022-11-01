@@ -22,7 +22,7 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "TelegramIconsTheme",
-            dependencies: [.productItem(name: "SwiftSignalKit", package: "SSignalKit", condition: nil)],
+            dependencies: [.product(name: "SwiftSignalKit", package: "SSignalKit", condition: nil)],
             path: "Sources"
         ),
     ]

@@ -30,7 +30,7 @@ final class ChatAvatarView : Control {
     
     func setPeer(context: AccountContext, peer: Peer, message: Message? = nil, size: NSSize? = nil, force: Bool = false) {
         self.avatar.setPeer(account: context.account, peer: peer, message: message, size: size)
-        if peer.isPremium || force {
+        if peer.isPremium || force, peer.hasVideo {
             let signal = peerPhotos(context: context, peerId: peer.id) |> deliverOnMainQueue
             disposable.set(signal.start(next: { [weak self] photos in
                 self?.updatePhotos(photos, context: context, peer: peer)
@@ -41,6 +41,7 @@ final class ChatAvatarView : Control {
     private var videoRepresentation: TelegramMediaImage.VideoRepresentation?
     
     private func updatePhotos(_ photos: [TelegramPeerPhoto], context: AccountContext, peer: Peer) {
+        
         if let first = photos.first, let video = first.image.videoRepresentations.first {
             let equal = videoRepresentation?.resource.id == video.resource.id
             
@@ -134,6 +135,10 @@ final class ChatAvatarView : Control {
         NotificationCenter.default.removeObserver(self)
     }
     deinit {
+        if superview != nil {
+            var bp = 0
+            bp += 1
+        }
         NotificationCenter.default.removeObserver(self)
     }
     

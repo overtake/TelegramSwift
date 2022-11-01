@@ -26,6 +26,15 @@ class WPMediaLayout: WPLayout {
             self.media = self.media.withUpdatedPreviewRepresentations(representations)
         }
         self.parameters = ChatMediaLayoutParameters.layout(for: content.file!, isWebpage: true, chatInteraction: chatInteraction, presentation: .make(for: parent, account: context.account, renderType: presentation.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(parent), isIncoming: parent.isIncoming(context.account, presentation.renderType == .bubble), autoplayMedia: autoplayMedia)
+        
+        self.parameters?.cancelOperation = { [unowned context] message, media in
+            if let media = media as? TelegramMediaFile {
+                messageMediaFileCancelInteractiveFetch(context: context, messageId: message.id, file: media)
+            } else if let media = media as? TelegramMediaImage {
+                chatMessagePhotoCancelInteractiveFetch(account: context.account, photo: media)
+            }
+        }
+        
         super.init(with: content, context: context, chatInteraction: chatInteraction, parent:parent, fontSize: fontSize, presentation: presentation, approximateSynchronousValue: approximateSynchronousValue, mayCopyText: mayCopyText)
         
     }

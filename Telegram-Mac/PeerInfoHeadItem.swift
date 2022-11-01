@@ -532,9 +532,9 @@ class PeerInfoHeadItem: GeneralRowItem {
         _ = self.makeSize(initialSize.width, oldWidth: 0)
         
         
-        if let peer = peer, threadData == nil {
+        if let peer = peer, threadData == nil, peer.hasVideo {
             self.photos = syncPeerPhotos(peerId: peer.id)
-            let signal = peerPhotos(context: context, peerId: peer.id, force: true) |> deliverOnMainQueue
+            let signal = peerPhotos(context: context, peerId: peer.id) |> deliverOnMainQueue
             var first: Bool = true
             peerPhotosDisposable.set(signal.start(next: { [weak self] photos in
                 if self?.photos != photos {

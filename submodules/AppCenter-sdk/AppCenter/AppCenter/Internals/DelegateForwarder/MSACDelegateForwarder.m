@@ -19,7 +19,7 @@ static NSMutableArray<dispatch_block_t> *traceBuffer = nil;
 
 @synthesize enabled = _enabled;
 
-+ (void)load {
++ (void)initialize {
   traceBuffer = [NSMutableArray new];
 }
 

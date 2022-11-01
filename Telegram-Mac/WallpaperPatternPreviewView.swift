@@ -77,9 +77,9 @@ class WallpaperPatternView : Control {
             case let .file(_, file, _, _):
                 var representations:[TelegramMediaImageRepresentation] = []
                 if let dimensions = file.dimensions {
-                    representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil))
+                    representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
                 } else {
-                    representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(width: 300, height: 300), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil))
+                    representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(width: 300, height: 300), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
                 }
                 
                 let updateImageSignal = chatWallpaper(account: account, representations: representations, file: file, mode: .thumbnail, isPattern: true, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false, drawPatternOnly: false)

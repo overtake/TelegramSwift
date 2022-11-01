@@ -415,6 +415,8 @@ private func selectivePrivacySettingsControllerEntries(kind: SelectivePrivacySet
         }
     }
 
+    entries.append(.section(sectionId))
+    sectionId += 1
 
     return entries
 }

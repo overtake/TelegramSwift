@@ -320,7 +320,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 var needConfirm = needConfirm || url.host != URL(string: urlValue)?.host
                 
                 if needConfirm {
-                    let allowed = ["telegram.org", "telegram.dog", "telegram.me", "telesco.pe", "fragment.com"]
+                    let allowed = appDelegate?.allowedDomains ?? []
                     if let url = URL(string: urlValue) {
                         if let host = url.host, allowed.contains(host) {
                             needConfirm = false
@@ -461,9 +461,9 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         }, error: { error in
             switch error {
             case .doesntExists:
-                alert(for: context.window, info: strings().alertUserDoesntExists)
+                showModalText(for: context.window, text: strings().alertUserDoesntExists)
             case .privateAccess:
-                 alert(for: context.window, info: strings().alertPrivateChannelAccessError)
+                showModalText(for: context.window, text: strings().alertPrivateChannelAccessError)
             case .generic:
                 break
             }
@@ -519,9 +519,9 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         }, error: { error in
             switch error {
             case .doesntExists:
-                alert(for: context.window, info: strings().alertUserDoesntExists)
+                showModalText(for: context.window, text: strings().alertUserDoesntExists)
             case .privateAccess:
-                 alert(for: context.window, info: strings().alertPrivateChannelAccessError)
+                showModalText(for: context.window, text: strings().alertPrivateChannelAccessError)
             case .generic:
                 break
             }
@@ -570,17 +570,17 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         }
                         if let peer = peer as? TelegramChannel {
                             if peer.participationStatus == .kicked {
-                                alert(for: context.window, info: strings().alertPrivateChannelAccessError)
+                                showModalText(for: context.window, text: strings().alertPrivateChannelAccessError)
                                 return
                             }
                         }
                         invokeCallback(peer, messageId, action)
                     } else {
-                        alert(for: context.window, info: strings().alertPrivateChannelAccessError)
+                        showModalText(for: context.window, text: strings().alertPrivateChannelAccessError)
                     }
                 })
             } else {
-                alert(for: context.window, info: strings().alertPrivateChannelAccessError)
+                showModalText(for: context.window, text: strings().alertPrivateChannelAccessError)
             }
         } else {
             let phone = username.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
@@ -663,7 +663,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         invokeCallback(peer, messageId, action)
                     }
                 } else {
-                    alert(for: context.window, info: strings().alertUserDoesntExists)
+                    showModalText(for: context.window, text: strings().alertUserDoesntExists)
                 }
                     
             })
@@ -798,7 +798,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     interaction(peer.id, true, nil, .closeAfter(peek))
                 }
             case .invalidHash:
-                alert(for: context.window, info: strings().linkExpired)
+                showModalText(for: context.window, text: strings().linkExpired)
             }
         })
         afterComplete(true)
@@ -830,7 +830,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             }, error: { error in
                 switch error {
                 case .generic:
-                    alert(for: context.window, info: strings().wallpaperPreviewDoesntExists)
+                    showModalText(for: context.window, text: strings().wallpaperPreviewDoesntExists)
                 }
             })
         }

@@ -1996,7 +1996,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 if let chatNameLayout = item.ctxChatNameLayout {
                     messageOffset += min(chatNameLayout.layoutSize.height, 17) + 2
                 }
-                let displayHeight = min(displayLayout.0.size.height, 17)
+                let displayHeight = displayLayout.0.size.height
                 if let messageTextView = messageTextView {
                     messageTextView.setFrameOrigin(NSMakePoint(item.leftInset, displayHeight + item.margin + 1 + messageOffset))
                 }
