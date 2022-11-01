@@ -1840,8 +1840,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             let item = self.item(at: row)
             
             if view.isKind(of: item.viewClass()) && !presentAsNew {
-                
-                
                 let height:CGFloat = item.heightValue
                 let width:CGFloat = self is HorizontalTableView ? item.width : frame.width
 
@@ -1853,21 +1851,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 
                 NSAnimationContext.current.duration = animated ? duration : 0.0
                 NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
-                tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
-
-            } else {
-                NSAnimationContext.current.duration = animated ? duration : 0.0
-                NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
-                self.tableView.removeRows(at: IndexSet(integer: row), withAnimation: !animated ? .none : options)
-                self.tableView.insertRows(at: IndexSet(integer: row), withAnimation: !animated ? .none :  options)
                 self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
+                self.tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integer: 0))
+                return
             }
-        } else {
-            NSAnimationContext.current.duration = 0.0
-            NSAnimationContext.current.timingFunction = nil
-            tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
         }
-        //self.moveItem(from: row, to: row)
+        NSAnimationContext.current.duration = animated ? duration : 0.0
+        NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
+        self.tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integer: 0))
     }
     
     fileprivate func reloadHeightItems() {
@@ -2623,12 +2615,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             let height:CGFloat = self is HorizontalTableView ? frame.width : frame.height
             let value = (gap < height) || self.tableView.isFlipped
             animated = (visibleRange.indexIn(index) || !transition.animateVisibleOnly) && value
-//            if case .none = transition.state {
-//
-//            } else {
-//                animated = false
-//            }
-            
             if animated {
                 animatedItems.append((index, item))
             } else {
