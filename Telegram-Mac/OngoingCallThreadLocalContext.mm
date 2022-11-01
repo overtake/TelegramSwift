@@ -443,6 +443,17 @@ static void (*InternalVoipLoggingFunction)(NSString *) = NULL;
     }
 }
 
+- (void)switchAudioInput:(NSString *)input {
+    if (_tgVoip) {
+        _tgVoip->setAudioInputDevice(std::string(input.UTF8String));
+    }
+}
+- (void)switchAudioOutput:(NSString *)output {
+    if (_tgVoip) {
+        _tgVoip->setAudioOutputDevice(std::string(output.UTF8String));
+    }
+}
+
 - (void)setNetworkType:(OngoingCallNetworkType)networkType {
     if (_networkType != networkType) {
         _networkType = networkType;
