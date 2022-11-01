@@ -364,24 +364,24 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
     [bold setKeyEquivalentModifierMask: NSCommandKeyMask];
     
     NSMenuItem *italic = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.Italic", nil) action:@selector(italicWord:) keyEquivalent:@"i"];
-    [italic setKeyEquivalentModifierMask: NSCommandKeyMask];
+    [italic setKeyEquivalentModifierMask: NSEventModifierFlagCommand];
     
     
     NSMenuItem *code = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.Code", nil) action:@selector(codeWord:) keyEquivalent:@"k"];
-    [code setKeyEquivalentModifierMask: NSShiftKeyMask | NSCommandKeyMask];
+    [code setKeyEquivalentModifierMask: NSEventModifierFlagShift | NSEventModifierFlagCommand];
     
     NSMenuItem *url = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.URL1", nil) action:@selector(makeUrl:) keyEquivalent:@"u"];
-    [url setKeyEquivalentModifierMask: NSCommandKeyMask];
+    [url setKeyEquivalentModifierMask: NSEventModifierFlagCommand];
     
     NSMenuItem *strikethrough = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.Strikethrough", nil) action:@selector(makeStrikethrough:) keyEquivalent:@"x"];
-    [strikethrough setKeyEquivalentModifierMask: NSShiftKeyMask | NSCommandKeyMask];
+    [strikethrough setKeyEquivalentModifierMask: NSEventModifierFlagShift | NSEventModifierFlagCommand];
 
     NSMenuItem *underline = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.Underline", nil) action:@selector(makeUnderline:) keyEquivalent:@"u"];
-    [underline setKeyEquivalentModifierMask: NSShiftKeyMask | NSCommandKeyMask];
+    [underline setKeyEquivalentModifierMask: NSEventModifierFlagShift | NSEventModifierFlagCommand];
 
     
     NSMenuItem *spoiler = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.Spoiler", nil) action:@selector(makeSpoiler:) keyEquivalent:@"p"];
-    [spoiler setKeyEquivalentModifierMask: NSShiftKeyMask | NSCommandKeyMask];
+    [spoiler setKeyEquivalentModifierMask: NSEventModifierFlagShift | NSEventModifierFlagCommand];
 
     
     
@@ -952,7 +952,7 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
         }
         
         
-        [[self.scrollView verticalScroller] setControlSize:NSSmallControlSize];
+        [[self.scrollView verticalScroller] setControlSize:NSControlSizeSmall];
         self.scrollView.documentView = _textView;
         [self.scrollView setFrame:NSMakeRect(0, 0, NSWidth(self.frame), NSHeight(self.frame))];
         [self addSubview:self.scrollView];

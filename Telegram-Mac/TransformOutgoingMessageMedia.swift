@@ -112,7 +112,7 @@ public func transformOutgoingMessageMedia(postbox: Postbox, network: Network, re
                                 if CGImageDestinationFinalize(colorDestination) {
                                     let thumbnailResource = LocalFileMediaResource(fileId: arc4random64(), isSecretRelated: false)
                                     postbox.mediaBox.storeResourceData(thumbnailResource.id, data: mutableData as Data)
-                                    subscriber.putNext(AnyMediaReference.standalone(media: file.withUpdatedSize(Int64(size ?? 0)).withUpdatedPreviewRepresentations([TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: thumbnailResource, progressiveSizes: [], immediateThumbnailData: nil)])))
+                                    subscriber.putNext(AnyMediaReference.standalone(media: file.withUpdatedSize(Int64(size ?? 0)).withUpdatedPreviewRepresentations([TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: thumbnailResource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)])))
                                     
                                      return EmptyDisposable
                                 }

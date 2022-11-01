@@ -125,6 +125,21 @@ final class TelegramFilterCategory : Peer {
     }
 }
 
+extension CachedPeerData {
+    var photo: TelegramMediaImage? {
+        if let data = self as? CachedUserData {
+            return data.photo
+        }
+        if let data = self as? CachedChannelData {
+            return data.photo
+        }
+        if let data = self as? CachedGroupData {
+            return data.photo
+        }
+        return nil
+    }
+}
+
 extension Peer {
     
     func hasBannedRights(_ flags: TelegramChatBannedRightsFlags) -> Bool {
@@ -143,7 +158,12 @@ extension Peer {
     }
     
     
-    
+    var hasVideo: Bool {
+        if let image = self.profileImageRepresentations.first {
+            return image.hasVideo
+        }
+        return false
+    }
     
     func canSendMessage(_ isThreadMode: Bool = false, threadData: MessageHistoryThreadData? = nil) -> Bool {
         if self.id == repliesPeerId {

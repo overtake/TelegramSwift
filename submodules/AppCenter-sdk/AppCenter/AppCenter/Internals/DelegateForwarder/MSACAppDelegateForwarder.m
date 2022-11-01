@@ -15,7 +15,7 @@ static dispatch_once_t swizzlingOnceToken;
 
 @implementation MSACAppDelegateForwarder
 
-+ (void)load {
++ (void)initialize {
 
   /*
    * The application starts querying its delegate for its implementation as soon as it is set then may never query again. It means that if

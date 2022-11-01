@@ -963,7 +963,8 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                 peers: message.peers,
                 associatedMessages: message.associatedMessages,
                 associatedMessageIds: message.associatedMessageIds,
-                associatedMedia: [:]
+                associatedMedia: [:],
+                associatedThreadInfo: message.associatedThreadInfo
             )
             nextAdMessageId += 1
             

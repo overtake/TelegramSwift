@@ -26,7 +26,7 @@ class MGalleryPhotoItem: MGalleryItem {
                 if case let .Loaded(content) = webpage.content, let image = content.image {
                     self.media = image
                 } else if case let .Loaded(content) = webpage.content, let media = content.file  {
-                    let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? PixelDimensions(0, 0), resource: media.resource, progressiveSizes: [], immediateThumbnailData: nil)
+                    let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? PixelDimensions(0, 0), resource: media.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)
                     var representations = media.previewRepresentations
                     representations.append(represenatation)
                     self.media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
@@ -36,7 +36,7 @@ class MGalleryPhotoItem: MGalleryItem {
                 }
             } else {
                 if let media = media as? TelegramMediaFile {
-                    let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? PixelDimensions(0, 0), resource: media.resource, progressiveSizes: [], immediateThumbnailData: nil)
+                    let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? PixelDimensions(0, 0), resource: media.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)
                     var representations = media.previewRepresentations
                     representations.append(represenatation)
                     self.media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
