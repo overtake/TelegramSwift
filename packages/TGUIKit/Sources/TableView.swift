@@ -1382,7 +1382,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     let itemRect:NSRect = someItem.view?.visibleRect ?? NSZeroRect
 
                     if let item = stickItem, item.isKind(of: stickClass), let stickView = stickView {
-                        let rect:NSRect = tableView.rect(ofRow: item.index)
+                        let rect:NSRect = self.rectOf(item: item)
                         let dif:CGFloat
                         if currentStick != nil {
                             dif = min(scrollInset - rect.maxY, item.heightValue)
@@ -1852,14 +1852,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 NSAnimationContext.current.duration = animated ? duration : 0.0
                 NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
                 self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
-                self.tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integer: 0))
                 return
             }
         }
         NSAnimationContext.current.duration = animated ? duration : 0.0
         NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
         self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
-        self.tableView.reloadData(forRowIndexes: IndexSet(integer: row), columnIndexes: IndexSet(integer: 0))
     }
     
     fileprivate func reloadHeightItems() {
@@ -1925,11 +1923,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func rectOf(item:TableRowItem) -> NSRect {
-        return self.tableView.rect(ofRow: item.index)
+        let rect = self.tableView.rect(ofRow: item.index)
+        return CGRect(origin: CGPoint(x: round(rect.minX), y: round(rect.minY)), size: rect.size)
     }
     
     public func rectOf(index:Int) -> NSRect {
-        return self.tableView.rect(ofRow: index)
+        let item = self.item(at: index)
+        return rectOf(item: item)
     }
     
     public func remove(at:Int, redraw:Bool = true, animation:NSTableView.AnimationOptions = .none) -> Void {
@@ -2488,6 +2488,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         for (idx, item) in transition.inserted {
             let effect:NSTableView.AnimationOptions = (visibleRange.indexIn(idx) || !transition.animateVisibleOnly) && transition.animated ? .effectFade : .none
             _ = self.insert(item: item, at:idx, redraw: true, animation: effect)
+
             if item.animatable {
                 inserted.append((item, effect))
             }
@@ -2595,15 +2596,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                     saveVisible(.lower)
                 }
             }
-            
         case .bottom, .top, .center:
             self.scroll(to: transition.state)
         case .up, .down, .upOffset:
             self.scroll(to: transition.state)
         case let .saveVisible(side):
             saveVisible(side)
-            
-            break
+            self.reloadData()
         }
               
         var nonAnimatedItems: [(Int, TableRowItem)] = []
@@ -2633,6 +2632,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         self.endTableUpdates()
         
+
         if !tableView.isFlipped, case .none = transition.state {
             saveScrollState(visible)
         }
@@ -2652,13 +2652,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
             }
         }
+
         
         self.tableView.beginUpdates()
         self.tableView.setFrameSize(NSMakeSize(frame.width, listHeight))
         self.tableView.tile()
         self.reflectScrolledClipView(clipView)
         self.tableView.endUpdates()
-
         self.endUpdates()
         
         

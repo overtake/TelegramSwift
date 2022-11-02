@@ -117,7 +117,7 @@ class SharedWakeupManager {
         for account in accounts {
             if !ringingStatesActivated.contains(account.id) {
                 
-                let combine = combineLatest(queue: .mainQueue(), account.stateManager.isUpdating, account.callSessionManager.ringingStates()) |> mapToSignal { loading, states -> Signal<(Bool, CallSessionRingingState, PCallSession.InitialData)?, NoError> in
+                let combine = combineLatest(account.stateManager.isUpdating, account.callSessionManager.ringingStates()) |> mapToSignal { loading, states -> Signal<(Bool, CallSessionRingingState, PCallSession.InitialData)?, NoError> in
                     if let state = states.first {
                         return getPrivateCallSessionData(account, accountManager: accountManager, peerId: state.peerId) |> map {
                             (loading, state, $0)
@@ -128,7 +128,7 @@ class SharedWakeupManager {
                 }
                 |> filter { $0 != nil && !$0!.0 }
                 |> map { $0! }
-                
+                |> deliverOnMainQueue
                 _ = combine.start(next: { data in
                     let state = data.1
                     let initialData = data.2

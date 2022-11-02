@@ -323,6 +323,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
     
     open override func setFrameOrigin(_ newOrigin: NSPoint) {
+        let def = newOrigin.y - floor(newOrigin.y)
         super.setFrameOrigin(newOrigin)
     }
     

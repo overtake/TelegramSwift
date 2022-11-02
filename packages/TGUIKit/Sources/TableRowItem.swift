@@ -79,9 +79,10 @@ open class TableRowItem: NSObject {
             return -1
         }
     }
+    internal var origin: NSPoint = .zero
 
     
-    internal(set) var _index:Int? = nil
+    var _index:Int? = nil
     
     public init(_ initialSize:NSSize) {
         self.initialSize = initialSize

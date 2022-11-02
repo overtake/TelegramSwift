@@ -328,6 +328,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     
     override public func scroll(to newOrigin:NSPoint) -> Void {
+        let newOrigin = NSMakePoint(round(newOrigin.x), round(newOrigin.y))
         if (self.shouldAnimateOriginChange) {
             self.shouldAnimateOriginChange = false;
             self.destinationOrigin = newOrigin;
