@@ -233,15 +233,15 @@ public class TGClipView: NSClipView,CALayerDelegate {
             // Make this call so that we can force an update of the scroller positions.
             self.containingScrollView?.reflectScrolledClipView(self);
             
-            if ((fabs(o.x - lastOrigin.x) < 0.1 && fabs(o.y - lastOrigin.y) < 0.1)) {
+            if ((abs(o.x - lastOrigin.x) < 0.1 && abs(o.y - lastOrigin.y) < 0.1)) {
                 if destination.x == o.x && destination.y == o.y {
                     self.endScroll()
                     super.scroll(to: o)
                     handleCompletionIfNeeded(withSuccess: true)
                 } else {
                     _ = destination.x - o.x
-                    let ydif = destination.y - o.y
-                    let xdif = destination.x - o.x
+                    let ydif = ceil(destination.y - o.y)
+                    let xdif = ceil(destination.x - o.x)
 
          
                     if ydif != 0 {
@@ -308,9 +308,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
         if animated && abs(bounds.minY - point.y) > frame.height {
             let y:CGFloat
             if bounds.minY < point.y {
-                y = point.y - frame.height / 2
+                y = point.y - floor(frame.height / 2)
             } else {
-                y = point.y + frame.height / 2
+                y = point.y + floor(frame.height / 2)
             }
             super.scroll(to: NSMakePoint(point.x,y))
             DispatchQueue.main.async(execute: { [weak self] in

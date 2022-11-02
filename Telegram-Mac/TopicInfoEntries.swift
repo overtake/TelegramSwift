@@ -38,7 +38,7 @@ final class TopicInfoArguments : PeerInfoArguments {
                 if let address = peer.addressName, !address.isEmpty {
                     link = "https://t.me/\(address)"
                 }
-                link += "?topic=\(threadId)"
+                link += "/\(threadId)"
                 
                 showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: context.window)
             }
@@ -278,7 +278,7 @@ func topicInfoEntries(view: PeerView, threadData: MessageHistoryThreadData, argu
         let addressName: String = group.addressName ?? ""
         
         if !addressName.isEmpty {
-            aboutBlock.append(.addressName(section: TopicInfoSection.desc.rawValue, name: "\(addressName)?topic=\(state.threadId)", viewType: .singleItem))
+            aboutBlock.append(.addressName(section: TopicInfoSection.desc.rawValue, name: "\(addressName)/\(state.threadId)", viewType: .singleItem))
         }
         
         applyBlock(aboutBlock)
