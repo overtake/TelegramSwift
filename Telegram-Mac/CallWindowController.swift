@@ -1318,13 +1318,37 @@ class PhoneCallWindowController {
         updateLocalizationAndThemeDisposable.dispose()
         NotificationCenter.default.removeObserver(self)
         self.window.removeAllHandlers(for: self.view)
-        
+        _ = enableScreenSleep()
         _ = self.view.allActiveControlsViews.map {
             $0.updateEnabled(false, animated: true)
         }
     }
     
+    private var assertionID: IOPMAssertionID = 0
+    private var success: IOReturn?
+    
+    private func disableScreenSleep() -> Bool? {
+        guard success == nil else { return nil }
+        success = IOPMAssertionCreateWithName( kIOPMAssertionTypeNoDisplaySleep as CFString,
+                                               IOPMAssertionLevel(kIOPMAssertionLevelOn),
+                                               "Group Call" as CFString,
+                                               &assertionID )
+        return success == kIOReturnSuccess
+    }
+    
+    private func enableScreenSleep() -> Bool {
+        if success != nil {
+            success = IOPMAssertionRelease(assertionID)
+            success = nil
+            return true
+        }
+        return false
+    }
+    
     func show() {
+        
+        _ = self.disableScreenSleep()
+        
         let ready = self.ready.get() |> filter { $0 } |> take(1)
         
         readyDisposable.set(ready.start(next: { [weak self] _ in

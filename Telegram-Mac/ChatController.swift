@@ -406,7 +406,6 @@ class ChatControllerView : View, ChatInputDelegate {
     }
         
     func updateFloating(_ values:[ChatFloatingPhoto], animated: Bool, currentAnimationRows: [TableAnimationInterface.AnimateItem] = []) {
-        CATransaction.begin()
         var added:[NSView] = []
         for value in values {
             if let view = value.photoView {
@@ -433,7 +432,6 @@ class ChatControllerView : View, ChatInputDelegate {
         for view in toRemove {
             performSubviewRemoval(view, animated: animated, timingFunction: .easeOut, checkCompletion: true)
         }
-        CATransaction.commit()
     }
     
     
@@ -1512,10 +1510,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let gap: CGFloat = 13
             let inset: CGFloat = 3
             
+            genericView.tableView.beginTableUpdates()
+            let lastMax: CGFloat = items[items.count - 1].frame.maxY - inset
+            let firstMin: CGFloat = items[0].frame.minY + inset
+            genericView.tableView.endTableUpdates()
             
-            let lastMax = items[items.count - 1].frame.maxY - inset
-            let firstMin = items[0].frame.minY + inset
-
             if offset.y >= lastMax - ph - gap {
                 point.y = lastMax - offset.y - ph
             } else if offset.y + gap > firstMin {
@@ -1552,30 +1551,24 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         genericView.updateFloating(floating, animated: animated, currentAnimationRows: currentAnimationRows)
     }
     
-    private func collectPreviousItems()-> [(TableRowItem, CGRect)] {
-        var result: [(TableRowItem, CGRect)] = []
-        
-        let visible = genericView.tableView.visibleRows(genericView.frame.height)
-        
-        for i in visible.lowerBound ..< visible.upperBound {
-            let item = genericView.tableView.item(at: i)
-            if let view = item.view {
-                result.append((genericView.tableView.item(at: i), view.frame))
-            }
+    private var hasPhotos: Bool = false
+    private func updateHasPhotos(_ theme: TelegramPresentationTheme) {
+        if let peer = self.chatInteraction.peer {
+            let peerAccept = peer.isGroup || peer.isChannel || peer.isSupergroup || peer.id == context.peerId || peer.id == repliesPeerId
+            self.hasPhotos = peerAccept && theme.bubbled
+        } else {
+            self.hasPhotos = false
         }
-        return result
     }
     
-    private func collectFloatingPhotos(animated: Bool, previousItems: [(TableRowItem, CGRect)], currentAnimationRows: [TableAnimationInterface.AnimateItem]) {
-        guard let peer = self.chatInteraction.peer, let theme = self.previousView.with({ $0?.theme }) else {
+    
+    private func collectFloatingPhotos(animated: Bool, currentAnimationRows: [TableAnimationInterface.AnimateItem]) {
+        
+        if !hasPhotos {
             self.grouppedFloatingPhotos = []
             return
         }
-        guard peer.isGroup || peer.isChannel || peer.isSupergroup || peer.id == context.peerId || peer.id == repliesPeerId, theme.bubbled else {
-            self.grouppedFloatingPhotos = []
-            return
-        }
-        let cached:[MessageId : NSView] = grouppedFloatingPhotos.reduce([:], { current, value in
+        let cached:[MessageId : NSView] = self.grouppedFloatingPhotos.reduce([:], { current, value in
             var current = current
             for item in value.0 {
                 let view = value.1
@@ -1586,9 +1579,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         var groupped:[[ChatRowItem]] = []
         var current:[ChatRowItem] = []
-        
         let visibleItems = self.genericView.tableView.visibleRows(50)
-                
         for i in visibleItems.lowerBound ..< visibleItems.upperBound {
             let item = self.genericView.tableView.item(at: i)
             var skipOrFill = true
@@ -1626,7 +1617,18 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         self.grouppedFloatingPhotos = groupped.compactMap { value in
             let item = value[value.count - 1]
-            let view = cached[item.message!.id] ?? ChatRowView.makePhotoView(item)
+            var view: NSView?
+            for item in value {
+                if let v = cached[item.message!.id] {
+                    view = v
+                    break
+                }
+            }
+            if view == nil {
+                view = ChatRowView.makePhotoView(item)
+            }
+                    
+            //??
             let control = view as? Control
             control?.toolTip = item.nameHide
             control?.removeAllHandlers()
@@ -1644,7 +1646,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        self.updateFloatingPhotos(genericView.scroll, animated: animated, currentAnimationRows: currentAnimationRows)
+        self.updateFloatingPhotos(self.genericView.scroll, animated: animated, currentAnimationRows: currentAnimationRows)
+        
     }
     
     private func toggleUnderMouseMessage() {
@@ -1698,7 +1701,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             guard let `self` = self else {
                 return
             }
-            self.collectFloatingPhotos(animated: false, previousItems: self.collectPreviousItems(), currentAnimationRows: self.currentAnimationRows)
+            self.collectFloatingPhotos(animated: false, currentAnimationRows: self.currentAnimationRows)
             
             self.updateVisibleRange(position.visibleRows)
             
@@ -5366,25 +5369,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
       
         self.currentAnimationRows = []
         
-        
-        let previousItems = self.collectPreviousItems()
-//
-//        var transition = transition
-//
-//        if case .none = transition.state, !canInteractiveRead() {
-//            transition = transition.withUpdatedState(.saveVisible(.lower))
-//        }
+        self.updateHasPhotos(processedView.theme)
         
         genericView.tableView.merge(with: transition)
-        
-        
-//        self.reactionManager?.update(transition: .animated(duration: 0.2, curve: .easeOut))
-        
+        collectFloatingPhotos(animated: animated, currentAnimationRows: currentAnimationRows)
+
         self.updateBackgroundColor(processedView.theme.controllerBackgroundMode)
         
         genericView.chatTheme = processedView.theme
                         
-        collectFloatingPhotos(animated: animated, previousItems: previousItems, currentAnimationRows: currentAnimationRows)
         
         let _ = nextTransaction.execute()
 
