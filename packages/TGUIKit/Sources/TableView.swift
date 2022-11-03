@@ -1928,8 +1928,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func rectOf(index:Int) -> NSRect {
-        let item = self.item(at: index)
-        return rectOf(item: item)
+        return self.tableView.rect(ofRow: index)
     }
     
     public func remove(at:Int, redraw:Bool = true, animation:NSTableView.AnimationOptions = .none) -> Void {
