@@ -2178,9 +2178,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func reloadData() -> Void {
         if documentSize.height > frame.height, window != nil {
-            self.tableView.beginUpdates()
-            self.tableView.reloadData()
-            self.tableView.endUpdates()
+            self.beginTableUpdates()
+            self.enumerateItems { item in
+                reloadData(row: item.index, animated: false)
+                return true
+            }
+            self.endTableUpdates()
         }
     }
     
