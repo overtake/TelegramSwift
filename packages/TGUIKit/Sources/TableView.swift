@@ -1186,14 +1186,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.enumerateItems { item in
             _ = item.makeSize(frame.width, oldWidth: item.width)
             reloadData(row: item.index, animated: false)
-            NSAnimationContext.current.duration = 0.0
-            NSAnimationContext.current.timingFunction = nil
-            tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: item.index))
             return true
         }
+        self.reloadData()
         self.endTableUpdates()
         
-        self.reloadData()
         
         self.saveScrollState(visibleItems)
         
@@ -2661,6 +2658,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView.tile()
         self.reflectScrolledClipView(clipView)
         self.tableView.endUpdates()
+        
         self.endUpdates()
         
         

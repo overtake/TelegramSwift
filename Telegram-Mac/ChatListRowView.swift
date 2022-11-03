@@ -1046,16 +1046,14 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                          } else {
                              current = .init(account: item.context.account, file: forumIconFile, size: size, playPolicy: .playCount(2))
                          }
-                         
-                         if item.context.layout == .minimisize {
-                             current.frame = CGRect(origin: NSMakePoint(20, 20), size: size)
-                         } else {
-                             current.frame = CGRect(origin: NSMakePoint(10, 12), size: size)
-                         }
-                         
                          current.superview = containerView
                          self.containerView.layer?.addSublayer(current)
                          self.inlineTopicPhotoLayer = current
+                     }
+                     if item.context.layout == .minimisize {
+                         current.frame = CGRect(origin: NSMakePoint(20, 20), size: size)
+                     } else {
+                         current.frame = CGRect(origin: NSMakePoint(10, 12), size: size)
                      }
                      photo.isHidden = true
                  } else {

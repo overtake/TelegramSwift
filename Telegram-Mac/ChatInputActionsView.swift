@@ -165,14 +165,11 @@ class ChatInputActionsView: View {
         entertaiments.set(handler: { [weak self] (state) in
             guard let `self` = self else {return}
             let chatInteraction = self.chatInteraction
-            var enabled = false
             
-            if let sidebarEnabled = chatInteraction.presentation.sidebarEnabled {
-                enabled = sidebarEnabled
-            }
             let context = chatInteraction.context
             let navigation = context.bindings.rootNavigation()
-            if !(navigation.frame.width >= 730 && context.layout == .dual) || !enabled {
+            NSLog("\(navigation.frame.width), \(context.layout == .dual)")
+            if (navigation.frame.width <= 730 && context.layout == .dual) || !FastSettings.sidebarEnabled {
                 self.showEntertainment()
             }
         }, for: .Hover)
@@ -552,7 +549,7 @@ class ChatInputActionsView: View {
                     }, itemImage: MenuAnimation.menu_mute.value))
                 }
                 switch chatInteraction.mode {
-                case .history:
+                case .history, .thread:
                     if !peer.isSecretChat {
                         let text = peer.id == chatInteraction.context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage
                         items.append(ContextMenuItem(text, handler: {

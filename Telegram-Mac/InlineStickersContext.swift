@@ -107,11 +107,11 @@ final class InlineStickersContext {
             return ActionDisposable {
                 if let current = self.dataContexts[key] {
                     current.subscribers.remove(index)
+                    if current.subscribers.isEmpty, current.loadState != .loaded {
+                        self.dataContexts[key]?.loadState = .inited
+                        disposable?.dispose()
+                    }
                 }
-                if self.dataContexts[key]?.loadState != .loaded {
-                    self.dataContexts[key]?.loadState = .inited
-                }
-                disposable?.dispose()
             }
         }
     }

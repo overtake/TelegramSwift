@@ -259,13 +259,13 @@ static void (*InternalVoipLoggingFunction)(NSString *) = NULL;
             proxyValue = proxyObject;
         }
         
-        TgVoipCrypto crypto;
-        crypto.sha1 = &TGCallSha1;
-        crypto.sha256 = &TGCallSha256;
-        crypto.rand_bytes = &TGCallRandomBytes;
-        crypto.aes_ige_encrypt = &TGCallAesIgeEncrypt;
-        crypto.aes_ige_decrypt = &TGCallAesIgeDecrypt;
-        crypto.aes_ctr_encrypt = &TGCallAesCtrEncrypt;
+//        TgVoipCrypto crypto;
+//        crypto.sha1 = &TGCallSha1;
+//        crypto.sha256 = &TGCallSha256;
+//        crypto.rand_bytes = &TGCallRandomBytes;
+//        crypto.aes_ige_encrypt = &TGCallAesIgeEncrypt;
+//        crypto.aes_ige_decrypt = &TGCallAesIgeDecrypt;
+//        crypto.aes_ctr_encrypt = &TGCallAesCtrEncrypt;
         
         std::vector<TgVoipEndpoint> endpoints;
         NSArray<OngoingCallConnectionDescription *> *connections = [@[primaryConnection] arrayByAddingObjectsFromArray:alternativeConnections];
@@ -327,8 +327,8 @@ static void (*InternalVoipLoggingFunction)(NSString *) = NULL;
                                        endpoints,
                                        proxyValue,
                                        callControllerNetworkTypeForType(networkType),
-                                       encryptionKey,
-                                       crypto
+                                       encryptionKey
+                               //        crypto
                                        );
         
         _state = OngoingCallStateInitializing;
