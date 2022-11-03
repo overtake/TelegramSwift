@@ -838,7 +838,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         }
         
         updateMinMaxWindowSize(animated: false)
-        self.view.splitView.layout()
+        DispatchQueue.main.async {
+            self.view.splitView.needsLayout = true
+        }
         context.layout = state
     }
     

@@ -5151,7 +5151,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         })
         
         switch self.mode {
-        case .history:
+        case .history, .thread:
             let hasScheduledMessages = peerView.get()
             |> take(1)
             |> mapToSignal { view -> Signal<Bool, NoError> in

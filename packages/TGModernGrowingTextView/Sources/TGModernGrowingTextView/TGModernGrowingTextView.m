@@ -361,7 +361,7 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
 -(NSArray *)transformItems {
     
     NSMenuItem *bold = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.Bold", nil) action:@selector(boldWord:) keyEquivalent:@"b"];
-    [bold setKeyEquivalentModifierMask: NSCommandKeyMask];
+    [bold setKeyEquivalentModifierMask: NSEventModifierFlagCommand];
     
     NSMenuItem *italic = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.Italic", nil) action:@selector(italicWord:) keyEquivalent:@"i"];
     [italic setKeyEquivalentModifierMask: NSEventModifierFlagCommand];
