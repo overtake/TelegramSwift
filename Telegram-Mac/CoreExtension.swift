@@ -572,8 +572,10 @@ public extension Message {
         for attr in attributes {
             if let attr = attr as? RestrictedContentMessageAttribute {
                 for rule in attr.rules {
-                    if rule.platform == "ios" || rule.platform == "all" {
-                        return !contentSettings.ignoreContentRestrictionReasons.contains(rule.reason) ? rule.text : nil
+                    if rule.platform == "ios" || rule.platform == "all" || contentSettings.addContentRestrictionReasons.contains(rule.platform) {
+                        if !contentSettings.ignoreContentRestrictionReasons.contains(rule.reason) {
+                            return rule.text
+                        }
                     }
                 }
             }

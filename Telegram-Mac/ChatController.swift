@@ -4128,7 +4128,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 let count = self.chatInteraction.presentation.pinnedMessageId?.totalCount ?? 1
                 
                 confirm(for: context.window, information: strings().chatUnpinAllMessagesConfirmationCountable(count), okTitle: strings().chatConfirmUnpinOK, cancelTitle: strings().modalCancel, successHandler: { [weak self] _ in
-                    let _ = (context.engine.messages.requestUnpinAllMessages(peerId: peerId)
+                    let _ = (context.engine.messages.requestUnpinAllMessages(peerId: peerId, threadId: chatLocation.threadId)
                         |> deliverOnMainQueue).start(error: { _ in
                             
                         }, completed: { [weak self] in

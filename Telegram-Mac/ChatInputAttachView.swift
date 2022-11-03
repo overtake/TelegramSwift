@@ -100,6 +100,8 @@ class ChatInputAttachView: ImageButton, Notifable {
 
                     let replyTo = chatInteraction.presentation.interfaceState.replyMessageId ?? chatMode.threadId
                     
+                    let threadId = chatInteraction.presentation.chatLocation.threadId
+
                     let acceptMode = chatMode == .history || (chatMode.isThreadMode || chatMode.isTopicMode)
                     
                     if acceptMode, let peer = chatInteraction.presentation.peer {
@@ -130,7 +132,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                             if canAddAttach {
                                 items.append(ContextMenuItem(attach.shortName, handler: { [weak self] in
                                     let invoke:()->Void = { [weak self] in
-                                        showModal(with: WebpageModalController(context: context, url: "", title: attach.peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: attach.peer, replyTo: replyTo, buttonText: "", payload: nil, fromMenu: false, hasSettings: attach.hasSettings, complete: chatInteraction.afterSentTransition), chatInteraction: self?.chatInteraction, thumbFile: thumbFile), for: context.window)
+                                        showModal(with: WebpageModalController(context: context, url: "", title: attach.peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: attach.peer, replyTo: replyTo, buttonText: "", payload: nil, fromMenu: false, hasSettings: attach.hasSettings, complete: chatInteraction.afterSentTransition), chatInteraction: self?.chatInteraction, thumbFile: thumbFile), for: context.window)
                                     }
                                     invoke()
                                 }, itemImage: value))
