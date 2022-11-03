@@ -2177,7 +2177,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func reloadData() -> Void {
-        self.tableView.reloadData()
+        if documentSize.height > frame.height, window != nil {
+            self.tableView.beginUpdates()
+            self.tableView.reloadData()
+            self.tableView.endUpdates()
+        }
     }
     
     public func item(at:Int) -> TableRowItem {
