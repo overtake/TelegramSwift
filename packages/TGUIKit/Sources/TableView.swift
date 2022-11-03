@@ -1188,7 +1188,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             reloadData(row: item.index, animated: false)
             return true
         }
-        self.reloadData()
         self.endTableUpdates()
         
         
