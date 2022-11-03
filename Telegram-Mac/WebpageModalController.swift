@@ -421,13 +421,13 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
     
     enum RequestData {
         case simple(url: String, bot: Peer, buttonText: String)
-        case normal(url: String?, peerId: PeerId, bot: Peer, replyTo: MessageId?, buttonText: String, payload: String?, fromMenu: Bool, hasSettings: Bool, complete:(()->Void)?)
+        case normal(url: String?, peerId: PeerId, threadId: Int64?, bot: Peer, replyTo: MessageId?, buttonText: String, payload: String?, fromMenu: Bool, hasSettings: Bool, complete:(()->Void)?)
         
         var bot: Peer {
             switch self {
             case let .simple(_, bot, _):
                 return bot
-            case let .normal(_, _, bot, _, _, _, _, _, _):
+            case let .normal(_, _, _, bot, _, _, _, _, _, _):
                 return bot
             }
         }
@@ -435,7 +435,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             switch self {
             case let .simple(_, _, buttonText):
                 return buttonText
-            case let .normal(_, _, _, _, buttonText, _, _, _, _):
+            case let .normal(_, _, _, _, _, buttonText, _, _, _, _):
                 return buttonText
             }
         }
@@ -443,7 +443,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             switch self {
             case .simple:
                 return false
-            case let .normal(_, _, _, _, _, _, _, hasSettings, _):
+            case let .normal(_, _, _, _, _, _, _, _, hasSettings, _):
                 return hasSettings
             }
         }
@@ -636,12 +636,12 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                         self?.close()
                     }
                 }))
-            case .normal(let url, let peerId, let bot, let replyTo, let buttonText, let payload, let fromMenu, _, let complete):
+            case .normal(let url, let peerId, let threadId, let bot, let replyTo, let buttonText, let payload, let fromMenu, _, let complete):
   
 
                 
                 
-                let signal = context.engine.messages.requestWebView(peerId: peerId, botId: bot.id, url: url, payload: payload, themeParams: generateWebAppThemeParams(theme), fromMenu: fromMenu, replyToMessageId: replyTo) |> deliverOnMainQueue
+                let signal = context.engine.messages.requestWebView(peerId: peerId, botId: bot.id, url: url, payload: payload, themeParams: generateWebAppThemeParams(theme), fromMenu: fromMenu, replyToMessageId: replyTo, threadId: threadId) |> deliverOnMainQueue
                 requestWebDisposable.set(signal.start(next: { [weak self] result in
                 
                     
@@ -772,7 +772,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             switch requestData {
             case .simple(_, let bot, _):
                 request(bot)
-            case .normal(_, _, let bot, _, _, _, _, _, _):
+            case .normal(_, _, _, let bot, _, _, _, _, _, _):
                 request(bot)
             }
         } else {
