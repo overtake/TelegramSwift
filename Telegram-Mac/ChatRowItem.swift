@@ -83,6 +83,10 @@ class ChatRowItem: TableRowItem {
         }
     }
     
+    var isAdRow: Bool {
+        return message?.adAttribute != nil
+    }
+    
     private(set) var chatInteraction:ChatInteraction
     
     let context: AccountContext
@@ -845,7 +849,7 @@ class ChatRowItem: TableRowItem {
         if chatInteraction.mode.isThreadMode, chatInteraction.mode.threadId == message?.id {
             return false
         } else {
-            return isIncoming
+            return isIncoming && self.hasPhoto
         }
     }
     

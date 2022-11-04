@@ -62,6 +62,16 @@ struct ForumUI {
         navigation.push(ChatListController(context, modal: false, mode: .forum(peerId)))
     }
     static func openTopic(_ threadId: Int64, peerId: PeerId, context: AccountContext, messageId: MessageId? = nil, animated: Bool = false, addition: Bool = false, initialAction: ChatInitialAction? = nil) -> Signal<Bool, NoError> {
+        
+        let controller = context.bindings.rootNavigation().controller as? ChatController
+        
+        if let controller = controller, controller.chatInteraction.chatLocation.threadId == threadId {
+            if let messageId = messageId {
+                controller.chatInteraction.focusMessageId(nil, messageId, .CenterEmpty)
+            }
+            return controller.ready.get()
+        }
+        
         let threadMessageId = makeThreadIdMessageId(peerId: peerId, threadId: threadId)
         let context = context
         let signal = fetchAndPreloadReplyThreadInfo(context: context, subject: .groupMessage(threadMessageId), preload: false)

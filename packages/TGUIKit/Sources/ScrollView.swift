@@ -45,7 +45,7 @@ open class ScrollView: NSScrollView{
         
         let rect = NSMakeRect(contentView.bounds.minX, contentView.bounds.maxY,contentView.documentRect.width, contentView.documentRect.height)
         
-        var d:ScrollDirection = .none
+        var d:ScrollDirection = currentpos.direction
                 
         if(currentpos.rect.minY > rect.minY) {
             d = .top
@@ -59,8 +59,12 @@ open class ScrollView: NSScrollView{
         return (n, previous)
     }
     
-    func updateScroll(_ visibleRange: NSRange = NSMakeRange(NSNotFound, 0)) -> Void {
-        self.currentpos = ScrollPosition(NSMakeRect(contentView.bounds.minX, contentView.bounds.maxY,contentView.documentRect.width, contentView.documentRect.height), .none, visibleRange)
+    public var currentScroll: ScrollPosition {
+        return currentpos
+    }
+    
+    func resetScroll(_ visibleRange: NSRange = NSMakeRange(NSNotFound, 0)) -> Void {
+        self.currentpos = ScrollPosition(NSMakeRect(contentView.bounds.minX, contentView.bounds.maxY,contentView.documentRect.width, contentView.documentRect.height), self.currentpos.direction, visibleRange)
     }
     
     public var documentOffset:NSPoint {

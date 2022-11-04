@@ -710,7 +710,9 @@ class ChatMessageItem: ChatRowItem {
         }
         if let _ = actionButtonText {
             contentSize.height += actionButtonHeight
+            contentSize.width = max(contentSize.width, 200)
         }
+        
         
         return contentSize
     }

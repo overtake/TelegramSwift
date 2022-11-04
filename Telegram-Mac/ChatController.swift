@@ -1248,6 +1248,201 @@ private struct ChatDismissedPins : Equatable {
     let tempMaxId: MessageId?
 }
 
+private final class ChatAdData {
+    var preloadAdPeerId: PeerId?
+    let preloadAdPeerDisposable = MetaDisposable()
+    var pendingDynamicAdMessages: [Message] = []
+    var pendingDynamicAdMessageInterval: Int?
+    var remainingDynamicAdMessageInterval: Int?
+    var remainingDynamicAdMessageDistance: CGFloat?
+    var nextPendingDynamicMessageId: Int32 = 1
+    private var seenMessageIds = Set<MessageId>()
+    private var height: CGFloat = 0
+
+
+    private let disposable = MetaDisposable()
+    let context: AdMessagesHistoryContext
+    
+    private var allAdMessages: (fixed: Message?, opportunistic: [Message], version: Int) = (nil, [], 0) {
+            didSet {
+                self.allAdMessagesPromise.set(.single(self.allAdMessages))
+            }
+        }
+    private let allAdMessagesPromise = Promise<(fixed: Message?, opportunistic: [Message], version: Int)>((nil, [], 0))
+    
+    var allMessages: Signal<(fixed: Message?, opportunistic: [Message], version: Int), NoError> {
+        return allAdMessagesPromise.get()
+    }
+
+
+    init(context: AccountContext, height: Signal<CGFloat, NoError>, peerId: PeerId) {
+        self.context = context.engine.messages.adMessages(peerId: peerId)
+        let signal = (combineLatest(self.context.state, height)
+                      |> deliverOnMainQueue)
+        
+        disposable.set(signal.start(next: { [weak self] values in
+            guard let `self` = self else {
+                return
+            }
+            let (interPostInterval, messages) = values.0
+            let height = values.1
+            self.height = height
+            
+            if let interPostInterval = interPostInterval {
+                self.pendingDynamicAdMessages = messages
+                self.pendingDynamicAdMessageInterval = Int(interPostInterval)
+                
+                if self.remainingDynamicAdMessageInterval == nil {
+                    self.remainingDynamicAdMessageInterval = Int(interPostInterval)
+                }
+                if self.remainingDynamicAdMessageDistance == nil {
+                    self.remainingDynamicAdMessageDistance = height
+                }
+                
+                self.allAdMessages = (messages.first, [], 0)
+            } else {
+                var adPeerId: PeerId?
+                adPeerId = messages.first?.author?.id
+                
+                if self.preloadAdPeerId != adPeerId {
+                    self.preloadAdPeerId = adPeerId
+                    if let adPeerId = adPeerId {
+                        let combinedDisposable = DisposableSet()
+                        self.preloadAdPeerDisposable.set(combinedDisposable)
+                        combinedDisposable.add(context.account.viewTracker.polledChannel(peerId: adPeerId).start())
+                        combinedDisposable.add(context.account.addAdditionalPreloadHistoryPeerId(peerId: adPeerId))
+                    } else {
+                        self.preloadAdPeerDisposable.set(nil)
+                    }
+                }
+                
+                self.allAdMessages = (messages.first, [], 0)
+            }
+        }))
+
+    }
+    
+    
+    private func maybeInsertPendingAdMessage(tableView: TableView, position: ScrollPosition, toLaterRange: (Int, Int), toEarlierRange: (Int, Int)) {
+        if self.pendingDynamicAdMessages.isEmpty {
+            return
+        }
+        
+        let currentPrefetchDirectionIsToLater = position.direction == .top
+
+        let selectedRange: (Int, Int)
+        let range:[Int]
+        let reverse: Bool
+        if currentPrefetchDirectionIsToLater {
+            selectedRange = (toLaterRange.0, toLaterRange.1)
+            reverse = true
+        } else {
+            selectedRange = (toEarlierRange.0, toEarlierRange.1)
+            reverse = false
+        }
+        if selectedRange.0 <= selectedRange.1 {
+            if reverse {
+                range = (selectedRange.0 ... selectedRange.1).reversed()
+            } else {
+                range = Array((selectedRange.0 ... selectedRange.1))
+            }
+        } else {
+            range = []
+        }
+        
+        if !range.isEmpty {
+            var insertionTimestamp: Int32?
+            for i in range {
+                let item = tableView.item(at: i) as? ChatRowItem
+                if let message = item?.message, message.id.namespace == Namespaces.Message.Cloud, message.adAttribute == nil {
+                    
+                    insertionTimestamp = message.timestamp
+                    break
+                }
+            }
+
+            if let insertionTimestamp = insertionTimestamp {
+                let initialMessage = self.pendingDynamicAdMessages.removeFirst()
+                let message = Message(
+                    stableId: UInt32.max - 1 - UInt32(self.nextPendingDynamicMessageId),
+                    stableVersion: initialMessage.stableVersion,
+                    id: MessageId(peerId: initialMessage.id.peerId, namespace: initialMessage.id.namespace, id: self.nextPendingDynamicMessageId),
+                    globallyUniqueId: nil,
+                    groupingKey: nil,
+                    groupInfo: nil,
+                    threadId: nil,
+                    timestamp: insertionTimestamp,
+                    flags: initialMessage.flags,
+                    tags: initialMessage.tags,
+                    globalTags: initialMessage.globalTags,
+                    localTags: initialMessage.localTags,
+                    forwardInfo: initialMessage.forwardInfo,
+                    author: initialMessage.author,
+                    text: initialMessage.text,
+                    attributes: initialMessage.attributes,
+                    media: initialMessage.media,
+                    peers: initialMessage.peers,
+                    associatedMessages: initialMessage.associatedMessages,
+                    associatedMessageIds: initialMessage.associatedMessageIds,
+                    associatedMedia: initialMessage.associatedMedia,
+                    associatedThreadInfo: initialMessage.associatedThreadInfo
+                )
+                self.nextPendingDynamicMessageId += 1
+
+                var allAdMessages = self.allAdMessages
+                if allAdMessages.fixed?.adAttribute?.opaqueId == message.adAttribute?.opaqueId {
+                    allAdMessages.fixed = self.pendingDynamicAdMessages.first?.withUpdatedStableVersion(stableVersion: UInt32(self.nextPendingDynamicMessageId))
+                }
+                allAdMessages.opportunistic.append(message)
+                allAdMessages.version += 1
+                self.allAdMessages = allAdMessages
+            }
+        }
+    }
+    
+    func update(items allVisibleAnchorMessageIds: [(MessageId, Int)], tableView: TableView, position: ScrollPosition) {
+        let visible = tableView.visibleRows()
+        
+        let toEarlierRange = (visible.upperBound + 1, tableView.count - 1)
+        let toLaterRange = (0, visible.lowerBound)
+
+        for (messageId, index) in allVisibleAnchorMessageIds {
+            let itemHeight = tableView.item(at: index).height
+            
+            //TODO:loc optimize eviction
+            if self.seenMessageIds.insert(messageId).inserted, let remainingDynamicAdMessageIntervalValue = self.remainingDynamicAdMessageInterval, let remainingDynamicAdMessageDistanceValue = self.remainingDynamicAdMessageDistance {
+                
+                let remainingDynamicAdMessageInterval = remainingDynamicAdMessageIntervalValue - 1
+                let remainingDynamicAdMessageDistance = remainingDynamicAdMessageDistanceValue - itemHeight
+                if remainingDynamicAdMessageInterval <= 0 && remainingDynamicAdMessageDistance <= 0.0 {
+                    self.remainingDynamicAdMessageInterval = self.pendingDynamicAdMessageInterval
+                    self.remainingDynamicAdMessageDistance = self.height
+                    self.maybeInsertPendingAdMessage(tableView: tableView, position: position, toLaterRange: toLaterRange, toEarlierRange: toEarlierRange)
+                } else {
+                    self.remainingDynamicAdMessageInterval = remainingDynamicAdMessageInterval
+                    self.remainingDynamicAdMessageDistance = remainingDynamicAdMessageDistance
+                }
+            }
+        }
+    }
+    
+    func markAsSeen(opaqueId: Data) {
+        for i in 0 ..< self.pendingDynamicAdMessages.count {
+            if let pendingAttribute = self.pendingDynamicAdMessages[i].adAttribute, pendingAttribute.opaqueId == opaqueId {
+                self.pendingDynamicAdMessages.remove(at: i)
+                break
+            }
+        }
+        self.context.markAsSeen(opaqueId: opaqueId)
+    }
+
+    
+    deinit {
+        disposable.dispose()
+        preloadAdPeerDisposable.dispose()
+    }
+}
+
 class ChatController: EditableViewController<ChatControllerView>, Notifable, TableViewDelegate {
     
     private var chatLocation:ChatLocation
@@ -1375,7 +1570,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     
     private var currentAnimationRows:[TableAnimationInterface.AnimateItem] = []
     
-    private let adMessages: AdMessagesHistoryContext?
+    private let adMessages: ChatAdData?
+    
+    
    
     private var themeSelector: ChatThemeSelectorController? = nil
     
@@ -1583,7 +1780,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         for i in visibleItems.lowerBound ..< visibleItems.upperBound {
             let item = self.genericView.tableView.item(at: i)
             var skipOrFill = true
-            if let item = item as? ChatRowItem, item.hasPhoto {
+            if let item = item as? ChatRowItem {
                 if item.canHasFloatingPhoto {
                     let prev = current.last
                     let sameAuthor = prev?.lastMessage?.author?.id == item.lastMessage?.author?.id
@@ -1682,12 +1879,15 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
     override func viewDidResized(_ size: NSSize) {
         super.viewDidResized(size)
+        sizeValue.set(size)
         self.updateFloatingPhotos(genericView.scroll, animated: false)
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
+        sizeValue.set(frame.size)
         self.chatInteraction.add(observer: self)
         
         genericView.inputContextHelper.didScroll = { [weak self] in
@@ -1974,7 +2174,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             let visibleRows = self.genericView.tableView.visibleRows()
             var messageIndex: MessageIndex?
             for i in stride(from: visibleRows.max - 1, to: -1, by: -1) {
-                if let item = self.genericView.tableView.item(at: i) as? ChatRowItem, !item.ignoreAtInitialization, let message = item.message  {
+                if let item = self.genericView.tableView.item(at: i) as? ChatRowItem, !item.ignoreAtInitialization, let message = item.message, message.adAttribute == nil {
                     messageIndex = MessageIndex(message)
                     break
                 }
@@ -2003,13 +2203,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let previousUpdatingMedia = Atomic<[MessageId: ChatUpdatingMessageMedia]?>(value: nil)
         
         
-        let adMessages:Signal<[Message], NoError>
+        let adMessages:Signal<(fixed: Message?, opportunistic: [Message], version: Int), NoError>
         if let ad = self.adMessages {
-            adMessages = ad.state |> map {
-                $0.messages
-            }
+            adMessages = ad.allMessages
         } else {
-            adMessages = .single([])
+            adMessages = .single((nil, [], 0))
         }
         
         let themeEmoticon: Signal<String?, NoError> = self.peerView.get() |> map {
@@ -2157,12 +2355,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         topMessages = nil
                     }
                     
-                    var ads:[Message] = []
+                    var ads:(fixed: Message?, opportunistic: [Message]) = (fixed: nil, opportunistic: [])
                     if !view.isLoading && view.laterId == nil {
-                        ads = adMessages
+                        ads = (fixed: adMessages.fixed, opportunistic: adMessages.opportunistic)
                     }
                     
-                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, addTopThreadInset: addTopThreadInset, updatingMedia: updatingMedia, adMessages: ads, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
+                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, addTopThreadInset: addTopThreadInset, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries, theme: chatTheme)
                 }
             } else {
@@ -3381,23 +3579,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.focusMessageId = { [weak self] fromId, toId, state in
             
             if let strongSelf = self {
-                switch strongSelf.mode {
-                case let .thread(data, mode):
-                    if mode.originId == toId {
-                        let controller = strongSelf.navigationController?.previousController as? ChatController
-                        if let controller = controller, case .peer(mode.originId.peerId) = controller.chatLocation {
-                            strongSelf.navigationController?.back()
-                            controller.chatInteraction.focusMessageId(fromId, mode.originId, state)
-                        } else {
-                            strongSelf.navigationController?.push(ChatAdditionController(context: strongSelf.context, chatLocation: .peer(toId.peerId), mode: .history, messageId: toId, initialAction: nil))
-                        }
-                        return
-                    } else if toId.peerId != peerId {
-                        strongSelf.navigationController?.push(ChatAdditionController(context: strongSelf.context, chatLocation: .peer(toId.peerId), mode: .history, messageId: toId, initialAction: nil))
-                    }
-                default:
-                    break
-                }
+               
                 
                 switch strongSelf.mode {
                 case .history, .thread:
@@ -5035,7 +5217,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 var unsupportedMessagesIds: [MessageId] = []
                 var topVisibleMessageRange: ChatTopVisibleMessageRange?
  
-                
+                var allVisibleAnchorMessageIds: [(MessageId, Int)] = []
+
+
                 var readAds:[Data] = []
                 
                 tableView.enumerateVisibleItems(with: { item in
@@ -5070,6 +5254,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             } else {
                                 topVisibleMessageRange = ChatTopVisibleMessageRange(lowerBound: message.id, upperBound: message.id, isLast: item.index == tableView.count - 1)
                             }
+                            
+                            if message.id.namespace == Namespaces.Message.Cloud, self?.adMessages?.remainingDynamicAdMessageInterval != nil {
+                                allVisibleAnchorMessageIds.append((message.id, item.index))
+                            }
+                            
                             if let id = message.adAttribute?.opaqueId {
                                 if item.height == item.view?.visibleRect.height {
                                     readAds.append(id)
@@ -5146,6 +5335,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     strongSelf.updateMaxVisibleReadIncomingMessageIndex(MessageIndex(message))
                 }
                 
+                if !allVisibleAnchorMessageIds.isEmpty {
+                    self?.adMessages?.update(items: allVisibleAnchorMessageIds, tableView: tableView, position: position)
+                }
                
             }
         })
@@ -6499,6 +6691,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let messageId: MessageId?
     let mode: ChatMode
     
+    private let sizeValue = ValuePromise<NSSize>(ignoreRepeated: true)
+    
     public init(context: AccountContext, chatLocation:ChatLocation, mode: ChatMode = .history, messageId:MessageId? = nil, initialAction: ChatInitialAction? = nil, chatLocationContextHolder: Atomic<ChatLocationContextHolder?>? = nil) {
         self.chatLocation = chatLocation
         self.messageId = messageId
@@ -6517,7 +6711,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         if chatLocation.peerId.namespace == Namespaces.Peer.CloudChannel, mode == .history {
-            self.adMessages = context.engine.messages.adMessages(peerId: chatLocation.peerId)
+            self.adMessages = .init(context: context, height: sizeValue.get() |> map { $0 .height}, peerId: chatLocation.peerId)
         } else {
             self.adMessages = nil
         }
@@ -7209,3 +7403,24 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
     
 }
+
+
+/*
+ switch strongSelf.mode {
+ case let .thread(data, mode):
+     if mode.originId == toId {
+         let controller = strongSelf.navigationController?.previousController as? ChatController
+         if let controller = controller, case .peer(mode.originId.peerId) = controller.chatLocation {
+             strongSelf.navigationController?.back()
+             controller.chatInteraction.focusMessageId(fromId, mode.originId, state)
+         } else {
+             strongSelf.navigationController?.push(ChatAdditionController(context: strongSelf.context, chatLocation: .thread(data), mode: .history, messageId: toId, initialAction: nil))
+         }
+         return
+     } else if toId.peerId != peerId {
+         strongSelf.navigationController?.push(ChatAdditionController(context: strongSelf.context, chatLocation: .peer(toId.peerId), mode: .history, messageId: toId, initialAction: nil))
+     }
+ default:
+     break
+ }
+ */

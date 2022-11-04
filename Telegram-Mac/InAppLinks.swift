@@ -510,7 +510,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 return .doesntExists
             }
         }
-        _ = peerSignal.start(next: { peer in
+        _ = (peerSignal |> deliverOnMainQueue).start(next: { peer in
             var toMessageId: MessageId? = nil
             if let commentId = commentId {
                 toMessageId = MessageId(peerId: peer.id, namespace: Namespaces.Message.Cloud, id: commentId)
@@ -1510,16 +1510,19 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                     if name == "c" {
                         
                         if let context = context {
-                            var post = userAndPost.count >= 3 ? (userAndPost[2].isEmpty ? nil : Int32(userAndPost[2])) : nil
+                            let postIndex = userAndPost.count - 1
+                            var post = userAndPost[postIndex].isEmpty ? nil : Int32(userAndPost[postIndex])
                             let username = userAndPost[1]
-                            if userAndPost.count >= 3, let range = userAndPost[2].range(of: "?") {
-                                post = Int32(userAndPost[2][..<range.lowerBound])
+                            if let range = userAndPost[postIndex].range(of: "?") {
+                                post = Int32(userAndPost[postIndex][..<range.lowerBound])
                             }
                             let (params, _) = urlVars(with: url as String)
                             if let thread = params[keyURLThreadId]?.nsstring.intValue, let post = post {
                                 return .comments(link: urlString, username: "\(_private_)\(username)", context: context, threadId: thread, commentId: post)
                             } else if let topic = params[keyURLTopicId]?.nsstring.intValue {
                                 return .topic(link: urlString, username: "\(_private_)\(username)", context: context, threadId: topic, commentId: post)
+                            } else if userAndPost.count == 4, let threadId = Int32(userAndPost[2]) {
+                                return .topic(link: urlString, username: "\(_private_)\(username)", context: context, threadId: threadId, commentId: post)
                             } else {
                                 return .followResolvedName(link: urlString, username: "\(_private_)\(username)", postId: post, context: context, action:nil, callback: openInfo)
                             }
@@ -1531,9 +1534,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             return .theme(link: urlString, context: context, name: userAndPost[1])
                         }
                     } else {
-                        var post = userAndPost[1].isEmpty ? nil : Int32(userAndPost[1])//.intValue
-                        if let range = userAndPost[1].range(of: "?") {
-                            post = Int32(userAndPost[1][..<range.lowerBound])
+                        var postIndex: Int = userAndPost.count - 1
+                        var post = userAndPost[postIndex].isEmpty ? nil : Int32(userAndPost[postIndex])
+                        if let range = userAndPost[postIndex].range(of: "?") {
+                            post = Int32(userAndPost[postIndex][..<range.lowerBound])
                         }
                         if name.hasPrefix("iv?") {
                             return .external(link: urlString, false)
@@ -1560,7 +1564,9 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                  return .comments(link: urlString, username: name, context: context, threadId: thread, commentId: comment)
                             } else if let topic = params[keyURLTopicId]?.nsstring.intValue {
                                 return .topic(link: urlString, username: name, context: context, threadId: topic, commentId: post)
-                           } else {
+                            } else if userAndPost.count == 3, let threadId = Int32(userAndPost[1]) {
+                                return .topic(link: urlString, username: name, context: context, threadId: threadId, commentId: post)
+                            } else {
                                 return .followResolvedName(link: urlString, username: name, postId: post, context: context, action: action, callback: openInfo)
                             }
                         }
