@@ -1897,7 +1897,7 @@ class ChatRowItem: TableRowItem {
             //
             var fullDate: String = message.timestamp == scheduleWhenOnlineTimestamp ? "" : formatter.string(from: Date(timeIntervalSince1970: TimeInterval(message.timestamp) - context.timeDifference))
             
-            let threadId: MessageId? = chatInteraction.mode.threadId
+            let threadId: MessageId? = chatInteraction.chatLocation.threadMsgId
             
             if let message = effectiveCommentMessage {
                 for attribute in message.attributes {

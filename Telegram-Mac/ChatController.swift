@@ -4276,7 +4276,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             guard let `self` = self else {
                 return
             }
-            self.navigationController?.push(ChatAdditionController(context: context, chatLocation: .peer(peerId), mode: .pinned, messageId: messageId))
+            self.navigationController?.push(ChatAdditionController(context: context, chatLocation: chatLocation, mode: .pinned, messageId: messageId))
         }
         
         chatInteraction.unpinAllMessages = { [weak self, unowned context] in

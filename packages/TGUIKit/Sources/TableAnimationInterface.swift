@@ -30,7 +30,7 @@ open class TableAnimationInterface: NSObject {
         
         var height:CGFloat = 0
         
-        
+        table.tile()
        
         
         let contentView = table.contentView
@@ -45,7 +45,6 @@ open class TableAnimationInterface: NSObject {
         } else {
             checkBelowAfter = true
         }
-        table.tile()
         
         var range:NSRange = table.visibleRows(height)
         

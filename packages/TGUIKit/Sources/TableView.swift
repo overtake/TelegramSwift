@@ -420,12 +420,16 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         return false
     }
     
-    override func didAdd(_ rowView: NSTableRowView, forRow row: Int) {
-        if rowView.frame != rect(ofRow: row) {
-            var bp = 0
-            bp += 1
-        }
+    override func rect(ofRow row: Int) -> NSRect {
+        return super.rect(ofRow: row)
     }
+    override func row(at point: NSPoint) -> Int {
+        return super.row(at: point)
+    }
+    override func rows(in rect: NSRect) -> NSRange {
+        return super.rows(in: rect)
+    }
+    
     
     override public static var isCompatibleWithResponsiveScrolling: Bool {
         return true
