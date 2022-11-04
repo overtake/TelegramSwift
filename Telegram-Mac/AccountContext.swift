@@ -75,6 +75,14 @@ extension ChatLocation {
             return makeMessageThreadId(replyThreadMessage.messageId) //Int64(replyThreadMessage.messageId.id)
         }
     }
+    var threadMsgId: MessageId? {
+        switch self {
+        case .peer:
+            return nil
+        case let .thread(replyThreadMessage):
+            return replyThreadMessage.messageId
+        }
+    }
 
 }
 
