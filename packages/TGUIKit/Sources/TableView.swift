@@ -2202,7 +2202,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func reloadData() -> Void {
         if documentSize.height > frame.height, window != nil {
             self.beginTableUpdates()
-            self.tableView.reloadData()
+            NSAnimationContext.beginGrouping()
+            NSAnimationContext.current.duration = 0
+            let entireTableView: IndexSet = .init(0 ..< self.tableView.numberOfRows)
+            self.tableView.noteHeightOfRows(withIndexesChanged: entireTableView)
+            NSAnimationContext.endGrouping()
             self.endTableUpdates()
         }
     }
