@@ -322,10 +322,10 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         super.setFrameSize(newSize)
     }
     
-    open override func setFrameOrigin(_ newOrigin: NSPoint) {
-        let def = newOrigin.y - floor(newOrigin.y)
-        super.setFrameOrigin(newOrigin)
+    override public static var isCompatibleWithResponsiveScrolling: Bool {
+        return true
     }
+    
     
     open override func viewDidMoveToSuperview() {
         super.viewDidMoveToSuperview()

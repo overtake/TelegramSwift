@@ -420,6 +420,17 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         return false
     }
     
+    override func didAdd(_ rowView: NSTableRowView, forRow row: Int) {
+        if rowView.frame != rect(ofRow: row) {
+            var bp = 0
+            bp += 1
+        }
+    }
+    
+    override public static var isCompatibleWithResponsiveScrolling: Bool {
+        return true
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -764,7 +775,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView.wantsLayer = true
         self.tableView.autoresizesSubviews = false
         super.init(frame: frameRect)
-        
         updateAfterInitialize(isFlipped:true, drawBorder: false)
     }
     
@@ -818,11 +828,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 //        self.tableView.setFrameSize(NSMakeSize(frame.width, self.tableView.frame.height))
         
         self.tableView.flip = isFlipped
-      //  #if MAC_OS_X_VERSION_10_16
-        if #available(OSX 11.0, *) {
+        if #available(macOS 11.0, *) {
             self.tableView.style = .fullWidth
         }
-       // #endif
+
         
         clipView.copiesOnScroll = true
         
@@ -967,13 +976,101 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     
     public var updateScrollPoint:((NSPoint)->NSPoint)? = nil
-    
+    private var beginPendingTime:CFAbsoluteTime?
+    private var dispatchRange: NSRange = NSMakeRange(NSNotFound, 0)
+
     open override func scroll(_ clipView: NSClipView, to point: NSPoint) {
         var point = point
         if let updateScrollPoint = updateScrollPoint {
             point = updateScrollPoint(point)
         }
         clipView.scroll(to: point)
+    }
+    
+    private func updateScroll() {
+        
+        Queue.mainQueue().justDispatch { [weak self] in
+            self?.scrollDidChangedBounds()
+        }
+       
+        if self.updating == true {
+            return
+        }
+        var isNextCallLocked: Bool {
+            if let beginPendingTime = beginPendingTime {
+                if CFAbsoluteTimeGetCurrent() - beginPendingTime < 0.05 {
+                    return false
+                }
+            }
+            beginPendingTime = CFAbsoluteTimeGetCurrent()
+            return false
+        }
+        
+        let reqCount = self.count / 6
+        
+        self.updateStickAfterScroll(self.nextScrollEventIsAnimated)
+        self.nextScrollEventIsAnimated = false
+        let scroll = self.scrollPosition(self.visibleRows())
+        
+        if (!self.updating && !self.clipView.isAnimateScrolling) {
+            
+            let range = scroll.current.visibleRows
+            
+            if range.location == NSNotFound {
+                return;
+            }
+            
+            if(scroll.current.direction != self.previousScroll?.direction && scroll.current.rect != self.previousScroll?.rect) {
+
+                switch(scroll.current.direction) {
+                case .top:
+                    if(range.location  <= reqCount) {
+                        if !isNextCallLocked {
+                            self.scrollHandler(scroll.current)
+                        }
+                        self.previousScroll = scroll.current
+                    }
+                case .bottom:
+                    if(self.count - (range.location + range.length) <= reqCount) {
+                        if !isNextCallLocked {
+                            self.scrollHandler(scroll.current)
+                        }
+                        self.previousScroll = scroll.current
+                    }
+                case .none:
+                    if !isNextCallLocked {
+                        self.scrollHandler(scroll.current)
+                    }
+                    self.previousScroll = scroll.current
+                }
+            }
+            
+        }
+        for listener in self.scrollListeners {
+            if !listener.dispatchWhenVisibleRangeUpdated || listener.first || !NSEqualRanges(scroll.current.visibleRows, listener.dispatchRange) {
+                listener.handler(scroll.current)
+                listener.first = false
+                listener.dispatchRange = scroll.current.visibleRows
+            }
+        }
+        
+        if self.needUpdateVisibleAfterScroll {
+            let range = self.visibleRows()
+            for i in range.location ..< range.location + range.length {
+                if let view = self.viewNecessary(at: i) {
+                    view.updateMouse()
+                }
+            }
+        }
+        if !NSEqualRanges(scroll.current.visibleRows, dispatchRange) {
+            tableView.beginUpdates()
+            self.enumerateVisibleItems(with: { item in
+                item.view?.setFrameOrigin(self.rectOf(item: item).origin)
+                return true
+            })
+            tableView.endUpdates()
+            dispatchRange = scroll.current.visibleRows
+        }
     }
     
     open func scrollDidChangedBounds() {
@@ -1022,100 +1119,22 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if superview != nil {
             let clipView = self.contentView
             
-            NotificationCenter.default.addObserver(forName: NSScrollView.didEndLiveScrollNotification, object: self, queue: nil, using: { [weak self] notification in
+            NotificationCenter.default.addObserver(forName: NSScrollView.didEndLiveScrollNotification, object: self, queue: nil, using: { [weak self] _ in
                 self?.scrollDidEndLiveScrolling()
             })
             
-            NotificationCenter.default.addObserver(forName: NSScrollView.willStartLiveScrollNotification, object: self, queue: nil, using: { [weak self] notification in
+            NotificationCenter.default.addObserver(forName: NSScrollView.willStartLiveScrollNotification, object: self, queue: nil, using: { [weak self] _ in
                 self?.scrollWillStartLiveScrolling()
             })
             
-            NotificationCenter.default.addObserver(forName: NSScrollView.didLiveScrollNotification, object: self, queue: nil, using: { [weak self] notification in
+            NotificationCenter.default.addObserver(forName: NSScrollView.didLiveScrollNotification, object: self, queue: nil, using: { [weak self] _ in
                 self?.scrollDidLiveScrolling()
             })
-            
-            var beginPendingTime:CFAbsoluteTime?
 
-            NotificationCenter.default.addObserver(forName: NSView.boundsDidChangeNotification, object: clipView, queue: OperationQueue.main, using: { [weak self] notification  in
-                Queue.mainQueue().justDispatch { [weak self] in
-                    self?.scrollDidChangedBounds()
-                }
-               
-                if self?.updating == true {
-                    return
-                }
-                var isNextCallLocked: Bool {
-                    if let beginPendingTime = beginPendingTime {
-                        if CFAbsoluteTimeGetCurrent() - beginPendingTime < 0.05 {
-                            return false
-                        }
-                    }
-                    beginPendingTime = CFAbsoluteTimeGetCurrent()
-                    return false
-                }
-                
-                
-                
-                if let strongSelf = self {
-                    let reqCount = strongSelf.count / 6
-                    
-                    strongSelf.updateStickAfterScroll(strongSelf.nextScrollEventIsAnimated)
-                    strongSelf.nextScrollEventIsAnimated = false
-                    let scroll = strongSelf.scrollPosition(strongSelf.visibleRows())
-                    
-                    if (!strongSelf.updating && !strongSelf.clipView.isAnimateScrolling) {
-                        
-                        let range = scroll.current.visibleRows
-                        
-                        if range.location == NSNotFound {
-                            return;
-                        }
-                        
-                        if(scroll.current.direction != strongSelf.previousScroll?.direction && scroll.current.rect != strongSelf.previousScroll?.rect) {
-
-                            switch(scroll.current.direction) {
-                            case .top:
-                                if(range.location  <= reqCount) {
-                                    if !isNextCallLocked {
-                                        strongSelf.scrollHandler(scroll.current)
-                                    }
-                                    strongSelf.previousScroll = scroll.current
-                                }
-                            case .bottom:
-                                if(strongSelf.count - (range.location + range.length) <= reqCount) {
-                                    if !isNextCallLocked {
-                                        strongSelf.scrollHandler(scroll.current)
-                                    }
-                                    strongSelf.previousScroll = scroll.current
-                                }
-                            case .none:
-                                if !isNextCallLocked {
-                                    strongSelf.scrollHandler(scroll.current)
-                                }
-                                strongSelf.previousScroll = scroll.current
-                                
-                            }
-                        }
-                        
-                    }
-                    for listener in strongSelf.scrollListeners {
-                        if !listener.dispatchWhenVisibleRangeUpdated || listener.first || !NSEqualRanges(scroll.current.visibleRows, listener.dispatchRange) {
-                            listener.handler(scroll.current)
-                            listener.first = false
-                            listener.dispatchRange = scroll.current.visibleRows
-                        }
-                    }
-                    
-                    if strongSelf.needUpdateVisibleAfterScroll {
-                        let range = strongSelf.visibleRows()
-                        for i in range.location ..< range.location + range.length {
-                            if let view = strongSelf.viewNecessary(at: i) {
-                                view.updateMouse()
-                            }
-                        }
-                    }
-                }
+            NotificationCenter.default.addObserver(forName: NSScrollView.boundsDidChangeNotification, object: clipView, queue: nil, using: { [weak self] _ in
+                self?.updateScroll()
             })
+            
         } else {
            NotificationCenter.default.removeObserver(self)
         }
@@ -1836,18 +1855,21 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             let item = self.item(at: row)
             
             if view.isKind(of: item.viewClass()) && !presentAsNew {
-                let height:CGFloat = item.heightValue
-                let width:CGFloat = self is HorizontalTableView ? item.width : frame.width
-
-                let size = NSMakeSize(width, height)
-                let transition: ContainedViewLayoutTransition = animated ? .animated(duration: duration, curve: .easeOut) : .immediate
-                view.set(item: item, animated: animated && view.visibleRect != .zero)
-                view.updateLayout(size: size, transition: transition)
-                transition.updateFrame(view: view, frame: CGRect(origin: view.frame.origin, size: size))
                 
                 NSAnimationContext.current.duration = animated ? duration : 0.0
                 NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
                 self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
+
+                
+                let height:CGFloat = item.heightValue
+                let width:CGFloat = self is HorizontalTableView ? item.width : frame.width
+
+                let rect = rectOf(item: item)
+                let transition: ContainedViewLayoutTransition = animated ? .animated(duration: duration, curve: .easeOut) : .immediate
+                view.set(item: item, animated: animated && view.visibleRect != .zero)
+                view.updateLayout(size: rect.size, transition: transition)
+                transition.updateFrame(view: view, frame: rect)
+                
                 return
             }
         }
@@ -2179,13 +2201,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func reloadData() -> Void {
         if documentSize.height > frame.height, window != nil {
             self.beginTableUpdates()
-            self.enumerateItems { item in
+            self.enumerateVisibleItems { item in
                 reloadData(row: item.index, animated: false)
                 return true
             }
             self.endTableUpdates()
         }
     }
+    
+    
     
     public func item(at:Int) -> TableRowItem {
         return self.list[at]
@@ -2523,6 +2547,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         
         func saveVisible(_ side: TableSavingSide) {
+            reloadData()
             var nrect:NSRect = NSZeroRect
             
             let strideTo:StrideTo<Int>
@@ -2607,7 +2632,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             self.scroll(to: transition.state)
         case let .saveVisible(side):
             saveVisible(side)
-            self.reloadData()
         }
               
         var nonAnimatedItems: [(Int, TableRowItem)] = []
