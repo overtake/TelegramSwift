@@ -45,6 +45,7 @@ open class TableAnimationInterface: NSObject {
         } else {
             checkBelowAfter = true
         }
+        table.tile()
         
         var range:NSRange = table.visibleRows(height)
         
@@ -65,11 +66,11 @@ open class TableAnimationInterface: NSObject {
         }
         
         for item in added {
-            height += item.height
+            height += item.heightValue
         }
         
         for item in removed {
-            height -= item.height
+            height -= item.heightValue
         }
         
         if previousRange.length == 0  {
