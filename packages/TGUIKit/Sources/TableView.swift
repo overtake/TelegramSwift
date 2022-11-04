@@ -863,10 +863,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView.headerView = nil;
         self.tableView.intercellSpacing = NSMakeSize(0, 0)
 //        self.tableView.columnAutoresizingStyle = .noColumnAutoresizing
-        let tableColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(rawValue: "column"))
-        tableColumn.width = frame.width
-
-        self.tableView.addTableColumn(tableColumn)
+//        let tableColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(rawValue: "column"))
+//        tableColumn.width = frame.width
+//
+//        self.tableView.addTableColumn(tableColumn)
        
         
         mergeDisposable.set(mergePromise.get().start(next: { [weak self] (transition) in
@@ -1046,6 +1046,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             }
             
         }
+        
         for listener in self.scrollListeners {
             if !listener.dispatchWhenVisibleRangeUpdated || listener.first || !NSEqualRanges(scroll.current.visibleRows, listener.dispatchRange) {
                 listener.handler(scroll.current)
@@ -1062,15 +1063,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
                 }
             }
         }
-        if !NSEqualRanges(scroll.current.visibleRows, dispatchRange) {
-            tableView.beginUpdates()
-            self.enumerateVisibleItems(with: { item in
-                item.view?.setFrameOrigin(self.rectOf(item: item).origin)
-                return true
-            })
-            tableView.endUpdates()
-            dispatchRange = scroll.current.visibleRows
-        }
+//        if !NSEqualRanges(scroll.current.visibleRows, dispatchRange) {
+//            tableView.beginUpdates()
+//            self.enumerateVisibleItems(with: { item in
+//                item.view?.setFrameOrigin(self.rectOf(item: item).origin)
+//                return true
+//            })
+//            tableView.endUpdates()
+//            dispatchRange = scroll.current.visibleRows
+//        }
     }
     
     open func scrollDidChangedBounds() {
@@ -1502,7 +1503,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func resetScrollNotifies() ->Void {
         self.previousScroll = nil
-        updateScroll()
+        resetScroll()
     }
     
     public func scrollUp(offset: CGFloat = 30.0) {
@@ -1930,13 +1931,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func beginUpdates() -> Void {
         updating = true
-        updateScroll(visibleRows())
+        resetScroll(visibleRows())
         self.previousScroll = nil
     }
     
     public func endUpdates() -> Void {
         updating = false
-        updateScroll(visibleRows())
+        resetScroll(visibleRows())
         self.previousScroll = nil
     }
     
@@ -2201,10 +2202,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func reloadData() -> Void {
         if documentSize.height > frame.height, window != nil {
             self.beginTableUpdates()
-            self.enumerateVisibleItems { item in
-                reloadData(row: item.index, animated: false)
-                return true
-            }
+            self.tableView.reloadData()
             self.endTableUpdates()
         }
     }
@@ -2683,11 +2681,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
 
         
-        self.tableView.beginUpdates()
-        self.tableView.setFrameSize(NSMakeSize(frame.width, listHeight))
-        self.tableView.tile()
-        self.reflectScrolledClipView(clipView)
-        self.tableView.endUpdates()
+//        self.tableView.beginUpdates()
+//        self.tableView.setFrameSize(NSMakeSize(frame.width, listHeight))
+//        self.tableView.tile()
+//        self.reflectScrolledClipView(clipView)
+//        self.tableView.endUpdates()
         
         self.endUpdates()
         
@@ -2956,6 +2954,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
         super.change(size: size, animated: animated, removeOnCompletion: removeOnCompletion, duration: duration, timingFunction: timingFunction, completion: completion)
+        self.tile()
         self.updateStickAfterScroll(animated)
     }
     
@@ -3216,7 +3215,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func performScrollEvent(_ animated: Bool = false) -> Void {
         self.nextScrollEventIsAnimated = animated
-        self.updateScroll(visibleRows())
+        self.resetScroll(visibleRows())
         //NotificationCenter.default.post(name: NSView.boundsDidChangeNotification, object: self.contentView)
     }
     

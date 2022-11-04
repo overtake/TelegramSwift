@@ -446,7 +446,7 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 }
 
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil, addRepliesHeader: Bool = false, addTopThreadInset: CGFloat? = nil, updatingMedia: [MessageId: ChatUpdatingMessageMedia] = [:], adMessages:[Message] = [], chatTheme: TelegramPresentationTheme = theme, reactions: AvailableReactions? = nil, transribeState: [MessageId : TranscribeAudioState] = [:], topicCreatorId: PeerId? = nil) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil, addRepliesHeader: Bool = false, addTopThreadInset: CGFloat? = nil, updatingMedia: [MessageId: ChatUpdatingMessageMedia] = [:], adMessage:Message? = nil, dynamicAdMessages: [Message] = [], chatTheme: TelegramPresentationTheme = theme, reactions: AvailableReactions? = nil, transribeState: [MessageId : TranscribeAudioState] = [:], topicCreatorId: PeerId? = nil) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
 
     
@@ -931,19 +931,25 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
     }
     
   
+    if !dynamicAdMessages.isEmpty {
+        for message in dynamicAdMessages {
+            entries.append(.MessageEntry(message, MessageIndex(message), true, renderType, .Full(rank: nil, header: .normal), nil, .init(nil, .init(), autoplayMedia)))
+        }
+    }
 
     
     if let lastMessage = entries.last(where: { $0.message != nil })?.message {
         var nextAdMessageId: Int32 = 1
         
-        
-        if !adMessages.isEmpty {
-            entries.append(.empty(MessageIndex.init(id: .init(peerId: lastMessage.id.peerId, namespace: lastMessage.id.namespace, id: Int32.max - 150), timestamp: Int32.max - 150), chatTheme))
+        let fixedAdMessageStableId: UInt32 = UInt32.max - 5000
+
+        if adMessage != nil {
+            entries.append(.empty(MessageIndex(id: .init(peerId: lastMessage.id.peerId, namespace: lastMessage.id.namespace, id: Int32.max - 150), timestamp: Int32.max - 150), chatTheme))
             nextAdMessageId += 1
         }
-        for message in adMessages {
+        if let message = adMessage {
             let updatedMessage = Message(
-                stableId: UInt32.max - 1 - UInt32(nextAdMessageId),
+                stableId: fixedAdMessageStableId,
                 stableVersion: message.stableVersion,
                 id: MessageId(peerId: message.id.peerId, namespace: message.id.namespace, id: nextAdMessageId),
                 globallyUniqueId: nil,
@@ -971,7 +977,6 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
             let timestamp = Int32(min(TimeInterval(updatedMessage.timestamp) - timeDifference, TimeInterval(Int32.max)))
             entries.append(.MessageEntry(updatedMessage, MessageIndex(updatedMessage.withUpdatedTimestamp(timestamp)), true, renderType, .Full(rank: nil, header: .normal), nil, .init(nil, .init(), autoplayMedia)))
             
-            //add entry
         }
     }
     
