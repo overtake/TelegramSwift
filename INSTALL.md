@@ -1,20 +1,30 @@
 # How to Build Telegram for macOS
 
 1. Clone this repository with submodules:
-	
-	```sh
+	```
 	git clone https://github.com/overtake/TelegramSwift.git --recurse-submodules
 	```
-2.  ```brew install cmake ninja openssl@1.1 zlib autoconf libtool automake yasm pkg-config```
-3.  ```sh %project_dir%/scripts/configure_frameworks.sh```
-4. Open `Telegram-Mac.xcworkspace` in the latest XCode.  
-5. Build.
+2. Install Homebrew:
+	```
+	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+	```
+3. Install tools: 
+	```
+	brew install cmake ninja openssl@1.1 zlib autoconf libtool automake yasm pkg-config
+	```
+4. Run scripts to configurate framework: 
+	```
+	sh %project_dir%/scripts/configure_frameworks.sh
+	```
+
+5. Open `Telegram-Mac.xcworkspace` in [the latest Xcode](https://apps.apple.com/us/app/xcode/id497799835).  
+6. Now you can **Build**!
 
 
 
 # If you want to develop a fork
 
-1. Do first and second step above.
+1. For starters, you need [to build application](https://github.com/overtake/TelegramSwift/blob/master/INSTALL.md#how-to-build-telegram-for-macos).
 2. Change bundle Identifier and team-id. Easiest way is to search all mentions `ru.keepcoder.Telegram` and change it to your own. Team-id you can find on apple developer portal.
 3. Obtain your [API ID](https://core.telegram.org/api/obtaining_api_id). **Note:** The built-in `apiId` is highly limited for api usage. **Do not use it** in any circumstances except verify binaries.
 4. Open `Telegram-Mac/Config.swift` and repalce `apiId` and `apiHash` from previous step. **Note:** Do not forget to change `teamId` either.
