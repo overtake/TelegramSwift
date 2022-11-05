@@ -779,6 +779,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView.wantsLayer = true
         self.tableView.autoresizesSubviews = false
         super.init(frame: frameRect)
+        self.autoresizingMask = []
         updateAfterInitialize(isFlipped:true, drawBorder: false)
     }
     
@@ -787,6 +788,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView.wantsLayer = true
         self.tableView.autoresizesSubviews = false
         super.init(frame: frameRect)
+        self.autoresizingMask = []
         updateAfterInitialize(isFlipped: isFlipped, drawBorder: drawBorder)
     }
 
@@ -836,7 +838,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             self.tableView.style = .fullWidth
         }
 
-        
+        clipView.autoresizingMask = []
+        clipView.autoresizesSubviews = false
         clipView.copiesOnScroll = true
         
        // self.scrollsDynamically = true
@@ -1861,19 +1864,19 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             
             if view.isKind(of: item.viewClass()) && !presentAsNew {
                 
-                NSAnimationContext.current.duration = animated ? duration : 0.0
-                NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
-                self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
-
-                
                 let height:CGFloat = item.heightValue
                 let width:CGFloat = self is HorizontalTableView ? item.width : frame.width
 
-                let rect = rectOf(item: item)
+                let rect = CGRect(origin: view.frame.origin, size: CGSize(width: width, height: height))
                 let transition: ContainedViewLayoutTransition = animated ? .animated(duration: duration, curve: .easeOut) : .immediate
                 view.set(item: item, animated: animated && view.visibleRect != .zero)
                 view.updateLayout(size: rect.size, transition: transition)
                 transition.updateFrame(view: view, frame: rect)
+                
+                NSAnimationContext.current.duration = animated ? duration : 0.0
+                NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
+
                 
                 return
             }
@@ -2657,7 +2660,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         
         
-       
         
         let visible = self.visibleItems()
         
