@@ -2078,9 +2078,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     return (view, location.side, location)
                 }
         }
-        let historyViewUpdate = historyViewUpdate1 |> mapToThrottled { next in
-            return .single(next) |> then(.complete() |> delay(0.0166667, queue: messagesViewQueue))
-        }
+        let historyViewUpdate = historyViewUpdate1
 
 
         
