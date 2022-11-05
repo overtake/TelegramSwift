@@ -75,7 +75,7 @@ func touchBarChatItems(presentation: ChatPresentationInterfaceState, layout: Spl
         var items: [NSTouchBarItem.Identifier] = []
         items.append(.chatEditMessageDone)
  
-        if let editState = presentation.interfaceState.editState, let media = editState.message.media.first, media is TelegramMediaFile || media is TelegramMediaImage {
+        if let editState = presentation.interfaceState.editState, let media = editState.message.effectiveMedia, media is TelegramMediaFile || media is TelegramMediaImage {
             items.append(.flexibleSpace)
             items.append(.chatEditMessageUpdateMedia)
             if editState.message.groupingKey == nil {
@@ -184,13 +184,13 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         self.textView = textView
         super.init()
         self.delegate = self
-        let result = touchBarChatItems(presentation: chatInteraction.presentation, layout: chatInteraction.context.sharedContext.layout, isKeyWindow: true)
+        let result = touchBarChatItems(presentation: chatInteraction.presentation, layout: chatInteraction.context.layout, isKeyWindow: true)
         self.defaultItemIdentifiers = result.items
         self.escapeKeyReplacementItemIdentifier = result.escapeReplacement
         self.customizationAllowedItemIdentifiers = self.defaultItemIdentifiers
         self.textView.updateTouchBarItemIdentifiers()
         self.customizationIdentifier = .windowBar
-        layoutStateDisposable.set(chatInteraction.context.sharedContext.layoutHandler.get().start(next: { [weak self] _ in
+        layoutStateDisposable.set(chatInteraction.context.layoutValue.start(next: { [weak self] _ in
             guard let `self` = self, let chatInteraction = self.chatInteraction else {return}
             self.notify(with: chatInteraction.presentation, oldValue: chatInteraction.presentation, animated: true)
         }))
@@ -228,7 +228,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState, let chatInteraction = self.chatInteraction  {
             if !animated  || oldValue.state != value.state || oldValue.effectiveInput.selectionRange.isEmpty != value.effectiveInput.selectionRange.isEmpty || prevIsKeyWindow != textView.window?.isKeyWindow || oldValue.inputQueryResult != value.inputQueryResult || oldValue.selectionState != value.selectionState || oldValue.canInvokeBasicActions != value.canInvokeBasicActions {
                 self.prevIsKeyWindow = textView.window?.isKeyWindow
-                let result = touchBarChatItems(presentation: value, layout: chatInteraction.context.sharedContext.layout, isKeyWindow: textView.window?.isKeyWindow ?? false)
+                let result = touchBarChatItems(presentation: value, layout: chatInteraction.context.layout, isKeyWindow: textView.window?.isKeyWindow ?? false)
                 self.defaultItemIdentifiers = result.items
                 self.escapeKeyReplacementItemIdentifier = result.escapeReplacement
                 self.customizationAllowedItemIdentifiers = self.defaultItemIdentifiers
@@ -347,7 +347,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
 
         item.popoverTouchBar = ChatStickersTouchBarPopover(chatInteraction: chatInteraction, dismiss: { [weak item, weak self] file in
             if let file = file {
-                self?.chatInteraction?.sendAppFile(file, false, nil, false)
+                self?.chatInteraction?.sendAppFile(file, false, nil, false, nil)
             }
             item?.dismissPopover(nil)
         }, entries: entries)
@@ -615,7 +615,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
                 switch result {
                 case let .stickers(stickers):
                     return StickersScrubberBarItem(identifier: identifier, context: chatInteraction.context, animated: false, sendSticker: { [weak self] file in
-                        self?.chatInteraction?.sendAppFile(file, false, nil, false)
+                        self?.chatInteraction?.sendAppFile(file, false, nil, false, nil)
                         self?.chatInteraction?.clearInput()
                     }, entries: stickers.map({.sticker($0.file)}))
                 default:

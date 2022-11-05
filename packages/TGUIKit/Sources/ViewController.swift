@@ -527,7 +527,7 @@ open class ViewController : NSObject {
     }
     
     open var isOnScreen: Bool {
-        return self.navigationController?.controller == self
+        return self.navigationController?.controller == self && !hasModals()
     }
     
     open func executeReturn() -> Void {
@@ -605,9 +605,6 @@ open class ViewController : NSObject {
         return {}
     }
     
-    open func navigationUndoHeaderDidNoticeAnimation(_ current: CGFloat, _ previous: CGFloat, _ animated: Bool) -> ()->Void  {
-        return {}
-    }
     
     @available(OSX 10.12.2, *)
     open func makeTouchBar() -> NSTouchBar? {
@@ -981,7 +978,7 @@ open class ViewController : NSObject {
     
     open func show(for control:Control, edge:NSRectEdge? = nil, inset:NSPoint = NSZeroPoint, static: Bool = false) -> Void {
         if popover == nil {
-            self.popover = (self.popoverClass as! Popover.Type).init(controller: self, static: `static`)
+            self.popover = (self.popoverClass as! Popover.Type).init(controller: self, static: `static`, animationMode: .classic)
         }
         
         if let popover = popover {
@@ -1040,6 +1037,7 @@ open class GenericViewController<T> : ViewController where T:NSView {
             centerBarView = getCenterBarViewOnce()
             rightBarView = getRightBarViewOnce()
 
+            
             _view = initializer()
             _view?.wantsLayer = true
             _view?.autoresizingMask = [.width,.height]

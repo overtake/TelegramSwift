@@ -21,11 +21,12 @@ class MGalleryPhotoItem: MGalleryItem {
     override init(_ context: AccountContext, _ entry: GalleryEntry, _ pagerSize: NSSize) {
         switch entry {
         case .message(let entry):
-            if let webpage =  entry.message!.media[0] as? TelegramMediaWebpage {
+            let media = entry.message!.effectiveMedia
+            if let webpage = media as? TelegramMediaWebpage {
                 if case let .Loaded(content) = webpage.content, let image = content.image {
                     self.media = image
                 } else if case let .Loaded(content) = webpage.content, let media = content.file  {
-                    let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? PixelDimensions(0, 0), resource: media.resource, progressiveSizes: [], immediateThumbnailData: nil)
+                    let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? PixelDimensions(0, 0), resource: media.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)
                     var representations = media.previewRepresentations
                     representations.append(represenatation)
                     self.media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
@@ -34,13 +35,13 @@ class MGalleryPhotoItem: MGalleryItem {
                     fatalError("image for webpage not found")
                 }
             } else {
-                if let media = entry.message!.media[0] as? TelegramMediaFile {
-                    let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? PixelDimensions(0, 0), resource: media.resource, progressiveSizes: [], immediateThumbnailData: nil)
+                if let media = media as? TelegramMediaFile {
+                    let represenatation = TelegramMediaImageRepresentation(dimensions: media.dimensions ?? PixelDimensions(0, 0), resource: media.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)
                     var representations = media.previewRepresentations
                     representations.append(represenatation)
                     self.media = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: representations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                 } else {
-                    self.media = entry.message!.media[0] as! TelegramMediaImage
+                    self.media = media as! TelegramMediaImage
                 }
             }
             secureIdAccessContext = nil
@@ -192,7 +193,7 @@ class MGalleryPhotoItem: MGalleryItem {
     }
     
     override func fetch() -> Void {
-        if let message = entry.message, let file = entry.message?.media.first as? TelegramMediaFile {
+        if let message = entry.message, let file = entry.message?.effectiveMedia as? TelegramMediaFile {
             fetching.set(messageMediaFileInteractiveFetched(context: context, messageId: message.id, messageReference: .init(message), file: file, userInitiated: true).start())
         } else {
             fetching.set(chatMessagePhotoInteractiveFetched(account: context.account, imageReference: entry.imageReference(media)).start())

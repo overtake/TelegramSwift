@@ -108,7 +108,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<CreateGroupEntry>],
                     let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                     (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.context.timeDifference, relativeTo: Int32(timestamp))
                 }
-                return  ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, height:50, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(foregroundColor: color), status: string, inset:NSEdgeInsets(left: 30, right:30), viewType: viewType)
+                return  ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, height:50, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(foregroundColor: color), status: string, inset:NSEdgeInsets(left: 30, right:30), viewType: viewType)
             case .section:
                 return GeneralRowItem(initialSize, height: 30, stableId: entry.stableId, viewType: .separator)
             }

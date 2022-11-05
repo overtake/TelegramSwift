@@ -11,22 +11,22 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
+import AppKit
 
 final class EmojiScreenEffect {
     fileprivate let context: AccountContext
-    fileprivate let takeTableItem:(MessageId)->TableRowItem?
+    fileprivate let takeTableItem:(MessageId)->ChatRowItem?
     fileprivate(set) var scrollUpdater: TableScrollListener!
-    private let dataDisposable: DisposableDict<String> = DisposableDict()
-    private let reactionDataDisposable: DisposableDict<String> = DisposableDict()
+    private let dataDisposable: DisposableDict<MessageId> = DisposableDict()
+    private let reactionDataDisposable: DisposableDict<MessageId> = DisposableDict()
     
     private let limit: Int = 5
     
     struct Key : Hashable {
         enum Mode : Equatable, Hashable {
-            case effect
-            case reaction(String)
+            case effect(Bool)
+            case reaction(MessageReaction.Reaction)
         }
-        let animationKey: LottieAnimationKey
         let messageId: MessageId
         let timestamp: TimeInterval
         let isIncoming: Bool
@@ -45,7 +45,9 @@ final class EmojiScreenEffect {
     struct Value {
         let view: WeakReference<EmojiAnimationEffectView>
         let index: Int
-        let emoji: String
+        let messageId: MessageId
+        let emoji: String?
+        let reaction: MessageReaction.Reaction?
         let mirror: Bool
         let key: Key
     }
@@ -61,7 +63,7 @@ final class EmojiScreenEffect {
     
     
     
-    init(context: AccountContext, takeTableItem:@escaping(MessageId)->TableRowItem?) {
+    init(context: AccountContext, takeTableItem:@escaping(MessageId)->ChatRowItem?) {
         self.context = context
         self.takeTableItem = takeTableItem
         
@@ -90,9 +92,22 @@ final class EmojiScreenEffect {
                         let subSize = animationView.animationSize - contentView.frame.size
                         
                         switch key.mode {
-                        case .effect:
-                            point.x-=(subSize.width - 20)
+                        case let .effect(isPremium):
+                            if !animation.mirror {
+                                point.x-=subSize.width
+                            }
                             point.y-=subSize.height/2
+                                       
+                            
+                            if isPremium {
+                                if !animation.mirror {
+                                    point.x += 18
+                                } else {
+                                    point.x -= 18
+                                }
+                                point.y -= 2
+                                
+                            }
                         case .reaction:
                             point.x-=subSize.width/2
                             point.y-=subSize.height/2
@@ -104,7 +119,7 @@ final class EmojiScreenEffect {
                         
                         if contentView.visibleRect != .zero {
                             success = true
-                        }
+                        } 
                     }
                 }
             }
@@ -143,7 +158,7 @@ final class EmojiScreenEffect {
             let signal: Signal<LottieAnimation?, NoError> = context.diceCache.animationEffect(for: emoji.emojiUnmodified)
             |> map { value -> LottieAnimation? in
                 if let random = value.randomElement(), let data = random.1 {
-                    return LottieAnimation(compressed: data, key: .init(key: .bundle("_effect_\(emoji)"), size: animationSize, backingScale: Int(System.backingScale)), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd)
+                    return LottieAnimation(compressed: data, key: .init(key: .bundle("_effect_\(emoji)_\(random.2.fileId)"), size: animationSize, backingScale: Int(System.backingScale), mirror: mirror), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd)
                 } else {
                     return nil
                 }
@@ -152,47 +167,123 @@ final class EmojiScreenEffect {
             
             dataDisposable.set(signal.start(next: { [weak self, weak parentView] animation in
                 if let animation = animation, let parentView = parentView {
-                    self?.initAnimation(animation, mode: .effect, emoji: emoji, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
+                    self?.initAnimation(.builtin(animation), mode: .effect(false), emoji: emoji, reaction: nil, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
                 }
-            }), forKey: emoji)
+            }), forKey: messageId)
         } else {
-            dataDisposable.set(nil, forKey: emoji)
+            dataDisposable.set(nil, forKey: messageId)
         }
     }
     
-    func addReactionAnimation(_ value: String, index: Int?, messageId: MessageId, animationSize: NSSize, viewFrame: NSRect, for parentView: NSView) {
+    func addPremiumEffect(mirror: Bool, isIncoming: Bool, messageId: MessageId, viewFrame: NSRect, for parentView: NSView) {
+        
+        let context = self.context
+        let onair = animations.filter { $0.key.messageId == messageId }
+
+        if onair.isEmpty, let item = takeTableItem(messageId) {
+            let animationSize = NSMakeSize(item.contentSize.width * 1.5, item.contentSize.height * 1.5)
+            let signal: Signal<(LottieAnimation, String)?, NoError> = context.account.postbox.messageAtId(messageId)
+            |> mapToSignal { message in
+                if let message = message, let file = message.effectiveMedia as? TelegramMediaFile {
+                    if let effect = file.premiumEffect {
+                        return context.account.postbox.mediaBox.resourceData(effect.resource) |> filter { $0.complete } |> take(1) |> map { data in
+                            if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
+                                return (LottieAnimation(compressed: data, key: .init(key: .bundle("_prem_effect_\(file.fileId.id)"), size: animationSize, backingScale: Int(System.backingScale), mirror: mirror), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd), file.stickerText ?? "")
+                            } else {
+                                return nil
+                            }
+                        }
+                    }
+                }
+                return .single(nil)
+            }
+            |> deliverOnMainQueue
+
+            dataDisposable.set(signal.start(next: { [weak self, weak parentView] values in
+                if let animation = values?.0, let emoji = values?.1, let parentView = parentView {
+                    self?.initAnimation(.builtin(animation), mode: .effect(true), emoji: emoji, reaction: nil, mirror: mirror, isIncoming: isIncoming, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
+                }
+            }), forKey: messageId)
+        } else {
+            dataDisposable.set(nil, forKey: messageId)
+        }
+    }
+    
+    func addReactionAnimation(_ value: MessageReaction.Reaction, index: Int?, messageId: MessageId, animationSize: NSSize, viewFrame: NSRect, for parentView: NSView) {
         
         let context = self.context
         
-        let signal: Signal<LottieAnimation?, NoError> = context.reactions.stateValue |> take(1) |> map {
-            return $0?.reactions.first(where: {
-                $0.value == value
-            })
+        switch value {
+        case let .custom(fileId):
+            
+            let signal: Signal<LottieAnimation?, NoError> = combineLatest(context.reactions.stateValue |> take(1), context.inlinePacksContext.load(fileId: fileId)) |> map { state, file in
+                return state?.reactions.first(where: {
+                    $0.value.string == file?.customEmojiText
+                })
+            }
+             |> mapToSignal { reaction -> Signal<MediaResourceData?, NoError> in
+                if let file = reaction?.aroundAnimation {
+                    return context.account.postbox.mediaBox.resourceData(file.resource)
+                    |> map { $0.complete ? $0 : nil }
+                    |> take(1)
+                } else {
+                    return .single(nil)
+                }
+            } |> map { resource in
+                if let resource = resource, let data = try? Data(contentsOf: URL(fileURLWithPath: resource.path)) {
+                    return LottieAnimation(compressed: data, key: .init(key: .bundle("_reaction_e_\(value)"), size: animationSize, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd)
+                } else {
+                    return nil
+                }
+            } |> deliverOnMainQueue
+            
+            reactionDataDisposable.set(signal.start(next: { [weak self, weak parentView] animation in
+                if let parentView = parentView {
+                    if let animation = animation {
+                        self?.initAnimation(.builtin(animation), mode: .reaction(value), emoji: nil, reaction: value, mirror: false, isIncoming: false, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
+                    } else {
+                        let animationSize = NSMakeSize(animationSize.width * 2, animationSize.height * 2)
+                        let rect = NSMakeSize(animationSize.width, animationSize.height).bounds
+                        let view = CustomReactionEffectView(frame: rect, context: context, fileId: fileId)
+                        self?.initAnimation(.custom(view), mode: .reaction(value), emoji: nil, reaction: value, mirror: false, isIncoming: false, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
+                    }
+                }
+            }), forKey: messageId)
+            
+            
+        case .builtin:
+            let signal: Signal<LottieAnimation?, NoError> = context.reactions.stateValue |> take(1) |> map {
+                return $0?.reactions.first(where: {
+                    $0.value == value
+                })
+            }
+            |> filter { $0 != nil}
+            |> map {
+                $0!
+            } |> mapToSignal { reaction -> Signal<MediaResourceData, NoError> in
+                if let file = reaction.aroundAnimation {
+                    return context.account.postbox.mediaBox.resourceData(file.resource)
+                    |> filter { $0.complete }
+                    |> take(1)
+                } else {
+                    return .complete()
+                }
+            } |> map { data in
+                if let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
+                    return LottieAnimation(compressed: data, key: .init(key: .bundle("_reaction_e_\(value)"), size: animationSize, backingScale: Int(System.backingScale), mirror: false), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd)
+                } else {
+                    return nil
+                }
+            } |> deliverOnMainQueue
+            
+            reactionDataDisposable.set(signal.start(next: { [weak self, weak parentView] animation in
+                if let animation = animation, let parentView = parentView {
+                    self?.initAnimation(.builtin(animation), mode: .reaction(value), emoji: nil, reaction: value, mirror: false, isIncoming: false, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
+                }
+            }), forKey: messageId)
         }
-        |> filter { $0 != nil}
-        |> map {
-            $0!
-        } |> mapToSignal { reaction -> Signal<MediaResourceData, NoError> in
-            if let file = reaction.aroundAnimation {
-                return context.account.postbox.mediaBox.resourceData(file.resource)
-                |> filter { $0.complete }
-                |> take(1)
-            } else {
-                return .complete()
-            }
-        } |> map { data in
-            if let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
-                return LottieAnimation(compressed: data, key: .init(key: .bundle("_reaction_e_\(value)"), size: animationSize, backingScale: Int(System.backingScale)), cachePurpose: .temporaryLZ4(.effect), playPolicy: .onceEnd)
-            } else {
-                return nil
-            }
-        } |> deliverOnMainQueue
         
-        reactionDataDisposable.set(signal.start(next: { [weak self, weak parentView] animation in
-            if let animation = animation, let parentView = parentView {
-                self?.initAnimation(animation, mode: .reaction(value), emoji: value, mirror: false, isIncoming: false, messageId: messageId, animationSize: animationSize, viewFrame: viewFrame, parentView: parentView)
-            }
-        }), forKey: value)
+        
        
     }
 
@@ -214,23 +305,31 @@ final class EmojiScreenEffect {
         }
     }
     
-    private func initAnimation(_ animation: LottieAnimation, mode: EmojiScreenEffect.Key.Mode, emoji: String, mirror: Bool, isIncoming: Bool, messageId: MessageId, animationSize: NSSize, viewFrame: NSRect, parentView: NSView) {
+    private func initAnimation(_ animation: EmojiAnimationEffectView.Source, mode: EmojiScreenEffect.Key.Mode, emoji: String?, reaction: MessageReaction.Reaction?, mirror: Bool, isIncoming: Bool, messageId: MessageId, animationSize: NSSize, viewFrame: NSRect, parentView: NSView) {
         
         
         let mediaView = (takeTableItem(messageId)?.view as? ChatMediaView)?.contentNode as? MediaAnimatedStickerView
         mediaView?.playAgain()
         
-        let key: Key = .init(animationKey: animation.key.key, messageId: messageId, timestamp: Date().timeIntervalSince1970, isIncoming: isIncoming, mode: mode)
+        let key: Key = .init(messageId: messageId, timestamp: Date().timeIntervalSince1970, isIncoming: isIncoming, mode: mode)
         
-        animation.triggerOn = (LottiePlayerTriggerFrame.last, { [weak self] in
-            self?.deinitAnimation(key: key, animated: true)
-        }, {})
+        switch animation {
+        case let .builtin(animation):
+            animation.triggerOn = (LottiePlayerTriggerFrame.last, { [weak self] in
+                self?.deinitAnimation(key: key, animated: true)
+            }, {})
+        case let .custom(animation):
+            animation.triggerOnFinish = { [weak self] in
+                self?.deinitAnimation(key: key, animated: true)
+            }
+        }
+       
         
-        let view = EmojiAnimationEffectView(animation: animation, animationSize: animationSize, animationPoint: .zero, frameRect: viewFrame, mirror: mirror)
+        let view = EmojiAnimationEffectView(animation: animation, animationSize: animationSize, animationPoint: .zero, frameRect: viewFrame)
 
         parentView.addSubview(view)
         
-        let value: Value = .init(view: .init(value: view), index: 1, emoji: emoji, mirror: mirror, key: key)
+        let value: Value = .init(view: .init(value: view), index: 1, messageId: messageId, emoji: emoji, reaction: reaction, mirror: mirror, key: key)
         animations[key] = value
         
         updateScroll(transition: .immediate)
@@ -257,8 +356,8 @@ final class EmojiScreenEffect {
         
         var exists:Set<MessageId> = Set()
         for value in enqueuedToEnjoy {
-            if !exists.contains(value.key.messageId) {
-                context.account.updateLocalInputActivity(peerId: PeerActivitySpace(peerId: value.key.messageId.peerId, category: .global), activity: .seeingEmojiInteraction(emoticon: value.emoji), isPresent: true)
+            if !exists.contains(value.key.messageId), let emoji = value.emoji {
+                context.account.updateLocalInputActivity(peerId: PeerActivitySpace(peerId: value.key.messageId.peerId, category: .global), activity: .seeingEmojiInteraction(emoticon: emoji), isPresent: true)
                 exists.insert(value.key.messageId)
             }
         }
@@ -289,7 +388,9 @@ final class EmojiScreenEffect {
                 .init(index: current.index, timeOffset: Float((current.key.timestamp - value.key.timestamp)))
             }.sorted(by: { $0.timeOffset < $1.timeOffset })
             
-            context.account.updateLocalInputActivity(peerId: PeerActivitySpace(peerId: msgId.peerId, category: .global), activity: .interactingWithEmoji(emoticon: value.emoji, messageId: msgId, interaction: EmojiInteraction(animations: animations)), isPresent: true)
+            if let emoji = value.emoji {
+                context.account.updateLocalInputActivity(peerId: PeerActivitySpace(peerId: msgId.peerId, category: .global), activity: .interactingWithEmoji(emoticon: emoji, messageId: msgId, interaction: EmojiInteraction(animations: animations)), isPresent: true)
+            }
         }
     }
     
@@ -299,19 +400,9 @@ final class EmojiScreenEffect {
             if let value = animation.view.value {
                 transition.updateFrame(view: value, frame: rect)
                 value.updateLayout(size: rect.size, transition: transition)
-                
-                if animation.mirror {
-                    let size = value.animationSize
-                    var fr = CATransform3DIdentity
-                    fr = CATransform3DTranslate(fr, size.width, 0, 0)
-                    fr = CATransform3DScale(fr, -1, 1, 1)
-                    fr = CATransform3DTranslate(fr, -(size.width + size.width/2), 0, 0)
-                    value.layer?.sublayerTransform = fr
-                } else {
-                    value.layer?.sublayerTransform = CATransform3DIdentity
-                }
-                
             }
         }
     }
 }
+
+

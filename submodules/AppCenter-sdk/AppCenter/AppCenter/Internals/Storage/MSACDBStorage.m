@@ -13,7 +13,7 @@ static int sqliteConfigurationResult = SQLITE_ERROR;
 
 @implementation MSACDBStorage
 
-+ (void)load {
++ (void)initialize {
 
   /*
    * Configure SQLite at load time to invoke configuration only once and before opening a DB.

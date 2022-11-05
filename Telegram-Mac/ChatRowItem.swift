@@ -83,6 +83,10 @@ class ChatRowItem: TableRowItem {
         }
     }
     
+    var isAdRow: Bool {
+        return message?.adAttribute != nil
+    }
+    
     private(set) var chatInteraction:ChatInteraction
     
     let context: AccountContext
@@ -255,7 +259,7 @@ class ChatRowItem: TableRowItem {
     }
     
     var isSticker: Bool {
-        let file = message?.media.first as? TelegramMediaFile
+        let file = message?.effectiveMedia as? TelegramMediaFile
         return file?.isStaticSticker == true || file?.isAnimatedSticker == true  || file?.isVideoSticker == true
     }
     
@@ -358,7 +362,7 @@ class ChatRowItem: TableRowItem {
         if presentation.shouldBlurService, isStateOverlayLayout {
             return true
         } else if isStateOverlayLayout {
-            if let message = message, let media = message.media.first {
+            if let message = message, let media = message.effectiveMedia {
                 return isBubbled && media.isInteractiveMedia && captionLayouts.isEmpty
             } else {
                 return false
@@ -368,9 +372,19 @@ class ChatRowItem: TableRowItem {
     }
     
     var isStateOverlayLayout: Bool {
-        if let message = message, let media = message.media.first {
+        if let message = message, let media = message.effectiveMedia {
             if isSticker {
                 return isBubbled
+            }
+            if let media = media as? TelegramMediaFile, media.isInstantVideo {
+                if let data = entry.additionalData.transribeState {
+                    switch data {
+                    case .loading, .revealed:
+                        return false
+                    default:
+                        break
+                    }
+                }
             }
             if media is TelegramMediaDice {
                 return isBubbled
@@ -427,11 +441,11 @@ class ChatRowItem: TableRowItem {
         var inset: CGFloat = leftInset
         if isBubbled {
             if hasPhoto {
-                inset += 36 + 4
+                inset += 36
             } else if self.isIncoming, let message = message {
                 if let peer = message.peers[message.id.peerId] {
                     if peer.isGroup || peer.isSupergroup {
-                        inset += 36 + 4
+                        inset += 36
                     }
                 }
             }
@@ -443,6 +457,11 @@ class ChatRowItem: TableRowItem {
     }
     
     var hasPhoto: Bool {
+        if let adAttribute = message?.adAttribute {
+            if adAttribute.displayAvatar {
+                return true
+            }
+        }
         if !isBubbled {
             if case .Full = itemType {
                 return true
@@ -451,20 +470,17 @@ class ChatRowItem: TableRowItem {
             }
         } else {
             if let message = message, let peer = message.peers[message.id.peerId] {
-                switch chatInteraction.chatLocation {
-                case .peer, .replyThread:
-                    if chatInteraction.mode.threadId == effectiveCommentMessage?.id {
-                        return false
-                    }
-                    if (isIncoming && message.id.peerId == context.peerId) {
-                        return true
-                    }
-                    if message.id.peerId == repliesPeerId && message.author?.id != context.peerId {
-                        return true
-                    }
-                    if !peer.isUser && !peer.isSecretChat && !peer.isChannel && isIncoming {
-                        return true
-                    }
+                if chatInteraction.mode.threadId == effectiveCommentMessage?.id {
+                    return false
+                }
+                if (isIncoming && message.id.peerId == context.peerId) {
+                    return true
+                }
+                if message.id.peerId == repliesPeerId && message.author?.id != context.peerId {
+                    return true
+                }
+                if !peer.isUser && !peer.isSecretChat && !peer.isChannel && isIncoming {
+                    return true
                 }
             }
         }
@@ -475,10 +491,7 @@ class ChatRowItem: TableRowItem {
     }
     
     var isInstantVideo: Bool {
-        if let media = message?.media.first as? TelegramMediaFile {
-            return media.isInstantVideo
-        }
-        return false
+        return self is ChatVideoMessageItem
     }
     
     var contentOffset:NSPoint {
@@ -539,11 +552,11 @@ class ChatRowItem: TableRowItem {
             left += leftContentInset
         }
         
-        if let item = self as? ChatMessageItem, item.containsBigEmoji {
-            if commentsBubbleDataOverlay != nil || isSharable || hasSource {
-                top += 20
-            }
-        }
+//        if let item = self as? ChatMessageItem, item.containsBigEmoji {
+//            if commentsBubbleDataOverlay != nil || isSharable || hasSource {
+//                top += 20
+//            }
+//        }
         
         return NSMakePoint(left, top)
     }
@@ -585,21 +598,11 @@ class ChatRowItem: TableRowItem {
     }
     
     override var isSelectable: Bool {
-        switch chatInteraction.mode {
-        case .preview:
-            return false
-        default:
-            return chatInteraction.mode.threadId != effectiveCommentMessage?.id
-        }
+        return chatInteraction.mode.threadId != effectiveCommentMessage?.id
     }
     
     var disableInteractions: Bool {
-        switch chatInteraction.mode {
-        case .preview:
-            return true
-        default:
-            return false
-        }
+        return false
     }
     
     
@@ -631,7 +634,7 @@ class ChatRowItem: TableRowItem {
                             chatInteraction.openReplyThread(threadMessageId, false, true, .comments(origin: attr.messageId))
                         } else {
                             switch chatInteraction.mode {
-                            case .replyThread:
+                            case .thread:
                                 chatInteraction.focusMessageId(nil, attr.messageId, .CenterEmpty)
                             default:
                                 chatInteraction.openInfo(attr.messageId.peerId, true, attr.messageId, nil)
@@ -748,7 +751,10 @@ class ChatRowItem: TableRowItem {
             if unsupported {
                 return false
             }
-            if let media = message.media.first, media is TelegramMediaAction {
+            if message.containsSecretMedia {
+                return false
+            }
+            if let media = message.effectiveMedia, media is TelegramMediaAction {
                 return false
             }
             return true
@@ -816,12 +822,6 @@ class ChatRowItem: TableRowItem {
     private let _isScam: Bool
     private let _isFake: Bool
     
-    var isScam: Bool {
-        return _isScam && self.authorText != nil
-    }
-    var isFake: Bool {
-        return _isFake && self.authorText != nil
-    }
     private(set) var isForwardScam: Bool
     private(set) var isForwardFake: Bool
 
@@ -849,7 +849,7 @@ class ChatRowItem: TableRowItem {
         if chatInteraction.mode.isThreadMode, chatInteraction.mode.threadId == message?.id {
             return false
         } else {
-            return isIncoming
+            return isIncoming && self.hasPhoto
         }
     }
     
@@ -912,17 +912,17 @@ class ChatRowItem: TableRowItem {
         var canFillAuthorName: Bool = true
         var disable: Bool = false
         switch chatInteraction.chatLocation {
-        case .peer, .replyThread:
+        case .peer, .thread:
             if renderType == .bubble, let peer = coreMessageMainPeer(message) {
                 canFillAuthorName = isIncoming && (peer.isGroup || peer.isSupergroup || message.id.peerId == chatInteraction.context.peerId || message.id.peerId == repliesPeerId || message.adAttribute != nil)
-                if let media = message.media.first {
+                if let media = message.effectiveMedia {
                     canFillAuthorName = canFillAuthorName && !media.isInteractiveMedia && hasBubble && isIncoming
                 } else if bigEmojiMessage(chatInteraction.context.sharedContext, message: message) {
                     canFillAuthorName = false
                     disable = true
                 }
                 if message.isAnonymousMessage, !isIncoming {
-                    if let media = message.media.first as? TelegramMediaFile {
+                    if let media = message.effectiveMedia as? TelegramMediaFile {
                         if media.isSticker || media.isAnimatedSticker {
                             disable = true
                         }
@@ -932,7 +932,7 @@ class ChatRowItem: TableRowItem {
                     }
                 }
                 if !isIncoming && message.author?.id != chatInteraction.context.peerId, message.globallyUniqueId != 0 {
-                    if let media = message.media.first as? TelegramMediaFile {
+                    if let media = message.effectiveMedia as? TelegramMediaFile {
                         if media.isSticker || media.isAnimatedSticker {
                             disable = true
                         }
@@ -982,7 +982,7 @@ class ChatRowItem: TableRowItem {
     var hasBubble: Bool 
     
     static func hasBubble(_ message: Message?, entry: ChatHistoryEntry, type: ChatItemType, sharedContext: SharedAccountContext) -> Bool {
-        if let message = message, let media = message.media.first {
+        if let message = message, let media = message.effectiveMedia {
             
             if let file = media as? TelegramMediaFile {
                 if file.isStaticSticker {
@@ -995,6 +995,14 @@ class ChatRowItem: TableRowItem {
                     return false
                 }
                 if file.isInstantVideo {
+                    if let data = entry.additionalData.transribeState {
+                        switch data {
+                        case .loading, .revealed:
+                            return true
+                        default:
+                            break
+                        }
+                    }
                     return false //!message.text.isEmpty || (message.replyAttribute != nil && !file.isInstantVideo) || (message.forwardInfo != nil && !file.isInstantVideo)
                 }
             }
@@ -1034,7 +1042,7 @@ class ChatRowItem: TableRowItem {
             if message.groupInfo != nil {
                 switch entry {
                 case .groupedPhotos(let entries, _):
-                    let prettyCount = entries.filter { $0.message?.media.first?.isInteractiveMedia ?? false }.count
+                    let prettyCount = entries.filter { $0.message?.effectiveMedia?.isInteractiveMedia ?? false }.count
                     return !message.text.isEmpty || message.replyAttribute != nil || message.forwardInfo != nil || entries.count == 1 || prettyCount != entries.count
                 default:
                     return true
@@ -1188,7 +1196,7 @@ class ChatRowItem: TableRowItem {
         if !isBubbled || !channelHasCommentButton {
             return nil
         }
-        if isStateOverlayLayout, let media = effectiveCommentMessage?.media.first, !media.isInteractiveMedia {
+        if isStateOverlayLayout, let media = effectiveCommentMessage?.effectiveMedia, !media.isInteractiveMedia {
             return nil
         } else if (self is ChatVideoMessageItem) {
             return nil
@@ -1329,13 +1337,18 @@ class ChatRowItem: TableRowItem {
         if let value = _reactionsLayout {
             return value
         } else if let message = self.messages.first {
-            
+            if chatInteraction.isLogInteraction {
+                return nil
+            }
+            if unsupported {
+                return nil
+            }
             let reactions = message.effectiveReactions(context.peerId)
-            
+            let context = self.context
             let chatInteraction = self.chatInteraction
             if let reactions = reactions, !reactions.reactions.isEmpty, let available = context.reactions.available {
-                let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: available, peerAllowed: chatInteraction.presentation.allowedReactions ?? [], engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)), openInfo: { [weak chatInteraction] peerId in
-                    chatInteraction?.openInfo(peerId, false, nil, nil)
+                let layout = ChatReactionsLayout(context: chatInteraction.context, message: message, available: available, peerAllowed: chatInteraction.presentation.allowedReactions, engine: chatInteraction.context.reactions, theme: presentation, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isBubbleFullFilled && self.captionLayouts.isEmpty, hasWallpaper: presentation.hasWallpaper, stateOverlayTextColor: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, entry.renderType == .bubble)), openInfo: { peerId in
+                    context.bindings.rootNavigation().push(PeerInfoController(context: context, peerId: peerId, source: .reaction(message.id)))
                 }, runEffect: { [weak chatInteraction] value in
                     chatInteraction?.runReactionEffect(value, message.id)
                 })
@@ -1405,7 +1418,7 @@ class ChatRowItem: TableRowItem {
         }
         
         var stateOverlayTextColor: NSColor {
-            if let media = message?.media.first, media.isInteractiveMedia || media is TelegramMediaMap {
+            if let media = message?.effectiveMedia, media.isInteractiveMedia || media is TelegramMediaMap {
                  return NSColor(0xffffff)
             } else {
                 return theme.chatServiceItemTextColor
@@ -1413,12 +1426,20 @@ class ChatRowItem: TableRowItem {
         }
         
         var isStateOverlayLayout: Bool {
-            if renderType == .bubble, let message = captionMessage, let media = message.media.first {
+            if renderType == .bubble, let message = captionMessage, let media = message.effectiveMedia {
                 if let file = media as? TelegramMediaFile {
                     if file.isStaticSticker || file.isAnimatedSticker || file.isVideoSticker  {
                         return renderType == .bubble
                     }
                     if file.isInstantVideo {
+                        if let data = object.additionalData.transribeState {
+                            switch data {
+                            case .loading, .revealed:
+                                return false
+                            default:
+                                break
+                            }
+                        }
                         return renderType == .bubble
                     }
                     
@@ -1517,13 +1538,13 @@ class ChatRowItem: TableRowItem {
                     self.peer = author
                 } else if let signature = info.authorSignature {
                     
-                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [])
                 } else {
                     self.peer = message.chatPeer(context.peerId)
                 }
             } else if let info = message.forwardInfo, chatInteraction.peerId == context.account.peerId || (object.renderType == .list && info.psaType != nil) {
                 if info.author == nil, let signature = info.authorSignature {
-                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [])
+                    self.peer = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [])
                 } else if (object.renderType == .list && info.psaType != nil) {
                     self.peer = info.author ?? message.chatPeer(context.peerId)
                 } else {
@@ -1588,7 +1609,7 @@ class ChatRowItem: TableRowItem {
                 
                 var accept:Bool = !isHasSource && message.id.peerId != context.peerId
                 
-                if let media = message.media.first as? TelegramMediaFile {
+                if let media = message.effectiveMedia as? TelegramMediaFile {
                     
                   
                     for attr in media.attributes {
@@ -1669,7 +1690,17 @@ class ChatRowItem: TableRowItem {
                     
                     
                     var isInstantVideo: Bool {
-                        if let media = message.media.first as? TelegramMediaFile {
+                        if let media = message.effectiveMedia as? TelegramMediaFile {
+                            if media.isInstantVideo {
+                                if let data = object.additionalData.transribeState {
+                                    switch data {
+                                    case .loading, .revealed:
+                                        return false
+                                    default:
+                                        break
+                                    }
+                                }
+                            }
                             return media.isInstantVideo
                         }
                         return false
@@ -1720,10 +1751,10 @@ class ChatRowItem: TableRowItem {
             }
             
             let fillName: Bool
-            let rank: String?
+            var rank: String?
             switch itemType {
             case let .Full(r, header):
-                rank = r
+                rank = r 
                 fillName = header == .normal
             case let .Short(r, header):
                 rank = r
@@ -1829,8 +1860,9 @@ class ChatRowItem: TableRowItem {
                 let attr: NSAttributedString = .initialize(string: dateFormatter.string(from: Date(timeIntervalSince1970: TimeInterval(time))), color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                 self.date = TextViewLayout(attr, maximumNumberOfLines: 1)
                 self.date?.measure(width: .greatestFiniteMagnitude)
-            } else if message.adAttribute != nil {
-                let attr: NSAttributedString = .initialize(string: strings().chatMessageSponsored, color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short))
+            } else if let adAttr = message.adAttribute {
+                let text = adAttr.messageType == .recommended ? strings().chatMessageRecommended : strings().chatMessageSponsored
+                let attr: NSAttributedString = .initialize(string: text, color: isStateOverlayLayout ? stateOverlayTextColor : (!hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble)), font: renderType == .bubble ? .italic(.small) : .normal(.short))
                 self.date = TextViewLayout(attr, maximumNumberOfLines: 1)
                 self.date?.measure(width: .greatestFiniteMagnitude)
             }
@@ -1865,7 +1897,7 @@ class ChatRowItem: TableRowItem {
             //
             var fullDate: String = message.timestamp == scheduleWhenOnlineTimestamp ? "" : formatter.string(from: Date(timeIntervalSince1970: TimeInterval(message.timestamp) - context.timeDifference))
             
-            let threadId: MessageId? = chatInteraction.mode.threadId
+            let threadId: MessageId? = chatInteraction.chatLocation.threadMsgId
             
             if let message = effectiveCommentMessage {
                 for attribute in message.attributes {
@@ -1948,14 +1980,16 @@ class ChatRowItem: TableRowItem {
                
                 
                 let paid: Bool
-                if let invoice = message.media.first as? TelegramMediaInvoice {
+                if let invoice = message.effectiveMedia as? TelegramMediaInvoice {
                     paid = invoice.receiptMessageId != nil
                 } else {
                     paid = false
                 }
                 if let attribute = attribute as? ReplyMarkupMessageAttribute, attribute.flags.contains(.inline) {
                     if message.restrictedText(context.contentSettings) == nil {
-                        replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message), theme, paid: paid)
+                        if !message.hasExtendedMedia {
+                            replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: message), theme, paid: paid)
+                        }
                     }
                 }
             }
@@ -2022,7 +2056,7 @@ class ChatRowItem: TableRowItem {
         }
         
         if let message = entry.message {
-            if message.media.count == 0 || message.media.first is TelegramMediaWebpage {
+            if message.media.count == 0 || message.effectiveMedia is TelegramMediaWebpage {
                 return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
             } else {
                 if let action = message.media[0] as? TelegramMediaAction {
@@ -2036,6 +2070,14 @@ class ChatRowItem: TableRowItem {
                     if file.isVideoSticker {
                         return ChatGIFMediaItem(initialSize, interaction, interaction.context,entry, downloadSettings, theme: theme)
                     } else if file.isInstantVideo {
+                        if let data = entry.additionalData.transribeState {
+                            switch data {
+                            case .loading, .revealed:
+                                return ChatVoiceRowItem(initialSize,interaction, interaction.context,entry, downloadSettings, theme: theme)
+                            default:
+                                break
+                            }
+                        }
                         return ChatVideoMessageItem(initialSize, interaction, interaction.context,entry, downloadSettings, theme: theme)
                     } else if file.isVideo && !file.isAnimated {
                         return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
@@ -2057,17 +2099,26 @@ class ChatRowItem: TableRowItem {
                     return ChatMapRowItem(initialSize,interaction, interaction.context, entry, downloadSettings, theme: theme)
                 } else if message.media[0] is TelegramMediaContact {
                     return ChatContactRowItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
-                } else if message.media[0] is TelegramMediaInvoice {
-                    return ChatInvoiceItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                } else if let media = message.media[0] as? TelegramMediaInvoice {
+                    if let extendedMedia = media.extendedMedia {
+                        switch extendedMedia {
+                        case .preview:
+                            return ChatInvoiceItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                        case .full:
+                            return ChatMediaItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                        }
+                    } else {
+                        return ChatInvoiceItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
+                    }
                 } else if message.media[0] is TelegramMediaExpiredContent {
                     return ChatServiceItem(initialSize, interaction,interaction.context, entry, downloadSettings, theme: theme)
-                } else if message.media.first is TelegramMediaGame {
+                } else if message.effectiveMedia is TelegramMediaGame {
                     return ChatMessageItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
-                } else if message.media.first is TelegramMediaPoll {
+                } else if message.effectiveMedia is TelegramMediaPoll {
                     return ChatPollItem(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
-                } else if message.media.first is TelegramMediaUnsupported {
+                } else if message.effectiveMedia is TelegramMediaUnsupported {
                     return ChatMessageItem(initialSize, interaction, interaction.context,entry, downloadSettings, theme: theme)
-                } else if message.media.first is TelegramMediaDice {
+                } else if message.effectiveMedia is TelegramMediaDice {
                     return ChatMediaDice(initialSize, interaction, interaction.context, entry, downloadSettings, theme: theme)
                 }
                 
@@ -2295,41 +2346,61 @@ class ChatRowItem: TableRowItem {
     var maxTitleWidth: CGFloat {
         let nameWidth:CGFloat
         if hasBubble {
-            nameWidth = (authorText?.layoutSize.width ?? 0) + additionBad + (adminBadge?.layoutSize.width ?? 0)
+            nameWidth = (authorText?.layoutSize.width ?? 0) + statusSize + (adminBadge?.layoutSize.width ?? 0)
         } else {
             nameWidth = 0
         }
 
-        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + additionForwardBad + (isPsa ? 30 : 0) : 0
+        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + forwardStatusSize + (isPsa ? 30 : 0) : 0
         
         let replyWidth = min(hasBubble ? (replyModel?.size.width ?? 0) : 0, 200)
         
         return max(max(nameWidth, forwardWidth), replyWidth)//min(max(max(nameWidth, forwardWidth), replyWidth), contentSize.width)
     }
     
-    var additionBad: CGFloat {
-        return (isScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (isFake ? theme.icons.chatFake.backingSize.width + 3 : 0)
-    }
-    var additionForwardBad: CGFloat {
-        return (isForwardScam ? theme.icons.chatScam.backingSize.width + 3 : 0) + (isForwardFake ? theme.icons.chatFake.backingSize.width + 3 : 0)
+    var hasStatus: Bool {
+        if let peer = self.peer, let message = self.message, PremiumStatusControl.hasControl(peer) {
+            if authorText != nil, let peer = message.peers[message.id.peerId] {
+                if peer.isGroup || peer.isSupergroup || peer.isGigagroup {
+                    return true
+                }
+            }
+        }
+        return false
     }
     
-    var badIcon: CGImage {
-        return isScam ? theme.icons.chatScam : theme.icons.chatFake
+    var statusSize: CGFloat {
+        if let peer = self.peer, hasStatus, let controlSize = PremiumStatusControl.controlSize(peer, false) {
+            return controlSize.width
+        }
+        return 0
     }
-    var forwardBadIcon: CGImage {
-        return isForwardScam ? theme.icons.chatScam : theme.icons.chatFake
+    var forwardStatusSize: CGFloat {
+        if let peer = self.peer, false, let controlSize = PremiumStatusControl.controlSize(peer, false) {
+            return controlSize.width
+        }
+        return 0
     }
+    
+    func status(_ cached: PremiumStatusControl?, animated: Bool) -> PremiumStatusControl? {
+        if let peer = peer, let attr = authorText?.attributedString, !attr.string.isEmpty, hasStatus {
+            if let color = attr.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor {
+                return PremiumStatusControl.control(peer, account: context.account, inlinePacksContext: context.inlinePacksContext, isSelected: false, color: color, cached: cached, animated: animated)
+            }
+        }
+        return nil
+    }
+
     
     var bubbleFrame: NSRect {
         let nameWidth:CGFloat
         if hasBubble {
-            nameWidth = (authorText?.layoutSize.width ?? 0) + additionBad + (adminBadge?.layoutSize.width ?? 0)
+            nameWidth = (authorText?.layoutSize.width ?? 0) + statusSize + (adminBadge?.layoutSize.width ?? 0)
         } else {
             nameWidth = 0
         }
         
-        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + additionForwardBad + (isPsa ? 30 : 0) : 0
+        let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + forwardStatusSize + (isPsa ? 30 : 0) : 0
         let replyWidth: CGFloat = hasBubble ? (replyModel?.size.width ?? 0) : 0
 
         var rect = NSMakeRect(defLeftInset, 2, contentSize.width, height - 4)
@@ -2394,7 +2465,7 @@ class ChatRowItem: TableRowItem {
     
     
     var unsupported: Bool {
-        if let message = message, message.text.isEmpty && (message.media.isEmpty || message.media.first is TelegramMediaUnsupported) {
+        if let message = message, message.text.isEmpty && (message.media.isEmpty || message.effectiveMedia is TelegramMediaUnsupported) {
             return message.inlinePeer == nil
         } else {
             return false
@@ -2409,6 +2480,19 @@ class ChatRowItem: TableRowItem {
 
         if unsupported {
             return rightSize.height
+        }
+        if isBigEmoji {
+            return rightSize.height
+        }
+        if let message = message, let entities = message.textEntities {
+            for entity in entities.entities {
+                if case .CustomEmoji = entity.type {
+                    let range = NSMakeRange(0, message.text.length)
+                    if range == NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound) {
+                        return rightSize.height
+                    }
+                }
+            }
         }
         
         if let lastLine = lastLineContentWidth {
@@ -2451,7 +2535,7 @@ class ChatRowItem: TableRowItem {
     
     func openInfo() {
         switch chatInteraction.chatLocation {
-        case .peer, .replyThread:
+        case .peer, .thread:
             if let peer = peer {
                 let messageId: MessageId?
                 if chatInteraction.isGlobalSearchMessage {
@@ -2544,7 +2628,7 @@ class ChatRowItem: TableRowItem {
     }
     
     func replyAction() -> Bool {
-        if chatInteraction.presentation.state == .normal, chatInteraction.mode.threadId != effectiveCommentMessage?.id {
+        if chatInteraction.presentation.canReplyInRestrictedMode, chatInteraction.mode.threadId != effectiveCommentMessage?.id {
             chatInteraction.setupReplyMessage(message?.id)
             return true
         }
@@ -2572,86 +2656,272 @@ class ChatRowItem: TableRowItem {
     func reactAction() -> Bool {
         if canReact {
             
+            
+            
             let context = self.context
-
-            var available:[AvailableReactions.Reaction] = []
-            let allowed = chatInteraction.presentation.allowedReactions
-            if let reactions = self.entry.additionalData.reactions {
-                available = reactions.enabled.filter {
-                    allowed == nil || allowed!.contains($0.value)
-                }
+            let value = context.reactionSettings.quickReaction
+            let message = self.message
+            
+            guard let message = message else {
+                return false
             }
             
-            guard !available.isEmpty, let messageId = self.message?.id else {
-                return false
+            var reaction: MessageReaction.Reaction?
+            
+            let messageId = message.id
+            let builtin = self.entry.additionalData.reactions
+            let allowed = chatInteraction.presentation.allowedReactions
+            if let allowed = allowed {
+                switch allowed {
+                case .all:
+                    switch value {
+                    case .builtin:
+                        reaction = value
+                    case .custom:
+                        reaction = context.isPremium ? value : builtin?.enabled.first?.value
+                    }
+                case let .limited(array):
+                    if array.contains(value) {
+                        reaction = value
+                    } else {
+                        reaction = builtin?.enabled.first(where: {
+                            array.contains($0.value)
+                        })?.value
+                    }
+                case .empty:
+                    break
+                }
+            } else {
+                switch value {
+                case .custom:
+                    reaction = context.isPremium ? value : builtin?.enabled.first?.value
+                case .builtin:
+                    reaction = value
+                }
             }
-            if let index = available.firstIndex(where: { $0.value == context.reactionSettings.quickReaction }) {
-                available.move(at: index, to: 0)
-            }
-            if let value = available.first?.value {
-                let isSelected = message?.reactionsAttribute?.reactions.contains(where: { $0.value == value && $0.isSelected }) == true
-                context.reactions.react(messageId, value: isSelected ? nil : value)
-                return false
+            if let reaction = reaction {
+                context.reactions.react(messageId, values: message.newReactions(with: reaction.toUpdate()))
             }
         }
         return false
     }
     
-    override var menuAdditionView: Window? {
-        if FastSettings.legacyReactions {
-            return nil
-        }
+    override var menuAdditionView: Signal<Window?, NoError> {
         if canReact {
             
             let context = self.context
 
+            guard let message = self.message, let peer = chatInteraction.presentation.mainPeer else {
+                return .single(nil)
+            }
             
-            var available:[AvailableReactions.Reaction] = []
-            let allowed = chatInteraction.presentation.allowedReactions
-            if let reactions = self.entry.additionalData.reactions {
-                available = reactions.enabled.filter {
-                    allowed == nil || allowed!.contains($0.value)
+            let builtin = context.reactions.stateValue
+            let peerAllowed: Signal<PeerAllowedReactions?, NoError> = context.account.postbox.peerView(id: self.chatInteraction.peerId)
+            |> map { $0.cachedData }
+            |> map { cachedData in
+                if let cachedData = cachedData as? CachedGroupData {
+                    return cachedData.allowedReactions.knownValue
+                } else if let cachedData = cachedData as? CachedChannelData {
+                    return cachedData.allowedReactions.knownValue
+                } else {
+                    return nil
+                }
+            }
+            |> take(1)
+            
+            var orderedItemListCollectionIds: [Int32] = []
+            
+            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudRecentReactions)
+            orderedItemListCollectionIds.append(Namespaces.OrderedItemList.CloudTopReactions)
+     
+            let reactions:Signal<[RecentReactionItem], NoError> = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: orderedItemListCollectionIds, namespaces: [Namespaces.ItemCollection.CloudEmojiPacks], aroundIndex: nil, count: 2000000) |> map { view in
+                
+                var recentReactionsView: OrderedItemListView?
+                var topReactionsView: OrderedItemListView?
+                for orderedView in view.orderedItemListsViews {
+                    if orderedView.collectionId == Namespaces.OrderedItemList.CloudRecentReactions {
+                        recentReactionsView = orderedView
+                    } else if orderedView.collectionId == Namespaces.OrderedItemList.CloudTopReactions {
+                        topReactionsView = orderedView
+                    }
+                }
+                var recentReactionsItems:[RecentReactionItem] = []
+                var topReactionsItems:[RecentReactionItem] = []
+
+                if let recentReactionsView = recentReactionsView {
+                    for item in recentReactionsView.items {
+                        guard let item = item.contents.get(RecentReactionItem.self) else {
+                            continue
+                        }
+                        recentReactionsItems.append(item)
+                    }
+                }
+                if let topReactionsView = topReactionsView {
+                    for item in topReactionsView.items {
+                        guard let item = item.contents.get(RecentReactionItem.self) else {
+                            continue
+                        }
+                        topReactionsItems.append(item)
+                    }
+                }
+                return topReactionsItems.filter { value in
+                    if context.isPremium {
+                        return true
+                    } else {
+                        if case .custom = value.content {
+                            return false
+                        } else {
+                            return true
+                        }
+                    }
                 }
             }
             
-            guard !available.isEmpty, let message = self.message else {
-                return nil
-            }
             
-            
-            if let index = available.firstIndex(where: { $0.value == context.reactionSettings.quickReaction }) {
-                available.move(at: index, to: 0)
-            }
-            
-            let width = ContextAddReactionsListView.width(for: available)
-            
-            let rect = NSMakeRect(0, 0, width + 20, 40)
-            
-            let panel = Window(contentRect: rect, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
-            panel._canBecomeMain = false
-            panel._canBecomeKey = false
-            panel.level = .popUpMenu
-            panel.backgroundColor = .clear
-            panel.isOpaque = false
-            panel.hasShadow = false
-            
-            
+            let signal = combineLatest(queue: .mainQueue(), builtin, peerAllowed, reactions)
+            |> take(1)
 
-            
-            let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value in
-                let isSelected = message.reactionsAttribute?.reactions.contains(where: { $0.value == value && $0.isSelected }) == true
-                context.reactions.react(message.id, value: isSelected ? nil : value)
-            })
-            
-            
-            
-            view.layer?.cornerRadius = 15
-            panel.contentView?.addSubview(view)
-            panel.contentView?.wantsLayer = true
-            view.autoresizingMask = [.width, .height]
-            return panel
+            return signal |> map { builtin, peerAllowed, reactions in
+                let enabled = builtin?.enabled ?? []
+
+                var available:[ContextReaction] = []
+                
+                let allowed = peerAllowed
+                
+                var accessToAll: Bool
+                
+                let isSelected:(MessageReaction.Reaction)->Bool = { reaction in
+                    return message.effectiveReactions?.contains(where: { $0.value == reaction && $0.isSelected }) ?? false
+                }
+
+                
+                if peer.isChannel {
+                   accessToAll = false
+                } else if let peerAllowed = peerAllowed {
+                    switch peerAllowed {
+                    case .all:
+                        accessToAll = true
+                    case .limited, .empty:
+                        accessToAll = false
+                    }
+                } else {
+                    accessToAll = true
+                }
+                
+                if !accessToAll {
+                    if let reactions = builtin {
+                        available = reactions.enabled.filter { value in
+                            if let allowed = allowed {
+                                switch allowed {
+                                case .all:
+                                    return true
+                                case let .limited(array):
+                                    return array.contains(value.value)
+                                case .empty:
+                                    return false
+                                }
+                            } else {
+                                return true
+                            }
+                        }.map {
+                            .builtin(value: $0.value, staticFile: $0.staticIcon, selectFile: $0.selectAnimation, appearFile: $0.appearAnimation, isSelected: isSelected($0.value))
+                        }
+                    }
+                } else {
+                    available = reactions.compactMap { value in
+                        switch value.content {
+                        case let .builtin(emoji):
+                            if let generic = enabled.first(where: { $0.value.string == emoji }) {
+                                return .builtin(value: generic.value, staticFile: generic.staticIcon, selectFile: generic.selectAnimation, appearFile: generic.appearAnimation, isSelected: isSelected(generic.value))
+                            } else {
+                                return nil
+                            }
+                        case let .custom(file):
+                            return .custom(value: .custom(file.fileId.id), fileId: file.fileId.id, file, isSelected: isSelected(.custom(file.fileId.id)))
+                        }
+                    }
+                }
+                
+                var uniqueLimit: Int = .max
+                if let value = context.appConfiguration.data?["reactions_uniq_max"] as? Double {
+                    uniqueLimit = Int(value)
+                }
+                            
+                if let reactions = message.effectiveReactions, reactions.count >= uniqueLimit {
+                    available = reactions.compactMap { reaction in
+                        switch reaction.value {
+                        case let .custom(fileId):
+                            if accessToAll {
+                                let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
+                                return .custom(value: reaction.value, fileId: fileId, message.associatedMedia[mediaId] as? TelegramMediaFile, isSelected: isSelected(reaction.value))
+                            } else {
+                                return nil
+                            }
+                        case .builtin:
+                            if let generic = enabled.first(where: { $0.value == reaction.value }) {
+                                return .builtin(value: generic.value, staticFile: generic.staticIcon, selectFile: generic.selectAnimation, appearFile: generic.appearAnimation, isSelected: isSelected(reaction.value))
+                            } else {
+                                return nil
+                            }
+                        }
+                    }
+                    accessToAll = false
+                }
+                
+                
+//                if let index = available.firstIndex(where: { $0.value == context.reactionSettings.quickReaction }) {
+//                    available.move(at: index, to: 0)
+//                }
+                
+                guard !available.isEmpty else {
+                    return nil
+                }
+                
+                if accessToAll {
+                    available = Array(available.prefix(6))
+                }
+                
+                
+                let width = ContextAddReactionsListView.width(for: available.count, maxCount: 6, allowToAll: accessToAll)
+                
+                
+                let rect = NSMakeRect(0, 0, width + 20 + (accessToAll ? 0 : 20), 40 + 20)
+                
+                
+                let panel = Window(contentRect: rect, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
+                panel._canBecomeMain = false
+                panel._canBecomeKey = false
+                panel.level = .popUpMenu
+                panel.backgroundColor = .clear
+                panel.isOpaque = false
+                panel.hasShadow = false
+                
+
+                let reveal:((NSView & StickerFramesCollector)->Void)?
+                
+                
+                if accessToAll {
+                    reveal = { view in
+                        let window = ReactionsWindowController(context, message: message)
+                        window.show(view)
+                    }
+                } else {
+                    reveal = nil
+                }
+                
+                
+                let view = ContextAddReactionsListView(frame: rect, context: context, list: available, add: { value, checkPrem, fromRect in
+                    context.reactions.react(message.id, values: message.newReactions(with: value.toUpdate()), fromRect: fromRect, storeAsRecentlyUsed: true)
+                }, radiusLayer: nil, revealReactions: reveal)
+                
+                
+                panel.contentView?.addSubview(view)
+                panel.contentView?.wantsLayer = true
+                view.autoresizingMask = [.width, .height]
+                return panel
+            }
         }
-        return nil
+        return .single(nil)
     }
     
     override var instantlyResize: Bool {
@@ -2666,7 +2936,7 @@ class ChatRowItem: TableRowItem {
     }
     
     var stateOverlayBackgroundColor: NSColor {
-        guard let media = self.message?.media.first else {
+        guard let media = self.message?.effectiveMedia else {
             return self.presentation.chatServiceItemColor
         }
         if media is TelegramMediaImage {
@@ -2681,7 +2951,7 @@ class ChatRowItem: TableRowItem {
     }
     
     var stateOverlayTextColor: NSColor {
-       guard let media = self.message?.media.first else {
+       guard let media = self.message?.effectiveMedia else {
            return self.presentation.chatServiceItemTextColor
        }
         if let file = media as? TelegramMediaFile, file.isInstantVideo {
@@ -2697,10 +2967,28 @@ class ChatRowItem: TableRowItem {
        }
     }
     var isInteractiveMedia: Bool {
-        guard let media = self.message?.media.first else {
+        guard let media = self.message?.effectiveMedia else {
             return false
         }
         return media.isInteractiveMedia
+    }
+    
+    var hasTranscribeText: Bool {
+        if let transcribe = entry.additionalData.transribeState {
+            switch transcribe {
+            case .loading:
+                return false
+            case .revealed(let bool):
+                return bool
+            case .collapsed(let bool):
+                return bool
+            }
+        }
+        return false
+    }
+    
+    var transcribeSize: NSSize {
+        return NSMakeSize(40, 40)
     }
     
     struct LastLineData {

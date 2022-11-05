@@ -16,14 +16,14 @@ public enum ContainedViewLayoutTransitionCurve {
     case legacy
 }
 
-private let listViewAnimationCurveSystem: (CGFloat) -> CGFloat = { t in
+public let listViewAnimationCurveSystem: (CGFloat) -> CGFloat = { t in
     return bezierPoint(0.23, 1.0, 0.32, 1.0, t)
 }
-let listViewAnimationCurveEaseInOut: (CGFloat) -> CGFloat = { t in
+public let listViewAnimationCurveEaseInOut: (CGFloat) -> CGFloat = { t in
     return bezierPoint(0.42, 0.0, 0.58, 1.0, t)
 }
 
-private let listViewAnimationCurveLinear: (CGFloat) -> CGFloat = { t in
+public let listViewAnimationCurveLinear: (CGFloat) -> CGFloat = { t in
     return t
 }
 
@@ -121,6 +121,7 @@ public extension ContainedViewLayoutTransition {
             default:
                 
                 CATransaction.begin()
+                var ignoreSize: Bool = false
                 if let view = view as? TableView {
                     view.change(size: frame.size, animated: true, duration: duration, timingFunction: curve.timingFunction, completion: { completed in
                         completion?(completed)
@@ -242,6 +243,16 @@ public extension ContainedViewLayoutTransition {
             })
         }
     }
+    
+    func animatePositionWithKeyframes(layer: CALayer, keyframes: [CGPoint], removeOnCompletion: Bool = true, additive: Bool = false, completion: ((Bool) -> Void)? = nil) {
+           switch self {
+           case .immediate:
+               completion?(true)
+           case let .animated(duration, curve):
+               layer.animateKeyframes(values: keyframes.map(NSValue.init(point:)), duration: duration, keyPath: "position", timingFunction: curve.timingFunction, removeOnCompletion: removeOnCompletion, completion: completion)
+           }
+       }
+
 }
 
 public protocol ContainableController: class {

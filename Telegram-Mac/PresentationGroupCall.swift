@@ -7,6 +7,52 @@ import AVFoundation
 import TelegramVoip
 import TGUIKit
 
+
+func groupCallLogsPath(account: Account) -> String {
+    return account.basePath + "/group-calls"
+}
+
+private func cleanupGroupCallLogs(account: Account) {
+    let path = groupCallLogsPath(account: account)
+    let fileManager = FileManager.default
+    if !fileManager.fileExists(atPath: path, isDirectory: nil) {
+        try? fileManager.createDirectory(atPath: path, withIntermediateDirectories: true, attributes: nil)
+    }
+    
+    var oldest: [(URL, Date)] = []
+    var count = 0
+    if let enumerator = FileManager.default.enumerator(at: URL(fileURLWithPath: path), includingPropertiesForKeys: [.contentModificationDateKey], options: [.skipsHiddenFiles, .skipsSubdirectoryDescendants], errorHandler: nil) {
+        for url in enumerator {
+            if let url = url as? URL {
+                if let date = (try? url.resourceValues(forKeys: Set([.contentModificationDateKey])))?.contentModificationDate {
+                    oldest.append((url, date))
+                    count += 1
+                }
+            }
+        }
+    }
+    let callLogsLimit = 20
+    if count > callLogsLimit {
+        oldest.sort(by: { $0.1 > $1.1 })
+        while oldest.count > callLogsLimit {
+            try? fileManager.removeItem(atPath: oldest[oldest.count - 1].0.path)
+            oldest.removeLast()
+        }
+    }
+}
+
+func allocateCallLogPath(account: Account) -> String {
+    let path = groupCallLogsPath(account: account)
+    
+    let _ = try? FileManager.default.createDirectory(at: URL(fileURLWithPath: path), withIntermediateDirectories: true, attributes: nil)
+    
+    let name = "log-\(Date())".replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: ":", with: "_")
+    
+    return "\(path)/\(name).log"
+}
+
+
+
 func getGroupCallPanelData(context: AccountContext, peerId: PeerId) -> Signal<GroupCallPanelData?, NoError> {
     let account = context.account
     let availableGroupCall: Signal<GroupCallPanelData?, NoError>
@@ -1136,7 +1182,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
                             strongSelf.requestCall(movingFromBroadcastToRtc: false)
                         }
                     }
-                }, outgoingAudioBitrateKbit: nil, videoContentType: .generic, enableNoiseSuppression: false, disableAudioInput: self.isStream, preferX264: false)
+                }, outgoingAudioBitrateKbit: nil, videoContentType: .generic, enableNoiseSuppression: false, disableAudioInput: self.isStream, preferX264: false, logPath: allocateCallLogPath(account: self.account))
                 
                 self.settingsDisposable = (voiceCallSettings(self.sharedContext.accountManager) |> deliverOnMainQueue).start(next: { [weak self] settings in
                     self?.genericCallContext?.setIsNoiseSuppressionEnabled(settings.noiseSuppression)
@@ -2315,7 +2361,8 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             videoContentType: .screencast,
             enableNoiseSuppression: false,
             disableAudioInput: true,
-            preferX264: false
+            preferX264: false,
+            logPath: ""
         )
 
         self.screencastCallContext = screencastCallContext
@@ -2579,6 +2626,11 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         guard case let .established(callInfo, _, _, _, _) = self.internalState, !self.invitedPeersValue.contains(peerId) else {
             return false
         }
+        
+        guard stateValue.networkState == .connected else {
+            return false
+        }
+        
         if let channel = self.peer as? TelegramChannel {
             if channel.isChannel {
                 return false

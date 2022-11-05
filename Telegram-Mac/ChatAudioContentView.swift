@@ -102,7 +102,7 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
     
     override func fetch(userInitiated: Bool) {
         if let context = context, let media = media as? TelegramMediaFile, let parent = parent {
-            fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, messageReference: .init(parent), file: media, userInitiated: false).start())
+            fetchDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: parent.id, messageReference: .init(parent), file: media, userInitiated: userInitiated).start())
         }
     }
     
@@ -205,9 +205,6 @@ class ChatAudioContentView: ChatMediaContentView, APDelegate {
         return self.progressView
     }
     
-    override func setContent(size: NSSize) {
-        super.setContent(size: size)
-    }
     
     override func cancel() {
         fetchDisposable.set(nil)

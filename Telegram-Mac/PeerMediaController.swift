@@ -496,9 +496,9 @@
     private let toggleDisposable = MetaDisposable()
     private let externalDisposable = MetaDisposable()
     private var currentController: ViewController?
-    
-     private var sparseCalendar: SparseMessageCalendar?
-    
+     
+    private let threadInfo: ThreadInfo?
+        
     var currentMainTableView:((TableView?, Bool, Bool)->Void)? = nil {
         didSet {
             if isLoaded() {
@@ -520,12 +520,13 @@
         }
     }
     
-    init(context: AccountContext, peerId:PeerId, isProfileIntended:Bool = false, externalSearchData: PeerMediaExternalSearchData? = nil) {
+     init(context: AccountContext, peerId:PeerId, threadInfo: ThreadInfo? = nil, isProfileIntended:Bool = false, externalSearchData: PeerMediaExternalSearchData? = nil) {
         self.externalSearchData = externalSearchData
         self.peerId = peerId
+        self.threadInfo = threadInfo
         self.isProfileIntended = isProfileIntended
         self.interactions = ChatInteraction(chatLocation: .peer(peerId), context: context)
-        self.mediaGrid = PeerMediaPhotosController(context, chatInteraction: interactions, peerId: peerId, tags: .photoOrVideo)
+        self.mediaGrid = PeerMediaPhotosController(context, chatInteraction: interactions, threadInfo: threadInfo, peerId: peerId, tags: .photoOrVideo)
         
         var updateTitle:((ExternalSearchMessages)->Void)? = nil
         
@@ -541,13 +542,13 @@
         
         var listControllers: [PeerMediaListController] = []
         for _ in tagsList.filter ({ !$0.tagsValue.isEmpty }) {
-            listControllers.append(PeerMediaListController(context: context, chatLocation: .peer(peerId), chatInteraction: interactions))
+            listControllers.append(PeerMediaListController(context: context, peerId: peerId, threadInfo: threadInfo, chatInteraction: interactions))
         }
         self.listControllers = listControllers
         
         self.members = PeerMediaGroupPeersController(context: context, peerId: peerId, editing: editing.get())
         self.commonGroups = GroupsInCommonViewController(context: context, peerId: peerId)
-        self.gifs = PeerMediaPhotosController(context, chatInteraction: interactions, peerId: peerId, tags: .gif)
+         self.gifs = PeerMediaPhotosController(context, chatInteraction: interactions, threadInfo: threadInfo, peerId: peerId, tags: .gif)
         super.init(context)
         
         updateTitle = { [weak self] result in
@@ -624,16 +625,13 @@
      
      
      override func getRightBarViewOnce() -> BarView {
-         let back = BarView(70, controller: self) //MajorBackNavigationBar(self, account: account, excludePeerId: peerId)
-         
+         let back = BarView(70, controller: self)
          let editButton = ImageButton()
-        // editButton.disableActions()
          back.addSubview(editButton)
          
          self.editButton = editButton
  //
          let doneButton = TitleButton()
-       //  doneButton.disableActions()
          doneButton.set(font: .medium(.text), for: .Normal)
          doneButton.set(text: strings().navigationDone, for: .Normal)
          
@@ -662,17 +660,6 @@
                  self?.changeState()
              }, itemImage: MenuAnimation.menu_edit.value))
              
-             if mode == .photoOrVideo {
-                 let context = context
-                 items.append(ContextMenuItem(strings().peerMediaCalendarTitle, handler: { [weak self] in
-                     guard let sparseCalendar = self?.sparseCalendar else {
-                         return
-                     }
-                     showModal(with: ChatCalendarModalController(context: context, sparseCalendar: sparseCalendar, jumpTo: { [weak self] message in
-                         self?.mediaGrid.jumpTo(message)
-                     }), for: context.window)
-                 }, itemImage: MenuAnimation.menu_calendar.value))
-             }
             
              let menu = ContextMenu(betterInside: true)
              
@@ -690,9 +677,7 @@
      private func showRightControls() {
          switch state {
          case .Normal:
-             if let button = editButton {
-                
-             }
+             break
          case .Edit:
              self.changeState()
          case .Some:
@@ -789,7 +774,6 @@
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.sparseCalendar = context.engine.messages.sparseMessageCalendar(peerId: peerId, tag: [.photoOrVideo])
 
         
         genericView.updateInteraction(interactions)
@@ -803,15 +787,18 @@
         
         let context = self.context
         let peerId = self.peerId
-        
+        let threadInfo = self.threadInfo
         
         let membersTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
         let commonGroupsTab:Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>
         
         membersTab = context.account.postbox.peerView(id: peerId) |> map { view -> (exist: Bool, loaded: Bool) in
-            if let cachedData = view.cachedData as? CachedGroupData {
+            if threadInfo != nil {
+                return (exist: false, loaded: true)
+            }
+            if (view.cachedData as? CachedGroupData) != nil {
                 return (exist: true, loaded: true)
-            } else if let cachedData = view.cachedData as? CachedChannelData {
+            } else if (view.cachedData as? CachedChannelData) != nil {
                 if let peer = peerViewMainPeer(view), peer.isSupergroup {
                     return (exist: true, loaded: true)
                 } else {
@@ -837,9 +824,15 @@
             return (tag: .commonGroups, exists: data.exist, hasLoaded: data.loaded)
         }
         
+        let location: ChatLocationInput
+        if let threadInfo = threadInfo {
+            location = context.chatLocationInput(for: .thread(threadInfo.message), contextHolder: threadInfo.contextHolder)
+        } else {
+            location = .peer(peerId: peerId, threadId: nil)
+        }
         
         let tabItems: [Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError>] = self.tagsList.filter { !$0.tagsValue.isEmpty }.map { tags -> Signal<(tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool), NoError> in
-            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: peerId), count: 3, tagMask: tags.tagsValue)
+            return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(location, count: 3, tagMask: tags.tagsValue)
             |> map { (view, _, _) -> (tag: PeerMediaCollectionMode, exists: Bool, hasLoaded: Bool) in
                 let hasLoaded = view.entries.count >= 3 || (!view.isLoading)
                 return (tag: tags, exists: !view.entries.isEmpty, hasLoaded: hasLoaded)
@@ -963,10 +956,21 @@
             showModal(with: ShareModalController(ForwardMessagesObject(context, messageIds: messageIds)), for: context.window)
         }
         
-        interactions.focusMessageId = { [weak self] _, focusMessageId, animated in
-            if let strongSelf = self {
-                strongSelf.navigationController?.push(ChatController(context: context, chatLocation: .peer(strongSelf.peerId), messageId: focusMessageId))
+        let openChat:(PeerId, MessageId?)->Void = { [weak self] id, messageId in
+            let location: ChatLocation
+            let mode: ChatMode
+            if let threadInfo = threadInfo, peerId == id {
+                location = .thread(threadInfo.message)
+                mode = .thread(data: threadInfo.message, mode: .topic(origin: threadInfo.message.messageId))
+            } else {
+                location = .peer(id)
+                mode = .history
             }
+            self?.navigationController?.push(ChatController(context: context, chatLocation: location, mode: mode, messageId: messageId, chatLocationContextHolder: threadInfo?.contextHolder))
+        }
+        
+        interactions.focusMessageId = { _, focusMessageId, _ in
+            openChat(peerId, focusMessageId)
         }
         
         interactions.inlineAudioPlayer = { [weak self] controller in
@@ -981,9 +985,9 @@
         interactions.openInfo = { [weak self] (peerId, toChat, postId, action) in
             if let strongSelf = self {
                 if toChat {
-                    strongSelf.navigationController?.push(ChatController(context: context, chatLocation: .peer(peerId), messageId: postId, initialAction: action))
+                    openChat(peerId, postId)
                 } else {
-                    strongSelf.navigationController?.push(PeerInfoController(context: context, peerId: peerId))
+                    strongSelf.navigationController?.push(PeerInfoController(context: context, peerId: peerId, threadInfo: threadInfo))
                 }
             }
         }

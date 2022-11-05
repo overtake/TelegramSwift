@@ -8,6 +8,7 @@
 
 import Cocoa
 import TGUIKit
+import SwiftSignalKit
 
 final class VoiceBlobView: View {
     
@@ -182,11 +183,8 @@ final class BlobView: View {
     
     var level: CGFloat = 0 {
         didSet {
-            CATransaction.begin()
-            CATransaction.setDisableActions(true)
             let lv = minScale + (maxScale - minScale) * level
             shapeLayer.transform = CATransform3DMakeScale(lv, lv, 1)
-            CATransaction.commit()
         }
     }
     
@@ -198,8 +196,8 @@ final class BlobView: View {
     private var lastSpeedLevel: CGFloat = 0
     private var lastScaleLevel: CGFloat = 0
     
-    private let shapeLayer: CAShapeLayer = {
-        let layer = CAShapeLayer()
+    private let shapeLayer: SimpleShapeLayer = {
+        let layer = SimpleShapeLayer()
         layer.strokeColor = nil
         return layer
     }()
@@ -207,7 +205,25 @@ final class BlobView: View {
     private var transition: CGFloat = 0 {
         didSet {
             guard let currentPoints = currentPoints else { return }
-            shapeLayer.path = CGPath.smoothCurve(through: currentPoints, length: bounds.width, smoothness: smoothness)
+            
+            let width = self.bounds.width
+            let smoothness = self.smoothness
+            
+            let signal: Signal<CGPath, NoError> = Signal { subscriber in
+                
+                subscriber.putNext(.smoothCurve(through: currentPoints, length: width, smoothness: smoothness))
+                subscriber.putCompletion()
+                
+                return EmptyDisposable
+                
+            }
+            |> runOn(resourcesQueue)
+            |> deliverOnMainQueue
+            
+            
+            _ = signal.start(next: { [weak self] path in
+                self?.shapeLayer.path = path
+            })
         }
     }
     

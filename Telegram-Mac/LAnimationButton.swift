@@ -65,10 +65,11 @@ class LAnimationButton: Button {
             }
         }
         
-        self.animation = self.animation?.withUpdatedColors(colors)
-        self.firstFrame = self.firstFrame?.withUpdatedColors(colors)
-        animationView.set(self.firstFrame)
-
+        if self.animation?.colors != colors {
+            self.animation = self.animation?.withUpdatedColors(colors)
+            self.firstFrame = self.firstFrame?.withUpdatedColors(colors)
+            animationView.set(self.firstFrame)
+        }
     }
     
     

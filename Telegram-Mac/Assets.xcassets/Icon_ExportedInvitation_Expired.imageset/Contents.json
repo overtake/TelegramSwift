@@ -1,12 +1,12 @@
 {
   "images" : [
     {
-      "filename" : "ic_linkexpired.png",
+      "filename" : "broken link (3).png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "ic_linkexpired@2x.png",
+      "filename" : "broken link@2x (3).png",
       "idiom" : "universal",
       "scale" : "2x"
     },

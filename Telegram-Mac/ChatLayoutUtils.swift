@@ -46,7 +46,7 @@ class ChatLayoutUtils: NSObject {
             }
             if file.isWebm || file.isVideoSticker {
                 let dimensions = file.dimensions?.size
-                size = NSMakeSize(240, 240)
+                size = NSMakeSize(208, 208)
                 if file.isEmojiAnimatedSticker {
                     size = NSMakeSize(112, 112)
                 }
@@ -55,7 +55,7 @@ class ChatLayoutUtils: NSObject {
                 }
             } else if file.isAnimatedSticker && !webpIsFile {
                 let dimensions = file.dimensions?.size
-                size = NSMakeSize(240, 240)
+                size = NSMakeSize(208, 208)
                 if file.isEmojiAnimatedSticker {
                     size = NSMakeSize(112, 112)
                 }
@@ -63,10 +63,15 @@ class ChatLayoutUtils: NSObject {
                     size = dimensions.aspectFitted(size)
                 }
             } else if file.isStaticSticker && !webpIsFile {
-                if contentSize == NSZeroSize {
-                    return NSMakeSize(210, 210)
+                
+                var sz = NSMakeSize(208, 208)
+                if file.fileName == "telegram-animoji.tgs" {
+                    sz = NSMakeSize(112, 112)
                 }
-                size = contentSize.aspectFitted(NSMakeSize(210, 210))
+                if contentSize == NSZeroSize {
+                    return sz
+                }
+                size = contentSize.aspectFitted(sz)
                 size = NSMakeSize(max(size.width, 40), max(size.height, 40))
             } else if file.isInstantVideo {
                 size = NSMakeSize(280, 280)

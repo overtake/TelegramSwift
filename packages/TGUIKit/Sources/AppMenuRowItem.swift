@@ -154,7 +154,12 @@ open class AppMenuRowItem : AppMenuBasicItem {
     private var observation_t: NSKeyValueObservation?
     public init(_ initialSize: NSSize, item: ContextMenuItem, interaction: Interaction, presentation: AppMenu.Presentation) {
         self.item = item
-        self.text = TextViewLayout(.initialize(string: item.title, color: presentation.primaryColor(item), font: .medium(.text)))
+        let textColor = presentation.primaryColor(item)
+        let attr = parseMarkdownIntoAttributedString(item.title, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: textColor), bold: MarkdownAttributeSet(font: .bold(.text), textColor: textColor), link: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.accentIcon), linkAttribute: { contents in
+            return (NSAttributedString.Key.link.rawValue, contents)
+        }))
+        
+        self.text = TextViewLayout(attr)
         
         if item.keyEquivalent.isEmpty {
             keyEquivalentText = nil
@@ -163,13 +168,12 @@ open class AppMenuRowItem : AppMenuBasicItem {
         }
         super.init(initialSize, presentation: presentation, menuItem: item, interaction: interaction)
         self.menuItem = item
-        self.observation_i = item.observe(\.image) { [weak self] object, change in
+        self.observation_i = item.observe(\.image, options: .new, changeHandler: { [weak self] object, change in
             self?.redraw(animated: true)
-        }
-        self.observation_t = item.observe(\.title) { [weak self] object, change in
+        })
+        self.observation_t = item.observe(\.title, options: .new, changeHandler: { [weak self] object, change in
             self?.redraw(animated: true)
-        }
-        
+        })
     }
     
     open var imageSize: CGFloat {
@@ -182,8 +186,12 @@ open class AppMenuRowItem : AppMenuBasicItem {
     }
     
     public override func redraw(animated: Bool = false, options: NSTableView.AnimationOptions = .effectFade, presentAsNew: Bool = false) {
+        let textColor = presentation.primaryColor(item)
+        let attr = parseMarkdownIntoAttributedString(item.title, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .medium(.text), textColor: textColor), bold: MarkdownAttributeSet(font: .bold(.text), textColor: textColor), link: MarkdownAttributeSet(font: .bold(.text), textColor: presentation.colors.accentIcon), linkAttribute: { contents in
+            return (NSAttributedString.Key.link.rawValue, contents)
+        }))
         
-        self.text = TextViewLayout(.initialize(string: item.title, color: presentation.primaryColor(item), font: .medium(.text)))
+        self.text = TextViewLayout(attr)
         
         _ = makeSize(self.width)
         
@@ -213,7 +221,10 @@ open class AppMenuRowItem : AppMenuBasicItem {
     
     open override var effectiveSize: NSSize {
         var defaultSize = NSMakeSize(textSize, height)
+        
         if let _ = self.item.image {
+            defaultSize.width += imageSize + leftInset - 2
+        } else if imageSize != 18 {
             defaultSize.width += imageSize + leftInset - 2
         }
         
@@ -274,8 +285,16 @@ open class AppMenuRowView: AppMenuBasicItemView {
         containerView.layer?.cornerRadius = .cornerRadius
         containerView.scaleOnClick = true
         
+        let CheckWindow:() -> Bool = { [weak self] in
+            let wNumber = NSWindow.windowNumber(at: NSEvent.mouseLocation, belowWindowWithWindowNumber: 0)
+            guard wNumber == self?.window?.windowNumber else {
+                return false
+            }
+            return true
+        }
+        
         containerView.set(handler: { [weak self] _ in
-            guard let item = self?.item as? AppMenuRowItem else {
+            guard let item = self?.item as? AppMenuRowItem, CheckWindow() else {
                 return
             }
             item.interaction?.presentSubmenu(item.item)
@@ -283,6 +302,9 @@ open class AppMenuRowView: AppMenuBasicItemView {
         
         
         containerView.set(handler: { [weak self] _ in
+            if !CheckWindow() {
+                return
+            }
             self?.drawable?.updateState(.Hover)
             self?.updateState(.Hover)
             
@@ -295,27 +317,39 @@ open class AppMenuRowView: AppMenuBasicItemView {
             
         }, for: .Hover)
         containerView.set(handler: { [weak self] _ in
+            if !CheckWindow() {
+                return
+            }
             self?.drawable?.updateState(.Highlight)
             self?.updateState(.Highlight)
             self?.hoverDisposable.set(nil)
         }, for: .Highlight)
         containerView.set(handler: { [weak self] _ in
+            if !CheckWindow() {
+                return
+            }
             self?.drawable?.updateState(.Normal)
             self?.updateState(.Normal)
             self?.hoverDisposable.set(nil)
         }, for: .Normal)
         containerView.set(handler: { [weak self] _ in
+            if !CheckWindow() {
+                return
+            }
             self?.drawable?.updateState(.Other)
             self?.updateState(.Other)
             self?.hoverDisposable.set(nil)
         }, for: .Other)
            
         containerView.set(handler: { [weak self] _ in
+            if !CheckWindow() {
+                return
+            }
             guard let item = self?.item as? AppMenuRowItem else {
                 return
             }
             item.interaction?.action(item.item)
-        }, for: .Click)
+        }, for: .SingleClick)
         
         containerView.set(handler: { [weak self] _ in
             guard let item = self?.item as? AppMenuRowItem else {
@@ -428,6 +462,10 @@ open class AppMenuRowView: AppMenuBasicItemView {
         if let keyEquivalent = keyEquivalent {
             keyEquivalent.centerY(x: self.rightX - keyEquivalent.frame.width)
         }
+    }
+    open override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+      //  self.drawable?.updateState(.Hover)
     }
     
     open override func set(item: TableRowItem, animated: Bool = false) {

@@ -27,10 +27,10 @@ private enum ApplicationSpecificPreferencesKeyValues: Int32 {
     case passcodeSettings = 38
     case appConfiguration = 39
     case chatListSettings = 47
-    case recentEmoji = 48
     case voipDerivedState = 49
     case instantViewAppearance = 50
-    case downloadedPaths = 51
+    case recentEmoji = 52
+    case downloadedPaths = 53
 }
 
 public struct ApplicationSpecificPreferencesKeys {

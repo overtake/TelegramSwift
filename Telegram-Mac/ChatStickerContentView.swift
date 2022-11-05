@@ -53,7 +53,7 @@ class ChatStickerContentView: ChatMediaContentView {
     override func executeInteraction(_ isControl: Bool) {
         if let window = window as? Window {
             if let context = context, let peerId = parent?.id.peerId, let media = media as? TelegramMediaFile, let reference = media.stickerReference {
-                showModal(with:StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for:window)
+                showModal(with:StickerPackPreviewModalController(context, peerId: peerId, references: [ .stickers(reference)]), for:window)
             }
         }
     }
@@ -62,15 +62,20 @@ class ChatStickerContentView: ChatMediaContentView {
       
         let previous = self.parent
         
+        guard let file = media as? TelegramMediaFile else { return }
+
+        let updated = self.media != nil ? !file.isSemanticallyEqual(to: self.media!) : true
+
+        
         super.update(with: media, size: size, context: context, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
-        if let file = media as? TelegramMediaFile {
+        if let file = media as? TelegramMediaFile, updated {
             
             let reference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : stickerPackFileReference(file)
             
             let dimensions =  file.dimensions?.size.aspectFitted(size) ?? size
             
-            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets())
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: size, boundingSize: size, intrinsicInsets: NSEdgeInsets(), mirror: parameters?.mirror ?? false)
             
             self.image.animatesAlphaOnFirstTransition = false
            

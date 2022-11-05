@@ -124,7 +124,7 @@ class JoinLinkPreviewModalController: ModalViewController {
     private let context:AccountContext
     private let join:ExternalJoiningChatState
     private let joinhash:String
-    private let interaction:(PeerId?)->Void
+    private let interaction:(Peer)->Void
     override func viewDidLoad() {
         super.viewDidLoad()
         switch join {
@@ -145,7 +145,7 @@ class JoinLinkPreviewModalController: ModalViewController {
         return JoinLinkPreviewView.self
     }
     
-    init(_ context: AccountContext, hash:String, join:ExternalJoiningChatState, interaction:@escaping(PeerId?)->Void) {
+    init(_ context: AccountContext, hash:String, join:ExternalJoiningChatState, interaction:@escaping(Peer)->Void) {
         self.context = context
         self.join = join
         self.joinhash = hash
@@ -168,9 +168,11 @@ class JoinLinkPreviewModalController: ModalViewController {
         let context = self.context
         return ModalInteractions(acceptTitle: strings().joinLinkJoin, accept: { [weak self] in
             if let strongSelf = self, let window = strongSelf.window {
-                _ = showModalProgress(signal: context.engine.peers.joinChatInteractively(with: strongSelf.joinhash), for: window).start(next: { [weak strongSelf] peerId in
-                    strongSelf?.interaction(peerId)
-                    self?.close()
+                _ = showModalProgress(signal: context.engine.peers.joinChatInteractively(with: strongSelf.joinhash), for: window).start(next: { [weak strongSelf] peer in
+                    if let peer = peer?._asPeer() {
+                        strongSelf?.interaction(peer)
+                    }
+                    strongSelf?.close()
                 }, error: { error in
                     let text: String
                     switch error {

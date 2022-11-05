@@ -74,9 +74,7 @@ private final class BlurModalView : NSVisualEffectView {
         self.wantsLayer = true
         self.layer?.cornerRadius = 10.0
         self.autoresizingMask = []
-//        self.backgroundColor = .blackTransparent
-//        self.autoresizesSubviews = false
-        self.material = .ultraDark
+        self.material = .dark
         self.blendingMode = .withinWindow
         self.state = .active
     }
@@ -132,7 +130,7 @@ class SaveModalController : ModalViewController {
     }
     
     override func viewClass() -> AnyClass {
-        if self.shouldBlur {
+        if false {
             return BlurModalView.self
         } else {
             return SaveModalView.self

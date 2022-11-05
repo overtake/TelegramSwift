@@ -69,6 +69,9 @@ final class VideoMessageCorner : View {
 
 class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
 
+    private var transcribeControl: VoiceTranscriptionControl?
+
+    
     private let stateThumbView = ImageView()
     private var player:GIFPlayerView = GIFPlayerView()
     private var progressView:RadialProgressView?
@@ -246,7 +249,23 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
         playingProgressView.frame = NSMakeRect(1.5, 1.5, bounds.width - 3, bounds.height - 3)
         progressView?.center()
         stateThumbView.centerX(y: 10)
-        durationView.setFrameOrigin(0, frame.height - durationView.frame.height)
+        
+        if let control = transcribeControl, let presentation = self.parameters?.presentation {
+            if presentation.isBubble {
+                if presentation.isIncoming {
+                    control.setFrameOrigin(NSMakePoint(player.frame.maxX - control.frame.width, player.frame.maxY - control.frame.height))
+                    durationView.setFrameOrigin(0, frame.height - durationView.frame.height)
+                } else {
+                    control.setFrameOrigin(NSMakePoint(0, player.frame.maxY - control.frame.height))
+                    durationView.setFrameOrigin(control.frame.maxX + 2, frame.height - durationView.frame.height)
+                }
+            } else {
+                control.setFrameOrigin(NSMakePoint(player.frame.maxX - control.frame.width, player.frame.maxY - control.frame.height))
+                durationView.setFrameOrigin(0, frame.height - durationView.frame.height)
+            }
+        } else {
+            durationView.setFrameOrigin(0, frame.height - durationView.frame.height)
+        }
     }
     
     
@@ -305,8 +324,10 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
         if let media = media as? TelegramMediaFile {
             if let parameters = parameters as? ChatMediaVideoMessageLayoutParameters {
                 durationView.updateText(String.durationTransformed(elapsed: parameters.duration), maxWidth: 50, status: nil, isStreamable: false, isUnread: !isIncomingConsumed, animated: animated, isVideoMessage: true)
+                fillTranscribedAudio(parameters.transcribeData, parameters: parameters, animated: animated)
             }
             
+
             
             if mediaUpdated {
                 
@@ -398,6 +419,53 @@ class ChatVideoMessageContentView: ChatMediaContentView, APDelegate {
                                 
             }
             
+        }
+    }
+    
+    
+    func fillTranscribedAudio(_ data:ChatMediaVoiceLayoutParameters.TranscribeData?, parameters: ChatMediaVideoMessageLayoutParameters, animated: Bool) -> Void {
+        if let data = data {
+            var removeTransribeControl = true
+            let controlState: VoiceTranscriptionControl.TranscriptionState?
+            switch data.state {
+            case .possible:
+                controlState = .possible(false)
+            case let .state(inner):
+                switch inner {
+                case .collapsed:
+                    controlState = .collapsed(false)
+                case .revealed:
+                    controlState = .expanded(data.isPending)
+                case .loading:
+                    controlState = .possible(true)
+                }
+            }
+            if let controlState = controlState {
+                
+                removeTransribeControl = false
+                
+                let control: VoiceTranscriptionControl
+                if let view = self.transcribeControl {
+                    control = view
+                } else {
+                    control = VoiceTranscriptionControl(frame: NSMakeRect(0, 0, 25, 25))
+                    addSubview(control)
+                    control.scaleOnClick = true
+                    self.transcribeControl = control
+                    
+                    control.set(handler: { [weak self] _ in
+                        if let parameters = self?.parameters as? ChatMediaVideoMessageLayoutParameters {
+                            parameters.transcribe()
+                        }
+                    }, for: .Click)
+                }
+                control.update(state: controlState, color: data.backgroundColor, activityBackground: data.fontColor, blurBackground: parameters.presentation.isBubble ? theme.blurServiceColor : nil, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
+            }
+            
+            if removeTransribeControl, let view = transcribeControl {
+                self.transcribeControl = nil
+                performSubviewRemoval(view, animated: animated)
+            }
         }
     }
     

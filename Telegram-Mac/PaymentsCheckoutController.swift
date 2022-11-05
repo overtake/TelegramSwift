@@ -11,13 +11,59 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
+import CurrencyFormat
 import Postbox
 
 enum PaymentProvider : Equatable {
     case stripe
     case smartglocal
 }
+
+
+enum BotCheckoutPaymentMethod: Equatable {
+    case savedCredentials(BotPaymentSavedCredentials)
+    case webToken(BotCheckoutPaymentWebToken)
+    case other(BotPaymentMethod)
+    
+    var title: String {
+        switch self {
+            case let .savedCredentials(credentials):
+                switch credentials {
+                    case let .card(_, title):
+                        return title
+                }
+            case let .webToken(token):
+                return token.title
+            case let .other(method):
+                return method.title
+        }
+    }
+}
+
+
+
+
+
+private func availablePaymentMethods(form: BotPaymentForm, current: BotCheckoutPaymentMethod?) -> [BotCheckoutPaymentMethod] {
+    var methods: [BotCheckoutPaymentMethod] = []
+    for savedCredentials in form.savedCredentials {
+        if !methods.contains(.savedCredentials(savedCredentials)) {
+            methods.append(.savedCredentials(savedCredentials))
+        }
+    }
+    
+    if !form.additionalPaymentMethods.isEmpty {
+        methods.append(contentsOf: form.additionalPaymentMethods.map { .other($0) })
+    }
+    if let current = current {
+        if !methods.contains(current) {
+            methods.insert(current, at: 0)
+        }
+    }
+    return methods
+}
+
+
 
 func parseRequestedPaymentMethod(paymentForm: BotPaymentForm?) -> (String, PaymentsPaymentMethodAdditionalFields, PaymentProvider)? {
         
@@ -93,26 +139,6 @@ struct BotCheckoutPaymentWebToken: Equatable {
     var saveOnServer: Bool
 }
 
-enum BotCheckoutPaymentMethod: Equatable {
-    case savedCredentials(BotPaymentSavedCredentials)
-    case webToken(BotCheckoutPaymentWebToken)
-    case applePay
-    
-    var title: String {
-        switch self {
-            case let .savedCredentials(credentials):
-                switch credentials {
-                    case let .card(_, title):
-                        return title
-                }
-            case let .webToken(token):
-                return token.title
-            case .applePay:
-                return "Apple Pay"
-        }
-    }
-}
-
 
 private final class Arguments {
     let context: AccountContext
@@ -121,13 +147,15 @@ private final class Arguments {
     let openPaymentMethod:()->Void
     let selectTip:(Int64?)->Void
     let pay:(TemporaryTwoStepPasswordToken?)->Void
-    init(context: AccountContext, openForm:@escaping(PaymentsShippingInfoFocus?)->Void, openShippingMethod:@escaping()->Void, openPaymentMethod:@escaping()->Void, pay:@escaping(TemporaryTwoStepPasswordToken?)->Void, selectTip:@escaping(Int64?)->Void) {
+    let toggleRecurrentAccept:()->Void
+    init(context: AccountContext, openForm:@escaping(PaymentsShippingInfoFocus?)->Void, openShippingMethod:@escaping()->Void, openPaymentMethod:@escaping()->Void, pay:@escaping(TemporaryTwoStepPasswordToken?)->Void, selectTip:@escaping(Int64?)->Void, toggleRecurrentAccept:@escaping()->Void) {
         self.context = context
         self.openForm = openForm
         self.openShippingMethod = openShippingMethod
         self.openPaymentMethod = openPaymentMethod
         self.pay = pay
         self.selectTip = selectTip
+        self.toggleRecurrentAccept = toggleRecurrentAccept
     }
 }
 
@@ -136,9 +164,15 @@ enum PaymentViewMode {
     case invoice
 }
 
+extension TelegramMediaInvoice : Equatable {
+    public static func == (lhs: TelegramMediaInvoice, rhs: TelegramMediaInvoice) -> Bool {
+        return lhs.id == rhs.id
+    }
+}
+
 private struct State : Equatable {
     let mode: PaymentViewMode
-    var message: Message
+    var invoice: TelegramMediaInvoice
     var form: BotPaymentForm?
     var botPeer: PeerEquatable?
     var validatedInfo: BotPaymentValidatedFormInfo?
@@ -146,6 +180,7 @@ private struct State : Equatable {
     var shippingOptionId: BotPaymentShippingOption?
     var paymentMethod: BotCheckoutPaymentMethod?
     var currentTip: Int64?
+    var recurrentAccepted: Bool?
     var unfilledInfo: PaymentsShippingInfoFocus? {
         if let form = form {
             if form.invoice.requestedFields.contains(.shippingAddress) {
@@ -185,6 +220,8 @@ private let _id_checkout_flex_shipping = InputDataIdentifier("_id_checkout_flex_
 private let _id_checkout_phone_number = InputDataIdentifier("_id_checkout_phone_number")
 private let _id_checkout_email = InputDataIdentifier("_id_checkout_email")
 
+private let _id_recurrent_info = InputDataIdentifier("_id_checkout_email")
+
 private let _id_tips = InputDataIdentifier("_id_tips")
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
@@ -198,7 +235,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
   
     
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_checkout_preview, equatable: InputDataEquatable(state.botPeer), comparable: nil, item: { initialSize, stableId in
-        return PaymentsCheckoutPreviewRowItem(initialSize, stableId: stableId, context: arguments.context, message: state.message, botPeer: state.botPeer?.peer, viewType: .singleItem)
+        return PaymentsCheckoutPreviewRowItem(initialSize, stableId: stableId, context: arguments.context, invoice: state.invoice, botPeer: state.botPeer?.peer, viewType: .singleItem)
     }))
     index += 1
     
@@ -356,6 +393,16 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             })))
             index += 1
         }
+        
+        if let info = state.form?.invoice.recurrentInfo, let accept = state.recurrentAccepted {
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+            
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_recurrent_info, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+                return PaymentsCheckoutRecurrentRowItem(initialSize, stableId: stableId, termsUrl: info.termsUrl, botName: state.botPeer?.peer.displayTitle ?? "", accept: accept, toggle: arguments.toggleRecurrentAccept)
+            }))
+            index += 1
+        }
     
     } else {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_checkout_loading, equatable: nil, comparable: nil, item: { initialSize, stableId in
@@ -372,24 +419,65 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func PaymentsCheckoutController(context: AccountContext, message: Message) -> InputDataModalController {
+enum PaymentCheckoutCompletionStatus : String {
+    case paid
+    case cancelled
+    case failed
+}
 
+func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoiceSource, invoice: TelegramMediaInvoice, completion:((PaymentCheckoutCompletionStatus)->Void)? = nil) -> InputDataModalController {
+
+    var completion = completion
+    
+    let invokeCompletion:(PaymentCheckoutCompletionStatus)->Void = { value in
+        completion?(value)
+        completion = nil
+    }
+    
     var close:(()->Void)? = nil
-    let messageId = message.id
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(mode: .invoice, message: message, savedInfo: BotPaymentRequestedInfo(name: nil, phone: nil, email: nil, shippingAddress: nil))
+    let initialState = State(mode: .invoice, invoice: invoice, savedInfo: BotPaymentRequestedInfo(name: nil, phone: nil, email: nil, shippingAddress: nil))
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
     }
+    
+    let addPaymentMethod:(String, BotPaymentForm)->Void = { url, paymentForm in
+        showModal(with: PaymentWebInteractionController(context: context, url: url, intent: .addPaymentMethod({ token in
+           
+            let canSave = paymentForm.canSaveCredentials && !paymentForm.passwordMissing
+            if canSave {
+                confirm(for: context.window, information: strings().checkoutInfoSaveInfoHelp, okTitle: strings().modalYes, cancelTitle: strings().modalNotNow, successHandler: { _ in
+                    updateState { current in
+                        var current = current
+                        current.paymentMethod = .webToken(.init(title: token.title, data: token.data, saveOnServer: true))
+                        return current
+                    }
+                }, cancelHandler: {
+                    updateState { current in
+                        var current = current
+                        current.paymentMethod = .webToken(token)
+                        return current
+                    }
+                })
+            } else {
+                updateState { current in
+                    var current = current
+                    current.paymentMethod = .webToken(token)
+                    return current
+                }
+            }
+
+        })), for: context.window)
+    }
 
     let arguments = Arguments(context: context, openForm: { focus in
         let state = stateValue.with({ $0 })
         if let form = state.form {
-            showModal(with: PaymentsShippingInfoController(context: context, invoice: form.invoice, messageId: messageId, formInfo: state.savedInfo, focus: focus, formInfoUpdated: { savedInfo, validatedInfo in
+            showModal(with: PaymentsShippingInfoController(context: context, invoice: form.invoice, source: source, formInfo: state.savedInfo, focus: focus, formInfoUpdated: { savedInfo, validatedInfo in
                 updateState { current in
                     var current = current
                     current.savedInfo = savedInfo
@@ -412,55 +500,44 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
     }, openPaymentMethod: {
         if let form = stateValue.with({ $0.form }), let value = parseRequestedPaymentMethod(paymentForm: form) {
             let addPayment:()->Void = {
-                showModal(with: PaymentsPaymentMethodController(context: context, fields: value.1, publishableKey: value.0, passwordMissing: form.passwordMissing, isTesting: form.invoice.isTest, provider: value.2, completion: { method in
-                    updateState { current in
-                        var current = current
-                        current.paymentMethod = method
-                        return current
-                    }
-                }), for: context.window)
+                
+                
+                let openNewCard:()->Void = {
+                    showModal(with: PaymentsPaymentMethodController(context: context, fields: value.1, publishableKey: value.0, passwordMissing: form.passwordMissing, isTesting: form.invoice.isTest, provider: value.2, completion: { method in
+                        updateState { current in
+                            var current = current
+                            current.paymentMethod = method
+                            return current
+                        }
+                    }), for: context.window)
+                }
+                
+                let methods = availablePaymentMethods(form: form, current: nil)
+                if methods.isEmpty {
+                    openNewCard()
+                } else {
+                    showModal(with: PaymentMethodController(context: context, methods: methods, newCard: openNewCard, newByUrl: { url in
+                        if let paymentForm = stateValue.with({ $0.form }) {
+                            addPaymentMethod(url, paymentForm)
+                        }
+                    }), for: context.window)
+                }
             }
             
-            if let savedCredentials = form.savedCredentials {
-                showModal(with: PamentsSelectMethodController(context: context, cards: [savedCredentials], form: form, select: { selected in
+            if !form.savedCredentials.isEmpty {
+                showModal(with: PamentsSelectMethodController(context: context, cards: form.savedCredentials, form: form, select: { selected in
                     updateState { current in
                         var current = current
                         current.paymentMethod = .savedCredentials(selected)
                         return current
                     }
                 }, addNew: addPayment), for: context.window)
-               
             } else {
                 addPayment()
             }
             
         } else if let paymentForm = stateValue.with({ $0.form }) {
-            showModal(with: PaymentWebInteractionController(context: context, url: paymentForm.url, intent: .addPaymentMethod({ token in
-               
-                let canSave = paymentForm.canSaveCredentials && !paymentForm.passwordMissing
-                if canSave {
-                    confirm(for: context.window, information: strings().checkoutInfoSaveInfoHelp, okTitle: strings().modalYes, cancelTitle: strings().modalNotNow, successHandler: { _ in
-                        updateState { current in
-                            var current = current
-                            current.paymentMethod = .webToken(.init(title: token.title, data: token.data, saveOnServer: true))
-                            return current
-                        }
-                    }, cancelHandler: {
-                        updateState { current in
-                            var current = current
-                            current.paymentMethod = .webToken(token)
-                            return current
-                        }
-                    })
-                } else {
-                    updateState { current in
-                        var current = current
-                        current.paymentMethod = .webToken(token)
-                        return current
-                    }
-                }
-
-            })), for: context.window)
+            addPaymentMethod(paymentForm.url, paymentForm)
         }
     }, pay: { savedCredentialsToken in
         guard let paymentMethod = stateValue.with ({ $0.paymentMethod }) else {
@@ -473,17 +550,18 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
             guard let form = state.form else {
                 return
             }
-            
+                        
             let pay:()->Void = {
-                let paySignal = context.engine.payments.sendBotPaymentForm(messageId: messageId, formId: form.id, validatedInfoId: state.validatedInfo?.id, shippingOptionId: state.shippingOptionId?.id, tipAmount: state.form?.invoice.tip != nil ? (state.currentTip ?? 0) : nil, credentials: credentials)
+                
+                let paySignal = context.engine.payments.sendBotPaymentForm(source: source, formId: form.id, validatedInfoId: state.validatedInfo?.id, shippingOptionId: state.shippingOptionId?.id, tipAmount: state.form?.invoice.tip != nil ? (state.currentTip ?? 0) : nil, credentials: credentials)
                 
                 _ = showModalProgress(signal: paySignal, for: context.window).start(next: { result in
                     
                     let success:(Bool)->Void = { value in
                         if value {
+                            invokeCompletion(.paid)
                             close?()
-                            let invoice = state.message.media.first as! TelegramMediaInvoice
-                            //currencyValue: currencyValue, itemTitle: invoice.title
+                            let invoice = state.invoice
                             let totalValue = currentTotalPrice(paymentForm: form, validatedFormInfo: state.validatedInfo, shippingOption: state.shippingOptionId)
                             
                             let total = formatCurrencyAmount(totalValue, currency: form.invoice.currency)
@@ -510,16 +588,16 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
                         text = strings().checkoutErrorPrecheckoutFailed
                     }
                     alert(for: context.window, info: text)
+                    invokeCompletion(.failed)
                     close?()
                 })
             }
             
-            let messageId = message.id
             let botPeer: Signal<Peer?, NoError> = context.account.postbox.transaction { transaction -> Peer? in
                 return transaction.getPeer(form.paymentBotId)
             }
 
-            let checkSignal = combineLatest(queue: .mainQueue(), ApplicationSpecificNotice.getBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: messageId.peerId), botPeer, context.account.postbox.loadedPeerWithId(form.providerId))
+            let checkSignal = combineLatest(queue: .mainQueue(), ApplicationSpecificNotice.getBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: form.paymentBotId), botPeer, context.account.postbox.loadedPeerWithId(form.providerId))
             
             let _ = checkSignal.start(next: { value, botPeer, providerPeer in
                 if let botPeer = botPeer {
@@ -528,7 +606,7 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
                     } else {
                         confirm(for: context.window, header: strings().paymentsWarninTitle, information: strings().paymentsWarningText(botPeer.compactDisplayTitle, providerPeer.compactDisplayTitle, botPeer.compactDisplayTitle, botPeer.compactDisplayTitle), successHandler: { _ in
                             pay()
-                            _ = ApplicationSpecificNotice.setBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: messageId.peerId).start()
+                            _ = ApplicationSpecificNotice.setBotPaymentLiability(accountManager: context.sharedContext.accountManager, peerId: botPeer.id).start()
                         })
                     }
                 }
@@ -585,6 +663,14 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
             }
             return current
         }
+    }, toggleRecurrentAccept: {
+        updateState { current in
+            var current = current
+            if let value = current.recurrentAccepted {
+                current.recurrentAccepted = !value
+            }
+            return current
+        }
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -603,10 +689,10 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
             ]
 
     
-    let formAndMaybeValidatedInfo = context.engine.payments.fetchBotPaymentForm(messageId: messageId, themeParams: themeParams)
+    let formAndMaybeValidatedInfo = context.engine.payments.fetchBotPaymentForm(source: source, themeParams: themeParams)
            |> mapToSignal { paymentForm -> Signal<(BotPaymentForm, BotPaymentValidatedFormInfo?), BotPaymentFormRequestError> in
                if let current = paymentForm.savedInfo {
-                return context.engine.payments.validateBotPaymentForm(saveInfo: true, messageId: messageId, formInfo: current)
+                   return context.engine.payments.validateBotPaymentForm(saveInfo: true, source: source, formInfo: current)
                        |> mapError { _ -> BotPaymentFormRequestError in
                            return .generic
                        }
@@ -636,18 +722,22 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
         updateState { current in
             var current = current
             current.form = form.0
+            if current.recurrentAccepted == nil, current.form?.invoice.recurrentInfo != nil {
+                current.recurrentAccepted = false
+            }
             current.botPeer = botPeer != nil ? PeerEquatable(botPeer!) : nil
             current.validatedInfo = form.1
             if let savedInfo = form.0.savedInfo {
                 current.savedInfo = savedInfo
             }
-            if let savedCredentials = form.0.savedCredentials {
+            if let savedCredentials = form.0.savedCredentials.first {
                 current.paymentMethod = .savedCredentials(savedCredentials)
             }
 
             return current
         }
     }, error: { error in
+        invokeCompletion(.failed)
         close?()
         switch error {
         case .generic:
@@ -681,6 +771,11 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
                 arguments.openPaymentMethod()
             }))
         }
+        if let recurrent = state.recurrentAccepted {
+            if !recurrent {
+                return .fail(.fields([_id_recurrent_info : .shake]))
+            }
+        }
         
         return .fail(.doSomething(next: { _ in
             arguments.pay(nil)
@@ -691,11 +786,15 @@ func PaymentsCheckoutController(context: AccountContext, message: Message) -> In
         _ = controller?.returnKeyAction()
     }, drawBorder: true, height: 50, singleButton: true)
     
-    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions)
+    let modalController = InputDataModalController(controller, modalInteractions: modalInteractions, closeHandler: { f in
+        f()
+        invokeCompletion(.cancelled)
+    })
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
         modalController?.close()
     })
+    
     
     close = { [weak modalController] in
         modalController?.modal?.close()

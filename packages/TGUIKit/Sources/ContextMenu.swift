@@ -74,7 +74,7 @@ open class ContextMenuItem : NSMenuItem {
         self.keyEquivalentValue = keyEquivalent
         super.init(title: title, action: nil, keyEquivalent: "")
         
-        self.title = title
+        self.title = title.prefixWithDots(cuttail ?? Int.max)
         self.action = #selector(click)
         self.target = self
         self.isEnabled = true
@@ -82,6 +82,10 @@ open class ContextMenuItem : NSMenuItem {
         if let state = state {
             self.state = state
         }
+    }
+    
+    open var cuttail: Int? {
+        return 30
     }
     
     public override var title: String {

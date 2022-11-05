@@ -100,7 +100,7 @@ class ChatMessageAccessoryView: Control {
         
         let animated = animated && self.isCompact != isCompact
         
-        let updatedText = TextViewLayout(.initialize(string: isStreamable ? text.components(separatedBy: ", ").joined(separator: "\n") : text, color: isVideoMessage ? theme.chatServiceItemTextColor : .white, font: .normal(10.0)), maximumNumberOfLines: isStreamable && !isCompact ? 2 : 1, truncationType: .end, alwaysStaticItems: true) //TextNode.layoutText(maybeNode: textNode, .initialize(string: isStreamable ? text.components(separatedBy: ", ").joined(separator: "\n") : text, color: isVideoMessage ? theme.chatServiceItemTextColor : .white, font: .normal(10.0)), nil, isStreamable && !isCompact ? 2 : 1, .end, NSMakeSize(maxWidth, 20), nil, false, .left)
+        let updatedText = TextViewLayout(.initialize(string: isStreamable && !isCompact ? text.components(separatedBy: ", ").joined(separator: "\n") : text, color: isVideoMessage ? theme.chatServiceItemTextColor : .white, font: .normal(10.0)), maximumNumberOfLines: isStreamable && !isCompact ? 2 : 1, truncationType: .end, alwaysStaticItems: true) //TextNode.layoutText(maybeNode: textNode, .initialize(string: isStreamable ? text.components(separatedBy: ", ").joined(separator: "\n") : text, color: isVideoMessage ? theme.chatServiceItemTextColor : .white, font: .normal(10.0)), nil, isStreamable && !isCompact ? 2 : 1, .end, NSMakeSize(maxWidth, 20), nil, false, .left)
         updatedText.measure(width: maxWidth)
         textView.update(updatedText)
         
@@ -130,11 +130,9 @@ class ChatMessageAccessoryView: Control {
             case .Remote:
                 progress.isHidden = true
                 download.isHidden = false
-                progress.state = .None
             case .Local:
                 progress.isHidden = true
                 download.isHidden = true
-                progress.state = .None
             case let .Fetching(_, progress), let .Paused(progress):
                 self.progress.state = !isCompact ? .Fetching(progress: progress, force: false) : .None
                 self.progress.isHidden = isCompact

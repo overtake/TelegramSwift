@@ -38,7 +38,7 @@ class GIFContainerView: Control {
     var associatedMessageId: MessageId? = nil
     private var fileReference: FileMediaReference?
 
-    
+
     override init() {
         
         
@@ -52,7 +52,7 @@ class GIFContainerView: Control {
         player.setVideoLayerGravity(.resizeAspectFill)
         set(handler: { [weak self] control in
             if let `self` = self, let window = self.window as? Window, let table = self.tableView, let context = self.context {
-                _ = startModalPreviewHandle(table, window: window, context: context)
+                startModalPreviewHandle(table, window: window, context: context)
             }
         }, for: .LongMouseDown)
         
@@ -170,10 +170,11 @@ class GIFContainerView: Control {
         
         let imageSize = viewSize.aspectFitted(NSMakeSize(size.width, size.height))
         let size = (fileReference.media.dimensions?.size ?? imageSize).aspectFilled(viewSize)
-        let arguments = TransformImageArguments(corners: ImageCorners(radius:2.0), imageSize: size, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
+        let arguments = TransformImageArguments(corners: ImageCorners(radius:0), imageSize: size, boundingSize: imageSize, intrinsicInsets: NSEdgeInsets())
         
         player.setSignal(signal: cachedMedia(media: fileReference.media, arguments: arguments, scale: backingScaleFactor), clearInstantly: updated)
         
+       
         if !player.isFullyLoaded {
             player.setSignal(iconSignal, cacheImage: { result in
                 cacheMedia(result, media: fileReference.media, arguments: arguments, scale: System.backingScale)
@@ -188,6 +189,7 @@ class GIFContainerView: Control {
         
         needsLayout = true
     }
+
     
     override func layout() {
         super.layout()
@@ -200,7 +202,7 @@ class GIFContainerView: Control {
         view.backgroundColor = .clear
         let layer:CALayer = CALayer()
         layer.frame = NSMakeRect(0, visibleRect.minY == 0 ? 0 :  player.visibleRect.height - player.frame.height, player.frame.width,  player.frame.height)
-        layer.contents = player.layer?.contents
+        layer.contents = player.layer?.contents ?? player.imageHolder
         layer.masksToBounds = true
         view.frame = player.visibleRect
         layer.shouldRasterize = true

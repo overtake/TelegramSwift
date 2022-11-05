@@ -10,7 +10,7 @@ import Cocoa
 
 open class HorizontalRowView: TableRowView {
 
-    private var container:View = View()
+    public let container: View = View()
     
     required public init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -25,6 +25,14 @@ open class HorizontalRowView: TableRowView {
     open override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item, animated: animated)
         container.backgroundColor = backdorColor
+        
+        let transiton: ContainedViewLayoutTransition
+        if animated {
+            transiton = .animated(duration: 0.2, curve: .easeOut)
+        } else {
+            transiton = .immediate
+        }
+        transiton.updateFrame(view: container, frame: NSMakeRect(item.width, 0, item.height, item.width))
     }
     
 

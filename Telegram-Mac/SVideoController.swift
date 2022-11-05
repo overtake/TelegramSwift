@@ -12,6 +12,7 @@ import TelegramCore
 
 import SwiftSignalKit
 import Postbox
+import RangeSet
 import IOKit.pwr_mgt
 
 extension MediaPlayerStatus {
@@ -151,10 +152,16 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     private func updateControlVisibility(_ isMouseUpOrDown: Bool = false) {
         updateIdleTimer()
         
+        
         if let rootView = genericView.superview?.superview {
             var hide = !genericView._mouseInside() && !rootView.isHidden && (NSEvent.pressedMouseButtons & (1 << 0)) == 0
             
            
+            if !hide, (NSEvent.pressedMouseButtons & (1 << 0)) != 0 {
+                hide = genericView.controlsStyle.isPip
+            }
+
+            
             if self.fullScreenWindow != nil && isMouseUpOrDown, !genericView.insideControls {
                 hide = true
                 if !self.isPaused {
@@ -232,11 +239,11 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             return .rejected
         }, with: self, for: .leftMouseUp, priority: .modal)
         
-        self.updateControls = SwiftSignalKit.Timer(timeout: 0.1, repeat: true, completion: { [weak self] in
-            self?.updateControlVisibility()
-        }, queue: .mainQueue())
-        
-        self.updateControls?.start()
+//        self.updateControls = SwiftSignalKit.Timer(timeout: 2.0, repeat: true, completion: { [weak self] in
+//            self?.updateControlVisibility()
+//        }, queue: .mainQueue())
+//
+//        self.updateControls?.start()
         
     }
     
@@ -345,7 +352,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         let size = reference.media.resource.size ?? 0
         
         let bufferingStatus = postbox.mediaBox.resourceRangesStatus(reference.media.resource)
-            |> map { ranges -> (IndexSet, Int) in
+            |> map { ranges -> (RangeSet<Int64>, Int64) in
                 return (ranges, size)
         } |> deliverOnMainQueue
         
@@ -460,9 +467,14 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
         if let screen = NSScreen.main {
             if let window = fullScreenWindow, let state = fullScreenRestoreState {
                 
+                var topInset: CGFloat = 0
+                
+                if #available(macOS 12.0, *) {
+                    topInset = screen.safeAreaInsets.top
+                }
                 
                 
-                window.setFrame(NSMakeRect(screen.frame.minX + state.rect.minX, screen.frame.minY + screen.frame.height - state.rect.maxY, state.rect.width, state.rect.height), display: true, animate: true)
+                window.setFrame(NSMakeRect(screen.frame.minX + state.rect.minX, screen.frame.minY + screen.frame.height - state.rect.maxY - topInset, state.rect.width, state.rect.height), display: true, animate: true)
                 window.orderOut(nil)
                 view.frame = state.rect
                 state.view.addSubview(view)

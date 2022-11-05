@@ -15,23 +15,33 @@ import Postbox
 
 private final class Arguments {
     let context: AccountContext
-    let toggleReaction:([String])->Void
-    let toggleValueReaction:(String)->Void
-    let updateQuick:(String)->Void
-    init(context: AccountContext, toggleReaction:@escaping([String])->Void, updateQuick:@escaping(String)->Void, toggleValueReaction: @escaping(String)->Void) {
+    let toggleReaction:([MessageReaction.Reaction])->Void
+    let toggleValueReaction:(MessageReaction.Reaction)->Void
+    let updateQuick:(MessageReaction.Reaction)->Void
+    let toggleChatReactions:(State.ChatReactions)->Void
+    init(context: AccountContext, toggleReaction:@escaping([MessageReaction.Reaction])->Void, updateQuick:@escaping(MessageReaction.Reaction)->Void, toggleValueReaction: @escaping(MessageReaction.Reaction)->Void, toggleChatReactions:@escaping(State.ChatReactions)->Void) {
         self.context = context
         self.toggleReaction = toggleReaction
         self.updateQuick = updateQuick
         self.toggleValueReaction = toggleValueReaction
+        self.toggleChatReactions = toggleChatReactions
     }
 }
 
 private struct State : Equatable {
+    
+    enum ChatReactions : Equatable {
+        case all
+        case some
+        case none
+    }
+    
     let mode: ReactionSettingsMode
-    var quick: String?
-    var reactions: [String]
+    var quick: MessageReaction.Reaction?
+    var reactions: [MessageReaction.Reaction]
     var availableReactions: AvailableReactions?
-    var thumbs:[String: CGImage] = [:]
+    var chatReactions: ChatReactions = .all
+    var thumbs:[MessageReaction.Reaction: CGImage] = [:]
 }
 
 private let _id_allow: InputDataIdentifier = InputDataIdentifier("_id_allow")
@@ -48,67 +58,95 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     
     switch state.mode {
     case .chat:
-        let all = state.availableReactions?.enabled.map { $0.value } ?? []
-      
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_allow, data: .init(name: strings().reactionSettingsAllow, color: theme.colors.text, type: .switchable(!state.reactions.isEmpty), viewType: .singleItem, action: {
-            arguments.toggleReaction(state.reactions.isEmpty ? all : [])
-        })))
-        index += 1
+        let all = state.availableReactions?.enabled.filter { value in
+            return !value.isPremium || arguments.context.isPremium
+        }.map { $0.value } ?? []
+        
+        
+        if !state.mode.isGroup {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_allow, data: .init(name: strings().reactionSettingsAllow, color: theme.colors.text, type: .switchable(!state.reactions.isEmpty), viewType: .singleItem, action: {
+                arguments.toggleReaction(state.reactions.isEmpty ? all : [])
+            })))
+            index += 1
+        } else {
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("all"), data: .init(name: strings().reactionSettingsGroupAll, color: theme.colors.text, type: .selectable(state.chatReactions == .all), viewType: .firstItem, action: {
+                arguments.toggleChatReactions(.all)
+            })))
+            index += 1
+            
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("some"), data: .init(name: strings().reactionSettingsGroupSome, color: theme.colors.text, type: .selectable(state.chatReactions == .some), viewType: .innerItem, action: {
+                arguments.toggleChatReactions(.some)
+            })))
+            index += 1
+            
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("no"), data: .init(name: strings().reactionSettingsGroupNone, color: theme.colors.text, type: .selectable(state.chatReactions == .none), viewType: .lastItem, action: {
+                arguments.toggleChatReactions(.none)
+            })))
+            index += 1
+        }
+        
         
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(state.mode.isGroup ? strings().reactionSettingsAllowGroupInfo : strings().reactionSettingsAllowChannelInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
+        
     default:
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().reactionSettingsQuickInfo), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
         index += 1
     }
     
     if let available = state.availableReactions {
-        for (i, reaction) in available.enabled.enumerated() {
-            let type: GeneralInteractedType
-            switch state.mode {
-            case .quick:
-                if state.quick != nil {
-                    type = .selectable(state.quick == reaction.value)
-                } else {
-                    type = .selectable(i == 0)
-                }
-            case .chat:
-                 type = .switchable(state.reactions.contains(reaction.value))
-            }
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init(reaction.value), data: .init(name: reaction.title, color: theme.colors.text, icon: state.thumbs[reaction.value], type: type, viewType: bestGeneralViewType(available.enabled, for: i), action: {
+        var accept = true
+        if state.mode.isGroup, state.chatReactions != .some {
+            accept = false
+        }
+        if accept {
+            for (i, reaction) in available.enabled.enumerated() {
+                let type: GeneralInteractedType
                 switch state.mode {
                 case .quick:
-                    arguments.updateQuick(reaction.value)
+                    if state.quick != nil {
+                        type = .selectable(state.quick == reaction.value)
+                    } else {
+                        type = .selectable(i == 0)
+                    }
                 case .chat:
-                    arguments.toggleValueReaction(reaction.value)
+                     type = .switchable(state.reactions.contains(reaction.value))
                 }
-            })))
-            index += 1
+                entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("_id_\(reaction.value.hashValue)"), data: .init(name: reaction.title, color: theme.colors.text, icon: state.thumbs[reaction.value], type: type, viewType: bestGeneralViewType(available.enabled, for: i), action: {
+                    switch state.mode {
+                    case .quick:
+                        arguments.updateQuick(reaction.value)
+                    case .chat:
+                        arguments.toggleValueReaction(reaction.value)
+                    }
+                })))
+                index += 1
+            }
         }
     }
     
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    switch state.mode {
-    case .quick:
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("legacy"), data: .init(name: strings().reactionSettingsLegacy, color: theme.colors.text, type: .switchable(FastSettings.legacyReactions), viewType: .singleItem, action: {
-            FastSettings.toggleReactionMode(!FastSettings.legacyReactions)
-        })))
-        index += 1
-        
-        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().reactionSettingsLegacyInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
-        index += 1
-
-        entries.append(.sectionId(sectionId, type: .normal))
-        sectionId += 1
-    default:
-        break
-    }
-    
+//    switch state.mode {
+//    case .quick:
+//        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("legacy"), data: .init(name: strings().reactionSettingsLegacy, color: theme.colors.text, type: .switchable(FastSettings.legacyReactions), viewType: .singleItem, action: {
+//            FastSettings.toggleReactionMode(!FastSettings.legacyReactions)
+//        })))
+//        index += 1
+//        
+//        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().reactionSettingsLegacyInfo), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+//        index += 1
+//
+//        entries.append(.sectionId(sectionId, type: .normal))
+//        sectionId += 1
+//    default:
+//        break
+//    }
+//    
     return entries
 }
 
@@ -126,16 +164,33 @@ enum ReactionSettingsMode : Equatable {
     }
 }
 
-func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowedReactions: [String]?, availableReactions: AvailableReactions?, mode: ReactionSettingsMode) -> InputDataController {
+func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?, mode: ReactionSettingsMode) -> InputDataController {
 
     let actionsDisposable = DisposableSet()
     let update = MetaDisposable()
     actionsDisposable.add(update)
-    let allowed = allowedReactions ?? availableReactions?.reactions.map { $0.value } ?? []
+    let allowed:[MessageReaction.Reaction]
+    let chatReactions: State.ChatReactions
+    if let allowedReactions = allowedReactions {
+        switch allowedReactions {
+        case let .limited(reactions):
+            allowed = reactions
+            chatReactions = .some
+        case .all:
+            allowed = availableReactions?.enabled.map { $0.value } ?? []
+            chatReactions = .all
+        case .empty:
+            allowed = []
+            chatReactions = .none
+        }
+    } else {
+        allowed = availableReactions?.enabled.map { $0.value } ?? []
+        chatReactions = .all
+    }
     
-    let initialState = State(mode: mode, reactions: allowed, availableReactions: availableReactions)
+    let initialState = State(mode: mode, reactions: allowed, availableReactions: availableReactions, chatReactions: chatReactions)
     
-    let statePromise: ValuePromise<State> = ValuePromise(initialState, ignoreRepeated: true)
+    let statePromise: ValuePromise<State> = ValuePromise(ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
     let updateState: ((State) -> State) -> Void = { f in
         statePromise.set(stateValue.modify (f))
@@ -201,8 +256,31 @@ func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowe
             current.reactions = list
             return current
         }
+    }, toggleChatReactions: { value in
+        updateState { current in
+            var current = current
+            current.chatReactions = value
+            if value == .some {
+                var list = current.reactions
+                list = list.filter({ reaction in
+                    if let available = current.availableReactions {
+                        if available.enabled.count <= 2 {
+                            return false
+                        }
+                        if reaction == available.enabled[0].value {
+                            return true
+                        }
+                        if reaction == available.enabled[1].value {
+                            return true
+                        }
+                    }
+                    return false
+                })
+                current.reactions = list
+            }
+            return current
+        }
     })
-    
     
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -215,7 +293,31 @@ func ReactionsSettingsController(context: AccountContext, peerId: PeerId, allowe
         actionsDisposable.dispose()
         switch mode {
         case .chat:
-            _ = context.engine.peers.updatePeerAllowedReactions(peerId: peerId, allowedReactions: stateValue.with { $0.reactions }).start()
+            let updated: PeerAllowedReactions
+            let state = stateValue.with { $0 }
+            if state.mode.isGroup {
+                switch state.chatReactions {
+                case .none:
+                    updated = .empty
+                case .all:
+                    updated = .all
+                case .some:
+                    updated = .limited(state.reactions)
+                }
+            } else {
+                let selected = state.reactions.map { value in
+                    return value
+                }
+                if selected.isEmpty {
+                    updated = .empty
+                } else if selected.count == state.availableReactions?.enabled.count {
+                    updated = .all
+                } else {
+                    updated = .limited(selected)
+                }
+            }
+            
+            _ = context.engine.peers.updatePeerAllowedReactions(peerId: peerId, allowedReactions: updated).start()
         default:
             break
         }

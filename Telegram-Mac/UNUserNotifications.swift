@@ -100,18 +100,26 @@ class UNUserNotifications : NSObject {
                     if sourceMessageId.peerId.namespace != Namespaces.Peer.CloudUser {
                         replyToMessageId = sourceMessageId
                     }
-                    _ = enqueueMessages(account: account, peerId: sourceMessageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], mediaReference: nil, replyToMessageId: replyToMessageId, localGroupingKey: nil, correlationId: nil)]).start()
+                    _ = enqueueMessages(account: account, peerId: sourceMessageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: replyToMessageId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
 
                 } else {
                     var replyToMessageId:MessageId?
                     if messageId.peerId.namespace != Namespaces.Peer.CloudUser {
                         replyToMessageId = messageId
                     }
-                    _ = enqueueMessages(account: account, peerId: messageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], mediaReference: nil, replyToMessageId: replyToMessageId, localGroupingKey: nil, correlationId: nil)]).start()
+                    _ = enqueueMessages(account: account, peerId: messageId.peerId, messages: [EnqueueMessage.message(text: text, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: replyToMessageId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
                 }
             } else {
-                if let threadId = getNotificationMessageId(userInfo: userInfo, for: "thread"), let fromId = getNotificationMessageId(userInfo: userInfo, for: "source") {
-                    self.bindings.navigateToThread(account, threadId, fromId)
+                let fromId = getNotificationMessageId(userInfo: userInfo, for: "source")
+                let threadData: MessageHistoryThreadData?
+                if let data = userInfo["thread_data"] as? Data {
+                    threadData = CodableEntry(data: data).get(MessageHistoryThreadData.self)
+                } else {
+                    threadData = nil
+                }
+                let isThread = userInfo["is_thread"] as? Bool
+                if let threadId = getNotificationMessageId(userInfo: userInfo, for: "thread"), isThread == true {
+                    self.bindings.navigateToThread(account, threadId, fromId, threadData)
                 } else {
                     self.bindings.navigateToChat(account, messageId.peerId)
                 }
@@ -244,8 +252,6 @@ final class UNUserNotificationsNew : UNUserNotifications, UNUserNotificationCent
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
 
         completionHandler([.alert, .sound])
-        var bp = 0
-        bp += 1
     }
     
     

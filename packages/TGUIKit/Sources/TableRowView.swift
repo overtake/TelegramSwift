@@ -45,7 +45,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     open func viewDidUpdatedDynamicContent() {
-        
+        self._updateAnimatableContent()
     }
     
     
@@ -245,11 +245,15 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         contextMenu = nil
         
         if let item = item {
-            menuDisposable.set((item.menuItems(in: convertWindowPointToContent(event.locationInWindow)) |> deliverOnMainQueue |> take(1)).start(next: { [weak self, weak item] items in
+            let items = item.menuItems(in: convertWindowPointToContent(event.locationInWindow))
+                         |> deliverOnMainQueue
+                         |> take(1)
+            menuDisposable.set(combineLatest(queue: .mainQueue(), items, item.menuAdditionView).start(next: { [weak self, weak item] items, topWindow in
                 if let strongSelf = self, let item = item {
                     let menu = ContextMenu(presentation: item.menuPresentation, isLegacy: item.isLegacyMenu)
 
-                    menu.topWindow = item.menuAdditionView
+                    
+                    menu.topWindow = topWindow
                     
                     menu.onShow = { [weak strongSelf] menu in
                         strongSelf?.onShowContextMenu()
@@ -316,27 +320,17 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     open override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
-        guard #available(OSX 10.12, *) else {
-            needsLayout = true
-            return
-        }
     }
     
-    open override func setFrameOrigin(_ newOrigin: NSPoint) {
-        super.setFrameOrigin(newOrigin)
-        guard #available(OSX 10.12, *) else {
-            needsLayout = true
-            return
-        }
+    override public static var isCompatibleWithResponsiveScrolling: Bool {
+        return true
     }
+    
     
     open override func viewDidMoveToSuperview() {
-        if superview != nil {
-            guard #available(OSX 10.12, *) else {
-                needsLayout = true
-                return
-            }
-        }
+        super.viewDidMoveToSuperview()
+        _updateListeners()
+        _updateAnimatableContent()
     }
     
     open override func layout() {
@@ -370,6 +364,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     deinit {
         longDisposable.dispose()
         menuDisposable.dispose()
+        removeNotificationListeners()
     }
     
     open var mouseInsideField: Bool {
@@ -393,6 +388,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     open func set(item:TableRowItem, animated:Bool = false) -> Void {
         self.item = item;
         updateColors()
+        self._updateAnimatableContent()
     }
     
     open func focusAnimation(_ innerId: AnyHashable?) {
@@ -449,6 +445,43 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     
     open func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         
+    }
+    
+    @objc private func _updateAnimatableContent() {
+        DispatchQueue.main.async { [weak self] in
+            self?.updateAnimatableContent()
+        }
+    }
+    
+    open func updateAnimatableContent() {
+        
+    }
+    
+    
+    
+    open override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        _updateListeners()
+        _updateAnimatableContent()
+    }
+    
+
+    private func _updateListeners() {
+        let center = NotificationCenter.default
+        if let window = window {
+            center.removeObserver(self)
+            center.addObserver(self, selector: #selector(_updateAnimatableContent), name: NSWindow.didBecomeKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(_updateAnimatableContent), name: NSWindow.didResignKeyNotification, object: window)
+            center.addObserver(self, selector: #selector(_updateAnimatableContent), name: NSView.boundsDidChangeNotification, object: self.enclosingScrollView?.contentView)
+            center.addObserver(self, selector: #selector(_updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self.enclosingScrollView?.documentView)
+            center.addObserver(self, selector: #selector(_updateAnimatableContent), name: NSView.frameDidChangeNotification, object: self)
+        } else {
+            center.removeObserver(self)
+        }
+    }
+    
+    private func removeNotificationListeners() {
+        NotificationCenter.default.removeObserver(self)
     }
     
 }

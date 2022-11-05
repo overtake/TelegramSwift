@@ -43,10 +43,12 @@ private final class Arguments {
     let context: AccountContext
     let interaction: ChatInteraction
     let clearRecent:()->Void
-    init(context: AccountContext, interaction: ChatInteraction, clearRecent:@escaping()->Void) {
+    let gallery:(Message, GalleryAppearType)->Void
+    init(context: AccountContext, interaction: ChatInteraction, clearRecent:@escaping()->Void, gallery:@escaping(Message, GalleryAppearType)->Void) {
         self.context = context
         self.interaction = interaction
         self.clearRecent = clearRecent
+        self.gallery = gallery
     }
 }
 
@@ -56,10 +58,10 @@ private struct State : Equatable {
 }
 
 private func _id_recent(_ messageId: MessageId) -> InputDataIdentifier {
-    return .init("_id_recent_\(messageId.toInt64())")
+    return .init("_id_recent_\(messageId.string)")
 }
 private func _id_downloading(_ messageId: MessageId) -> InputDataIdentifier {
-    return .init("_id_downloading\(messageId.toInt64())")
+    return .init("_id_downloading\(messageId.string)")
 }
 
 private let _id_recent_separator = InputDataIdentifier("_id_recent_separator")
@@ -78,7 +80,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     if !state.inProgressItems.isEmpty {
         for item in state.inProgressItems {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_downloading(item.message.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-                return PeerMediaFileRowItem(initialSize, arguments.interaction, .messageEntry(item.message, [], .defaultSettings, viewType), gallery: .recentDownloaded, viewType: viewType)
+                return PeerMediaFileRowItem(initialSize, arguments.interaction, .messageEntry(item.message, [], .defaultSettings, viewType), galleryType: .recentDownloaded, gallery: arguments.gallery, viewType: viewType)
             }))
             index += 1
         }
@@ -94,7 +96,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         
         for item in state.doneItems {
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_recent(item.message.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-                return PeerMediaFileRowItem(initialSize, arguments.interaction, .messageEntry(item.message, [], .defaultSettings, viewType), gallery: .recentDownloaded, viewType: viewType)
+                return PeerMediaFileRowItem(initialSize, arguments.interaction, .messageEntry(item.message, [], .defaultSettings, viewType), galleryType: .recentDownloaded, gallery: arguments.gallery, viewType: viewType)
             }))
             index += 1
         }
@@ -184,9 +186,13 @@ func DownloadsController(context: AccountContext, searchValue: Signal<String, No
         }
         _ = signal.start()
     }
+    
+    var gallery:((Message, GalleryAppearType)->Void)? = nil
 
     let arguments = Arguments(context: context, interaction: interaction, clearRecent: {
         _ = clearRecentDownloadList(postbox: context.account.postbox).start()
+    }, gallery: { message, type in
+        gallery?(message, type)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
@@ -251,7 +257,14 @@ func DownloadsController(context: AccountContext, searchValue: Signal<String, No
         }
         controller.genericView.border = [.Right]
         controller.tableView.border = [.Right]
-        controller.tableView.supplyment = GallerySupplyment(tableView: controller.tableView)
+        
+        let supplyment = GallerySupplyment(tableView: controller.tableView)
+        
+        controller.tableView.supplyment = supplyment
+        
+        gallery = { message, type in
+            showChatGallery(context: context, message: message, supplyment, nil, type: type)
+        }
     }
 
     controller.afterTransaction = { controller in

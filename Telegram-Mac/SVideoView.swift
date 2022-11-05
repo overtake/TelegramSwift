@@ -10,6 +10,7 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import ColorPalette
+import RangeSet
 
 private final class SVideoPipControls : Control {
     
@@ -383,6 +384,9 @@ private final class SVideoControlsView : Control {
         volumeSlider.set(progress: CGFloat(status.volume))
         volumeToggle.set(image: status.volume.isZero ? theme.icons.videoPlayerVolumeOff : theme.icons.videoPlayerVolume, for: .Normal)
         
+        rewindForward.isHidden = rewindForward.isHidden || frame.width < 450
+        rewindBackward.isHidden = rewindBackward.isHidden || frame.width < 450
+
         rewindForward.isEnabled = status.duration > 30 && !status.generationTimestamp.isZero
         rewindBackward.isEnabled = status.duration > 30 && !status.generationTimestamp.isZero
         rewindForward.layer?.opacity = rewindForward.isEnabled ? 1.0 : 0.3
@@ -765,11 +769,11 @@ class SVideoView: NSView {
             
         }
     }
-    var bufferingStatus: (IndexSet, Int)? {
+    var bufferingStatus: (RangeSet<Int64>, Int64)? {
         didSet {
             if let ranges = bufferingStatus {
                 var bufRanges: [Range<CGFloat>] = []
-                for range in ranges.0.rangeView {
+                for range in ranges.0.ranges {
                     let low = CGFloat(range.lowerBound) / CGFloat(ranges.1)
                     let high = CGFloat(range.upperBound) / CGFloat(ranges.1)
                     let br: Range<CGFloat> = Range<CGFloat>(uncheckedBounds: (lower: low, upper: high))

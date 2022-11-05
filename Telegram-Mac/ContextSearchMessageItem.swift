@@ -86,12 +86,17 @@ class ContextSearchMessageItem: GeneralRowItem {
         
         var text = pullText(from: message) as String
         if text.isEmpty {
-            text = serviceMessageText(message, account: context.account)
+            text = serviceMessageText(message, account: context.account).0
         }
         _ = messageTitle.append(string: text, color: theme.colors.text, font: .normal(.text))
         
+        let r = messageTitle.string.lowercased().nsstring.range(of: searchText.lowercased())
+        if r.location != NSNotFound, r.location > 50 {
+            messageTitle.replaceCharacters(in: NSMakeRange(0, r.location - 30), with: "...")
+        }
+
         
-        self.messageLayout = TextViewLayout(messageTitle, maximumNumberOfLines: 1, truncationType: .end, strokeLinks: true)
+        self.messageLayout = TextViewLayout(messageTitle.trimNewLinesToSpace, maximumNumberOfLines: 1, truncationType: .end, strokeLinks: true)
         let selectRange = messageTitle.string.lowercased().nsstring.range(of: searchText.lowercased())
         if selectRange.location != NSNotFound {
             self.messageLayout.additionalSelections = [TextSelectedRange(range: selectRange, color: theme.colors.accentIcon.withAlphaComponent(0.5), def: false)]
@@ -113,7 +118,7 @@ class ContextSearchMessageItem: GeneralRowItem {
         dateLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, false, .left)
         dateSelectedLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, true, .left)
         
-        self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, message, nil)
+        self.photo = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, message, nil, peer.isForum)
         
         super.init(initialSize, height: 44, action: action)
 

@@ -182,7 +182,7 @@ class ChannelInfoArguments : PeerInfoArguments {
             }
             
             if let titleValue = updateValues.title, titleValue.isEmpty {
-                controller.genericView.item(stableId: IntPeerInfoEntryStableId(value: 1).hashValue)?.view?.shakeView()
+                controller.genericView.tableView.item(stableId: IntPeerInfoEntryStableId(value: 1).hashValue)?.view?.shakeView()
                 return false
             }
             
@@ -240,7 +240,7 @@ class ChannelInfoArguments : PeerInfoArguments {
             self?.openInviteLinks()
         }))
     }
-    func openReactions(allowedReactions: [String]?, availableReactions: AvailableReactions?) {
+    func openReactions(allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?) {
         pushViewController(ReactionsSettingsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions, mode: .chat(isGroup: false)))
     }
 
@@ -299,8 +299,11 @@ class ChannelInfoArguments : PeerInfoArguments {
         
         let context = self.context
         
-        let updatePhoto:(NSImage) -> Void = { image in
-            _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
+        let updatePhoto:(Signal<NSImage, NoError>) -> Void = { image in
+            let signal = image |> mapToSignal { image in
+                return putToTemp(image: image, compress: true)
+            } |> deliverOnMainQueue
+            _ = signal.start(next: { path in
                 let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
                 showModal(with: controller, for: context.window, animationType: .scaleCenter)
                 _ = controller.result.start(next: { [weak self] url, _ in
@@ -312,18 +315,60 @@ class ChannelInfoArguments : PeerInfoArguments {
             })
         }
         if let image = custom {
-            updatePhoto(image)
+            updatePhoto(.single(image))
         } else {
             let context = self.context
             let updateVideo = self.updateVideo
             
+            
+            let makeVideo:(MediaObjectToAvatar)->Void = { object in
+                
+                switch object.object.foreground.type {
+                case .emoji:
+                    updatePhoto(object.start() |> mapToSignal { value in
+                        if let result = value.result {
+                            switch result {
+                            case let .image(image):
+                                return .single(image)
+                            default:
+                                return .never()
+                            }
+                        } else {
+                            return .never()
+                        }
+                    })
+                default:
+                    let signal:Signal<VideoAvatarGeneratorState, NoError> = object.start() |> map { value in
+                        if let result = value.result {
+                            switch result {
+                            case let .video(path, thumb):
+                                return .complete(thumb: thumb, video: path, keyFrame: nil)
+                            default:
+                                return .error
+                            }
+                        } else if let status = value.status {
+                            switch status {
+                            case let .initializing(thumb):
+                                return .start(thumb: thumb)
+                            case let .converting(progress):
+                                return .progress(progress)
+                            default:
+                                return .error
+                            }
+                        } else {
+                            return .error
+                        }
+                    }
+                    updateVideo(signal)
+                }
+            }
             
             var items:[ContextMenuItem] = []
             
             items.append(.init(strings().editAvatarPhotoOrVideo, handler: {
                 filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
                     if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
-                        updatePhoto(image)
+                        updatePhoto(.single(image))
                     } else if let path = paths?.first {
                         selectVideoAvatar(context: context, path: path, localize: strings().videoAvatarChooseDescChannel, signal: { signal in
                             updateVideo(signal)
@@ -332,57 +377,10 @@ class ChannelInfoArguments : PeerInfoArguments {
                 })
             }, itemImage: MenuAnimation.menu_shared_media.value))
             
-//            items.append(.init(strings().editAvatarStickerOrGif, handler: { [weak control] in
-//                let controller = EntertainmentViewController(size: NSMakeSize(350, 350), context: context, mode: .selectAvatar)
-//                controller._frameRect = NSMakeRect(0, 0, 350, 400)
-//                
-//                let interactions = ChatInteraction(chatLocation: .peer(context.peerId), context: context)
-//                
-//                let runConvertor:(MediaObjectToAvatar)->Void = { [weak control] convertor in
-//                    _ = showModalProgress(signal: convertor.start(), for: context.window).start(next: { [weak control] result in
-//                        switch result {
-//                        case let .image(image):
-//                             updatePhoto(image)
-//                        case let .video(path):
-//                            selectVideoAvatar(context: context, path: path, localize: strings().videoAvatarChooseDescChannel, quality: AVAssetExportPresetHighestQuality, signal: { signal in
-//                                updateVideo(signal)
-//                            })
-//                        }
-//                        control?.contextObject = nil
-//                    })
-//                    control?.contextObject = convertor
-//                }
-//                
-//                interactions.sendAppFile = { file, _, _, _ in
-//                    let object: MediaObjectToAvatar.Object
-//                    if file.isAnimatedSticker {
-//                        object = .animated(file)
-//                    } else if file.isSticker {
-//                        object = .sticker(file)
-//                    } else {
-//                        object = .gif(file)
-//                    }
-//                    let convertor = MediaObjectToAvatar(context: context, object: object)
-//                    runConvertor(convertor)
-//                }
-//                interactions.sendInlineResult = { [] collection, result in
-//                    switch result {
-//                    case let .internalReference(reference):
-//                        if let file = reference.file {
-//                            let convertor = MediaObjectToAvatar(context: context, object: .gif(file))
-//                            runConvertor(convertor)
-//                        }
-//                    case .externalReference:
-//                        break
-//                    }
-//                }
-//                
-//                control?.contextObject = interactions
-//                controller.update(with: interactions)
-//                if let control = control {
-//                    showPopover(for: control, with: controller, edge: .maxY, inset: NSMakePoint(0, -110), static: true)
-//                }
-//            }, itemImage: MenuAnimation.menu_view_sticker_set.value))
+            items.append(.init(strings().editAvatarCustomize, handler: {
+                showModal(with: AvatarConstructorController(context, target: .avatar, videoSignal: makeVideo), for: context.window)
+            }, itemImage: MenuAnimation.menu_view_sticker_set.value))
+            
             
             if let control = control, let event = NSApp.currentEvent {
                 let menu = ContextMenu()
@@ -394,7 +392,7 @@ class ChannelInfoArguments : PeerInfoArguments {
             } else {
                 filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
                     if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
-                        updatePhoto(image)
+                        updatePhoto(.single(image))
                     } else if let path = paths?.first {
                         selectVideoAvatar(context: context, path: path, localize: strings().videoAvatarChooseDescChannel, signal: { signal in
                             updateVideo(signal)
@@ -423,7 +421,7 @@ class ChannelInfoArguments : PeerInfoArguments {
         
         
         let updateSignal: Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> = signal
-            |> mapError { _ in return UploadPeerPhotoError.generic }
+        |> castError(UploadPeerPhotoError.self)
             |> mapToSignal { state in
                 switch state {
                 case .error:
@@ -504,7 +502,7 @@ class ChannelInfoArguments : PeerInfoArguments {
                 }
             }
             
-        } |> mapError {_ in return UploadPeerPhotoError.generic} |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
+        } |> castError(UploadPeerPhotoError.self) |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
             return context.engine.peers.updatePeerPhoto(peerId: peerId, photo: context.engine.peers.uploadedPeerPhoto(resource: resource), mapResourceToAvatarSizes: { resource, representations in
                 return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
             })
@@ -544,10 +542,10 @@ class ChannelInfoArguments : PeerInfoArguments {
         
         _ = peer.start(next: { peerView in
             if let peer = peerViewMainPeer(peerView) {
-                var link: String = "https://t.me/\(peer.id.id)"
+                var link: String = "https://t.me/c/\(peer.id.id)"
                 if let address = peer.addressName, !address.isEmpty {
                     link = "https://t.me/\(address)"
-                } else if let cachedData = peerView.cachedData as? CachedChannelData, let invitation = cachedData.exportedInvitation {
+                } else if let cachedData = peerView.cachedData as? CachedChannelData, let invitation = cachedData.exportedInvitation?._invitation {
                     link = invitation.link
                 }
                 showModal(with: ShareModalController(ShareLinkObject(context, link: link)), for: context.window)
@@ -615,7 +613,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case info(sectionId: ChannelInfoSection, peerView: PeerView, editable:Bool, updatingPhotoState:PeerInfoUpdatingPhotoState?, viewType: GeneralViewType)
     case scam(sectionId: ChannelInfoSection, title: String, text: String, viewType: GeneralViewType)
     case about(sectionId: ChannelInfoSection, text: String, viewType: GeneralViewType)
-    case userName(sectionId: ChannelInfoSection, value: String, viewType: GeneralViewType)
+    case userName(sectionId: ChannelInfoSection, value: [String], viewType: GeneralViewType)
     case setTitle(sectionId: ChannelInfoSection, text: String, viewType: GeneralViewType)
     case admins(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
     case blocked(sectionId: ChannelInfoSection, count:Int32?, viewType: GeneralViewType)
@@ -623,7 +621,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
     case link(sectionId: ChannelInfoSection, addressName:String, viewType: GeneralViewType)
     case inviteLinks(section: ChannelInfoSection, count: Int32, viewType: GeneralViewType)
     case requests(section: ChannelInfoSection, count: Int32, viewType: GeneralViewType)
-    case reactions(section: ChannelInfoSection, text: String, allowedReactions: [String]?, availableReactions: AvailableReactions?, viewType: GeneralViewType)
+    case reactions(section: ChannelInfoSection, text: String, allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?, viewType: GeneralViewType)
     case discussion(sectionId: ChannelInfoSection, group: Peer?, participantsCount: Int32?, viewType: GeneralViewType)
     case discussionDesc(sectionId: ChannelInfoSection, viewType: GeneralViewType)
     case aboutInput(sectionId: ChannelInfoSection, description:String, viewType: GeneralViewType)
@@ -1009,7 +1007,7 @@ enum ChannelInfoEntry: PeerInfoEntry {
         let arguments = arguments as! ChannelInfoArguments
         switch self {
         case let .info(_, peerView, editable, updatingPhotoState, viewType):
-            return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView:peerView, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: arguments.updateChannelPhoto)
+            return PeerInfoHeadItem(initialSize, stableId: stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: nil, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: arguments.updateChannelPhoto)
         case let .scam(_, title, text, viewType):
             return TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: title, copyMenuText: strings().textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
         case let .about(_, text, viewType):
@@ -1021,9 +1019,26 @@ enum ChannelInfoEntry: PeerInfoEntry {
                 }
             }, hashtag: arguments.context.bindings.globalSearch)
         case let .userName(_, value, viewType):
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoSharelink, copyMenuText: strings().textCopyLabelShareLink, text: value, context: arguments.context, viewType: viewType, isTextSelectable:false, callback: arguments.share, selectFullWord: true, _copyToClipboard: {
-                arguments.copy(value)
-            })
+            let link = "https://t.me/\(value[0])"
+            
+            let text: String
+            if value.count > 1 {
+                text = strings().peerInfoUsernamesList("https://t.me/\(value[0])", value.suffix(value.count - 1).map { "@\($0)" }.joined(separator: ", "))
+            } else {
+                text = "@\(value[0])"
+            }
+            let interactions = TextViewInteractions()
+            interactions.processURL = { value in
+                if let value = value as? inAppLink {
+                    arguments.copy(value.link)
+                }
+            }
+            interactions.localizeLinkCopy = globalLinkExecutor.localizeLinkCopy
+
+            
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoSharelink, copyMenuText: strings().textCopyLabelShareLink, labelColor: theme.colors.text, text: text, context: arguments.context, viewType: viewType, detectLinks: true, isTextSelectable: value.count > 1, callback: arguments.share, selectFullWord: true, _copyToClipboard: {
+                arguments.copy(link)
+            }, linkInteractions: interactions)
         case let .report(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReport, type: .none, viewType: viewType, action: { () in
                 arguments.report()
@@ -1149,22 +1164,26 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                 }
                 if channel.groupAccess.canEditGroupInfo {
                     let cachedData = view.cachedData as? CachedChannelData
-                    let allCount = cachedData?.allowedReactions?.count ?? availableReactions?.enabled.count ?? 0
-                    
+                                        
                     let text: String
-                    if let availableReactions = availableReactions {
-                        if allCount == availableReactions.enabled.count {
+                    if let allowed = cachedData?.allowedReactions.knownValue, let availableReactions = availableReactions {
+                        switch allowed {
+                        case .all:
                             text = strings().peerInfoReactionsAll
-                        } else if allCount == 0 {
+                        case let .limited(count):
+                            if count.count != availableReactions.enabled.count {
+                                text = strings().peerInfoReactionsPart("\(count.count)", "\(availableReactions.enabled.count)")
+                            } else {
+                                text = strings().peerInfoReactionsAll
+                            }
+                        case .empty:
                             text = strings().peerInfoReactionsDisabled
-                        } else {
-                            text = strings().peerInfoReactionsPart("\(allCount)", "\(availableReactions.enabled.count)")
                         }
                     } else {
                         text = strings().peerInfoReactionsAll
                     }
                     
-                    block.append(.reactions(section: .type, text: text, allowedReactions: cachedData?.allowedReactions, availableReactions: availableReactions, viewType: .singleItem))
+                    block.append(.reactions(section: .type, text: text, allowedReactions: cachedData?.allowedReactions.knownValue, availableReactions: availableReactions, viewType: .singleItem))
                     
                     block.append(.discussion(sectionId: .type, group: group, participantsCount: nil, viewType: .singleItem))
                 }
@@ -1208,10 +1227,14 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
                 }
             }
             
-            if let username = channel.username, !username.isEmpty {
-                aboutBlock.append(.userName(sectionId: .desc, value: "https://t.me/\(username)", viewType: .singleItem))
-            } else if let cachedData = view.cachedData as? CachedChannelData, let invitation = cachedData.exportedInvitation {
-                aboutBlock.append(.userName(sectionId: .desc, value: invitation.link, viewType: .singleItem))
+            var usernames = channel.usernames.filter { $0.isActive }.map {
+                $0.username
+            }
+            if usernames.isEmpty, let address = channel.addressName {
+                usernames.append(address)
+            }
+            if !usernames.isEmpty {
+                aboutBlock.append(.userName(sectionId: .desc, value: usernames, viewType: .singleItem))
             }
             
             applyBlock(aboutBlock)

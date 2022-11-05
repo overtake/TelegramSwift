@@ -37,7 +37,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         set {
             super.backgroundColor = newValue
             for view in subviews {
-                if !(view is TransformImageView) && !(view is SelectingControl) && !(view is GIFPlayerView) && !(view is ChatMessageAccessoryView) && !(view is MediaPreviewEditControl) && !(view is ProgressIndicator) {
+                if !(view is TransformImageView) && !(view is SelectingControl) && !(view is GIFPlayerView) && !(view is ChatMessageAccessoryView) && !(view is MediaPreviewEditControl) && !(view is ProgressIndicator) && !(view is VoiceTranscriptionControl) {
                     view.background = newValue
                 }
             }
@@ -46,9 +46,6 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     
     weak var table:TableView?
     
-    override func updateTrackingAreas() {
-        
-    }
     
     override init() {
         super.init()
@@ -163,7 +160,7 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
      }
     
     func update(with media: Media, size:NSSize, context:AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) -> Void  {
-        self.setContent(size: size)
+        self.setContent(size: size, animated: animated)
         self.parameters = parameters
         self.positionFlags = positionFlags
         self.context = context
@@ -210,8 +207,15 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
         self.layer?.addSublayer(layer)
     }
     
-    func setContent(size:NSSize) -> Void {
-        self.frame = NSMakeRect(NSMinX(self.frame), NSMinY(self.frame), size.width, size.height)
+    func setContent(size:NSSize, animated: Bool) -> Void {
+        let frame = NSMakeRect(NSMinX(self.frame), NSMinY(self.frame), size.width, size.height)
+        let transition: ContainedViewLayoutTransition
+        if animated {
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        } else {
+            transition = .immediate
+        }
+        transition.updateFrame(view: self, frame: frame)
     }
     
     override func copy() -> Any {
@@ -291,6 +295,14 @@ class ChatMediaContentView: Control, NSDraggingSource, NSPasteboardItemDataProvi
     }
     
     
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
+    }
     
     
     override func mouseDragged(with event: NSEvent) {

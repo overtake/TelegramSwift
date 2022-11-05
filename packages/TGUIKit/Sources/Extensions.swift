@@ -98,7 +98,20 @@ public extension NSAttributedString {
         
         return string
     }
-
+    var trimNewLinesToSpace: NSAttributedString {
+        
+        let string:NSMutableAttributedString = self.mutableCopy() as! NSMutableAttributedString
+        
+       
+        var range = string.string.nsstring.range(of: "\n")
+        while !string.string.isEmpty, range.location != NSNotFound {
+            string.replaceCharacters(in: range, with: " ")
+            range = string.string.nsstring.range(of: "\n")
+        }
+     
+        
+        return string
+    }
     
     
     var range:NSRange {
@@ -136,17 +149,28 @@ public extension NSAttributedString {
 
 public extension String {
     
+    static func prettySized(with size:Int64, afterDot: Int8 = 1, removeToken: Bool = false, round: Bool = false) -> String {
+        return prettySized(with: Int(size), afterDot: afterDot, removeToken: removeToken, round: round)
+    }
     
-    static func prettySized(with size:Int, afterDot: Int8 = 1, removeToken: Bool = false) -> String {
+    static func prettySized(with size:Int, afterDot: Int8 = 1, removeToken: Bool = false, round: Bool = false) -> String {
         var converted:Double = Double(size)
         var factor:Int = 0
         
         let tokens:[String] = ["B", "KB", "MB", "GB", "TB"]
         
-        while converted >= 1024.0 {
-            converted /= 1024.0
-            factor += 1
+        if round {
+            while converted >= 1000 {
+                converted /= 1000
+                factor += 1
+            }
+        } else {
+            while converted >= 1024.0 {
+                converted /= 1024.0
+                factor += 1
+            }
         }
+        
         
         if factor == 0 {
             //converted = 0
@@ -250,6 +274,9 @@ public extension NSPasteboard.PasteboardType {
     static var kUrl:NSPasteboard.PasteboardType {
         return NSPasteboard.PasteboardType(kUTTypeURL as String)
     }
+    static var kInApp:NSPasteboard.PasteboardType {
+        return NSPasteboard.PasteboardType("TelegramTextPboardType" as String)
+    }
     static var kFilenames:NSPasteboard.PasteboardType {
         return NSPasteboard.PasteboardType("NSFilenamesPboardType")
     }
@@ -331,13 +358,13 @@ public extension NSMutableAttributedString {
     }
     
     func fixEmojiesFont(_ fontSize: CGFloat) {
-        let nsString = self.string.nsstring
-        for i in 0 ..< min(nsString.length, 300) {
-            let sub = nsString.substring(with: NSMakeRange(i, 1))
-            if sub.containsOnlyEmoji, let font = NSFont(name: "AppleColorEmoji", size: fontSize) {
-                self.addAttribute(.font, value: font, range: NSMakeRange(i, 1))
-            }
-        }
+//        let nsString = self.string.nsstring
+//        for i in 0 ..< min(nsString.length, 300) {
+//            let sub = nsString.substring(with: NSMakeRange(i, 1))
+//            if sub.containsOnlyEmoji, let font = NSFont(name: "AppleColorEmoji", size: fontSize) {
+//                self.addAttribute(.font, value: font, range: NSMakeRange(i, 1))
+//            }
+//        }
     }
     
     func add(link:Any, for range:NSRange, color: NSColor = presentation.colors.link)  {
@@ -376,7 +403,21 @@ public extension CALayer {
         self.add(animation, forKey: "backgroundColor")
     }
     
-
+    func animatePath() {
+        let animation = CABasicAnimation(keyPath: "path")
+        animation.duration = 0.2
+        self.add(animation, forKey: "path")
+    }
+    func animateShadow() {
+        let animation = CABasicAnimation(keyPath: "shadowPath")
+        animation.duration = 0.2
+        self.add(animation, forKey: "shadowPath")
+    }
+    func animateFrameFast() {
+        let animation = CABasicAnimation(keyPath: "frame")
+        animation.duration = 0.2
+        self.add(animation, forKey: "frame")
+    }
     
     func animateBorder() ->Void {
         let animation = CABasicAnimation(keyPath: "borderWidth")
@@ -388,6 +429,11 @@ public extension CALayer {
         let animation = CABasicAnimation(keyPath: "borderColor")
         animation.duration = 0.2
         self.add(animation, forKey: "borderColor")
+    }
+    func animateCornerRadius() ->Void {
+        let animation = CABasicAnimation(keyPath: "cornerRadius")
+        animation.duration = 0.2
+        self.add(animation, forKey: "cornerRadius")
     }
     
     func animateContents() ->Void {
@@ -933,7 +979,7 @@ public extension CGSize {
     
     func aspectFitted(_ size: CGSize) -> CGSize {
         let scale = min(size.width / max(1.0, self.width), size.height / max(1.0, self.height))
-        return CGSize(width: ceil(self.width * scale), height: ceil(self.height * scale))
+        return CGSize(width: floor(self.width * scale), height: floor(self.height * scale))
     }
     
     func multipliedByScreenScale() -> CGSize {
@@ -1455,6 +1501,14 @@ public extension NSRange {
     func indexIn(_ index: Int) -> Bool {
         return NSLocationInRange(index, self)
     }
+    init(string: String, range: Range<String.Index>) {
+        let utf8 = string.utf16
+
+        let location = utf8.distance(from: utf8.startIndex, to: range.lowerBound)
+        let length = utf8.distance(from: range.lowerBound, to: range.upperBound)
+
+        self.init(location: location, length: length)
+    }
 }
 
 public extension NSBezierPath {
@@ -1543,6 +1597,76 @@ public extension Int32 {
         return self > Int32(Date().timeIntervalSince1970)
     }
 }
+public extension Int64 {
+    
+    func prettyFormatter(_ n: Int64, iteration: Int, rounded: Bool = false) -> String {
+        let keys = ["K", "M", "B", "T"]
+        var d = Double((n / 100)) / 10.0
+        if rounded {
+            d = floor(d)
+        }
+        let isRound:Bool = (Int(d) * 10) % 10 == 0
+        if d < 1000 {
+            if d == 1 {
+                return "\(Int(d))\(keys[iteration])"
+            } else {
+                var result = "\((d > 99.9 || isRound || (!isRound && d > 9.99)) ? d * 10 / 10 : d)"
+                if result.hasSuffix(".0") {
+                    result = result.prefix(result.count - 2)
+                }
+                return result + "\(keys[iteration])"
+            }
+        }
+        else {
+            return self.prettyFormatter(Int64(d), iteration: iteration + 1, rounded: rounded)
+        }
+    }
+    
+    var prettyRounded: String {
+        if self < 1000 {
+            return "\(self)"
+        }
+        return self.prettyFormatter(self, iteration: 0, rounded: true).replacingOccurrences(of: ".", with: Locale.current.decimalSeparator ?? ".")
+    }
+    
+    var prettyNumber:String {
+        if self < 1000 {
+            return "\(self)"
+        }
+        
+        return self.prettyFormatter(self, iteration: 0).replacingOccurrences(of: ".", with: Locale.current.decimalSeparator ?? ".")
+    }
+    var separatedNumber: String {
+        if self < 1000 {
+            return "\(self)"
+        }
+        let string = "\(self)"
+        
+        let length: Int = string.length
+        var result:String = ""
+        var index:Int = 0
+        while index < length {
+            let modulo = length % 3
+            if index == 0 && modulo != 0 {
+                result = string.nsstring.substring(with: NSMakeRange(index, modulo))
+                index += modulo
+            } else {
+                let count:Int = 3
+                let value = string.nsstring.substring(with: NSMakeRange(index, count))
+                if index == 0 {
+                    result = value
+                } else {
+                    result += " " + value
+                }
+                index += count
+            }
+        }
+        return result
+    }
+}
+
+
+
 
 public extension Int {
     
@@ -1888,6 +2012,28 @@ public func performSubviewRemoval(_ view: NSView, animated: Bool, duration: Doub
         }
     } else {
         view.removeFromSuperview()
+    }
+}
+
+public func performSublayerRemoval(_ view: CALayer, animated: Bool, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut, checkCompletion: Bool = false, scale: Bool = false, scaleTo: CGFloat? = nil, completed:((Bool)->Void)? = nil) {
+    if animated {
+        view.animateAlpha(from: 1, to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak view] finish in
+            completed?(finish)
+            if checkCompletion {
+                if finish {
+                    view?.removeFromSuperlayer()
+                }
+            } else {
+                view?.removeFromSuperlayer()
+            }
+        })
+        if scale {
+            view.animateScale(from: 1, to: 0.1, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
+        } else if let scaleTo = scaleTo {
+            view.animateScale(from: 1, to: scaleTo, duration: duration, timingFunction: timingFunction, removeOnCompletion: false)
+        }
+    } else {
+        view.removeFromSuperlayer()
     }
 }
 

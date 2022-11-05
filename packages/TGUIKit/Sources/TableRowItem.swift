@@ -54,6 +54,11 @@ open class TableRowItem: NSObject {
     public var oldWidth:CGFloat = 0
     
     open var width:CGFloat  {
+        if Thread.isMainThread, let table = table, table.frame.width > 0 {
+            return table.frame.width
+        } else if oldWidth == 0 {
+            return initialSize.width
+        }
         return oldWidth
     }
     
@@ -74,9 +79,10 @@ open class TableRowItem: NSObject {
             return -1
         }
     }
+    internal var origin: NSPoint = .zero
 
     
-    internal(set) var _index:Int? = nil
+    var _index:Int? = nil
     
     public init(_ initialSize:NSSize) {
         self.initialSize = initialSize
@@ -108,8 +114,8 @@ open class TableRowItem: NSObject {
         return .zero
     }
     
-    open var menuAdditionView: Window? {
-        return nil
+    open var menuAdditionView: Signal<Window?, NoError> {
+        return .single(nil)
     }
     
     open func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
@@ -200,6 +206,7 @@ open class TableRowItem: NSObject {
     }
     
     internal var heightValue: CGFloat {
-        return _isAutohidden ? 1.0 : self.height
+        let height = self.height
+        return ceil(_isAutohidden ? 1.0 : height)
     }
 }

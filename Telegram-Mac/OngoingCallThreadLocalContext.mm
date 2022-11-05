@@ -11,7 +11,7 @@
 #import "VoIPServerConfig.h"
 #import "TgVoip.h"
 #define CVoIPController tgvoip::VoIPController
-
+#import <libkern/OSAtomic.h>
 #import <memory>
 #import <MtProtoKit/MtProtoKit.h>
 
@@ -150,6 +150,7 @@ static MTAtomic *callContexts() {
 static int32_t nextId = 1;
 
 static int32_t addContext(OngoingCallThreadLocalContext *context, id<OngoingCallThreadLocalContextQueue> queue) {
+    
     int32_t contextId = OSAtomicIncrement32(&nextId);
     [callContexts() with:^id(NSMutableDictionary *dict) {
         dict[@(contextId)] = [[OngoingCallThreadLocalContextReference alloc] initWithContext:context queue:queue];
@@ -258,13 +259,13 @@ static void (*InternalVoipLoggingFunction)(NSString *) = NULL;
             proxyValue = proxyObject;
         }
         
-        TgVoipCrypto crypto;
-        crypto.sha1 = &TGCallSha1;
-        crypto.sha256 = &TGCallSha256;
-        crypto.rand_bytes = &TGCallRandomBytes;
-        crypto.aes_ige_encrypt = &TGCallAesIgeEncrypt;
-        crypto.aes_ige_decrypt = &TGCallAesIgeDecrypt;
-        crypto.aes_ctr_encrypt = &TGCallAesCtrEncrypt;
+//        TgVoipCrypto crypto;
+//        crypto.sha1 = &TGCallSha1;
+//        crypto.sha256 = &TGCallSha256;
+//        crypto.rand_bytes = &TGCallRandomBytes;
+//        crypto.aes_ige_encrypt = &TGCallAesIgeEncrypt;
+//        crypto.aes_ige_decrypt = &TGCallAesIgeDecrypt;
+//        crypto.aes_ctr_encrypt = &TGCallAesCtrEncrypt;
         
         std::vector<TgVoipEndpoint> endpoints;
         NSArray<OngoingCallConnectionDescription *> *connections = [@[primaryConnection] arrayByAddingObjectsFromArray:alternativeConnections];
@@ -326,8 +327,8 @@ static void (*InternalVoipLoggingFunction)(NSString *) = NULL;
                                        endpoints,
                                        proxyValue,
                                        callControllerNetworkTypeForType(networkType),
-                                       encryptionKey,
-                                       crypto
+                                       encryptionKey
+                               //        crypto
                                        );
         
         _state = OngoingCallStateInitializing;
@@ -439,6 +440,17 @@ static void (*InternalVoipLoggingFunction)(NSString *) = NULL;
 - (void)setIsMuted:(bool)isMuted {
     if (_tgVoip) {
         _tgVoip->setMuteMicrophone(isMuted);
+    }
+}
+
+- (void)switchAudioInput:(NSString *)input {
+    if (_tgVoip) {
+        _tgVoip->setAudioInputDevice(std::string(input.UTF8String));
+    }
+}
+- (void)switchAudioOutput:(NSString *)output {
+    if (_tgVoip) {
+        _tgVoip->setAudioOutputDevice(std::string(output.UTF8String));
     }
 }
 

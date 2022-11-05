@@ -278,7 +278,6 @@ class InstantPageViewController: TelegramGenericViewController<ScrollView> {
             let signal: Signal<Void, NoError> = (.complete() |> delay(0.08, queue: Queue.mainQueue()))
             self.updateLayoutDisposable.set(signal.start(completed: { [weak self] in
                 if let strongSelf = self {
-                    NSLog("\(strongSelf.currentWebEmbedHeights)")
 
                     strongSelf.reloadData()
                     strongSelf.updateVisibleItems(visibleBounds: strongSelf.genericView.contentView.bounds, animated: false)

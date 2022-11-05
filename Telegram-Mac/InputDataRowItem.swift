@@ -219,6 +219,14 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
         _ = self.makeSize(self.width, oldWidth: self.width)
     }
     
+    var hasTextLimitation: Bool {
+        if let placeholder = placeholder {
+            return placeholder.hasLimitationText
+        } else {
+            return limit > 30 && defaultText == nil
+        }
+    }
+    
     private(set) fileprivate var additionRightInset: CGFloat = 0
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
@@ -240,6 +248,10 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
             }
         } else {
             self.additionRightInset = 0
+        }
+        
+        if hasTextLimitation {
+            self.additionRightInset += 20
         }
         
         switch viewType {
@@ -314,14 +326,12 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         
     //    textView.max_height = 34
       // .isSingleLine = true
-        textView.delegate = self
         placeholderTextView.userInteractionEnabled = false
         placeholderTextView.isSelectable = false
         
         secureField.isBordered = false
         secureField.isBezeled = false
         secureField.focusRingType = .none
-        secureField.delegate = self
         secureField.drawsBackground = true
         secureField.isEditable = true
         secureField.isSelectable = true
@@ -331,7 +341,10 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         secureField.font = .normal(.text)
         secureField.textView?.insertionPointColor = theme.colors.text
         secureField.sizeToFit()
-        
+                
+    }
+    
+    deinit {
     }
     
     override func shakeView() {
@@ -505,7 +518,11 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
     
     public func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
         if let item = item as? InputDataRowItem {
-            return item.limit
+            if item.hasTextLimitation {
+                return 10000
+            } else {
+                return item.limit
+            }
         }
         return 100000
     }
@@ -606,7 +623,6 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
     }
     
     
-    
     func controlTextDidChange(_ obj: Notification) {
         if let item = item as? InputDataRowItem {
             let string = secureField.stringValue
@@ -670,6 +686,12 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             return customTheme.grayTextColor
         }
         return theme.colors.grayText
+    }
+    var redColor: NSColor {
+        if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
+            return customTheme.redColor
+        }
+        return theme.colors.redUI
     }
     var borderColor: NSColor {
         if let item = item as? GeneralRowItem, let customTheme = item.customTheme {
@@ -739,6 +761,12 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         }
     }
     
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        self.secureField.delegate = self
+        self.textView.delegate = self
+    }
+    
     override func set(item: TableRowItem, animated: Bool) {
         
         guard let item = item as? InputDataRowItem else {return}
@@ -746,6 +774,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
         self.textView.animates = false
         super.set(item: item, animated: animated)
         self.textView.animates = true
+
         
         placeholderTextView.isHidden = item.placeholderLayout == nil
         placeholderTextView.update(item.placeholderLayout)
@@ -867,12 +896,7 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
                 }
             }
             
-            if placeholder.hasLimitationText {
-                textLimitation.isHidden = item.currentText.length < item.limit / 3 * 2
-                textLimitation.attributedString = .initialize(string: "\(item.limit - Int32(item.currentText.length))", color: self.grayText, font: .normal(.small))
-            } else {
-                textLimitation.isHidden = true
-            }
+            
         } else {
             if animated {
                 if let placeholderAction = placeholderAction {
@@ -888,6 +912,8 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
                 placeholderAction = nil
             }
             
+           
+            
             switch item.viewType {
             case .legacy:
                 textView._change(pos: NSMakePoint(item.inset.left + item.textFieldLeftInset - 3, 6), animated: animated)
@@ -899,6 +925,15 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
                     textView._change(pos: NSMakePoint(textX, textView.frame.minY), animated: animated)
                 }
             }
+        }
+        
+        if item.hasTextLimitation {
+            textLimitation.isHidden = item.currentText.length < item.limit / 3 * 2 || item.currentText.length == item.limit
+            let color: NSColor = item.currentText.length > item.limit ? self.redColor : self.grayText
+            textLimitation.attributedString = .initialize(string: "\(item.limit - Int32(item.currentText.length))", color: color, font: .normal(.small))
+            textLimitation.sizeToFit()
+        } else {
+            textLimitation.isHidden = true
         }
         
         switch item.mode {

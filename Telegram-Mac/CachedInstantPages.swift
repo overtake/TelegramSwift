@@ -51,15 +51,13 @@ public func cachedInstantPage(postbox: Postbox, url: String) -> Signal<CachedIns
     }
 }
 
-private let collectionSpec = ItemCacheCollectionSpec(lowWaterItemCount: 5, highWaterItemCount: 10)
-
 public func updateCachedInstantPage(postbox: Postbox, url: String, webPage: TelegramMediaWebpage?) -> Signal<Void, NoError> {
     return postbox.transaction { transaction -> Void in
         let key = ValueBoxKey(length: 8)
         key.setInt64(0, value: Int64(bitPattern: url.persistentHashValue))
         let id = ItemCacheEntryId(collectionId: ApplicationSpecificItemCacheCollectionId.cachedInstantPages, key: key)
         if let webPage = webPage, let entry = CodableEntry(CachedInstantPage(webPage: webPage, timestamp: Int32(CFAbsoluteTimeGetCurrent()))) {
-            transaction.putItemCacheEntry(id: id, entry: entry, collectionSpec: collectionSpec)
+            transaction.putItemCacheEntry(id: id, entry: entry)
         } else {
             transaction.removeItemCacheEntry(id: id)
         }

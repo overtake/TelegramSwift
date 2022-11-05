@@ -15,9 +15,35 @@ import Postbox
 
 
 
+struct _ExportedInvitation : Equatable {
+    var link: String
+    var title: String?
+    var isPermanent: Bool
+    var requestApproval: Bool
+    var isRevoked: Bool
+    var adminId: PeerId
+    var date: Int32
+    var startDate: Int32?
+    var expireDate: Int32?
+    var usageLimit: Int32?
+    var count: Int32?
+    var requestedCount: Int32?
+    
+    var invitation: ExportedInvitation {
+        return .link(link: link, title: title, isPermanent: isPermanent, requestApproval: requestApproval, isRevoked: isRevoked, adminId: adminId, date: date, startDate: startDate, expireDate: expireDate, usageLimit: usageLimit, count: count, requestedCount: requestedCount)
+    }
+    
+    static func initialize(_ inivitation: ExportedInvitation) -> _ExportedInvitation? {
+        switch inivitation {
+        case .link(let link, let title, let isPermanent, let requestApproval, let isRevoked, let adminId, let date, let startDate, let expireDate, let usageLimit, let count, let requestedCount):
+            return .init(link: link, title: title, isPermanent: isPermanent, requestApproval: requestApproval, isRevoked: isRevoked, adminId: adminId, date: date, startDate: startDate, expireDate: expireDate, usageLimit: usageLimit, count: count, requestedCount: requestedCount)
+        case .publicJoinRequest:
+            return nil
+        }
+    }
+}
 
-
-extension ExportedInvitation {
+extension _ExportedInvitation {
     var isExpired: Bool {
         if let expiryDate = expireDate {
             if expiryDate < Int32(CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970) {
@@ -35,8 +61,13 @@ extension ExportedInvitation {
         return false
     }
     
-    func withUpdatedIsRevoked(_ isRevoked: Bool) -> ExportedInvitation {
-        return ExportedInvitation(link: self.link, title: self.title, isPermanent: self.isPermanent, requestApproval: self.requestApproval, isRevoked: isRevoked, adminId: self.adminId, date: self.date, startDate: self.startDate, expireDate: self.expireDate, usageLimit: self.usageLimit, count: self.count, requestedCount: self.requestedCount)
+    func withUpdatedIsRevoked(_ isRevoked: Bool) -> _ExportedInvitation {
+        return _ExportedInvitation(link: self.link, title: self.title, isPermanent: self.isPermanent, requestApproval: self.requestApproval, isRevoked: isRevoked, adminId: self.adminId, date: self.date, startDate: self.startDate, expireDate: self.expireDate, usageLimit: self.usageLimit, count: self.count, requestedCount: self.requestedCount)
+    }
+}
+extension ExportedInvitation {
+    var _invitation: _ExportedInvitation? {
+        return _ExportedInvitation.initialize(self)
     }
 }
 
@@ -44,13 +75,13 @@ final class InviteLinkPeerManager {
     
     struct State : Equatable {
         
-        var list: [ExportedInvitation]?
-        var next: ExportedInvitation?
+        var list: [_ExportedInvitation]?
+        var next: _ExportedInvitation?
         var creators:[ExportedInvitationCreator]?
         var totalCount: Int32
         var activeLoaded: Bool
-        var revokedList: [ExportedInvitation]?
-        var nextRevoked: ExportedInvitation?
+        var revokedList: [_ExportedInvitation]?
+        var nextRevoked: _ExportedInvitation?
         var totalRevokedCount: Int32
         var revokedLoaded: Bool
         var effectiveCount: Int32 {
@@ -102,7 +133,7 @@ final class InviteLinkPeerManager {
         
     }
     
-    func createPeerExportedInvitation(title: String?, expireDate: Int32?, usageLimit: Int32?, requestNeeded: Bool? = nil) -> Signal<NoValue, NoError> {
+    func createPeerExportedInvitation(title: String?, expireDate: Int32?, usageLimit: Int32?, requestNeeded: Bool? = nil) -> Signal<_ExportedInvitation?, NoError> {
         let context = self.context
         let peerId = self.peerId
         return Signal { [weak self] subscriber in
@@ -111,19 +142,21 @@ final class InviteLinkPeerManager {
                 self?.updateState { state in
                     var state = state
                     state.list = state.list ?? []
-                    if let value = value {
+                    if let value = value?._invitation {
                         state.list?.insert(value, at: 0)
                         state.totalCount += 1
                     }
                     return state
                 }
+                
+                subscriber.putNext(value?._invitation)
                 subscriber.putCompletion()
             })
             return disposable
         }
     }
     
-    func editPeerExportedInvitation(link: ExportedInvitation, title: String?, expireDate: Int32?, usageLimit: Int32?, requestNeeded: Bool? = nil) -> Signal<NoValue, EditPeerExportedInvitationError> {
+    func editPeerExportedInvitation(link: _ExportedInvitation, title: String?, expireDate: Int32?, usageLimit: Int32?, requestNeeded: Bool? = nil) -> Signal<NoValue, EditPeerExportedInvitationError> {
         let context = self.context
         let peerId = self.peerId
         return Signal { [weak self] subscriber in
@@ -132,7 +165,7 @@ final class InviteLinkPeerManager {
                 self?.updateState { state in
                     var state = state
                     state.list = state.list ?? []
-                    if let value = value, let index = state.list?.firstIndex(where: { $0.link == value.link }) {
+                    if let value = value?._invitation, let index = state.list?.firstIndex(where: { $0.link == value.link }) {
                         state.list?[index] = value
                     }
                     return state
@@ -145,7 +178,7 @@ final class InviteLinkPeerManager {
         }
     }
 
-    func revokePeerExportedInvitation(link: ExportedInvitation) -> Signal<NoValue, RevokePeerExportedInvitationError> {
+    func revokePeerExportedInvitation(link: _ExportedInvitation) -> Signal<NoValue, RevokePeerExportedInvitationError> {
         let context = self.context
         let peerId = self.peerId
         return Signal { [weak self] subscriber in
@@ -159,18 +192,22 @@ final class InviteLinkPeerManager {
                     if let value = value {
                         switch value {
                         case let .update(link):
-                            state.revokedList = state.revokedList ?? []
-                            state.list!.removeAll(where: { $0.link == link.link})
-                            state.revokedList?.append(link)
-                            state.revokedList?.sort(by: { $0.date < $1.date })
-                            state.totalCount -= 1
+                            if let link = link._invitation {
+                                state.revokedList = state.revokedList ?? []
+                                state.list!.removeAll(where: { $0.link == link.link})
+                                state.revokedList?.append(link)
+                                state.revokedList?.sort(by: { $0.date < $1.date })
+                                state.totalCount -= 1
+                            }
                         case let .replace(link, new):
-                            let link = link.withUpdatedIsRevoked(true)
-                            state.revokedList = state.revokedList ?? []
-                            state.list!.removeAll(where: { $0.link == link.link})
-                            state.list!.insert(new, at: 0)
-                            state.revokedList?.insert(link, at: 0)
-                            state.revokedList?.sort(by: { $0.date > $1.date })
+                            if let link = link._invitation, let new = new._invitation {
+                                let link = link.withUpdatedIsRevoked(true)
+                                state.revokedList = state.revokedList ?? []
+                                state.list!.removeAll(where: { $0.link == link.link})
+                                state.list!.insert(new, at: 0)
+                                state.revokedList?.insert(link, at: 0)
+                                state.revokedList?.sort(by: { $0.date > $1.date })
+                            }
                         }
 
                     }
@@ -185,7 +222,7 @@ final class InviteLinkPeerManager {
         }
     }
 
-    func deletePeerExportedInvitation(link: ExportedInvitation) -> Signal<Never, DeletePeerExportedInvitationError> {
+    func deletePeerExportedInvitation(link: _ExportedInvitation) -> Signal<Never, DeletePeerExportedInvitationError> {
         let context = self.context
         let peerId = self.peerId
         return Signal { [weak self] subscriber in
@@ -243,7 +280,7 @@ final class InviteLinkPeerManager {
         let revoked = forceLoadRevoked ? true : stateValue.with { $0.activeLoaded }
         
         if stateValue.with({ revoked ? !$0.revokedLoaded : !$0.activeLoaded }) {
-            let offsetLink: ExportedInvitation? = stateValue.with { state in
+            let offsetLink: _ExportedInvitation? = stateValue.with { state in
                 if revoked {
                     return state.nextRevoked
                 } else {
@@ -251,17 +288,17 @@ final class InviteLinkPeerManager {
                 }
             }
             
-            let signal = context.engine.peers.direct_peerExportedInvitations(peerId: peerId, revoked: revoked, adminId: self.adminId, offsetLink: offsetLink) |> deliverOnMainQueue
+            let signal = context.engine.peers.direct_peerExportedInvitations(peerId: peerId, revoked: revoked, adminId: self.adminId, offsetLink: offsetLink?.invitation) |> deliverOnMainQueue
             self.listDisposable.set(signal.start(next: { [weak self] list in
                 self?.updateState { state in
                     var state = state
                     if revoked {
-                        state.revokedList = (state.revokedList ?? []) + (list?.list ?? [])
+                        state.revokedList = (state.revokedList ?? []) + (list?.list?.compactMap { $0._invitation } ?? [])
                         state.totalRevokedCount = list?.totalCount ?? 0
                         state.revokedLoaded = state.revokedList?.count == Int(state.totalRevokedCount)
                         state.nextRevoked = state.revokedList?.last
                     } else {
-                        state.list = (state.list ?? []) + (list?.list ?? [])
+                        state.list = (state.list ?? []) + (list?.list?.compactMap { $0._invitation } ?? [])
                         state.totalCount = list?.totalCount ?? 0
                         state.activeLoaded = state.list?.count == Int(state.totalCount)
                         state.next = state.list?.last
@@ -279,15 +316,15 @@ final class InviteLinkPeerManager {
     }
     private var cachedImporters:[CachedKey : PeerInvitationImportersContext] = [:]
     
-    func importer(for link: ExportedInvitation) -> (joined: PeerInvitationImportersContext, requested: PeerInvitationImportersContext) {
+    func importer(for link: _ExportedInvitation) -> (joined: PeerInvitationImportersContext, requested: PeerInvitationImportersContext) {
         let joined = self.cachedImporters[.init(string: link.link, requested: false)]
         let requested = self.cachedImporters[.init(string: link.link, requested: true)]
 
         if let requested = requested, let joined = joined {
             return (joined: joined, requested: requested)
         } else {
-            let joined = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .invite(invite: link, requested: false))
-            let requested = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .invite(invite: link, requested: true))
+            let joined = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .invite(invite: link.invitation, requested: false))
+            let requested = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .invite(invite: link.invitation, requested: true))
             self.cachedImporters[.init(string: link.link, requested: false)] = joined
             self.cachedImporters[.init(string: link.link, requested: true)] = requested
             return (joined: joined, requested: requested)
@@ -300,14 +337,14 @@ private final class InviteLinksArguments {
     let context: AccountContext
     let shareLink: (String)->Void
     let copyLink: (String)->Void
-    let revokeLink: (ExportedInvitation)->Void
-    let editLink:(ExportedInvitation)->Void
-    let deleteLink:(ExportedInvitation)->Void
+    let revokeLink: (_ExportedInvitation)->Void
+    let editLink:(_ExportedInvitation)->Void
+    let deleteLink:(_ExportedInvitation)->Void
     let deleteAll:()->Void
     let newLink:()->Void
-    let open:(ExportedInvitation)->Void
+    let open:(_ExportedInvitation)->Void
     let openAdminLinks:(ExportedInvitationCreator)->Void
-    init(context: AccountContext, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, revokeLink: @escaping(ExportedInvitation)->Void, editLink:@escaping(ExportedInvitation)->Void, newLink:@escaping()->Void, deleteLink:@escaping(ExportedInvitation)->Void, deleteAll:@escaping()->Void, open:@escaping(ExportedInvitation)->Void, openAdminLinks: @escaping(ExportedInvitationCreator)->Void) {
+    init(context: AccountContext, shareLink: @escaping(String)->Void, copyLink: @escaping(String)->Void, revokeLink: @escaping(_ExportedInvitation)->Void, editLink:@escaping(_ExportedInvitation)->Void, newLink:@escaping()->Void, deleteLink:@escaping(_ExportedInvitation)->Void, deleteAll:@escaping()->Void, open:@escaping(_ExportedInvitation)->Void, openAdminLinks: @escaping(ExportedInvitationCreator)->Void) {
         self.context = context
         self.shareLink = shareLink
         self.copyLink = copyLink
@@ -322,10 +359,10 @@ private final class InviteLinksArguments {
 }
 
 private struct InviteLinksState : Equatable {
-    var permanent: ExportedInvitation?
+    var permanent: _ExportedInvitation?
     var permanentImporterState: PeerInvitationImportersState?
-    var list: [ExportedInvitation]?
-    var revokedList: [ExportedInvitation]?
+    var list: [_ExportedInvitation]?
+    var revokedList: [_ExportedInvitation]?
     var creators:[ExportedInvitationCreator]?
     var isAdmin: Bool
     var totalCount: Int
@@ -338,12 +375,12 @@ private let _id_permanent = InputDataIdentifier("_id_permanent")
 private let _id_add_link = InputDataIdentifier("_id_add_link")
 private let _id_loading = InputDataIdentifier("_id_loading")
 private let _id_delete_all = InputDataIdentifier("_id_delete_all")
-private func _id_links(_ links:[ExportedInvitation]) -> InputDataIdentifier {
+private func _id_links(_ links:[_ExportedInvitation]) -> InputDataIdentifier {
     return InputDataIdentifier("active_" + links.reduce("", { current, value in
         return current + value.link
     }))
 }
-private func _id_links_revoked(_ links:[ExportedInvitation]) -> InputDataIdentifier {
+private func _id_links_revoked(_ links:[_ExportedInvitation]) -> InputDataIdentifier {
     return InputDataIdentifier("revoked_" + links.reduce("", { current, value in
         return current + value.link
     }))
@@ -426,7 +463,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
     }
 
     struct Tuple : Equatable {
-        let link:ExportedInvitation
+        let link: _ExportedInvitation
         let viewType: GeneralViewType
     }
 
@@ -566,7 +603,7 @@ private func entries(_ state: InviteLinksState, arguments: InviteLinksArguments)
             let viewType = bestGeneralViewType(creators, for: i)
 
             entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_creator(creator.peer.peerId), equatable: InputDataEquatable(creator), comparable: nil, item: { initialSize, stableId in
-                return ShortPeerRowItem(initialSize, peer: creator.peer.peer!, account: arguments.context.account, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), status: strings().manageLinksTitleCountCountable(Int(creator.count)), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
+                return ShortPeerRowItem(initialSize, peer: creator.peer.peer!, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 50, photoSize: NSMakeSize(36, 36), status: strings().manageLinksTitleCountCountable(Int(creator.count)), inset: NSEdgeInsets(left: 30, right: 30), viewType: viewType, action: {
                     arguments.openAdminLinks(creator)
                 })
             }))
@@ -618,8 +655,11 @@ func InviteLinksController(context: AccountContext, peerId: PeerId, manager: Inv
         showModal(with: ClosureInviteLinkController(context: context, peerId: peerId, mode: .new, save: { [weak manager] link in
             let signal = manager?.createPeerExportedInvitation(title: link.title, expireDate: link.date == .max ? nil : link.date + Int32(Date().timeIntervalSince1970), usageLimit: link.count == .max ? nil : link.count, requestNeeded: link.requestApproval)
             if let signal = signal {
-                _ = showModalProgress(signal: signal, for: context.window).start(completed:{
-                    _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
+                _ = showModalProgress(signal: signal, for: context.window).start(next: { invitation in
+                    if let invitation = invitation {
+                        copyToClipboard(invitation.link)
+                        showModalText(for: context.window, text: strings().inviteLinkCreateCopied)
+                    }
                 })
             }
         }), for: context.window)

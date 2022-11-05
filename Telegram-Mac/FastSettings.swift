@@ -125,10 +125,12 @@ class FastSettings {
     private static let kEntertainmentType = "kEntertainmentType"
     private static let kSidebarType = "kSidebarType1"
     private static let kSidebarShownType = "kSidebarShownType2"
+    private static let kDebugWebApp = "kDebugWebApp"
     private static let kRecordingStateType = "kRecordingStateType"
     private static let kInAppSoundsType = "kInAppSoundsType"
     private static let kIsMinimisizeType = "kIsMinimisizeType"
     private static let kAutomaticConvertEmojiesType = "kAutomaticConvertEmojiesType2"
+    private static let kSuggestSwapEmoji = "kSuggestSwapEmoji"
     private static let kForceTouchAction = "kForceTouchAction"
     private static let kNeedCollage = "kNeedCollage"
 	private static let kInstantViewScrollBySpace = "kInstantViewScrollBySpace"
@@ -157,6 +159,11 @@ class FastSettings {
     
     private static let kConfirmWebApp = "kConfirmWebApp"
 
+    private static let kAnimateInputEmoji = "kAnimateInputEmoji"
+    private static let kUseNativeGraphicContext = "kUseNativeGraphicContext"
+
+    
+    
     
     static var sendingType:SendingType {
         let type = UserDefaults.standard.value(forKey: kSendingType) as? String
@@ -261,6 +268,15 @@ class FastSettings {
     
     static var sidebarShown: Bool {
         return !UserDefaults.standard.bool(forKey: kSidebarShownType)
+    }
+    
+    static var debugWebApp: Bool {
+        return UserDefaults.standard.bool(forKey: kDebugWebApp)
+    }
+    
+    static func toggleDebugWebApp() {
+        UserDefaults.standard.set(!debugWebApp, forKey: kDebugWebApp)
+        
     }
     
     static var recordingState: RecordingStateSettings {
@@ -404,6 +420,17 @@ class FastSettings {
         UserDefaults.standard.synchronize()
     }
     
+    static var suggestSwapEmoji: Bool {
+        if let value = UserDefaults.standard.value(forKey: kSuggestSwapEmoji) as? Bool {
+            return value
+        }
+        return true
+    }
+    static func toggleSwapEmoji(_ value: Bool) -> Void {
+        UserDefaults.standard.setValue(value, forKey: kSuggestSwapEmoji)
+        UserDefaults.standard.synchronize()
+    }
+    
     static var isPossibleReplaceEmojies: Bool {
         return !UserDefaults.standard.bool(forKey: kAutomaticConvertEmojiesType)
     }
@@ -515,6 +542,22 @@ class FastSettings {
         return intersection.count != peerIds.count
     }
     
+    static var animateInputEmoji: Bool {
+        return UserDefaults.standard.bool(forKey: kAnimateInputEmoji)
+    }
+    static func toggleAnimateInputEmoji() {
+        return UserDefaults.standard.set(!animateInputEmoji, forKey: kAnimateInputEmoji)
+    }
+    static var useNativeGraphicContext: Bool {
+        let value = UserDefaults.standard.value(forKey: kUseNativeGraphicContext) as? Bool
+        return value ?? true
+    }
+    static func toggleNativeGraphicContext() {
+        return UserDefaults.standard.set(!useNativeGraphicContext, forKey: kUseNativeGraphicContext)
+    }
+    
+    
+    
     /*
  
      +(void)requestPermissionWithKey:(NSString *)permissionKey peer_id:(int)peer_id handler:(void (^)(bool success))handler {
@@ -601,51 +644,37 @@ func saveAs(_ file:TelegramMediaFile, account:Account) {
 func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox, saveAnyway: Bool = false) -> Signal<String?, NoError>  {
     let path = downloadFilePath(file, postbox)
     return combineLatest(queue: resourcesQueue, path, downloadedFilePaths(postbox)) |> map { (expanded, paths) in
-        guard let (boxPath, adopted) = expanded else {
+        guard var (boxPath, adopted) = expanded else {
             return nil
         }
-        if let id = file.id {
-            if let path = paths.path(for: id), !saveAnyway {
-                let lastModified = Int32(FileManager.default.modificationDateForFileAtPath(path: path.downloadedPath)?.timeIntervalSince1970 ?? 0)
-                if fileSize(path.downloadedPath) == Int(path.size), lastModified == path.lastModified {
-                    return path.downloadedPath
-                }
-                
+        let id = file.fileId
+        if let path = paths.path(for: id), !saveAnyway {
+            let lastModified = Int32(FileManager.default.modificationDateForFileAtPath(path: path.downloadedPath)?.timeIntervalSince1970 ?? 0)
+            if fileSize(path.downloadedPath) == Int64(path.size), lastModified == path.lastModified {
+                return path.downloadedPath
             }
-            
-            var adopted = adopted
-            var i:Int = 1
-            let deletedPathExt = adopted.nsstring.deletingPathExtension
-            while FileManager.default.fileExists(atPath: adopted, isDirectory: nil) {
-                let ext = adopted.nsstring.pathExtension
-                adopted = "\(deletedPathExt) (\(i)).\(ext)"
-                i += 1
-            }
-            
-            try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
-            
-//            let quarantineData = "doesn't matter".data(using: .utf8)!
-//
-//
-//            URL(fileURLWithPath: adopted).withUnsafeFileSystemRepresentation { fileSystemPath in
-//                _ = quarantineData.withUnsafeBytes {
-//                    setxattr(fileSystemPath, "com.apple.quarantine", $0.baseAddress, quarantineData.count, 0, 0)
-//                }
-//            }
-            
-            let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
-            
-            let fs = fileSize(boxPath)
-            let path = DownloadedPath(id: id, downloadedPath: adopted, size: fs != nil ? Int32(fs!) : nil ?? Int32(file.size ?? 0), lastModified: Int32(lastModified))
-            
-            _ = updateDownloadedFilePaths(postbox, {
-                $0.withAddedPath(path)
-            }).start()
-            
-            return adopted
-        } else {
-            return adopted
         }
+        var i:Int = 1
+        let deletedPathExt = adopted.nsstring.deletingPathExtension
+        while FileManager.default.fileExists(atPath: adopted, isDirectory: nil) {
+            let ext = adopted.nsstring.pathExtension
+            adopted = "\(deletedPathExt) (\(i)).\(ext)"
+            i += 1
+        }
+        
+        try? FileManager.default.copyItem(atPath: boxPath, toPath: adopted)
+        
+        let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
+        
+        let fs = fileSize(boxPath)
+        let fileSize = fs ?? file.size ?? 0
+        let path = DownloadedPath(id: id, downloadedPath: adopted, size: Int64(fileSize), lastModified: Int32(lastModified))
+        
+        _ = updateDownloadedFilePaths(postbox, {
+            $0.withAddedPath(path)
+        }).start()
+        
+        return adopted
     }
     
 //    return downloadFilePath(file, postbox) |> deliverOn(resourcesQueue) |> map { (boxPath, adopted) in
@@ -669,11 +698,24 @@ func copyToDownloads(_ file: TelegramMediaFile, postbox: Postbox, saveAnyway: Bo
 //
 }
 
+extension String {
+    var fixedFileName: String {
+        var string = self.replacingOccurrences(of: "/", with: "_")
+        
+        var range = string.nsstring.range(of: ".")
+        while range.location == 0 {
+            string = string.nsstring.replacingCharacters(in: range, with: "_")
+            range = string.nsstring.range(of: ".")
+        }
+        return string
+    }
+}
+
 func downloadFilePath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<(String, String)?, NoError> {
-    return combineLatest(postbox.mediaBox.resourceData(file.resource) |> take(1), automaticDownloadSettings(postbox: postbox) |> take(1)) |> mapToSignal { data, settings -> Signal< (String, String)?, NoError> in
+    return combineLatest(postbox.mediaBox.resourceData(file.resource), automaticDownloadSettings(postbox: postbox)) |> take(1) |> mapToSignal { data, settings -> Signal< (String, String)?, NoError> in
         if data.complete {
             var ext:String = ""
-            let fileName = file.fileName ?? data.path.nsstring.lastPathComponent
+            let fileName = (file.fileName ?? data.path.nsstring.lastPathComponent).fixedFileName
             ext = fileName.nsstring.pathExtension
             if !ext.isEmpty {
                 return .single((data.path, "\(settings.downloadFolder)/\(fileName.nsstring.deletingPathExtension).\(ext)"))
@@ -702,7 +744,7 @@ func fileFinderPath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<Str
                 
                 if let path = paths.path(for: id) {
                     let lastModified = Int32(FileManager.default.modificationDateForFileAtPath(path: path.downloadedPath)?.timeIntervalSince1970 ?? 0)
-                    if fileSize(path.downloadedPath) == Int(path.size), lastModified == path.lastModified {
+                    if fileSize(path.downloadedPath) == Int64(path.size), lastModified == path.lastModified {
                        return path.downloadedPath
                     }
                 }
@@ -728,7 +770,7 @@ func showInFinder(_ file:TelegramMediaFile, account:Account)  {
                 
                 if let path = paths.path(for: id) {
                     let lastModified = Int32(FileManager.default.modificationDateForFileAtPath(path: path.downloadedPath)?.timeIntervalSince1970 ?? 0)
-                    if fileSize(path.downloadedPath) == Int(path.size), lastModified == path.lastModified {
+                    if fileSize(path.downloadedPath) == Int64(path.size), lastModified == path.lastModified {
                         NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path.downloadedPath)])
                         return
                     }
@@ -749,8 +791,8 @@ func showInFinder(_ file:TelegramMediaFile, account:Account)  {
                 let lastModified = FileManager.default.modificationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? FileManager.default.creationDateForFileAtPath(path: adopted)?.timeIntervalSince1970 ?? Date().timeIntervalSince1970
                 
                 let fs = fileSize(boxPath)
-                let path = DownloadedPath(id: id, downloadedPath: adopted, size: fs != nil ? Int32(fs!) : nil ?? Int32(file.size ?? 0), lastModified: Int32(lastModified))
-                
+                let fileSize = fs ?? file.size ?? 0
+                let path = DownloadedPath(id: id, downloadedPath: adopted, size: Int64(fileSize), lastModified: Int32(lastModified))
                 
                 NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: adopted)])
                 _ = updateDownloadedFilePaths(account.postbox, {

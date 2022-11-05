@@ -102,6 +102,8 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar) {
 
 NSString *const TGCustomLinkAttributeName = @"TGCustomLinkAttributeName";
 NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
+NSString *const TGAnimatedEmojiAttributeName = @"TGAnimatedEmojiAttributeName";
+NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
 
 
 
@@ -164,6 +166,8 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     }
 }
     
+
+
 -(NSPoint)textContainerOrigin {
     
     if(NSHeight(self.frame) <= 34) {
@@ -189,31 +193,34 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     CGContextSetAllowsFontSmoothing(context,!isRetina);
     
     
-    [super drawRect:dirtyRect];
     
     NSRange range = NSMakeRange(0, self.attributedString.length);
     
     NSMutableArray<NSValue *> *ranges = [NSMutableArray array];
     
+    
     [self.attributedString enumerateAttribute:TGSpoilerAttributeName inRange:range options:0 usingBlock:^(__unused id value, NSRange range, __unused BOOL *stop) {
         if ([value isKindOfClass:[TGInputTextTag class]]) {
             TGInputTextTag *tag = (TGInputTextTag *)value;
-            if ([tag.attachment intValue] == -1) {
+            if ([tag.attachment intValue] == inputTagIdSpoiler) {
                 [ranges addObject:[NSValue valueWithRange:range]];
             }
         }
     }];
     
+    
     for (int i = 0; i < ranges.count; i++) {
         NSRange range = [[ranges objectAtIndex:i] rangeValue];
         for (int j = 0; j < range.length; j++) {
             NSRect rect = [self highlightRectForRange:NSMakeRange(range.location + j, 1) whole:false];
+            CGContextClearRect(context, rect);
             CGContextSetFillColorWithColor(context, [[_weakTextView.textColor colorWithAlphaComponent:0.15] CGColor]);
             CGContextFillRect(context, rect);
         }
 
     }
-
+    
+    [super drawRect:dirtyRect];
 
     
 }
@@ -356,27 +363,27 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
 -(NSArray *)transformItems {
     
     NSMenuItem *bold = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.Bold", nil) action:@selector(boldWord:) keyEquivalent:@"b"];
-    [bold setKeyEquivalentModifierMask: NSCommandKeyMask];
+    [bold setKeyEquivalentModifierMask: NSEventModifierFlagCommand];
     
     NSMenuItem *italic = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.Italic", nil) action:@selector(italicWord:) keyEquivalent:@"i"];
-    [italic setKeyEquivalentModifierMask: NSCommandKeyMask];
+    [italic setKeyEquivalentModifierMask: NSEventModifierFlagCommand];
     
     
     NSMenuItem *code = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.Code", nil) action:@selector(codeWord:) keyEquivalent:@"k"];
-    [code setKeyEquivalentModifierMask: NSShiftKeyMask | NSCommandKeyMask];
+    [code setKeyEquivalentModifierMask: NSEventModifierFlagShift | NSEventModifierFlagCommand];
     
     NSMenuItem *url = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.URL1", nil) action:@selector(makeUrl:) keyEquivalent:@"u"];
-    [url setKeyEquivalentModifierMask: NSCommandKeyMask];
+    [url setKeyEquivalentModifierMask: NSEventModifierFlagCommand];
     
     NSMenuItem *strikethrough = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.Strikethrough", nil) action:@selector(makeStrikethrough:) keyEquivalent:@"x"];
-    [strikethrough setKeyEquivalentModifierMask: NSShiftKeyMask | NSCommandKeyMask];
+    [strikethrough setKeyEquivalentModifierMask: NSEventModifierFlagShift | NSEventModifierFlagCommand];
 
     NSMenuItem *underline = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.Underline", nil) action:@selector(makeUnderline:) keyEquivalent:@"u"];
-    [underline setKeyEquivalentModifierMask: NSShiftKeyMask | NSCommandKeyMask];
+    [underline setKeyEquivalentModifierMask: NSEventModifierFlagShift | NSEventModifierFlagCommand];
 
     
     NSMenuItem *spoiler = [[NSMenuItem alloc] initWithTitle:NSLocalized(@"TextView.Transform.Spoiler", nil) action:@selector(makeSpoiler:) keyEquivalent:@"p"];
-    [spoiler setKeyEquivalentModifierMask: NSShiftKeyMask | NSCommandKeyMask];
+    [spoiler setKeyEquivalentModifierMask: NSEventModifierFlagShift | NSEventModifierFlagCommand];
 
     
     
@@ -396,6 +403,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     NSMutableAttributedString *attr = [self.attributedString mutableCopy];
     [attr removeAttribute:TGCustomLinkAttributeName range:selectedRange];
     [attr removeAttribute:TGSpoilerAttributeName range:selectedRange];
+    [attr removeAttribute:TGAnimatedEmojiAttributeName range:selectedRange];
     [attr addAttribute:NSFontAttributeName value:[NSFont systemFontOfSize:self.font.pointSize] range: selectedRange];
     
     [self.textStorage setAttributedString:attr];
@@ -409,7 +417,9 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     if(self.selectedRange.length == 0) {
         return;
     }
-
+    
+   
+    
     NSRange effectiveRange;
     NSFont *effectiveFont;
     for (int i = self.selectedRange.location; i < self.selectedRange.location + self.selectedRange.length; i++) {
@@ -489,7 +499,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     
     TGInputTextTag * attribute = (TGInputTextTag *) [was attribute:TGSpoilerAttributeName atIndex:0 effectiveRange:&effectiveRange];
     
-    if ([attribute.attachment intValue] == -1) {
+    if ([attribute.attachment intValue] == inputTagIdSpoiler) {
         [self.textStorage removeAttribute:TGSpoilerAttributeName range:self.selectedRange];
         NSAttributedString *be = [self.attributedString attributedSubstringFromRange:self.selectedRange];
         
@@ -498,7 +508,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
         MarkdownUndoItem *item = [[MarkdownUndoItem alloc] initWithAttributedString:was be:be inRange:self.selectedRange];
         [self addItem:item];
     } else {
-        id tag = [[TGInputTextTag alloc] initWithUniqueId:++nextId attachment:@(-1) attribute:[[TGInputTextAttribute alloc] initWithName:NSForegroundColorAttributeName value:[NSColor redColor]]];
+        id tag = [[TGInputTextTag alloc] initWithUniqueId:++nextId attachment:@(inputTagIdSpoiler) attribute:[[TGInputTextAttribute alloc] initWithName:NSForegroundColorAttributeName value:[NSColor redColor]]];
         [self.weakTextView addInputTextTag:tag range:self.selectedRange];
     }
 }
@@ -865,14 +875,29 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
 @end
 
 
-@interface TGModernGrowingTextView () <NSTextViewDelegate,CAAnimationDelegate> {
+@interface TGModernGrowingTextView () <NSTextViewDelegate,CAAnimationDelegate, NSLayoutManagerDelegate> {
     int _last_height;
 }
     @property (nonatomic,strong) TGGrowingTextView *textView;
     @property (nonatomic,strong) NSScrollView *scrollView;
     @property (nonatomic,assign) BOOL notify_next;
     @property (nonatomic, strong) NSUndoManager *_undo;
-    @end
+    @property (nonatomic, strong) NSView * _Nullable (^ _Nullable getAttachView)();
+    @property (nonatomic,strong) NSMutableDictionary<NSString *, NSView *> *attachments;
+
+@end
+
+@interface TGTextLayoutManager : NSLayoutManager
+
+@end
+
+@implementation TGTextLayoutManager
+
+-(void)drawGlyphsForGlyphRange:(NSRange)glyphsToShow atPoint:(NSPoint)origin {
+    [super drawGlyphsForGlyphRange:glyphsToShow atPoint:origin];
+}
+
+@end
 
 
 @implementation TGModernGrowingTextView
@@ -892,8 +917,20 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
         _max_height = 200;
         _animates = YES;
         _cursorColor = [NSColor blackColor];
-        
+//        _textStorage = [[NSTextStorage alloc] init];
+//
+//        TGTextLayoutManager *layoutManager = [[TGTextLayoutManager alloc] init];
+//        [_textStorage addLayoutManager:layoutManager];
+//
+//        NSTextContainer *container = [[NSTextContainer alloc] init];
+//        container.widthTracksTextView = true;
+//        container.heightTracksTextView = true;
+//        [layoutManager addTextContainer:container];
+//
         _textView = [[[self _textViewClass] alloc] initWithFrame:self.bounds];
+
+        _attachments = [[NSMutableDictionary alloc] init];
+        
         [_textView setRichText:NO];
         [_textView setImportsGraphics:NO];
         _textView.insertionPointColor = _cursorColor;
@@ -908,6 +945,8 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
         [_textView setDrawsBackground:NO];
         
         
+        _textView.layoutManager.delegate = self;
+        
         if (unscrollable) {
             self.scrollView = [[UnscrollableTextScrollView alloc] initWithFrame:self.bounds];
         } else {
@@ -915,7 +954,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
         }
         
         
-        [[self.scrollView verticalScroller] setControlSize:NSSmallControlSize];
+        [[self.scrollView verticalScroller] setControlSize:NSControlSizeSmall];
         self.scrollView.documentView = _textView;
         [self.scrollView setFrame:NSMakeRect(0, 0, NSWidth(self.frame), NSHeight(self.frame))];
         [self addSubview:self.scrollView];
@@ -948,6 +987,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     
     return self;
 }
+
     
 -(NSUndoManager *)undoManagerForTextView:(NSTextView *)view {
     return self._undo;
@@ -964,6 +1004,12 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     _textView.textColor = _textColor;
     [self textDidChange:nil];
 }
+
+-(void)setSelectTextColor:(NSColor *)selectTextColor {
+    _selectedTextColor = selectTextColor;
+    [self refreshAttributes];
+}
+    
     
 -(void)setTextFont:(NSFont *)textFont {
     _textFont = textFont;
@@ -994,6 +1040,8 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     newSize.height = MIN(MAX(newSize.height,_min_height),_max_height);
     
     [self updatePlaceholder:self.animates newSize:newSize];
+    
+    [self refreshAttachments];
 }
     
 -(void)mouseDown:(NSEvent *)theEvent {
@@ -1031,10 +1079,87 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     
 - (void)drawRect:(NSRect)dirtyRect {
     [super drawRect:dirtyRect];
-    
+    [self refreshAttributes];
 }
 
+
+-(void)refreshAttachments {
+    NSMutableArray<NSValue *> *ranges = [NSMutableArray array];
+    NSMutableArray<TGTextAttachment *> *attachments = [NSMutableArray array];
+
     
+    NSRange range = NSMakeRange(0, self.textView.attributedString.length);
+        
+    [self.textView.attributedString enumerateAttributesInRange:range options:0 usingBlock:^(NSDictionary<NSAttributedStringKey,id> * _Nonnull attrs, NSRange range, BOOL * _Nonnull stop) {
+        
+        [attrs enumerateKeysAndObjectsUsingBlock:^(NSAttributedStringKey  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+            if ([key isEqualToString:TGAnimatedEmojiAttributeName]) {
+                TGTextAttachment *attachment = (TGTextAttachment *)obj;
+                if (attachment) {
+                    [ranges addObject:[NSValue valueWithRange:range]];
+                    [attachments addObject:obj];
+                }
+            }
+        }];
+        
+    }];
+    
+    NSMutableArray<NSString *> *validIds = [NSMutableArray array];
+    
+    for (int i = 0; i < ranges.count; i++) {
+        NSRange range = ranges[i].rangeValue;
+        TGTextAttachment *attachment = attachments[i];
+        
+        NSRect rect = [self.textView highlightRectForRange:range whole:NO];
+        NSView* view = [self.attachments valueForKey:attachment.identifier];
+        if (view == nil) {
+            view = _getAttachView(attachment, rect.size);
+        }
+        if (view != nil) {
+            rect.size.height = view.frame.size.height;
+            rect.size.width = view.frame.size.width;
+            rect.origin.y -= 1;
+            rect.origin.y = floor(rect.origin.y);
+            rect.origin.x = floor(rect.origin.x);
+            view.frame = rect;
+            if(view != nil && view.superview != _textView) {
+                [_textView addSubview:view];
+            }
+            [validIds addObject:attachment.identifier];
+            [_attachments setObject:view forKey:attachment.identifier];
+        }
+    }
+    
+    NSMutableArray<NSString *> *toRemove = [NSMutableArray array];
+    [_attachments enumerateKeysAndObjectsUsingBlock:^(NSString * _Nonnull key, NSView * _Nonnull obj, BOOL * _Nonnull stop) {
+        if (![validIds containsObject:key]) {
+            [toRemove addObject:key];
+        }
+    }];
+    
+    for (int i = 0; i < toRemove.count; i++) {
+        NSView *view = [_attachments objectForKey:toRemove[i]];
+        [view removeFromSuperview];
+        [_attachments removeObjectForKey:toRemove[i]];
+    }
+    
+        
+    [self.textView.attributedString enumerateAttribute:TGAnimatedEmojiAttributeName inRange:range options:0 usingBlock:^(__unused id value, NSRange range, __unused BOOL *stop) {
+        if ([value isKindOfClass:[TGTextAttachment class]]) {
+            [ranges addObject:[NSValue valueWithRange:range]];
+        }
+    }];
+    
+    for (int i = 0; i < ranges.count; i++) {
+        NSRange range = [[ranges objectAtIndex:i] rangeValue];
+        [self.textView.textStorage addAttribute:NSForegroundColorAttributeName value:[NSColor clearColor] range:range];
+    }
+    
+}
+    
+-(void)installGetAttachView:(NSView* _Nullable (^)(TGTextAttachment * _Nonnull, NSSize size))getAttachView {
+    _getAttachView = getAttachView;
+}
     
 -(NSArray<NSTouchBarItemIdentifier> *)textView:(NSTextView *)textView shouldUpdateTouchBarItemIdentifiers:(NSArray<NSTouchBarItemIdentifier> *)identifiers {
     if ([self.delegate respondsToSelector:@selector(textView:shouldUpdateTouchBarItemIdentifiers:)]) {
@@ -1101,7 +1226,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     
     newSize.height = MIN(MAX(newSize.height,_min_height),_max_height);
     
-    BOOL animated = self.animates && ![self.window inLiveResize];
+    BOOL animated = self.animates && ![self.window inLiveResize] && self.window != nil;
     
     
     if(_last_height != newSize.height) {
@@ -1116,7 +1241,6 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
         
         [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
         
-        newSize.width = [_delegate textViewSize: self].width;
         
         NSSize layoutSize = NSMakeSize(roundf(newSize.width), roundf(newSize.height));
         
@@ -1207,7 +1331,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
 -(void)scrollToCursor {
     [_textView.layoutManager ensureLayoutForTextContainer:_textView.textContainer];
     
-    NSRect lineRect = [self.textView highlightRectForRange:self.selectedRange whole:true];
+    NSRect lineRect = [self.textView highlightRectForRange:NSMakeRange(self.selectedRange.location + self.selectedRange.length - 1, 1) whole:true];
     
     CGFloat maxY = [self.scrollView.contentView documentRect].size.height;
     maxY = MIN(MAX(lineRect.origin.y, 0), maxY - self.scrollView.frame.size.height);
@@ -1379,7 +1503,20 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
         
         
         [self.textView.textStorage addAttribute:NSForegroundColorAttributeName value:self.textColor range:NSMakeRange(0, string.length)];
+       
+        if (self.selectedTextColor != nil) {
+            [_textView setSelectedTextAttributes:
+                 [NSDictionary dictionaryWithObjectsAndKeys:
+                  self.selectedTextColor, NSBackgroundColorAttributeName,
+                  nil]];
+        }
         
+        [string enumerateAttribute:TGEmojiHolderAttributeName inRange:NSMakeRange(0, string.length) options:0 usingBlock:^(__unused id value, NSRange range, __unused BOOL *stop) {
+            TGInputTextEmojiHolder *attribute = (TGInputTextEmojiHolder *)value;
+            if (attribute) {
+                [self.textView.textStorage addAttribute:attribute.attribute.name value:attribute.attribute.value range:range];
+            }
+        }];
         
         NSArray<NSString *> *attributes = @[TGCustomLinkAttributeName, TGSpoilerAttributeName];
         
@@ -1534,7 +1671,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
         
     }
     
-    
+    [self refreshAttachments];
 }
 
 -(void)strikethroughWord {
@@ -1550,6 +1687,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     
 -(void)boldWord {
     [self.textView boldWord:nil];
+
 }
 -(void)removeAllAttributes {
     if(self.selectedRange.length == 0) {
@@ -1559,6 +1697,7 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     [attr removeAttribute:NSFontAttributeName range:self.selectedRange];
     [attr removeAttribute:TGCustomLinkAttributeName range:self.selectedRange];
     [attr removeAttribute:TGSpoilerAttributeName range:self.selectedRange];
+    [attr removeAttribute:TGAnimatedEmojiAttributeName range:self.selectedRange];
     [self.textView.textStorage setAttributedString:attr];
 }
     
@@ -1591,13 +1730,11 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     NSAttributedString *string = [attributedString attributedSubstringFromRange:NSMakeRange(0, MIN(limit, attributedString.string.length))];
     
     NSMutableAttributedString *attr = [[NSMutableAttributedString alloc] initWithAttributedString: string];
-    
+        
     [string enumerateAttribute:NSFontAttributeName inRange:NSMakeRange(0, string.length) options:0 usingBlock:^(NSFont *value, NSRange range, BOOL * _Nonnull stop) {
         [attr addAttribute:NSFontAttributeName value:[[NSFontManager sharedFontManager] convertFont:value toSize:_textFont.pointSize] range:range];
     }];
-    
-  
-    
+        
     NSRange selectedRange = _textView.selectedRange;
     if (selectedRange.location == self.textView.string.length) {
         selectedRange = NSMakeRange(attr.length, 0);
@@ -1611,7 +1748,9 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
     self.animates = o;
    
     [self setSelectedRange:NSMakeRange(MIN(selectedRange.location, string.length), 0)];
-
+    
+    [self refreshAttachments];
+    
 }
     
     
@@ -1788,7 +1927,15 @@ NSString *const TGSpoilerAttributeName = @"TGSpoilerAttributeName";
 -(void)setBackgroundColor:(NSColor * __nonnull)color {
     self.scrollView.backgroundColor = color;
     self.textView.backgroundColor = color;
-    _placeholder.backgroundColor = [NSColor redColor];
+    _placeholder.backgroundColor = [NSColor clearColor];
+}
+
+-(NSRect)highlightRectForRange:(NSRange)aRange whole: (BOOL)whole {
+    return [self.textView highlightRectForRange:aRange whole:whole];
+}
+
+-(NSScrollView *)scroll {
+    return self.scrollView;
 }
 
 @end

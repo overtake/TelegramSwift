@@ -165,7 +165,7 @@ func rateCallAndSendLogs(context: AccountContext, callId: CallId, starsCount: In
         let name = "\(callId.id)_\(callId.accessHash).log.json"
         let path = callLogsPath(account: context.account) + "/" + name
         let file = TelegramMediaFile(fileId: MediaId(namespace: Namespaces.Media.LocalFile, id: id), partialReference: nil, resource: LocalFileReferenceMediaResource(localFilePath: path, randomId: id), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "application/text", size: nil, attributes: [.FileName(fileName: name)])
-        let message = EnqueueMessage.message(text: comment, attributes: [], mediaReference: .standalone(media: file), replyToMessageId: nil, localGroupingKey: nil, correlationId: nil)
+        let message = EnqueueMessage.message(text: comment, attributes: [], inlineStickers: [:], mediaReference: .standalone(media: file), replyToMessageId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])
         return rate
             |> then(enqueueMessages(account: context.account, peerId: peerId, messages: [message])
                 |> mapToSignal({ _ -> Signal<Void, NoError> in
@@ -173,7 +173,7 @@ func rateCallAndSendLogs(context: AccountContext, callId: CallId, starsCount: In
                 }))
     } else if !comment.isEmpty {
         return rate
-            |> then(enqueueMessages(account: context.account, peerId: peerId, messages: [.message(text: comment, attributes: [], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil)])
+            |> then(enqueueMessages(account: context.account, peerId: peerId, messages: [.message(text: comment, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])])
                 |> mapToSignal({ _ -> Signal<Void, NoError> in
                     return .single(Void())
                 }))

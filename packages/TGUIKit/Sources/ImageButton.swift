@@ -119,7 +119,7 @@ open class ImageButton: Button {
         } else {
             updated = images[.Normal]
         }
-        
+                
         if imageView.image != updated {
             self.imageView.image = updated
         }
@@ -214,7 +214,7 @@ open class ImageButton: Button {
     }
     
     public override func updateLayout() {
-        if let image = images[controlState] {
+        if let image = self.imageView.image {
             switch imageView.contentGravity {
             case .resize, .resizeAspectFill:
                 imageView.setFrameSize(frame.size)

@@ -26,7 +26,7 @@ class EditAccountInfoItem: GeneralRowItem {
         self.updateText = updateText
         self.state = state
         self.uploadNewPhoto = uploadNewPhoto
-        self.photo = state.peer != nil ? .PeerAvatar(state.peer!, [state.firstName.first, state.lastName.first].compactMap{$0}.map{String($0)}, state.representation, nil, nil) : .Empty
+        self.photo = state.peer != nil ? .PeerAvatar(state.peer!, [state.firstName.first, state.lastName.first].compactMap{$0}.map{String($0)}, state.representation, nil, nil, state.peer!.isForum) : .Empty
         
         let height: CGFloat
         switch viewType {
@@ -219,6 +219,10 @@ private final class EditAccountInfoItemView : TableRowView, TGModernGrowingDeleg
     override func updateColors() {
         firstNameTextView.textColor = theme.colors.text
         lastNameTextView.textColor = theme.colors.text
+        
+        firstNameTextView.selectedTextColor = theme.colors.selectText
+        lastNameTextView.selectedTextColor = theme.colors.selectText
+
         
         firstNameTextView.setBackgroundColor(backdorColor)
         lastNameTextView.setBackgroundColor(backdorColor)

@@ -75,7 +75,7 @@ private struct DiceState : Equatable {
     init(message: Message) {
         self.message = message
         self.messageId = message.id
-        if let dice = message.media.first as? TelegramMediaDice, dice.value == 0 {
+        if let dice = message.effectiveMedia as? TelegramMediaDice, dice.value == 0 {
             play = .idle
         } else if message.forwardInfo != nil {
             play = .end(animated: false)
@@ -243,6 +243,7 @@ class ChatDiceContentView: ChatMediaContentView {
         self.diceState = diceState
         
         
+        
         let data: Signal<(Data?, TelegramMediaFile), NoError> = context.diceCache.interactiveSymbolData(baseSymbol: baseSymbol, synchronous: approximateSynchronousValue) |> mapToSignal { values in
             for value in values {
                 if value.0 == sideSymbol {
@@ -303,7 +304,7 @@ class ChatDiceContentView: ChatMediaContentView {
                 }
                 switch diceState.play {
                 case let .end(animated):
-                    if let previous = self.playerView.animation, animated {
+                    if let previous = self.playerView.contextAnimation, animated {
                         switch self.playerView.currentState {
                         case .playing:
                             previous.triggerOn = (.last, { [weak self] in
@@ -352,7 +353,7 @@ class ChatDiceContentView: ChatMediaContentView {
                         self.playerView.isHidden = false
                         self.thumbView.isHidden = true
                     }
-                case .stoped:
+                case .stoped, .finished:
                     switch diceState.play {
                     case let .end(animated):
                         if animated {

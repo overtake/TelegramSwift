@@ -505,7 +505,7 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
         }
     }
     
-    controller.updateDatas = { data in
+    controller.updateDatas = { [weak controller] data in
                 
         updateState { current in
             var current = current
@@ -564,6 +564,16 @@ func PaymentsPaymentMethodController(context: AccountContext, fields: PaymentsPa
                     cardError = .init(description: strings().yourCardsSecurityCodeIsInvalid, target: .data)
                 default:
                     cardError = nil
+                }
+            }
+            
+            if let responder = controller?.currentFirstResponderIdentifier, cardError == nil {
+                if _id_card_number == responder, normalized.length == maxCardNumberLength {
+                    controller?.jumpNext()
+                } else if _id_card_date == responder, current.card.date.length == 5 {
+                    controller?.jumpNext()
+                }  else if _id_card_cvc == responder, current.card.cvc.length == maxCVCLength {
+                    controller?.jumpNext()
                 }
             }
             

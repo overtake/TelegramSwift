@@ -1787,11 +1787,14 @@ extension String {
             let char = string.character(at: range.location + i)
             rep += "\(chars[Int(char) % chars.count])"
         }
-        if string.length <= range.upperBound {
-            return string.replacingCharacters(in: range, with: rep)
-        } else {
-            return self
-        }
+        return string.replacingCharacters(in: range, with: rep)
+
+//        if string.length <= range.upperBound {
+//            return string.replacingCharacters(in: range, with: rep)
+//        } else {
+//            NSLog("\(string.length), \(range.upperBound)")
+//            return string.replacingCharacters(in: NSMakeRange(range.location, string.length), with: rep)
+//        }
     }
 }
 
@@ -1799,6 +1802,19 @@ func copyToClipboard(_ string:String) {
     NSPasteboard.general.clearContents()
     NSPasteboard.general.declareTypes([.string], owner: nil)
     NSPasteboard.general.setString(string, forType: .string)
+}
+func copyToClipboard(_ input: ChatTextInputState) -> Void {
+    let pb = NSPasteboard.general
+    pb.clearContents()
+    pb.declareTypes([.kInApp, .string], owner: nil)
+
+    let encoder = AdaptedPostboxEncoder()
+    let encoded = try? encoder.encode(input)
+    
+    if let data = encoded {
+        pb.setData(data, forType: .kInApp)
+        pb.setString(input.inputText, forType: .string)
+    }
 }
 
 extension LAPolicy {
@@ -2240,6 +2256,7 @@ public extension NSAttributedString {
                 break
             }
         }
+        NSLog("\(modified)")
         
         var attachments:[NSTextAttachment] = []
         
@@ -2253,10 +2270,10 @@ public extension NSAttributedString {
                 }
                 if let string = string {
                     let tag = TGInputTextTag(uniqueId: arc4random64(), attachment: string, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
-                    if let tag = tag {
-                        modified.addAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), value: tag, range: range)
-                    }
+                    modified.addAttribute(NSAttributedString.Key(rawValue: TGCustomLinkAttributeName), value: tag, range: range)
                 }
+            } else if let _ = attr[.init(rawValue: TGAnimatedEmojiAttributeName)] {
+               
             } else if let font = attr[.font] as? NSFont {
                 let newFont: NSFont
                 if font.fontDescriptor.symbolicTraits.contains(.bold) && font.fontDescriptor.symbolicTraits.contains(.italic) {
@@ -2292,7 +2309,7 @@ public extension NSAttributedString {
         let inputText = self.mutableCopy() as! NSMutableAttributedString
         
         
-        var range: NSRange = NSMakeRange(selectedRange.location + string.string.length, 0);
+        let range: NSRange = NSMakeRange(selectedRange.location + string.string.length, 0);
         if selectedRange.upperBound - selectedRange.lowerBound > 0 {
             inputText.replaceCharacters(in: NSMakeRange(selectedRange.lowerBound, selectedRange.upperBound - selectedRange.lowerBound), with: string)
         } else {

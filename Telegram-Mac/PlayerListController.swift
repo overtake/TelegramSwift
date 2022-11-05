@@ -12,11 +12,14 @@ import TelegramCore
 
 import Postbox
 import SwiftSignalKit
+import RangeSet
 
 private final class PlayerListArguments {
     let chatInteraction: ChatInteraction
-    init(chatInteraction: ChatInteraction) {
+    let music:(Message, GalleryAppearType)->Void
+    init(chatInteraction: ChatInteraction, music:@escaping(Message, GalleryAppearType)->Void) {
         self.chatInteraction = chatInteraction
+        self.music = music
     }
 }
 
@@ -44,7 +47,7 @@ private enum PlayerListEntry: TableItemListNodeEntry {
     func item(_ arguments: PlayerListArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .message(_, message):
-            return PeerMediaMusicRowItem(initialSize, arguments.chatInteraction, .messageEntry(message, [], .defaultSettings, .singleItem),  isCompactPlayer: true)
+            return PeerMediaMusicRowItem(initialSize, arguments.chatInteraction, .messageEntry(message, [], .defaultSettings, .singleItem), isCompactPlayer: true, music: arguments.music)
         }
     }
     
@@ -421,7 +424,7 @@ final class PlayerListView : View, APDelegate {
     let tableView: TableView
     private let controls: PlayerListControlsView = PlayerListControlsView(frame: .zero)
     private let bufferingStatusDisposable = MetaDisposable()
-    private var ranges: (IndexSet, Int)?
+    private var ranges: (RangeSet<Int64>, Int64)?
     private(set) var controller:APController? {
         didSet {
             oldValue?.remove(listener: self)
@@ -439,10 +442,10 @@ final class PlayerListView : View, APDelegate {
         }
     }
     
-    func updateStatus(_ ranges: IndexSet, _ size: Int) {
+    func updateStatus(_ ranges: RangeSet<Int64>, _ size: Int64) {
         self.ranges = (ranges, size)
         if let ranges = self.ranges, !ranges.0.isEmpty, ranges.1 != 0 {
-            for range in ranges.0.rangeView {
+            for range in ranges.0.ranges {
                 var progress = (CGFloat(range.count) / CGFloat(ranges.1))
                 progress = progress == 1.0 ? 0 : progress
                 controls.progress.set(fetchingProgress: progress, animated: progress > 0)
@@ -673,7 +676,9 @@ class PlayerListController: TelegramGenericViewController<PlayerListView> {
         let updateView = Atomic<PeerMediaUpdate?>(value: nil)
         
         
-        let arguments = PlayerListArguments(chatInteraction: chatInteraction)
+        let arguments = PlayerListArguments(chatInteraction: chatInteraction, music: { message, _ in
+            context.audioPlayer?.playOrPause(message.id)
+        })
         
         let historyViewTransition: Signal<TableUpdateTransition, NoError>
         if messages.isEmpty {

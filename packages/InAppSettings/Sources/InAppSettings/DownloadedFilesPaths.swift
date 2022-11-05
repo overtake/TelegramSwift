@@ -14,9 +14,9 @@ import TelegramCore
 public struct DownloadedPath : Codable, Equatable {
     public let id: MediaId
     public let downloadedPath: String
-    public let size: Int32
+    public let size: Int64
     public let lastModified: Int32
-    public init(id: MediaId, downloadedPath: String, size: Int32, lastModified: Int32) {
+    public init(id: MediaId, downloadedPath: String, size: Int64, lastModified: Int32) {
         self.id = id
         self.downloadedPath = downloadedPath
         self.size = size
@@ -29,7 +29,7 @@ public struct DownloadedPath : Codable, Equatable {
         
         self.id = try container.decode(MediaId.self, forKey: "id")
         self.downloadedPath = try container.decode(String.self, forKey: "dp")
-        self.size = try container.decode(Int32.self, forKey: "s")
+        self.size = try container.decode(Int64.self, forKey: "s")
         self.lastModified = try container.decode(Int32.self, forKey: "lm")
     }
     

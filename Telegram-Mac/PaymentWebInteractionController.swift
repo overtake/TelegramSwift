@@ -62,6 +62,13 @@ final class PaymentWebInteractionController: ModalViewController, WKNavigationDe
         }
     }
     
+    override var canBecomeResponder: Bool {
+        return true
+    }
+    
+    override func firstResponder() -> NSResponder? {
+        return self.view
+    }
 
     override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
         return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
@@ -73,7 +80,7 @@ final class PaymentWebInteractionController: ModalViewController, WKNavigationDe
     }
     
     override func measure(size: NSSize) {
-        self.modal?.resize(with:NSMakeSize(min(max(380, size.width - 20), 500), size.height - 70), animated: false)
+        self.modal?.resize(with:NSMakeSize(min(max(380, size.width - 20), 380), min(size.height - 70, 500)), animated: false)
     }
     
     override func initializer() -> NSView {

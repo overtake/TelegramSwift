@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-
+import Reactions
 import SwiftSignalKit
 
 
@@ -19,25 +19,40 @@ class AccountInfoItem: GeneralRowItem {
     
     fileprivate let textLayout: TextViewLayout
     fileprivate let activeTextlayout: TextViewLayout
+    
+    fileprivate let titleLayout: TextViewLayout
+    fileprivate let titleActiveLayout: TextViewLayout
+
     fileprivate let context: AccountContext
-    fileprivate let peer: TelegramUser
+    let peer: TelegramUser
     private(set) var photos: [TelegramPeerPhoto] = []
 
     private let peerPhotosDisposable = MetaDisposable()
     
-    init(_ initialSize:NSSize, stableId:AnyHashable, viewType: GeneralViewType, inset: NSEdgeInsets = NSEdgeInsets(left: 30, right: 30), context: AccountContext, peer: TelegramUser, action: @escaping()->Void) {
+    let setStatus:(Control, TelegramUser)->Void
+    
+    init(_ initialSize:NSSize, stableId:AnyHashable, viewType: GeneralViewType, inset: NSEdgeInsets = NSEdgeInsets(left: 30, right: 30), context: AccountContext, peer: TelegramUser, action: @escaping()->Void, setStatus: @escaping(Control, TelegramUser)->Void) {
         self.context = context
         self.peer = peer
+        self.setStatus = setStatus
         
         let attr = NSMutableAttributedString()
         
-        _ = attr.append(string: peer.displayTitle, color: theme.colors.text, font: .medium(.title))
+        
+        let titleAttr: NSMutableAttributedString = NSMutableAttributedString()
+        _ = titleAttr.append(string: peer.displayTitle, color: theme.colors.text, font: .medium(.title))
+        self.titleLayout = .init(titleAttr, maximumNumberOfLines: 1)
+        let activeTitle = titleAttr.mutableCopy() as! NSMutableAttributedString
+        activeTitle.addAttribute(.foregroundColor, value: theme.colors.underSelectedColor, range: titleAttr.range)
+        self.titleActiveLayout = .init(activeTitle, maximumNumberOfLines: 1)
+
         if let phone = peer.phone {
-            _ = attr.append(string: "\n")
             _ = attr.append(string: formatPhoneNumber(phone), color: theme.colors.grayText, font: .normal(.text))
         }
         if let username = peer.username, !username.isEmpty {
-            _ = attr.append(string: "\n")
+            if !attr.string.isEmpty {
+                _ = attr.append(string: "\n")
+            }
             _ = attr.append(string: "@\(username)", color: theme.colors.grayText, font: .normal(.text))
         }
         
@@ -49,7 +64,7 @@ class AccountInfoItem: GeneralRowItem {
         super.init(initialSize, height: 90, stableId: stableId, viewType: viewType, action: action, inset: inset)
         
         self.photos = syncPeerPhotos(peerId: peer.id)
-        let signal = peerPhotos(context: context, peerId: peer.id, force: true) |> deliverOnMainQueue
+        let signal = peerPhotos(context: context, peerId: peer.id) |> deliverOnMainQueue
         peerPhotosDisposable.set(signal.start(next: { [weak self] photos in
             self?.photos = photos
             self?.redraw()
@@ -62,13 +77,22 @@ class AccountInfoItem: GeneralRowItem {
     }
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat) -> Bool {
         let success = super.makeSize(width, oldWidth: oldWidth)
-        textLayout.measure(width: width - 100)
-        activeTextlayout.measure(width: width - 100)
+        textLayout.measure(width: width - 140)
+        activeTextlayout.measure(width: width - 140)
+        
+        let hasControl = PremiumStatusControl.hasControl(peer)
+        
+        self.titleLayout.measure(width: width - 140 - (hasControl ? 45 : 0))
+        self.titleActiveLayout.measure(width: width - 140 - (hasControl ? 45 : 0))
         return success
     }
     
     override func viewClass() -> AnyClass {
         return AccountInfoView.self
+    }
+    
+    var statusControl: Control? {
+        return (self.view as? AccountInfoView)?.statusControl
     }
     
 }
@@ -77,12 +101,16 @@ private class AccountInfoView : GeneralContainableRowView {
     
     
     private let avatarView:AvatarControl
+    private let titleView = TextView()
     private let textView: TextView = TextView()
     private let actionView: ImageView = ImageView()
     
     private var photoVideoView: MediaPlayerView?
     private var photoVideoPlayer: MediaPlayer?
 
+    private let container = View()
+    
+    fileprivate var statusControl: PremiumStatusControl?
     
     required init(frame frameRect: NSRect) {
         avatarView = AvatarControl(font: .avatar(22.0))
@@ -94,10 +122,16 @@ private class AccountInfoView : GeneralContainableRowView {
         textView.userInteractionEnabled = false
         textView.isSelectable = false
         
+        titleView.userInteractionEnabled = false
+        titleView.isSelectable = false
+        
         addSubview(avatarView)
         addSubview(actionView)
-        addSubview(textView)
         
+        container.addSubview(textView)
+        container.addSubview(titleView)
+        
+        addSubview(container)
         avatarView.set(handler: { [weak self] _ in
             if let item = self?.item as? AccountInfoItem, let _ = item.peer.largeProfileImage {
                 showPhotosGallery(context: item.context, peerId: item.peer.id, firstStableId: item.stableId, item.table, nil)
@@ -162,6 +196,7 @@ private class AccountInfoView : GeneralContainableRowView {
     
     deinit {
         removeNotificationListeners()
+        playStatusDisposable.dispose()
     }
 
 
@@ -170,12 +205,113 @@ private class AccountInfoView : GeneralContainableRowView {
     }
     
     private var videoRepresentation: TelegramMediaImage.VideoRepresentation?
+    private let playStatusDisposable = MetaDisposable()
     
+    private func playStatusEffect(_ status: PeerEmojiStatus, context: AccountContext) -> Void {
+        
+        
+    }
+    
+    private func playAnimation(_  status: Reactions.InteractiveStatus, context: AccountContext) {
+        guard let control = statusControl, visibleRect != .zero, window != nil else {
+            return
+        }
+        guard let fileId = status.fileId else {
+            return
+        }
+        
+        control.isHidden = true
+        
+        let play:(NSView, TableRowItem)->Void = { [weak control] container, item in
+            
+            guard let control = control else {
+                return
+            }
+            control.isHidden = false
+            control.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.3, bounce: true)
+            let player = CustomReactionEffectView(frame: NSMakeSize(160, 160).bounds, context: context, fileId: fileId)
+            
+            player.isEventLess = true
+            
+            player.triggerOnFinish = { [weak player] in
+                player?.removeFromSuperview()
+            }
+                    
+            let controlRect = container.convert(control.frame, to: item.table?.contentView)
+            
+            let rect = CGRect(origin: CGPoint(x: controlRect.midX - player.frame.width / 2, y: controlRect.midY - player.frame.height / 2), size: player.frame.size)
+            
+            player.frame = rect
+            
+            item.table?.contentView.addSubview(player)
+        }
+        if let item = self.item {
+            if let fromRect = status.rect {
+                let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: control.frame.size)
+                
+                let toRect = control.convert(control.frame.size.bounds, to: nil)
+                
+                let from = fromRect.origin.offsetBy(dx: fromRect.width / 2, dy: fromRect.height / 2)
+                let to = toRect.origin.offsetBy(dx: toRect.width / 2, dy: toRect.height / 2)
+                
+                let completed: (Bool)->Void = { [weak self] _ in
+                    DispatchQueue.main.async {
+                        if let item = self?.item, let container = self?.container {
+                            play(container, item)
+                            NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .default)
+                        }
+                    }
+                }
+                parabollicReactionAnimation(layer, fromPoint: from, toPoint: to, window: context.window, completion: completed)
+            } else {
+                play(self.container, item)
+            }
+        }
+        
+    }
     
     override func set(item: TableRowItem, animated: Bool) {
         super.set(item: item)
         
         if let item = item as? AccountInfoItem {
+            
+            var interactiveStatus: Reactions.InteractiveStatus? = nil
+            if visibleRect != .zero, window != nil, let interactive = item.context.reactions.interactiveStatus {
+                interactiveStatus = interactive
+            }
+            if let view = self.statusControl, interactiveStatus != nil, interactiveStatus?.fileId != nil {
+                performSubviewRemoval(view, animated: true, duration: 0.3)
+                self.statusControl = nil
+            }
+            
+            let control = PremiumStatusControl.control(item.peer, account: item.context.account, inlinePacksContext: item.context.inlinePacksContext, isSelected: item.isSelected, isBig: true, cached: self.statusControl, animated: animated)
+                        
+            if let control = control {
+                self.statusControl = control
+                self.container.addSubview(control)
+            } else if let view = self.statusControl {
+                performSubviewRemoval(view, animated: true)
+                self.statusControl = nil
+            }
+            if let interactive = interactiveStatus {
+                self.playAnimation(interactive, context: item.context)
+            }
+            
+            if let control = statusControl, item.peer.isPremium {
+                control.removeAllHandlers()
+                control.userInteractionEnabled = true
+                control.set(handler: { [weak item] control in
+                    if let user = item?.peer {
+                        item?.setStatus(control, user)
+                    }
+                }, for: .Click)
+            } else if let control = statusControl {
+                control.removeAllHandlers()
+                control.userInteractionEnabled = false
+            }
+        
+            
+            titleView.update(isSelect ? item.titleActiveLayout : item.titleLayout)
             
             actionView.image = item.isSelected ? nil : theme.icons.generalNext
             actionView.sizeToFit()
@@ -243,8 +379,21 @@ private class AccountInfoView : GeneralContainableRowView {
     override func layout() {
         super.layout()
         avatarView.centerY(x:16)
-        textView.centerY(x: avatarView.frame.maxX + 25)
-        actionView.centerY(x: containerView.frame.width - actionView.frame.width - 10)
+        
+        let h: CGFloat = statusControl != nil ? 6 : 0
+        
+        container.setFrameSize(NSMakeSize(max(titleView.frame.width, textView.frame.width + (statusControl != nil ? 40 : 0)), titleView.frame.height + textView.frame.height + 2 + h))
+        
+        titleView.setFrameOrigin(0, h)
+        textView.setFrameOrigin(0, titleView.frame.maxY + 2)
+        
+        container.centerY(x: avatarView.frame.maxX + 25)
+        
+        if let statusControl = statusControl {
+            statusControl.setFrameOrigin(titleView.frame.maxX + 3, 0)
+        }
+        
+        actionView.centerY(x: containerView.frame.width - actionView.frame.width - 15)
         photoVideoView?.frame = avatarView.frame
     }
     

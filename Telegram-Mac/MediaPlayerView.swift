@@ -27,13 +27,7 @@ private final class MediaPlayerViewLayer: AVSampleBufferDisplayLayer {
         return NSNull()
     }
     deinit {
-        if !Thread.isMainThread {
-            var bp = 0
-            bp += 1
-        } else {
-            var bp = 0
-            bp += 1
-        }
+    
     }
 }
 
@@ -89,6 +83,8 @@ final class MediaPlayerView: View {
     
     private let maskLayer = CAShapeLayer()
     
+    var cornerRadius: CGFloat = .cornerRadius
+    
     var positionFlags: LayoutPositionFlags? {
         didSet {
             if let positionFlags = positionFlags {
@@ -99,23 +95,23 @@ final class MediaPlayerView: View {
                 
                 path.move(to: NSMakePoint(minx, midy))
                 
-                var topLeftRadius: CGFloat = .cornerRadius
-                var bottomLeftRadius: CGFloat = .cornerRadius
-                var topRightRadius: CGFloat = .cornerRadius
-                var bottomRightRadius: CGFloat = .cornerRadius
+                var topLeftRadius: CGFloat = cornerRadius
+                var bottomLeftRadius: CGFloat = cornerRadius
+                var topRightRadius: CGFloat = cornerRadius
+                var bottomRightRadius: CGFloat = cornerRadius
                 
                 
                 if positionFlags.contains(.bottom) && positionFlags.contains(.left) {
-                    topLeftRadius = topLeftRadius * 3 + 2
+                    topLeftRadius = .cornerRadius * 3 + 2
                 }
                 if positionFlags.contains(.bottom) && positionFlags.contains(.right) {
-                    topRightRadius = topRightRadius * 3 + 2
+                    topRightRadius = .cornerRadius * 3 + 2
                 }
                 if positionFlags.contains(.top) && positionFlags.contains(.left) {
-                    bottomLeftRadius = bottomLeftRadius * 3 + 2
+                    bottomLeftRadius = .cornerRadius * 3 + 2
                 }
                 if positionFlags.contains(.top) && positionFlags.contains(.right) {
-                    bottomRightRadius = bottomRightRadius * 3 + 2
+                    bottomRightRadius = .cornerRadius * 3 + 2
                 }
                 
                 path.addArc(tangent1End: NSMakePoint(minx, miny), tangent2End: NSMakePoint(midx, miny), radius: bottomLeftRadius)
@@ -297,11 +293,11 @@ final class MediaPlayerView: View {
         let videoLayer = MediaPlayerViewLayer()
         videoLayer.videoGravity = .resize
         
-        #if arch(x86_64)
+       // #if arch(x86_64)
         if let sublayers = videoLayer.sublayers {
-            findContentsLayer(sublayers)?.minificationFilter = .trilinear
+            findContentsLayer(sublayers)?.minificationFilter = .linear
         }
-        #endif
+       // #endif
         
         self.videoLayer = videoLayer
         self.updateLayout()

@@ -12,6 +12,7 @@ import InAppSettings
 import Postbox
 import TGUIKit
 import SwiftSignalKit
+import TGModernGrowingTextView
 
 class ChatMediaLayoutParameters : Equatable {
     
@@ -30,6 +31,10 @@ class ChatMediaLayoutParameters : Equatable {
     
     
     var runEmojiScreenEffect:(String)->Void = { _ in }
+    
+    var runPremiumScreenEffect:(Message)->Void = { _ in }
+    
+    var mirror: Bool = false
     
     private var _timeCodeInitializer: Double? = nil
 
@@ -78,7 +83,7 @@ class ChatMediaLayoutParameters : Equatable {
     var automaticDownloadFunc:(Message)->Bool
     
     
-    init(presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool, autoplayMedia: AutoplayMediaPreferences) {
+    init(presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool = true, autoplayMedia: AutoplayMediaPreferences = .defaultSettings) {
         self.automaticDownloadFunc = { _ in
             return automaticDownload
         }
@@ -323,7 +328,16 @@ class ChatMediaItem: ChatRowItem {
         
         let isIncoming: Bool = message.isIncoming(context.account, object.renderType == .bubble)
 
-        media = message.media[0]
+        if let media = message.media[0] as? TelegramMediaInvoice, let extended = media.extendedMedia {
+            switch extended {
+            case .preview:
+                fatalError("not supported")
+            case .full(let media):
+                self.media = media
+            }
+        } else {
+            self.media = message.media[0]
+        }
         
         
         super.init(initialSize, chatInteraction, context, object, downloadSettings, theme: theme)
@@ -346,7 +360,9 @@ class ChatMediaItem: ChatRowItem {
             } else if message.containsSecretMedia {
                 type = .secret
             }
-                        
+            if self.chatInteraction.mode.isThreadMode, self.chatInteraction.mode.threadId?.peerId == message.id.peerId {
+                type = .messages([message])
+            }
             showChatGallery(context: context, message: message, self.table, self.parameters, type: type, chatMode: self.chatInteraction.mode, contextHolder: self.chatInteraction.contextHolder())
             
             }, showMessage: { [weak self] message in
@@ -356,10 +372,9 @@ class ChatMediaItem: ChatRowItem {
         self.parameters = parameters
         
         self.updateParameters()
-        
+                
+       
         if !message.text.isEmpty, canAddCaption {
-            
-            
             
             var caption:NSMutableAttributedString = NSMutableAttributedString()
             _ = caption.append(string: message.text, color: theme.chat.textColor(isIncoming, object.renderType == .bubble), font: .normal(theme.fontSize))
@@ -388,9 +403,16 @@ class ChatMediaItem: ChatRowItem {
                 }
             }
             var mediaDuration: Double? = nil
-            if let file = message.media.first as? TelegramMediaFile, file.isVideo && !file.isAnimated, let duration = file.duration {
+            if let file = message.effectiveMedia as? TelegramMediaFile, file.isVideo && !file.isAnimated, let duration = file.duration {
                 mediaDuration = Double(duration)
             }
+            
+          
+            
+            caption = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.modalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, object.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { [weak self] timecode in
+                self?.parameters?.set_timeCodeInitializer(timecode)
+                self?.parameters?.showMedia(message)
+            }, openBank: chatInteraction.openBank).mutableCopy() as! NSMutableAttributedString
             
             var spoilers:[TextViewLayout.Spoiler] = []
             for attr in message.attributes {
@@ -404,7 +426,8 @@ class ChatMediaItem: ChatRowItem {
                             } else {
                                 color = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
                             }
-                            spoilers.append(.init(range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound), color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
+                            let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
+                            caption.addAttribute(.init(rawValue: TGSpoilerAttributeName), value: TGInputTextTag(uniqueId: arc4random64(), attachment: NSNumber(value: -1), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: color)), range: range)
                         default:
                             break
                         }
@@ -412,23 +435,28 @@ class ChatMediaItem: ChatRowItem {
                 }
             }
             
-            caption = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.modalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, object.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { [weak self] timecode in
-                self?.parameters?.set_timeCodeInitializer(timecode)
-                self?.parameters?.showMedia(message)
-            }, openBank: chatInteraction.openBank).mutableCopy() as! NSMutableAttributedString
-            
-            
             if !hasEntities || message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
                 caption.detectLinks(type: types, context: context, color: theme.chat.linkColor(isIncoming, object.renderType == .bubble), openInfo:chatInteraction.openInfo, hashtag: context.bindings.globalSearch, command: chatInteraction.sendPlainText, applyProxy: chatInteraction.applyProxy)
             }
             if !(self is ChatVideoMessageItem) {
-                captionLayouts = [.init(id: message.stableId, offset: CGPoint(x: 0, y: 0), layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
+                
+                InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: message.textEntities?.entities ?? [], isPremium: context.isPremium)
+                
+                caption.enumerateAttribute(.init(rawValue: TGSpoilerAttributeName), in: caption.range, options: .init(), using: { value, range, stop in
+                    if let text = value as? TGInputTextTag {
+                        if let color = text.attribute.value as? NSColor {
+                            spoilers.append(.init(range: range, color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
+                        }
+                    }
+                })
+                
+                captionLayouts.append(.init(id: message.stableId, offset: CGPoint(x: 0, y: 0), layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, object.renderType == .bubble), strokeLinks: object.renderType == .bubble, alwaysStaticItems: true, disableTooltips: false, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
                     chatInteraction?.update({
                         $0.updatedInterfaceState({
                             $0.withRevealedSpoiler(message.id)
                         })
                     })
-                }))]
+                })))
             }
             
             let interactions = globalLinkExecutor
@@ -438,7 +466,7 @@ class ChatMediaItem: ChatRowItem {
                 context.bindings.rootNavigation().controller.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
             }
             interactions.topWindow = { [weak self] in
-                return self?.menuAdditionView
+                return self?.menuAdditionView ?? .single(nil)
             }
             for textLayout in self.captionLayouts.map ({ $0.layout }) {
                 textLayout.interactions = interactions
@@ -555,7 +583,7 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
         if let contentNode = contentNode {
@@ -587,7 +615,7 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
                 if let file = contentNode.media as? TelegramMediaFile, file.isGraphicFile, let mediaId = file.id, let dimension = file.dimensions {
                     var representations: [TelegramMediaImageRepresentation] = []
                     representations.append(contentsOf: file.previewRepresentations)
-                    representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil))
+                    representations.append(TelegramMediaImageRepresentation(dimensions: dimension, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
                     let image = TelegramMediaImage(imageId: mediaId, representations: representations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: file.partialReference, flags: [])
                     let reference = contentNode.parent != nil ? ImageMediaReference.message(message: MessageReference(contentNode.parent!), media: image) : ImageMediaReference.standalone(media: image)
                     return (.image(reference, ImagePreviewModalView.self), contentNode)
@@ -690,6 +718,17 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
            
             self.contentNode?.update(with: item.media, size: item.contentSize, context: item.context, parent:item.message, table:item.table, parameters:item.parameters, animated: animated, positionFlags: item.positionFlags, approximateSynchronousValue: item.approximateSynchronousValue)
             
+            let transition: ContainedViewLayoutTransition
+            if animated {
+                transition = .animated(duration: 0.2, curve: .easeOut)
+            } else {
+                transition = .immediate
+            }
+            if let contentNode = contentNode {
+                transition.updateFrame(view: contentNode, frame: item.contentSize.bounds)
+                contentNode.updateLayout(size: item.contentSize, transition: transition)
+            }
+            
             if item.isPinchable {
                 self.pinchToZoom?.add(to: contentNode!, size: item.contentSize)
             } else {
@@ -716,6 +755,14 @@ class ChatMediaView: ChatRowView, ModalPreviewRowViewProtocol {
        
         if interactive {
             self.contentNode?.interactionControllerDidFinishAnimation(interactive: interactive)
+        }
+    }
+    
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        if let view = contentNode, let item = self.item as? ChatMediaItem {
+            transition.updateFrame(view: view, frame: item.contentSize.bounds)
+            view.updateLayout(size: item.contentSize, transition: transition)
         }
     }
     

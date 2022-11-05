@@ -10,19 +10,20 @@ import Cocoa
 
 private class TitledContainerView : View {
     
-    private var statusNode:TextNode = TextNode()
-    private var titleNode:TextNode = TextNode()
+    private var statusNode:(TextNodeLayout, TextNode)?
+    private var titleNode:(TextNodeLayout, TextNode)?
     var titleImage:(CGImage, TitleBarImageSide)? {
         didSet {
             self.setNeedsDisplay()
         }
     }
     
-    var inset:()->CGFloat = { 50 }
+    var inset:()->CGFloat = { 0 }
     
     var text:NSAttributedString? {
         didSet {
             if text != oldValue {
+                self.updateLayouts()
                 self.setNeedsDisplay()
             }
         }
@@ -31,20 +32,32 @@ private class TitledContainerView : View {
     var status:NSAttributedString? {
         didSet {
             if status != oldValue {
-                self.setNeedsDisplay()
+                self.updateLayouts()
             }
         }
     }
     
+    func updateLayouts() {
+        var additionalInset: CGFloat = 0
+        if let (image,_) = titleImage {
+            additionalInset += image.backingSize.width + 5
+        }
+                
+        self.titleNode = TextNode.layoutText(maybeNode: nil,  text, nil, 1, .end, NSMakeSize(frame.width - inset() - additionalInset, frame.height), nil,false, .left)
+
+        self.statusNode = TextNode.layoutText(maybeNode: nil,  status, nil, 1, .end, NSMakeSize(frame.width - inset() - additionalInset, frame.height), nil,false, .left)
+        self.setNeedsDisplay()
+    }
+    
     var hiddenStatus:Bool = false {
         didSet {
-            self.setNeedsDisplay()
+            updateLayouts()
         }
     }
     
     var textInset:CGFloat? = nil {
         didSet {
-            self.setNeedsDisplay()
+            updateLayouts()
         }
     }
     
@@ -53,23 +66,50 @@ private class TitledContainerView : View {
         backgroundColor = presentation.colors.background
     }
     
+    var titleRect: NSRect? {
+        if let textLayout = self.titleNode?.0, let superview = superview {
+            
+            var tY = focus(textLayout.size).minY
+            
+            if let statusLayout = self.statusNode?.0 {
+                let t = textLayout.size.height + statusLayout.size.height + 2.0
+                tY = floorToScreenPixels(backingScaleFactor, (frame.height - t) / 2.0)
+            }
+            
+            let point = convert( NSMakePoint(floorToScreenPixels(backingScaleFactor, (superview.frame.width - textLayout.size.width)/2.0), tY), from: superview)
+            var textRect = NSMakeRect(min(max(textInset == nil ? point.x : textInset!, 0), frame.width - textLayout.size.width), point.y, textLayout.size.width, textLayout.size.height)
+            
+            if let (titleImage, side) = titleImage {
+                switch side {
+                case .left:
+                    textRect.origin.x += floorToScreenPixels(backingScaleFactor, titleImage.backingSize.width) + 4
+                default:
+                    break
+                }
+            }
+            return textRect
+        }
+        return nil
+    }
+    
+    override func layout() {
+        super.layout()
+        self.updateLayouts()
+    }
+    
     fileprivate override func draw(_ layer: CALayer, in ctx: CGContext) {
         
-        
-        
-        if let text = text, let superview = superview?.superview {
-            
+        if let (textLayout, textApply) = titleNode, let superview = superview?.superview {
+                        
             var additionalInset: CGFloat = 0
             if let (image,_) = titleImage {
                 additionalInset += image.backingSize.width + 5
             }
             
-            let (textLayout, textApply) = TextNode.layoutText(maybeNode: titleNode,  text, nil, 1, .end, NSMakeSize(frame.width - inset() - additionalInset, frame.height), nil,false, .left)
             var tY = focus(textLayout.size).minY
             
-            if let status = status {
+            if let (statusLayout, statusApply) = statusNode {
                 
-                let (statusLayout, statusApply) = TextNode.layoutText(maybeNode: statusNode,  status, nil, 1, .end, NSMakeSize(frame.width - inset() - additionalInset, frame.height), nil,false, .left)
                 
                 let t = textLayout.size.height + statusLayout.size.height + 2.0
                 tY = floorToScreenPixels(backingScaleFactor, (frame.height - t) / 2.0)
@@ -147,7 +187,7 @@ open class TitledBarView: BarView {
     }
     
     open var inset:CGFloat {
-        return 50
+        return 10
     }
 
     public var textInset:CGFloat? {
@@ -155,12 +195,20 @@ open class TitledBarView: BarView {
             _containerView.textInset = textInset
         }
     }
+    public var titleRect: NSRect? {
+        return _containerView.titleRect
+    }
     
     open override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         containerView.setFrameSize(newSize)
-        containerView.setNeedsDisplay()
+        _containerView.updateLayouts()
     }
+    open func update() {
+        
+    }
+    
+    
     public init(controller: ViewController, _ text:NSAttributedString? = nil, _ status:NSAttributedString? = nil, textInset:CGFloat? = nil) {
         self.text = text
         self.status = status

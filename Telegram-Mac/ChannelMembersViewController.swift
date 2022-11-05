@@ -135,7 +135,7 @@ private enum ChannelMembersEntry: Identifiable, Comparable {
                 interactionType = .plain
             }
             
-            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, stableId: stableId, enabled: enabled, height:46, photoSize: NSMakeSize(32, 32), drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
+            return ShortPeerRowItem(initialSize, peer: participant.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: enabled, height:46, photoSize: NSMakeSize(32, 32), drawLastSeparator: true, inset: NSEdgeInsets(left: 30, right: 30), interactionType: interactionType, generalType: .none, viewType: viewType, action: {
             
                 if case .plain = interactionType {
                     arguments.openInfo(participant.peer)
@@ -388,6 +388,8 @@ class ChannelMembersViewController: EditableViewController<TableView> {
                     text = strings().inviteChannelsTooMuch
                 case .generic:
                     text = strings().unknownError
+                case .kicked:
+                    text = strings().channelAddUserKickedError
                 case let .bot(memberId):
                     let _ = (context.account.postbox.transaction { transaction in
                         return transaction.getPeer(peerId)

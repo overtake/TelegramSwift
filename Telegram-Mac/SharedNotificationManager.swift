@@ -67,10 +67,10 @@ struct LockNotificationsData : Equatable {
 
 final class SharedNotificationBindings {
     let navigateToChat:(Account, PeerId) -> Void
-    let navigateToThread:(Account, MessageId, MessageId) -> Void // threadId, fromId
+    let navigateToThread:(Account, MessageId, MessageId?, MessageHistoryThreadData?) -> Void // threadId, fromId
     let updateCurrectController:()->Void
     let applyMaxReadIndexInteractively:(MessageIndex)->Void
-    init(navigateToChat: @escaping(Account, PeerId) -> Void, navigateToThread: @escaping(Account, MessageId, MessageId) -> Void, updateCurrectController: @escaping()->Void, applyMaxReadIndexInteractively:@escaping(MessageIndex)->Void) {
+    init(navigateToChat: @escaping(Account, PeerId) -> Void, navigateToThread: @escaping(Account, MessageId, MessageId?, MessageHistoryThreadData?) -> Void, updateCurrectController: @escaping()->Void, applyMaxReadIndexInteractively:@escaping(MessageIndex)->Void) {
         self.navigateToChat = navigateToChat
         self.navigateToThread = navigateToThread
         self.updateCurrectController = updateCurrectController
@@ -264,37 +264,54 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         updateLocked { (previous) -> LockNotificationsData in
             return previous.withUpdatedScreenLock(true)
         }
+        _isLockedValue.set(true)
     }
     
     @objc func screenIsUnlocked() {
         updateLocked { (previous) -> LockNotificationsData in
             return previous.withUpdatedScreenLock(false)
         }
+        _isLockedValue.set(false)
     }
     
+    private let _isLockedValue = ValuePromise(false, ignoreRepeated: true)
+    var isLockedValue: Signal<Bool, NoError> {
+        return _isLockedValue.get()
+    }
+
     
     var isLocked: Bool {
         return _lockedValue.isLocked
     }
     
-    private(set) var snoofEnabled: Bool = true
+    private(set) var showNotificationsOutOfFocus: Bool = true
     private(set) var requestUserAttention: Bool = false
     
     enum Source {
-        case messages([Message], PeerGroupId)
-        case reaction(Message, Peer, String, Int32)
+        case messages([Message], PeerGroupId, MessageHistoryThreadData?)
+        case reaction(Message, Peer, MessageReaction.Reaction, Int32, TelegramMediaFile?, MessageHistoryThreadData?)
         
         var messages:[Message] {
             switch self {
-            case let .messages(messages, _):
+            case let .messages(messages, _, _):
                 return messages
-            case let .reaction(message, _, _, _):
+            case let .reaction(message, _, _, _, _, _):
                 return [message]
             }
         }
+        
+        var threadData: MessageHistoryThreadData? {
+            switch self {
+            case let .messages(_, _, threadData):
+                return threadData
+            case let .reaction(_, _, _, _, _, threadData):
+                return threadData
+            }
+        }
+        
         var groupId: PeerGroupId? {
             switch self {
-            case let .messages(_, groupId):
+            case let .messages(_, groupId, _):
                 return groupId
             case .reaction:
                 return nil
@@ -302,10 +319,10 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         }
         func key(for message: Message) -> String {
             switch self {
-            case let .reaction(_, peer, value, timestamp):
-                return "reaction_\(message.id.toInt64())_\(peer.id.toInt64())_\(value)_\(timestamp)"
+            case let .reaction(_, peer, value, timestamp, _, _):
+                return "reaction_\(message.id.string)_\(peer.id.toInt64())_\(value)_\(timestamp)"
             case .messages:
-                return "message_\(message.id.toInt64())"
+                return "message_\(message.id.string)"
             }
         }
     }
@@ -314,26 +331,76 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         let screenLocked = self.screenLocked
         var alreadyNotified:Set<String> = Set()
         
+        let engine = TelegramEngine(account: account)
         
+        struct ReactionTuple {
+            var reactionAuthor: Peer
+            var reaction: MessageReaction.Reaction
+            var message: Message
+            var timestamp: Int32
+            var file: TelegramMediaFile?
+            var threadData: MessageHistoryThreadData?
+        }
         
+        let reactions: Signal<[ReactionTuple], NoError> = account.stateManager.reactionNotifications |> mapToSignal { reactions in
+            
+            
+            var fileIds: Set<Int64> = Set()
+            for reaction in reactions {
+                switch reaction.reaction {
+                case let .custom(fileId):
+                    fileIds.insert(fileId)
+                default:
+                    break
+                }
+            }
+            
+            return engine.stickers.resolveInlineStickers(fileIds: Array(fileIds)) |> mapToSignal { files in
+                return engine.account.postbox.transaction { transaction in
+                    var reactions:[ReactionTuple] = reactions.map { .init(reactionAuthor: $0, reaction: $1, message: $2, timestamp: $3) }
+                    
+                    for (i, reaction) in reactions.enumerated() {
+                        var threadData: MessageHistoryThreadData?
+                        let message = reaction.message
+                        for attr in message.attributes {
+                            if let attribute = attr as? ReplyMessageAttribute {
+                                if let threadId = attribute.threadMessageId {
+                                    let id = makeMessageThreadId(threadId)
+                                    threadData = transaction.getMessageHistoryThreadInfo(peerId: message.id.peerId, threadId: id)?.data.get(MessageHistoryThreadData.self)
+                                }
+                            }
+                        }
+                        reactions[i].threadData = threadData
+                    }
+                    
+                    for (i, reaction) in reactions.enumerated() {
+                        sw: switch reaction.reaction {
+                            case let .custom(fileId):
+                                reactions[i].file = files[fileId]
+                            default:
+                                break sw
+                        }
+                    }
+                    return reactions
+                }
+                
+            }
+        }
         
-        disposableDict.set((combineLatest(account.stateManager.notificationMessages, account.stateManager.reactionNotifications) |> mapToSignal { messages, reactions -> Signal<([Source], InAppNotificationSettings), NoError> in
+        disposableDict.set((combineLatest(account.stateManager.notificationMessages, reactions) |> mapToSignal { messages, reactions -> Signal<([Source], InAppNotificationSettings), NoError> in
             return appNotificationSettings(accountManager: self.accountManager) |> take(1) |> mapToSignal { inAppSettings -> Signal<([Source], InAppNotificationSettings), NoError> in
-                self.snoofEnabled = inAppSettings.showNotificationsOutOfFocus
+                self.showNotificationsOutOfFocus = inAppSettings.showNotificationsOutOfFocus
                 self.requestUserAttention = inAppSettings.requestUserAttention
                 if inAppSettings.enabled && inAppSettings.muteUntil < Int32(Date().timeIntervalSince1970) {
-                    
-                    
                     
                     let msgs:[Source] = messages.filter
                     {
                         $0.2 || ($0.0.isEmpty || $0.0[0].wasScheduled)
                     }.map {
-                        return .messages($0.0, $0.1)
+                        return .messages($0.0, $0.1, $0.3)
                     }
-                    
                     let rctns:[Source] = reactions.map {
-                        .reaction($2, $0, $1, $3)
+                        .reaction($0.message, $0.reactionAuthor, $0.reaction, $0.timestamp, $0.file, $0.threadData)
                     }
 
                     return .single((msgs + rctns, inAppSettings))
@@ -347,24 +414,27 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                 
                 var photos:[Signal<(MessageId, CGImage?),NoError>] = []
             
-                let messages:[Message] = sources.reduce([], { current, value in return current + value.messages})
-                
-                for message in messages {
-                    var peer = message.author
-                    if let mainPeer = coreMessageMainPeer(message) {
-                        if mainPeer is TelegramChannel || mainPeer is TelegramGroup || message.wasScheduled {
-                            peer = mainPeer
+                for source in sources {
+                    for message in source.messages {
+                        var peer = message.author
+                        if let mainPeer = coreMessageMainPeer(message) {
+                            if mainPeer is TelegramChannel || mainPeer is TelegramGroup || message.wasScheduled {
+                                peer = mainPeer
+                            }
+                        }
+                        if message.id.peerId == repliesPeerId {
+                            peer = message.chatPeer(account.peerId)
+                        }
+                        if let peer = peer {
+                            if let threadData = source.threadData {
+                                photos.append(peerAvatarImage(account: account, photo: .topic(threadData.info), genCap: false) |> map { data in return (message.id, data.0)})
+                            } else {
+                                photos.append(peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), genCap: false) |> map { data in return (message.id, data.0)})
+                            }
                         }
                     }
-                    if message.id.peerId == repliesPeerId {
-                        peer = message.chatPeer(account.peerId)
-                    }
-                    if let peer = peer {
-                        photos.append(peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, message), genCap: false) |> map { data in return (message.id, data.0)})
-                    }
                 }
-                
-                return  combineLatest(photos) |> map { resources in
+                return  combineLatest(photos) |> take(1) |> map { resources in
                     var images:[MessageId:NSImage] = [:]
                     for (messageId,image) in resources {
                         if let image = image {
@@ -380,11 +450,16 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
             }
             |> mapToSignal { values -> Signal<([Source], [MessageId:NSImage], InAppNotificationSettings, Bool, Peer, String?), NoError> in
             
-            return account.postbox.loadedPeerWithId(account.peerId) |> mapToSignal { peer in
+                return account.postbox.loadedPeerWithId(account.peerId) |> mapToSignal { peer in
                     if let message = values.0.first?.messages.first {
                         return account.postbox.transaction { transaction -> Signal<([Source], [MessageId:NSImage], InAppNotificationSettings, Bool, Peer, String?), NoError> in
-                            let notifications = transaction.getPeerNotificationSettings(message.id.peerId) as? TelegramPeerNotificationSettings
+                            let notifications = transaction.getPeerNotificationSettings(id: message.id.peerId) as? TelegramPeerNotificationSettings
                             
+                            if let threadData = values.0.first?.threadData {
+                                if threadData.notificationSettings.isMuted {
+                                    return .complete()
+                                }
+                            }
                             if notifications == nil || !notifications!.isMuted {
                                 if let messageSound = notifications?.messageSound {
                                     switch messageSound {
@@ -405,9 +480,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                     }
                                 }
                             } else {
-                                return getNotificationToneFile(account: account, sound: values.2.tone) |> map { soundPath in
-                                    return (values.0, values.1, values.2, values.3, peer, soundPath)
-                                }
+                                return .complete()
                             }
                         } |> switchToLatest
                     }
@@ -420,7 +493,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                 }
 
                 for source in sources {
-                    for message in source.messages {
+                    loop: for message in source.messages {
                         
                         if alreadyNotified.contains(source.key(for: message)) {
                             continue
@@ -436,10 +509,10 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             if let peer = message.peers[message.id.peerId] {
                                 if peer.isSupergroup || peer.isGroup {
                                     title = peer.displayTitle
-                                    hasReplyButton = peer.canSendMessage(false)
+                                    hasReplyButton = peer.canSendMessage(false, threadData: source.threadData)
                                 } else if message.id.peerId == repliesPeerId {
                                     if let peerId = message.sourceReference?.messageId.peerId, let sourcePeer = message.peers[peerId] {
-                                        hasReplyButton = sourcePeer.canSendMessage(true)
+                                        hasReplyButton = sourcePeer.canSendMessage(true, threadData: source.threadData)
                                     }
                                 } else if peer.isChannel {
                                     hasReplyButton = false
@@ -457,18 +530,29 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             var text: String
                             var subText:String? = nil
                             switch source {
-                            case let .reaction(message, peer, value, _):
+                            case let .reaction(message, peer, value, _, file, _):
+                                
+                                let reactionText: String
+                                switch value {
+                                case let .builtin(emoji):
+                                    reactionText = emoji
+                                case let .custom(fileId):
+                                    let mediaId = MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)
+                                    let file = file ?? message.associatedMedia[mediaId] as? TelegramMediaFile
+                                    reactionText = file?.customEmojiText ?? file?.stickerText ?? ""
+                                }
+                                
                                 let msg = pullText(from: message) as String
                                 title = message.peers[message.id.peerId]?.displayTitle ?? ""
                                 if message.id.peerId.namespace == Namespaces.Peer.CloudUser {
-                                    text = strings().notificationContactReacted(value.fixed, msg)
+                                    text = strings().notificationContactReacted(reactionText.fixed, msg)
                                 } else {
-                                    text = strings().notificationGroupReacted(peer.displayTitle, value, msg)
+                                    text = strings().notificationGroupReacted(peer.displayTitle, reactionText.fixed, msg)
                                 }
                             case .messages:
                                 text = chatListText(account: account, for: message, applyUserName: true).string
-                                if text.contains("\n") {
-                                    let parts = text.components(separatedBy: "\n")
+                                if text.contains("\r") {
+                                    let parts = text.components(separatedBy: "\r")
                                     text = parts[1]
                                     subText = parts[0]
                                 }
@@ -487,6 +571,9 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 subText = message.chatPeer(account.peerId)?.displayTitle
                             }
                             
+                            if let threadData = source.threadData, let txt = subText {
+                                subText = "\(txt) → \(threadData.info.title)"
+                            }
                             
                             if !inAppSettings.displayPreviews || message.peers[message.id.peerId] is TelegramSecretChat || screenIsLocked {
                                 text = strings().notificationLockedPreview
@@ -495,7 +582,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             
                             let notification = NSUserNotification()
                             
-                            notification.identifier = "msg_\(message.id.toInt64())"
+                            notification.identifier = "msg_\(message.id.string)"
                             
                             if #available(macOS 10.14, *) {
                                 switch inAppSettings.tone {
@@ -513,10 +600,16 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 }
                             }
 
-                            if message.muted {
-                                notification.soundName = nil
-                                title += " 🔕"
+                            switch source {
+                            case .messages:
+                                if message.muted {
+                                    notification.soundName = nil
+                                    title += " 🔕"
+                                }
+                            default:
+                                break
                             }
+                           
                             if screenIsLocked {
                                 notification.soundName = nil
                             }
@@ -524,7 +617,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                             if self.activeAccounts.accounts.count > 1 && !screenIsLocked {
                                 title += " → \(accountPeer.addressName ?? accountPeer.displayTitle)"
                             }
-                            
+                                                        
                             notification.title = title
                             notification.informativeText = text as String
                             notification.subtitle = subText
@@ -540,16 +633,23 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                 dict["wasScheduled"] = true
                             }
                             
-                            if let sourceReference = message.sourceReference, let threadId = message.replyAttribute?.threadMessageId, message.id.peerId == repliesPeerId {
+                            if let sourceReference = message.sourceReference, message.id.peerId == repliesPeerId {
                                 dict["source.message.id"] = sourceReference.messageId.id
                                 dict["source.message.namespace"] = sourceReference.messageId.namespace
                                 dict["source.peer.id"] = sourceReference.messageId.peerId.id._internalGetInt64Value()
                                 dict["source.peer.namespace"] = sourceReference.messageId.peerId.namespace._internalGetInt32Value()
-                                
+                            }
+                            if message.sourceReference != nil || source.threadData != nil {
+                                dict["is_thread"] = true
+                            }
+                            if let threadId = message.replyAttribute?.threadMessageId {
                                 dict["thread.message.id"] = threadId.id
                                 dict["thread.message.namespace"] = threadId.namespace
                                 dict["thread.peer.id"] = threadId.peerId.id._internalGetInt64Value()
                                 dict["thread.peer.namespace"] = threadId.peerId.namespace._internalGetInt32Value()
+                                if let threadData = source.threadData, let data = CodableEntry(threadData)?.data {
+                                    dict["thread_data"] = data
+                                }
                             }
                             
                             dict["reply.message.id"] =  message.id.id
@@ -603,7 +703,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
         guard let context = find(accountId) else {
             return false
         }
-        let result = !snoofEnabled || !context.window.isKeyWindow || wasScheduled
+        let result = !showNotificationsOutOfFocus || !context.window.isKeyWindow || wasScheduled
         
         return result
     }

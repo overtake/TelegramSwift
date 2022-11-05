@@ -14,7 +14,10 @@ import TGUIKit
 import SwiftSignalKit
 
 
-class ChatInputAccessory: Node {
+class ChatInputAccessory: View {
+
+    
+    let nodeReady = Promise<Bool>()
 
     var chatInteraction:ChatInteraction
 
@@ -29,10 +32,12 @@ class ChatInputAccessory: Node {
     var dismissReply:(()->Void)!
     var dismissEdit:(()->Void)!
     var dismissUrlPreview:(()->Void)!
-    init(_ view: View? = nil, chatInteraction:ChatInteraction) {
+    init(chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
-        super.init(view)
-        
+        super.init(frame: .zero)
+        self.addSubview(iconView)
+        self.addSubview(container)
+        self.addSubview(dismiss)
         dismissForward = { [weak self] in
             self?.chatInteraction.update({$0.updatedInterfaceState({$0.withoutForwardMessages()})})
         }
@@ -51,10 +56,15 @@ class ChatInputAccessory: Node {
         dismiss.set(image: theme.icons.dismissAccessory, for: .Normal)
         _ = dismiss.sizeToFit()
         
-        view?.addSubview(iconView)
-        view?.addSubview(dismiss)
-        self.view = view
         
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
     }
     
 
@@ -65,7 +75,7 @@ class ChatInputAccessory: Node {
     //forward
     //reply
     
-    func update(with state:ChatPresentationInterfaceState, account:Account, animated:Bool) -> Void {
+    func update(with state:ChatPresentationInterfaceState, context: AccountContext, animated:Bool) -> Void {
         
         dismiss.isHidden = false
         progress?.isHidden = true
@@ -78,12 +88,12 @@ class ChatInputAccessory: Node {
 
         if let urlPreview = state.urlPreview, state.interfaceState.composeDisableUrlPreview != urlPreview.0, let peer = state.peer, !peer.webUrlRestricted {
             iconView.image = theme.icons.chat_action_url_preview
-            displayNode = ChatUrlPreviewModel(account: account, webpage: urlPreview.1, url:urlPreview.0)
+            displayNode = ChatUrlPreviewModel(context: context, webpage: urlPreview.1, url:urlPreview.0)
             dismiss.set(handler: { [weak self ] _ in
                 self?.dismissUrlPreview()
             }, for: .Click)
         } else if let editState = state.interfaceState.editState {
-            displayNode = EditMessageModel(state: editState, account:account)
+            displayNode = EditMessageModel(state: editState, context: context)
             iconView.image = theme.icons.chat_action_edit_message
             iconView.isHidden = editState.loadingState != .none
             progress?.isHidden = editState.loadingState == .none
@@ -96,7 +106,7 @@ class ChatInputAccessory: Node {
             }, for: .Click)
             
         } else if !state.interfaceState.forwardMessages.isEmpty && !state.interfaceState.forwardMessageIds.isEmpty {
-            displayNode = ForwardPanelModel(forwardMessages:state.interfaceState.forwardMessages, hideNames: state.interfaceState.hideSendersName, account:account)
+            displayNode = ForwardPanelModel(forwardMessages:state.interfaceState.forwardMessages, hideNames: state.interfaceState.hideSendersName, context: context)
            
             iconView.image = theme.icons.chat_action_forward_message
 
@@ -131,7 +141,7 @@ class ChatInputAccessory: Node {
                 
                 let authors = state.interfaceState.forwardMessages.compactMap { $0.author?.id }.uniqueElements.count
 
-                let hideSendersName = (state.interfaceState.hideSendersName || state.interfaceState.hideCaptions)
+                let hideSendersName = state.interfaceState.hideSendersName
                 
                 items.append(ContextMenuItem(strings().chatAlertForwardActionShow1Countable(authors), handler: {
                     setHideAction(false)
@@ -144,7 +154,7 @@ class ChatInputAccessory: Node {
                 items.append(ContextSeparatorItem())
                 
                 let messagesWithCaption = state.interfaceState.forwardMessages.filter {
-                    !$0.text.isEmpty && $0.media.first != nil
+                    !$0.text.isEmpty && $0.effectiveMedia != nil
                 }.count
                 
                 if messagesWithCaption > 0 {
@@ -194,7 +204,6 @@ class ChatInputAccessory: Node {
             nodeReady.set(.single(animated))
         }
         iconView.sizeToFit()
-        container.removeAllSubviews()
         displayNode?.view = container
     }
     
@@ -211,7 +220,7 @@ class ChatInputAccessory: Node {
             } else {
                 indicator = ProgressIndicator(frame: NSMakeRect(0, 0, 20, 20))
                 progress = indicator
-                view?.addSubview(indicator)
+                self.addSubview(indicator)
             }
             indicator.progressColor = theme.colors.text
         case let .progress(progress):
@@ -221,27 +230,21 @@ class ChatInputAccessory: Node {
             } else {
                 radial = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .clear, foregroundColor: theme.colors.accent), twist: true, size: NSMakeSize(20, 20))
                 self.progress = radial
-                view?.addSubview(radial)
+                self.addSubview(radial)
             }
             radial.state = .ImpossibleFetching(progress: progress, force: false)
         }
     }
     
     
-    override var frame: NSRect {
-        get {
-            
-            return super.frame
-        }
-        set {
-            super.frame = newValue
-            updateLayout(newValue.size, transition: .immediate)
-        }
+    override func layout() {
+        super.layout()
+        updateLayout(frame.size, transition: .immediate)
     }
     
     func updateLayout(_ size: NSSize, transition: ContainedViewLayoutTransition) {
         
-        transition.updateFrame(view: self.container, frame: NSMakeRect(49, 0, measuredWidth, size.height))
+        transition.updateFrame(view: self.container, frame: NSMakeRect(49, 0, size.width, size.height))
         transition.updateFrame(view: iconView, frame: iconView.centerFrameY(x: 2))
         transition.updateFrame(view: dismiss, frame: dismiss.centerFrameY(x: size.width - dismiss.frame.width))
         if let view = progress {
@@ -251,52 +254,11 @@ class ChatInputAccessory: Node {
         
     }
     
-    override var view: View? {
-        get {
-            return super.view
-        }
-        set {
-            
-            if let view = newValue {
-                if container.superview != newValue {
-                    container.removeFromSuperview()
-                    view.addSubview(container, positioned: .below, relativeTo: dismiss)
-                }
-                container.frame = view.bounds
-                container.setNeedsDisplay()
-            }
-            
-            super.view = newValue
-            
-            displayNode?.setNeedDisplay()
-        }
-    }
     
     deinit {
     }
     
-    override func setNeedDisplay() {
-        super.setNeedDisplay()
-        displayNode?.setNeedDisplay()
-    }
-    
-    override var size: NSSize {
-        get {
-            
-            var s:NSSize = super.size
-            if let size = displayNode?.size {
-                s = size
-            }
-            
-            if s.height > 0 {
-                s.width = measuredWidth
-            }
-            return s
-        }
-        set {
-            super.size = size
-        }
-    }
+    var size: NSSize = .zero
     
     func isVisibility() -> Bool {
         let isRecordingVoice:Bool
@@ -309,13 +271,12 @@ class ChatInputAccessory: Node {
     }
 
     
-    override func measureSize(_ width: CGFloat) {
+    func measureSize(_ width: CGFloat) {
         displayNode?.measureSize(width - 59)
         
         if let displayNode = displayNode {
-            self.size = displayNode.size
+            self.size = NSMakeSize(width, displayNode.size.height)
         }
-        super.measureSize(width)
     }
     
     

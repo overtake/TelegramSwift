@@ -34,6 +34,7 @@ extension Peer {
         var isCreator = false
         var canReport = true
         var canMakeVoiceChat = false
+        var canPin: Bool
         if let group = self as? TelegramGroup {
             if case .creator = group.role {
                 isCreator = true

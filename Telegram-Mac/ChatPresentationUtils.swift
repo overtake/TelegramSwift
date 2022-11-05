@@ -16,8 +16,8 @@ import TelegramIconsTheme
 
 final class ChatMediaPresentation : Equatable {
     
-    private let isIncoming: Bool
-    private let isBubble: Bool
+    let isIncoming: Bool
+    let isBubble: Bool
     
     let activityBackground: NSColor
     let activityForeground: NSColor
@@ -42,12 +42,16 @@ final class ChatMediaPresentation : Equatable {
     
     static func make(for message: Message, account: Account, renderType: ChatItemRenderType, theme: TelegramPresentationTheme) -> ChatMediaPresentation {
         let isIncoming: Bool = message.isIncoming(account, renderType == .bubble)
+        
+        
+        let grayText = theme.chat.grayText(isIncoming, renderType == .bubble)
+
         return ChatMediaPresentation(presentation: theme, isIncoming: isIncoming,
                                      isBubble: renderType == .bubble,
                                      activityBackground: theme.chat.activityBackground(isIncoming, renderType == .bubble),
                                      activityForeground: theme.chat.activityForeground(isIncoming, renderType == .bubble),
                                      text: theme.chat.textColor(isIncoming, renderType == .bubble),
-                                     grayText: theme.chat.grayText(isIncoming, renderType == .bubble),
+                                     grayText: grayText,
                                      link: theme.chat.linkColor(isIncoming, renderType == .bubble),
                                      waveformBackground: theme.chat.waveformBackground(isIncoming, renderType == .bubble),
                                      waveformForeground: theme.chat.waveformForeground(isIncoming, renderType == .bubble))

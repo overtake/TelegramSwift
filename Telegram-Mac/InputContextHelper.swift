@@ -11,7 +11,7 @@ import SwiftSignalKit
 import TGUIKit
 import Postbox
 import TelegramCore
-
+import TGModernGrowingTextView
 
 
 
@@ -25,16 +25,16 @@ enum InputContextEntry : Comparable, Identifiable {
     case command(PeerCommand, Int64, Int64)
     case sticker(InputMediaStickersRow, Int64)
     case showPeers(Int, Int64)
-    case emoji([String], String?, Bool, Int32)
+    case emoji([String], [TelegramMediaFile], ContextClueRowItem.Source?, Bool, Int32)
     case hashtag(String, Int64)
     case inlineRestricted(String)
-    case separator(String, Int64, Int64)
+    case separator(String, Int64, Int64, CGFloat?)
     var stableId: Int64 {
         switch self {
         case .switchPeer:
             return -1
         case let .message(_, message, _):
-            return message.id.toInt64()
+            return Int64(message.id.string.hashValue)
         case let .peer(_,_, stableId):
             return stableId
         case let .contextResult(_,_,index):
@@ -49,11 +49,11 @@ enum InputContextEntry : Comparable, Identifiable {
             return stableId
         case let .hashtag(hashtag, _):
             return Int64(hashtag.hashValue)
-        case let .emoji(clue, _, _, _):
+        case let .emoji(clue, _, _, _, _):
             return Int64(clue.joined().hashValue)
         case .inlineRestricted:
             return -1000
-        case let .separator(_, _, stableId):
+        case let .separator(_, _, stableId, _):
             return stableId
         }
     }
@@ -76,13 +76,13 @@ enum InputContextEntry : Comparable, Identifiable {
             return Int64(index) //result.maybeId | ((Int64(index) << 40))
         case let .hashtag(_, index):
             return index
-        case let .emoji(_, _, _, index):
+        case let .emoji(_, _, _, _, index):
             return Int64(index) //result.maybeId | ((Int64(index) << 40))
         case .inlineRestricted:
             return 0
         case let .message(index, _, _):
             return index
-        case let .separator(_, index, _):
+        case let .separator(_, index, _, _):
             return index
         }
     }
@@ -135,9 +135,9 @@ func ==(lhs:InputContextEntry, rhs:InputContextEntry) -> Bool {
             return  lhsHashtag == rhsHashtag && lhsIndex == rhsIndex
         }
         return false
-    case let .emoji(lhsClue, lhsCurrent, lhsFirstWord, lhsIndex):
-        if case let .emoji(rhsClue, rhsCurrent, rhsFirstWord, rhsIndex) = rhs {
-            return  lhsClue == rhsClue && lhsIndex == rhsIndex && lhsFirstWord == rhsFirstWord && lhsCurrent == rhsCurrent
+    case let .emoji(lhsClue, lhsAnimated, lhsCurrent, lhsFirstWord, lhsIndex):
+        if case let .emoji(rhsClue, rhsAnimated, rhsCurrent, rhsFirstWord, rhsIndex) = rhs {
+            return  lhsClue == rhsClue && lhsIndex == rhsIndex && lhsFirstWord == rhsFirstWord && lhsCurrent == rhsCurrent && lhsAnimated == rhsAnimated
         }
         return false
     case let .inlineRestricted(lhsText):
@@ -152,8 +152,8 @@ func ==(lhs:InputContextEntry, rhs:InputContextEntry) -> Bool {
         } else {
             return false
         }
-    case let .separator(value1, value2, value3):
-        if case .separator(value1, value2, value3) = rhs {
+    case let .separator(value1, value2, value3, value4):
+        if case .separator(value1, value2, value3, value4) = rhs {
             return true
         }
         return false
@@ -178,11 +178,11 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
             let statusStyle:ControlStyle = ControlStyle(font: .normal(.text), foregroundColor: theme.colors.grayText, backgroundColor: theme.colors.background, highlightColor:.white)
             
 
-            return ShortPeerRowItem(initialSize, peer: peer, account: context.account, height: 40, photoSize: NSMakeSize(30, 30), titleStyle: titleStyle, statusStyle: statusStyle, status: status, borderType: [], drawCustomSeparator: true, inset: NSEdgeInsets(left:20))
+            return ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, height: 40, photoSize: NSMakeSize(30, 30), titleStyle: titleStyle, statusStyle: statusStyle, status: status, borderType: [], drawCustomSeparator: true, inset: NSEdgeInsets(left:20))
         case let .contextResult(results,result,index):
             return ContextListRowItem(initialSize, results, result, index, context, chatInteraction)
         case let .contextMediaResult(results,result,index):
-            return ContextMediaRowItem(initialSize, result, index, context, ContextMediaArguments(sendResult: { result, view in
+            return ContextMediaRowItem(initialSize, result, index, context, ContextMediaArguments(sendResult: { _, result, view in
                 if let results = results {
                     if let slowMode = chatInteraction.presentation.slowMode, slowMode.hasLocked {
                         showSlowModeTimeoutTooltip(slowMode, for: view)
@@ -193,8 +193,8 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
             }))
         case let .command(command,_, stableId):
             return ContextCommandRowItem(initialSize, context.account, command, stableId)
-        case let .emoji(clues, selected, firstWord, _):
-            return ContextClueRowItem(initialSize, stableId: entry.stableId, context: context, clues: clues, selected: selected, canDisablePrediction: firstWord)
+        case let .emoji(clues, animated, selected, firstWord, _):
+            return ContextClueRowItem(initialSize, stableId: entry.stableId, context: context, clues: clues, animated: animated, selected: selected, canDisablePrediction: firstWord)
         case let .hashtag(hashtag, _):
             return ContextHashtagRowItem(initialSize, hashtag: "#\(hashtag)")
         case let .sticker(result, stableId):
@@ -209,8 +209,12 @@ fileprivate func prepareEntries(left:[AppearanceWrapperEntry<InputContextEntry>]
             return ContextSearchMessageItem(initialSize, context: context, message: message, searchText: searchText, action: {
                 
             })
-        case let .separator(string, _, _):
-            return SeparatorRowItem(initialSize, entry.stableId, string: string)
+        case let .separator(string, _, _, height):
+            if let height = height {
+                return GeneralRowItem(initialSize, height: height, stableId: entry.stableId)
+            } else {
+                return SeparatorRowItem(initialSize, entry.stableId, string: string)
+            }
         }
         
     })
@@ -430,16 +434,29 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                     chatInteraction.sendCommand(selectedItem.command)
                 }
             } else if let selectedItem = selectedItem as? ContextClueRowItem {
-                if let clue = selectedItem.selectedIndex != nil ? selectedItem.clues[selectedItem.selectedIndex!] : nil {
+                let sources:[ContextClueRowItem.Source] = selectedItem.animated.map { .animated($0) } + selectedItem.clues.map { .emoji($0) }
+                let clue = selectedItem.selectedIndex != nil ? sources[selectedItem.selectedIndex!] : nil
+                
+                if let clue = clue {
                     let textInputState = chatInteraction.presentation.effectiveInput
                     if let (range, _, _) = textInputStateContextQueryRangeAndType(textInputState, includeContext: false) {
                         let inputText = textInputState.inputText
                         
                         let distance = inputText.distance(from: range.lowerBound, to: range.upperBound)
-                        let replacementText = clue
                         
                         let atLength = range.lowerBound > inputText.startIndex && inputText[inputText.index(before: range.lowerBound)] == ":" ? 1 : 0
-                        _ = chatInteraction.appendText(replacementText, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
+                        
+                        switch clue {
+                        case let .emoji(emoji):
+                            _ = chatInteraction.appendText(emoji, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
+                        case let .animated(file):
+                            let attr = NSMutableAttributedString()
+                            let text = (file.customEmojiText ?? file.stickerText ?? "😀").fixed
+                            _ = attr.append(string: text)
+                            attr.addAttribute(.init(rawValue: TGAnimatedEmojiAttributeName), value: TGTextAttachment(identifier: "\(arc4random())", fileId: file.fileId.id, file: file, text: text, info: nil), range: attr.range)
+                            _ = chatInteraction.appendText(attr, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
+                        }
+                        
                     }
                 } else {
                     return .rejected
@@ -456,7 +473,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                     _ = chatInteraction.appendText(replacementText, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
                 }
             } else if let selectedItem = selectedItem as? ContextStickerRowItem, let index = selectedItem.selectedIndex {
-                chatInteraction.sendAppFile(selectedItem.result.results[index].file, false, chatInteraction.presentation.effectiveInput.inputText, false)
+                chatInteraction.sendAppFile(selectedItem.result.results[index].file, false, chatInteraction.presentation.effectiveInput.inputText, false, nil)
                 chatInteraction.clearInput()
             } else if let selectedItem = selectedItem as? ContextSearchMessageItem {
                 chatInteraction.focusMessageId(nil, selectedItem.message.id, .CenterEmpty)
@@ -475,11 +492,12 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 chatInteraction.updateInput(with: commandText)
 
             } else if let selectedItem = selectedItem as? ContextClueRowItem {
-                let clue: String?
+                let clue: ContextClueRowItem.Source?
+                let items = selectedItem.sources
                 if let index = selectedItem.selectedIndex {
-                    clue = selectedItem.clues[index]
+                    clue = items[index]
                 } else {
-                    clue = selectedItem.clues.first
+                    clue = items.first
                 }
                 if let clue = clue {
                     let textInputState = chatInteraction.presentation.effectiveInput
@@ -487,10 +505,16 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                         let inputText = textInputState.inputText
                         
                         let distance = inputText.distance(from: range.lowerBound, to: range.upperBound)
-                        let replacementText = clue
-                        
                         let atLength = range.lowerBound > inputText.startIndex && inputText[inputText.index(before: range.lowerBound)] == ":" ? 1 : 0
-                        _ = chatInteraction.appendText(replacementText, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
+                        
+                        switch clue {
+                        case let .emoji(emoji):
+                            _ = chatInteraction.appendText(emoji, selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
+                        case let .animated(file):
+                            let text = (file.customEmojiText ?? file.stickerText ?? "😀").fixed
+                            _ = chatInteraction.appendText(.makeAnimated(file, text: text), selectedRange: textInputState.selectionRange.lowerBound - distance - atLength ..< textInputState.selectionRange.upperBound)
+                        }
+                        
                     }
                 }
                 return .invoked
@@ -531,7 +555,9 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             if let selectedIndex = selectedItem.selectedIndex {
                 var index = selectedIndex
                 index += 1
-                selectedItem.selectedIndex = max(min(index, selectedItem.clues.count - 1), 0)
+                
+                let count = selectedItem.clues.count + selectedItem.animated.count
+                selectedItem.selectedIndex = max(min(index, count - 1), 0)
                 selectedItem.redraw(animated: true)
             }
             
@@ -545,7 +571,8 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             if let selectedIndex = selectedItem.selectedIndex {
                 var index = selectedIndex
                 index -= 1
-                selectedItem.selectedIndex = max(min(index, selectedItem.clues.count - 1), 0)
+                let count = selectedItem.clues.count + selectedItem.animated.count
+                selectedItem.selectedIndex = max(min(index, count - 1), 0)
                 selectedItem.redraw(animated: true)
             }
             return selectedItem.selectedIndex != nil ? .invoked : .rejected
@@ -600,12 +627,13 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         }
         if let selectedItem = genericView.selectedItem() as? ContextClueRowItem {
             var index: Int
+            let count = selectedItem.clues.count + selectedItem.animated.count
             if let start = start {
                 index = start + (bottom ? -1 : 1)
             } else {
-                index = bottom ? selectedItem.clues.count - 1 : 0
+                index = bottom ? count - 1 : 0
             }
-            index = min(max(index, 0), selectedItem.clues.count - 1)
+            index = min(max(index, 0), count - 1)
             selectedItem.selectedIndex = index
             selectedItem.redraw(animated: true)
         }
@@ -664,20 +692,22 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 escapeTextMarked = nil
             }
             switch result {
-            case .mentions, .searchMessages, .commands, .hashtags:
+            case .mentions, .searchMessages, .commands:
                 if !highlightInsteadOfSelect {
                     _ = genericView.select(item: genericView.item(at: selectIndex ?? 0))
                 } else {
                     _ = genericView.highlight(item: genericView.item(at: selectIndex ?? 0))
                 }
-            case let .emoji(_, firstWord):
+            case .hashtags:
+                _ = genericView.highlight(item: genericView.item(at: selectIndex ?? 0))
+            case let .emoji(_, _, firstWord):
                 if !highlightInsteadOfSelect {
                     _ = genericView.select(item: genericView.item(at: selectIndex ?? 0))
                 } else {
                     _ = genericView.highlight(item: genericView.item(at: selectIndex ?? 0))
                 }
                 if !firstWord {
-                    _ = selectFirstInRowIfCan()
+                    selectFirstInRowIfCan()
                 }
             default:
                 break
@@ -733,6 +763,10 @@ class InputContextHelper: NSObject {
     private let chatInteraction:ChatInteraction
     private let entries:Atomic<[AppearanceWrapperEntry<InputContextEntry>]?> = Atomic(value:nil)
     private let loadMoreDisposable = MetaDisposable()
+    
+    
+    var didScroll:(()->Void)?
+    
     init(chatInteraction:ChatInteraction, highlightInsteadOfSelect: Bool = false) {
         self.chatInteraction = chatInteraction
         self.context = chatInteraction.context
@@ -755,6 +789,10 @@ class InputContextHelper: NSObject {
         controller.genericView.position = position
         controller.updateLocalizationAndTheme(theme: theme)
         var currentResult = result
+        
+        controller.genericView.addScroll(listener: .init(dispatchWhenVisibleRangeUpdated: false, { [weak self] _ in
+            self?.didScroll?()
+        }))
         
         let initialSize = controller.atomicSize
         let previosEntries = self.entries
@@ -892,7 +930,13 @@ class InputContextHelper: NSObject {
                             
                             for i in 0 ..< mediaRows.count {
                                 if !mediaRows[i].results.isEmpty {
-                                    entries.append(.contextMediaResult(result, mediaRows[i], Int64(arc4random()) | ((Int64(entries.count) << 40))))
+                                    let random = Int64(arc4random64())
+                                    let stableId = random | ((Int64(entries.count) << 40))
+                                    let separatorStableId = Int64(random + 1) | ((Int64(entries.count) << 40))
+                                    entries.append(.contextMediaResult(result, mediaRows[i], stableId))
+                                    if i != mediaRows.count - 1 {
+                                        entries.append(.separator("", separatorStableId, arc4random64(), 1))
+                                    }
                                 }
                             }
                             
@@ -925,10 +969,11 @@ class InputContextHelper: NSObject {
                         entries.append(.sticker(mediaRows[i], Int64(arc4random()) | ((Int64(entries.count) << 40))))
                     }
                     
-                case let .emoji(clues, firstWord):
+                case let .emoji(clues, animated, firstWord):
                     var index:Int32 = 0
-                    if !clues.isEmpty {
-                        entries.append(.emoji(clues, nil, firstWord, index))
+                    let count = clues.count + animated.count
+                    if count > 0 {
+                        entries.append(.emoji(clues, animated, nil, firstWord, index))
                         index += 1
                     }
                    
@@ -939,15 +984,9 @@ class InputContextHelper: NSObject {
                     let count:Int = min(max(6 - messages.0.count, 1), suggestPeers.count)
                     for i in 0 ..< count {
                         let peer = suggestPeers[i]
-                        entries.append(.peer(peer, Int(index), arc4random64()))
+                        entries.append(.peer(peer, Int(index), peer.id.toInt64()))
                         index += 1
                     }
-                    
-                   
-//                    if suggestPeers.count > 1, messages.0.count > 0 {
-//                        entries.append(.showPeers(Int(index), arc4random64()))
-//                        index += 1
-//                    }
                     
                     for message in messages.0 {
                         entries.append(.message(index, message, searchText))

@@ -357,16 +357,18 @@ class ChatSelectText : NSObject {
                 if let index = self?.table.row(at: point), index > 0, let item = self?.table.item(at: index), let view = item.view as? ChatRowView {
                     
                     if event.clickCount > 1, selectManager.isEmpty {
-                        var set: Bool = false
-                        inner: for view in view.selectableTextViews {
-                            if view == window.firstResponder {
-                                _ = window.makeFirstResponder(view)
-                                set = true
-                                break inner
+                        if !view.isAllowedToDoubleAction(view.convert(event.locationInWindow, from: nil)) {
+                            var set: Bool = false
+                            inner: for view in view.selectableTextViews {
+                                if view == window.firstResponder {
+                                    _ = window.makeFirstResponder(view)
+                                    set = true
+                                    break inner
+                                }
                             }
-                        }
-                        if !set {
-                            _ = window.makeFirstResponder(view.selectableTextViews.first)
+                            if !set {
+                                _ = window.makeFirstResponder(view.selectableTextViews.first)
+                            }
                         }
                     }
 

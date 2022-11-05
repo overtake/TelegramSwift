@@ -48,71 +48,118 @@ enum AppearanceThumbSource : Int32 {
 }
 
 enum PhotoCacheKeyEntry : Hashable {
-    case avatar(PeerId, TelegramMediaImageRepresentation, NSSize, CGFloat)
-    case emptyAvatar(PeerId, String, NSColor, NSSize, CGFloat)
+    case avatar(PeerId, TelegramMediaImageRepresentation, NSSize, CGFloat, Bool)
+    case emptyAvatar(PeerId, String, NSColor, NSSize, CGFloat, Bool)
     case media(Media, TransformImageArguments, CGFloat, LayoutPositionFlags?)
     case slot(SlotMachineValue, TransformImageArguments, CGFloat)
     case platformTheme(TelegramThemeSettings, TransformImageArguments, CGFloat, LayoutPositionFlags?)
     case messageId(stableId: Int64, TransformImageArguments, CGFloat, LayoutPositionFlags)
     case theme(ThemeSource, Bool, AppearanceThumbSource)
-
+    case emoji(String, CGFloat)
     func hash(into hasher: inout Hasher) {
-        hasher.combine(self.stringValue)
-    }
-    
-    var stringValue: NSString {
+        
         switch self {
-        case let .avatar(peerId, rep, size, scale):
-            return "avatar-\(peerId.toInt64())-\(rep.resource.id.hashValue)-\(size.width)-\(size.height)-\(scale)".nsstring
-        case let .emptyAvatar(peerId, letters, color, size, scale):
-            return "emptyAvatar-\(peerId.toInt64())-\(letters)-\(color.hexString)-\(size.width)-\(size.height)-\(scale)".nsstring
+        case let .avatar(peerId, rep, size, scale, isForum):
+            hasher.combine("avatar")
+            hasher.combine(rep.resource.id.hashValue)
+            hasher.combine(peerId.toInt64())
+            hasher.combine(size.width)
+            hasher.combine(size.height)
+            hasher.combine(scale)
+            hasher.combine(isForum)
+        case let .emptyAvatar(peerId, letters, color, size, scale, isForum):
+            hasher.combine("emptyAvatar")
+            hasher.combine(peerId.toInt64())
+            hasher.combine(color.hashValue)
+            hasher.combine(letters)
+            hasher.combine(size.width)
+            hasher.combine(size.height)
+            hasher.combine(scale)
+            hasher.combine(isForum)
         case let .media(media, transform, scale, layout):
-            var addition: String = ""
+            hasher.combine("media")
+            
             if let media = media as? TelegramMediaMap {
-                addition = "\(media.longitude)-\(media.latitude)"
+                hasher.combine(media.longitude)
+                hasher.combine(media.latitude)
             }
+            
             if let media = media as? TelegramMediaFile {
-                addition += "\(media.resource.id.stringRepresentation)-\(String(describing: media.resource.size))"
+                hasher.combine(media.resource.id.stringRepresentation)
+                if let size = media.resource.size {
+                    hasher.combine(size)
+                }
                 #if !SHARE
                 if let fitz = media.animatedEmojiFitzModifier {
-                    addition += "fitz-\(fitz.rawValue)"
+                    hasher.combine(fitz.rawValue)
                 }
                 #endif
             }
-            return "media-\(String(describing: media.id?.id))-\(transform)-\(scale)-\(String(describing: layout?.rawValue))-\(addition)".nsstring
+            if let media = media.id {
+                hasher.combine(media.id)
+            }
+            hasher.combine(transform)
+            if let layout = layout {
+                hasher.combine(layout.rawValue)
+            }
+            hasher.combine(scale)
         case let .slot(slot, transform, scale):
-            return "slot-\(slot.left.hashValue)\(slot.center.hashValue)\(slot.right.hashValue)-\(transform)-\(scale)".nsstring
+            hasher.combine("slot")
+            hasher.combine(slot)
+            hasher.combine(transform)
+            hasher.combine(scale)
         case let .messageId(stableId, transform, scale, layout):
-            return "messageId-\(stableId)-\(transform)-\(scale)-\(layout.rawValue)".nsstring
+            hasher.combine("messageId")
+            hasher.combine(stableId)
+            hasher.combine(transform)
+            hasher.combine(scale)
+            hasher.combine(layout.rawValue)
         case let .theme(source, bubbled, thumbSource):
+            hasher.combine(bubbled)
+            
             switch source {
             case let .local(palette, cloud):
+                hasher.combine("theme-local")
                 if let settings = cloud?.effectiveSettings(for: palette) {
                     #if !SHARE
-                    return "theme-local-\(palette.name)-bubbled\(bubbled ? 1 : 0)-\(settings.desc)-\(thumbSource.rawValue)".nsstring
-                    #else
-                    return ""
+                    hasher.combine(palette.name)
+                    hasher.combine(settings.desc)
+                    hasher.combine(thumbSource.rawValue)
                     #endif
-                }   else {
-                    return "theme-local-\(palette.name)-bubbled\(bubbled ? 1 : 0)-\(palette.accent.argb)-\(thumbSource.rawValue)".nsstring
+                } else {
+                    hasher.combine(palette.name)
+                    hasher.combine(palette.accent.argb)
+                    hasher.combine(thumbSource.rawValue)
                 }
             case let .cloud(cloud):
-                return "theme-remote-\(cloud.id)\(String(describing: cloud.file?.id))-bubbled\(bubbled ? 1 : 0)-\(thumbSource.rawValue)".nsstring
+                hasher.combine("theme-local")
+                hasher.combine(cloud.id)
+                if let file = cloud.file {
+                    hasher.combine(file.fileId.id)
+                }
+                hasher.combine(thumbSource.rawValue)
             }
         case let .platformTheme(settings, arguments, scale, layout):
+            hasher.combine("platformTheme")
             #if !SHARE
-            return "theme-\(settings.desc)-\(arguments)-\(scale)-\(String(describing: layout?.rawValue))".nsstring
-            #else
-            return ""
+            hasher.combine(settings.desc)
+            hasher.combine(scale)
+            hasher.combine(arguments)
+            if let layout = layout {
+                hasher.combine(layout.rawValue)
+            }
             #endif
-            
+        case let .emoji(emoji, scale):
+            hasher.combine("emoji")
+            hasher.combine(emoji)
+            hasher.combine(scale)
         }
     }
     
     static func ==(lhs:PhotoCacheKeyEntry, rhs: PhotoCacheKeyEntry) -> Bool {
         switch lhs {
-        case let .avatar(lhsPeerId, lhsRepresentation, lhsSize, lhsScale):
-            if case let .avatar(rhsPeerId, rhsRepresentation, rhsSize, rhsScale) = rhs {
+        case let .avatar(lhsPeerId, lhsRepresentation, lhsSize, lhsScale, lhsIsForum):
+            if case let .avatar(rhsPeerId, rhsRepresentation, rhsSize, rhsScale, rhsIsForum) = rhs {
                 if lhsPeerId != rhsPeerId {
                     return false
                 }
@@ -125,12 +172,15 @@ enum PhotoCacheKeyEntry : Hashable {
                 if lhsRepresentation.resource.id == rhsRepresentation.resource.id  {
                     return false
                 }
+                if lhsIsForum != rhsIsForum {
+                    return false
+                }
                 return true
             } else {
                 return false
             }
-        case let .emptyAvatar(peerId, symbol, color, size, scale):
-            if case .emptyAvatar(peerId, symbol, color, size, scale) = rhs {
+        case let .emptyAvatar(peerId, symbol, color, size, scale, isForum):
+            if case .emptyAvatar(peerId, symbol, color, size, scale, isForum) = rhs {
                 return true
             } else {
                 return false
@@ -182,6 +232,12 @@ enum PhotoCacheKeyEntry : Hashable {
             } else {
                 return false
             }
+        case let .emoji(emoji, scale):
+            if case .emoji(emoji, scale) = rhs {
+                return true
+            } else {
+                return false
+            }
         }
     }
 }
@@ -191,15 +247,15 @@ enum PhotoCacheKeyEntry : Hashable {
 private class PhotoCache {
     let memoryLimit:Int
     let maxCount:Int = 50
-    private var values:NSCache<NSString, PhotoCachedRecord> = NSCache()
+    private var values:NSCache<NSNumber, PhotoCachedRecord> = NSCache()
     
-    init(_ memoryLimit:Int = 15) {
+    init(_ memoryLimit:Int = 100) {
         self.memoryLimit = memoryLimit
         self.values.countLimit = memoryLimit
     }
     
     fileprivate func cacheImage(_ image:CGImage, for key:PhotoCacheKeyEntry) {
-        self.values.setObject(PhotoCachedRecord(image: image, size: Int(image.backingSize.width * image.backingSize.height * 4)), forKey: key.stringValue)
+        self.values.setObject(PhotoCachedRecord(image: image, size: Int(image.backingSize.width * image.backingSize.height * 4)), forKey: .init(value: key.hashValue))
     }
     
     private func freeMemoryIfNeeded() {
@@ -207,12 +263,12 @@ private class PhotoCache {
     
     func cachedImage(for key:PhotoCacheKeyEntry) -> CGImage? {
         var image:CGImage? = nil
-        image = self.values.object(forKey: key.stringValue)?.image
+        image = self.values.object(forKey: .init(value: key.hashValue))?.image
         return image
     }
     
     func removeRecord(for key:PhotoCacheKeyEntry) {
-        self.values.removeObject(forKey: key.stringValue)
+        self.values.removeObject(forKey: .init(value: key.hashValue))
     }
     
     func clearAll() {
@@ -222,11 +278,11 @@ private class PhotoCache {
 
 
 private let peerPhotoCache = PhotoCache(100)
-private let photosCache = PhotoCache(50)
-private let photoThumbsCache = PhotoCache(50)
-private let themeThums = PhotoCache(100)
+private let photosCache = PhotoCache(100)
+private let photoThumbsCache = PhotoCache(500)
+private let themeThums = PhotoCache(500)
 
-private let stickersCache = PhotoCache(500)
+private let stickersCache = PhotoCache(1000)
 
 
 func clearImageCache() -> Signal<Void, NoError> {
@@ -240,31 +296,31 @@ func clearImageCache() -> Signal<Void, NoError> {
     }
 }
 
-func cachedPeerPhoto(_ peerId:PeerId, representation: TelegramMediaImageRepresentation, size: NSSize, scale: CGFloat) -> Signal<CGImage?, NoError> {
-    let entry:PhotoCacheKeyEntry = .avatar(peerId, representation, size, scale)
+func cachedPeerPhoto(_ peerId:PeerId, representation: TelegramMediaImageRepresentation, size: NSSize, scale: CGFloat, isForum: Bool) -> Signal<CGImage?, NoError> {
+    let entry:PhotoCacheKeyEntry = .avatar(peerId, representation, size, scale, isForum)
     return .single(peerPhotoCache.cachedImage(for: entry))
 }
 
-func cachePeerPhoto(image:CGImage, peerId:PeerId, representation: TelegramMediaImageRepresentation, size: NSSize, scale: CGFloat) -> Signal <Void, NoError> {
-    let entry:PhotoCacheKeyEntry = .avatar(peerId, representation, size, scale)
+func cachePeerPhoto(image:CGImage, peerId:PeerId, representation: TelegramMediaImageRepresentation, size: NSSize, scale: CGFloat, isForum: Bool) -> Signal <Void, NoError> {
+    let entry:PhotoCacheKeyEntry = .avatar(peerId, representation, size, scale, isForum)
     return .single(peerPhotoCache.cacheImage(image, for: entry))
 }
 
-func cachedEmptyPeerPhoto(_ peerId:PeerId, symbol: String, color: NSColor, size: NSSize, scale: CGFloat) -> Signal<CGImage?, NoError> {
-    let entry:PhotoCacheKeyEntry = .emptyAvatar(peerId, symbol, color, size, scale)
+func cachedEmptyPeerPhoto(_ peerId:PeerId, symbol: String, color: NSColor, size: NSSize, scale: CGFloat, isForum: Bool) -> Signal<CGImage?, NoError> {
+    let entry:PhotoCacheKeyEntry = .emptyAvatar(peerId, symbol, color, size, scale, isForum)
     return .single(peerPhotoCache.cachedImage(for: entry))
 }
 
-func cacheEmptyPeerPhoto(image:CGImage, peerId:PeerId, symbol: String, color: NSColor, size: NSSize, scale: CGFloat) -> Signal <Void, NoError> {
-    let entry:PhotoCacheKeyEntry = .emptyAvatar(peerId, symbol, color, size, scale)
+func cacheEmptyPeerPhoto(image:CGImage, peerId:PeerId, symbol: String, color: NSColor, size: NSSize, scale: CGFloat, isForum: Bool) -> Signal <Void, NoError> {
+    let entry:PhotoCacheKeyEntry = .emptyAvatar(peerId, symbol, color, size, scale, isForum)
     return .single(peerPhotoCache.cacheImage(image, for: entry))
 }
-func cachedPeerPhotoImmediatly(_ peerId:PeerId, representation: TelegramMediaImageRepresentation, size: NSSize, scale: CGFloat) -> CGImage? {
-    let entry:PhotoCacheKeyEntry = .avatar(peerId, representation, size, scale)
+func cachedPeerPhotoImmediatly(_ peerId:PeerId, representation: TelegramMediaImageRepresentation, size: NSSize, scale: CGFloat, isForum: Bool) -> CGImage? {
+    let entry:PhotoCacheKeyEntry = .avatar(peerId, representation, size, scale, isForum)
     return peerPhotoCache.cachedImage(for: entry)
 }
-func cachedEmptyPeerPhotoImmediatly(_ peerId:PeerId, symbol: String, color: NSColor, size: NSSize, scale: CGFloat) -> CGImage? {
-    let entry:PhotoCacheKeyEntry = .emptyAvatar(peerId, symbol, color, size, scale)
+func cachedEmptyPeerPhotoImmediatly(_ peerId:PeerId, symbol: String, color: NSColor, size: NSSize, scale: CGFloat, isForum: Bool) -> CGImage? {
+    let entry:PhotoCacheKeyEntry = .emptyAvatar(peerId, symbol, color, size, scale, isForum)
     return peerPhotoCache.cachedImage(for: entry)
 }
 
@@ -339,12 +395,21 @@ func cacheSlot(_ result: TransformImageResult, value: SlotMachineValue, argument
     }
 }
 
+func cacheEmoji(_ image: CGImage, emoji: String, scale: CGFloat) -> Void {
+    stickersCache.cacheImage(image, for: .emoji(emoji, scale))
+}
+func cachedEmoji(emoji: String, scale: CGFloat) -> CGImage? {
+    return stickersCache.cachedImage(for: .emoji(emoji, scale))
+}
+
 func cacheMedia(_ result: TransformImageResult, media: TelegramThemeSettings, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Void {
     if let image = result.image {
         let entry:PhotoCacheKeyEntry = .platformTheme(media, arguments, scale, positionFlags)
         photosCache.cacheImage(image, for: entry)
     }
 }
+
+
 
 func cacheMedia(_ result: TransformImageResult, messageId: Int64, arguments: TransformImageArguments, scale: CGFloat, positionFlags: LayoutPositionFlags? = nil) -> Void {
     

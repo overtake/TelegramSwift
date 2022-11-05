@@ -12,7 +12,7 @@ import TelegramCore
 
 import Postbox
 import SwiftSignalKit
-
+import RangeSet
 
 
 class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
@@ -56,7 +56,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
 
     private var message:Message?
     private(set) var instantVideoPip:InstantVideoPIP?
-    private var ranges: (IndexSet, Int)?
+    private var ranges: (RangeSet<Int64>, Int64)?
     
     private var bufferingStatusDisposable: MetaDisposable = MetaDisposable()
     
@@ -221,11 +221,11 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         }
     }
     
-    func updateStatus(_ ranges: IndexSet, _ size: Int) {
+    func updateStatus(_ ranges: RangeSet<Int64>, _ size: Int64) {
         self.ranges = (ranges, size)
         
         if let ranges = self.ranges, !ranges.0.isEmpty, ranges.1 != 0 {
-            for range in ranges.0.rangeView {
+            for range in ranges.0.ranges {
                 var progress = (CGFloat(range.count) / CGFloat(ranges.1))
                 progress = progress == 1.0 ? 0 : progress
                 progressView.set(fetchingProgress: progress, animated: progress > 0)

@@ -41,7 +41,7 @@ class ReplyMarkupButtonLayout {
 class ReplyMarkupNode: Node {
 
     static let buttonHeight:CGFloat = 34
-    static let buttonPadding:CGFloat = 4
+    static let buttonPadding:CGFloat = 2
     static let rowHeight = buttonHeight + buttonPadding
     
     private var width:CGFloat = 0

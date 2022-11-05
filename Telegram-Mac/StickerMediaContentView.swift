@@ -15,13 +15,105 @@ import Postbox
 
 
 class StickerMediaContentView: ChatMediaContentView {
-    private var content: ChatMediaContentView?
+    
+    private class LockView : NSVisualEffectView {
+        private let lockedView: ImageView = ImageView()
+
+        override init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            addSubview(lockedView)
+            
+            wantsLayer = true
+            self.blendingMode = .withinWindow
+            self.state = .active
+            self.material = .dark
+            
+            lockedView.image = theme.icons.premium_lock
+            lockedView.sizeToFit()
+            lockedView.setFrameSize(lockedView.frame.width * 0.7, lockedView.frame.height * 0.7)
+            self.layer?.cornerRadius = frameRect.height / 2
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func layout() {
+            super.layout()
+            lockedView.center()
+        }
+    }
+
+    private var lockedView: LockView?
+    
+    private var content: ChatMediaContentView? {
+        didSet {
+            if isLocked {
+                content?.layer?.opacity = 0.7
+            } else {
+                content?.layer?.opacity = 1.0
+            }
+        }
+    }
+    
+    
+    override var isHidden: Bool {
+        didSet {
+            if let content = content as? MediaAnimatedStickerView {
+                content.updatePlayerIfNeeded()
+            }
+        }
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
     deinit {
        
+    }
+    
+    
+    private var isLocked: Bool = false
+    func set(locked: Bool, animated: Bool) {
+        self.isLocked = locked
+        if isLocked {
+            content?.layer?.opacity = 0.7
+        } else {
+            content?.layer?.opacity = 1.0
+        }
+        if isLocked {
+            let current: LockView
+            if let view = self.lockedView {
+                current = view
+            } else {
+                current = LockView(frame: NSMakeRect(0, 0, 17, 17))
+                self.lockedView = current
+                addSubview(current, positioned: .above, relativeTo: content)
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+        } else if let view = lockedView {
+            performSubviewRemoval(view, animated: animated)
+            self.lockedView = nil
+        }
+        
+        needsLayout = true
+    }
+    
+    func play() {
+        if let content = content as? MediaAnimatedStickerView {
+            content.play()
+        }
+    }
+    
+    var playOnHover: Bool? = nil {
+        didSet {
+            if let content = content as? MediaAnimatedStickerView {
+                content.playOnHover = playOnHover
+            }
+        }
     }
     
     var overridePlayValue: Bool? = nil {
@@ -43,7 +135,7 @@ class StickerMediaContentView: ChatMediaContentView {
     }
     
     override func mouseInside() -> Bool {
-        return content?.mouseInside() ?? mouseInside()
+        return content?.mouseInside() ?? super.mouseInside()
     }
     
     override func previewMediaIfPossible() -> Bool {
@@ -54,11 +146,46 @@ class StickerMediaContentView: ChatMediaContentView {
         super.init(frame:frameRect)
     }
     
+    override var canSpamClicks: Bool {
+        return content?.canSpamClicks ?? super.canSpamClicks
+    }
+    
+    private var suggestOpenPremiumPack: Bool = false
+    
     override func executeInteraction(_ isControl: Bool) {
-        if let window = window as? Window {
-            if let context = context, let peerId = parent?.id.peerId, let media = media as? TelegramMediaFile, !media.isEmojiAnimatedSticker, let reference = media.stickerReference {
-                showModal(with:StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for:window)
-            } else if let media = media as? TelegramMediaFile, let sticker = media.stickerText, !sticker.isEmpty {
+        if let window = window as? Window, let context = self.context, let media = media as? TelegramMediaFile, let peerId = parent?.id.peerId {
+            
+            if suggestOpenPremiumPack, let reference = media.stickerReference {
+                
+                let title: String?
+                switch reference {
+                case let .name(name):
+                    title = name
+                default:
+                    title = nil
+                }
+                
+                showModalText(for: context.window, text: strings().stickerPremiumClickInfo, title: title, callback: { _ in
+                    showModal(with:StickerPackPreviewModalController(context, peerId: peerId, references: [.stickers(reference)]), for:window)
+                })
+                suggestOpenPremiumPack = false
+            } else {
+                if media.isPremiumSticker, !context.premiumIsBlocked {
+                    if !suggestOpenPremiumPack {
+                        suggestOpenPremiumPack = true
+                    }
+                }
+            }
+            
+            if media.isPremiumSticker, !media.noPremium, !context.premiumIsBlocked, let parent = parent {
+                self.playIfNeeded(true)
+                parameters?.runPremiumScreenEffect(parent)
+                return
+            }
+            
+            if !media.isEmojiAnimatedSticker, let reference = media.stickerReference {
+                showModal(with:StickerPackPreviewModalController(context, peerId: peerId, references: [.stickers(reference)]), for:window)
+            } else if let sticker = media.stickerText, !sticker.isEmpty {
                 self.playIfNeeded(true)
                 parameters?.runEmojiScreenEffect(sticker)
             }
@@ -71,6 +198,11 @@ class StickerMediaContentView: ChatMediaContentView {
     
     
     override func update(with media: Media, size: NSSize, context: AccountContext, parent:Message?, table:TableView?, parameters:ChatMediaLayoutParameters? = nil, animated: Bool = false, positionFlags: LayoutPositionFlags? = nil, approximateSynchronousValue: Bool = false) {
+        
+        let prev = self.media as? TelegramMediaFile
+        let prevParent = self.parent
+        
+        suggestOpenPremiumPack = false
                       
         super.update(with: media, size: size, context: context, parent:parent,table:table, parameters:parameters, animated: animated, positionFlags: positionFlags)
         
@@ -92,22 +224,42 @@ class StickerMediaContentView: ChatMediaContentView {
             }
             let content = contentClass.init(frame:size.bounds)
             self.content = content
-            self.addSubview(content)
+            self.addSubview(content, positioned: .below, relativeTo: lockedView)
         }
         
         guard let content = self.content else {
             return
         }
-        content.update(with: file, size: size, context: context, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags, approximateSynchronousValue: approximateSynchronousValue)
+        if let content = content as? MediaAnimatedStickerView {
+            content.playOnHover = playOnHover
+        }
+        
+        let aspectSize = file.dimensions?.size.aspectFitted(size) ?? size
+
+        content.update(with: file, size: aspectSize, context: context, parent: parent, table: table, parameters: parameters, animated: animated, positionFlags: positionFlags, approximateSynchronousValue: approximateSynchronousValue)
         
         content.userInteractionEnabled = false
         
+        if let prevParent = prevParent, let parent = parent {
+            let prevSending = prevParent.flags.contains(.Sending) || prevParent.flags.contains(.Unsent)
+            let sending = parent.flags.contains(.Sending) || parent.flags.contains(.Unsent)
+            if prevSending && !sending, file.fileId == prev?.fileId {
+                if file.isPremiumSticker, !file.noPremium {
+                    parameters?.runPremiumScreenEffect(parent)
+                }
+            }
+        }
+        
+        needsLayout = true
     }
     
     
     override func layout() {
         super.layout()
-        
+        if let view = lockedView {
+            view.centerX(y: frame.height - view.frame.height)
+        }
+        self.content?.center()
     }
     
     override func copy() -> Any {

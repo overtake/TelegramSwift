@@ -17,10 +17,10 @@ class ChatUrlPreviewModel: ChatAccessoryModel {
     
     private (set) var webpage: TelegramMediaWebpage
     private let url:String
-    init(account: Account, webpage: TelegramMediaWebpage, url:String) {
+    init(context: AccountContext, webpage: TelegramMediaWebpage, url:String) {
         self.webpage = webpage
         self.url = url
-        super.init()
+        super.init(context: context)
         self.updateWebpage()
     }
     
@@ -50,8 +50,8 @@ class ChatUrlPreviewModel: ChatAccessoryModel {
             text = content.text ?? content.title ?? strings().chatEmptyLinkPreview
         }
         
-        self.headerAttr = .initialize(string: authorName, color: theme.colors.accent, font: .medium(.text))
-        self.messageAttr = .initialize(string: text, color: isEmptyText ? theme.colors.grayText : theme.colors.text, font: .normal(.text))
+        self.header = .init(.initialize(string: authorName, color: theme.colors.accent, font: .medium(.text)), maximumNumberOfLines: 1)
+        self.message = .init(.initialize(string: text, color: isEmptyText ? theme.colors.grayText : theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1)
         
         nodeReady.set(.single(true))
         self.setNeedDisplay()

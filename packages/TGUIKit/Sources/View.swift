@@ -177,7 +177,11 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     
     public var flip:Bool = true
     
-    open var border:BorderType?
+    open var border:BorderType? {
+        didSet {
+            needsDisplay = true
+        }
+    }
     
 
     open override func layout() {
@@ -250,6 +254,10 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
        // self.autoresizesSubviews = false
        // self.layerContentsRedrawPolicy = .onSetNeedsDisplay
        // self.layer?.drawsAsynchronously = System.drawAsync
+        if #available(macOS 10.15, *) {
+            self.layer?.cornerCurve = .continuous
+        }
+
     }
     
     override required public init(frame frameRect: NSRect) {
@@ -264,6 +272,10 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
       //  self.layer?.isOpaque = false
         self.layerContentsRedrawPolicy = .onSetNeedsDisplay
       //  self.layer?.drawsAsynchronously = System.drawAsync
+        if #available(macOS 10.15, *) {
+            self.layer?.cornerCurve = .continuous
+        }
+
     }
     
 //    open override var wantsDefaultClipping: Bool {

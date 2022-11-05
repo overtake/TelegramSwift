@@ -89,5 +89,8 @@ typedef NS_ENUM(int32_t, OngoingCallDataSaving) {
 - (void)setNetworkType:(OngoingCallNetworkType)networkType;
 
 
+- (void)switchAudioInput:(NSString *_Nullable)input;
+- (void)switchAudioOutput:(NSString *_Nullable)output;
+
 
 @end

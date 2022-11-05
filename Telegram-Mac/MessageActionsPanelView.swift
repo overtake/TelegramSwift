@@ -17,20 +17,18 @@ import Postbox
 
 class MessageActionsPanelView: Control, Notifable {
     
-    private var deleteButton:TitleButton = TitleButton()
-    private var forwardButton:TitleButton = TitleButton()
-    private var countTitle:TitleButton = TitleButton()
+    private let deleteButton:TitleButton = TitleButton()
+    private let forwardButton:TitleButton = TitleButton()
+    private let countTitle:TextView = TextView()
         
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         
         self.countTitle.userInteractionEnabled = false
-        
-        countTitle.style = countStyle
+        self.countTitle.isSelectable = false
         
         deleteButton.disableActions()
         forwardButton.disableActions()
-        countTitle.disableActions()
     
         
         forwardButton.direction = .right
@@ -59,7 +57,7 @@ class MessageActionsPanelView: Control, Notifable {
     
     override func layout() {
         super.layout()
-        countTitle.sizeToFit(NSZeroSize, NSMakeSize(frame.width - deleteButton.frame.width - forwardButton.frame.width - 80, frame.height))
+        countTitle.resize(frame.width - deleteButton.frame.width - forwardButton.frame.width - 80)
 
         deleteButton.centerY(x:20)
         forwardButton.centerY(x:frame.width - forwardButton.frame.width - 20)
@@ -103,11 +101,12 @@ class MessageActionsPanelView: Control, Notifable {
         deleteButton.set(color: !deleteButton.userInteractionEnabled ? theme.colors.grayIcon : leftColor, for: .Normal)
         forwardButton.set(color: !forwardButton.userInteractionEnabled ? theme.colors.grayIcon : rightColor, for: .Normal)
 
-
-        countTitle.set(text: count == 0 ? strings().messageActionsPanelEmptySelected : strings().messageActionsPanelSelectedCountCountable(count), for: .Normal)
-        countTitle.set(color: (!canForward && !canDelete) || count == 0 ? theme.colors.grayText : theme.colors.text, for: .Normal)
-        countTitle.sizeToFit(NSZeroSize, NSMakeSize(frame.width - deleteButton.frame.width - forwardButton.frame.width - 80, frame.height))
-        countTitle.center()
+        let text = count == 0 ? strings().messageActionsPanelEmptySelected : strings().messageActionsPanelSelectedCountCountable(count)
+        let color = (!canForward && !canDelete) || count == 0 ? theme.colors.grayText : theme.colors.text
+        let layout = TextViewLayout(.initialize(string: text, color: color, font: .medium(.title)), maximumNumberOfLines: 1, truncationType: .middle)
+        
+        countTitle.update(layout)
+        needsLayout = true
     }
     
     func notify(with value: Any, oldValue: Any, animated:Bool) {

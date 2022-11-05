@@ -159,7 +159,7 @@ private enum RecentCallEntry : TableItemListNodeEntry {
             } else {
                 let text = outgoing ? strings().callRecentOutgoing : strings().callRecentIncoming
                 if messages.count == 1 {
-                    if let action = messages[0].media.first as? TelegramMediaAction, case .phoneCall(_, _, let duration, _) = action.action, let value = duration, value > 0 {
+                    if let action = messages[0].effectiveMedia as? TelegramMediaAction, case .phoneCall(_, _, let duration, _) = action.action, let value = duration, value > 0 {
                         statusText = text + " (\(String.stringForShortCallDurationSeconds(for: value)))"
                     } else {
                         statusText = text
@@ -177,7 +177,7 @@ private enum RecentCallEntry : TableItemListNodeEntry {
             }
             
             
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, height: 46, titleStyle: titleStyle, titleAddition: countText, leftImage: outgoing ? theme.icons.callOutgoing : nil, status: statusText , borderType: [.Right], drawCustomSeparator:true, deleteInset: 10, inset: NSEdgeInsets( left: outgoing ? 10 : theme.icons.callOutgoing.backingSize.width + 15, right: 10), drawSeparatorIgnoringInset: true, interactionType: interactionType, generalType: .context(DateUtils.string(forMessageListDate: messages.first!.timestamp)), action: {
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 46, titleStyle: titleStyle, titleAddition: countText, leftImage: outgoing ? theme.icons.callOutgoing : nil, status: statusText , borderType: [.Right], drawCustomSeparator:true, deleteInset: 10, inset: NSEdgeInsets( left: outgoing ? 10 : theme.icons.callOutgoing.backingSize.width + 15, right: 10), drawSeparatorIgnoringInset: true, interactionType: interactionType, generalType: .context(DateUtils.string(forMessageListDate: messages.first!.timestamp)), action: {
                 if !editing {
                     arguments.call(peer.id)
                 }
@@ -185,7 +185,7 @@ private enum RecentCallEntry : TableItemListNodeEntry {
                 return .single([ContextMenuItem(strings().recentCallsDelete, handler: {
                     arguments.removeCalls(messages.map{ $0.id }, peer)
                 }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)])
-            })
+            }, highlightVerified: true)
         case .empty(let loading):
             return SearchEmptyRowItem(initialSize, stableId: stableId, isLoading: loading, text: strings().recentCallsEmpty, border: [.Right])
         }

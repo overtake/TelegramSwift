@@ -408,11 +408,16 @@ public class NavigationBarView: View {
             self.addSubview(center)
             self.addSubview(right)
             
+            left.layer?.opacity = 1
+            center.layer?.opacity = 1
+            right.layer?.opacity = 1
+
             self.leftView = left
             self.centerView = center
             self.rightView = right
             
             self.addSubview(bottomBorder)
+            needsLayout = true
         }
         
         NotificationCenter.default.addObserver(self, selector: #selector(viewFrameChanged(_:)), name: NSView.frameDidChangeNotification, object: left)

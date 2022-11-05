@@ -20,12 +20,14 @@ private final class ChatListPresetArguments {
     let removePreset: (ChatListFilter)->Void
     let addFeatured: (ChatListFeaturedFilter)->Void
     let toggleSidebar: (Bool)->Void
-    init(context: AccountContext, openPreset: @escaping(ChatListFilter, Bool)->Void, removePreset: @escaping(ChatListFilter)->Void, addFeatured: @escaping(ChatListFeaturedFilter)->Void, toggleSidebar: @escaping(Bool)->Void) {
+    let limitExceeded:()->Void
+    init(context: AccountContext, openPreset: @escaping(ChatListFilter, Bool)->Void, removePreset: @escaping(ChatListFilter)->Void, addFeatured: @escaping(ChatListFeaturedFilter)->Void, toggleSidebar: @escaping(Bool)->Void, limitExceeded:@escaping()->Void) {
         self.context = context
         self.openPreset = openPreset
         self.removePreset = removePreset
         self.addFeatured = addFeatured
         self.toggleSidebar = toggleSidebar
+        self.limitExceeded = limitExceeded
     }
 }
 private func _id_preset(_ filter: ChatListFilter) -> InputDataIdentifier {
@@ -50,6 +52,8 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
     sectionId += 1
     
     
+    let limit = arguments.context.isPremium ? arguments.context.premiumLimits.dialog_filters_limit_premium : arguments.context.premiumLimits.dialog_filters_limit_default
+    
     entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_header, equatable: nil, comparable: nil, item: { initialSize, stableId in
         
         let attributedString = NSMutableAttributedString()
@@ -65,39 +69,58 @@ private func chatListPresetEntries(filtersWithCounts: [(ChatListFilter, Int)], s
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterListHeader), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textTopItem)))
     index += 1
     
+    let filtersWithCounts = filtersWithCounts.filter { filter, _ in
+        if !arguments.context.isPremium {
+            return !filter.isAllChats
+        } else {
+            return true
+        }
+    }
+    
+
     for (filter, count) in filtersWithCounts {
         var viewType = bestGeneralViewType(filtersWithCounts.map { $0.0 }, for: filter)
+        
         if filtersWithCounts.count == 1 {
             viewType = .firstItem
-        } else if filter == filtersWithCounts.last?.0, filtersWithCounts.count < 10 {
+        } else if filter == filtersWithCounts.last?.0, filtersWithCounts.count < arguments.context.premiumLimits.dialog_filters_limit_premium {
             viewType = .innerItem
         }
         
-        
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: filter.title, color: theme.colors.text, icon: FolderIcon(filter).icon(for: .preview), type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, justUpdate: arc4random64(), action: {
-            arguments.openPreset(filter, false)
-        }, menuItems: {
-            return [ContextMenuItem(strings().chatListFilterListRemove, handler: {
-                arguments.removePreset(filter)
-            }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)]
+        switch filter {
+        case .allChats:
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: filter.title, color: theme.colors.text, icon: FolderIcon(emoticon: .allChats).icon(for: .preview), type: .none, viewType: viewType)))
+            index += 1
+        case let .filter(_, title, _, _):
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_preset(filter), data: .init(name: title, color: theme.colors.text, icon: FolderIcon(filter).icon(for: .preview), type: .nextContext(count > 0 ? "\(count)" : ""), viewType: viewType, enabled: true, description: nil, action: {
+                arguments.openPreset(filter, false)
+            }, menuItems: {
+                return [ContextMenuItem(strings().chatListFilterListRemove, handler: {
+                    arguments.removePreset(filter)
+                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value)]
+            })))
+            index += 1
+
+        }
+    }
+    if filtersWithCounts.count < arguments.context.premiumLimits.dialog_filters_limit_premium {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_new, data: InputDataGeneralData(name: strings().chatListFilterListAddNew, color: theme.colors.accent, type: .next, viewType: filtersWithCounts.isEmpty ? .singleItem : .lastItem, action: {
+            
+            if filtersWithCounts.count < limit {
+                arguments.openPreset(ChatListFilter.new(excludeIds: filtersWithCounts.map { $0.0.id }), true)
+            } else {
+                arguments.limitExceeded()
+            }
+            
         })))
         index += 1
     }
     
-    if filtersWithCounts.count < 10 {
-        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add_new, data: InputDataGeneralData(name: strings().chatListFilterListAddNew, color: theme.colors.accent, type: .next, viewType: filtersWithCounts.isEmpty ? .singleItem : .lastItem, action: {
-            arguments.openPreset(ChatListFilter.new(excludeIds: filtersWithCounts.map { $0.0.id }), true)
-        })))
-        index += 1
-    }
+    
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().chatListFilterListDesc), data: .init(color: theme.colors.listGrayText, detectBold: true, viewType: .textBottomItem)))
     index += 1
     
-   
-    
-    
-
-    
+       
     if let suggested = suggested, filtersWithCounts.count < 10 {
         
         let filtered = suggested.filters.filter { value -> Bool in
@@ -169,8 +192,9 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
         _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
             var filters = filters
             var new = ChatListFilter.new(excludeIds: filters.map { $0.id })
-            new.data = featured.data
-            new.title = featured.title
+            new = new.withUpdatedData(featured.data)
+                .withUpdatedTitle(featured.title)
+            
             filters.append(new)
             return filters
         }).start()
@@ -178,6 +202,8 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
         _ = updateChatListFolderSettings(context.account.postbox, {
             $0.withUpdatedSidebar(sidebar)
         }).start()
+    }, limitExceeded: {
+        showModal(with: PremiumLimitController(context: context, type: .folders), for: context.window)
     })
     
     
@@ -190,14 +216,24 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
                 return (filters.list.map { filter -> (ChatListFilter, Int) in
                     let count: Int
                     if let cachedValue = chatCountCache.with({ dict -> Int? in
-                        return dict[filter.data]
+                        switch filter {
+                        case .allChats:
+                            return nil
+                        case let .filter(_, _, _, data):
+                            return dict[data]
+                        }
                     }) {
                         count = cachedValue
                     } else if let predicate = chatListFilterPredicate(for: filter) {
                         count = transaction.getChatCountMatchingPredicate(predicate)
                         let _ = chatCountCache.modify { dict in
                             var dict = dict
-                            dict[filter.data] = count
+                            switch filter {
+                            case .allChats:
+                                break
+                            case let .filter(_, _, _, data):
+                                dict[data] = count
+                            }
                             return dict
                         }
                     } else {
@@ -242,6 +278,7 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
             if let stableId = item.stableId.base as? InputDataEntryId {
                 switch stableId {
                 case let .general(identifier):
+
                     if identifier.identifier.hasPrefix("_id_filter") {
                         if range.location == NSNotFound {
                             range.location = item.index
@@ -258,6 +295,8 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
          })
         
         if range.location != NSNotFound {
+            
+            
             controller.tableView.resortController = TableResortController(resortRange: range, start: { row in
                 
             }, resort: { row in
@@ -265,7 +304,12 @@ func ChatListFiltersListController(context: AccountContext) -> InputDataControll
             }, complete: { from, to in
                 _ = context.engine.peers.updateChatListFiltersInteractively({ filters in
                     var filters = filters
-                    filters.move(at: from - range.location, to: to - range.location)
+                    
+                    var offset: Int = 0
+                    if !context.isPremium {
+                        offset = 1
+                    }
+                    filters.move(at: from - range.location + offset, to: to - range.location + offset)
                     return filters
                 }).start()
                 

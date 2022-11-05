@@ -60,7 +60,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func RequestJoinChatModalController(context: AccountContext, joinhash: String, invite: ExternalJoiningChatState, interaction:@escaping(PeerId?)->Void) -> InputDataModalController {
+func RequestJoinChatModalController(context: AccountContext, joinhash: String, invite: ExternalJoiningChatState, interaction:@escaping(Peer)->Void) -> InputDataModalController {
 
 
     switch invite {
@@ -111,8 +111,10 @@ func RequestJoinChatModalController(context: AccountContext, joinhash: String, i
         
         controller.returnKeyInvocation = { _, _ in
             close?()
-            _ = showModalProgress(signal: context.engine.peers.joinChatInteractively(with: joinhash), for: context.window).start(next: { peerId in
-                interaction(peerId)
+            _ = showModalProgress(signal: context.engine.peers.joinChatInteractively(with: joinhash), for: context.window).start(next: { peer in
+                if let peer = peer?._asPeer() {
+                    interaction(peer)
+                }
             }, error: { error in
                 let text: String
                 switch error {

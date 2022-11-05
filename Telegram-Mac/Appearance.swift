@@ -18,6 +18,9 @@ import Svg
 import ColorPalette
 import ThemeSettings
 
+let premiumGradient = [NSColor(hexString: "#6B93FF"), NSColor(hexString: "#976FFF"), NSColor(hexString: "#E46ACE")]
+
+
 func generateFilledCircleImage(diameter: CGFloat, color: NSColor?, strokeColor: NSColor? = nil, strokeWidth: CGFloat? = nil, backgroundColor: NSColor? = nil) -> CGImage {
     return generateImage(CGSize(width: diameter, height: diameter), contextGenerator: { size, context in
         context.clear(CGRect(origin: CGPoint(), size: size))
@@ -88,8 +91,7 @@ private func generateGradientBubble(_ colors: [NSColor]) -> CGImage {
                     locations.append(delta * CGFloat(i))
                 }
 
-                let colorSpace = deviceColorSpace
-                let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
+                let gradient = CGGradient(colorsSpace: DeviceGraphicsContextSettings.shared.colorSpace, colors: colors, locations: &locations)!
                 
                 context.drawLinearGradient(gradient, start: CGPoint(), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
             } else {
@@ -152,7 +154,7 @@ private func generateChatAction(_ image: CGImage, background: NSColor) -> CGImag
         let rect = CGRect(origin: CGPoint(), size: size)
         ctx.clear(rect)
         
-        ctx.setFillColor(background.cgColor)
+        ctx.setFillColor(NSColor.clear.cgColor)
         ctx.fillEllipse(in: rect)
         ctx.draw(image, in: rect.focus(image.backingSize))
         
@@ -448,31 +450,165 @@ func generateThemePreview(for palette: ColorPalette, wallpaper: Wallpaper, backg
     })!
 }
 
+func generateLockPremium(_ palette: ColorPalette) -> CGImage {
+    let image = NSImage(named: "Icon_Premium_Lock")!.precomposed(palette.accent)
+    return generateImage(image.backingSize, contextGenerator: { size, ctx in
+        ctx.clear(size.bounds)
+        
+//        ctx.setFillColor(palette.background.cgColor)
+//        ctx.fillEllipse(in: size.bounds.insetBy(dx: 2, dy: 2))
+//
+//        ctx.fill(NSMakeRect(size.width - 9, 1, 8, 8))
+
+        
+        ctx.clip(to: size.bounds, mask: image)
+
+        let colors = [NSColor(hexString: "#ffffff")!, NSColor(hexString: "#ffffff")!].map { $0.cgColor } as NSArray
+        let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+        
+        var locations: [CGFloat] = []
+        for i in 0 ..< colors.count {
+            locations.append(delta * CGFloat(i))
+        }
+
+        let colorSpace = deviceColorSpace
+        let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
+        
+        ctx.drawLinearGradient(gradient, start: CGPoint(x: size.width, y: 0), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
+    })!
+}
+
+func generateLockPremiumReaction(_ palette: ColorPalette) -> CGImage {
+    let image = NSImage(named: "Icon_Premium_Lock")!.precomposed(palette.accent)
+    return generateImage(image.backingSize, contextGenerator: { size, ctx in
+        ctx.clear(size.bounds)
+        
+        ctx.setFillColor(palette.background.cgColor)
+        ctx.fillEllipse(in: size.bounds.insetBy(dx: 2, dy: 2))
+        
+        ctx.fill(NSMakeRect(size.width - 9, 1, 8, 8))
+
+        
+        ctx.clip(to: size.bounds, mask: image)
+
+        let colors = [NSColor(hexString: "#1391FF")!, NSColor(hexString: "#F977CC")!].map { $0.cgColor } as NSArray
+        let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+        
+        var locations: [CGFloat] = []
+        for i in 0 ..< colors.count {
+            locations.append(delta * CGFloat(i))
+        }
+
+        let colorSpace = deviceColorSpace
+        let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
+        
+        ctx.drawLinearGradient(gradient, start: CGPoint(x: size.width, y: 0), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
+    })!
+}
+
+func generatePremium(_ reversed: Bool = false, color: NSColor? = nil, small: Bool = false) -> CGImage {
+    
+    let draw: (NSSize, CGContext)->Void = { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+
+        let image: CGImage
+        if small {
+            image = NSImage(named: "Icon_Peer_Premium")!.precomposed()
+        } else {
+            image = NSImage(named: "Icon_Premium_StickerPack")!.precomposed()
+        }
+        ctx.clip(to: size.bounds, mask: image)
+
+        if let color = color {
+            ctx.setFillColor(color.cgColor)
+            ctx.fill(size.bounds)
+        } else {
+            let colors = [NSColor(hexString: "#1391FF")!, NSColor(hexString: "#F977CC")!].map { $0.cgColor } as NSArray
+            let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+            
+            var locations: [CGFloat] = []
+            for i in 0 ..< colors.count {
+                locations.append(delta * CGFloat(i))
+            }
+
+            let colorSpace = deviceColorSpace
+            let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
+            
+            ctx.drawLinearGradient(gradient, start: CGPoint(x: size.width, y: 0), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
+        }
+        
+    }
+    
+    let size: NSSize
+    if small {
+        size = NSMakeSize(16, 16)
+    } else {
+        size = NSMakeSize(24, 24)
+    }
+    if reversed {
+        return generateImage(size, rotatedContext: { size, ctx in
+            draw(size, ctx)
+        })!
+    } else {
+        return generateImage(size, contextGenerator: { size, ctx in
+            draw(size, ctx)
+        })!
+    }
+
+}
+
+
+func generateStickerPackPremium() -> CGImage {
+    
+    let draw: (NSSize, CGContext)->Void = { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+
+        let image = NSImage(named: "Icon_Premium_StickerPack")!.precomposed()
+        ctx.clip(to: size.bounds, mask: image)
+
+        let colors = premiumGradient.compactMap { $0?.cgColor } as NSArray
+        let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+        
+        var locations: [CGFloat] = []
+        for i in 0 ..< colors.count {
+            locations.append(delta * CGFloat(i))
+        }
+
+        let colorSpace = deviceColorSpace
+        let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
+        
+        ctx.drawLinearGradient(gradient, start: CGPoint(x: size.width, y: 0), end: CGPoint(x: 0.0, y: size.height), options: CGGradientDrawingOptions())
+        
+    }
+    return generateImage(NSMakeSize(24, 24), contextGenerator: { size, ctx in
+        draw(size, ctx)
+    })!
+}
+
 func generateDialogVerify(background: NSColor, foreground: NSColor, reversed: Bool = false) -> CGImage {
     if reversed {
-        return generateImage(NSMakeSize(24, 24), contextGenerator: { size, ctx in
+        return generateImage(NSMakeSize(16, 16), contextGenerator: { size, ctx in
             ctx.clear(CGRect(origin: CGPoint(), size: size))
 
             let image = NSImage(named: "Icon_VerifyDialog")!.precomposed(foreground)
             
             ctx.setFillColor(background.cgColor)
-            ctx.fillEllipse(in: NSMakeRect(8, 8, size.width - 16, size.height - 16))
+            ctx.fillEllipse(in: NSMakeRect(4, 4, size.width - 8, size.height - 8))
             
             ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
         })!
     } else {
-        return generateImage(NSMakeSize(24, 24), rotatedContext: { size, ctx in
+        return generateImage(NSMakeSize(16, 16), rotatedContext: { size, ctx in
             ctx.clear(CGRect(origin: CGPoint(), size: size))
 
             let image = NSImage(named: "Icon_VerifyDialog")!.precomposed(foreground)
             
             ctx.setFillColor(background.cgColor)
-            ctx.fillEllipse(in: NSMakeRect(8, 8, size.width - 16, size.height - 16))
+            ctx.fillEllipse(in: NSMakeRect(4, 4, size.width - 8, size.height - 8))
             
             ctx.draw(image, in: CGRect(origin: CGPoint(), size: size))
         })!
     }
-    
 }
 
 private func generatePollDeleteOption(_ color: NSColor) -> CGImage {
@@ -488,7 +624,7 @@ private func generatePollDeleteOption(_ color: NSColor) -> CGImage {
 }
 
 private func generateStickerPackSelection(_ color: NSColor) -> CGImage {
-    return generateImage(NSMakeSize(35, 35), contextGenerator: { size, ctx in
+    return generateImage(NSMakeSize(30, 30), contextGenerator: { size, ctx in
         ctx.interpolationQuality = .low
         ctx.clear(CGRect(origin: CGPoint(), size: size))
         ctx.round(size, .cornerRadius)
@@ -588,11 +724,11 @@ private func generateUnreadFeaturedStickers(_ icon: CGImage, _ color: NSColor) -
     return generateImage(NSMakeSize(icon.systemSize.width, icon.systemSize.height), contextGenerator: { size, ctx in
         ctx.clear(CGRect(origin: CGPoint(), size: size))
 
-        let imageRect = NSMakeRect(floorToScreenPixels(System.backingScale, (size.width - icon.backingSize.width) / 2), floorToScreenPixels(System.backingScale, (size.height - icon.backingSize.height) / 2), icon.backingSize.width, icon.backingSize.height)
+        let imageRect = size.bounds
         ctx.draw(icon, in: imageRect)
 
-        ctx.setFillColor(color.cgColor)
-        ctx.fillEllipse(in: NSMakeRect(size.width - 11, size.height - 12, 6, 6))
+//        ctx.setFillColor(color.cgColor)
+//        ctx.fillEllipse(in: NSMakeRect(size.width - 10, size.height - 10, 6, 6))
 
     }, scale: System.backingScale)!
 }
@@ -773,6 +909,37 @@ private func generateSettingsActiveIcon(_ icon: CGImage, background: NSColor) ->
     })!
 }
 
+private func generatePremiumIcon(_ icon: CGImage) -> CGImage {
+    return generateImage(NSMakeSize(24, 24), contextGenerator: { size, ctx in
+        ctx.clear(size.bounds)
+        ctx.round(size, 5)
+        
+        let colors = premiumGradient.compactMap { $0?.cgColor } as NSArray
+        
+        let delta: CGFloat = 1.0 / (CGFloat(colors.count) - 1.0)
+        
+        var locations: [CGFloat] = []
+        for i in 0 ..< colors.count {
+            locations.append(delta * CGFloat(i))
+        }
+        let colorSpace = deviceColorSpace
+        let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: &locations)!
+        
+        ctx.drawLinearGradient(gradient, start: CGPoint(x: 0, y: size.height), end: CGPoint(x: size.width, y: size.height), options: CGGradientDrawingOptions())
+
+        let icon = generateImage(icon.backingSize, contextGenerator: { size, ctx in
+            ctx.clear(size.bounds)
+            ctx.clip(to: size.bounds, mask: icon)
+            ctx.setFillColor(.white)
+            ctx.fill(size.bounds)
+        })!
+        
+        ctx.draw(icon, in: size.bounds.focus(icon.backingSize))
+        
+    })!
+}
+
+
 private func generateStickersEmptySearch(color: NSColor) -> CGImage {
     return generateImage(NSMakeSize(100, 100), contextGenerator: { size, ctx in
         let rect = CGRect(origin: CGPoint(), size: size)
@@ -913,10 +1080,14 @@ func generateChatGroupToggleUnselected(foregroundColor: NSColor, backgroundColor
     }, scale: 2)!
 }
 
-func generateAvatarPlaceholder(foregroundColor: NSColor, size: NSSize) -> CGImage {
+func generateAvatarPlaceholder(foregroundColor: NSColor, size: NSSize, cornerRadius: CGFloat = -1) -> CGImage {
     return generateImage(size, contextGenerator: { size, ctx in
         ctx.clear(NSMakeRect(0, 0, size.width, size.height))
-        ctx.round(size, size.width/2)
+        if cornerRadius == -1 {
+            ctx.round(size, size.width/2)
+        } else {
+            ctx.round(size, min(cornerRadius, size.width / 2))
+        }
         ctx.setFillColor(foregroundColor.cgColor)
         ctx.fill(NSMakeRect(0, 0, size.width, size.height))
     }, scale: 1.0)!
@@ -1538,7 +1709,7 @@ class TelegramPresentationTheme : PresentationTheme {
             if bubbled {
                 switch backgroundMode {
                 case .background:
-                    chatServiceItemTextColor = .white
+                    chatServiceItemTextColor = NSColor(rgb: 0xffffff)
                 case let .color(color):
                     if color != colors.background {
                         chatServiceItemTextColor = chatServiceItemColor.brightnessAdjustedColor
@@ -1691,8 +1862,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                secretImageSelected:{  #imageLiteral(resourceName: "Icon_SecretChatLock").precomposed(palette.underSelectedColor, flipVertical:true) },
                                                pinnedImage: { #imageLiteral(resourceName: "Icon_ChatListPinned").precomposed(palette.grayIcon, flipVertical:true) },
                                                pinnedImageSelected: { #imageLiteral(resourceName: "Icon_ChatListPinned").precomposed(palette.underSelectedColor, flipVertical:true) },
-                                               verifiedImage: { #imageLiteral(resourceName: "Icon_VerifyPeer").precomposed(flipVertical: true) },
-                                               verifiedImageSelected: { #imageLiteral(resourceName: "Icon_VerifyPeerActive").precomposed(flipVertical: true) },
+                                               verifiedImage: { generateDialogVerify(background: palette.underSelectedColor, foreground: palette.basicAccent) },
+                                               verifiedImageSelected: { generateDialogVerify(background: palette.underSelectedColor, foreground: palette.basicAccent) },
                                                errorImage: { #imageLiteral(resourceName: "Icon_MessageSentFailed").precomposed(flipVertical: true) },
                                                errorImageSelected: { #imageLiteral(resourceName: "Icon_DialogSendingError").precomposed(flipVertical: true) },
                                                chatSearch: { generateChatAction(#imageLiteral(resourceName: "Icon_SearchChatMessages").precomposed(palette.accentIcon), background: palette.background) },
@@ -1800,24 +1971,24 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                peerMediaDownloadFileStart: { #imageLiteral(resourceName: "Icon_MediaDownload").precomposed(palette.accentIcon) },
                                                peerMediaDownloadFilePause: { downloadFilePauseIcon(palette.accentIcon) },
                                                stickersShare: { #imageLiteral(resourceName: "Icon_ShareStickerPack").precomposed(palette.accentIcon) },
-                                               emojiRecentTab: { #imageLiteral(resourceName: "Icon_EmojiTabRecent").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true) },
-                                               emojiSmileTab: { #imageLiteral(resourceName: "Icon_EmojiTabSmiles").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true) },
-                                               emojiNatureTab: { #imageLiteral(resourceName: "Icon_EmojiTabNature").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true) },
-                                               emojiFoodTab: { #imageLiteral(resourceName: "Icon_EmojiTabFood").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true) },
-                                               emojiSportTab: { #imageLiteral(resourceName: "Icon_EmojiTabSports").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true) },
-                                               emojiCarTab: { #imageLiteral(resourceName: "Icon_EmojiTabCar").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true) },
-                                               emojiObjectsTab: { #imageLiteral(resourceName: "Icon_EmojiTabObjects").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true) },
-                                               emojiSymbolsTab: { #imageLiteral(resourceName: "Icon_EmojiTabSymbols").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true) },
-                                               emojiFlagsTab: { #imageLiteral(resourceName: "Icon_EmojiTabFlag").precomposed(palette.grayIcon, flipVertical:true, flipHorizontal:true) },
-                                               emojiRecentTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabRecent").precomposed(palette.accentIcon, flipVertical:true, flipHorizontal:true) },
-                                               emojiSmileTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabSmiles").precomposed(palette.accentIcon, flipVertical:true, flipHorizontal:true) },
-                                               emojiNatureTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabNature").precomposed(palette.accentIcon, flipVertical:true, flipHorizontal:true) },
-                                               emojiFoodTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabFood").precomposed(palette.accentIcon, flipVertical:true, flipHorizontal:true) },
-                                               emojiSportTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabSports").precomposed(palette.accentIcon, flipVertical:true, flipHorizontal:true) },
-                                               emojiCarTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabCar").precomposed(palette.accentIcon, flipVertical:true, flipHorizontal:true) },
-                                               emojiObjectsTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabObjects").precomposed(palette.accentIcon, flipVertical:true, flipHorizontal:true) },
-                                               emojiSymbolsTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabSymbols").precomposed(palette.accentIcon, flipVertical:true, flipHorizontal:true) },
-                                               emojiFlagsTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabFlag").precomposed(palette.accentIcon, flipVertical:true, flipHorizontal:true) },
+                                               emojiRecentTab: { #imageLiteral(resourceName: "Icon_EmojiTabRecent").precomposed(palette.grayIcon.withAlphaComponent(0.8)) },
+                                               emojiSmileTab: { #imageLiteral(resourceName: "Icon_EmojiTabSmiles").precomposed(palette.grayIcon.withAlphaComponent(0.8)) },
+                                               emojiNatureTab: { #imageLiteral(resourceName: "Icon_EmojiTabNature").precomposed(palette.grayIcon.withAlphaComponent(0.8)) },
+                                               emojiFoodTab: { #imageLiteral(resourceName: "Icon_EmojiTabFood").precomposed(palette.grayIcon.withAlphaComponent(0.8)) },
+                                               emojiSportTab: { #imageLiteral(resourceName: "Icon_EmojiTabSports").precomposed(palette.grayIcon.withAlphaComponent(0.8)) },
+                                               emojiCarTab: { #imageLiteral(resourceName: "Icon_EmojiTabCar").precomposed(palette.grayIcon.withAlphaComponent(0.8)) },
+                                               emojiObjectsTab: { #imageLiteral(resourceName: "Icon_EmojiTabObjects").precomposed(palette.grayIcon.withAlphaComponent(0.8)) },
+                                               emojiSymbolsTab: { #imageLiteral(resourceName: "Icon_EmojiTabSymbols").precomposed(palette.grayIcon.withAlphaComponent(0.8)) },
+                                               emojiFlagsTab: { #imageLiteral(resourceName: "Icon_EmojiTabFlag").precomposed(palette.grayIcon.withAlphaComponent(0.8)) },
+                                               emojiRecentTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabRecent").precomposed(palette.grayIcon.darker()) },
+                                               emojiSmileTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabSmiles").precomposed(palette.grayIcon.darker()) },
+                                               emojiNatureTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabNature").precomposed(palette.grayIcon.darker()) },
+                                               emojiFoodTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabFood").precomposed(palette.grayIcon.darker()) },
+                                               emojiSportTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabSports").precomposed(palette.grayIcon.darker()) },
+                                               emojiCarTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabCar").precomposed(palette.grayIcon.darker()) },
+                                               emojiObjectsTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabObjects").precomposed(palette.grayIcon.darker()) },
+                                               emojiSymbolsTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabSymbols").precomposed(palette.grayIcon.darker()) },
+                                               emojiFlagsTabActive: { #imageLiteral(resourceName: "Icon_EmojiTabFlag").precomposed(palette.grayIcon.darker()) },
                                                stickerBackground: { generateStickerBackground(NSMakeSize(83, 83), palette.background) },
                                                stickerBackgroundActive: { generateStickerBackground(NSMakeSize(83, 83), palette.grayBackground) },
                                                stickersTabRecent: { #imageLiteral(resourceName: "Icon_EmojiTabRecent").precomposed(palette.grayIcon) },
@@ -1853,8 +2024,8 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                calendarBackDisabled: { #imageLiteral(resourceName: "Icon_NavigationBack").precomposed(palette.grayIcon) },
                                                calendarNextDisabled: { #imageLiteral(resourceName: "Icon_NavigationBack").precomposed(palette.grayIcon, flipHorizontal: true) },
                                                newChatCamera: { #imageLiteral(resourceName: "Icon_AttachCamera").precomposed(palette.grayIcon) },
-                                               peerInfoVerify: { #imageLiteral(resourceName: "Icon_VerifyPeer").precomposed(flipVertical: true) },
-                                               peerInfoVerifyProfile: { #imageLiteral(resourceName: "Icon_VerifyPeer").precomposed() },
+                                               peerInfoVerify: { generateDialogVerify(background: palette.underSelectedColor, foreground: palette.basicAccent, reversed: true) },
+                                               peerInfoVerifyProfile: { generateDialogVerify(background: palette.underSelectedColor, foreground: palette.basicAccent, reversed: true) },
                                                peerInfoCall: { #imageLiteral(resourceName: "Icon_ProfileCall").precomposed(palette.accent) },
                                                callOutgoing: { #imageLiteral(resourceName: "Icon_CallOutgoing").precomposed(palette.grayIcon, flipVertical: true) },
                                                recentDismiss: { NSImage(named: "Icon_Search_RemoveRecent")!.precomposed(palette.grayIcon) },
@@ -1896,7 +2067,6 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chatMentionActive: { generateChatMention(image: NSImage(named: "Icon_ChatMention")!, backgroundColor: palette.background, border: palette.accentIcon, foregroundColor: palette.accentIcon) },
                                                sliderControl: { #imageLiteral(resourceName: "Icon_SliderNormal").precomposed() },
                                                sliderControlActive: { #imageLiteral(resourceName: "Icon_SliderNormal").precomposed() },
-                                               stickersTabFave: { #imageLiteral(resourceName: "Icon_FaveStickers").precomposed(palette.grayIcon) },
                                                chatInstantView: { #imageLiteral(resourceName: "Icon_ChatIV").precomposed(palette.webPreviewActivity) },
                                                chatInstantViewBubble_incoming: { #imageLiteral(resourceName: "Icon_ChatIV").precomposed(palette.webPreviewActivityBubble_incoming) },
                                                chatInstantViewBubble_outgoing: { #imageLiteral(resourceName: "Icon_ChatIV").precomposed(palette.webPreviewActivityBubble_outgoing) },
@@ -1922,6 +2092,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                settingsWallet: { generateSettingsIcon(NSImage(named: "Icon_SettingsWallet")!.precomposed(NSColor(0x59a7d8), flipVertical: true)) },
                                                settingsUpdate: { generateSettingsIcon(NSImage(named: "Icon_SettingsUpdate")!.precomposed(flipVertical: true)) },
                                                settingsFilters: { generateSettingsIcon(NSImage(named: "Icon_SettingsFilters")!.precomposed(flipVertical: true)) },
+                                               settingsPremium: { generatePremiumIcon(NSImage(named: "Icon_Premium_Settings")!.precomposed(flipVertical: true)) },
                                                settingsAskQuestionActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsAskQuestion").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsFaqActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsFaq").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
                                                settingsGeneralActive: { generateSettingsActiveIcon(#imageLiteral(resourceName: "Icon_SettingsGeneral").precomposed(palette.underSelectedColor, flipVertical: true), background: palette.accentSelect) },
@@ -2066,11 +2237,11 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                logoutOptionChangePhoneNumber: { generateSettingsIcon(NSImage(named: "Icon_LogoutOption_ChangePhoneNumber")!.precomposed(flipVertical: true)) },
                                                logoutOptionContactSupport: { generateSettingsIcon(NSImage(named: "Icon_LogoutOption_ContactSupport")!.precomposed(flipVertical: true)) },
                                                disableEmojiPrediction: { NSImage(named: "Icon_CallWindowClose")!.precomposed(palette.grayIcon) },
-                                               scam: { generateScamIcon(foregroundColor: palette.redUI, backgroundColor: .clear) },
-                                               scamActive: { generateScamIcon(foregroundColor: palette.underSelectedColor, backgroundColor: .clear) },
+                                               scam: { generateScamIconReversed(foregroundColor: palette.redUI, backgroundColor: .clear) },
+                                               scamActive: { generateScamIconReversed(foregroundColor: palette.underSelectedColor, backgroundColor: .clear) },
                                                chatScam: { generateScamIconReversed(foregroundColor: palette.redUI, backgroundColor: .clear) },
-                                               fake: { generateFakeIcon(foregroundColor: palette.redUI, backgroundColor: .clear) },
-                                               fakeActive: { generateFakeIcon(foregroundColor: palette.underSelectedColor, backgroundColor: .clear) },
+                                               fake: { generateFakeIconReversed(foregroundColor: palette.redUI, backgroundColor: .clear) },
+                                               fakeActive: { generateFakeIconReversed(foregroundColor: palette.underSelectedColor, backgroundColor: .clear) },
                                                chatFake: { generateFakeIconReversed(foregroundColor: palette.redUI, backgroundColor: .clear) },
                                                chatUnarchive: { NSImage(named: "Icon_ChatUnarchive")!.precomposed(palette.accentIcon) },
                                                chatArchive: { NSImage(named: "Icon_ChatArchive")!.precomposed(palette.accentIcon) },
@@ -2080,17 +2251,18 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                privacySettings_twoStep: { generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_TwoStep")!.precomposed(flipVertical: true)) },
                                                deletedAccount: { NSImage(named: "Icon_DeletedAccount")!.precomposed() },
                                                stickerPackSelection: { generateStickerPackSelection(.clear) },
-                                               stickerPackSelectionActive: { generateStickerPackSelection(palette.grayForeground) },
+                                               stickerPackSelectionActive: { generateStickerPackSelection(palette.grayForeground.withAlphaComponent(0.8)) },
                                                entertainment_Emoji: { NSImage(named: "Icon_Entertainment_Emoji")!.precomposed(palette.grayIcon) },
                                                entertainment_Stickers: { NSImage(named: "Icon_Entertainment_Stickers")!.precomposed(palette.grayIcon) },
                                                entertainment_Gifs: { NSImage(named: "Icon_Entertainment_Gifs")!.precomposed(palette.grayIcon) },
                                                entertainment_Search: { NSImage(named: "Icon_Entertainment_Search")!.precomposed(palette.grayIcon) },
                                                entertainment_Settings: { NSImage(named: "Icon_Entertainment_Settings")!.precomposed(palette.grayIcon) },
                                                entertainment_SearchCancel: { NSImage(named: "Icon_Entertainment_SearchCancel")!.precomposed(palette.grayIcon) },
+                                               entertainment_AnimatedEmoji:  { NSImage(named: "Icon_Entertainment_AnimatedEmoji")!.precomposed(palette.grayIcon) },
                                                scheduledAvatar: { NSImage(named: "Icon_AvatarScheduled")!.precomposed(.white) },
                                                scheduledInputAction: { NSImage(named: "Icon_ChatActionScheduled")!.precomposed(palette.accentIcon) },
-                                               verifyDialog: { generateDialogVerify(background: .white, foreground: palette.basicAccent) },
-                                               verifyDialogActive: { generateDialogVerify(background: palette.accentIcon, foreground: palette.underSelectedColor) },
+                                               verifyDialog: { generateDialogVerify(background: palette.underSelectedColor, foreground: palette.basicAccent, reversed: true) },
+                                               verifyDialogActive: { generateDialogVerify(background: palette.accentIcon, foreground: palette.underSelectedColor, reversed: true) },
                                                chatInputScheduled: { NSImage(named: "Icon_ChatInputScheduled")!.precomposed(palette.grayIcon) },
                                                appearanceAddPlatformTheme: {
                                                 let image = NSImage(named: "Icon_AppearanceAddTheme")!.precomposed(palette.accentIcon)
@@ -2186,8 +2358,12 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_quiz_explanation: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIcon) },
                                                chat_quiz_explanation_bubble_incoming: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_incoming) },
                                                chat_quiz_explanation_bubble_outgoing: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_outgoing) },
-                                               stickers_add_featured: { NSImage(named: "Icon_AddFeaturedStickers")!.precomposed(palette.grayIcon) },
-                                               stickers_add_featured_unread: { generateUnreadFeaturedStickers(NSImage(named: "Icon_AddFeaturedStickers")!.precomposed(palette.grayIcon), palette.redUI) },
+                                               stickers_add_featured: { NSImage(named: "Icon_AddFeaturedStickers")!.precomposed(palette.grayIcon.withAlphaComponent(0.8)) },
+                                               stickers_add_featured_unread: { generateUnreadFeaturedStickers(NSImage(named: "Icon_AddFeaturedStickers")!.precomposed(palette.grayIcon.withAlphaComponent(0.8)), palette.redUI) },
+                                               stickers_add_featured_active: { NSImage(named: "Icon_AddFeaturedStickers")!.precomposed(palette.grayIcon.darker()) },
+                                               stickers_add_featured_unread_active: { generateUnreadFeaturedStickers(NSImage(named: "Icon_AddFeaturedStickers")!.precomposed(palette.grayIcon.darker()), palette.redUI) },
+                                               stickers_favorite: { #imageLiteral(resourceName: "Icon_FaveStickers").precomposed(palette.grayIcon.withAlphaComponent(0.8)) },
+                                               stickers_favorite_active: { #imageLiteral(resourceName: "Icon_FaveStickers").precomposed(palette.grayIcon.darker()) },
                                                channel_info_promo: { NSImage(named: "Icon_ChannelPromoInfo")!.precomposed(palette.grayIcon) },
                                                channel_info_promo_bubble_incoming: { NSImage(named: "Icon_ChannelPromoInfo")!.precomposed(palette.grayTextBubble_incoming) },
                                                channel_info_promo_bubble_outgoing: { NSImage(named: "Icon_ChannelPromoInfo")!.precomposed(palette.grayTextBubble_outgoing) },
@@ -2204,7 +2380,10 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                chat_like_inside_empty_bubble_incoming: { NSImage(named: "Icon_Like_MessageInsideEmpty")!.precomposed(palette.grayIconBubble_incoming, flipVertical: true) },
                                                chat_like_inside_empty_bubble_outgoing: { NSImage(named: "Icon_Like_MessageInsideEmpty")!.precomposed(palette.grayIconBubble_outgoing, flipVertical: true) },
                                                chat_like_inside_empty_bubble_overlay: { NSImage(named: "Icon_Like_MessageInsideEmpty")!.precomposed(.white, flipVertical: true) },
-                                               gif_trending: { NSImage(named: "Icon_GifTrending")!.precomposed(palette.grayIcon) },
+                                               gif_trending: { NSImage(named: "Icon_GifTrending")!.precomposed(palette.grayIcon.withAlphaComponent(0.8)) },
+                                               gif_trending_active: { NSImage(named: "Icon_GifTrending")!.precomposed(palette.grayIcon.darker()) },
+                                               gif_recent: { NSImage(named: "Icon_EmojiTabRecent")!.precomposed(palette.grayIcon.withAlphaComponent(0.8)) },
+                                               gif_recent_active: { NSImage(named: "Icon_EmojiTabRecent")!.precomposed(palette.grayIcon.darker()) },
                                                chat_list_thumb_play: { NSImage(named: "Icon_ChatListThumbPlay")!.precomposed() },
                                                call_tooltip_battery_low: { NSImage(named: "Icon_Call_BatteryLow")!.precomposed(.white) },
                                                call_tooltip_camera_off: { NSImage(named: "Icon_Call_CameraOff")!.precomposed(.white) },
@@ -2251,6 +2430,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                profile_channel_sign: {NSImage(named: "Icon_Profile_ChannelSign")!.precomposed(flipVertical: true)},
                                                profile_channel_type: {NSImage(named: "Icon_Profile_ChannelType")!.precomposed(flipVertical: true)},
                                                profile_group_type: {NSImage(named: "Icon_Profile_GroupType")!.precomposed(flipVertical: true)},
+                                                profile_group_topics: {NSImage(named: "Icon_Profile_Topics")!.precomposed(flipVertical: true)},
                                                profile_group_destruct: {NSImage(named: "Icon_Profile_Destruct")!.precomposed(flipVertical: true)},
                                                profile_group_discussion: {NSImage(named: "Icon_Profile_Discussion")!.precomposed(flipVertical: true)},
                                                profile_requests: {NSImage(named: "Icon_Profile_Requests")!.precomposed(palette.accent, flipVertical: true)},
@@ -2324,6 +2504,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                reactions_badge_active: { generateBadgeMention(image: NSImage(named: "Icon_ReactionBadge")!, backgroundColor: palette.underSelectedColor, foregroundColor: palette.accentSelect) },
                                                reactions_badge_archive: { generateBadgeMention(image: NSImage(named: "Icon_ReactionBadge")!, backgroundColor: palette.badgeMuted, foregroundColor: palette.background) },
                                                reactions_badge_archive_active: { generateBadgeMention(image: NSImage(named: "Icon_ReactionBadge")!, backgroundColor: palette.underSelectedColor, foregroundColor: palette.accentSelect) },
+                                               reactions_show_more: { NSImage.init(named: "Icon_Reactions_ShowMore")!.precomposed(NSColor.white) },
                                                chat_reactions_badge: { generateChatMention(image: NSImage(named: "Icon_ReactionButton")!, backgroundColor: palette.background, border: palette.chatBackground == palette.background && palette.isDark ? palette.grayIcon : .clear, foregroundColor: palette.grayIcon) },
                                                chat_reactions_badge_active: { generateChatMention(image: NSImage(named: "Icon_ReactionButton")!, backgroundColor: palette.background, border: palette.chatBackground == palette.background && palette.isDark ? palette.accentIcon : .clear, foregroundColor: palette.accentIcon) },
                                                 gallery_pip_close: { NSImage(named: "Icon_Pip_Close")!.precomposed(NSColor(0xffffff)) },
@@ -2332,11 +2513,43 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 gallery_pip_out: { NSImage(named: "Icon_Pip_Out")!.precomposed(NSColor(0xffffff)) },
                                                 gallery_pip_pause: { NSImage(named: "Icon_Pip_Pause")!.precomposed(NSColor(0xffffff)) },
                                                 gallery_pip_play: { NSImage(named: "Icon_Pip_Play")!.precomposed(NSColor(0xffffff)) },
-                                                notification_sound_add: { NSImage(named: "Icon_Notification_Add")!.precomposed(palette.accent, flipVertical: true) }
+                                                notification_sound_add: { NSImage(named: "Icon_Notification_Add")!.precomposed(palette.accent, flipVertical: true) },
+                                                premium_lock: { generateLockPremium(palette) },
+                                                premium_lock_gray: { NSImage(named: "Icon_Premium_Lock")!.precomposed(palette.grayIcon) },
+                                                premium_plus: { NSImage(named: "Icon_Premium_Plus")!.precomposed(NSColor(0xffffff)) },
+                                                premium_account: { generatePremium(false, color: palette.accent) },
+                                                premium_account_active: { generatePremium(false, color: palette.underSelectedColor) },
+                                                premium_account_rev: { generatePremium(true, color: palette.accent) },
+                                                premium_account_rev_active: { generatePremium(true, color: palette.underSelectedColor, small: false) },
+                                                premium_account_small: { generatePremium(false, color: palette.accent, small: true) },
+                                                premium_account_small_active: { generatePremium(false, color: palette.underSelectedColor, small: true) },
+                                                premium_account_small_rev: { generatePremium(true, color: palette.accent, small: true) },
+                                                premium_account_small_rev_active: { generatePremium(true, color: palette.underSelectedColor, small: true) },
+                                                premium_reaction_lock: { NSImage(named: "Icon_Premium_ReactionLock")!.precomposed(palette.accent) },
+                                                premium_boarding_feature_next: { NSImage(named: "Premium_Boarding_Feature_Next")!.precomposed(palette.grayIcon) },
+                                                premium_stickers: { generateStickerPackPremium() },
+                                                premium_emoji_lock: { NSImage(named: "Icon_EmojiLock")!.precomposed(palette.grayIcon)},
+                                                account_add_account: { NSImage(named: "Icon_Account_Add_Account")!.precomposed(palette.accent, flipVertical: true)},
+                                                account_set_status: { NSImage(named: "Icon_Account_Set_Status")!.precomposed(palette.accent, flipVertical: true)},
+                                                account_change_status: { NSImage(named: "Icon_Account_Change_Status")!.precomposed(palette.accent, flipVertical: true)},
+                                                chat_premium_status_red: { generatePremium(false, color: palette.groupPeerNameRed, small: true) },
+                                                chat_premium_status_orange: { generatePremium(false, color: palette.groupPeerNameOrange, small: true) },
+                                                chat_premium_status_violet: { generatePremium(false, color: palette.groupPeerNameViolet, small: true) },
+                                                chat_premium_status_green: { generatePremium(false, color: palette.groupPeerNameGreen, small: true) },
+                                                chat_premium_status_cyan: { generatePremium(false, color: palette.groupPeerNameCyan, small: true) },
+                                                chat_premium_status_light_blue: { generatePremium(false, color: palette.groupPeerNameLightBlue, small: true) },
+                                                chat_premium_status_blue: { generatePremium(false, color: palette.groupPeerNameBlue, small: true) },
+                                                extend_content_lock: { NSImage(named: "Icon_Premium_Lock")!.precomposed(.white) },
+                                                chatlist_forum_closed_topic: { NSImage(named: "Icon_Forum_ClosedTopic")!.precomposed(palette.grayIcon, flipVertical: true) },
+                                                chatlist_forum_closed_topic_active: { NSImage(named: "Icon_Forum_ClosedTopic")!.precomposed(palette.underSelectedColor, flipVertical: true) },
+                                                chatlist_arrow: { NSImage(named: "Icon_ChatList_Arrow")!.precomposed(palette.text) },
+                                                chatlist_arrow_active: { NSImage(named: "Icon_ChatList_Arrow")!.precomposed(palette.underSelectedColor) }
+
 
     )
 
 }
+
 func generateTheme(palette: ColorPalette, cloudTheme: TelegramTheme?, bubbled: Bool, fontSize: CGFloat, wallpaper: ThemeWallpaper) -> TelegramPresentationTheme {
     
     let chatList = TelegramChatListTheme(selectedBackgroundColor: palette.accentSelect,
@@ -2451,7 +2664,8 @@ func generateWebAppThemeParams(_ presentationTheme: PresentationTheme) -> [Strin
         "hint_color": Int32(bitPattern: presentationTheme.colors.grayText.rgb),
         "link_color": Int32(bitPattern: presentationTheme.colors.link.rgb),
         "button_color": Int32(bitPattern: presentationTheme.colors.accent.rgb),
-        "button_text_color": Int32(bitPattern: presentationTheme.colors.underSelectedColor.rgb)
+        "button_text_color": Int32(bitPattern: presentationTheme.colors.underSelectedColor.rgb),
+        "secondary_bg_color":Int32(bitPattern: presentationTheme.colors.listBackground.rgb)
     ]
 }
 

@@ -104,14 +104,14 @@ public class SectionControllerView : View {
                 nfrom = NSMakePoint(-container.frame.width, 0)
             }
             
-            previous?.view._change(pos: pto, animated: animated, duration: duration, timingFunction: CAMediaTimingFunctionName.spring, completion: { [weak previous, weak controller] complete in
+            previous?.view._change(pos: pto, animated: animated, duration: duration, timingFunction: .spring, completion: { [weak previous, weak controller] complete in
                 if complete {
                     previous?.view.removeFromSuperview()
                     previous?.viewDidDisappear(animated)
                     controller?.viewDidAppear(animated)
                 }
             })
-            controller.view.layer?.animatePosition(from: nfrom, to: NSZeroPoint, duration: duration, timingFunction: CAMediaTimingFunctionName.spring)
+            controller.view.layer?.animatePosition(from: nfrom, to: NSZeroPoint, duration: duration, timingFunction: .spring, removeOnCompletion: false)
             CATransaction.commit()
         } else {
             container.removeAllSubviews()
