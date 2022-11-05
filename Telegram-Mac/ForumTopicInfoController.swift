@@ -130,15 +130,28 @@ func ForumTopicInfoController(context: AccountContext, purpose: ForumTopicInfoPu
         default:
             pass = false
         }
-        if !context.isPremium, sticker.file.isPremiumEmoji && !pass {
-            showPremiumAlert()
-        } else {
-            updateState { current in
-                var current = current
-                current.icon = .init(file: sticker.file, fileId: sticker.file.fileId.id, fromRect: fromRect)
-                return current
+        
+        let freeItems: Signal<[StickerPackItem], NoError> = context.engine.stickers.loadedStickerPack(reference: .iconTopicEmoji, forceActualized: false) |> map { result in
+            switch result {
+            case let .result(_, items, _):
+                return items
+            default:
+                return []
             }
-        }
+        } |> take(1) |> deliverOnMainQueue
+        
+        _ = freeItems.start(next: { freeItems in
+            let accept = freeItems.contains(where: { $0.file.fileId == sticker.file.fileId })
+            if !context.isPremium, sticker.file.isPremiumEmoji && !pass && !accept {
+                showPremiumAlert()
+            } else {
+                updateState { current in
+                    var current = current
+                    current.icon = .init(file: sticker.file, fileId: sticker.file.fileId.id, fromRect: fromRect)
+                    return current
+                }
+            }
+        })
     }
     
     emojis.update(with: interactions, chatInteraction: .init(chatLocation: .peer(peerId), context: context))
