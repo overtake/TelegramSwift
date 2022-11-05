@@ -606,7 +606,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         if hasPhoto {
             activities.view?.setFrameOrigin(avatarControl.frame.maxX + 8, 25)
         } else {
-            activities.view?.setFrameOrigin(24, 25)
+            activities.view?.setFrameOrigin(24 + additionInset, 25)
         }
         badgeNode.view!.setFrameOrigin(6,4)
         
