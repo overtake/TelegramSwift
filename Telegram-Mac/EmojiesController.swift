@@ -1416,8 +1416,9 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                return reactionSettings
            }
         
+        let peer = getPeerView(peerId: context.peerId, postbox: context.account.postbox)
         
-        actionsDisposable.add(combineLatest(emojies, context.account.viewTracker.featuredEmojiPacks(), context.account.postbox.peerView(id: context.peerId), search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji, forumTopic).start(next: { view, featured, peerView, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji, forumTopic in
+        actionsDisposable.add(combineLatest(emojies, context.account.viewTracker.featuredEmojiPacks(), peer, search, reactions, recentUsedEmoji(postbox: context.account.postbox), reactionSettings, iconStatusEmoji, forumTopic).start(next: { view, featured, peer, search, reactions, recentEmoji, reactionSettings, iconStatusEmoji, forumTopic in
             
             
             var featuredStatusEmoji: OrderedItemListView?
@@ -1506,7 +1507,7 @@ final class EmojiesController : TelegramGenericViewController<AnimatedEmojiesVie
                         sections.append(.init(info: item.info, items: item.topItems, dict: dict, installed: false))
                     }
                 }
-                if let peer = peerView.peers[peerView.peerId] {
+                if let peer = peer {
                     current.peer = .init(peer)
                 }
                 current.featuredStatusItems = featuredStatusItems

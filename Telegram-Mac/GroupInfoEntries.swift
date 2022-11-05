@@ -600,12 +600,12 @@ final class GroupInfoArguments : PeerInfoArguments {
         }
         
         
-        let addMember = context.account.viewTracker.peerView(peerId) |> take(1) |> deliverOnMainQueue |> mapToSignal{ view -> Signal<[PeerId], NoError> in
+        let addMember = getCachedDataView(peerId: peerId, postbox: context.account.postbox) |> take(1) |> deliverOnMainQueue |> mapToSignal{ cachedData -> Signal<[PeerId], NoError> in
             
             var excludePeerIds:[PeerId] = []
-            if let cachedData = view.cachedData as? CachedChannelData {
+            if let cachedData = cachedData as? CachedChannelData {
                 excludePeerIds = Array(cachedData.peerIds)
-            } else if let cachedData = view.cachedData as? CachedGroupData {
+            } else if let cachedData = cachedData as? CachedGroupData {
                 excludePeerIds = Array(cachedData.peerIds)
             }
             

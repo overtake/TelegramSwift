@@ -102,8 +102,9 @@ final class GroupCallAddMembersBehaviour : SelectPeersBehavior {
                     ($0.0.map { $0._asPeer() }, $0.1.mapValues { $0._asPresence() })
                 }
             }
-            contacts = combineLatest(account.postbox.peerView(id: peerId), contacts) |> map { peerView, contacts in
-                if let peer = peerViewMainPeer(peerView) {
+            
+            contacts = combineLatest(getPeerView(peerId: peerId, postbox: account.postbox), contacts) |> map { peer, contacts in
+                if let peer = peer {
                     if peer.groupAccess.canAddMembers {
                         return contacts
                     } else {

@@ -684,10 +684,10 @@ class ShareMessageObject : ShareObject {
         let date = self.scheduleDate
         let withoutSound = self.withoutSound
         for peerId in peerIds {
-            let viewSignal: Signal<PeerId?, NoError> = context.account.postbox.peerView(id: peerId)
+            let viewSignal: Signal<PeerId?, NoError> = getCachedDataView(peerId: peerId, postbox: context.account.postbox)
             |> take(1)
-            |> map { peerView in
-                if let cachedData = peerView.cachedData as? CachedChannelData {
+            |> map { cachedData in
+                if let cachedData = cachedData as? CachedChannelData {
                     return cachedData.sendAsPeerId
                 } else {
                     return nil
@@ -853,10 +853,10 @@ final class ForwardMessagesObject : ShareObject {
             let date = self.scheduleDate
             let withoutSound = self.withoutSound
             for peerId in peerIds {
-                let viewSignal: Signal<PeerId?, NoError> = context.account.postbox.peerView(id: peerId)
+                let viewSignal: Signal<PeerId?, NoError> = getCachedDataView(peerId: peerId, postbox: context.account.postbox)
                 |> take(1)
-                |> map { peerView in
-                    if let cachedData = peerView.cachedData as? CachedChannelData {
+                |> map { cachedData in
+                    if let cachedData = cachedData as? CachedChannelData {
                         return cachedData.sendAsPeerId
                     } else {
                         return nil

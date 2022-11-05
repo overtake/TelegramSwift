@@ -694,7 +694,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                 }) |> map { result in
                     return Array(result.joined())
                 } |> mapToSignal { peers in
-                    return combineLatest(peers.map { context.account.viewTracker.peerView($0.peerId) |> take(1) }) |> map { ($0, peers) }
+                    return combineLatest(peers.map { context.account.postbox.peerView(id: $0.peerId) |> take(1) }) |> map { ($0, peers) }
                 } |> mapToSignal { peerViews, peers in
                     return context.account.postbox.unreadMessageCountsView(items: peers.map {.peer(id: $0.peerId, handleThreads: false)}) |> take(1) |> map { values in
                         var unread:[PeerId: UnreadSearchBadge] = [:]
@@ -786,7 +786,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                                 }
                                 |> mapToSignal { peers -> Signal<([FoundPeer], [FoundPeer], [PeerId : UnreadSearchBadge]), NoError> in
                                     let all = peers.0 + peers.1
-                                    return combineLatest(all.map { context.account.viewTracker.peerView($0.peer.id) |> take(1) }) |> mapToSignal { peerViews in
+                                return combineLatest(all.map { context.account.postbox.peerView(id: $0.peer.id) |> take(1) }) |> mapToSignal { peerViews in
                                         return context.account.postbox.unreadMessageCountsView(items: all.map {.peer(id: $0.peer.id, handleThreads: false)}) |> take(1) |> map { values in
                                             var unread:[PeerId: UnreadSearchBadge] = [:]
                                             outer: for peerView in peerViews {
@@ -973,7 +973,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
             } else if options.contains(.chats), target.isCommon {
 
                 let recently = context.engine.peers.recentlySearchedPeers() |> mapToSignal { recently -> Signal<[PeerView], NoError> in
-                    return combineLatest(recently.map {context.account.viewTracker.peerView($0.peer.peerId)})
+                    return combineLatest(recently.map {context.account.postbox.peerView(id: $0.peer.peerId)})
                 } |> map { peerViews -> [PeerView] in
                     return peerViews.filter { peerView in
                         if let group = peerViewMainPeer(peerView) as? TelegramGroup, group.migrationReference != nil {
@@ -1002,7 +1002,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
                     case .disabled:
                         return .single(([], [:], [:]))
                     case let .peers(peers):
-                        return combineLatest(peers.map {context.account.viewTracker.peerView($0.id)}) |> mapToSignal { peerViews -> Signal<([Peer], [PeerId: UnreadSearchBadge], [PeerId : Bool]), NoError> in
+                        return combineLatest(peers.map {context.account.postbox.peerView(id: $0.id)}) |> mapToSignal { peerViews -> Signal<([Peer], [PeerId: UnreadSearchBadge], [PeerId : Bool]), NoError> in
                             return context.account.postbox.unreadMessageCountsView(items: peerViews.map {.peer(id: $0.peerId, handleThreads: false)}) |> map { values in
                                     
                                     var peers:[Peer] = []

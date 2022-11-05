@@ -875,8 +875,13 @@ class PeerListContainerView : View {
         
         let searchRect = NSMakeRect(10, floorToScreenPixels(backingScaleFactor, inset + (offset - inset - componentSize.height)/2.0), searchWidth, componentSize.height)
         
+        var bottomInset: CGFloat = 0
+        if let actionView = self.actionView {
+            bottomInset += actionView.frame.height
+        }
+        
         transition.updateFrame(view: searchView, frame: searchRect)
-        transition.updateFrame(view: tableView, frame: NSMakeRect(0, offset, size.width, size.height - offset))
+        transition.updateFrame(view: tableView, frame: NSMakeRect(0, offset, size.width, size.height - offset - bottomInset))
 
         transition.updateFrame(view: backgroundView, frame: size.bounds)
         
@@ -1158,8 +1163,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 return (ps, status)
             }
         }
-        let peer: Signal<PeerEquatable?, NoError> = context.account.postbox.peerView(id: context.peerId) |> map { view in
-            if let peer = peerViewMainPeer(view) {
+        
+        let peer: Signal<PeerEquatable?, NoError> = getPeerView(peerId: context.peerId, postbox: context.account.postbox) |> map { peer in
+            if let peer = peer {
                 return PeerEquatable(peer)
             } else {
                 return nil

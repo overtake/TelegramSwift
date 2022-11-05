@@ -186,8 +186,8 @@ final class PremiumStatusControl : Control {
         self.updateListeners()
         
         
-        let updatedPeer = account.postbox.peerView(id: peer.id) |> map {
-            return peerViewMainPeer($0)
+        let updatedPeer = account.postbox.combinedView(keys: [.basicPeer(peer.id)]) |> map { view in
+            return (view.views[.basicPeer(peer.id)] as? BasicPeerView)?.peer
         }
         |> filter { $0 != nil }
         |> map { $0! }

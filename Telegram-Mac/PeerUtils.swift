@@ -8,7 +8,7 @@
 
 import Cocoa
 import TelegramCore
-
+import SwiftSignalKit
 import Postbox
 
 
@@ -379,5 +379,17 @@ extension PeerId {
             }
         }
         return peerId
+    }
+}
+
+
+func getPeerView(peerId: PeerId, postbox: Postbox) -> Signal<Peer?, NoError> {
+    return postbox.combinedView(keys: [.basicPeer(peerId)]) |> map { view in
+        return (view.views[.basicPeer(peerId)] as? BasicPeerView)?.peer
+    }
+}
+func getCachedDataView(peerId: PeerId, postbox: Postbox) -> Signal<CachedPeerData?, NoError> {
+    return postbox.combinedView(keys: [.cachedPeerData(peerId: peerId)]) |> map { view in
+        return (view.views[.cachedPeerData(peerId: peerId)] as? CachedPeerDataView)?.cachedPeerData
     }
 }

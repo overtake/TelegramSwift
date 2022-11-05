@@ -32,8 +32,9 @@ func peerPhotos(context: AccountContext, peerId: PeerId, force: Bool = false) ->
         return .single(photos.photos)
     } else {
         if !force {
-            return context.account.postbox.peerView(id: peerId) |> map { peerView in
-                if let photo = peerView.cachedData?.photo, !force {
+            
+            return getCachedDataView(peerId: peerId, postbox: context.account.postbox) |> map { cachedData in
+                if let photo = cachedData?.photo, !force {
                     let photo = TelegramPeerPhoto(image: photo, reference: nil, date: 0, index: 0, totalCount: 0, messageId: nil)
                     return [photo]
                 } else {
@@ -41,11 +42,11 @@ func peerPhotos(context: AccountContext, peerId: PeerId, force: Bool = false) ->
                 }
             }
         }
-        return .single(peerAvatars.with { $0[peerId]?.photos } ?? []) |> then(combineLatest(context.engine.peers.requestPeerPhotos(peerId: peerId), context.account.postbox.peerView(id: peerId)) |> delay(0.4, queue: .concurrentDefaultQueue()) |> map { photos, peerView in
+        return .single(peerAvatars.with { $0[peerId]?.photos } ?? []) |> then(combineLatest(context.engine.peers.requestPeerPhotos(peerId: peerId), getCachedDataView(peerId: peerId, postbox: context.account.postbox)) |> delay(0.4, queue: .concurrentDefaultQueue()) |> map { photos, cachedData in
             return peerAvatars.modify { value in
                 var value = value
                 var photos = photos
-                if let cachedData = peerView.cachedData as? CachedChannelData {
+                if let cachedData = cachedData as? CachedChannelData {
                     if let photo = cachedData.photo {
                         if photos.firstIndex(where: { $0.image.id == photo.id }) == nil {
                             photos.insert(TelegramPeerPhoto(image: photo, reference: nil, date: 0, index: 0, totalCount: photos.first?.totalCount ?? 0, messageId: nil), at: 0)

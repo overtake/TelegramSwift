@@ -176,7 +176,7 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
         }
     }
     
-    let cachedData = context.account.postbox.peerView(id: peerId) |> take(1) |> map { $0.cachedData }
+    let cachedData = getCachedDataView(peerId: peerId, postbox: context.account.postbox) |> take(1)
     
     let combined = combineLatest(queue: .mainQueue(), _dialogs, _recentUsedPeers, _favoritePeers, _accountPeer, _resourceData, _fileFinderPath, _getIsStickerSaved, _recentMedia, _updatingMessageMedia, context.reactions.stateValue, context.engine.peers.notificationSoundList(), cachedData, _savedStickersCount, _savedGifsCount)
     |> take(1)

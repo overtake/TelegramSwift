@@ -1227,9 +1227,7 @@ class ChatListRowItem: TableRowItem {
         
         let cachedData:Signal<CachedPeerData?, NoError>
         if let peerId = peerId {
-            cachedData = context.account.viewTracker.peerView(peerId) |> map {
-                $0.cachedData
-            }
+            cachedData = getCachedDataView(peerId: peerId, postbox: context.account.postbox)
         } else {
             cachedData = .single(nil)
         }
