@@ -103,7 +103,7 @@ public class NavigationBarView: View {
             let rightWidth = right.isFitted ? right.frame.width : right.fit(to: (left.frame.width == left.minWidth ? frame.width / 3 : frame.width / 4))
             
             left.frame = NSMakeRect(0, 0, leftWidth, frame.height - .borderSize);
-            center.frame = NSMakeRect(leftWidth, 0, frame.width - (leftWidth + rightWidth), frame.height - .borderSize);
+            center.frame = NSMakeRect(left.frame.maxX, 0, frame.width - (leftWidth + rightWidth), frame.height - .borderSize);
             right.frame = NSMakeRect(center.frame.maxX, 0, rightWidth, frame.height - .borderSize);
         }
     }
