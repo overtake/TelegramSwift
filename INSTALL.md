@@ -6,8 +6,9 @@
 	git clone https://github.com/overtake/TelegramSwift.git --recurse-submodules
 	```
 2.  ```brew install cmake ninja openssl@1.1 zlib autoconf libtool automake yasm pkg-config```
-3. Open `Telegram-Mac.xcworkspace` in **Xcode 10.3**.  Avoid Xcode 10.11+ because it causes additional errors when building the libraries with optimizations turned on.  
-4. Select build target to **Github** and **Run** build.
+3.  ```sh %project_dir%/scripts/configure_frameworks.sh```
+4. Open `Telegram-Mac.xcworkspace` in the latest XCode.  
+5. Build.
 
 
 
