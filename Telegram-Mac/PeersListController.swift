@@ -904,7 +904,7 @@ class PeerListContainerView : View {
             }
         }
         if let actionView = self.actionView {
-            transition.updateFrame(view: actionView, frame: CGRect(origin: CGPoint(x: 0, y: size.height - actionView.frame.height), size: actionView.frame.size))
+            transition.updateFrame(view: actionView, frame: CGRect(origin: CGPoint(x: 0, y: size.height - actionView.frame.height), size: NSMakeSize(frame.width, actionView.frame.height)))
         }
     }
     
@@ -1472,7 +1472,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             self.checkSearchMedia()
             self.genericView.tableView.alwaysOpenRowsOnMouseUp = state.splitState == .single
             self.genericView.tableView.reloadData()
-            self.requestUpdateBackBar()
+            DispatchQueue.main.async {
+                self.requestUpdateBackBar()
+            }
         }
               
         setCenterTitle(self.defaultBarTitle)
@@ -1659,6 +1661,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     
     override func requestUpdateBackBar() {
         self.leftBarView.minWidth = 70
+        self.centerBarView.isHidden = context.layout == .minimisize
+        self.rightBarView.isHidden = context.layout == .minimisize
         super.requestUpdateBackBar()
     }
     

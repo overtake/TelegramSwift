@@ -199,6 +199,10 @@ open class TitledBarView: BarView {
         return _containerView.titleRect
     }
     
+    open override func setFrameOrigin(_ newOrigin: NSPoint) {
+        super.setFrameOrigin(newOrigin)
+    }
+    
     open override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         containerView.setFrameSize(newSize)
