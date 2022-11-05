@@ -1569,18 +1569,25 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         return self.contentView
     }
     
-    override func doubleClick(in location: NSPoint) {
+    func isAllowedToDoubleAction(_ location: NSPoint) -> Bool {
         if let item = self.item as? ChatRowItem, item.chatInteraction.presentation.canReplyInRestrictedMode {
             if self.hitTest(location) == nil || self.hitTest(location) == self || !clickInContent(point: location) || self.hitTest(location) == rowView || self.hitTest(location) == bubbleView || self.hitTest(location) == replyView {
                 if let avatar = avatar {
                     if NSPointInRect(location, avatar.frame) {
-                        return
+                        return false
                     }
                 }
                 if let message = item.message, canReplyMessage(message, peerId: item.chatInteraction.peerId, mode: item.chatInteraction.mode) {
-                    item.chatInteraction.setupReplyMessage(item.message?.id)
+                    return true
                 }
             }
+        }
+        return false
+    }
+    
+    override func doubleClick(in location: NSPoint) {
+        if let item = self.item as? ChatRowItem, isAllowedToDoubleAction(location) {
+            item.chatInteraction.setupReplyMessage(item.message?.id)
         }
     }
     

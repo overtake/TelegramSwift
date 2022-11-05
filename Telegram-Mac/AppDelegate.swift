@@ -191,6 +191,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         UserDefaults.standard.set(false, forKey: "NSTableViewCanEstimateRowHeights")
+        
     }
     
     var allowedDomains: [String] {

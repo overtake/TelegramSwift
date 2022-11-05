@@ -10,6 +10,7 @@ import Cocoa
 import SwiftSignalKit
 import ColorPalette
 
+
 public enum LinkType {
     case plain
     case email
@@ -2147,6 +2148,10 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         
         
         return false        
+    }
+    
+    public override func accessibilityLabel() -> String? {
+        return self.textLayout?.attributedString.string
     }
 
 //    public override var isOpaque: Bool {

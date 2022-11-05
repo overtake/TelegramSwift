@@ -166,6 +166,8 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
     }
 }
     
+
+
 -(NSPoint)textContainerOrigin {
     
     if(NSHeight(self.frame) <= 34) {
