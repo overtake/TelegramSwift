@@ -72,8 +72,8 @@ func GroupsInCommonViewController(context: AccountContext, peerId: PeerId) -> Vi
     })
     
     let contextValue: Promise<GroupsInCommonContext> = Promise()
-    let peerId = context.account.postbox.peerView(id: peerId) |> take(1) |> map { view in
-        return peerViewMainPeer(view)?.id ?? peerId
+    let peerId = getPeerView(peerId: peerId, postbox: context.account.postbox) |> take(1) |> map { peer in
+        return peer?.id ?? peerId
     }
     contextValue.set(peerId |> map {
         GroupsInCommonContext(account: context.account, peerId: $0)

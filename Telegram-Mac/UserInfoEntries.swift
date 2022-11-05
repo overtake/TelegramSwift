@@ -103,9 +103,8 @@ class UserInfoArguments : PeerInfoArguments {
     
     func shareContact() {
         let context = self.context
-        let peer = context.account.postbox.peerView(id: peerId) |> take(1) |> map {
-            return peerViewMainPeer($0)
-        } |> deliverOnMainQueue
+        
+        let peer = getPeerView(peerId: peerId, postbox: context.account.postbox) |> take(1) |> deliverOnMainQueue
         
 
         
@@ -153,9 +152,9 @@ class UserInfoArguments : PeerInfoArguments {
     
     func addContact() {
         let context = self.context
-        let peerView = context.account.postbox.peerView(id: self.peerId) |> take(1) |> deliverOnMainQueue
-        _ = peerView.start(next: { peerView in
-            if let peer = peerViewMainPeer(peerView) {
+        let peerView = getPeerView(peerId: peerId, postbox: context.account.postbox) |> take(1) |> deliverOnMainQueue
+        _ = peerView.start(next: { peer in
+            if let peer = peer {
                 showModal(with: NewContactController(context: context, peerId: peer.id), for: context.window)
             }
         })
@@ -243,8 +242,8 @@ class UserInfoArguments : PeerInfoArguments {
     
     func call(_ isVideo: Bool) {
         let context = self.context
-        let peer = context.account.postbox.peerView(id: peerId) |> take(1) |> map {
-            return peerViewMainPeer($0)?.id
+        let peer = getPeerView(peerId: peerId, postbox: context.account.postbox) |> take(1) |> map {
+            return $0?.id
         } |> filter { $0 != nil } |> map { $0! }
         
         let call = peer |> mapToSignal {

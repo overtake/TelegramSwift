@@ -2714,10 +2714,10 @@ class ChatRowItem: TableRowItem {
             guard let message = self.message, let peer = chatInteraction.presentation.mainPeer else {
                 return .single(nil)
             }
+            let peerId = self.chatInteraction.peerId
             
             let builtin = context.reactions.stateValue
-            let peerAllowed: Signal<PeerAllowedReactions?, NoError> = context.account.postbox.peerView(id: self.chatInteraction.peerId)
-            |> map { $0.cachedData }
+            let peerAllowed: Signal<PeerAllowedReactions?, NoError> = getCachedDataView(peerId: peerId, postbox: context.account.postbox)
             |> map { cachedData in
                 if let cachedData = cachedData as? CachedGroupData {
                     return cachedData.allowedReactions.knownValue

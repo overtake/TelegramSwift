@@ -1971,10 +1971,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         switch chatLocation {
         case let .peer(peerId):
-            self.peerView.set(context.account.viewTracker.peerView(peerId, updateData: true) |> map {Optional($0)})
+            self.peerView.set(context.account.postbox.peerView(id: peerId) |> map {Optional($0)})
             let _ = context.engine.peers.checkPeerChatServiceActions(peerId: peerId).start()
         case let .thread(data):
-            self.peerView.set(context.account.viewTracker.peerView(data.messageId.peerId, updateData: true) |> map {Optional($0)})
+            self.peerView.set(context.account.postbox.peerView(id: data.messageId.peerId) |> map {Optional($0)})
         }
         
         
@@ -2026,7 +2026,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         var wasUsedLocation = false
 
         let historyViewUpdate1 = location.get() |> deliverOn(messagesViewQueue)
-            |> mapToSignal { location -> Signal<(ChatHistoryViewUpdate, TableSavingSide?), NoError> in
+            |> mapToSignal { location -> Signal<(ChatHistoryViewUpdate, TableSavingSide?, ChatHistoryLocation), NoError> in
                 
                 var additionalData: [AdditionalMessageHistoryViewData] = []
                 additionalData.append(.cachedPeerData(peerId))
@@ -2075,7 +2075,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         maxReadIndex.set(nil)
                     }
                 } |> map { view in
-                    return (view, location.side)
+                    return (view, location.side, location)
                 }
         }
         let historyViewUpdate = historyViewUpdate1 |> mapToThrottled { next in
@@ -2169,8 +2169,12 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let previousAppearance:Atomic<Appearance> = Atomic(value: appAppearance)
         let firstInitialUpdate:Atomic<Bool> = Atomic(value: true)
                 
-        let applyHole:() -> Void = { [weak self] in
+        let applyHole:(ChatHistoryLocation) -> Void = { [weak self] current in
             guard let `self` = self else { return }
+
+            if current != self.locationValue {
+                return
+            }
             let visibleRows = self.genericView.tableView.visibleRows()
             var messageIndex: MessageIndex?
             for i in stride(from: visibleRows.max - 1, to: -1, by: -1) {
@@ -2295,7 +2299,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             case let .Generic(type: type):
                 switch type {
                 case .FillHole:
-                    Queue.mainQueue().async(applyHole)
+                    DispatchQueue.main.async {
+                        applyHole(update.2)
+                    }
                     return .complete()
                 default:
                     break
@@ -3906,11 +3912,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.shareSelfContact = { [weak self] replyId in
             if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
-                strongSelf.shareContactDisposable.set((context.account.viewTracker.peerView(context.account.peerId) |> take(1)).start(next: { [weak strongSelf] peerView in
-                    if let strongSelf = strongSelf, let peer = peerViewMainPeer(peerView) as? TelegramUser {
-                        _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil)), replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: strongSelf.chatInteraction.peerId).start()
-                    }
-                }))
+                if let myPeer = context.myPeer as? TelegramUser {
+                    _ = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: myPeer.firstName ?? "", lastName: myPeer.lastName ?? "", phoneNumber: myPeer.phone ?? "", peerId: myPeer.id, vCardData: nil)), replyToMessageId: replyId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId).start(completed: scrollAfterSend)
+                    strongSelf.nextTransaction.set(handler: afterSentTransition)
+                }
             }
         }
         

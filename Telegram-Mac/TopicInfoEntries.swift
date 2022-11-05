@@ -28,12 +28,12 @@ final class TopicInfoArguments : PeerInfoArguments {
     }
     
     func share() {
-        let peer = context.account.postbox.peerView(id: peerId) |> take(1) |> deliverOnMainQueue
+        let peer = getPeerView(peerId: peerId, postbox: context.account.postbox) |> take(1) |> deliverOnMainQueue
         let context = self.context
         let state = self.state as! TopicInfoState
         let threadId = state.threadId
-        _ = peer.start(next: { peerView in
-            if let peer = peerViewMainPeer(peerView) {
+        _ = peer.start(next: { peer in
+            if let peer = peer {
                 var link: String = "https://t.me/c/\(peer.id.id._internalGetInt64Value())"
                 if let address = peer.addressName, !address.isEmpty {
                     link = "https://t.me/\(address)"

@@ -339,12 +339,9 @@ class ChatListController : PeersListController {
     private let removePeerIdGroupDisposable = MetaDisposable()
     private let downloadsDisposable = MetaDisposable()
     private let disposable = MetaDisposable()
-    private let scrollDisposable = MetaDisposable()
     private let reorderDisposable = MetaDisposable()
     private let globalPeerDisposable = MetaDisposable()
-    private let archivationTooltipDisposable = MetaDisposable()
     private let animateGroupNextTransition:Atomic<EngineChatList.Group?> = Atomic(value: nil)
-    private var activityStatusesDisposable:Disposable?
     
     private let downloadsSummary: DownloadsSummary
     
@@ -748,18 +745,23 @@ class ChatListController : PeersListController {
         
         
         let needPreload = previousChatList.with  { $0?.hasLater == false }
+        var preloadItems:Set<ChatHistoryPreloadItem> = Set()
         if needPreload {
-            var preloadItems:[ChatHistoryPreloadItem] = []
-            self.genericView.tableView.enumerateItems(with: { item -> Bool in
-                guard let item = item as? ChatListRowItem, let index = item.chatListIndex else {return true}
-                preloadItems.append(.init(index: index, threadId: item.mode.threadId, isMuted: item.isMuted, hasUnread: item.hasUnread))
-                return preloadItems.count < 30
-            })
-            context.account.viewTracker.chatListPreloadItems.set(.single(preloadItems) |> delay(0.2, queue: prepareQueue))
-        } else {
-            context.account.viewTracker.chatListPreloadItems.set(.single([]))
+            switch mode {
+            case .plain, .folder:
+                self.genericView.tableView.enumerateItems(with: { item -> Bool in
+                    guard let item = item as? ChatListRowItem, let index = item.chatListIndex else {return true}
+                    preloadItems.insert(.init(index: index, threadId: item.mode.threadId, isMuted: item.isMuted, hasUnread: item.hasUnread))
+                    return preloadItems.count < 30
+                })
+                break
+            default:
+                break
+            }
         }
-        
+        if self.isOnScreen {
+            context.account.viewTracker.chatListPreloadItems.set(.single(preloadItems) |> delay(0.2, queue: prepareQueue))
+        }
     }
     
     private func resortPinned(_ from: Int, _ to: Int) {
@@ -1209,11 +1211,8 @@ class ChatListController : PeersListController {
     deinit {
         removePeerIdGroupDisposable.dispose()
         disposable.dispose()
-        scrollDisposable.dispose()
         reorderDisposable.dispose()
         globalPeerDisposable.dispose()
-        archivationTooltipDisposable.dispose()
-        activityStatusesDisposable?.dispose()
         filterDisposable.dispose()
         suggestAutoarchiveDisposable.dispose()
         downloadsDisposable.dispose()
