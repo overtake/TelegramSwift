@@ -306,14 +306,15 @@ private final class ChannelMemberSingleCategoryListContext: ChannelMemberCategor
                     return
                 }
                 
-                var hash: UInt64 = 0
-                
+                var acc: UInt64 = 0
+                                
                 for i in 0 ..< min(strongSelf.listStateValue.list.count, Int(initialBatchSize)) {
                     let peerId = strongSelf.listStateValue.list[i].peer.id
-                    hash = (hash &* 20261) &+ UInt64(bitPattern: peerId.id._internalGetInt64Value())
+                    combineInt64Hash(&acc, with: peerId)
                 }
-                hash = hash % 0x7FFFFFFF
-                strongSelf.headUpdateDisposable.set((strongSelf.loadSignal(offset: 0, count: initialBatchSize, hash: Int64(bitPattern: hash))
+                let hashResult = finalizeInt64Hash(acc)
+
+                strongSelf.headUpdateDisposable.set((strongSelf.loadSignal(offset: 0, count: initialBatchSize, hash: hashResult)
                     |> deliverOnMainQueue).start(next: { members in
                         self?.updateHeadMembers(members)
                     }))
