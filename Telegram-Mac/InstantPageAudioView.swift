@@ -10,7 +10,7 @@ import Cocoa
 import TGUIKit
 import Postbox
 import TelegramCore
-
+import RangeSet
 import SwiftSignalKit
 
 final class InstantPageAudioView: View, InstantPageView, APDelegate {
@@ -22,7 +22,7 @@ final class InstantPageAudioView: View, InstantPageView, APDelegate {
     private let statusView: RadialProgressView = RadialProgressView()
     private let linearProgress: LinearProgressControl = LinearProgressControl(progressHeight: 3)
     private var bufferingStatusDisposable: MetaDisposable = MetaDisposable()
-    private var ranges: (IndexSet, Int)?
+    private var ranges: (RangeSet<Int64>, Int64)?
 
     weak var controller:APController? {
         didSet {
@@ -38,11 +38,11 @@ final class InstantPageAudioView: View, InstantPageView, APDelegate {
         }
     }
     
-    private func updateStatus(_ ranges: IndexSet, _ size: Int) {
+    private func updateStatus(_ ranges: RangeSet<Int64>, _ size: Int64) {
         self.ranges = (ranges, size)
         
         if let ranges = self.ranges, !ranges.0.isEmpty, ranges.1 != 0 {
-            for range in ranges.0.rangeView {
+            for range in ranges.0.ranges {
                 var progress = (CGFloat(range.count) / CGFloat(ranges.1))
                 progress = progress == 1.0 ? 0 : progress
                 linearProgress.set(fetchingProgress: progress, animated: progress > 0)

@@ -18,7 +18,7 @@ struct VoiceChatTile {
     fileprivate(set) var index: Int
     
     var bestQuality: PresentationGroupCallRequestedVideo.Quality {
-        let option = min(rect.width, rect.height)
+        let option = max(rect.width, rect.height)
         if option > 500 {
             return .full
         } else if option > 160 {

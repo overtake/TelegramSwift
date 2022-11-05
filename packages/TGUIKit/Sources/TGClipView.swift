@@ -61,11 +61,14 @@ public class TGClipView: NSClipView,CALayerDelegate {
     public var decelerationRate:CGFloat = 0.8
     
     
-    var isScrolling: Bool {
+    public var isScrolling: Bool {
         if let displayLink = displayLink {
             return CVDisplayLinkIsRunning(displayLink)
         }
         return false
+    }
+    public var destination: NSPoint? {
+        return self.destinationOrigin
     }
 
     override init(frame frameRect: NSRect) {
@@ -76,7 +79,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
         self.layerContentsRedrawPolicy = .never
       //  self.layer?.drawsAsynchronously = System.drawAsync
         //self.layer?.delegate = self
-        createDisplayLink()
+//        createDisplayLink()
 
     }
     
@@ -134,6 +137,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
     }
     
     private func createDisplayLink() {
+        if displayLink != nil {
+            return
+        }
         CVDisplayLinkCreateWithActiveCGDisplays(&displayLink)
         guard let displayLink = displayLink else {
             return
@@ -160,11 +166,11 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     
     func beginScroll() -> Void {
+        createDisplayLink()
         if let displayLink = displayLink {
             if (CVDisplayLinkIsRunning(displayLink)) {
                 return
             }
-            
             CVDisplayLinkStart(displayLink)
         }
         
@@ -189,7 +195,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
             }
             CVDisplayLinkStop(displayLink);
         }
-        
+        self.displayLink = nil
     }
 //    
 //    func easeInOutQuad (percentComplete: CGFloat, elapsedTimeMs: CGFloat, startValue: CGFloat, endValue: CGFloat, totalDuration: CGFloat) -> CGFloat {
@@ -227,15 +233,15 @@ public class TGClipView: NSClipView,CALayerDelegate {
             // Make this call so that we can force an update of the scroller positions.
             self.containingScrollView?.reflectScrolledClipView(self);
             
-            if ((fabs(o.x - lastOrigin.x) < 0.1 && fabs(o.y - lastOrigin.y) < 0.1)) {
+            if ((abs(o.x - lastOrigin.x) < 0.1 && abs(o.y - lastOrigin.y) < 0.1)) {
                 if destination.x == o.x && destination.y == o.y {
                     self.endScroll()
                     super.scroll(to: o)
                     handleCompletionIfNeeded(withSuccess: true)
                 } else {
                     _ = destination.x - o.x
-                    let ydif = destination.y - o.y
-                    let xdif = destination.x - o.x
+                    let ydif = ceil(destination.y - o.y)
+                    let xdif = ceil(destination.x - o.x)
 
          
                     if ydif != 0 {
@@ -257,22 +263,22 @@ public class TGClipView: NSClipView,CALayerDelegate {
     }
     
     override public func viewWillMove(toWindow newWindow: NSWindow?) {
-        if let w = newWindow {
-            
-            NotificationCenter.default.addObserver(self, selector: #selector(updateCVDisplay), name: NSWindow.didChangeScreenNotification, object: w)
-            
-        } else {
-            NotificationCenter.default.removeObserver(self, name: NSWindow.didChangeScreenNotification, object: self.window)
-        }
+//        if let w = newWindow {
+//
+//            NotificationCenter.default.addObserver(self, selector: #selector(updateCVDisplay), name: NSWindow.didChangeScreenNotification, object: w)
+//
+//        } else {
+//            NotificationCenter.default.removeObserver(self, name: NSWindow.didChangeScreenNotification, object: self.window)
+//        }
         
         super.viewWillMove(toWindow: newWindow)
     }
     
-    @objc func updateCVDisplay(_ notification:NSNotification? = nil) -> Void {
-        if let displayLink = displayLink, let _ = NSScreen.main {
-            CVDisplayLinkSetCurrentCGDisplay(displayLink, CGMainDisplayID());
-        }
-    }
+//    @objc func updateCVDisplay(_ notification:NSNotification? = nil) -> Void {
+//        if let displayLink = displayLink, let _ = NSScreen.main {
+//            CVDisplayLinkSetCurrentCGDisplay(displayLink, CGMainDisplayID());
+//        }
+//    }
     
     
     func scrollRectToVisible(_ rect: NSRect, animated: Bool) -> Bool {
@@ -296,19 +302,24 @@ public class TGClipView: NSClipView,CALayerDelegate {
         self.shouldAnimateOriginChange = animated
         self.scrollCompletion = completion
         if animated {
+            self.layer?.removeAllAnimations()
             beginScroll()
         }
         if animated && abs(bounds.minY - point.y) > frame.height {
             let y:CGFloat
             if bounds.minY < point.y {
-                y = point.y - frame.height
+                y = point.y - floor(frame.height / 2)
             } else {
-                y = point.y + frame.height
+                y = point.y + floor(frame.height / 2)
             }
             super.scroll(to: NSMakePoint(point.x,y))
+            DispatchQueue.main.async(execute: { [weak self] in
+                self?.scroll(to: point)
+            })
+        } else {
+            self.scroll(to: point)
         }
         
-        self.scroll(to: point)
     }
     
     public func justScroll(to newOrigin:NSPoint) {
@@ -317,6 +328,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     
     override public func scroll(to newOrigin:NSPoint) -> Void {
+        let newOrigin = NSMakePoint(round(newOrigin.x), round(newOrigin.y))
         if (self.shouldAnimateOriginChange) {
             self.shouldAnimateOriginChange = false;
             self.destinationOrigin = newOrigin;

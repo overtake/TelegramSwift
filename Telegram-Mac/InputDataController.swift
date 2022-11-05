@@ -11,7 +11,7 @@ import TGUIKit
 import TelegramCore
 import HackUtils
 import SwiftSignalKit
-
+import ObjcUtils
 
 public class InputDataModalController : ModalViewController {
     private let controller: InputDataController
@@ -99,7 +99,8 @@ public class InputDataModalController : ModalViewController {
     }
     
     public override func returnKeyAction() -> KeyHandlerResult {
-        return controller.returnKeyAction()
+        let result = controller.returnKeyAction()
+        return result
     }
     
     public override var haveNextResponder: Bool {
@@ -181,11 +182,11 @@ public class InputDataModalController : ModalViewController {
             self?.modal?.updateLocalizationAndTheme(theme: appearance.presentation)
             self?.controller.updateLocalizationAndTheme(theme: appearance.presentation)
         }))
-        
+        var first = true
         controller.modalTransitionHandler = { [weak self] animated in
             if self?.dynamicSize == true {
-                self?.updateSize(animated && self?.first == false)
-                self?.first = false
+                self?.updateSize(animated && !first)
+                first = false
             }
         }
     }
@@ -326,14 +327,7 @@ final class InputDataView : BackgroundView {
     }
     override func layout() {
         super.layout()
-        let size = tableView.frame.size
         tableView.frame = bounds
-        
-        if size.height > bounds.height {
-            self.tableView.beginTableUpdates()
-            self.tableView.layoutSubtreeIfNeeded()
-            self.tableView.endTableUpdates()
-        }
     }
 }
 
@@ -369,6 +363,8 @@ class InputDataController: GenericViewController<InputDataView> {
     var getBackgroundColor: ()->NSColor
     let identifier: String
     var ignoreRightBarHandler: Bool = false
+    
+    var inputLimitReached:(Int)->Void = { _ in }
     
     var contextObject: Any?
     var didAppear: ((InputDataController)->Void)?
@@ -534,7 +530,31 @@ class InputDataController: GenericViewController<InputDataView> {
     }
     
     private func validateInput(data: [InputDataIdentifier : InputDataValue]) {
-        proccessValidation(self.validateData(data))
+        
+        var values:[InputDataIdentifier : Int] = [:]
+        tableView.enumerateItems { item -> Bool in
+            if let identifier = (item.stableId.base as? InputDataEntryId)?.identifier {
+                if let item = item as? InputDataRowItem {
+                    if let data = data[identifier] {
+                        let length = (data.stringValue?.length ?? 0)
+                        if item.limit < length {
+                            values[identifier] = length - Int(item.limit)
+                        }
+                    }
+                }
+            }
+            return true
+        }
+        if !values.isEmpty {
+            for (key, _) in values {
+                let item = findItem(for: key)
+                item?.view?.shakeView()
+            }
+            let first = values.first!.value
+            self.inputLimitReached(first)
+        } else {
+            proccessValidation(self.validateData(data))
+        }
     }
     
     override func viewDidLoad() {
@@ -603,7 +623,6 @@ class InputDataController: GenericViewController<InputDataView> {
             }
             
             self.afterTransaction(self)
-
             self.modalTransitionHandler?(transition.animated)
             
             let wasReady: Bool = self.didSetReady
@@ -618,7 +637,18 @@ class InputDataController: GenericViewController<InputDataView> {
         if let event = NSApp.currentEvent {
             switch returnKeyInvocation(self.currentFirstResponderIdentifier, event) {
             case .default:
-                self.validateInput(data: self.fetchData())
+                if event.type != .keyDown || FastSettings.checkSendingAbility(for: event) {
+                    self.validateInput(data: self.fetchData())
+                } else {
+                    let containsString = fetchData().compactMap {
+                        $0.value.stringValue
+                    }
+                    if event.type == .keyDown, containsString.isEmpty {
+                        self.validateInput(data: self.fetchData())
+                    } else {
+                        return .invokeNext
+                    }
+                }
                 return .invoked
             case .nextResponder:
                 _ = window?.makeFirstResponder(self.nextResponder())
@@ -630,6 +660,12 @@ class InputDataController: GenericViewController<InputDataView> {
             }
         }
         return .invokeNext
+    }
+    
+    func jumpNext() {
+        if haveNextResponder {
+            _ = window?.makeFirstResponder(self.nextResponder())
+        }
     }
     
     override func becomeFirstResponder() -> Bool? {
@@ -907,7 +943,6 @@ class InputDataController: GenericViewController<InputDataView> {
     deinit {
         disposable.dispose()
         appearanceDisposablet.dispose()
-        onDeinit?()
     }
     
 }

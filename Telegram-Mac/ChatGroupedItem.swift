@@ -12,6 +12,7 @@ import TelegramCore
 import InAppSettings
 import Postbox
 import SwiftSignalKit
+import TGModernGrowingTextView
 
 class ChatGroupedItem: ChatRowItem {
 
@@ -34,7 +35,7 @@ class ChatGroupedItem: ChatRowItem {
         if case let .groupedPhotos(messages, _) = entry {
             
             let messages = messages.map{$0.message!}.filter({!$0.media.isEmpty})
-            let prettyCount = messages.filter { $0.media.first!.isInteractiveMedia }.count
+            let prettyCount = messages.filter { $0.effectiveMedia!.isInteractiveMedia }.count
             self.layout = GroupedLayout(messages, type: prettyCount != messages.count ? .files : .photoOrVideo)
             
             var captionMessages: [Message] = []
@@ -105,7 +106,8 @@ class ChatGroupedItem: ChatRowItem {
                                 } else {
                                     color = theme.chat.textColor(isIncoming, entry.renderType == .bubble)
                                 }
-                                spoilers.append(.init(range: NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound), color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
+                                let range = NSMakeRange(entity.range.lowerBound, entity.range.upperBound - entity.range.lowerBound)
+                                caption.addAttribute(.init(rawValue: TGSpoilerAttributeName), value: TGInputTextTag(uniqueId: arc4random64(), attachment: NSNumber(value: -1), attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: color)), range: range)
                             default:
                                 break
                             }
@@ -120,6 +122,16 @@ class ChatGroupedItem: ChatRowItem {
                 default:
                     break
                 }
+                InlineStickerItem.apply(to: caption, associatedMedia: message.associatedMedia, entities: message.textEntities?.entities ?? [], isPremium: context.isPremium)
+
+                
+                caption.enumerateAttribute(.init(rawValue: TGSpoilerAttributeName), in: caption.range, options: .init(), using: { value, range, stop in
+                    if let text = value as? TGInputTextTag {
+                        if let color = text.attribute.value as? NSColor {
+                            spoilers.append(.init(range: range, color: color, isRevealed: chatInteraction.presentation.interfaceState.revealedSpoilers.contains(message.id)))
+                        }
+                    }
+                })
                 
                 let layout: ChatRowItem.RowCaption = .init(id: stableId, offset: .zero, layout: TextViewLayout(caption, alignment: .left, selectText: theme.chat.selectText(isIncoming, entry.renderType == .bubble), strokeLinks: entry.renderType == .bubble, alwaysStaticItems: true, mayItems: !message.isCopyProtected(), spoilers: spoilers, onSpoilerReveal: { [weak chatInteraction] in
                     chatInteraction?.update({
@@ -143,7 +155,11 @@ class ChatGroupedItem: ChatRowItem {
         
         for layout in captionLayouts {
             layout.layout.interactions.topWindow = { [weak self] in
-                return self?.menuAdditionView
+                if let strongSelf = self {
+                    return strongSelf.menuAdditionView
+                } else {
+                    return .single(nil)
+                }
             }
         }
                 
@@ -152,10 +168,24 @@ class ChatGroupedItem: ChatRowItem {
             switch layout.type {
             case .files:
                 
-               // self.parameters.append(ChatMediaLayoutParameters.layout(for: (message.media.first as! TelegramMediaFile), isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType), automaticDownload: downloadSettings.isDownloable(message), isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), isFile: true, autoplayMedia: entry.autoplayMedia, isChatRelated: true))
+               // self.parameters.append(ChatMediaLayoutParameters.layout(for: (message.effectiveMedia as! TelegramMediaFile), isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType), automaticDownload: downloadSettings.isDownloable(message), isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), isFile: true, autoplayMedia: entry.autoplayMedia, isChatRelated: true))
 
+                let parameters = ChatMediaLayoutParameters.layout(for: (message.effectiveMedia as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(message), isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), autoplayMedia: entry.autoplayMedia)
                 
-                self.parameters.append(ChatMediaLayoutParameters.layout(for: (message.media.first as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(message), isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), autoplayMedia: entry.autoplayMedia))
+                parameters.showMedia = { [weak self] message in
+                    guard let `self` = self else {return}
+                    
+                    var type:GalleryAppearType = .history
+                    if let parameters = self.parameters[i] as? ChatMediaGalleryParameters, parameters.isWebpage {
+                        type = .alone
+                    } else if message.containsSecretMedia {
+                        type = .secret
+                    }
+                                
+                    showChatGallery(context: context, message: message, self.table, self.parameters as? ChatMediaGalleryParameters, type: type, chatMode: self.chatInteraction.mode, contextHolder: self.chatInteraction.contextHolder())
+                }
+                
+                self.parameters.append(parameters)
             case .photoOrVideo:
                 self.parameters.append(ChatMediaGalleryParameters(showMedia: { [weak self] message in
                     guard let `self` = self else {return}
@@ -166,14 +196,14 @@ class ChatGroupedItem: ChatRowItem {
                     } else if message.containsSecretMedia {
                         type = .secret
                     }
-                    if self.chatInteraction.mode.threadId?.peerId == message.id.peerId {
+                    if self.chatInteraction.mode.isThreadMode, self.chatInteraction.mode.threadId?.peerId == message.id.peerId {
                         type = .messages(self.messages)
                     }
-                    showChatGallery(context: context, message: message, self.table, self.parameters[i], type: type, chatMode: self.chatInteraction.mode)
+                    showChatGallery(context: context, message: message, self.table, self.parameters[i], type: type, chatMode: self.chatInteraction.mode, contextHolder: self.chatInteraction.contextHolder())
                     
                     }, showMessage: { [weak self] message in
                         self?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
-                    }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), media: message.media.first!, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: entry.autoplayMedia))
+                    }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), media: message.effectiveMedia!, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: entry.autoplayMedia))
                 
                 self.parameters[i].automaticDownloadFunc = { message in
                     return downloadSettings.isDownloable(message)
@@ -262,7 +292,7 @@ class ChatGroupedItem: ChatRowItem {
         }
         switch self.layoutType {
         case .files:
-            let file = self.messages[self.messages.count - 1].media.first as! TelegramMediaFile
+            let file = self.messages[self.messages.count - 1].effectiveMedia as! TelegramMediaFile
             if file.previewRepresentations.isEmpty {
                 if let parameters = self.parameters[messages.count - 1] as? ChatFileLayoutParameters {
                     let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
@@ -666,9 +696,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         let approximateSynchronousValue = item.approximateSynchronousValue
         
         contentView.frame = self.contentFrame(item)
-        
-        var offset: CGFloat = 0
-        
+                
         for i in 0 ..< item.layout.count {
             contents[i].change(size: item.layout.frame(at: i).size, animated: animated)
             var positionFlags: LayoutPositionFlags = item.isBubbled ? item.positionFlags ?? item.layout.position(at: i) : []
@@ -685,7 +713,14 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
             
             contents[i].update(with: item.layout.messages[i].media[0], size: item.layout.frame(at: i).size, context: item.context, parent: item.layout.messages[i], table: item.table, parameters: item.parameters[i], animated: animated, positionFlags: positionFlags, approximateSynchronousValue: approximateSynchronousValue)
             
-            contents[i].change(pos: item.layout.frame(at: i).origin.offsetBy(dx: 0, dy: offset), animated: animated)
+            let transition: ContainedViewLayoutTransition
+            if animated {
+                transition = .animated(duration: 0.2, curve: .easeOut)
+            } else {
+                transition = .immediate
+            }
+            transition.updateFrame(view: contents[i], frame: item.layout.frame(at: i))
+            contents[i].updateLayout(size: item.layout.frame(at: i).size, transition: transition)
             
         }
 
@@ -1127,25 +1162,33 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
         return .zero
     }
     
-    override func layout() {
-        super.layout()
+    override func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        super.updateLayout(size: size, transition: transition)
+        
         guard let item = item as? ChatGroupedItem else {return}
 
         assert(contents.count == item.layout.count)
-        
+
         for i in 0 ..< item.layout.count {
-            contents[i].setFrameOrigin(item.layout.frame(at: i).origin)
+            transition.updateFrame(view: contents[i], frame: item.layout.frame(at: i))
+            contents[i].updateLayout(size: item.layout.frame(at: i).size, transition: transition)
         }
         
         for content in contents {
             let subviews = content.subviews
             for subview in subviews {
                 if subview is SelectingControl {
-                    subview.setFrameOrigin(selectionOrigin(content))
-                    break
+                    transition.updateFrame(view: subview, frame: CGRect(origin: selectionOrigin(content), size: subview.frame.size))
                 }
             }
         }
+    }
+    
+    override func layout() {
+        super.layout()
+
+        
+        
         
     }
     

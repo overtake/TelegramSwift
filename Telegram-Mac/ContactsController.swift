@@ -148,7 +148,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<ContactsEntry>]?, t
                     let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                     (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: context.timeDifference, relativeTo: Int32(timestamp))
                 }
-                item = ShortPeerRowItem(initialSize, peer: peer, account: context.account, stableId: entry.stableId,statusStyle: ControlStyle(foregroundColor:color), status: string, borderType: [.Right])
+                item = ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: entry.stableId,statusStyle: ControlStyle(foregroundColor:color), status: string, borderType: [.Right], highlightVerified: true)
             case .addContact:
                 item = AddContactTableItem(initialSize, stableId: entry.stableId, addContact: {
                     arguments.addContact()
@@ -299,7 +299,7 @@ class ContactsController: PeersListController {
             switch location {
             case let .peer(peerId):
                 genericView.tableView.changeSelection(stableId: ContactsControllerEntryId.peerId(peerId.toInt64()))
-            case .replyThread:
+            case .thread:
                 break
             }
         } else {
@@ -321,8 +321,8 @@ class ContactsController: PeersListController {
     
     override func selectionDidChange(row:Int, item:TableRowItem, byClick:Bool, isNew:Bool) -> Void {
         
-        if let item = item as? ShortPeerRowItem, let navigation = navigationController {
-            
+        if let item = item as? ShortPeerRowItem {
+            let navigation = context.bindings.rootNavigation()
             if !isNew {
                 if let modalAction = navigation.modalAction {
                     navigation.controller.invokeNavigation(action: modalAction)

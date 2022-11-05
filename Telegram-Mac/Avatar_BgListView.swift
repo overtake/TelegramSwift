@@ -18,6 +18,7 @@ private final class Avatar_PatternListItem : GeneralRowItem {
     
     struct Item {
         var wallpaper:Wallpaper
+        var palette: ColorPalette
         var selected: Bool
         var color: AvatarColor
         var frame: NSRect
@@ -34,7 +35,7 @@ private final class Avatar_PatternListItem : GeneralRowItem {
         self.wallpapers = wallpapers
         self.select = select
         self.context = context
-        self.items = wallpapers.map { .init(wallpaper: $0.wallpaper!, selected: $0.selected, color: $0, frame: .zero) }
+        self.items = wallpapers.map { .init(wallpaper: $0.wallpaper!, palette: $0.colors!, selected: $0.selected, color: $0, frame: .zero) }
         super.init(initialSize, height: height, stableId: stableId)
         _ = makeSize(initialSize.width)
     }
@@ -49,7 +50,8 @@ private final class Avatar_PatternListItem : GeneralRowItem {
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
-        let size = NSMakeSize(100, 100)
+        
+        let size = NSMakeSize(floor(width - 40 - 20) / 3, floor(width - 40 - 20) / 3)
         
         let rowCount = ceil((width - 40) / size.width)
         
@@ -125,21 +127,21 @@ private final class Avatar_PatternListView : TableRowView {
                 emptyColor = .color(NSColor(rgb: 0xd6e2ee, alpha: 0.5))
             }
             
-            let arguments = TransformImageArguments(corners: ImageCorners(radius: 0), imageSize: pattern.wallpaper.dimensions.aspectFilled(NSMakeSize(300, 300)), boundingSize: pattern.frame.size, intrinsicInsets: NSEdgeInsets(), emptyColor: emptyColor)
+            let arguments = TransformImageArguments(corners: ImageCorners(radius: 0), imageSize: pattern.wallpaper.dimensions.aspectFilled(NSMakeSize(300, 300)), boundingSize: pattern.frame.size, intrinsicInsets: NSEdgeInsets(), emptyColor: emptyColor, someObject: pattern.palette.isDark ? 1 : 0)
             
             imageView.set(arguments: arguments)
 
-
+            
             switch pattern.wallpaper {
             case let .file(_, file, _, _):
                 var representations:[TelegramMediaImageRepresentation] = []
                 if let dimensions = file.dimensions {
-                    representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil))
+                    representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
                 } else {
-                    representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(pattern.frame.size), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil))
+                    representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(pattern.frame.size), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
                 }
                 
-                let updateImageSignal = chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: true, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false, drawPatternOnly: false, palette: dayClassicPalette)
+                let updateImageSignal = chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: true, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false, drawPatternOnly: false, palette: pattern.palette)
                 
                                 
                 
@@ -171,6 +173,7 @@ private final class Avatar_PatternListView : TableRowView {
                 }
                 current.layer?.borderColor = theme.colors.listBackground.cgColor
                 current.layer?.borderWidth = 2
+                current.frame = frame.insetBy(dx: 2, dy: 2)
             } else if let view = self.selectedView {
                 performSubviewRemoval(view, animated: animated)
                 self.selectedView = nil
@@ -262,8 +265,6 @@ private final class Avatar_BgColorListView : TableRowView {
             self.color = color
             var colors: [NSColor] = []
             switch color.content {
-            case let .solid(color):
-                colors = [color]
             case let .gradient(c):
                 colors = c
             default:
@@ -424,13 +425,13 @@ final class Avatar_BgListView : View {
         tableView.replace(item: GeneralRowItem(frame.size, height: 20, stableId: "1", backgroundColor: .clear), at: 0, animated: animated)
         
         
-        tableView.replace(item: GeneralTextRowItem(frame.size, stableId: "2", text: .initialize(string: "PLAIN GRADIENT", color: theme.colors.listGrayText, font: .normal(12)), inset: NSEdgeInsets(), viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 20, 5, 0))), at: 1, animated: animated)
+        tableView.replace(item: GeneralTextRowItem(frame.size, stableId: "2", text: .initialize(string: strings().avatarBackgroundPlainGradient, color: theme.colors.listGrayText, font: .normal(12)), inset: NSEdgeInsets(), viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 20, 5, 0))), at: 1, animated: animated)
         
         tableView.replace(item: Avatar_BgColorListItem(frame.size, height: 35, colors: colors.filter { !$0.isWallpaper }, select: select, stableId: "3"), at: 2, animated: animated)
         
         tableView.replace(item: GeneralRowItem(frame.size, height: 20, stableId: "4", backgroundColor: .clear), at: 3, animated: animated)
 
-        tableView.replace(item: GeneralTextRowItem(frame.size, stableId: "5", text: .initialize(string: "GRADIENT WITH PATTERN", color: theme.colors.listGrayText, font: .normal(12)), inset: NSEdgeInsets(), viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 20, 5, 0))), at: 4, animated: animated)
+        tableView.replace(item: GeneralTextRowItem(frame.size, stableId: "5", text: .initialize(string: strings().avatarBackgroundPatters, color: theme.colors.listGrayText, font: .normal(12)), inset: NSEdgeInsets(), viewType: .modern(position: .single, insets: NSEdgeInsetsMake(0, 20, 5, 0))), at: 4, animated: animated)
 
         tableView.replace(item: Avatar_PatternListItem(frame.size, height: 35, wallpapers: colors.filter { $0.isWallpaper }, select: select, context: context, stableId: "6"), at: 5, animated: animated)
 

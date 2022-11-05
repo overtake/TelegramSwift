@@ -20,11 +20,21 @@ class ChatListEmptyRowItem: TableRowItem {
         return _stableId
     }
     let context: AccountContext
-    let filter: ChatListFilter?
-    let openFilterSettings: (ChatListFilter?)->Void
-    init(_ initialSize: NSSize, stableId: AnyHashable, filter: ChatListFilter?, context: AccountContext, openFilterSettings: @escaping(ChatListFilter?)->Void) {
+    let filter: ChatListFilter
+    let mode: PeerListMode
+    let peer: Peer?
+    let layoutState: SplitViewState
+    let openFilterSettings: (ChatListFilter)->Void
+    let createTopic:()->Void
+    let switchOffForum:()->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, filter: ChatListFilter, mode: PeerListMode, peer: Peer?, layoutState: SplitViewState, context: AccountContext, openFilterSettings: @escaping(ChatListFilter)->Void, createTopic:@escaping()->Void, switchOffForum:@escaping()->Void) {
         self.context = context
         self.filter = filter
+        self.mode = mode
+        self.peer = peer
+        self.layoutState = layoutState
+        self.createTopic = createTopic
+        self.switchOffForum = switchOffForum
         self._stableId = stableId
         self.openFilterSettings = openFilterSettings
         super.init(initialSize)
@@ -52,10 +62,80 @@ class ChatListEmptyRowItem: TableRowItem {
 
 
 private class ChatListEmptyRowView : TableRowView {
+    
+    private final class ForumView: View {
+        private let createTopic = TitleButton()
+        private var offForum: TitleButton?
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            createTopic.layer?.cornerRadius = 4
+            createTopic.scaleOnClick = true
+            createTopic.autohighlight = false
+            addSubview(createTopic)
+        }
+        
+        func update(_ peer: Peer, animated: Bool, createTopic:@escaping()->Void, switchOffForum:@escaping()->Void) {
+            
+            self.createTopic.set(font: .normal(.text), for: .Normal)
+            self.createTopic.set(color: theme.colors.underSelectedColor, for: .Normal)
+            self.createTopic.set(background: theme.colors.accent, for: .Normal)
+            self.createTopic.set(text: strings().chatListEmptyCreateTopic, for: .Normal)
+            self.createTopic.sizeToFit(NSMakeSize(80, 20), .zero, thatFit: false)
+
+            
+            if peer.groupAccess.isCreator {
+                let current: TitleButton
+                if let view = self.offForum {
+                    current = view
+                } else {
+                    current = TitleButton()
+                    self.offForum = current
+                    addSubview(current)
+                }
+                current.set(font: .normal(.text), for: .Normal)
+                current.set(color: theme.colors.accent, for: .Normal)
+                current.set(background: theme.colors.background, for: .Normal)
+                current.set(text: strings().chatListEmptyDisableForum, for: .Normal)
+                current.sizeToFit(NSMakeSize(20, 10), .zero, thatFit: false)
+                current.scaleOnClick = true
+                current.autohighlight = false
+                
+            } else if let view = self.offForum {
+                performSubviewRemoval(view, animated: animated)
+                self.offForum = nil
+            }
+            
+            self.createTopic.removeAllHandlers()
+            self.createTopic.set(handler: { _ in
+                createTopic()
+            }, for: .Click)
+            
+            self.offForum?.removeAllHandlers()
+            self.offForum?.set(handler: { _ in
+                switchOffForum()
+            }, for: .Click)
+            
+            needsLayout = true
+        }
+        
+        override func layout() {
+            super.layout()
+            createTopic.centerX(y: 0)
+            if let offForum = offForum {
+                offForum.centerX(y: createTopic.frame.maxY + 10)
+            }
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+    }
+    
     private let disposable = MetaDisposable()
     private let textView = TextView()
     private let separator = View()
     private let sticker: MediaAnimatedStickerView = MediaAnimatedStickerView(frame: NSZeroRect)
+    private var forumView: ForumView?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(textView)
@@ -75,12 +155,35 @@ private class ChatListEmptyRowView : TableRowView {
         
         let animatedSticker: LocalAnimatedSticker
         
-        if let _ = item.filter {
-            animatedSticker = .folder_empty
-        } else {
+        if case .allChats = item.filter {
             animatedSticker = .chiken_born
+        } else {
+            animatedSticker = .folder_empty
         }
         sticker.update(with: animatedSticker.file, size: NSMakeSize(112, 112), context: item.context, parent: nil, table: item.table, parameters: animatedSticker.parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
+        
+        switch item.mode {
+        case .forum:
+            if let peer = item.peer, item.layoutState != .minimisize, peer.groupAccess.isCreator {
+                let current: ForumView
+                if let view = self.forumView {
+                    current = view
+                } else {
+                    current = ForumView(frame: NSMakeRect(0, 0, frame.width, 80))
+                    self.forumView = current
+                    self.addSubview(current)
+                }
+                current.update(peer, animated: animated, createTopic: item.createTopic, switchOffForum: item.switchOffForum)
+            } else if let forumView = forumView {
+                performSubviewRemoval(forumView, animated: animated)
+                self.forumView = nil
+            }
+        default:
+            if let forumView = forumView {
+                performSubviewRemoval(forumView, animated: animated)
+                self.forumView = nil
+            }
+        }
         
         needsLayout = true
     }
@@ -101,17 +204,22 @@ private class ChatListEmptyRowView : TableRowView {
         
         
         let text: String
-        if let _ = item.filter {
+        if case .filter = item.filter {
             text = strings().chatListFilterEmpty
         } else {
-            text = strings().chatListEmptyText
+            switch item.mode {
+            case .forum:
+                text = strings().chatListEmptyForum
+            default:
+                text = strings().chatListEmptyText
+            }
         }
 
         
         let attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.title), textColor: theme.colors.text), bold: MarkdownAttributeSet(font: .medium(.title), textColor: theme.colors.text), link: MarkdownAttributeSet(font: .normal(.title), textColor: theme.colors.link), linkAttribute: { [weak item] contents in
             return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { [weak item] value in
-                if value == "filter" {
-                    item?.openFilterSettings(item?.filter)
+                if value == "filter", let filter = item?.filter {
+                    item?.openFilterSettings(filter)
                 }
                
             }))
@@ -127,12 +235,16 @@ private class ChatListEmptyRowView : TableRowView {
         textView.update(layout)
         textView.center()
         
-        textView.isHidden = frame.width <= 70
-        sticker.isHidden = frame.width <= 70
+        textView.isHidden = item.layoutState == .minimisize
+        sticker.isHidden = item.layoutState == .minimisize
         
         separator.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
         
         sticker.centerX(y: textView.frame.minY - sticker.frame.height - 20)
+        
+        if let forumView = forumView {
+            forumView.frame = NSMakeRect(30, frame.height - 80 - 40, frame.width - 60, 80)
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -140,11 +252,6 @@ private class ChatListEmptyRowView : TableRowView {
     }
     
 }
-
-
-
-
-
 
 
 
@@ -211,7 +318,7 @@ private class ChatListLoadingRowView : TableRowView {
         }
         
         
-        if let _ = item.filter {
+        if item.filter != .allChats {
             let animatedSticker: LocalAnimatedSticker = LocalAnimatedSticker.new_folder
             sticker.update(with: animatedSticker.file, size: NSMakeSize(112, 112), context: item.context, parent: nil, table: item.table, parameters: animatedSticker.parameters, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
             sticker.isHidden = false
@@ -239,10 +346,10 @@ private class ChatListLoadingRowView : TableRowView {
         }
         
         let text: String
-        if let _ = item.filter {
+        if item.filter != .allChats {
             text = strings().chatListFilterLoading
         } else {
-            text = "Loading"
+            text = strings().chatListEmptyLoading
         }
         
         let attr = NSAttributedString.initialize(string: text, color: theme.colors.text, font: .normal(.text)).mutableCopy() as! NSMutableAttributedString
@@ -256,10 +363,10 @@ private class ChatListLoadingRowView : TableRowView {
         textView.update(layout)
         textView.center()
         
-        textView.isHidden = frame.width <= 70 || item.filter == nil
-        sticker.isHidden = frame.width <= 70 || item.filter == nil
+        textView.isHidden = frame.width <= 70 || item.filter == .allChats
+        sticker.isHidden = frame.width <= 70 || item.filter == .allChats
         
-        indicator.isHidden = item.filter != nil
+        indicator.isHidden = item.filter != .allChats
         
         separator.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
         

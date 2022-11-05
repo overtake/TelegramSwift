@@ -100,7 +100,7 @@ final class AudioCommandCenter : NSObject, APDelegate {
                 
                 switch song.entry {
                 case let .song(message):
-                    let file = message.media.first as! TelegramMediaFile
+                    let file = message.effectiveMedia as! TelegramMediaFile
                     let resource: TelegramMediaResource?
                     if file.previewRepresentations.isEmpty {
                         if !file.mimeType.contains("ogg") {
@@ -117,7 +117,7 @@ final class AudioCommandCenter : NSObject, APDelegate {
 
                         let arguments = TransformImageArguments(corners: .init(), imageSize: iconSize, boundingSize: iconSize, intrinsicInsets: NSEdgeInsets())
                                                 
-                        let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: message.id.toInt64()), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(iconSize), resource: resource, progressiveSizes: [], immediateThumbnailData: nil)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                        let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: Int64(message.id.id)), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(iconSize), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                         
                         
                         let signal = chatMessagePhotoThumbnail(account: controller.context.account, imageReference: .message(message: MessageReference(message), media: image)) |> deliverOnMainQueue

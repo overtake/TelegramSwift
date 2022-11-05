@@ -31,7 +31,16 @@ func peerPhotos(context: AccountContext, peerId: PeerId, force: Bool = false) ->
     if let photos = photos, photos.time > Date().timeIntervalSince1970, !force {
         return .single(photos.photos)
     } else {
-        
+        if !force {
+            return context.account.postbox.peerView(id: peerId) |> map { peerView in
+                if let photo = peerView.cachedData?.photo, !force {
+                    let photo = TelegramPeerPhoto(image: photo, reference: nil, date: 0, index: 0, totalCount: 0, messageId: nil)
+                    return [photo]
+                } else {
+                    return []
+                }
+            }
+        }
         return .single(peerAvatars.with { $0[peerId]?.photos } ?? []) |> then(combineLatest(context.engine.peers.requestPeerPhotos(peerId: peerId), context.account.postbox.peerView(id: peerId)) |> delay(0.4, queue: .concurrentDefaultQueue()) |> map { photos, peerView in
             return peerAvatars.modify { value in
                 var value = value
@@ -72,7 +81,7 @@ func peerPhotosGalleryEntries(context: AccountContext, peerId: PeerId, firstStab
         var image:TelegramMediaImage? = nil
         var msg: Message? = nil
         if let base = firstStableId.base as? ChatHistoryEntryId, case let .message(message) = base {
-            let action = message.media.first as! TelegramMediaAction
+            let action = message.effectiveMedia as! TelegramMediaAction
             switch action.action {
             case let .photoUpdated(updated):
                 image = updated
@@ -97,7 +106,7 @@ func peerPhotosGalleryEntries(context: AccountContext, peerId: PeerId, firstStab
             let photo = photos[i]
             photosDate.append(TimeInterval(photo.date))
             if let base = firstStableId.base as? ChatHistoryEntryId, case let .message(message) = base {
-                let action = message.media.first as! TelegramMediaAction
+                let action = message.effectiveMedia as! TelegramMediaAction
                 switch action.action {
                 case let .photoUpdated(updated):
                     if photo.image.id == updated?.id {

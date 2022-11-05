@@ -13,13 +13,13 @@ import SwiftSignalKit
 import TelegramCore
 
 import Postbox
+import TGModernGrowingTextView
 
 
 
 
 protocol ChatHeaderProtocol {
     func update(with state: ChatHeaderState, animated: Bool)
-    init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect)
 }
 
 
@@ -32,10 +32,10 @@ enum ChatHeaderState : Identifiable, Equatable {
     case requestChat(ChatActiveGroupCallInfo?, String, String)
     case shareInfo(ChatActiveGroupCallInfo?)
     case pinned(ChatActiveGroupCallInfo?, ChatPinnedMessage, doNotChangeTable: Bool)
-    case report(ChatActiveGroupCallInfo?, autoArchived: Bool)
-    case promo(ChatActiveGroupCallInfo?, PromoChatListItem.Kind)
+    case report(ChatActiveGroupCallInfo?, autoArchived: Bool, status: PeerEmojiStatus?)
+    case promo(ChatActiveGroupCallInfo?, EngineChatList.AdditionalItem.PromoInfo.Content)
     case pendingRequests(ChatActiveGroupCallInfo?, Int, [PeerInvitationImportersState.Importer])
-
+    case restartTopic(ChatActiveGroupCallInfo?)
     var stableId:Int {
         switch self {
         case .none:
@@ -56,6 +56,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             return 7
         case .requestChat:
             return 8
+        case .restartTopic:
+            return 9
         }
     }
 
@@ -65,7 +67,7 @@ enum ChatHeaderState : Identifiable, Equatable {
             return voiceChat
         case let .search(voiceChat, _, _, _):
             return voiceChat
-        case let .report(voiceChat, _):
+        case let .report(voiceChat, _, _):
             return voiceChat
         case let .addContact(voiceChat, _, _):
             return voiceChat
@@ -78,6 +80,8 @@ enum ChatHeaderState : Identifiable, Equatable {
         case let .pendingRequests(voiceChat, _, _):
             return voiceChat
         case let .requestChat(voiceChat, _, _):
+            return voiceChat
+        case let .restartTopic(voiceChat):
             return voiceChat
         }
     }
@@ -100,6 +104,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             return ChatPendingRequests.self
         case .requestChat:
             return ChatRequestChat.self
+        case .restartTopic:
+            return ChatRestartTopic.self
         case .none:
             return nil
         }
@@ -122,7 +128,10 @@ enum ChatHeaderState : Identifiable, Equatable {
             height += 0
         case .search:
             height += 44
-        case .report:
+        case let .report(_, _, status):
+            if let _ = status {
+                height += 30
+            }
             height += 44
         case .addContact:
             height += 44
@@ -135,7 +144,9 @@ enum ChatHeaderState : Identifiable, Equatable {
         case .pendingRequests:
             height += 44
         case .requestChat:
-            return 44
+            height += 44
+        case .restartTopic:
+            height += 44
         }
         return height
     }
@@ -316,9 +327,11 @@ class ChatHeaderController {
             case .promo:
                 primary = ChatSponsoredView(chatInteraction, state: _headerState, frame: primaryRect)
             case .pendingRequests:
-                primary = ChatPendingRequests(chatInteraction, state: _headerState, frame: primaryRect)
+                primary = ChatPendingRequests(context: chatInteraction.context, openAction: chatInteraction.openPendingRequests, dismissAction: chatInteraction.dismissPendingRequests, state: _headerState, frame: primaryRect)
             case .requestChat:
                 primary = ChatRequestChat(chatInteraction, state: _headerState, frame: primaryRect)
+            case .restartTopic:
+                primary = ChatRestartTopic(chatInteraction, state: _headerState, frame: primaryRect)
             case .none:
                 primary = nil
             }
@@ -329,7 +342,7 @@ class ChatHeaderController {
         }
         if let _ = self._headerState.voiceChat {
             if s_v == nil || s_v?.className != NSStringFromClass(_headerState.secondaryClass ?? NSView.self) {
-                secondary = ChatGroupCallView(chatInteraction, state: _headerState, frame: secondaryRect)
+                secondary = ChatGroupCallView(chatInteraction.joinGroupCall, context: chatInteraction.context, state: _headerState, frame: secondaryRect)
                 secondary?.autoresizingMask = [.width]
             } else {
                 secondary = s_v
@@ -361,21 +374,21 @@ struct ChatSearchInteractions {
 private class ChatSponsoredModel: ChatAccessoryModel {
     
 
-    init(title: String, text: String) {
-        super.init()
+    init(context: AccountContext, title: String, text: String) {
+        super.init(context: context)
         update(title: title, text: text)
     }
     
     func update(title: String, text: String) {
         //strings().chatProxySponsoredCapTitle
-        self.headerAttr = .initialize(string: title, color: theme.colors.link, font: .medium(.text))
-        self.messageAttr = .initialize(string: text, color: theme.colors.text, font: .normal(.text))
+        self.header = .init(.initialize(string: title, color: theme.colors.link, font: .medium(.text)), maximumNumberOfLines: 1)
+        self.message = .init(.initialize(string: text, color: theme.colors.text, font: .normal(.text)), maximumNumberOfLines: 1)
         nodeReady.set(.single(true))
         self.setNeedDisplay()
     }
 }
 
-private extension PromoChatListItem.Kind {
+private extension EngineChatList.AdditionalItem.PromoInfo.Content {
     var title: String {
         switch self {
         case .proxy:
@@ -410,7 +423,7 @@ private final class ChatSponsoredView : Control, ChatHeaderProtocol {
     private let container:ChatAccessoryView = ChatAccessoryView()
     private let dismiss:ImageButton = ImageButton()
     private var node: ChatSponsoredModel?
-    private var kind: PromoChatListItem.Kind?
+    private var kind: EngineChatList.AdditionalItem.PromoInfo.Content?
     required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
         self.chatInteraction = chatInteraction
         super.init(frame: frame)
@@ -472,7 +485,7 @@ private final class ChatSponsoredView : Control, ChatHeaderProtocol {
             self.kind = nil
         }
         if let kind = kind {
-            node = ChatSponsoredModel(title: kind.title, text: kind.text)
+            node = ChatSponsoredModel(context: self.chatInteraction.context, title: kind.title, text: kind.text)
             node?.view = container
         }
 
@@ -533,6 +546,17 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
         super.init(frame: frame)
         
         dismiss.disableActions()
+        self.contextMenu = { [weak self] in
+            guard let pinnedMessage = self?.pinnedMessage else {
+                return nil
+            }
+            let menu = ContextMenu()
+            menu.addItem(ContextMenuItem(strings().chatContextPinnedHide, handler: {
+                self?.chatInteraction.updatePinned(pinnedMessage.messageId, true, false, false)
+            }, itemImage: MenuAnimation.menu_unpin.value))
+
+            return menu
+        }
 
         self.set(handler: { [weak self] _ in
             guard let `self` = self, let pinnedMessage = self.pinnedMessage else {
@@ -649,19 +673,23 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
             current.autohighlight = false
             current.scaleOnClick = true
             
-            current.set(handler: { [weak self] _ in
-                self?.chatInteraction.processBotKeyboard(with: message).proccess(button, { _ in
-                    
-                })
-            }, for: .Click)
+            
             
             if animated {
                 current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
             }
-            
             self.inlineButton = current
-            addSubview(current)
         }
+        current.removeAllHandlers()
+        current.set(handler: { [weak self] _ in
+            self?.chatInteraction.processBotKeyboard(with: message).proccess(button, { _ in
+                
+            })
+        }, for: .Click)
+        
+        addSubview(current)
+
+        
         current.set(text: button.title, for: .Normal)
         current.set(font: .medium(.text), for: .Normal)
         current.set(color: theme.colors.underSelectedColor, for: .Normal)
@@ -745,12 +773,17 @@ class ChatReportView : Control, ChatHeaderProtocol {
     private let unarchiveButton = TitleButton()
     private let dismiss:ImageButton = ImageButton()
 
+    private var statusLayer: InlineStickerView?
+    
     private let buttonsContainer = View()
+    
+    private var textView: TextView?
     
     required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
         self.chatInteraction = chatInteraction
         super.init(frame: frame)
         dismiss.disableActions()
+        
         
         self.style = ControlStyle(backgroundColor: theme.colors.background)
         
@@ -801,16 +834,74 @@ class ChatReportView : Control, ChatHeaderProtocol {
     func update(with state: ChatHeaderState, animated: Bool) {
         buttonsContainer.removeAllSubviews()
         switch state {
-        case let .report(_, autoArchived):
+        case let .report(_, autoArchived, status):
             buttonsContainer.addSubview(report)
-
             if autoArchived {
                 buttonsContainer.addSubview(unarchiveButton)
+            }
+            
+            
+            let context = chatInteraction.context
+            let peerId = chatInteraction.peerId
+            
+            if let status = status {
+                let current: TextView
+                if let view = self.textView {
+                    current = view
+                } else {
+                    current = TextView()
+                    current.isSelectable = false
+                    self.textView = current
+                    addSubview(current)
+                }
+                let text = strings().customStatusReportSpam
+                let attr: NSMutableAttributedString
+                
+                attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.short), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .medium(.short), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .medium(.short), textColor: theme.colors.link), linkAttribute: { contents in
+                    return (NSAttributedString.Key.link.rawValue, inAppLink.callback(contents, { value in
+                        showModal(with: PremiumBoardingController.init(context: context, source: .profile(peerId)), for: context.window)
+                    }))
+                })).mutableCopy() as! NSMutableAttributedString
+                
+                
+                let range = attr.string.nsstring.range(of: "🤡")
+                if range.location != NSNotFound {
+                    attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: TGTextAttachment(identifier: "\(arc4random())", fileId: status.fileId, file: nil, text: "", info: nil), range: range)
+                }
+                let layout = TextViewLayout(attr, alignment: .center)
+                layout.measure(width: frame.width - 80)
+                layout.interactions = globalLinkExecutor
+                current.update(layout)
+                
+                self.statusLayer?.removeFromSuperview()
+                self.statusLayer = nil
+                
+                for embedded in layout.embeddedItems {
+                    let rect = embedded.rect.insetBy(dx: -1.5, dy: -1.5)
+                    let view = InlineStickerView(account: chatInteraction.context.account, inlinePacksContext: chatInteraction.context.inlinePacksContext, emoji: .init(fileId: status.fileId, file: nil, emoji: ""), size: rect.size)
+                    view.frame = rect
+                    current.addEmbeddedView(view)
+                    self.statusLayer = view
+                    view.updateAnimatableContent()
+                    view.animateLayer.isPlayable = true
+                }
+            } else if let view = self.textView {
+                performSubviewRemoval(view, animated: animated)
+                self.textView = nil
             }
         default:
             break
         }
         updateLocalizationAndTheme(theme: theme)
+    }
+    
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        self.statusLayer?.updateAnimatableContent()
+    }
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        self.statusLayer?.updateAnimatableContent()
     }
 
     override func draw(_ layer: CALayer, in ctx: CGContext) {
@@ -821,9 +912,9 @@ class ChatReportView : Control, ChatHeaderProtocol {
     
     override func layout() {
         report.center()
-        dismiss.centerY(x: frame.width - dismiss.frame.width - 20)
+        dismiss.frame = NSMakeRect(frame.width - dismiss.frame.width - 20, floorToScreenPixels(backingScaleFactor, (44 - dismiss.frame.height) / 2), dismiss.frame.width, dismiss.frame.height)
         
-        buttonsContainer.frame = NSMakeRect(0, 0, frame.width, frame.height - .borderSize)
+        buttonsContainer.frame = NSMakeRect(0, 0, frame.width, 44 - .borderSize)
 
         var buttons:[Control] = []
         if report.superview != nil {
@@ -838,6 +929,10 @@ class ChatReportView : Control, ChatHeaderProtocol {
         for button in buttons {
             button.frame = NSMakeRect(x, 0, buttonWidth, buttonsContainer.frame.height)
             x += buttonWidth
+        }
+        
+        if let textView = textView {
+            textView.centerX(y: frame.height - textView.frame.height - 5)
         }
     }
     
@@ -1723,7 +1818,7 @@ private final class TimerButtonView : Control {
 }
 
 
-private final class ChatGroupCallView : Control, ChatHeaderProtocol {
+final class ChatGroupCallView : Control, ChatHeaderProtocol {
     
     struct Avatar : Comparable, Identifiable {
         static func < (lhs: Avatar, rhs: Avatar) -> Bool {
@@ -1751,7 +1846,6 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
 
     private let joinButton = TitleButton()
     private var data: ChatActiveGroupCallInfo?
-    private let chatInteraction: ChatInteraction
     private let headerView = TextView()
     private let membersCountView = DynamicCounterTextView()
     private let button = Control()
@@ -1761,9 +1855,12 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
     private var audioLevelGenerators: [PeerId: FakeAudioLevelGenerator] = [:]
     private var audioLevelGeneratorTimer: SwiftSignalKit.Timer?
 
+    private let context: AccountContext
+    private let join:(CachedChannelData.ActiveCall, String?) -> Void
 
-    required init(_ chatInteraction: ChatInteraction, state: ChatHeaderState, frame: NSRect) {
-        self.chatInteraction = chatInteraction
+    required init(_ join: @escaping (CachedChannelData.ActiveCall, String?) -> Void, context: AccountContext, state: ChatHeaderState, frame: NSRect) {
+        self.context = context
+        self.join = join
         super.init(frame: frame)
         addSubview(headerView)
         addSubview(membersCountView)
@@ -1779,14 +1876,14 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
 
         joinButton.set(handler: { [weak self] _ in
             if let `self` = self, let data = self.data {
-                self.chatInteraction.joinGroupCall(data.activeCall, data.joinHash)
+                join(data.activeCall, data.joinHash)
             }
         }, for: .SingleClick)
         
         
         button.set(handler: { [weak self] _ in
             if let `self` = self, let data = self.data {
-                self.chatInteraction.joinGroupCall(data.activeCall, data.joinHash)
+                join(data.activeCall, data.joinHash)
             }
         }, for: .SingleClick)
         
@@ -1811,6 +1908,7 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         joinButton.scaleOnClick = true
 
         self.avatarsContainer.center()
+        border = [.Bottom]
 
         self.update(with: state, animated: false)
         updateLocalizationAndTheme(theme: theme)
@@ -1825,7 +1923,7 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
 
     func update(_ data: ChatActiveGroupCallInfo, animated: Bool) {
         
-        let context = self.chatInteraction.context
+        let context = self.context
         
         let activeCall = data.data?.groupCall != nil
         joinButton.change(opacity: activeCall ? 0 : 1, animated: animated)
@@ -1965,7 +2063,7 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
                 
                 current.set(handler: { [weak self] _ in
                     if let `self` = self, let data = self.data {
-                        self.chatInteraction.joinGroupCall(data.activeCall, data.joinHash)
+                        self.join(data.activeCall, data.joinHash)
                     }
                 }, for: .SingleClick)
 
@@ -2002,13 +2100,11 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         
         var title: String = data.activeCall.scheduleTimestamp != nil ? strings().chatGroupCallScheduledTitle : strings().chatGroupCallTitle
         
-        
-        if data.activeCall.scheduleTimestamp == nil, let peer = self.chatInteraction.presentation.peer as? TelegramChannel {
-            if peer.flags.contains(.isGigagroup) || peer.isChannel {
+        if data.activeCall.scheduleTimestamp == nil {
+            if data.isLive {
                 title = strings().chatGroupCallLiveTitle
             }
         }
-        
         
         let headerLayout = TextViewLayout(.initialize(string: title, color: theme.colors.text, font: .medium(.text)))
         headerLayout.measure(width: frame.width - 100)
@@ -2037,7 +2133,6 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         backgroundColor = theme.colors.background
-        border = [.Bottom]
         borderColor = theme.colors.border
         joinButton.set(font: .medium(.text), for: .Normal)
         joinButton.set(text: strings().chatGroupCallJoin, for: .Normal)
@@ -2047,7 +2142,6 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
         joinButton.set(background: theme.colors.accent, for: .Normal)
         joinButton.set(background: theme.colors.accent.highlighted, for: .Highlight)
         
-
     }
     
     override func layout() {
@@ -2068,12 +2162,11 @@ private final class ChatGroupCallView : Control, ChatHeaderProtocol {
             self.avatarsContainer.centerY(x: floorToScreenPixels(backingScaleFactor, (frame.width - avatarSize) / 2))
         }
         
-        headerView.textLayout?.measure(width: frame.width - 100)
-        headerView.update(headerView.textLayout)
+        headerView.resize(frame.width - 100)
 
         
-        headerView.setFrameOrigin(.init(x: 22, y: frame.midY - headerView.frame.height))
-        membersCountView.setFrameOrigin(.init(x: 22, y: frame.midY))
+        headerView.setFrameOrigin(.init(x: 22, y: bounds.midY - headerView.frame.height))
+        membersCountView.setFrameOrigin(.init(x: 22, y: bounds.midY))
                 
         button.frame = bounds
     }
@@ -2180,8 +2273,7 @@ private final class ChatRequestChat : Control, ChatHeaderProtocol {
     }
 }
 
-private final class ChatPendingRequests : Control, ChatHeaderProtocol {
-    private let chatInteraction:ChatInteraction
+final class ChatPendingRequests : Control, ChatHeaderProtocol {
     private let dismiss:ImageButton = ImageButton()
     private let textView = TextView()
     private var avatars:[AvatarContentView] = []
@@ -2211,9 +2303,10 @@ private final class ChatPendingRequests : Control, ChatHeaderProtocol {
     }
 
     private var peers:[Avatar] = []
+    private let context: AccountContext
     
-    required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
-        self.chatInteraction = chatInteraction
+    required init(context: AccountContext, openAction:@escaping()->Void, dismissAction:@escaping([PeerId])->Void, state: ChatHeaderState, frame: NSRect) {
+        self.context = context
         super.init(frame: frame)
         addSubview(avatarsContainer)
         avatarsContainer.isEventLess = true
@@ -2222,15 +2315,15 @@ private final class ChatPendingRequests : Control, ChatHeaderProtocol {
         self.dismiss.set(image: theme.icons.dismissPinned, for: .Normal)
         _ = self.dismiss.sizeToFit()
         
-        self.set(handler: { [weak self] _ in
-            self?.chatInteraction.openPendingRequests()
+        self.set(handler: { _ in
+            openAction()
         }, for: .Click)
         
         dismiss.set(handler: { [weak self] _ in
             guard let `self` = self else {
                 return
             }
-            self.chatInteraction.dismissPendingRequests(self.peers.map { $0.peer.id })
+            dismissAction(self.peers.map { $0.peer.id })
         }, for: .SingleClick)
 
         textView.userInteractionEnabled = false
@@ -2285,7 +2378,7 @@ private final class ChatPendingRequests : Control, ChatHeaderProtocol {
                 }
             }
             for inserted in inserted {
-                let control = AvatarContentView(context: chatInteraction.context, peer: inserted.1.peer, message: nil, synchronousLoad: false, size: NSMakeSize(30, 30))
+                let control = AvatarContentView(context: context, peer: inserted.1.peer, message: nil, synchronousLoad: false, size: NSMakeSize(30, 30))
                 control.updateLayout(size: NSMakeSize(30, 30), isClipped: inserted.0 != 0, animated: animated)
                 control.userInteractionEnabled = false
                 control.setFrameSize(NSMakeSize(30, 30))
@@ -2339,6 +2432,80 @@ private final class ChatPendingRequests : Control, ChatHeaderProtocol {
         textView.resize(frame.width - 60)
         textView.center()
         self.avatarsContainer.centerY(x: 22)
+    }
+    
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
+
+
+private final class ChatRestartTopic : Control, ChatHeaderProtocol {
+    private let chatInteraction:ChatInteraction
+    private let textView = TextView()
+    
+    
+    private var _state: ChatHeaderState?
+    
+    required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
+        self.chatInteraction = chatInteraction
+        self._state = state
+        super.init(frame: frame)
+        
+        self.set(handler: { [weak self] control in
+            self?.chatInteraction.restartTopic()
+        }, for: .SingleClick)
+        
+        self.set(handler: { [weak self] _ in
+            self?.textView.alphaValue = 0.8
+        }, for: .Highlight)
+        
+        self.set(handler: { [weak self] _ in
+            self?.textView.alphaValue = 1
+        }, for: .Normal)
+        
+        self.set(handler: { [weak self] _ in
+            self?.textView.alphaValue = 1
+        }, for: .Hover)
+        
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        
+        addSubview(textView)
+        self.style = ControlStyle(backgroundColor: theme.colors.background)
+
+        self.border = [.Bottom]
+        
+        update(with: state, animated: false)
+
+    }
+
+    func update(with state: ChatHeaderState, animated: Bool) {
+        _state = state
+        let attr = NSMutableAttributedString()
+        _ = attr.append(string: strings().chatHeaderRestartTopic, color: theme.colors.accent, font: .normal(.text))
+        let layout = TextViewLayout(attr)
+        textView.update(layout)
+        updateLocalizationAndTheme(theme: theme)
+        needsLayout = true
+
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        self.backgroundColor = theme.colors.background
+    }
+    
+    override func layout() {
+        super.layout()
+        textView.resize(frame.width - 40)
+        textView.center()
     }
     
     

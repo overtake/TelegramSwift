@@ -18,9 +18,9 @@ final class CachedStickerAJpegRepresentation: CachedMediaResourceRepresentation 
     var keepDuration: CachedMediaRepresentationKeepDuration = .general
     var uniqueId: String {
         if let size = self.size {
-            return "sticker-v1-png-\(Int(size.width))x\(Int(size.height))"
+            return "sticker-v3-png-\(Int(size.width))x\(Int(size.height))"
         } else {
-            return "sticker-v1-png"
+            return "sticker-v3-png"
         }
     }
     
@@ -117,7 +117,7 @@ final class CachedBlurredWallpaperRepresentation: CachedMediaResourceRepresentat
 final class CachedAnimatedStickerRepresentation: CachedMediaResourceRepresentation {
     var keepDuration: CachedMediaRepresentationKeepDuration = .general
     var uniqueId: String {
-        let version: Int = 8
+        let version: Int = 17
         if let fitzModifier = self.fitzModifier {
             return "animated-sticker-v\(version)-\(self.thumb ? 1 : 0)-w:\(size.width)-h:\(size.height)-fitz\(fitzModifier.rawValue)-f\(frame)-m1\(self.isVideo)"
         } else {

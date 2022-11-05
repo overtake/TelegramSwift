@@ -18,16 +18,20 @@ let graphicsThreadPool = ThreadPool(threadCount: 5, threadPriority: 1)
 
 enum PeerPhoto {
     case peer(Peer, TelegramMediaImageRepresentation?, [String], Message?)
+    case topic(EngineMessageHistoryThread.Info)
 }
 
-private var capHolder:[String : CGImage] = [:]
+private let capHolder:Atomic<[String : CGImage]> = Atomic(value: [:])
 
 private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, representation: TelegramMediaImageRepresentation?, message: Message? = nil, displayLetters: [String], font: NSFont, scale: CGFloat, genCap: Bool, synchronousLoad: Bool) -> Signal<(CGImage?, Bool), NoError> {
+    
+    let isForum: Bool = peer.isForum
+    
     if let representation = representation {
-        return cachedPeerPhoto(peer.id, representation: representation, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
+        return cachedPeerPhoto(peer.id, representation: representation, size: displayDimensions, scale: scale, isForum: isForum) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
             return autoreleasepool {
                 if let cached = cached {
-                    return cachePeerPhoto(image: cached, peerId: peer.id, representation: representation, size: displayDimensions, scale: scale) |> map {
+                    return cachePeerPhoto(image: cached, peerId: peer.id, representation: representation, size: displayDimensions, scale: scale, isForum: isForum) |> map {
                         return (cached, false)
                     }
                 } else {
@@ -75,12 +79,17 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                     
                     let def = deferred({ () -> Signal<(CGImage?, Bool), NoError> in
                         let key = NSStringFromSize(displayDimensions)
-                        if let image = capHolder[key] {
+                        if let image = capHolder.with({ $0[key] }) {
                             return .single((image, false))
                         } else {
                             let size = NSMakeSize(max(15, displayDimensions.width), max(15, displayDimensions.height))
-                            capHolder[key] = generateAvatarPlaceholder(foregroundColor: theme.colors.grayBackground, size: size)
-                            return .single((capHolder[key]!, false))
+                            let image = generateAvatarPlaceholder(foregroundColor: theme.colors.grayBackground, size: size, cornerRadius: isForum ? floor(size.height / 3) : -1)
+                            _ = capHolder.modify { current in
+                                var current = current
+                                current[key] = image
+                                return current
+                            }
+                            return .single((image, false))
                         }
                     }) |> deliverOnMainQueue
                     
@@ -90,7 +99,7 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                             
                         var image:CGImage?
                         if let data = data {
-                            image = roundImage(data, displayDimensions, scale: scale)
+                            image = roundImage(data, displayDimensions, cornerRadius: isForum ? displayDimensions.width / 3 : -1, scale: scale)
                         } else {
                             image = nil
                         }
@@ -104,14 +113,22 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                             }
                             telegramFastBlurMore(Int32(size.width), Int32(size.height), Int32(ctx.bytesPerRow), ctx.bytes)
                             
-                            image = ctx.generateImage()
+                            let rounded = DrawingContext(size: img.size, scale: 1.0)
+                            rounded.withContext { c in
+                                c.clear(size.bounds)
+                                c.round(size, isForum ? min(floor(size.height / 3), size.height / 2) : size.height / 2)
+                                c.clear(size.bounds)
+                                c.draw(ctx.generateImage()!, in: size.bounds)
+                            }
+                            
+                            image = rounded.generateImage()//ctx.generateImage()
                         }
                         #endif
                         if let image = image {
                             if tiny {
                                 return .single((image, animated))
                             }
-                            return cachePeerPhoto(image: image, peerId: peer.id, representation: representation, size: displayDimensions, scale: scale) |> map {
+                            return cachePeerPhoto(image: image, peerId: peer.id, representation: representation, size: displayDimensions, scale: scale, isForum: isForum) |> map {
                                 return (image, animated)
                             }
                         } else {
@@ -145,13 +162,13 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
             return current + letter
         })
         
-        return cachedEmptyPeerPhoto(peer.id, symbol: symbol, color: color.top, size: displayDimensions, scale: scale) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
+        return cachedEmptyPeerPhoto(peer.id, symbol: symbol, color: color.top, size: displayDimensions, scale: scale, isForum: isForum) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
             if let cached = cached {
                 return .single((cached, false))
             } else {
-                return generateEmptyPhoto(displayDimensions, type: .peer(colors: color, letter: letters, font: font)) |> runOn(graphicsThreadPool) |> mapToSignal { image -> Signal<(CGImage?, Bool), NoError> in
+                return generateEmptyPhoto(displayDimensions, type: .peer(colors: color, letter: letters, font: font, cornerRadius: isForum ? floor(displayDimensions.height / 3) : nil)) |> runOn(graphicsThreadPool) |> mapToSignal { image -> Signal<(CGImage?, Bool), NoError> in
                     if let image = image {
-                        return cacheEmptyPeerPhoto(image: image, peerId: peer.id, symbol: symbol, color: color.top, size: displayDimensions, scale: scale) |> map {
+                        return cacheEmptyPeerPhoto(image: image, peerId: peer.id, symbol: symbol, color: color.top, size: displayDimensions, scale: scale, isForum: isForum) |> map {
                             return (image, false)
                         }
                     } else {
@@ -164,16 +181,70 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
     }
 }
 
-func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0, font:NSFont = .medium(.title), genCap: Bool = true, synchronousLoad: Bool = false) -> Signal<(CGImage?, Bool), NoError> {
+func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0, font:NSFont = .medium(17), genCap: Bool = true, synchronousLoad: Bool = false) -> Signal<(CGImage?, Bool), NoError> {
    
     switch photo {
     case let .peer(peer, representation, displayLetters, message):
         return peerImage(account: account, peer: peer, displayDimensions: displayDimensions, representation: representation, message: message, displayLetters: displayLetters, font: font, scale: scale, genCap: genCap, synchronousLoad: synchronousLoad)
+    case let .topic(info):
+        #if !SHARE
+      
+        let file: Signal<TelegramMediaFile, NoError>
+        
+        if let fileId = info.icon {
+            file = TelegramEngine(account: account).stickers.resolveInlineStickers(fileIds: [fileId]) |> map {
+                return $0[fileId]
+            }
+            |> filter { $0 != nil }
+            |> map { $0! }
+        } else {
+            file = .single(ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor))
+        }
+        
+        return file |> mapToSignal { file in
+            let reference = FileMediaReference.standalone(media: file)
+            let signal:Signal<ImageDataTransformation, NoError>
+            
+            let emptyColor: TransformImageEmptyColor?
+            if isDefaultStatusesPackId(file.emojiReference) {
+                emptyColor = .fill(theme.colors.accent)
+            } else {
+                emptyColor = nil
+            }
+            
+            let aspectSize = file.dimensions?.size.aspectFilled(displayDimensions) ?? displayDimensions
+            let arguments = TransformImageArguments(corners: ImageCorners(), imageSize: aspectSize, boundingSize: displayDimensions, intrinsicInsets: NSEdgeInsets(), emptyColor: emptyColor)
+            
+            switch file.mimeType {
+            case "image/webp":
+                signal = chatMessageSticker(postbox: account.postbox, file: reference, small: false, scale: System.backingScale, fetched: true)
+            case "bundle/topic":
+                if let resource = file.resource as? ForumTopicIconResource {
+                    signal = makeTopicIcon(resource.title, bgColors: resource.bgColors, strokeColors: resource.strokeColors)
+                } else {
+                    signal = .complete()
+                }
+            default:
+                signal = chatMessageAnimatedSticker(postbox: account.postbox, file: reference, small: false, scale: System.backingScale, size: aspectSize, fetched: true, thumbAtFrame: 0, isVideo: file.fileName == "webm-preview" || file.isVideoSticker)
+            }
+            return signal |> map { data -> (CGImage?, Bool) in
+                let context = data.execute(arguments, data.data)
+                let image = context?.generateImage()
+                return (image, true)
+            }
+        }
+        #else
+        return .complete()
+        #endif
     }
 }
 
+/*
+
+ */
+
 enum EmptyAvatartType {
-    case peer(colors:(top:NSColor, bottom: NSColor), letter: [String], font: NSFont)
+    case peer(colors:(top:NSColor, bottom: NSColor), letter: [String], font: NSFont, cornerRadius: CGFloat?)
     case icon(colors:(top:NSColor, bottom: NSColor), icon: CGImage, iconSize: NSSize, cornerRadius: CGFloat?)
 }
 
@@ -194,13 +265,13 @@ func generateEmptyPhoto(_ displayDimensions:NSSize, type: EmptyAvatartType) -> S
             font = nil
             iconSize = _iconSize
             cornerRadius = _cornerRadius
-        case let .peer(colors, _letters, _font):
+        case let .peer(colors, _letters, _font, _cornerRadius):
             color = colors
             icon = nil
             font = _font
             letters = _letters
             iconSize = nil
-            cornerRadius = nil
+            cornerRadius = _cornerRadius
         }
         
         let image = generateImage(displayDimensions, contextGenerator: { (size, ctx) in

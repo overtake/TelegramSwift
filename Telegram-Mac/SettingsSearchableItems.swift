@@ -314,7 +314,7 @@ private func profileSearchableItems(context: AccountContext, canAddAccount: Bool
         present(.push, PhoneNumberIntroController(context))
     }))
     items.append(SettingsSearchableItem(id: .profile(3), title: strings().editAccountUsername, alternate: synonyms(strings().settingsSearchSynonymsEditProfileUsername), icon: icon, breadcrumbs: [strings().editAccountTitle], present: { context, _, present in
-        present(.push, UsernameSettingsViewController(context))
+        present(.push, UsernameController(context))
     }))
     if canAddAccount {
         items.append(SettingsSearchableItem(id: .profile(4), title: strings().editAccountAddAccount, alternate: synonyms(strings().settingsSearchSynonymsEditProfileAddAccount), icon: icon, breadcrumbs: [strings().editAccountTitle], present: { context, _, present in
@@ -431,6 +431,8 @@ private func privacySearchableItems(context: AccountContext, privacySettings: Ac
                     current = info.forwards
                 case .phoneNumber:
                     current = info.phoneNumber
+                case .voiceMessages:
+                    current = info.voiceMessages
                 }
                 
                 present(.push, SelectivePrivacySettingsController(context, kind: kind, current: current, callSettings: kind == .voiceCalls ? info.voiceCallsP2P : nil, phoneDiscoveryEnabled: nil, updated: { updated, updatedCallSettings, _ in }))

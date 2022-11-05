@@ -76,6 +76,14 @@ enum GalleryAppearType : Equatable {
 
 private func mediaForMessage(message: Message, postbox: Postbox) -> Media? {
     for media in message.media {
+        if let media = media as? TelegramMediaInvoice, let extended = media.extendedMedia {
+            switch extended {
+            case .preview:
+                return nil
+            case let .full(media):
+                return media
+            }
+        }
         if let media = media as? TelegramMediaImage {
             return media
         } else if let file = media as? TelegramMediaFile {
@@ -573,18 +581,18 @@ class GalleryViewer: NSResponder {
                 
                 let signal:Signal<(MessageHistoryView, ViewUpdateType, InitialMessageHistoryData?), NoError>
                 switch mode {
-                case .history, .preview:
-                    signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(peerId: message.id.peerId), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
-                case let .replyThread(data, _):
+                case .history:
+                    signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(peerId: message.id.peerId, threadId: nil), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
+                case let .thread(data, _):
                     if data.messageId == message.id {
-                        signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(peerId: message.id.peerId), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
+                        signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(peerId: message.id.peerId, threadId: nil), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
                     } else {
-                        signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(context.chatLocationInput(for: .replyThread(data), contextHolder: contextHolder), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
+                        signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(context.chatLocationInput(for: .thread(data), contextHolder: contextHolder), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: tags, orderStatistics: [.combinedLocation], additionalData: [])
                     }
                 case .pinned:
-                    signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(peerId: message.id.peerId), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: .pinned, orderStatistics: [.combinedLocation], additionalData: [])
+                    signal = context.account.viewTracker.aroundIdMessageHistoryViewForLocation(.peer(peerId: message.id.peerId, threadId: nil), count: 50, ignoreRelatedChats: false, messageId: index.id, tagMask: .pinned, orderStatistics: [.combinedLocation], additionalData: [])
                 case .scheduled:
-                    signal = context.account.viewTracker.scheduledMessagesViewForLocation(.peer(peerId: message.id.peerId))
+                    signal = context.account.viewTracker.scheduledMessagesViewForLocation(.peer(peerId: message.id.peerId, threadId: nil))
                 }
 
             
@@ -597,7 +605,7 @@ class GalleryViewer: NSResponder {
                     
                     inserted.insert((0, itemFor(entry: entries[0], context: context, pagerSize: pagerSize)), at: 0)
 
-                    if let webpage = message.media.first as? TelegramMediaWebpage {
+                    if let webpage = message.effectiveMedia as? TelegramMediaWebpage {
                         let instantMedias = instantPageMedias(for: webpage)
                         if instantMedias.count > 1 {
                             for i in 1 ..< instantMedias.count {
@@ -660,7 +668,7 @@ class GalleryViewer: NSResponder {
                 case .secret:
                     return context.account.postbox.messageView(index.id) |> mapToSignal { view -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                         var entries:[ChatHistoryEntry] = []
-                        if let message = view.message, !(message.media.first is TelegramMediaExpiredContent) {
+                        if let message = view.message, !(message.effectiveMedia is TelegramMediaExpiredContent) {
                             entries.append(.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings)))
                         }
                         let previous = previous.with {$0}
@@ -788,8 +796,7 @@ class GalleryViewer: NSResponder {
     }
     
 
-    
-    func showControlsPopover(_ control:Control) {
+    private func showControlsPopoverReady(_ control: Control, savedGifs: [RecentMediaItem]) {
         
         var items:[ContextMenuItem] = []
         
@@ -812,9 +819,34 @@ class GalleryViewer: NSResponder {
             let file = item.media
             if file.isAnimated && file.isVideo {
                 let reference = item.entry.fileReference(file)
-                items.append(ContextMenuItem(strings().gallerySaveGif, handler: {
-                    let _ = addSavedGif(postbox: context.account.postbox, fileReference: reference).start()
-                }, itemImage: MenuAnimation.menu_add_gif.value))
+                if savedGifs.contains(where: { $0.media.fileId == file.fileId }) {
+                    items.append(ContextMenuItem(strings().galleryRemoveGif, handler: { [weak control] in
+                        _ = removeSavedGif(postbox: context.account.postbox, mediaId: file.fileId).start()
+                        if let window = control?.kitWindow {
+                            showModalText(for: window, text: strings().chatContextGifRemoved)
+                        }
+                    }, itemImage: MenuAnimation.menu_remove_gif.value))
+                } else {
+                    items.append(ContextMenuItem(strings().gallerySaveGif, handler: { [weak control, weak self] in
+                        
+                        guard let window = control?.kitWindow else {
+                            return
+                        }
+                        
+                        let limit = context.isPremium ? context.premiumLimits.saved_gifs_limit_premium : context.premiumLimits.saved_gifs_limit_default
+                        if limit >= savedGifs.count, !context.isPremium {
+                            showModalText(for: window, text: strings().chatContextFavoriteGifsLimitInfo("\(context.premiumLimits.saved_gifs_limit_premium)"), title: strings().chatContextFavoriteGifsLimitTitle, callback: { value in
+                                showPremiumLimit(context: context, type: .savedGifs)
+                                self?.close()
+                            })
+                            return
+                        }
+                        let _ = addSavedGif(postbox: context.account.postbox, fileReference: reference).start()
+                        if let window = control?.kitWindow {
+                            showModalText(for: window, text: strings().chatContextGifAdded)
+                        }
+                    }, itemImage: MenuAnimation.menu_add_gif.value))
+                }
             }
         }
         
@@ -825,8 +857,8 @@ class GalleryViewer: NSResponder {
         }
         
         
-        if let _ = self.contentInteractions {
-            if let message = pager.selectedItem?.entry.message {
+        if let contentInteractions = self.contentInteractions {
+            if let message = pager.selectedItem?.entry.message, let pageItem = pager.selectedItem {
                 if self.type == .history {
                     items.append(ContextMenuItem(strings().galleryContextShowMessage, handler: { [weak self] in
                         self?.showMessage()
@@ -836,7 +868,38 @@ class GalleryViewer: NSResponder {
                     items.append(ContextMenuItem(strings().galleryContextShowGallery, handler: { [weak self] in
                         self?.showSharedMedia()
                     }, itemImage: MenuAnimation.menu_shared_media.value))
+                    
+                    let controller = context.bindings.rootNavigation().controller
+
+                    
+                    if let peer = message.peers[message.id.peerId], peer.canSendMessage(), let controller = controller as? ChatController {
+                        if let _ = message.effectiveMedia as? TelegramMediaImage {
+                            items.append(ContextMenuItem(strings().gallerySendHere, handler: { [weak self, weak controller] in
+                                
+                                self?.close(false)
+                                
+                                let signal = pageItem.path.get()
+                                |> take(1)
+                                |> deliverOnMainQueue
+                                _ = signal.start(next: { [weak controller] path in
+                                    if let controller = controller {
+                                        let preview = PreviewSenderController(urls: [.init(fileURLWithPath: path)], chatInteraction: controller.chatInteraction, asMedia: true, attributedString: nil)
+                                        
+                                        let ready = preview.ready.get() |> take(1)
+                                        
+                                        _ = ready.start(next: { [weak preview] value in
+                                            delay(0.01, closure: { [weak preview] in
+                                                preview?.runDrawer()
+                                            })
+                                        })
+                                        showModal(with: preview, for: context.window)
+                                    }
+                                })
+                            }, itemImage: MenuAnimation.menu_edit.value))
+                        }
+                    }
                 }
+                
                 
                 if canDeleteMessage(message, account: context.account, mode: .history) {
                     if !items.isEmpty {
@@ -852,7 +915,7 @@ class GalleryViewer: NSResponder {
                         var items:[ContextMenuItem] = []
                         
                         let thisTitle: String
-                        if message.media.first is TelegramMediaImage {
+                        if message.effectiveMedia is TelegramMediaImage {
                             thisTitle = strings().galleryContextShareThisPhoto
                         } else {
                             thisTitle = strings().galleryContextShareThisVideo
@@ -862,9 +925,9 @@ class GalleryViewer: NSResponder {
                         }, itemImage: MenuAnimation.menu_select_messages.value))
                        
                         let allTitle: String
-                        if messages.filter({$0.media.first is TelegramMediaImage}).count == messages.count {
+                        if messages.filter({$0.effectiveMedia is TelegramMediaImage}).count == messages.count {
                             allTitle = strings().galleryContextShareAllPhotosCountable(messages.count)
-                        } else if messages.filter({$0.media.first is TelegramMediaFile}).count == messages.count {
+                        } else if messages.filter({$0.effectiveMedia is TelegramMediaFile}).count == messages.count {
                             allTitle = strings().galleryContextShareAllVideosCountable(messages.count)
                         } else {
                             allTitle = strings().galleryContextShareAllItemsCountable(messages.count)
@@ -915,6 +978,22 @@ class GalleryViewer: NSResponder {
         if let event = NSApp.currentEvent {
             AppMenu.show(menu: menu, event: event, for: control)
         }
+    }
+    
+    func showControlsPopover(_ control: Control) {
+        
+        let _savedGifsCount: Signal<[RecentMediaItem], NoError> = context.account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudRecentGifs], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: 100) |> take(1) |> map {
+            $0.orderedItemListsViews[0].items.compactMap {
+                $0.contents.get(RecentMediaItem.self)
+            }
+        } |> deliverOnMainQueue
+
+        _ = _savedGifsCount.start(next: { [weak control, weak self] savedGifs in
+            if let control = control {
+                self?.showControlsPopoverReady(control, savedGifs: savedGifs)
+            }
+        })
+        
     }
     
     private func deleteMessages(_ messages:[Message]) {
@@ -1180,11 +1259,11 @@ class GalleryViewer: NSResponder {
                 var items:[ContextMenuItem] = []
                 
                 let thisTitle: String
-                if message.media.first is TelegramMediaImage {
+                if message.effectiveMedia is TelegramMediaImage {
                     thisTitle = strings().galleryContextShareThisPhoto
-                } else if message.media.first!.isVideoFile {
+                } else if message.effectiveMedia!.isVideoFile {
                     thisTitle = strings().galleryContextShareThisVideo
-                } else if message.media.first!.isGraphicFile {
+                } else if message.effectiveMedia!.isGraphicFile {
                     thisTitle = strings().galleryContextShareThisPhoto
                 } else {
                     thisTitle = strings().galleryContextShareThisFile
@@ -1196,11 +1275,11 @@ class GalleryViewer: NSResponder {
                 }, itemImage: MenuAnimation.menu_share.value))
                 
                 let allTitle: String
-                if messages.filter({$0.media.first is TelegramMediaImage}).count == messages.count {
+                if messages.filter({$0.effectiveMedia is TelegramMediaImage}).count == messages.count {
                     allTitle = strings().galleryContextShareAllPhotosCountable(messages.count)
-                } else if messages.filter({ $0.media.first!.isVideoFile }).count == messages.count {
+                } else if messages.filter({ $0.effectiveMedia!.isVideoFile }).count == messages.count {
                     allTitle = strings().galleryContextShareAllVideosCountable(messages.count)
-                } else if messages.filter({ $0.media.first!.isGraphicFile }).count == messages.count {
+                } else if messages.filter({ $0.effectiveMedia!.isGraphicFile }).count == messages.count {
                     allTitle = strings().galleryContextShareAllPhotosCountable(messages.count)
                 } else {
                     allTitle = strings().galleryContextShareAllItemsCountable(messages.count)

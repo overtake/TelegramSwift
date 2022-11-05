@@ -29,6 +29,8 @@ final class ChatMenuItemsData {
     let peerId: PeerId
     let fileFinderPath: String?
     let isStickerSaved: Bool?
+    let savedStickersCount: Int
+    let savedGifsCount: Int
     let dialogs: [Peer]
     let recentUsedPeers: [Peer]
     let favoritePeers: [Peer]
@@ -41,7 +43,7 @@ final class ChatMenuItemsData {
     let textLayout: (TextViewLayout?, LinkType?)?
     let notifications: NotificationSoundList?
     let cachedData: CachedPeerData?
-    init(chatInteraction: ChatInteraction, message: Message, accountPeer: Peer, resourceData: MediaResourceData?, chatState: ChatState, chatMode: ChatMode, disableSelectAbility: Bool, isLogInteraction: Bool, canPinMessage: Bool, pinnedMessage: ChatPinnedMessage?, peer: Peer?, peerId: PeerId, fileFinderPath: String?, isStickerSaved: Bool?, dialogs: [Peer], recentUsedPeers: [Peer], favoritePeers: [Peer], recentMedia: [RecentMediaItem], updatingMessageMedia: [MessageId: ChatUpdatingMessageMedia], additionalData: MessageEntryAdditionalData, file: TelegramMediaFile?, image: TelegramMediaImage?, textLayout: (TextViewLayout?, LinkType?)?, availableReactions: AvailableReactions?, notifications: NotificationSoundList?, cachedData: CachedPeerData?) {
+    init(chatInteraction: ChatInteraction, message: Message, accountPeer: Peer, resourceData: MediaResourceData?, chatState: ChatState, chatMode: ChatMode, disableSelectAbility: Bool, isLogInteraction: Bool, canPinMessage: Bool, pinnedMessage: ChatPinnedMessage?, peer: Peer?, peerId: PeerId, fileFinderPath: String?, isStickerSaved: Bool?, dialogs: [Peer], recentUsedPeers: [Peer], favoritePeers: [Peer], recentMedia: [RecentMediaItem], updatingMessageMedia: [MessageId: ChatUpdatingMessageMedia], additionalData: MessageEntryAdditionalData, file: TelegramMediaFile?, image: TelegramMediaImage?, textLayout: (TextViewLayout?, LinkType?)?, availableReactions: AvailableReactions?, notifications: NotificationSoundList?, cachedData: CachedPeerData?, savedStickersCount: Int, savedGifsCount: Int) {
         self.chatInteraction = chatInteraction
         self.message = message
         self.accountPeer = accountPeer
@@ -68,6 +70,8 @@ final class ChatMenuItemsData {
         self.availableReactions = availableReactions
         self.notifications = notifications
         self.cachedData = cachedData
+        self.savedStickersCount = savedStickersCount
+        self.savedGifsCount = savedGifsCount
     }
 }
 func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkType?)?, entry: ChatHistoryEntry?, chatInteraction: ChatInteraction) -> Signal<ChatMenuItemsData, NoError> {
@@ -87,11 +91,11 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
     
     var file: TelegramMediaFile? = nil
     var image: TelegramMediaImage? = nil
-    if let media = message.media.first as? TelegramMediaFile {
+    if let media = message.effectiveMedia as? TelegramMediaFile {
         file = media
-    } else if let media = message.media.first as? TelegramMediaImage {
+    } else if let media = message.effectiveMedia as? TelegramMediaImage {
         image = media
-    } else if let media = message.media.first as? TelegramMediaWebpage {
+    } else if let media = message.effectiveMedia as? TelegramMediaWebpage {
         switch media.content {
         case let .Loaded(content):
             file = content.file
@@ -107,7 +111,7 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
         |> map { view in
             return view.0.entries.compactMap { entry in
                 switch entry {
-                case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _):
+                case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _):
                     return renderedPeer.peer
                 default:
                     return nil
@@ -138,6 +142,15 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
     var _getIsStickerSaved: Signal<Bool?, NoError> = .single(nil)
     var _recentMedia: Signal<[RecentMediaItem], NoError> = .single([])
     
+    let _savedStickersCount: Signal<Int, NoError> = account.postbox.itemCollectionsView(orderedItemListCollectionIds: [Namespaces.OrderedItemList.CloudSavedStickers], namespaces: [Namespaces.ItemCollection.CloudStickerPacks], aroundIndex: nil, count: 100) |> take(1) |> map {
+        $0.orderedItemListsViews[0].items.count
+    }
+    
+    let _savedGifsCount: Signal<Int, NoError> = context.account.postbox.combinedView(keys: [.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)]) |> take(1) |> map {
+        return ($0.views[.orderedItemList(id: Namespaces.OrderedItemList.CloudRecentGifs)] as! OrderedItemListView).items.count
+    }
+
+    
     let _updatingMessageMedia = account.pendingUpdateMessageManager.updatingMessageMedia
         
     if let media = file {
@@ -165,18 +178,23 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
     
     let cachedData = context.account.postbox.peerView(id: peerId) |> take(1) |> map { $0.cachedData }
     
-    let combined = combineLatest(queue: .mainQueue(), _dialogs, _recentUsedPeers, _favoritePeers, _accountPeer, _resourceData, _fileFinderPath, _getIsStickerSaved, _recentMedia, _updatingMessageMedia, context.reactions.stateValue, context.engine.peers.notificationSoundList(), cachedData)
+    let combined = combineLatest(queue: .mainQueue(), _dialogs, _recentUsedPeers, _favoritePeers, _accountPeer, _resourceData, _fileFinderPath, _getIsStickerSaved, _recentMedia, _updatingMessageMedia, context.reactions.stateValue, context.engine.peers.notificationSoundList(), cachedData, _savedStickersCount, _savedGifsCount)
     |> take(1)
     
     
-    return combined |> map { dialogs, recentUsedPeers, favoritePeers, accountPeer, resourceData, fileFinderPath, isStickerSaved, recentMedia, updatingMessageMedia, availableReactions, notifications, cachedData in
-        return .init(chatInteraction: chatInteraction, message: message, accountPeer: accountPeer, resourceData: resourceData, chatState: chatState, chatMode: chatMode, disableSelectAbility: disableSelectAbility, isLogInteraction: isLogInteraction, canPinMessage: canPinMessage, pinnedMessage: pinnedMessage, peer: peer, peerId: peerId, fileFinderPath: fileFinderPath, isStickerSaved: isStickerSaved, dialogs: dialogs, recentUsedPeers: recentUsedPeers, favoritePeers: favoritePeers, recentMedia: recentMedia, updatingMessageMedia: updatingMessageMedia, additionalData: additionalData, file: file, image: image, textLayout: textLayout, availableReactions: availableReactions, notifications: notifications, cachedData: cachedData)
+    return combined |> map { dialogs, recentUsedPeers, favoritePeers, accountPeer, resourceData, fileFinderPath, isStickerSaved, recentMedia, updatingMessageMedia, availableReactions, notifications, cachedData, savedStickersCount, savedGifsCount in
+        return .init(chatInteraction: chatInteraction, message: message, accountPeer: accountPeer, resourceData: resourceData, chatState: chatState, chatMode: chatMode, disableSelectAbility: disableSelectAbility, isLogInteraction: isLogInteraction, canPinMessage: canPinMessage, pinnedMessage: pinnedMessage, peer: peer, peerId: peerId, fileFinderPath: fileFinderPath, isStickerSaved: isStickerSaved, dialogs: dialogs, recentUsedPeers: recentUsedPeers, favoritePeers: favoritePeers, recentMedia: recentMedia, updatingMessageMedia: updatingMessageMedia, additionalData: additionalData, file: file, image: image, textLayout: textLayout, availableReactions: availableReactions, notifications: notifications, cachedData: cachedData, savedStickersCount: savedStickersCount, savedGifsCount: savedGifsCount)
     }
 }
 
 
 func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (TextViewLayout?, LinkType?)?, chatInteraction: ChatInteraction) -> Signal<[ContextMenuItem], NoError> {
     
+    if chatInteraction.isLogInteraction {
+        return .single([])
+    } else if chatInteraction.disableSelectAbility {
+        return .single([])
+    }
     
     return chatMenuItemsData(for: message, textLayout: textLayout, entry: entry, chatInteraction: chatInteraction) |> map { data in
 
@@ -188,7 +206,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         let appConfiguration = data.chatInteraction.context.appConfiguration
         let context = data.chatInteraction.context
         let account = context.account
-        let isService = data.message.media.first is TelegramMediaAction
+        let isService = data.message.effectiveMedia is TelegramMediaAction
         
         var items:[ContextMenuItem] = []
         
@@ -198,7 +216,8 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         var thirdBlock:[ContextMenuItem] = []
         var fourthBlock:[ContextMenuItem] = []
         var fifthBlock:[ContextMenuItem] = []
-        
+        var sixBlock:[ContextMenuItem] = []
+
         
         if data.message.adAttribute != nil {
             items.append(ContextMenuItem(strings().chatMessageSponsoredWhat, handler: {
@@ -213,10 +232,15 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     }
                 })
             }))
+            if !context.premiumIsBlocked {
+                items.append(ContextMenuItem.init(strings().chatContextHideAd, handler: {
+                    showModal(with: PremiumBoardingController(context: context), for: context.window)
+                }))
+            }
             return items
         }
         
-        if data.disableSelectAbility, data.isLogInteraction || data.chatState == .selecting || data.chatMode == .preview {
+        if data.disableSelectAbility, data.isLogInteraction || data.chatState == .selecting {
             return []
         }
         
@@ -247,20 +271,20 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             }, itemImage: MenuAnimation.menu_send_now.value))
             firstBlock.append(ContextMenuItem(strings().chatContextScheduledReschedule, handler: {
                 showModal(with: DateSelectorModalController(context: context, defaultDate: Date(timeIntervalSince1970: TimeInterval(message.timestamp)), mode: .schedule(peer.id), selectedAt: { date in
-                    _ = showModalProgress(signal: context.engine.messages.requestEditMessage(messageId: messageId, text: data.message.text, media: .keep, entities: data.message.textEntities, scheduleTime: Int32(min(date.timeIntervalSince1970, Double(scheduleWhenOnlineTimestamp)))), for: context.window).start()
+                    _ = showModalProgress(signal: context.engine.messages.requestEditMessage(messageId: messageId, text: data.message.text, media: .keep, entities: data.message.textEntities, inlineStickers: data.message.associatedMedia, scheduleTime: Int32(min(date.timeIntervalSince1970, Double(scheduleWhenOnlineTimestamp)))), for: context.window).start()
                }), for: context.window)
             }, itemImage: MenuAnimation.menu_schedule_message.value))
         }
         
         
-        if canReplyMessage(data.message, peerId: data.peerId, mode: data.chatMode)  {
+        if canReplyMessage(data.message, peerId: data.peerId, mode: data.chatMode, threadData: chatInteraction.presentation.threadInfo)  {
             firstBlock.append(ContextMenuItem(strings().messageContextReply1, handler: {
                 data.chatInteraction.setupReplyMessage(data.message.id)
             }, itemImage: MenuAnimation.menu_reply.value, keyEquivalent: .cmdr))
         }
         
         
-        if let poll = data.message.media.first as? TelegramMediaPoll {
+        if let poll = data.message.effectiveMedia as? TelegramMediaPoll {
             if !poll.isClosed && isNotFailed {
                 if let _ = poll.results.voters?.first(where: {$0.selected}), poll.kind != .quiz {
                     let isLoading = data.additionalData.pollStateData.isLoading
@@ -285,7 +309,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         }
         
         if data.chatMode.threadId == nil, let peer = peer, peer.isSupergroup {
-            if let attr = data.message.replyThread, attr.count > 0 {
+            if let attr = data.message.threadAttr, attr.count > 0 {
                 var messageId: MessageId = message.id
                 var modeIsReplies = true
                 if let source = message.sourceReference {
@@ -303,11 +327,12 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             }
         }
         
+        
         if !data.message.isCopyProtected() {
             if let textLayout = data.textLayout?.0 {
                 
                 if !textLayout.selectedRange.hasSelectText {
-                    let text = textLayout.attributedString.string
+                    let text = message.text
                     let language = Translate.detectLanguage(for: text)
                     let toLang = appAppearance.language.baseLanguageCode
                     if language != toLang {
@@ -328,7 +353,17 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         text = copyContextText(from: linkType)
                         thirdBlock.append(ContextMenuItem(text, handler: { [weak textLayout] in
                             if let textLayout = textLayout {
-                                let attr = textLayout.attributedString
+                                let attr = textLayout.attributedString.mutableCopy() as! NSMutableAttributedString
+                                attr.enumerateAttributes(in: attr.range, options: [], using: { data, range, _ in
+                                    if let value = data[.init("Attribute__EmbeddedItem")] as? InlineStickerItem {
+                                        switch value.source {
+                                        case let .attribute(value):
+                                            attr.replaceCharacters(in: range, with: value.attachment.text)
+                                        default:
+                                            break
+                                        }
+                                    }
+                                })
                                 var effectiveRange = textLayout.selectedRange.range
                                 let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
                                 let pb = NSPasteboard.general
@@ -344,7 +379,17 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                             
                         }, itemImage: MenuAnimation.menu_copy.value))
                     } else {
-                        let attr = textLayout.attributedString
+                        let attr = textLayout.attributedString.mutableCopy() as! NSMutableAttributedString
+                        attr.enumerateAttributes(in: attr.range, options: [], using: { data, range, _ in
+                            if let value = data[.init("Attribute__EmbeddedItem")] as? InlineStickerItem {
+                                switch value.source {
+                                case let .attribute(value):
+                                    attr.replaceCharacters(in: range, with: value.attachment.text)
+                                default:
+                                    break
+                                }
+                            }
+                        })
                         let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
                         let text = selectedText.string
                         let language = Translate.detectLanguage(for: text)
@@ -413,8 +458,10 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             let pinText = data.message.tags.contains(.pinned) ? strings().messageContextUnpin : strings().messageContextPin
             
             let pinImage = data.message.tags.contains(.pinned) ? MenuAnimation.menu_unpin.value : MenuAnimation.menu_pin.value
+            
+            let canSendMessage = peer.canSendMessage(data.chatMode.isThreadMode || data.chatMode.isTopicMode, threadData: data.chatInteraction.presentation.threadInfo)
 
-            if let peer = peer as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)) {
+            if let peer = peer as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)), canSendMessage {
                 if isNotFailed {
                     if !data.chatMode.isThreadMode, (needUnpin || data.chatMode != .pinned) {
                         secondBlock.append(ContextMenuItem(pinText, handler: {
@@ -488,21 +535,14 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             
             func makeItem(_ peer: Peer) -> ContextMenuItem {
                 let title = peer.id == context.peerId ? strings().peerSavedMessages : peer.displayTitle.prefixWithDots(20)
-                let item = ContextMenuItem(title, handler: {
-                    _ = forwardObject.perform(to: [peer.id]).start()
-                })
-                let signal:Signal<(CGImage?, Bool), NoError>
-                if peer.id == context.peerId {
-                    let icon = theme.icons.searchSaved
-                    signal = generateEmptyPhoto(NSMakeSize(18, 18), type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(10, 10)), cornerRadius: nil)) |> deliverOnMainQueue |> map { ($0, true) }
-                } else {
-                    signal = peerAvatarImage(account: account, photo: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(18 * System.backingScale, 18 * System.backingScale), font: .avatar(13), genCap: true, synchronousLoad: false) |> deliverOnMainQueue
-                }
-                _ = signal.start(next: { [weak item] image, _ in
-                    if let image = image {
-                        item?.image = NSImage(cgImage: image, size: NSMakeSize(18, 18))
-                    }
-                })
+                let item = ReactionPeerMenu(title: title, handler: {
+                    _ = forwardObject.perform(to: [peer.id], threadId: nil).start()
+                }, peer: peer, context: context, reaction: nil, destination: .forward(callback: { threadId in
+                    _ = forwardObject.perform(to: [peer.id], threadId: makeThreadIdMessageId(peerId: peer.id, threadId: threadId)).start()
+                }))
+
+                ContextMenuItem.makeItemAvatar(item, account: context.account, peer: peer, source: .peer(peer, peer.smallProfileImage, peer.displayLetters, nil))
+                
                 return item
             }
             
@@ -512,7 +552,9 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 items.append(ContextSeparatorItem())
             }
             for peer in recent {
-                items.append(makeItem(peer))
+                if peer.id.namespace != Namespaces.Peer.SecretChat {
+                    items.append(makeItem(peer))
+                }
             }
             if !recent.isEmpty {
                 items.append(ContextSeparatorItem())
@@ -524,7 +566,9 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 items.append(ContextSeparatorItem())
             }
             for peer in dialogs {
-                items.append(makeItem(peer))
+                if peer.id.namespace != Namespaces.Peer.SecretChat {
+                    items.append(makeItem(peer))
+                }
             }
             if !items.isEmpty {
                 items.append(ContextSeparatorItem())
@@ -576,27 +620,54 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 }
             }
         }
-
+        
+     
         
         if let resourceData = data.resourceData, !protected, !isService {
             if let file = data.file {
                 if file.isVideo && file.isAnimated {
                     if data.recentMedia.contains(where: {$0.media.id == file.fileId}) {
                         thirdBlock.append(ContextMenuItem(strings().messageContextRemoveGif, handler: {
+                            showModalText(for: context.window, text: strings().chatContextGifRemoved)
                             _ = removeSavedGif(postbox: account.postbox, mediaId: file.fileId).start()
                         }, itemImage: MenuAnimation.menu_remove_gif.value))
                     } else {
                         thirdBlock.append(ContextMenuItem(strings().messageContextSaveGif, handler: {
+                            
+                            let limit = context.isPremium ? context.premiumLimits.saved_gifs_limit_premium : context.premiumLimits.saved_gifs_limit_default
+                            if limit <= data.savedGifsCount, !context.isPremium, !context.premiumIsBlocked {
+                                showModalText(for: context.window, text: strings().chatContextFavoriteGifsLimitInfo("\(context.premiumLimits.saved_gifs_limit_premium)"), title: strings().chatContextFavoriteGifsLimitTitle, callback: { value in
+                                    showPremiumLimit(context: context, type: .savedGifs)
+                                })
+                            } else {
+                                showModalText(for: context.window, text: strings().chatContextGifAdded)
+                            }
                             _ = addSavedGif(postbox: account.postbox, fileReference: FileMediaReference.message(message: MessageReference(data.message), media: file)).start()
                         }, itemImage: MenuAnimation.menu_add_gif.value))
                     }
                 }
                 if file.isSticker, let saved = data.isStickerSaved {
+                    
+                    if let reference = file.stickerReference {
+                        thirdBlock.append(ContextMenuItem(strings().contextViewStickerSet, handler: {
+                            showModal(with: StickerPackPreviewModalController(context, peerId: peerId, references: [.stickers(reference)]), for: context.window)
+                        }, itemImage: MenuAnimation.menu_view_sticker_set.value))
+                    }
+                    
                     let image = saved ? MenuAnimation.menu_remove_from_favorites.value : MenuAnimation.menu_add_to_favorites.value
                     thirdBlock.append(ContextMenuItem(!saved ? strings().chatContextAddFavoriteSticker : strings().chatContextRemoveFavoriteSticker, handler: {
                         if !saved {
+                            let limit = context.isPremium ? context.premiumLimits.stickers_faved_limit_premium : context.premiumLimits.stickers_faved_limit_default
+                            if limit >= data.savedStickersCount, !context.isPremium, !context.premiumIsBlocked {
+                                showModalText(for: context.window, text: strings().chatContextFavoriteStickersLimitInfo("\(context.premiumLimits.stickers_faved_limit_premium)"), title: strings().chatContextFavoriteStickersLimitTitle, callback: { value in
+                                    showPremiumLimit(context: context, type: .faveStickers)
+                                })
+                            } else {
+                                showModalText(for: context.window, text: strings().chatContextStickerAddedToFavorites)
+                            }
                             _ = addSavedSticker(postbox: account.postbox, network: account.network, file: file).start()
                         } else {
+                            showModalText(for: context.window, text: strings().chatContextStickerRemovedFromFavorites)
                             _ = removeSavedSticker(postbox: account.postbox, mediaId: file.fileId).start()
                         }
                     }, itemImage: image))
@@ -742,12 +813,47 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
         }
         
+        if let attr = message.textEntities {
+            var references: [StickerPackReference] = attr.entities.compactMap({ value in
+                if case let .CustomEmoji(reference, _) = value.type {
+                    return reference
+                } else {
+                    return nil
+                }
+            })
+            
+            references += message.associatedMedia.compactMap {
+                ($0.value as? TelegramMediaFile)?.emojiReference
+            }
+            references = references.uniqueElements
+            
+            let sources: [StickerPackPreviewSource] = references.map {
+                .emoji($0)
+            }
+            
+            if !sources.isEmpty {
+                
+                let text = strings().chatContextMessageContainsEmojiCountable(sources.count)
+                
+                let item = MessageContainsPacksMenuItem(title: text, handler: {
+                    showModal(with: StickerPackPreviewModalController(context, peerId: peerId, references: sources), for: context.window)
+                }, packs: references, context: context)
+                
+                sixBlock.append(item)
+                
+//                sixBlock.append(ContextMenuItem(strings().chatContextViewEmojiSetNewCountable(sources.count), handler: {
+//                    showModal(with: StickerPackPreviewModalController(context, peerId: peerId, references: sources), for: context.window)
+//                }, itemImage: MenuAnimation.menu_smile.value))
+            }
+        }
+        
         let blocks:[[ContextMenuItem]] = [firstBlock,
                                           add_secondBlock,
                                           thirdBlock,
                                           secondBlock,
                                           fourthBlock,
-                                          fifthBlock].filter { !$0.isEmpty }
+                                          fifthBlock,
+                                          sixBlock].filter { !$0.isEmpty }
         
         for (i, block) in blocks.enumerated() {
             if i == 0 {

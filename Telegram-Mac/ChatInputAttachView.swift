@@ -45,7 +45,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                 if let editState = chatInteraction.presentation.interfaceState.editState, let media = editState.originalMedia, media is TelegramMediaFile || media is TelegramMediaImage {
                     if editState.message.groupingKey == nil {
                         items.append(ContextMenuItem(strings().inputAttachPopoverPhotoOrVideo, handler: { [weak self] in
-                            self?.chatInteraction.updateEditingMessageMedia(mediaExts, true)
+                            self?.chatInteraction.updateEditingMessageMedia(nil, true)
                         }, itemImage: MenuAnimation.menu_shared_media.value))
                         
                         items.append(ContextMenuItem(strings().inputAttachPopoverFile, handler: { [weak self] in
@@ -58,11 +58,11 @@ class ChatInputAttachView: ImageButton, Notifable {
                             }, itemImage: MenuAnimation.menu_edit.value))
                         }
                     } else {
-                        if let _ = editState.message.media.first as? TelegramMediaImage {
+                        if let _ = editState.message.effectiveMedia as? TelegramMediaImage {
                             items.append(ContextMenuItem(strings().inputAttachPopoverPhotoOrVideo, handler: { [weak self] in
                                 self?.chatInteraction.updateEditingMessageMedia(mediaExts, true)
                             }, itemImage: MenuAnimation.menu_edit.value))
-                        } else if let file = editState.message.media.first as? TelegramMediaFile {
+                        } else if let file = editState.message.effectiveMedia as? TelegramMediaFile {
                             if file.isVideoFile {
                                 items.append(ContextMenuItem(strings().inputAttachPopoverPhotoOrVideo, handler: { [weak self] in
                                     self?.chatInteraction.updateEditingMessageMedia(mediaExts, true)
@@ -96,11 +96,15 @@ class ChatInputAttachView: ImageButton, Notifable {
                         self?.chatInteraction.attachPhotoOrVideo()
                     }, itemImage: MenuAnimation.menu_shared_media.value))
                     
-                    let replyTo = chatInteraction.presentation.interfaceState.replyMessageId
+                    let chatMode = chatInteraction.presentation.chatMode
+
+                    let replyTo = chatInteraction.presentation.interfaceState.replyMessageId ?? chatMode.threadId
                     
-  
+                    let threadId = chatInteraction.presentation.chatLocation.threadId
+
+                    let acceptMode = chatMode == .history || (chatMode.isThreadMode || chatMode.isTopicMode)
                     
-                    if chatInteraction.presentation.chatMode == .history, let peer = chatInteraction.presentation.peer {
+                    if acceptMode, let peer = chatInteraction.presentation.peer {
                         for attach in chatInteraction.presentation.attachItems {
                             
                             let thumbFile: TelegramMediaFile
@@ -112,31 +116,26 @@ class ChatInputAttachView: ImageButton, Notifable {
                                 value = MenuAnimation.menu_folder_bot.value
                                 thumbFile = MenuAnimation.menu_folder_bot.file
                             }
-                            if let botInfo = attach.peer.botInfo {
-                                let canAddAttach: Bool
-                                if peer.isUser {
-                                    canAddAttach = true
-                                } else if botInfo.flags.contains(.worksWithGroups) {
-                                    canAddAttach = true
-                                } else {
-                                    canAddAttach = false
-                                }
-                                if canAddAttach {
-                                    items.append(ContextMenuItem(attach.shortName, handler: { [weak self] in
-                                        let invoke:()->Void = { [weak self] in
-                                            showModal(with: WebpageModalController(context: context, url: "", title: attach.peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, bot: attach.peer, replyTo: replyTo, buttonText: "", payload: nil, fromMenu: false, complete: chatInteraction.afterSentTransition), chatInteraction: self?.chatInteraction, thumbFile: thumbFile), for: context.window)
-                                        }
-                                        if FastSettings.shouldConfirmWebApp(peer.id) {
-                                            confirm(for: context.window, header: strings().webAppFirstOpenTitle, information: strings().webAppFirstOpenInfo(attach.peer.displayTitle), successHandler: { _ in
-                                                invoke()
-                                                FastSettings.markWebAppAsConfirmed(peer.id)
-                                            })
-                                        } else {
-                                            invoke()
-                                        }
-                                        
-                                    }, itemImage: value))
-                                }
+                            let canAddAttach: Bool
+                            if peer.isUser {
+                                canAddAttach = attach.peerTypes.contains(.all) || attach.peerTypes.contains(.user)
+                            } else if peer.isBot {
+                                canAddAttach = attach.peerTypes.contains(.all) || attach.peerTypes.contains(.bot) || (attach.peerTypes.contains(.sameBot) && attach.peer.id == peer.id)
+                            } else if peer.isGroup || peer.isSupergroup {
+                                canAddAttach = attach.peerTypes.contains(.all) || attach.peerTypes.contains(.group)
+                            } else if peer.isChannel {
+                                canAddAttach = attach.peerTypes.contains(.all) || attach.peerTypes.contains(.channel)
+                            } else {
+                                canAddAttach = false
+                            }
+                            
+                            if canAddAttach {
+                                items.append(ContextMenuItem(attach.shortName, handler: { [weak self] in
+                                    let invoke:()->Void = { [weak self] in
+                                        showModal(with: WebpageModalController(context: context, url: "", title: attach.peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: attach.peer, replyTo: replyTo, buttonText: "", payload: nil, fromMenu: false, hasSettings: attach.hasSettings, complete: chatInteraction.afterSentTransition), chatInteraction: self?.chatInteraction, thumbFile: thumbFile), for: context.window)
+                                    }
+                                    invoke()
+                                }, itemImage: value))
                             }
                         }
                     }
@@ -254,7 +253,7 @@ class ChatInputAttachView: ImageButton, Notifable {
         
         if value?.interfaceState.editState != oldValue?.interfaceState.editState {
             if let editState = value?.interfaceState.editState {
-                let isMedia = editState.message.media.first is TelegramMediaFile || editState.message.media.first is TelegramMediaImage
+                let isMedia = editState.message.effectiveMedia is TelegramMediaFile || editState.message.effectiveMedia is TelegramMediaImage
                 editMediaAccessory.change(opacity: isMedia ? 1 : 0)
                 self.highlightHovered = false
                 self.autohighlight = false

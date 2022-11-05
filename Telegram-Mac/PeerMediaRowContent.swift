@@ -31,10 +31,12 @@ class PeerMediaRowItem: GeneralRowItem {
     let interface:ChatInteraction
     let automaticDownload: AutomaticMediaDownloadSettings
     let context: AccountContext
-    let gallery: GalleryAppearType
-    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, gallery: GalleryAppearType = .history, viewType: GeneralViewType = .legacy) {
+    let galleryType: GalleryAppearType
+    let gallery: (Message, GalleryAppearType)->Void
+    init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, galleryType: GalleryAppearType = .history, gallery: @escaping(Message, GalleryAppearType)->Void, viewType: GeneralViewType = .legacy) {
         self.entry = object
         self.interface = interface
+        self.galleryType = galleryType
         self.gallery = gallery
         self.context = interface.context
         if case let .messageEntry(message, _, automaticDownload, _) = object {
@@ -52,7 +54,7 @@ class PeerMediaRowItem: GeneralRowItem {
         var resourceData: Signal<(TelegramMediaFile, MediaResourceData)?, NoError> = .single(nil)
         
         let context = self.interface.context
-        if let file = self.message.media.first as? TelegramMediaFile {
+        if let file = self.message.effectiveMedia as? TelegramMediaFile {
             resourceData = context.account.postbox.mediaBox.resourceData(file.resource) |> map {
                 (file, $0)
             }
@@ -61,7 +63,7 @@ class PeerMediaRowItem: GeneralRowItem {
         let message = self.message
         let interface = self.interface
         let messageId = self.message.id
-        let mode = self.gallery
+        let mode = self.galleryType
                 
         return resourceData
         |> take(1)

@@ -166,7 +166,7 @@ class CallStatusBarBackgroundView: View, CallStatusBarBackground {
 
 
 
-private final class VoiceCurveLayer: CALayer {
+private final class VoiceCurveLayer: SimpleLayer {
     private let smallCurve: CurveLayer
     private let mediumCurve: CurveLayer
     private let bigCurve: CurveLayer
@@ -237,50 +237,10 @@ private final class VoiceCurveLayer: CALayer {
         }
     }
     
-    override init(layer: Any) {
-        let maxLevel: CGFloat = 2.5
-        let smallCurveRange:CurveRange = (0.0, 0.0)
-        let mediumCurveRange:CurveRange = (0.1, 0.55)
-        let bigCurveRange:CurveRange = (0.1, 1.0)
-        self.maxLevel = maxLevel
-
-        self.smallCurve = CurveLayer(
-            pointsCount: 7,
-            minRandomness: 1,
-            maxRandomness: 1.3,
-            minSpeed: 0.9,
-            maxSpeed: 3.2,
-            minOffset: smallCurveRange.min,
-            maxOffset: smallCurveRange.max
-        )
-        self.mediumCurve = CurveLayer(
-            pointsCount: 7,
-            minRandomness: 1.2,
-            maxRandomness: 1.5,
-            minSpeed: 1.0,
-            maxSpeed: 4.4,
-            minOffset: mediumCurveRange.min,
-            maxOffset: mediumCurveRange.max
-        )
-        self.bigCurve = CurveLayer(
-            pointsCount: 7,
-            minRandomness: 1.2,
-            maxRandomness: 1.7,
-            minSpeed: 1.0,
-            maxSpeed: 5.8,
-            minOffset: bigCurveRange.min,
-            maxOffset: bigCurveRange.max
-        )
-        super.init(layer: layer)
-    }
-
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
-    required init(frame frameRect: NSRect) {
-        fatalError("init(frame:) has not been implemented")
-    }
+    
 
     public func setColor(_ color: NSColor) {
         smallCurve.setColor(color.withAlphaComponent(1.0))
@@ -384,7 +344,25 @@ final class CurveLayer: CAShapeLayer {
     private var transition: CGFloat = 0 {
         didSet {
             guard let currentPoints = currentPoints else { return }
-            self.path = CGPath.smoothCurve(through: currentPoints, length: bounds.width, smoothness: smoothness, curve: true)
+            
+            let width = self.bounds.width
+            let smoothness = self.smoothness
+            
+            let signal: Signal<CGPath, NoError> = Signal { subscriber in
+                
+                subscriber.putNext(.smoothCurve(through: currentPoints, length: width, smoothness: smoothness, curve: true))
+                subscriber.putCompletion()
+                
+                return EmptyDisposable
+                
+            }
+            |> runOn(resourcesQueue)
+            |> deliverOnMainQueue
+            
+            
+            _ = signal.start(next: { [weak self] path in
+                self?.path = path
+            })
         }
     }
 

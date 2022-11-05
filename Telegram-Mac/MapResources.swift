@@ -36,6 +36,10 @@ public class MapSnapshotMediaResource: TelegramMediaResource {
         self.zoom = zoom
     }
     
+    public var size: Int64? {
+        return nil
+    }
+    
     public required init(decoder: PostboxDecoder) {
         self.latitude = decoder.decodeDoubleForKey("lt", orElse: 0.0)
         self.longitude = decoder.decodeDoubleForKey("ln", orElse: 0.0)

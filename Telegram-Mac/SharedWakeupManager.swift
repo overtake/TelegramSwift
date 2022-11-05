@@ -113,23 +113,31 @@ class SharedWakeupManager {
     private func updateRindingsStatuses(_ accounts:[Account]) {
         
         self.ringingStatesActivated = ringingStatesActivated.intersection(accounts.map { $0.id })
-        
+        let accountManager = sharedContext.accountManager
         for account in accounts {
             if !ringingStatesActivated.contains(account.id) {
                 
-                let combine = combineLatest(queue: .mainQueue(), account.stateManager.isUpdating, account.callSessionManager.ringingStates())
-                
-                _ = combine.start(next: { isUpdating, states in
-                    if isUpdating {
-                        return
-                    }
+                let combine = combineLatest(account.stateManager.isUpdating, account.callSessionManager.ringingStates()) |> mapToSignal { loading, states -> Signal<(Bool, CallSessionRingingState, PCallSession.InitialData)?, NoError> in
                     if let state = states.first {
-                        if self.sharedContext.hasActiveCall {
-                            account.callSessionManager.drop(internalId: state.id, reason: .busy, debugLog: .single(nil))
-                        } else {
-                            if let accountContext = appDelegate?.activeContext(for: account.id) {
-                                showCallWindow(PCallSession(accountContext: accountContext, account: account, isOutgoing: false, peerId: state.peerId, id: state.id, initialState: nil, startWithVideo: state.isVideo, isVideoPossible: state.isVideoPossible))
-                            }
+                        return getPrivateCallSessionData(account, accountManager: accountManager, peerId: state.peerId) |> map {
+                            (loading, state, $0)
+                        }
+                    } else {
+                        return .single(nil)
+                    }
+                }
+                |> filter { $0 != nil && !$0!.0 }
+                |> map { $0! }
+                |> deliverOnMainQueue
+                _ = combine.start(next: { data in
+                    let state = data.1
+                    let initialData = data.2
+                    
+                    if self.sharedContext.hasActiveCall {
+                        account.callSessionManager.drop(internalId: state.id, reason: .busy, debugLog: .single(nil))
+                    } else {
+                        if let accountContext = appDelegate?.activeContext(for: account.id) {
+                            showCallWindow(PCallSession(accountContext: accountContext, account: account, isOutgoing: false, peerId: state.peerId, id: state.id, initialState: nil, startWithVideo: state.isVideo, isVideoPossible: state.isVideoPossible, data: initialData))
                         }
                     }
                 })

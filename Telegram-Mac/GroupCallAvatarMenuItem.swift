@@ -13,7 +13,7 @@ import Postbox
 import SwiftSignalKit
 
 
-private final class PhotoOrVideoView: View {
+private final class PhotoOrVideoView: View, SlideViewProtocol {
     private let imageView: TransformImageView
     
     
@@ -26,6 +26,13 @@ private final class PhotoOrVideoView: View {
         imageView = TransformImageView(frame: frameRect.size.bounds)
         super.init(frame: frameRect)
         addSubview(imageView)
+    }
+    
+    func willAppear() {
+        
+    }
+    func willDisappear() {
+        
     }
     
     override func layout() {

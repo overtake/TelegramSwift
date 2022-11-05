@@ -31,14 +31,14 @@ extension ChatListFilterPeerCategories {
 
 final class TelegramFilterCategory : Peer {
     
-    
+    var timeoutAttribute: UInt32? 
     
     var id: PeerId
     
     var indexName: PeerIndexNameRepresentation
     
     var associatedPeerId: PeerId?
-    
+    var associatedMediaIds: [MediaId]?
     var notificationSettingsPeerId: PeerId?
     
     func isEqual(_ other: Peer) -> Bool {
@@ -52,7 +52,7 @@ final class TelegramFilterCategory : Peer {
     
     init(category: ChatListFilterPeerCategories) {
         self.id = PeerId(namespace: Namespaces.Peer.Empty, id: PeerId.Id._internalFromInt64Value(Int64(category.rawValue)))
-        self.indexName = .title(title: "", addressName: "")
+        self.indexName = .title(title: "", addressNames: [""])
         self.notificationSettingsPeerId = nil
         self.category = category
     }
@@ -116,12 +116,27 @@ final class TelegramFilterCategory : Peer {
     
     init(decoder: PostboxDecoder) {
         self.id = PeerId(0)
-        self.indexName = .title(title: "", addressName: "")
+        self.indexName = .title(title: "", addressNames: [""])
         self.notificationSettingsPeerId = nil
         self.category = []
     }
     func encode(_ encoder: PostboxEncoder) {
         
+    }
+}
+
+extension CachedPeerData {
+    var photo: TelegramMediaImage? {
+        if let data = self as? CachedUserData {
+            return data.photo
+        }
+        if let data = self as? CachedChannelData {
+            return data.photo
+        }
+        if let data = self as? CachedGroupData {
+            return data.photo
+        }
+        return nil
     }
 }
 
@@ -143,16 +158,28 @@ extension Peer {
     }
     
     
+    var hasVideo: Bool {
+        if let image = self.profileImageRepresentations.first {
+            return image.hasVideo
+        }
+        return false
+    }
     
-    
-    func canSendMessage(_ isThreadMode: Bool = false) -> Bool {
+    func canSendMessage(_ isThreadMode: Bool = false, threadData: MessageHistoryThreadData? = nil) -> Bool {
         if self.id == repliesPeerId {
             return false
         }
         if let channel = self as? TelegramChannel {
             if case .broadcast(_) = channel.info {
                 return channel.hasPermission(.sendMessages)
-            } else if case .group = channel.info  {
+            } else if case .group = channel.info {
+                
+                if let data = threadData {
+                    if data.isClosed, channel.adminRights == nil && !channel.flags.contains(.isCreator) && !data.isOwnedByMe {
+                        return false
+                    }
+                }
+                
                 switch channel.participationStatus {
                 case .member:
                     return !channel.hasBannedRights(.banSendMessages)
@@ -321,4 +348,36 @@ extension Peer {
         }
     }
     
+    
+    var isPremium: Bool {
+        if let peer = self as? TelegramUser {
+            return peer.flags.contains(.isPremium)
+        } else {
+            return false
+        }
+    }
+    
+    var isForum: Bool {
+        if let channel = self as? TelegramChannel {
+            return channel.flags.contains(.isForum)
+        } else {
+            return false
+        }
+    }
+    
+    
+}
+
+extension PeerId {
+    static func _optionalInternalFromInt64Value(_ id: Int64) -> PeerId.Id? {
+        let peerId = PeerId.Id._internalFromInt64Value(id)
+        if id < 0 {
+            if let _ = Int32(exactly: id) {
+                return peerId
+            } else {
+                return nil
+            }
+        }
+        return peerId
+    }
 }

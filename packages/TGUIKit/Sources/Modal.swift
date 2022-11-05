@@ -427,6 +427,10 @@ private class ModalContainerView: View {
     fileprivate override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
     }
+    override func cursorUpdate(with event: NSEvent) {
+        super.cursorUpdate(with: event)
+        NSCursor.arrow.set()
+    }
 }
 
 extension Modal : ObservableViewDelegate {
@@ -939,6 +943,15 @@ public func closeAllModals(window: Window? = nil) {
             }
         }
     }
+}
+
+public func findModal<T>(_ t: T.Type) -> T? where T:ModalViewController {
+    for modal in activeModals {
+        if let controller = modal.value?.controller, type(of: controller) == t {
+            return controller as? T
+        }
+    }
+    return nil
 }
 
 public enum ModalAnimationType {

@@ -19,14 +19,12 @@ private final class GroupPeersArguments {
     let promote:(ChannelParticipant)->Void
     let restrict:(ChannelParticipant)->Void
     let showMore:()->Void
-    let chatPreview:(PeerId)->Void
-    init(context: AccountContext, removePeer:@escaping(PeerId)->Void, showMore: @escaping()->Void, promote:@escaping(ChannelParticipant)->Void, restrict:@escaping(ChannelParticipant)->Void, chatPreview:@escaping(PeerId)->Void) {
+    init(context: AccountContext, removePeer:@escaping(PeerId)->Void, showMore: @escaping()->Void, promote:@escaping(ChannelParticipant)->Void, restrict:@escaping(ChannelParticipant)->Void) {
         self.context = context
         self.removePeer = removePeer
         self.promote = promote
         self.restrict = restrict
         self.showMore = showMore
-        self.chatPreview = chatPreview
     }
     
     func peerInfo(_ peerId:PeerId) {
@@ -107,11 +105,11 @@ private func groupPeersEntries(state: GroupPeersState, isEditing: Bool, view: Pe
                         interactionType = .plain
                     }
                     
-                    return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.context.account, stableId: stableId, enabled: enabled, height: 36 + 16, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset: NSEdgeInsets(left: 0, right: 0), interactionType: interactionType, generalType: .context(label), viewType: viewType, action:{
+                    return ShortPeerRowItem(initialSize, peer: peer!, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: enabled, height: 36 + 16, photoSize: NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(12.5), foregroundColor: theme.colors.text), statusStyle: ControlStyle(font: NSFont.normal(12.5), foregroundColor:color), status: string, inset: NSEdgeInsets(left: 0, right: 0), interactionType: interactionType, generalType: .context(label), viewType: viewType, action:{
                         arguments.peerInfo(peer!.id)
                     }, contextMenuItems: {
                         return .single(menuItems)
-                    }, inputActivity: inputActivity)
+                    }, inputActivity: inputActivity, highlightVerified: true)
                 }))
                 index += 1
             case let .showMore(_, _, viewType):
@@ -532,8 +530,6 @@ func PeerMediaGroupPeersController(context: AccountContext, peerId: PeerId, edit
         showModal(with: RestrictedModalViewController(context, peerId: peerId, memberId: participant.peerId, initialParticipant: participant, updated: { updatedRights in
             _ = context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: participant.peerId, bannedRights: updatedRights).start()
         }), for: context.window)
-    }, chatPreview: { peerId in
-        showModal(with: ChatModalPreviewController(location: .peer(peerId), context: context), for: context.window)
     })
     
     let dataSignal = combineLatest(queue: prepareQueue, statePromise.get(), context.account.postbox.peerView(id: peerId), channelMembersPromise.get(), inputActivity, editing) |> map {

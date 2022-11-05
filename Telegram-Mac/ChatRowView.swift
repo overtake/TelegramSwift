@@ -55,10 +55,12 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     private var forwardAccessory: ChatBubbleAccessoryForward? = nil
     private var viaAccessory: ChatBubbleViaAccessory? = nil
     
+    private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
+    
     let bubbleView = ChatMessageBubbleBackdrop()
     
-    private var scamButton: ImageButton? = nil
-    private var scamForwardButton: ImageButton? = nil
+    private var statusControl: PremiumStatusControl? = nil
+    private var forwardStatusControl: PremiumStatusControl? = nil
     
     private var psaButton: ImageButton? = nil
     
@@ -483,7 +485,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             rect.origin = NSMakePoint((hasBubble ? bubbleFrame.maxX : contentFrame.maxX) - rightSize.width - item.bubbleContentInset - (item.isIncoming ? 0 : item.additionBubbleInset), bubbleFrame.maxY - rightSize.height - 6 - (item.isStateOverlayLayout && !hasBubble ? 2 : 0))
             
             if item.isStateOverlayLayout {
-                if item.isInstantVideo {
+                if item is ChatVideoMessageItem {
                     rect.origin.y = contentFrame.maxY - rect.height - 3
                 } else {
                     rect.origin.x += 5
@@ -491,8 +493,12 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     rect.origin.x = max(20, rect.origin.x)
                 }
             }
-            if item is ChatVideoMessageItem {
-                rect.origin.x = item.isIncoming ? contentFrame.maxX - 40 : contentFrame.maxX - rightSize.width
+            if let item = item as? ChatVideoMessageItem {
+                if item.canTranscribe, item.isIncoming {
+                    rect.origin.x = contentFrame.maxX + 5
+                } else {
+                    rect.origin.x = item.isIncoming ? contentFrame.maxX - 40 : contentFrame.maxX - rightSize.width
+                }
                 rect.origin.y += 3
             }
             if let item = item as? ChatMessageItem {
@@ -616,12 +622,12 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
     }
     
-    func scamPoint(_ item: ChatRowItem) -> NSPoint {
+    func statusPoint(_ item: ChatRowItem) -> NSPoint {
         guard let authorText = item.authorText else {return NSZeroPoint}
         
         var point = self.namePoint(item)
-        point.x += authorText.layoutSize.width + 3
-        point.y += 1
+        point.x += authorText.layoutSize.width + 1
+//        point.y += 1
         return point
     }
     
@@ -640,7 +646,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         return point
     }
     
-    func scamForwardPoint(_ item: ChatRowItem) -> NSPoint {
+    func statusForwardPoint(_ item: ChatRowItem) -> NSPoint {
         guard let forwardName = item.forwardNameLayout else {return NSZeroPoint}
         
         var point = self.forwardNamePoint(item)
@@ -654,6 +660,11 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         let bubbleFrame = self.bubbleFrame(item)
         let namePoint = self.namePoint(item)
         var point = NSMakePoint( item.isBubbled ? bubbleFrame.maxX - item.bubbleContentInset - adminBadge.layoutSize.width : namePoint.x + authorText.layoutSize.width, item.defaultContentTopOffset + 1)
+        
+        if !item.isBubbled {
+            point.x += max(0, item.statusSize - 2)
+        }
+
         if item.isBubbled {
             point.y -= item.topInset
         }
@@ -784,10 +795,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     static func makePhotoView(_ item: ChatRowItem) -> NSView {
-        let avatar = AvatarControl(font: .avatar(.text))
+        let avatar = ChatAvatarView(frame: NSMakeSize(36, 36).bounds)
         avatar.setFrameSize(36,36)
         if let peer = item.peer {
-            avatar.setPeer(account: item.context.account, peer: peer, message: item.message)
+            avatar.setPeer(context: item.context, peer: peer, message: item.message)
         }
         return avatar
     }
@@ -838,47 +849,49 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
-    func fillScamButton(_ item: ChatRowItem, animated: Bool) -> Void {
-        if item.isScam || item.isFake, item.canFillAuthorName {
-            if scamButton == nil {
-                let text: String = !item.isScam ? strings().peerInfoFakeWarning : strings().peerInfoScamWarning
-                scamButton = ImageButton(frame: CGRect(origin: scamPoint(item), size: item.badIcon.backingSize))
-                scamButton?.autohighlight = false
-                rowView.addSubview(scamButton!)
-                scamButton?.set(handler: { control in
-                    tooltip(for: control, text: text)
-                }, for: .Click)
+    func fillStatus(_ item: ChatRowItem, animated: Bool) -> Void {
+        
+        if let status = item.status(self.statusControl, animated: animated) {
+            rowView.addSubview(status)
+            if self.statusControl == nil {
+                status.setFrameOrigin(statusPoint(item))
             }
-            scamButton?.set(image: item.badIcon, for: .Normal)
+            self.statusControl = status
             
-        } else {
-            if let view = scamButton {
-                performSubviewRemoval(view, animated: animated, scale: true)
-                scamButton = nil
-            }
+            status.userInteractionEnabled = true
+            status.removeAllHandlers()
+            status.set(handler: { [weak item] _ in
+                item?.openInfo()
+            }, for: .Click)
+            
+        } else if let view = statusControl {
+            performSubviewRemoval(view, animated: animated)
+            self.statusControl = nil
         }
     }
     
-    func fillScamForwardButton(_ item: ChatRowItem, animated: Bool) -> Void {
-        if item.isForwardScam || item.isForwardFake {
-            if scamForwardButton == nil {
-                let text: String = !item.isForwardScam ? strings().peerInfoFakeWarning : strings().peerInfoScamWarning
-                scamForwardButton = ImageButton(frame: CGRect(origin: scamForwardPoint(item), size: item.forwardBadIcon.backingSize))
-                scamForwardButton?.autohighlight = false
-                rowView.addSubview(scamForwardButton!)
-                scamForwardButton?.set(handler: { control in
-                    tooltip(for: control, text: text)
-                }, for: .Click)
-            }
-            scamForwardButton?.set(image: item.forwardBadIcon, for: .Normal)
-            
-        } else {
-            if let view = scamForwardButton {
-                performSubviewRemoval(view, animated: animated, scale: true)
-                scamForwardButton = nil
-            }
-        }
+    func fillForwardStatus(_ item: ChatRowItem, animated: Bool) -> Void {
+//        if item.isForwardScam || item.isForwardFake {
+//            if scamForwardButton == nil {
+//                let text: String = !item.isForwardScam ? strings().peerInfoFakeWarning : strings().peerInfoScamWarning
+//                scamForwardButton = ImageButton(frame: CGRect(origin: statusForwardPoint(item), size: item.forwardBadIcon.backingSize))
+//                scamForwardButton?.autohighlight = false
+//                rowView.addSubview(scamForwardButton!)
+//                scamForwardButton?.set(handler: { control in
+//                    tooltip(for: control, text: text)
+//                }, for: .Click)
+//            }
+//            scamForwardButton?.set(image: item.forwardBadIcon, for: .Normal)
+//
+//        } else {
+//            if let view = scamForwardButton {
+//                performSubviewRemoval(view, animated: animated, scale: true)
+//                scamForwardButton = nil
+//            }
+//        }
     }
+
+
     
     func fillCaption(_ item:ChatRowItem, animated: Bool) -> Void {
         
@@ -913,8 +926,86 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 captionViews.move(at: index, to: i)
             }
             view?.view.update(layout.layout)
+            
+            if let view = view {
+                updateInlineStickers(context: item.context, view: view.view, textLayout: layout.layout)
+            }
         }
     }
+
+    
+    
+    override func updateAnimatableContent() -> Void {
+        for (_, value) in inlineStickerItemViews {
+            if let superview = value.superview {
+                var isKeyWindow: Bool = false
+                if let window = self.window {
+                    if !window.canBecomeKey {
+                        isKeyWindow = true
+                    } else {
+                        isKeyWindow = window.isKeyWindow
+                    }
+                }
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
+            }
+        }
+    }
+    
+    
+    func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
+        var validIds: [InlineStickerItemLayer.Key] = []
+        var index: Int = textView.hashValue
+
+        for item in textLayout.embeddedItems {
+            if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
+                
+                let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index)
+                validIds.append(id)
+                
+                
+                let rect: NSRect
+                if textLayout.isBigEmoji {
+                    rect = item.rect
+                } else {
+                    rect = item.rect.insetBy(dx: -2, dy: -2)
+                }
+                
+                let view: InlineStickerItemLayer
+                if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
+                    view = current
+                } else {
+                    self.inlineStickerItemViews[id]?.removeFromSuperlayer()
+                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size)
+                    self.inlineStickerItemViews[id] = view
+                    view.superview = textView
+                    textView.addEmbeddedLayer(view)
+                }
+                index += 1
+                var isKeyWindow: Bool = false
+                if let window = window {
+                    if !window.canBecomeKey {
+                        isKeyWindow = true
+                    } else {
+                        isKeyWindow = window.isKeyWindow
+                    }
+                }
+                view.isPlayable = NSIntersectsRect(rect, textView.visibleRect) && isKeyWindow
+                view.frame = rect
+            }
+        }
+        
+        var removeKeys: [InlineStickerItemLayer.Key] = []
+        for (key, itemLayer) in self.inlineStickerItemViews {
+            if !validIds.contains(key) {
+                removeKeys.append(key)
+                itemLayer.removeFromSuperlayer()
+            }
+        }
+        for key in removeKeys {
+            self.inlineStickerItemViews.removeValue(forKey: key)
+        }
+    }
+
     
     func reactionsRect(_ item: ChatRowItem) -> CGRect {
         guard let reactionsLayout = item.reactionsLayout else {
@@ -925,7 +1016,15 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         var frame = NSMakeRect(contentFrame.minX + item.elementsContentInset, contentFrame.maxY + item.defaultReplyMarkupInset, reactionsLayout.size.width, reactionsLayout.size.height)
         
         if let captionLayout = item.captionLayouts.first?.layout {
-            frame.origin.y += captionLayout.layoutSize.height + item.defaultContentInnerInset
+            var ignore: Bool = false
+            if let item = item as? ChatGroupedItem, !item.isBubbled {
+                if item.layoutType == .files {
+                    ignore = true
+                }
+            }
+            if !ignore {
+                frame.origin.y += captionLayout.layoutSize.height + item.defaultContentInnerInset
+            }
         }
         
         let bubbleFrame = self.bubbleFrame(item)
@@ -949,11 +1048,14 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             }
            
         } else if item.isBubbled {
-            if let item = item as? ChatMessageItem {
-                if item.containsBigEmoji {
-                    frame.origin.y += rightFrame(item).height
-                } 
+            if item.isBigEmoji {
+                frame.origin.y = bubbleFrame.maxY + item.defaultReactionsInset
             }
+//            if let item = item as? ChatMessageItem {
+//                if item.containsBigEmoji {
+//                    frame.origin.y += rightFrame(item).height
+//                }
+//            }
         } else if let replyMarkup = item.replyMarkupModel {
             frame.origin.y += replyMarkup.size.height + item.defaultContentInnerInset
         }
@@ -1281,7 +1383,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     enum ScreenEffectMode {
         case effect
-        case reaction(String)
+        case reaction(MessageReaction.Reaction)
     }
     func getScreenEffectView(_ mode: ScreenEffectMode) -> NSView? {
         switch mode {
@@ -1374,7 +1476,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 let rect: NSRect
                 let tempRect: NSRect
             }
-            var views:[NSView] = [self.rightView, self.nameView, self.scamButton, self.replyView, self.adminBadge, self.forwardName, self.scamForwardButton, self.viaAccessory].compactMap { $0 }
+            var views:[NSView] = [self.rightView, self.nameView, self.statusControl, self.forwardStatusControl, self.replyView, self.adminBadge, self.forwardName, self.viaAccessory].compactMap { $0 }
             views.append(contentsOf: self.captionViews.map { $0.view })
             let shakeItems = views.map { view -> ShakeItem in
                 return ShakeItem(view: view, rect: view.frame, tempRect: self.bubbleView.convert(view.frame, from: view.superview))
@@ -1446,8 +1548,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         fillName(item, animated: animated)
         fillForward(item, animated: animated)
         fillPhoto(item, animated: animated)
-        fillScamButton(item, animated: animated)
-        fillScamForwardButton(item, animated: animated)
+        fillStatus(item, animated: animated)
+        fillForwardStatus(item, animated: animated)
         fillPsaButton(item, animated: animated)
         fillShareView(item, animated: animated)
         fillReactions(item, animated: animated)
@@ -1459,6 +1561,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         self.needsDisplay = true
         self.rowView.needsDisplay = true
         self.needsLayout = true
+        
 
     }
 
@@ -1466,18 +1569,25 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         return self.contentView
     }
     
-    override func doubleClick(in location: NSPoint) {
-        if let item = self.item as? ChatRowItem, item.chatInteraction.presentation.state == .normal {
+    func isAllowedToDoubleAction(_ location: NSPoint) -> Bool {
+        if let item = self.item as? ChatRowItem, item.chatInteraction.presentation.canReplyInRestrictedMode {
             if self.hitTest(location) == nil || self.hitTest(location) == self || !clickInContent(point: location) || self.hitTest(location) == rowView || self.hitTest(location) == bubbleView || self.hitTest(location) == replyView {
                 if let avatar = avatar {
                     if NSPointInRect(location, avatar.frame) {
-                        return
+                        return false
                     }
                 }
                 if let message = item.message, canReplyMessage(message, peerId: item.chatInteraction.peerId, mode: item.chatInteraction.mode) {
-                    item.chatInteraction.setupReplyMessage(item.message?.id)
+                    return true
                 }
             }
+        }
+        return false
+    }
+    
+    override func doubleClick(in location: NSPoint) {
+        if let item = self.item as? ChatRowItem, isAllowedToDoubleAction(location) {
+            item.chatInteraction.setupReplyMessage(item.message?.id)
         }
     }
     
@@ -1521,11 +1631,11 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             transition.updateFrame(view: view, frame: replyFrame(item))
             view.needsDisplay = true
         }
-        if let view = scamButton {
-            transition.updateFrame(view: view, frame: CGRect(origin: scamPoint(item), size: view.frame.size))
+        if let view = statusControl {
+            transition.updateFrame(view: view, frame: CGRect(origin: statusPoint(item), size: view.frame.size))
         }
-        if let view = scamForwardButton {
-            transition.updateFrame(view: view, frame: CGRect(origin: scamForwardPoint(item), size: view.frame.size))
+        if let view = forwardStatusControl {
+            transition.updateFrame(view: view, frame: CGRect(origin: statusForwardPoint(item), size: view.frame.size))
         }
         
         if let view = psaButton {
@@ -1596,10 +1706,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     override func forceClick(in location: NSPoint) {
-        guard let item = item as? ChatRowItem else { return }
-        
-        
-        if let item = self.item as? ChatRowItem, item.chatInteraction.presentation.state == .normal {
+            
+        if let item = self.item as? ChatRowItem, item.chatInteraction.presentation.state != .editing {
             if self.hitTest(location) == nil || self.hitTest(location) == self || !clickInContent(point: location) || self.hitTest(location) == rowView || self.hitTest(location) == bubbleView || self.hitTest(location) == replyView {
                 if let avatar = avatar {
                     if NSPointInRect(location, avatar.frame) {
@@ -1653,6 +1761,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 item.chatInteraction.add(observer: self)
             }
         }
+
     }
     
     

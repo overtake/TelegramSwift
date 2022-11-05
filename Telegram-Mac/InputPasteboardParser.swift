@@ -16,7 +16,7 @@ import TGUIKit
 class InputPasteboardParser: NSObject {
 
     
-     public class func getPasteboardUrls(_ pasteboard: NSPasteboard) -> Signal<[URL], NoError> {
+    public class func getPasteboardUrls(_ pasteboard: NSPasteboard, context: AccountContext) -> Signal<[URL], NoError> {
         let items = pasteboard.pasteboardItems
         
         if let items = items, !items.isEmpty {
@@ -57,10 +57,10 @@ class InputPasteboardParser: NSObject {
             
             
             files = files.filter { path -> Bool in
-                if let size = fs(path.path) {
-                    return size <= 2000 * 1024 * 1024
+                if let size = fileSize(path.path) {
+                    let exceed = fileSizeLimitExceed(context: context, fileSize: size)
+                    return exceed
                 }
-                
                 return false
             }
             
@@ -76,7 +76,7 @@ class InputPasteboardParser: NSObject {
         return .single([])
     }
     
-    public class func canProccessPasteboard(_ pasteboard:NSPasteboard) -> Bool {
+    public class func canProccessPasteboard(_ pasteboard:NSPasteboard, context: AccountContext) -> Bool {
         let items = pasteboard.pasteboardItems
         
         if let items = items, !items.isEmpty {
@@ -107,9 +107,9 @@ class InputPasteboardParser: NSObject {
             
             files = files.filter { path -> Bool in
                 if let size = fileSize(path.path) {
-                    return size <= 2000 * 1024 * 1024
+                    let exceed = fileSizeLimitExceed(context: context, fileSize: size)
+                    return exceed
                 }
-                
                 return false
             }
             
@@ -143,25 +143,6 @@ class InputPasteboardParser: NSObject {
                 if let path = path, let url = URL(string: path) {
                     files.append(url)
                 }
-//                if let type = item.availableType(from: [.html]), let data = item.data(forType: type) {
-//                    let attributed = NSAttributedString(html: data, documentAttributes: nil)
-//                    if let attributed = attributed, let attachment = attributed.attribute(.attachment, at: 0, effectiveRange: nil) as? NSTextAttachment {
-//
-//                        if let fileWrapper = attachment.fileWrapper, let fileName = fileWrapper.preferredFilename, fileWrapper.isRegularFile {
-//                            if let data = fileWrapper.regularFileContents {
-//                                let url = URL(fileURLWithPath: NSTemporaryDirectory() + "\(arc4random())_" + fileName)
-//                                do {
-//                                    try data.write(to: url)
-//                                    files.append(url)
-//                                } catch {
-//
-//                                }
-//
-//                            }
-//                        }
-//                    }
-//                }
-                
             }
             
             var image:NSImage? = nil
@@ -183,25 +164,30 @@ class InputPasteboardParser: NSObject {
                 }
             }
             
-            
             if let _ = items[0].types.firstIndex(of: NSPasteboard.PasteboardType(rawValue: "com.microsoft.appbundleid")) {
                 return true
             }
             
             let previous = files.count
+            var exceedSize: Int64?
+
+            
             
             files = files.filter { path -> Bool in
                 if let size = fileSize(path.path) {
-                    return size <= 2000 * 1024 * 1024
+                    let exceed = fileSizeLimitExceed(context: chatInteraction.context, fileSize: size)
+                    if exceed {
+                        exceedSize = size
+                    }
+                    return exceed
                 }
-                
                 return false
             }
             
             let afterSizeCheck = files.count
             
             if afterSizeCheck == 0 && previous != afterSizeCheck {
-                alert(for: mainWindow, info: strings().appMaxFileSize1)
+                showFileLimit(context: chatInteraction.context, fileSize: exceedSize)
                 return false
             }
             if let peer = chatInteraction.presentation.peer, let permissionText = permissionText(from: peer, for: .banSendMedia) {

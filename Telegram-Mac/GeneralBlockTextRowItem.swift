@@ -22,15 +22,20 @@ class GeneralBlockTextRowItem: GeneralRowItem {
     fileprivate let textLayout: TextViewLayout
     fileprivate let header: GeneralBlockTextHeader?
     fileprivate let headerLayout: TextViewLayout?
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, text: String, font: NSFont, color: NSColor = theme.colors.text, header: GeneralBlockTextHeader? = nil) {
-        self.textLayout = TextViewLayout(.initialize(string: text, color: color, font: font), alwaysStaticItems: false)
+    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType, text: String, font: NSFont, color: NSColor = theme.colors.text, header: GeneralBlockTextHeader? = nil, insets: NSEdgeInsets = NSEdgeInsets(left: 30, right: 30)) {
+        
+        let attr = NSMutableAttributedString()
+        _ = attr.append(string: text, color: color, font: font)
+        attr.detectBoldColorInString(with: .medium(font.pointSize))
+        
+        self.textLayout = TextViewLayout(attr, alwaysStaticItems: false)
         self.header = header
         if let header = header {
             self.headerLayout = TextViewLayout(.initialize(string: header.text, color: color, font: .medium(.title)), maximumNumberOfLines: 3)
         } else {
             self.headerLayout = nil
         }
-        super.init(initialSize, stableId: stableId, viewType: viewType)
+        super.init(initialSize, stableId: stableId, viewType: viewType, inset: insets)
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {

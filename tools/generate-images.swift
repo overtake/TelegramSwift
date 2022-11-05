@@ -216,7 +216,6 @@ func initialize() -> [String] {
     array.append("chatMentionActive")
     array.append("sliderControl")
     array.append("sliderControlActive")
-    array.append("stickersTabFave")
     array.append("chatInstantView")
     array.append("chatInstantViewBubble_incoming")
     array.append("chatInstantViewBubble_outgoing")
@@ -242,6 +241,7 @@ func initialize() -> [String] {
     array.append("settingsWallet")
     array.append("settingsUpdate")
     array.append("settingsFilters")
+    array.append("settingsPremium")
     array.append("settingsAskQuestionActive")
     array.append("settingsFaqActive")
     array.append("settingsGeneralActive")
@@ -407,6 +407,7 @@ func initialize() -> [String] {
     array.append("entertainment_Search")
     array.append("entertainment_Settings")
     array.append("entertainment_SearchCancel")
+    array.append("entertainment_AnimatedEmoji")
     array.append("scheduledAvatar")
     array.append("scheduledInputAction")
     array.append("verifyDialog")
@@ -529,6 +530,13 @@ func initialize() -> [String] {
     
     array.append("stickers_add_featured")
     array.append("stickers_add_featured_unread")
+    
+    array.append("stickers_add_featured_active")
+    array.append("stickers_add_featured_unread_active")
+
+    
+    array.append("stickers_favorite")
+    array.append("stickers_favorite_active")
 
     array.append("channel_info_promo")
     array.append("channel_info_promo_bubble_incoming")
@@ -552,7 +560,11 @@ func initialize() -> [String] {
 
     
     array.append("gif_trending")
-    
+    array.append("gif_trending_active")
+
+    array.append("gif_recent")
+    array.append("gif_recent_active")
+
     
     array.append("chat_list_thumb_play")
 
@@ -623,6 +635,7 @@ func initialize() -> [String] {
     array.append("profile_channel_sign")
     array.append("profile_channel_type")
     array.append("profile_group_type")
+    array.append("profile_group_topics")
     array.append("profile_group_destruct")
     array.append("profile_group_discussion")
     
@@ -721,6 +734,7 @@ func initialize() -> [String] {
     array.append("reactions_badge_archive")
     array.append("reactions_badge_archive_active")
 
+    array.append("reactions_show_more")
     
     array.append("chat_reactions_badge")
     array.append("chat_reactions_badge_active")
@@ -734,6 +748,48 @@ func initialize() -> [String] {
     array.append("gallery_pip_play")
     
     array.append("notification_sound_add")
+    
+    array.append("premium_lock")
+    array.append("premium_lock_gray")
+    array.append("premium_plus")
+
+    array.append("premium_account")
+    array.append("premium_account_active")
+
+    array.append("premium_account_rev")
+    array.append("premium_account_rev_active")
+    
+    array.append("premium_account_small")
+    array.append("premium_account_small_active")
+    array.append("premium_account_small_rev")
+    array.append("premium_account_small_rev_active")
+    array.append("premium_reaction_lock")
+    array.append("premium_boarding_feature_next")
+    array.append("premium_stickers")
+    array.append("premium_emoji_lock")
+    
+    
+    array.append("account_add_account")
+    array.append("account_set_status")
+    array.append("account_change_status")
+    
+    
+    array.append("chat_premium_status_red")
+    array.append("chat_premium_status_orange")
+    array.append("chat_premium_status_violet")
+    array.append("chat_premium_status_green")
+    array.append("chat_premium_status_cyan")
+    array.append("chat_premium_status_light_blue")
+    array.append("chat_premium_status_blue")
+
+    
+    array.append("extend_content_lock")
+    
+    array.append("chatlist_forum_closed_topic")
+    array.append("chatlist_forum_closed_topic_active")
+    
+    array.append("chatlist_arrow")
+    array.append("chatlist_arrow_active")
 
     return array
 }

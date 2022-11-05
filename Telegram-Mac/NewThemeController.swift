@@ -12,7 +12,7 @@ import SwiftSignalKit
 import TelegramCore
 import ColorPalette
 import ThemeSettings
-
+import Postbox
 
 private let _id_input_name = InputDataIdentifier("_id_input_name")
 
@@ -81,7 +81,7 @@ func NewThemeController(context: AccountContext, palette: ColorPalette) -> Input
             
             let temp = NSTemporaryDirectory() + "\(arc4random()).palette"
             try? palette.toString.write(to: URL(fileURLWithPath: temp), atomically: true, encoding: .utf8)
-            let resource = LocalFileReferenceMediaResource(localFilePath: temp, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true, size: fs(temp))
+            let resource = LocalFileReferenceMediaResource(localFilePath: temp, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true, size: fileSize(temp))
             var thumbnailData: Data? = nil
             let preview = generateThemePreview(for: palette, wallpaper: theme.wallpaper.wallpaper, backgroundMode: theme.backgroundMode)
             if let mutableData = CFDataCreateMutable(nil, 0), let destination = CGImageDestinationCreateWithData(mutableData, "public.png" as CFString, 1, nil) {
@@ -91,24 +91,6 @@ func NewThemeController(context: AccountContext, palette: ColorPalette) -> Input
                     thumbnailData = data
                 }
             }
-//            let baseTheme: TelegramBaseTheme?
-//            switch palette.parent {
-//            case .day:
-//                baseTheme = .day
-//            case .dayClassic:
-//                baseTheme = .classic
-//            case .nightAccent:
-//                baseTheme = .night
-//            default:
-//                baseTheme = nil
-//            }
-//            let settings: TelegramThemeSettings?
-//            if let baseTheme = baseTheme {
-//                settings = .init(baseTheme: baseTheme, accentColor: Int32(palette.accent.rgb), messageColors: (top: Int32(palette.bubbleBackground_outgoing.rgb), Int32(palette.bubbleBackground_outgoing.rgb)), wallpaper: nil)
-//            } else {
-//                settings = nil
-//            }
-//
             disposable.set(showModalProgress(signal: createTheme(account: context.account, title: name, resource: resource, thumbnailData: thumbnailData, settings: nil)
                 |> filter { value in
                     switch value {

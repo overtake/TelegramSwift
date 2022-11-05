@@ -29,16 +29,26 @@ public struct System {
     
     public static var legacyMenu: Bool = true
     
-    public static var scaleFactor: Atomic<CGFloat> = Atomic(value: 2.0)
+    private static var scaleFactor: Atomic<CGFloat> = Atomic(value: 2.0)
+    private static var safeScaleFactor: CGFloat = 2.0
+    public static func updateScaleFactor(_ value: CGFloat) {
+        _ = scaleFactor.modify { _ in
+            safeScaleFactor = value
+            return value
+        }
+        
+    }
+    
+    
     
     public static var isRetina:Bool {
         get {
-            return scaleFactor.modify({$0}) >= 2.0
+            return safeScaleFactor >= 2.0
         }
     }
     
     public static var backingScale:CGFloat {
-        return CGFloat(scaleFactor.modify({$0}))
+        return safeScaleFactor
     }
     public static var aspectRatio: CGFloat {
         let frame = NSScreen.main?.frame ?? .zero

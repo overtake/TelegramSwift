@@ -89,7 +89,7 @@ public func ==(lhs: ImageCorners, rhs: ImageCorners) -> Bool {
     return lhs.topLeft == rhs.topLeft && lhs.topRight == rhs.topRight && lhs.bottomLeft == rhs.bottomLeft && lhs.bottomRight == rhs.bottomRight
 }
 
-public enum TransformImageResizeMode {
+public enum TransformImageResizeMode : Hashable {
     case fill(NSColor)
     case blurBackground
     case none
@@ -97,12 +97,13 @@ public enum TransformImageResizeMode {
     case imageColor(NSColor)
 }
 
-public enum TransformImageEmptyColor : Equatable {
+public enum TransformImageEmptyColor : Equatable, Hashable {
     case color(NSColor)
+    case fill(NSColor)
     case gradient(colors: [NSColor], intensity: CGFloat, rotation: Int32?)
 }
 
-public struct TransformImageArguments: Equatable {
+public struct TransformImageArguments: Equatable, Hashable {
     public let corners: ImageCorners
     
     public let imageSize: NSSize
@@ -111,6 +112,29 @@ public struct TransformImageArguments: Equatable {
     public let resizeMode: TransformImageResizeMode
     public let emptyColor: TransformImageEmptyColor?
     public let scale: CGFloat
+    public let mirror: Bool
+    public let someObject: Int
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(imageSize.width)
+        hasher.combine(imageSize.height)
+        hasher.combine(boundingSize.height)
+        hasher.combine(boundingSize.width)
+        hasher.combine(scale)
+        hasher.combine(mirror)
+        hasher.combine(someObject)
+        if let emptyColor = emptyColor {
+            hasher.combine(emptyColor)
+        }
+        hasher.combine(resizeMode)
+        
+        hasher.combine(intrinsicInsets.top)
+        hasher.combine(intrinsicInsets.left)
+        hasher.combine(intrinsicInsets.right)
+        hasher.combine(intrinsicInsets.bottom)
+
+    }
+    
     public var drawingSize: CGSize {
         let cornersExtendedEdges = self.corners.extendedEdges
         return CGSize(width: max(self.boundingSize.width + cornersExtendedEdges.left + cornersExtendedEdges.right + self.intrinsicInsets.left + self.intrinsicInsets.right, 1), height: max(self.boundingSize.height + cornersExtendedEdges.top + cornersExtendedEdges.bottom + self.intrinsicInsets.top + self.intrinsicInsets.bottom, 1))
@@ -126,7 +150,7 @@ public struct TransformImageArguments: Equatable {
         return NSEdgeInsets(top: cornersExtendedEdges.top + self.intrinsicInsets.top, left: cornersExtendedEdges.left + self.intrinsicInsets.left, bottom: cornersExtendedEdges.bottom + self.intrinsicInsets.bottom, right: cornersExtendedEdges.right + self.intrinsicInsets.right)
     }
     
-    public init(corners:ImageCorners, imageSize:NSSize, boundingSize:NSSize, intrinsicInsets:NSEdgeInsets, resizeMode: TransformImageResizeMode = .none, emptyColor: TransformImageEmptyColor? = nil, scale: CGFloat = System.backingScale) {
+    public init(corners:ImageCorners, imageSize:NSSize, boundingSize:NSSize, intrinsicInsets:NSEdgeInsets, resizeMode: TransformImageResizeMode = .none, emptyColor: TransformImageEmptyColor? = nil, scale: CGFloat = System.backingScale, someObject: Int = 0, mirror: Bool = false) {
         self.corners = corners
         let min = corners.topLeft.corner + corners.topRight.corner
         self.imageSize = NSMakeSize(max(imageSize.width, min), max(imageSize.height, min))
@@ -135,11 +159,13 @@ public struct TransformImageArguments: Equatable {
         self.resizeMode = resizeMode
         self.emptyColor = emptyColor
         self.scale = scale
+        self.someObject = someObject
+        self.mirror = mirror
     }
 }
 
 public func ==(lhs: TransformImageArguments, rhs: TransformImageArguments) -> Bool {
-    return lhs.imageSize == rhs.imageSize && lhs.boundingSize == rhs.boundingSize && lhs.corners == rhs.corners && lhs.emptyColor == rhs.emptyColor && lhs.scale == rhs.scale
+    return lhs.imageSize == rhs.imageSize && lhs.boundingSize == rhs.boundingSize && lhs.corners == rhs.corners && lhs.emptyColor == rhs.emptyColor && lhs.scale == rhs.scale && lhs.someObject == rhs.someObject && lhs.mirror == rhs.mirror
 }
 
 

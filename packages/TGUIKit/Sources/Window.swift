@@ -561,6 +561,9 @@ open class Window: NSWindow {
     open override func becomeFirstResponder() -> Bool {
         return false
     }
+    open override var accessibilityFocusedUIElement: Any? {
+        return nil
+    }
 
     public func sendKeyEvent(_ key: KeyboardKey, modifierFlags: NSEvent.ModifierFlags) {
         guard let event = NSEvent.keyEvent(with: .keyDown, location: mouseLocationOutsideOfEventStream, modifierFlags: modifierFlags, timestamp: Date().timeIntervalSince1970, windowNumber: windowNumber, context: graphicsContext, characters: "", charactersIgnoringModifiers: "", isARepeat: false, keyCode: key.rawValue) else {return}
@@ -866,6 +869,10 @@ open class Window: NSWindow {
     public var _canBecomeMain = true
     open override var canBecomeMain: Bool {
         return _canBecomeMain
+    }
+    
+    open override func deminiaturize(_ sender: Any?) {
+        super.deminiaturize(sender)
     }
     
     

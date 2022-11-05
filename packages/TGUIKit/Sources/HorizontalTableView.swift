@@ -101,6 +101,10 @@ public class HorizontalTableView: TableView {
 open class HorizontalScrollView : ScrollView {
     override open func scrollWheel(with event: NSEvent) {
         
+        if let applyExternalScroll = self.applyExternalScroll, applyExternalScroll(event) {
+            return
+        }
+        
         var scrollPoint = contentView.bounds.origin
         let isInverted: Bool = System.isScrollInverted
         if event.scrollingDeltaY != 0 {

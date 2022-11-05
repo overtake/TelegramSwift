@@ -16,7 +16,7 @@ import Postbox
 
 final class ChatInputSendAsView : Control {
     private weak var chatInteraction: ChatInteraction?
-    private var peers: [FoundPeer]?
+    private var peers: [SendAsPeer]?
     private var currentPeerId: PeerId?
     private var avatar: AvatarControl?
     required init(frame frameRect: NSRect) {
@@ -51,7 +51,7 @@ final class ChatInputSendAsView : Control {
             
             for (i, peer) in peers.enumerated() {
                 items.append(ContextSendAsMenuItem(peer: peer, context: context, isSelected: i == 0, handler: { [weak self] in
-                    self?.toggleSendAs(peer.peer.id)
+                    self?.toggleSendAs(peer, context: context)
                 }))
             }
                     
@@ -64,10 +64,12 @@ final class ChatInputSendAsView : Control {
     }
     
     
-    private func toggleSendAs(_ peerId: PeerId) {
-        self.popover?.hide()
-        
-        self.chatInteraction?.toggleSendAs(peerId)
+    private func toggleSendAs(_ peer: SendAsPeer, context: AccountContext) {
+        if peer.isPremiumRequired && !context.isPremium {
+            showModal(with: PremiumBoardingController(context: context, source: .send_as), for: context.window)
+        } else {
+            self.chatInteraction?.toggleSendAs(peer.peer.id)
+        }
     }
     
     override func layout() {
@@ -84,7 +86,7 @@ final class ChatInputSendAsView : Control {
     
     var first: Bool = true
     
-    func update(_ peers: [FoundPeer], currentPeerId: PeerId, chatInteraction: ChatInteraction, animated: Bool) {
+    func update(_ peers: [SendAsPeer], currentPeerId: PeerId, chatInteraction: ChatInteraction, animated: Bool) {
         let currentIsUpdated = self.currentPeerId != currentPeerId
         self.currentPeerId = currentPeerId
         self.peers = peers

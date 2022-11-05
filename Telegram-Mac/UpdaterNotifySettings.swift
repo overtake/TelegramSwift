@@ -14,7 +14,7 @@ import InAppSettings
 
 enum LaunchNavigation : Equatable {
     case chat(PeerId, necessary: Bool)
-    case thread(MessageId, MessageId, necessary: Bool)
+    case thread(MessageId, MessageId?, MessageHistoryThreadData?, necessary: Bool)
     case profile(PeerId, necessary: Bool)
     case settings
 }

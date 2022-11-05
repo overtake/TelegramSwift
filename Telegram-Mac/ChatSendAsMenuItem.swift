@@ -14,10 +14,10 @@ import TelegramCore
 
 class ContextSendAsMenuItem : ContextMenuItem {
     
-    private let peer: FoundPeer
+    private let peer: SendAsPeer
     private let context: AccountContext
     private let isSelected: Bool
-    init(peer: FoundPeer, context: AccountContext, isSelected: Bool, handler: (() -> Void)? = nil) {
+    init(peer: SendAsPeer, context: AccountContext, isSelected: Bool, handler: (() -> Void)? = nil) {
         self.peer = peer
         self.context = context
         self.isSelected = isSelected
@@ -38,9 +38,9 @@ private final class ContextSendAsMenuRowItem : AppMenuRowItem {
     private let disposable = MetaDisposable()
     fileprivate let context: AccountContext
     fileprivate let statusLayout: TextViewLayout
-    fileprivate let peer: FoundPeer
+    fileprivate let peer: SendAsPeer
     fileprivate let selected: Bool
-    init(_ initialSize: NSSize, item: ContextMenuItem, interaction: AppMenuBasicItem.Interaction, presentation: AppMenu.Presentation, peer: FoundPeer, context: AccountContext, isSelected: Bool) {
+    init(_ initialSize: NSSize, item: ContextMenuItem, interaction: AppMenuBasicItem.Interaction, presentation: AppMenu.Presentation, peer: SendAsPeer, context: AccountContext, isSelected: Bool) {
         
         self.peer = peer
         self.context = context
@@ -86,6 +86,9 @@ private final class ContextSendAsMenuRowItem : AppMenuRowItem {
     override var effectiveSize: NSSize {
         var size = super.effectiveSize
         
+        if peer.isPremiumRequired && !context.isPremium {
+            size.width += 15
+        }
         
         return size
     }
@@ -110,6 +113,7 @@ private final class ContextSendAsMenuRowItem : AppMenuRowItem {
 private final class ContextAccountMenuRowView : AppMenuRowView {
     private let statusView: TextView = TextView()
     private var borderView: View?
+    private var lockView: ImageView?
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(statusView)
@@ -120,9 +124,17 @@ private final class ContextAccountMenuRowView : AppMenuRowView {
     
     override func layout() {
         super.layout()
+        
+        guard let item = item as? ContextSendAsMenuRowItem else {
+            return
+        }
+        
         statusView.setFrameOrigin(NSMakePoint(textX, textY + 14))
         if let borderView = borderView {
             borderView.frame = imageFrame.insetBy(dx: -2, dy: -2)
+        }
+        if let lockView = lockView {
+            lockView.setFrameOrigin(textX + item.text.layoutSize.width, textY)
         }
     }
     
@@ -134,6 +146,21 @@ private final class ContextAccountMenuRowView : AppMenuRowView {
         
         statusView.update(item.statusLayout)
         
+        if item.peer.isPremiumRequired && !item.context.isPremium {
+            let current: ImageView
+            if let view = self.lockView {
+                current = view
+            } else {
+                current = ImageView()
+                addSubview(current)
+                self.lockView = current
+            }
+            current.image = NSImage(named: "Icon_EmojiLock")?.precomposed(item.presentation.disabledTextColor)
+            current.sizeToFit()
+        } else if let view = self.lockView {
+            performSubviewRemoval(view, animated: animated)
+            self.lockView = nil
+        }
         if item.selected {
             let current: View
             if let view = borderView {

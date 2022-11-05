@@ -97,6 +97,10 @@ class UserInfoArguments : PeerInfoArguments {
     private let deletePeerContactDisposable = MetaDisposable()
     private let callDisposable = MetaDisposable()
     
+    func giftPremium(_ options: [CachedPremiumGiftOption]) {
+        showModal(with: PremiumGiftController(context: context, peerId: self.peerId, options: options), for: context.window)
+    }
+    
     func shareContact() {
         let context = self.context
         let peer = context.account.postbox.peerView(id: peerId) |> take(1) |> map {
@@ -136,7 +140,7 @@ class UserInfoArguments : PeerInfoArguments {
             if let peer = peer {
                 confirm(for: context.window, information: strings().peerInfoConfirmShareInfo(peer.displayTitle), successHandler: { [weak self] _ in
                     let signal: Signal<Void, NoError> = context.account.postbox.loadedPeerWithId(context.peerId) |> map { $0 as! TelegramUser } |> mapToSignal { peer in
-                        let signal = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil)), replyToMessageId: nil, localGroupingKey: nil, correlationId: nil), context: context, peerId: peerId)
+                        let signal = Sender.enqueue(message: EnqueueMessage.message(text: "", attributes: [], inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: peer.firstName ?? "", lastName: peer.lastName ?? "", phoneNumber: peer.phone ?? "", peerId: peer.id, vCardData: nil)), replyToMessageId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: []), context: context, peerId: peerId)
                         return signal  |> map { _ in}
                     }
                     self?.shareDisposable.set(showModalProgress(signal: signal, for: context.window).start())
@@ -184,7 +188,7 @@ class UserInfoArguments : PeerInfoArguments {
             }
             
             if let firstName = updateValues.firstName, firstName.isEmpty {
-                controller.genericView.item(stableId: IntPeerInfoEntryStableId(value: 1).hashValue)?.view?.shakeView()
+                controller.genericView.tableView.item(stableId: IntPeerInfoEntryStableId(value: 1).hashValue)?.view?.shakeView()
                 return false
             }
             
@@ -226,6 +230,15 @@ class UserInfoArguments : PeerInfoArguments {
     
     func sendMessage() {
         self.peerChat(self.peerId)
+    }
+    
+    func reportReaction(_ messageId: MessageId) {
+        let block: Signal<Never, NoError> = context.blockedPeersContext.add(peerId: peerId) |> `catch` { _ in .complete() }
+        let report = context.engine.peers.reportPeerReaction(authorId: self.peerId, messageId: messageId) |> ignoreValues
+        let context = self.context
+        _ = showModalProgress(signal: combineLatest(block, report), for: context.window).start(completed: {
+            showModalText(for: context.window, text: strings().peerInfoReportReactionSuccess)
+        })
     }
     
     func call(_ isVideo: Bool) {
@@ -426,10 +439,11 @@ enum UserInfoEntry: PeerInfoEntry {
     case setFirstName(sectionId:Int, text: String, viewType: GeneralViewType)
     case setLastName(sectionId:Int, text: String, viewType: GeneralViewType)
     case about(sectionId:Int, text: String, viewType: GeneralViewType)
-    case bio(sectionId:Int, text: String, viewType: GeneralViewType)
+    case bio(sectionId:Int, text: String, PeerEquatable, viewType: GeneralViewType)
     case scam(sectionId:Int, title: String, text: String, viewType: GeneralViewType)
     case phoneNumber(sectionId:Int, index: Int, value: PhoneNumberWithLabel, canCopy: Bool, viewType: GeneralViewType)
-    case userName(sectionId:Int, value: String, viewType: GeneralViewType)
+    case userName(sectionId:Int, value: [String], viewType: GeneralViewType)
+    case reportReaction(sectionId: Int, value: MessageId, viewType: GeneralViewType)
     case sendMessage(sectionId:Int, viewType: GeneralViewType)
     case shareContact(sectionId:Int, viewType: GeneralViewType)
     case shareMyInfo(sectionId:Int, viewType: GeneralViewType)
@@ -457,10 +471,11 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .setFirstName(sectionId, text, _): return .setFirstName(sectionId: sectionId, text: text, viewType: viewType)
         case let .setLastName(sectionId, text, _): return .setLastName(sectionId: sectionId, text: text, viewType: viewType)
         case let .about(sectionId, text, _): return .about(sectionId: sectionId, text: text, viewType: viewType)
-        case let .bio(sectionId, text, _): return .bio(sectionId: sectionId, text: text, viewType: viewType)
+        case let .bio(sectionId, text, peer, _): return .bio(sectionId: sectionId, text: text, peer, viewType: viewType)
         case let .scam(sectionId, title, text, _): return .scam(sectionId: sectionId, title: title, text: text, viewType: viewType)
         case let .phoneNumber(sectionId, index, value, canCopy, _): return .phoneNumber(sectionId: sectionId, index: index, value: value, canCopy: canCopy, viewType: viewType)
-        case let .userName(sectionId, value: String, _): return .userName(sectionId: sectionId, value: String, viewType: viewType)
+        case let .userName(sectionId, value, _): return .userName(sectionId: sectionId, value: value, viewType: viewType)
+        case let .reportReaction(sectionId, value, _): return .reportReaction(sectionId: sectionId, value: value, viewType: viewType)
         case let .sendMessage(sectionId, _): return .sendMessage(sectionId: sectionId, viewType: viewType)
         case let .shareContact(sectionId, _): return .shareContact(sectionId: sectionId, viewType: viewType)
         case let .shareMyInfo(sectionId, _): return .shareMyInfo(sectionId: sectionId, viewType: viewType)
@@ -528,7 +543,7 @@ enum UserInfoEntry: PeerInfoEntry {
                     if !lhsNotificationSettings.isEqual(to: rhsNotificationSettings) {
                         return false
                     }
-                } else if (lhsNotificationSettings == nil) != (rhsNotificationSettings == nil) {
+                } else if (lhsNotificationSettings != nil) != (rhsNotificationSettings != nil) {
                     return false
                 }
                 
@@ -536,7 +551,7 @@ enum UserInfoEntry: PeerInfoEntry {
                     if !lhsCachedData.isEqual(to: rhsCachedData) {
                         return false
                     }
-                } else if (lhsCachedData == nil) != (rhsCachedData == nil) {
+                } else if (lhsCachedData != nil) != (rhsCachedData != nil) {
                     return false
                 }
                 return true
@@ -564,9 +579,9 @@ enum UserInfoEntry: PeerInfoEntry {
             default:
                 return false
             }
-        case let .bio(sectionId, text, viewType):
+        case let .bio(sectionId, text, peer, viewType):
             switch entry {
-            case .bio(sectionId, text, viewType):
+            case .bio(sectionId, text, peer, viewType):
                 return true
             default:
                 return false
@@ -588,6 +603,13 @@ enum UserInfoEntry: PeerInfoEntry {
         case let .userName(sectionId, value, viewType):
             switch entry {
             case .userName(sectionId, value, viewType):
+                return true
+            default:
+                return false
+            }
+        case let .reportReaction(sectionId, value, viewType):
+            switch entry {
+            case .reportReaction(sectionId, value, viewType):
                 return true
             default:
                 return false
@@ -743,59 +765,61 @@ enum UserInfoEntry: PeerInfoEntry {
     private var stableIndex: Int {
         switch self {
         case .info:
-            return 0
+            return 100
         case .setFirstName:
-            return 1
+            return 101
         case .setLastName:
-            return 2
+            return 102
         case .scam:
-            return 3
+            return 103
         case .about:
-            return 4
+            return 104
         case .bio:
-            return 5
+            return 105
         case .phoneNumber:
-            return 6
+            return 106
         case .userName:
-            return 7
+            return 107
         case .sendMessage:
-            return 8
+            return 108
         case .botAddToGroup:
-            return 9
+            return 109
         case .botAddToGroupInfo:
-            return 10
+            return 110
         case .botShare:
-            return 11
+            return 111
         case .botSettings:
-            return 12
+            return 112
         case .botHelp:
-            return 13
+            return 113
         case .botPrivacy:
-            return 14
+            return 114
         case .shareContact:
-            return 15
+            return 115
         case .shareMyInfo:
-            return 16
+            return 116
         case .addContact:
-            return 17
+            return 117
         case .startSecretChat:
-            return 18
+            return 118
         case .sharedMedia:
-            return 19
+            return 119
         case .notifications:
-            return 20
+            return 120
         case .encryptionKey:
-            return 21
+            return 121
         case .groupInCommon:
-            return 22
+            return 122
         case .block:
-            return 23
+            return 123
+        case .reportReaction:
+            return 124
         case .deleteChat:
-            return 24
+            return 125
         case .deleteContact:
-            return 25
+            return 126
         case .media:
-            return 26
+            return 127
         case let .section(id):
             return (id + 1) * 1000 - id
         }
@@ -811,11 +835,13 @@ enum UserInfoEntry: PeerInfoEntry {
             return (sectionId * 1000) + stableIndex
         case let .about(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
-        case let .bio(sectionId, _, _):
+        case let .bio(sectionId, _, _, _):
             return (sectionId * 1000) + stableIndex
         case let .phoneNumber(sectionId, _, _, _, _):
             return (sectionId * 1000) + stableIndex
         case let .userName(sectionId, _, _):
+            return (sectionId * 1000) + stableIndex
+        case let .reportReaction(sectionId, _, _):
             return (sectionId * 1000) + stableIndex
         case let .scam(sectionId, _, _, _):
             return (sectionId * 1000) + stableIndex
@@ -882,7 +908,7 @@ enum UserInfoEntry: PeerInfoEntry {
         
         switch self {
         case let .info(_, peerView, editable, viewType):
-            return PeerInfoHeadItem(initialSize, stableId:stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, viewType: viewType, editing: editable)
+            return PeerInfoHeadItem(initialSize, stableId:stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: nil, viewType: viewType, editing: editable)
         case let .setFirstName(_, text, viewType):
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoFirstNamePlaceholder, filter: { $0 }, updated: {
                 arguments.updateEditingNames(firstName: $0, lastName: state.editingState?.editingLastName)
@@ -899,8 +925,8 @@ enum UserInfoEntry: PeerInfoEntry {
                     arguments.peerInfo(peerId)
                 }
             }, hashtag: arguments.context.bindings.globalSearch)
-        case let .bio(_, text, viewType):
-            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoBio, copyMenuText: strings().textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, detectLinks: true, onlyInApp: true, openInfo: { peerId, toChat, postId, _ in
+        case let .bio(_, text, peer, viewType):
+            return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: strings().peerInfoBio, copyMenuText: strings().textCopyLabelBio, text:text, context: arguments.context, viewType: viewType, detectLinks: true, onlyInApp: !peer.peer.isPremium, openInfo: { peerId, toChat, postId, _ in
                 if toChat {
                     arguments.peerChat(peerId, postId: postId)
                 } else {
@@ -908,11 +934,33 @@ enum UserInfoEntry: PeerInfoEntry {
                 }
             })
         case let .phoneNumber(_, _, value, canCopy, viewType):
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:value.label, copyMenuText: strings().textCopyLabelPhoneNumber, text: value.number, context: arguments.context, viewType: viewType, canCopy: canCopy)
+            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:value.label, copyMenuText: strings().textCopyLabelPhoneNumber, text: formatPhoneNumber(value.number), context: arguments.context, viewType: viewType, canCopy: canCopy, _copyToClipboard: {
+                arguments.copy("+\(value.number)")
+            })
         case let .userName(_, value, viewType):
-            let link = "https://t.me/\(value)"
-            return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoUsername, copyMenuText: strings().textCopyLabelUsername, text:"@\(value)", context: arguments.context, viewType: viewType, _copyToClipboard: {
+            let link = "https://t.me/\(value[0])"
+            
+            let text: String
+            if value.count > 1 {
+                text = strings().peerInfoUsernamesList("@\(value[0])", value.suffix(value.count - 1).map { "@\($0)" }.joined(separator: ", "))
+            } else {
+                text = "@\(value[0])"
+            }
+            
+            let interactions = TextViewInteractions()
+            interactions.processURL = { value in
+                if let value = value as? inAppLink {
+                    arguments.copy(value.link)
+                }
+            }
+            interactions.localizeLinkCopy = globalLinkExecutor.localizeLinkCopy
+            
+            return TextAndLabelItem(initialSize, stableId: stableId.hashValue, label: strings().peerInfoUsername, copyMenuText: strings().textCopyLabelUsername, labelColor: theme.colors.text, text: text, context: arguments.context, viewType: viewType, detectLinks: value.count > 1, isTextSelectable: value.count > 1, _copyToClipboard: {
                 arguments.copy(link)
+            }, linkInteractions: interactions)
+        case let .reportReaction(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoReportReaction, nameStyle: redActionButton, type: .none, viewType: viewType, action: {
+                arguments.reportReaction(value)
             })
         case let .scam(_, title, text, viewType):
             return  TextAndLabelItem(initialSize, stableId:stableId.hashValue, label: title, copyMenuText: strings().textCopy, labelColor: theme.colors.redUI, text: text, context: arguments.context, viewType: viewType, detectLinks:false)
@@ -1001,7 +1049,7 @@ enum UserInfoEntry: PeerInfoEntry {
 
 
 
-func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData: PeerMediaTabsData) -> [PeerInfoEntry] {
+func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData: PeerMediaTabsData, source: PeerInfoController.Source) -> [PeerInfoEntry] {
     
     let arguments = arguments as! UserInfoArguments
     let state = arguments.state as! UserInfoState
@@ -1021,21 +1069,25 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
         entries.append(contentsOf: block)
     }
     
-    var infoBlock: [UserInfoEntry] = []
+    var headerBlock: [UserInfoEntry] = []
     
     let editing = state.editingState != nil && (view.peers[view.peerId] as? TelegramUser)?.botInfo == nil && view.peerIsContact
     
-    infoBlock.append(.info(sectionId: sectionId, peerView: view, editable: editing, viewType: .singleItem))
+    headerBlock.append(.info(sectionId: sectionId, peerView: view, editable: editing, viewType: .singleItem))
     
     if editing {
-        infoBlock.append(.setFirstName(sectionId: sectionId, text: state.editingState?.editingFirstName ?? "", viewType: .singleItem))
-        infoBlock.append(.setLastName(sectionId: sectionId, text: state.editingState?.editingLastName ?? "", viewType: .singleItem))
+        headerBlock.append(.setFirstName(sectionId: sectionId, text: state.editingState?.editingFirstName ?? "", viewType: .singleItem))
+        headerBlock.append(.setLastName(sectionId: sectionId, text: state.editingState?.editingLastName ?? "", viewType: .singleItem))
     }
     
-    applyBlock(infoBlock)
+    applyBlock(headerBlock)
+    
+    
     
     entries.append(UserInfoEntry.section(sectionId: sectionId))
     sectionId += 1
+    
+
     
     if let peer = view.peers[view.peerId] {
         
@@ -1056,18 +1108,25 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                         if peer.isBot {
                             infoBlock.append(UserInfoEntry.about(sectionId: sectionId, text: about, viewType: .singleItem))
                         } else {
-                            infoBlock.append(UserInfoEntry.bio(sectionId: sectionId, text: about, viewType: .singleItem))
+                            infoBlock.append(UserInfoEntry.bio(sectionId: sectionId, text: about, PeerEquatable(peer), viewType: .singleItem))
                         }
                     }
                 }
                 
                 if let phoneNumber = user.phone, !phoneNumber.isEmpty {
-                    infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: strings().peerInfoPhone, number: formatPhoneNumber(phoneNumber)), canCopy: true, viewType: .singleItem))
+                    infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: strings().peerInfoPhone, number: phoneNumber), canCopy: true, viewType: .singleItem))
                 } else if view.peerIsContact {
                     infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: strings().peerInfoPhone, number: strings().newContactPhoneHidden), canCopy: false, viewType: .singleItem))
                 }
-                if let username = user.username, !username.isEmpty {
-                    infoBlock.append(.userName(sectionId: sectionId, value: username, viewType: .singleItem))
+                
+                var usernames = user.usernames.filter { $0.isActive }.map {
+                    $0.username
+                }
+                if usernames.isEmpty, let address = user.addressName {
+                    usernames.append(address)
+                }
+                if !usernames.isEmpty {
+                    infoBlock.append(.userName(sectionId: sectionId, value: usernames, viewType: .singleItem))
                 }
                 
                 if !user.isBot {
@@ -1081,7 +1140,19 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                 if !user.isBot {
                     if !view.peerIsContact {
                         if let cachedData = view.cachedData as? CachedUserData {
-                            infoBlock.append(.block(sectionId: sectionId, peer: peer, blocked: cachedData.isBlocked, isBot: peer.isBot, viewType: .singleItem))
+                            var addBlock = true
+                            switch source {
+                            case let .reaction(messageId):
+                                if !cachedData.isBlocked {
+                                    infoBlock.append(.reportReaction(sectionId: sectionId, value: messageId, viewType: .singleItem))
+                                    addBlock = false
+                                }
+                            default:
+                                break
+                            }
+                            if addBlock {
+                                infoBlock.append(.block(sectionId: sectionId, peer: peer, blocked: cachedData.isBlocked, isBot: peer.isBot, viewType: .singleItem))
+                            }
                         }
                     }
                 } else if let botInfo = user.botInfo, botInfo.flags.contains(.worksWithGroups) {
@@ -1089,10 +1160,13 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                 }
                
                 
+                
                 applyBlock(infoBlock)
+                
                 if let botInfo = user.botInfo, botInfo.flags.contains(.worksWithGroups) {
                     entries.append(UserInfoEntry.botAddToGroupInfo(sectionId: sectionId, viewType: .textBottomItem))
                 }
+                
             }
             
             if let _ = view.cachedData as? CachedUserData, arguments.context.account.peerId != arguments.peerId {

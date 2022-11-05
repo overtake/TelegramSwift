@@ -15,7 +15,7 @@ import SwiftSignalKit
 class PreUploadManager {
     let path: String
     let id: Int64
-    private var previousSize: Int? = nil
+    private var previousSize: Int64? = nil
     private let resource:Promise<MediaResourceData> = Promise()
     private let queue: Queue = Queue()
     init(_ path: String, context: AccountContext, id: Int64) {

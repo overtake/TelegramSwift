@@ -16,6 +16,10 @@ import InAppSettings
 import ThemeSettings
 import Reactions
 import FetchManager
+import InAppPurchaseManager
+import ApiCredentials
+
+
 
 protocol ChatLocationContextHolder: AnyObject {
 }
@@ -24,9 +28,63 @@ protocol ChatLocationContextHolder: AnyObject {
 
 enum ChatLocation: Equatable {
     case peer(PeerId)
-    case replyThread(ChatReplyThreadMessage)
+    case thread(ChatReplyThreadMessage)
 }
 
+extension ChatLocation {
+    var unreadMessageCountsItem: UnreadMessageCountsItem {
+        switch self {
+        case let .peer(peerId):
+            return .peer(id: peerId, handleThreads: false)
+        case let .thread(data):
+            return .peer(id: data.messageId.peerId, handleThreads: false)
+        }
+    }
+    
+    var postboxViewKey: PostboxViewKey {
+        switch self {
+        case let .peer(peerId):
+            return .peer(peerId: peerId, components: [])
+        case let .thread(data):
+            return .peer(peerId: data.messageId.peerId, components: [])
+        }
+    }
+    
+    var pinnedItemId: PinnedItemId {
+        switch self {
+        case let .peer(peerId):
+            return .peer(peerId)
+        case let .thread(data):
+            return .peer(data.messageId.peerId)
+        }
+    }
+    
+    var peerId: PeerId {
+        switch self {
+        case let .peer(peerId):
+            return peerId
+        case let .thread(data):
+            return data.messageId.peerId
+        }
+    }
+    var threadId: Int64? {
+        switch self {
+        case .peer:
+            return nil
+        case let .thread(replyThreadMessage):
+            return makeMessageThreadId(replyThreadMessage.messageId) //Int64(replyThreadMessage.messageId.id)
+        }
+    }
+    var threadMsgId: MessageId? {
+        switch self {
+        case .peer:
+            return nil
+        case let .thread(replyThreadMessage):
+            return replyThreadMessage.messageId
+        }
+    }
+
+}
 
 
 struct TemporaryPasswordContainer {
@@ -81,8 +139,11 @@ final class AccountContext {
     #if !SHARE
     let fetchManager: FetchManager
     let diceCache: DiceCache
+    let inlinePacksContext: InlineStickersContext
     let cachedGroupCallContexts: AccountGroupCallContextCacheImpl
     let networkStatusManager: NetworkStatusManager
+    let inAppPurchaseManager: InAppPurchaseManager
+    
     #endif
     private(set) var timeDifference:TimeInterval  = 0
     #if !SHARE
@@ -90,7 +151,6 @@ final class AccountContext {
     var audioPlayer:APController?
     
     let peerChannelMemberCategoriesContextsManager: PeerChannelMemberCategoriesContextsManager
-    let chatUndoManager = ChatUndoManager()
     let blockedPeersContext: BlockedPeersContext
     let cacheCleaner: AccountClearCache
     let activeSessionsContext: ActiveSessionsContext
@@ -127,6 +187,21 @@ final class AccountContext {
         }
     }
     
+    
+    private(set) var isPremium: Bool = false {
+        didSet {
+            #if !SHARE
+            self.reactions.isPremium = isPremium
+            #endif
+        }
+    }
+    #if !SHARE
+    var premiumIsBlocked: Bool {
+        return self.premiumLimits.premium_purchase_blocked
+    }
+    #endif
+    
+    private let premiumDisposable = MetaDisposable()
     
     let globalPeerHandler:Promise<ChatLocation?> = Promise()
     
@@ -175,6 +250,13 @@ final class AccountContext {
         return _appConfiguration.with { $0 }
     }
     
+    private var _myPeer: Peer?
+    
+    var myPeer: Peer? {
+        return _myPeer
+    }
+
+    
     
     private let isKeyWindowValue: ValuePromise<Bool> = ValuePromise(ignoreRepeated: true)
     
@@ -187,6 +269,19 @@ final class AccountContext {
     var autoplayMedia: AutoplayMediaPreferences {
         return _autoplayMedia.with { $0 }
     }
+    
+    var layout:SplitViewState = .none {
+        didSet {
+            self.layoutHandler.set(self.layout)
+        }
+    }
+    
+    
+    private let layoutHandler:ValuePromise<SplitViewState> = ValuePromise(ignoreRepeated:true)
+    var layoutValue: Signal<SplitViewState, NoError> {
+        return layoutHandler.get()
+    }
+    
     
 
     var isInGlobalSearch: Bool = false
@@ -203,6 +298,11 @@ final class AccountContext {
     
     private let preloadGifsDisposable = MetaDisposable()
     let engine: TelegramEngine
+    
+    private let giftStickersValues:Promise<[TelegramMediaFile]> = Promise([])
+    var giftStickers: Signal<[TelegramMediaFile], NoError> {
+        return giftStickersValues.get()
+    }
 
     
     init(sharedContext: SharedAccountContext, window: Window, account: Account, isSupport: Bool = false) {
@@ -212,8 +312,10 @@ final class AccountContext {
         self.engine = TelegramEngine(account: account)
         self.isSupport = isSupport
         #if !SHARE
+        self.inAppPurchaseManager = .init(premiumProductId: ApiEnvironment.premiumProductId)
         self.peerChannelMemberCategoriesContextsManager = PeerChannelMemberCategoriesContextsManager(self.engine, account: account)
         self.diceCache = DiceCache(postbox: account.postbox, engine: self.engine)
+        self.inlinePacksContext = .init(postbox: account.postbox, engine: self.engine)
         self.fetchManager = FetchManagerImpl(postbox: account.postbox, storeManager: DownloadedMediaStoreManagerImpl(postbox: account.postbox, accountManager: sharedContext.accountManager))
         self.blockedPeersContext = BlockedPeersContext(account: account)
         self.cacheCleaner = AccountClearCache(account: account)
@@ -225,6 +327,15 @@ final class AccountContext {
         #endif
         
         
+        giftStickersValues.set(engine.stickers.loadedStickerPack(reference: .premiumGifts, forceActualized: false)
+        |> map { pack in
+            switch pack {
+            case let .result(_, items, _):
+                return items.map { $0.file }
+            default:
+                return []
+            }
+        })
         
         let engine = self.engine
         
@@ -239,10 +350,10 @@ final class AccountContext {
         prefDisposable.add(account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]).start(next: { view in
             let configuration = view.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
             _ = appConfiguration.swap(configuration)
-            
-            
         }))
-        
+        prefDisposable.add((account.postbox.peerView(id: account.peerId) |> deliverOnMainQueue).start(next: { [weak self] peerView in
+            self?._myPeer = peerView.peers[peerView.peerId]
+        }))
         
         
         #if !SHARE
@@ -506,8 +617,22 @@ final class AccountContext {
             CallSessionManagerImplementationVersion(version: version, supportsVideo: supportsVideo)
         })
         
+//        reactions.needsPremium = { [weak self] in
+//            if let strongSelf = self {
+//                showModal(with: PremiumReactionsModal(context: strongSelf), for: strongSelf.window)
+//            }
+//        }
         
         #endif
+        
+        let isPremium: Signal<Bool, NoError> = account.postbox.peerView(id: account.peerId) |> map { view in
+            return (view.peers[view.peerId] as? TelegramUser)?.flags.contains(.isPremium) ?? false
+        } |> deliverOnMainQueue
+        
+        self.premiumDisposable.set(isPremium.start(next: { [weak self] value in
+            self?.isPremium = value
+        }))
+        
     }
     
     @objc private func updateKeyWindow() {
@@ -563,6 +688,15 @@ final class AccountContext {
             return nil
         }
     }
+    var premiumLimits: PremiumLimitConfig {
+        return PremiumLimitConfig(appConfiguration: appConfiguration)
+    }
+    var premiumOrder:PremiumPromoOrder {
+        return PremiumPromoOrder(appConfiguration: appConfiguration)
+    }
+    var premiumBuyConfig: PremiumBuyConfig {
+        return PremiumBuyConfig(appConfiguration: appConfiguration)
+    }
     #endif
     
     func setTemporaryPwd(_ password: String) -> Void {
@@ -576,6 +710,7 @@ final class AccountContext {
     deinit {
        cleanup()
     }
+  
     
     
     func cleanup() {
@@ -587,6 +722,7 @@ final class AccountContext {
         cloudThemeObserver.dispose()
         preloadGifsDisposable.dispose()
         freeSpaceDisposable.dispose()
+        premiumDisposable.dispose()
         NotificationCenter.default.removeObserver(self)
         #if !SHARE
       //  self.walletPasscodeTimeoutContext.clear()
@@ -618,10 +754,14 @@ final class AccountContext {
     func chatLocationInput(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>) -> ChatLocationInput {
         switch location {
         case let .peer(peerId):
-            return .peer(peerId: peerId)
-        case let .replyThread(data):
-            let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
-            return .thread(peerId: data.messageId.peerId, threadId: makeMessageThreadId(data.messageId), data: context.state)
+            return .peer(peerId: peerId, threadId: nil)
+        case let .thread(data):
+            if data.isForumPost {
+                return .peer(peerId: data.messageId.peerId, threadId: makeMessageThreadId(data.messageId))
+            } else {
+                let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
+                return .thread(peerId: data.messageId.peerId, threadId: makeMessageThreadId(data.messageId), data: context.state)
+            }
         }
     }
     
@@ -629,31 +769,56 @@ final class AccountContext {
         switch location {
         case .peer:
             return .single(nil)
-        case let .replyThread(data):
-            let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
-            return context.maxReadOutgoingMessageId
+        case let .thread(data):
+            if data.isForumPost {
+                let viewKey: PostboxViewKey = .messageHistoryThreadInfo(peerId: data.messageId.peerId, threadId: Int64(data.messageId.id))
+                return self.account.postbox.combinedView(keys: [viewKey])
+                |> map { views -> MessageId? in
+                    if let threadInfo = views.views[viewKey] as? MessageHistoryThreadInfoView, let data = threadInfo.info?.data.get(MessageHistoryThreadData.self) {
+                        return MessageId(peerId: location.peerId, namespace: Namespaces.Message.Cloud, id: data.maxOutgoingReadId)
+                    } else {
+                        return nil
+                    }
+                }
+            } else {
+                let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
+                return context.maxReadOutgoingMessageId
+            }
         }
     }
 
     public func chatLocationUnreadCount(for location: ChatLocation, contextHolder: Atomic<ChatLocationContextHolder?>) -> Signal<Int, NoError> {
         switch location {
         case let .peer(peerId):
-            let unreadCountsKey: PostboxViewKey = .unreadCounts(items: [.peer(peerId), .total(nil)])
+            let unreadCountsKey: PostboxViewKey = .unreadCounts(items: [.peer(id: peerId, handleThreads: false), .total(nil)])
             return self.account.postbox.combinedView(keys: [unreadCountsKey])
             |> map { views in
                 var unreadCount: Int32 = 0
 
                 if let view = views.views[unreadCountsKey] as? UnreadMessageCountsView {
-                    if let count = view.count(for: .peer(peerId)) {
+                    if let count = view.count(for: .peer(id: peerId, handleThreads: false)) {
                         unreadCount = count
                     }
                 }
 
                 return Int(unreadCount)
             }
-        case let .replyThread(data):
-            let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
-            return context.unreadCount
+        case let .thread(data):
+            if data.isForumPost {
+                let viewKey: PostboxViewKey = .messageHistoryThreadInfo(peerId: data.messageId.peerId, threadId: Int64(data.messageId.id))
+                return self.account.postbox.combinedView(keys: [viewKey])
+                |> map { views -> Int in
+                    if let threadInfo = views.views[viewKey] as? MessageHistoryThreadInfoView, let data = threadInfo.info?.data.get(MessageHistoryThreadData.self) {
+                        return Int(data.incomingUnreadCount)
+                    } else {
+                        return 0
+                    }
+                }
+            } else {
+                let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
+                return context.unreadCount
+            }
+
         }
     }
 
@@ -663,17 +828,43 @@ final class AccountContext {
         switch location {
         case .peer:
             let _ = self.engine.messages.applyMaxReadIndexInteractively(index: messageIndex).start()
-        case let .replyThread(data):
+        case let .thread(data):
             let context = chatLocationContext(holder: contextHolder, account: self.account, data: data)
             context.applyMaxReadIndex(messageIndex: messageIndex)
         }
     }
 
 
-
+   
 
     
     #if !SHARE
+    
+    func navigateToThread(_ threadId: MessageId, fromId: MessageId) {
+        let signal:Signal<ThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: self, subject: .channelPost(threadId))
+        
+        _ = showModalProgress(signal: signal |> take(1), for: self.window).start(next: { [weak self] result in
+            guard let context = self else {
+                return
+            }
+            let chatLocation: ChatLocation = .thread(result.message)
+            
+            let updatedMode: ReplyThreadMode
+            if result.isChannelPost {
+                updatedMode = .comments(origin: fromId)
+            } else {
+                updatedMode = .replies(origin: fromId)
+            }
+            let controller = ChatController(context: context, chatLocation: chatLocation, mode: .thread(data: result.message, mode: updatedMode), messageId: fromId, initialAction: nil, chatLocationContextHolder: result.contextHolder)
+            
+            context.bindings.rootNavigation().push(controller)
+            
+        }, error: { error in
+            
+        })
+    }
+
+    
     func composeCreateGroup(selectedPeers:Set<PeerId> = Set()) {
         createGroup(with: self, selectedPeers: selectedPeers)
     }
@@ -938,12 +1129,3 @@ private final class ChatLocationContextHolderImpl: ChatLocationContextHolder {
     }
 }
 
-
-/*
- _ = (strongSelf.postbox.messageAtId(messageId) |> filter { $0?.isCopyProtected() == false } |> map { $0?.media.first as? TelegramMediaFile} |> filter {$0 != nil} |> map {$0!} |> mapToSignal { file -> Signal<Void, NoError> in
-     if !file.isMusic && !file.isAnimated && !file.isVideo && !file.isVoice && !file.isInstantVideo && !file.isAnimatedSticker && !file.isStaticSticker {
-         return copyToDownloads(file, postbox: postbox) |> map { _ in }
-     }
-     return .single(Void())
- }).start()
- */

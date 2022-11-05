@@ -229,6 +229,7 @@ fileprivate class PreviewSenderView : Control {
         textView.background = theme.colors.background
         textView.textFont = .normal(.text)
         textView.textColor = theme.colors.text
+        textView.selectedTextColor = theme.colors.selectText
         textView.linkColor = theme.colors.link
         textView.max_height = 180
         
@@ -257,7 +258,7 @@ fileprivate class PreviewSenderView : Control {
                     }, itemImage: MenuAnimation.menu_mute.value))
                 }
                 switch chatInteraction.mode {
-                case .history:
+                case .history, .thread:
                     if !peer.isSecretChat {
                         items.append(ContextMenuItem(peer.id == chatInteraction.context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage, handler: {
                             showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak controller] date in
@@ -297,6 +298,30 @@ fileprivate class PreviewSenderView : Control {
         layout()
     }
     
+    private var textInputSuggestionsView: InputSwapSuggestionsPanel?
+    
+    func updateTextInputSuggestions(_ files: [TelegramMediaFile], chatInteraction: ChatInteraction, range: NSRange, animated: Bool) {
+        
+        let context = chatInteraction.context
+        
+        if !files.isEmpty {
+            let current: InputSwapSuggestionsPanel
+            let isNew: Bool
+            if let view = self.textInputSuggestionsView {
+                current = view
+                isNew = false
+            } else {
+                current = InputSwapSuggestionsPanel(self.textView, relativeView: self, window: context.window, context: context, chatInteraction: chatInteraction)
+                self.textInputSuggestionsView = current
+                isNew = true
+            }
+            current.apply(files, range: range, animated: animated, isNew: isNew)
+        } else if let view = self.textInputSuggestionsView {
+            view.close(animated: animated)
+            self.textInputSuggestionsView = nil
+        }
+    }
+    
     deinit {
         disposable.dispose()
     }
@@ -324,6 +349,15 @@ fileprivate class PreviewSenderView : Control {
 
         separator.change(pos: NSMakePoint(0, textContainerView.frame.minY), animated: animated)
         CATransaction.commit()
+        
+        let transition: ContainedViewLayoutTransition
+        if animated {
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        } else {
+            transition = .immediate
+        }
+        self.textInputSuggestionsView?.updateRect(transition: transition)
+
         
        // needsLayout = true
     }
@@ -377,6 +411,9 @@ fileprivate class PreviewSenderView : Control {
         separator.frame = NSMakeRect(0, textContainerView.frame.minY, frame.width, .borderSize)
 
         forHelperView.frame = NSMakeRect(0, textContainerView.frame.minY, 0, 0)
+        
+        self.textInputSuggestionsView?.updateRect(transition: .immediate)
+
     }
     
     
@@ -754,12 +791,14 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     private let context:AccountContext
     let chatInteraction:ChatInteraction
     private let disposable = MetaDisposable()
-    private let emoji: EmojiViewController
+    private let emoji: EmojiesController
     private var cachedMedia:[PreviewSendingState: (media: [Media], items: [TableRowItem])] = [:]
     private var sent: Bool = false
     private let pasteDisposable = MetaDisposable()
     
+    private let emojiHolderAnimator = EmojiHolderAnimator()
 
+    private let inputSwapDisposable = MetaDisposable()
     private var temporaryInputState: ChatTextInputState?
     private var contextQueryState: (ChatPresentationInputQuery?, Disposable)?
     private let inputContextHelper: InputContextHelper
@@ -788,7 +827,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             var listHeight = genericView.tableView.listHeight
             if let inputQuery = inputInteraction.state.inputQueryResult {
                 switch inputQuery {
-                case let .emoji(emoji, _):
+                case let .emoji(emoji, _, _):
                     if !emoji.isEmpty {
                         listHeight = listHeight > 0 ? max(40, listHeight) : 0
                     }
@@ -853,9 +892,25 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     func send(_ silent: Bool, atDate: Date? = nil) {
         
         let text = self.genericView.textView.string().trimmed
-        if text.length > ChatPresentationInterfaceState.maxShortInput {
-            alert(for: chatInteraction.context.window, info: strings().chatInputErrorMessageTooLongCountable(text.length - Int(ChatPresentationInterfaceState.maxShortInput)))
-            return
+        let context = self.context
+        if context.isPremium || context.premiumIsBlocked {
+            if text.length > context.premiumLimits.caption_length_limit_premium {
+                alert(for: chatInteraction.context.window, info: strings().chatInputErrorMessageTooLongCountable(text.length - Int(context.premiumLimits.caption_length_limit_premium)))
+                return
+            }
+        } else {
+            if text.length > context.premiumLimits.caption_length_limit_default {
+                confirm(for: context.window, information: strings().chatInputErrorMessageTooLongCountable(text.length - Int(context.premiumLimits.caption_length_limit_premium)), okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().premiumGetPremiumDouble, successHandler: { result in
+                    switch result {
+                    case .thrid:
+                        showPremiumLimit(context: context, type: .caption(text.length))
+                    default:
+                        break
+                    }
+
+                })
+                return
+            }
         }
         
         switch chatInteraction.mode {
@@ -865,9 +920,9 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                     self?.sendCurrentMedia?(silent, date)
                 }), for: context.window)
             }
-        case .history, .replyThread:
+        case .history, .thread:
             sendCurrentMedia?(silent, atDate)
-        case .pinned, .preview:
+        case .pinned:
             break
         }
     }
@@ -901,6 +956,16 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        let context = self.context
+        let initialSize = self.atomicSize
+
+        
+        genericView.textView.installGetAttach({ attachment, size in
+            let rect = size.bounds.insetBy(dx: -1.5, dy: -1.5)
+            let view = ChatInputAnimatedEmojiAttach(frame: rect)
+            view.set(attachment, size: rect.size, context: context)
+            return view
+        })
         
         genericView.draggingView.controller = self
         genericView.controller = self
@@ -921,17 +986,19 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         
         let interactions = EntertainmentInteractions(.emoji, peerId: chatInteraction.peerId)
         
-        interactions.sendEmoji = { [weak self] emoji in
-            self?.genericView.textView.appendText(emoji)
+        interactions.sendEmoji = { [weak self] emoji, fromRect in
+            _ = self?.contextChatInteraction.appendText(.makeEmojiHolder(emoji, fromRect: fromRect))
+        }
+        interactions.sendAnimatedEmoji = { [weak self] sticker, _, _, fromRect in
+            let text = (sticker.file.customEmojiText ?? sticker.file.stickerText ?? "😀").fixed
+            _ = self?.contextChatInteraction.appendText(.makeAnimated(sticker.file, text: text, fromRect: fromRect))
         }
         
-        emoji.update(with: interactions)
+        emoji.update(with: interactions, chatInteraction: contextChatInteraction)
         
         let actionsDisposable = DisposableSet()
         self.disposable.set(actionsDisposable)
         
-        let context = self.context
-        let initialSize = self.atomicSize
         
         let initialState = PreviewState(urls: [], medias: [], currentState: .init(state: .media, isCollage: FastSettings.isNeedCollage), editedData: [:])
         
@@ -1376,11 +1443,16 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         genericView.tableView.needUpdateVisibleAfterScroll = true
     }
     
+    func runDrawer() {
+        self.runEditor?(self.urls[0], false)
+    }
+    
     deinit {
         inputInteraction.remove(observer: self)
         disposable.dispose()
         editorDisposable.dispose()
         archiverStatusesDisposable.dispose()
+        inputSwapDisposable.dispose()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -1426,7 +1498,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         let context = chatInteraction.context
         self.asMedia = asMedia
         self.context = context
-        self.emoji = EmojiViewController(context)
+        self.emoji = EmojiesController(context)
         
        
 
@@ -1535,10 +1607,40 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                     self.urls = urls
                 }
             }
+            if value.effectiveInput != oldValue.effectiveInput {
+                self.emojiHolderAnimator.apply(self.genericView.textView, chatInteraction: self.contextChatInteraction, current: value.effectiveInput)
+                self.genericView.textView.scrollToCursor()
+            }
         }
     }
     
     private func updateInput(_ state:ChatPresentationInterfaceState, prevState: ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
+        
+        let input = state.effectiveInput
+        let textInputContextState = textInputStateContextQueryRangeAndType(input, includeContext: false)
+        let chatInteraction = self.contextChatInteraction
+        var cleanup = false
+        if let textInputContextState = textInputContextState {
+            if textInputContextState.1.contains(.swapEmoji) {
+                let stringRange = textInputContextState.0
+                let range = NSRange(string: input.inputText, range: stringRange)
+                if !input.isAnimatedEmoji(at: range) {
+                    let query = String(input.inputText[stringRange])
+                    let signal = InputSwapSuggestionsPanelItems(query, peerId: chatInteraction.peerId, context: chatInteraction.context)
+                    |> deliverOnMainQueue
+                    self.inputSwapDisposable.set(signal.start(next: { [weak self] files in
+                        self?.genericView.updateTextInputSuggestions(files, chatInteraction: chatInteraction, range: range, animated: animated)
+                    }))
+                    cleanup = true
+                } else {
+                }
+            }
+        }
+        
+        if cleanup {
+            self.genericView.updateTextInputSuggestions([], chatInteraction: chatInteraction, range: NSMakeRange(0, 0), animated: animated)
+            self.inputSwapDisposable.set(nil)
+        }
         
         let textView = genericView.textView
         
@@ -1648,7 +1750,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     
     func textViewDidPaste(_ pasteboard: NSPasteboard) -> Bool {
         
-        let result = InputPasteboardParser.canProccessPasteboard(pasteboard)
+        let result = InputPasteboardParser.canProccessPasteboard(pasteboard, context: context)
         
     
         let pasteRtf:()->Void = { [weak self] in
@@ -1678,7 +1780,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         }
         
         if !result {
-            self.pasteDisposable.set(InputPasteboardParser.getPasteboardUrls(pasteboard).start(next: { [weak self] urls in
+            self.pasteDisposable.set(InputPasteboardParser.getPasteboardUrls(pasteboard, context: context).start(next: { [weak self] urls in
                 self?.insertAdditionUrls?(urls)
                 
                 if urls.isEmpty {
@@ -1703,7 +1805,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     }
     
     func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
-        return ChatPresentationInterfaceState.maxInput
+        return ChatInteraction.maxInput
     }
     
     override func viewClass() -> AnyClass {

@@ -215,22 +215,12 @@ func modernConfirm(for window:Window, account: Account? = nil, peerId: PeerId? =
           //  alert.addButton(withTitle: thridTitle)
         }
         
-        let signal: Signal<Peer?, NoError>
-        if let peerId = peerId, let account = account {
-            signal = account.postbox.loadedPeerWithId(peerId) |> map(Optional.init) |> deliverOnMainQueue
-        } else {
-            signal = .single(nil)
-        }
-        
-        var disposable: Disposable?
-        
         var shown: Bool = false
         
         let readyToShow:() -> Void = {
             if !shown {
                 shown = true
                 alert.beginSheetModal(for: window, completionHandler: { [weak alert] response in
-                    disposable?.dispose()
                     if let alert = alert {
                         if alert.showsSuppressionButton, let button = alert.suppressionButton, response.rawValue != 1001 {
                             switch button.state {
@@ -254,37 +244,8 @@ func modernConfirm(for window:Window, account: Account? = nil, peerId: PeerId? =
             
         }
         
-        _ = signal.start(next: { peer in
-            if let peer = peer, let account = account {
-                alert.messageText = header.isEmpty || header == appName ? (account.peerId == peer.id ? strings().peerSavedMessages : peer.displayTitle) : header
-                alert.icon = nil
-                if peerId == account.peerId {
-                    let icon = theme.icons.searchSaved
-                    let signal = generateEmptyPhoto(NSMakeSize(70, 70), type: .icon(colors: theme.colors.peerColors(5), icon: icon, iconSize: icon.backingSize.aspectFitted(NSMakeSize(50, 50)), cornerRadius: nil)) |> deliverOnMainQueue
-                    disposable = signal.start(next: { image in
-                        if let image = image {
-                            alert.icon = NSImage(cgImage: image, size: NSMakeSize(70, 70))
-                            delay(0.2, closure: {
-                                readyToShow()
-                            })
-                        }
-                    })
+        readyToShow()
 
-                } else {
-                    disposable = (peerAvatarImage(account: account, photo: PeerPhoto.peer(peer, peer.smallProfileImage, peer.displayLetters, nil), displayDimensions: NSMakeSize(70, 70), scale: System.backingScale, font: .avatar(30), genCap: true) |> deliverOnMainQueue).start(next: { image, _ in
-                        if let image = image {
-                            alert.icon = NSImage(cgImage: image, size: NSMakeSize(70, 70))
-                            delay(0.2, closure: {
-                                readyToShow()
-                            })
-                        }
-                    })
-                }
-                
-            } else {
-                readyToShow()
-            }
-        })
     })
     
 }

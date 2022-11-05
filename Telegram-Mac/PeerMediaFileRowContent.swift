@@ -28,7 +28,7 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
     
     private(set) var docIcon:CGImage?
     private(set) var docTitle:NSAttributedString?
-    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, gallery: GalleryAppearType = .history, viewType: GeneralViewType = .legacy) {
+    override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, galleryType: GalleryAppearType = .history, gallery: @escaping(Message, GalleryAppearType)->Void, viewType: GeneralViewType = .legacy) {
         
         
         let message = object.message!
@@ -54,25 +54,27 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
         
         let iconImageRepresentation:TelegramMediaImageRepresentation? = smallestImageRepresentation(file.previewRepresentations)
         
+        let fileName: String = file.fileName ?? ""
+        
+        var fileExtension: String = "file"
+        if let range = fileName.range(of: ".", options: [.backwards]) {
+            fileExtension = fileName[range.upperBound...].lowercased()
+        }
+        if fileExtension.length > 5 {
+            fileExtension = "file"
+        }
+        docIcon = extensionImage(fileExtension: fileExtension)
+        
         if let iconImageRepresentation = iconImageRepresentation {
             iconArguments = TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: iconImageRepresentation.dimensions.size.aspectFilled(PeerMediaIconSize), boundingSize: PeerMediaIconSize, intrinsicInsets: NSEdgeInsets())
-            icon = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+            icon = TelegramMediaImage(imageId: file.fileId, representations: [iconImageRepresentation], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
         } else {
-            let fileName: String = file.fileName ?? ""
-            
-            var fileExtension: String = "file"
-            if let range = fileName.range(of: ".", options: [.backwards]) {
-                fileExtension = fileName[range.upperBound...].lowercased()
-            }
-            if fileExtension.length > 5 {
-                fileExtension = "file"
-            }
-            docIcon = extensionImage(fileExtension: fileExtension)
+           
             
             docTitle = NSAttributedString.initialize(string: fileExtension, color: theme.colors.text, font: .medium(.text))
 
         }
-        super.init(initialSize, interface, object, gallery: gallery, viewType: viewType)
+        super.init(initialSize, interface, object, galleryType: galleryType, gallery: gallery, viewType: viewType)
     }
     
     
@@ -131,7 +133,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
     
     func cancelFetching() {
         if let item = item as? PeerMediaFileRowItem, let file = item.file {
-            if item.gallery != .recentDownloaded {
+            if item.galleryType != .recentDownloaded {
                 messageMediaFileCancelInteractiveFetch(context: item.context, messageId: item.message.id, file: file)
             } else {
                 toggleInteractiveFetchPaused(context: item.context, file: file, isPaused: true)
@@ -142,7 +144,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
     func open() -> Void {
         if let item = item as? PeerMediaFileRowItem, let file = item.file {
             if file.isGraphicFile {
-                showChatGallery(context: item.interface.context, message: item.message, item.table, nil, type: item.gallery)
+                item.gallery(item.message, item.galleryType)
             } else {
                QuickLookPreview.current.show(context: item.interface.context, with: file, stableId:item.message.chatStableId, item.table)
             }
@@ -174,7 +176,7 @@ class PeerMediaFileRowView : PeerMediaRowView {
                     open()
                 }
             case .Paused:
-                if item.gallery == .recentDownloaded {
+                if item.galleryType == .recentDownloaded {
                     toggleInteractiveFetchPaused(context: item.context, file: file, isPaused: false)
                 } else {
                     cancel()
@@ -264,11 +266,26 @@ class PeerMediaFileRowView : PeerMediaRowView {
                 updateIconImageSignal = .complete()
             }
             
-            imageView.setSignal(updateIconImageSignal, clearInstantly: previous?.message.id != item.message.id)
+            
+            if let icon = item.icon, let arguments = item.iconArguments {
+                imageView.setSignal(signal: cachedMedia(media: icon, arguments: arguments, scale: System.backingScale), clearInstantly: previous?.message.id != item.message.id)
+            } else {
+                imageView.clear()
+            }
+            
+            if !imageView.isFullyLoaded {
+                if !imageView.hasImage {
+                    imageView.layer?.contents = item.docIcon
+                }
+                imageView.setSignal(updateIconImageSignal, clearInstantly: false, animate: true, cacheImage: { result in
+                    if let icon = item.icon, let arguments = item.iconArguments {
+                        cacheMedia(result, media: icon, arguments: arguments, scale: System.backingScale, positionFlags: nil)
+                    }
+                })
+            }
+            
             if let arguments = item.iconArguments {
                 imageView.set(arguments: arguments)
-            } else {
-                imageView.layer?.contents = item.docIcon
             }
             
             

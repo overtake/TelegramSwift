@@ -65,6 +65,7 @@ private class PictureInpictureView : Control {
 }
 
 fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
+    private let saver: WindowSaver
     fileprivate let _window: Window
     fileprivate let control: PictureInPictureControl
     private let rect:NSRect
@@ -85,13 +86,16 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         self._contentInteractions = contentInteractions
         self._type = type
         self.control = control
-        let minSize = control.view.frame.size.aspectFilled(NSMakeSize(250, 250))
+        let minSize = control.view.frame.size.aspectFilled(NSMakeSize(120, 120))
         let size = item.notFittedSize.aspectFilled(NSMakeSize(250, 250)).aspectFilled(minSize)
         let newRect = NSMakeRect(origin.x, origin.y, size.width, size.height)
         self.rect = newRect
         self.restoreRect = NSMakeRect(origin.x, origin.y, control.view.frame.width, control.view.frame.height)
         self.item = item
         _window = Window(contentRect: newRect, styleMask: [.resizable], backing: .buffered, defer: true)
+        _window.name = "pip"
+        self.saver = .find(for: _window)
+        _window.setFrame(NSMakeRect(3000, 3000, saver.rect.width, saver.rect.height), display: true)
         super.init(contentRect: newRect, styleMask: [.resizable, .nonactivatingPanel], backing: .buffered, defer: true)
 
         //self.isOpaque = false
@@ -181,8 +185,6 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
         self.control.setMode(.pip, animated: true)
     }
     
-    
-
     func hide() {
         
 
@@ -269,17 +271,6 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
             }
             setFrame(newFrame, display: true, animate: true)
 
-            
-//            switch alignment {
-//            case .topLeft:
-//                setFrame(NSMakeRect(30, 30, self.frame.width, self.frame.height), display: true, animate: true)
-//            case .topRight:
-//                setFrame(NSMakeRect(frame.width - self.frame.width - 30, 30, self.frame.width, self.frame.height), display: true, animate: true)
-//            case .bottomLeft:
-//                setFrame(NSMakeRect(30, frame.height - self.frame.height - 30, self.frame.width, self.frame.height), display: true, animate: true)
-//            case .bottomRight:
-//                setFrame(NSMakeRect(frame.width - self.frame.width - 30, frame.height - self.frame.height - 30, self.frame.width, self.frame.height), display: true, animate: true)
-//            }
         }
     }
     
@@ -289,6 +280,8 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
     }
     override func setFrame(_ frameRect: NSRect, display flag: Bool, animate animateFlag: Bool) {
         super.setFrame(frameRect, display: flag, animate: animateFlag)
+        saver.rect = frameRect
+        saver.save()
     }
 
     override func makeKeyAndOrderFront(_ sender: Any?) {
@@ -297,13 +290,16 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
             let savedRect: NSRect = NSMakeRect(0, 0, screen.frame.width * 0.3, screen.frame.width * 0.3)
             let convert_s = self.rect.size.aspectFilled(NSMakeSize(min(savedRect.width, 250), min(savedRect.height, 250)))
             self.aspectRatio = self.rect.size.fitted(NSMakeSize(savedRect.width, savedRect.height))
-            self.minSize = self.rect.size.aspectFitted(NSMakeSize(savedRect.width, savedRect.height)).aspectFilled(NSMakeSize(250, 250))
+            self.minSize = self.rect.size.aspectFitted(NSMakeSize(savedRect.width, savedRect.height)).aspectFilled(NSMakeSize(120, 120))
             
             let frame = NSScreen.main?.frame ?? NSMakeRect(0, 0, 1920, 1080)
             
             self.maxSize = self.rect.size.aspectFitted(frame.size)
+            
+            var rect = saver.rect.size.bounds
+            rect.origin = NSMakePoint(screen.frame.width - convert_s.width - 30, screen.frame.height - convert_s.height - 50)
 
-            self.setFrame(NSMakeRect(screen.frame.maxX - convert_s.width - 30, screen.frame.maxY - convert_s.height - 50, convert_s.width, convert_s.height), display: true, animate: true)
+            self.setFrame(NSMakeRect(saver.rect.minX, saver.rect.minY, convert_s.width, convert_s.height), display: true, animate: true)
            
         }
     }

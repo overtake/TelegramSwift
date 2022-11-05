@@ -264,6 +264,9 @@ final class WallpaperCheckboxView : Control {
         } else {
             backgroundColor = isSelected ? theme.chatServiceItemColor.darker() : theme.chatServiceItemColor
         }
+        if colorsValue.isEmpty {
+            checkbox.set(isSelected: self.isSelected, animated: true)
+        }
     }
     
     override func draw(_ layer: CALayer, in ctx: CGContext) {

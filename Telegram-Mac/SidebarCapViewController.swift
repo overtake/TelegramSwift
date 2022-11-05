@@ -108,7 +108,7 @@ class SidebarCapViewController: GenericViewController<SidebarCapView> {
                     return postbox.peerView(id: value.peerId) |> map {
                         return peerViewMainPeer($0)?.canSendMessage(false) ?? false
                     }
-                case .replyThread:
+                case .thread:
                     return postbox.peerView(id: value.peerId) |> map {
                         return peerViewMainPeer($0)?.canSendMessage(true) ?? false
                     }

@@ -165,7 +165,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     private let termDisposable = MetaDisposable()
     private let someActionsDisposable = DisposableSet()
     private let clearReadNotifiesDisposable = MetaDisposable()
-    private let chatUndoManagerDisposable = MetaDisposable()
     private let appUpdateDisposable = MetaDisposable()
     private let updatesDisposable = MetaDisposable()
     private let updateFoldersDisposable = MetaDisposable()
@@ -182,7 +181,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     
     private var launchAction: ApplicationContextLaunchAction?
     
-    init(window: Window, context: AccountContext, launchSettings: LaunchSettings, callSession: PCallSession?, groupCallContext: GroupCallContext?) {
+    init(window: Window, context: AccountContext, launchSettings: LaunchSettings, callSession: PCallSession?, groupCallContext: GroupCallContext?, folders: ChatListFolders?) {
         
         self.context = context
         emptyController = EmptyChatViewController(context)
@@ -241,9 +240,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         leftController = MainViewController(context);
 
-        
-        leftController.navigationController = rightController
-        
+                
         
         super.init()
         
@@ -272,7 +269,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 fatalError("Cannot use bindings. Application context is not exists")
             }
             self.leftController.tabController.select(index: self.leftController.chatIndex)
-            self.leftController.chatList.globalSearch(search)
+            self.leftController.globalSearch(search)
         }, entertainment: { [weak self] () -> EntertainmentViewController in
             guard let `self` = self else {
                 return EntertainmentViewController.init(size: NSZeroSize, context: context)
@@ -469,61 +466,74 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(0, true)
+            self?.switchAccount(1, true)
             return .invoked
         }, with: self, for: .One, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(1, true)
+            self?.switchAccount(2, true)
             return .invoked
         }, with: self, for: .Two, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(2, true)
+            self?.switchAccount(3, true)
             return .invoked
         }, with: self, for: .Three, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(3, true)
+            self?.switchAccount(4, true)
             return .invoked
         }, with: self, for: .Four, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(4, true)
+            self?.switchAccount(5, true)
             return .invoked
         }, with: self, for: .Five, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(5, true)
+            self?.switchAccount(6, true)
             return .invoked
         }, with: self, for: .Six, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(6, true)
+            self?.switchAccount(7, true)
             return .invoked
         }, with: self, for: .Seven, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(7, true)
+            self?.switchAccount(8, true)
             return .invoked
         }, with: self, for: .Eight, priority: .low, modifierFlags: [.control])
         
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(8, true)
+            self?.switchAccount(9, true)
             return .invoked
         }, with: self, for: .Nine, priority: .low, modifierFlags: [.control])
-        
-        window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            self?.openChat(9, true)
-            return .invoked
-        }, with: self, for: .Minus, priority: .low, modifierFlags: [.control])
-        
+                
         
         #if DEBUG
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            showModal(with: AvatarConstructorController(context, target: .avatar), for: context.window)
+            
+//            context.bindings.rootNavigation().push(ForumTopicInfoController(context: context, purpose: .create))
+            
+//            let rect = self!.window.contentView!.frame.focus(NSMakeSize(160, 160))
+//            self!.window.contentView!.addSubview(CustomReactionEffectView(frame: rect, context: context, fileId: 5415816441561619011))
+            
+//            let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: 5415816441561619011, file: nil, emoji: ""), size: NSMakeSize(30, 30))
+//            testParabolla(layer, window: context.window)
+
+//            showModal(with: PremiumLimitController.init(context: context, type: .pin), for: context.window)
+//            showModal(with: PremiumBoardingController(context: context), for: context.window)
+//            showInactiveChannels(context: context, source: .create)
+//            showModal(with: AvatarConstructorController(context, target: .avatar), for: context.window)
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
+        
+        window.set(handler: { [weak self] _ -> KeyHandlerResult in
+            
+            showModal(with: PremiumLimitController(context: context, type: .pin), for: context.window)
+            return .invoked
+        }, with: self, for: .Y, priority: .supreme, modifierFlags: [.command])
         #endif
         
         
@@ -574,18 +584,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         someActionsDisposable.add(applyUpdateTextIfNeeded(context.account.postbox).start())
         
- 
-        
-        let foldersSemaphore = DispatchSemaphore(value: 0)
-        var folders: ChatListFolders = ChatListFolders(list: [], sidebar: false)
-            
-        _ = (chatListFilterPreferences(engine: context.engine) |> take(1)).start(next: { value in
-            folders = value
-            foldersSemaphore.signal()
-        })
-        foldersSemaphore.wait()
-        
-        self.updateLeftSidebar(with: folders, layout: context.sharedContext.layout, animated: false)
+        if let folders = folders {
+            self.updateLeftSidebar(with: folders, layout: context.layout, animated: false)
+        }
         
         
         self.view.splitView.layout()
@@ -600,96 +601,51 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
                 _ready.set(leftController.settings.ready.get())
                 leftController.tabController.select(index: leftController.settingsIndex)
             case let .profile(peerId, necessary):
-                let peerSemaphore = DispatchSemaphore(value: 0)
-                var peer: Peer?
-                _ = context.account.postbox.transaction { transaction in
-                    peer = transaction.getPeer(peerId)
-                    peerSemaphore.signal()
-                }.start()
-                peerSemaphore.wait()
-
+                
                 _ready.set(leftController.chatList.ready.get())
                 self.leftController.tabController.select(index: self.leftController.chatIndex)
 
-                if (necessary || context.sharedContext.layout != .single) {
-                    if let _ = peer {
-                        let controller = PeerInfoController(context: context, peerId: peerId)
-                        controller.navigationController = self.rightController
-                        controller.loadViewIfNeeded(self.rightController.bounds)
+                if (necessary || context.layout != .single) {
+                    let controller = PeerInfoController(context: context, peerId: peerId)
+                    controller.navigationController = self.rightController
+                    controller.loadViewIfNeeded(self.rightController.bounds)
 
-                        self.launchAction = .navigate(controller)
+                    self.launchAction = .navigate(controller)
 
-                        self._ready.set(combineLatest(self.leftController.chatList.ready.get(), controller.ready.get()) |> map { $0 && $1 })
-                        self.leftController.tabController.select(index: self.leftController.chatIndex)
-                    } else {
-                       // self._ready.set(self.leftController.chatList.ready.get())
-                        self.leftController.tabController.select(index: self.leftController.chatIndex)
-                        self._ready.set(.single(true))
-                    }
+                    self._ready.set(combineLatest(self.leftController.chatList.ready.get(), controller.ready.get()) |> map { $0 && $1 })
+                    self.leftController.tabController.select(index: self.leftController.chatIndex)
                 } else {
-                   // self._ready.set(.single(true))
                     _ready.set(leftController.chatList.ready.get())
                     self.leftController.tabController.select(index: self.leftController.chatIndex)
                 }
             case let .chat(peerId, necessary):
-                let peerSemaphore = DispatchSemaphore(value: 0)
-                var peer: Peer?
-                _ = context.account.postbox.transaction { transaction in
-                    peer = transaction.getPeer(peerId)
-                    peerSemaphore.signal()
-                }.start()
-                peerSemaphore.wait()
                 
                 _ready.set(leftController.chatList.ready.get())
                 self.leftController.tabController.select(index: self.leftController.chatIndex)
                 
-                if (necessary || context.sharedContext.layout != .single) {
-                    if let peer = peer {
-                        let controller = ChatController(context: context, chatLocation: .peer(peer.id))
-                        controller.navigationController = self.rightController
-                        controller.loadViewIfNeeded(self.rightController.bounds)
+                if (necessary || context.layout != .single) {
+                    let controller = ChatController(context: context, chatLocation: .peer(peerId))
+                    controller.navigationController = self.rightController
+                    controller.loadViewIfNeeded(self.rightController.bounds)
 
-                        self.launchAction = .navigate(controller)
+                    self.launchAction = .navigate(controller)
 
-                        self._ready.set(combineLatest(self.leftController.chatList.ready.get(), controller.ready.get()) |> map { $0 && $1 })
-                        self.leftController.tabController.select(index: self.leftController.chatIndex)
-                    } else {
-                       // self._ready.set(self.leftController.chatList.ready.get())
-                        self.leftController.tabController.select(index: self.leftController.chatIndex)
-                        self._ready.set(.single(true))
-                    }
+                    self._ready.set(combineLatest(self.leftController.chatList.ready.get(), controller.ready.get()) |> map { $0 && $1 })
+                    self.leftController.tabController.select(index: self.leftController.chatIndex)
                 } else {
                    // self._ready.set(.single(true))
                     _ready.set(leftController.chatList.ready.get())
                     self.leftController.tabController.select(index: self.leftController.chatIndex)
                 }
-            case let .thread(threadId, fromId, _):
+            case let .thread(threadId, fromId, threadData, _):
                 self.leftController.tabController.select(index: self.leftController.chatIndex)
                 self._ready.set(self.leftController.chatList.ready.get())
                 
-                let signal:Signal<ReplyThreadInfo, FetchChannelReplyThreadMessageError> = fetchAndPreloadReplyThreadInfo(context: context, subject: .channelPost(threadId))
-                
-                _ = showModalProgress(signal: signal |> take(1), for: context.window).start(next: { [weak context] result in
-                    guard let context = context else {
-                        return
-                    }
-                    let chatLocation: ChatLocation = .replyThread(result.message)
-                    
-                    let updatedMode: ReplyThreadMode
-                    if result.isChannelPost {
-                        updatedMode = .comments(origin: fromId)
-                    } else {
-                        updatedMode = .replies(origin: fromId)
-                    }
-                    
-                    let controller = ChatController.init(context: context, chatLocation: chatLocation, mode: .replyThread(data: result.message, mode: updatedMode), messageId: fromId, initialAction: nil, chatLocationContextHolder: result.contextHolder)
-                    
-                    context.bindings.rootNavigation().push(controller)
-                    
-                }, error: { error in
-                    
-                })
-                
+                if let fromId = fromId {
+                    context.navigateToThread(threadId, fromId: fromId)
+                } else if let _ = threadData {
+                    _ = ForumUI.openTopic(makeMessageThreadId(threadId), peerId: threadId.peerId, context: context).start()
+                }
             }
         } else {
            // self._ready.set(.single(true))
@@ -706,7 +662,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             rightController.callHeader?.show(true, contextObject: groupCallContext)
         }
         
-        self.updateFoldersDisposable.set(combineLatest(queue: .mainQueue(), chatListFilterPreferences(engine: context.engine), context.sharedContext.layoutHandler.get()).start(next: { [weak self] value, layout in
+        self.updateFoldersDisposable.set(combineLatest(queue: .mainQueue(), chatListFilterPreferences(engine: context.engine), context.layoutValue).start(next: { [weak self] value, layout in
             self?.updateLeftSidebar(with: value, layout: layout, animated: true)
         }))
         
@@ -722,9 +678,9 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     private var previousLayout: SplitViewState?
     private let foldersReadyDisposable = MetaDisposable()
     private func updateLeftSidebar(with folders: ChatListFolders, layout: SplitViewState, animated: Bool) -> Void {
-        
-        let currentSidebar = !folders.list.isEmpty && (folders.sidebar || layout == .minimisize)
-        let previousSidebar = self.folders == nil ? nil : !self.folders!.list.isEmpty && (self.folders!.sidebar || self.previousLayout == SplitViewState.minimisize)
+                
+        let currentSidebar = !folders.isEmpty && (folders.sidebar || layout == .minimisize)
+        let previousSidebar = self.folders == nil ? nil : !self.folders!.isEmpty && (self.folders!.sidebar || self.previousLayout == SplitViewState.minimisize)
 
         let readySignal: Signal<Bool, NoError>
         
@@ -775,7 +731,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         if leftSidebarController != nil {
             width += leftSidebarWidth
         }
-        if context.sharedContext.layout == .minimisize {
+        if context.layout == .minimisize {
             width += 70
         }
         window.minSize = NSMakeSize(width, 550)
@@ -792,7 +748,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             switch launchAction {
             case let .navigate(controller):
                 leftController.tabController.select(index: leftController.chatIndex)
-                context.bindings.rootNavigation().push(controller, context.sharedContext.layout == .single)
+                context.bindings.rootNavigation().push(controller, context.layout == .single)
             case .preferences:
                 leftController.tabController.select(index: leftController.settingsIndex)
             }
@@ -807,6 +763,16 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
     
     private func openChat(_ index: Int, _ force: Bool = false) {
         leftController.openChat(index, force: force)
+    }
+    
+    private func switchAccount(_ index: Int, _ force: Bool = false) {
+        
+        let accounts = context.sharedContext.activeAccounts |> take(1) |> deliverOnMainQueue
+        let context = self.context
+        _ = accounts.start(next: { accounts in
+            let account = accounts.accounts[min(index - 1, accounts.accounts.count - 1)]
+            context.sharedContext.switchToAccount(id: account.0, action: nil)
+        })
     }
     
     func splitResizeCursor(at point: NSPoint) -> NSCursor? {
@@ -871,10 +837,11 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
             break;
         }
         
-        context.sharedContext.layoutHandler.set(state)
         updateMinMaxWindowSize(animated: false)
-        self.view.splitView.layout()
-
+        DispatchQueue.main.async {
+            self.view.splitView.needsLayout = true
+        }
+        context.layout = state
     }
     
 
@@ -907,7 +874,6 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         viewer?.close()
         someActionsDisposable.dispose()
         clearReadNotifiesDisposable.dispose()
-        chatUndoManagerDisposable.dispose()
         appUpdateDisposable.dispose()
         updatesDisposable.dispose()
         updateFoldersDisposable.dispose()

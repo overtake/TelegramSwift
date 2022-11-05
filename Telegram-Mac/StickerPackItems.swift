@@ -16,50 +16,65 @@ import SwiftSignalKit
 class StickerPackRowItem: TableRowItem {
     
     override var height:CGFloat {
-        return 40.0
+        return 36
     }
     
     override var width: CGFloat {
-        return 40
+        return 36
     }
     
     let info:StickerPackCollectionInfo
     let topItem:StickerPackItem?
     let context: AccountContext
     
-    let _stableId:StickerPackCollectionId
+    let _stableId:AnyHashable
     override var stableId:AnyHashable {
         return _stableId
     }
     let packIndex: Int
+    let isPremium: Bool
+    let installed: Bool?
     
-    init(_ initialSize:NSSize, packIndex: Int, context:AccountContext, stableId: StickerPackCollectionId, info:StickerPackCollectionInfo, topItem:StickerPackItem?) {
+    init(_ initialSize:NSSize, stableId: AnyHashable, packIndex: Int, isPremium: Bool, installed: Bool? = nil, context:AccountContext, info:StickerPackCollectionInfo, topItem:StickerPackItem?) {
         self.context = context
         self.packIndex = packIndex
         self._stableId = stableId
         self.info = info
         self.topItem = topItem
+        self.isPremium = isPremium
+        self.installed = installed
         super.init(initialSize)
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
         var items:[ContextMenuItem] = []
         let context = self.context
+        let info = info.id
         
-        switch _stableId {
-        case let .pack(id):
-            items.append(ContextMenuItem(strings().stickersContextArchive, handler: {
-                _ = context.engine.stickers.removeStickerPackInteractively(id: id, option: RemoveStickerPackOption.archive).start()
-            }, itemImage: MenuAnimation.menu_archive.value))
-
-        default:
-            break
+        let id = ItemCollectionId(namespace: info.namespace, id: info.id)
+        
+        let text: String
+        let option: RemoveStickerPackOption
+        let animation: MenuAnimation
+        if info.namespace == Namespaces.ItemCollection.CloudEmojiPacks {
+            text = strings().emojiContextRemove
+            option = .delete
+            animation = .menu_delete
+        } else {
+            text = strings().stickersContextArchive
+            option = .archive
+            animation = .menu_archive
         }
+        
+        items.append(ContextMenuItem(strings().emojiContextRemove, handler: {
+            _ = context.engine.stickers.removeStickerPackInteractively(id: id, option: option).start()
+        }, itemImage: animation.value))
+        
         return .single(items)
     }
     
-    func contentNode()->ChatMediaContentView.Type {
-        return StickerMediaContentView.self
+    func animateAppearance(delay: Double, duration: Double, ignoreCount: Int) {
+        (self.view as? StickerPackRowView)?.animateAppearance(delay: delay, duration: duration, ignoreCount: ignoreCount)
     }
     
     override func viewClass() -> AnyClass {
@@ -70,10 +85,10 @@ class StickerPackRowItem: TableRowItem {
 class RecentPackRowItem: TableRowItem {
     
     override var height:CGFloat {
-        return 40.0
+        return 36
     }
     override var width: CGFloat {
-        return 40.0
+        return 36
     }
     
     let _stableId:StickerPackCollectionId
@@ -95,18 +110,11 @@ class RecentPackRowView: HorizontalRowView {
     
     var imageView:ImageView = ImageView()
     
-    var overlay:ImageButton = ImageButton()
     
     required init(frame frameRect:NSRect) {
         super.init(frame:frameRect)
         
-        overlay.setFrameSize(35, 35)
-        overlay.userInteractionEnabled = false
-        overlay.autohighlight = false
-        overlay.canHighlight = false
         imageView.setFrameSize(30, 30)
-
-        addSubview(overlay)
         addSubview(imageView)
         
     }
@@ -114,7 +122,10 @@ class RecentPackRowView: HorizontalRowView {
     override func layout() {
         super.layout()
         imageView.center()
-        overlay.center()
+    }
+    
+    override var backdorColor: NSColor {
+        return .clear
     }
     
     deinit {
@@ -128,20 +139,22 @@ class RecentPackRowView: HorizontalRowView {
     override func set(item:TableRowItem, animated:Bool = false) {
         
         super.set(item: item, animated: animated)
-        overlay.set(image: theme.icons.stickerPackSelection, for: .Normal)
-        overlay.set(image: theme.icons.stickerPackSelectionActive, for: .Highlight)
         
-        overlay.isSelected = item.isSelected
-
         if let item = item as? RecentPackRowItem {
             self.needsLayout = true
             switch item._stableId {
             case .saved:
-                imageView.image = theme.icons.stickersTabFave
+                imageView.image = item.isSelected ? theme.icons.stickers_favorite_active : theme.icons.stickers_favorite
             case .recent:
-                imageView.image = theme.icons.stickersTabRecent
+                imageView.image = item.isSelected ? theme.icons.emojiRecentTabActive : theme.icons.emojiRecentTab
+            case .premium:
+                imageView.image = theme.icons.premium_stickers
             case let .featured(hasUnred):
-                imageView.image = hasUnred ? theme.icons.stickers_add_featured_unread : theme.icons.stickers_add_featured
+                if item.isSelected {
+                    imageView.image = hasUnred ? theme.icons.stickers_add_featured_unread_active : theme.icons.stickers_add_featured_active
+                } else {
+                    imageView.image = hasUnred ? theme.icons.stickers_add_featured_unread : theme.icons.stickers_add_featured
+                }
             default:
                 break
             }
@@ -156,10 +169,10 @@ class RecentPackRowView: HorizontalRowView {
 
 class StickerSpecificPackItem: TableRowItem {
     override var height:CGFloat {
-        return 40.0
+        return 36
     }
     override var width: CGFloat {
-        return 40.0
+        return 36
     }
     fileprivate let specificPack: (StickerPackCollectionInfo, Peer)
     fileprivate let account: Account
@@ -184,26 +197,22 @@ class StickerSpecificPackView: HorizontalRowView {
     
     
     var imageView:AvatarControl = AvatarControl(font: .medium(.short))
-    
-    var overlay:ImageButton = ImageButton()
-    
+        
     required init(frame frameRect:NSRect) {
         super.init(frame:frameRect)
         
         imageView.setFrameSize(30, 30)
-        overlay.setFrameSize(35, 35)
-        overlay.userInteractionEnabled = false
-        overlay.autohighlight = false
-        overlay.canHighlight = false
         imageView.userInteractionEnabled = false
-        addSubview(overlay)
         addSubview(imageView)
     }
     
     override func layout() {
         super.layout()
         imageView.center()
-        overlay.center()
+    }
+    
+    override var backdorColor: NSColor {
+        return .clear
     }
     
     
@@ -217,9 +226,6 @@ class StickerSpecificPackView: HorizontalRowView {
     
     override func set(item:TableRowItem, animated:Bool = false) {
         super.set(item: item, animated: animated)
-        overlay.set(image: theme.icons.stickerPackSelection, for: .Normal)
-        overlay.set(image: theme.icons.stickerPackSelectionActive, for: .Highlight)
-        overlay.isSelected = item.isSelected
         if let item = item as? StickerSpecificPackItem {
             imageView.setPeer(account: item.account, peer: item.specificPack.1)
         }
@@ -229,16 +235,48 @@ class StickerSpecificPackView: HorizontalRowView {
 
 private final class StickerPackRowView : HorizontalRowView {
     
+    private var inlineSticker: InlineStickerItemLayer?
     
-    var overlay:ImageButton = ImageButton()
+    
+    
+    func animateAppearance(delay: Double, duration: Double, ignoreCount: Int) {
+        self.inlineSticker?.animateScale(from: 0.1, to: 1, duration: duration, timingFunction: .spring, delay: delay)
+        self.lockedView?.animateScale(from: 0.1, to: 1, duration: duration, timingFunction: .spring, delay: delay)
+    }
+    
+    private var lockedView: InlineStickerLockLayer?
+
+    
+    private var isLocked: Bool = false
+    func set(locked: Bool, unlock: Bool, animated: Bool) {
+        self.isLocked = locked
+        if isLocked {
+            let current: InlineStickerLockLayer
+            if let view = self.lockedView {
+                current = view
+            } else {
+                current = InlineStickerLockLayer(frame: NSMakeRect(0, 0, 15, 15))
+                self.lockedView = current
+                if animated {
+                    current.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            current.removeFromSuperlayer()
+            self.container.layer?.addSublayer(current)
+
+            current.updateImage(unlock ? theme.icons.premium_lock : theme.icons.premium_plus)
+            if let layer = self.inlineSticker {
+                current.tieToLayer(layer)
+            }
+        } else if let view = lockedView {
+            performSublayerRemoval(view, animated: animated)
+            self.lockedView = nil
+        }
+        needsLayout = true
+    }
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        overlay.setFrameSize(35, 35)
-        overlay.autohighlight = false
-        overlay.canHighlight = false
-        overlay.userInteractionEnabled = false
-        addSubview(overlay)
         
     }
     
@@ -246,54 +284,40 @@ private final class StickerPackRowView : HorizontalRowView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    fileprivate(set) var contentNode:ChatMediaContentView?
-    
-    
-    override var backgroundColor: NSColor {
-        didSet {
-            contentNode?.backgroundColor = backdorColor
-        }
-    }
     
     override var backdorColor: NSColor {
         return .clear
     }
-    
-    override func shakeView() {
-        contentNode?.shake()
-    }
-    
-    
-    override func updateMouse() {
-        super.updateMouse()
-        self.contentNode?.updateMouse()
-    }
-    
-    
-    override func viewWillMove(toSuperview newSuperview: NSView?) {
-        if newSuperview == nil {
-            self.contentNode?.willRemove()
+
+    override func updateAnimatableContent() -> Void {
+        if let value = self.inlineSticker, let superview = value.superview {
+            var isKeyWindow: Bool = false
+            if let window = window {
+                if !window.canBecomeKey {
+                    isKeyWindow = true
+                } else {
+                    isKeyWindow = window.isKeyWindow
+                }
+            }
+            value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
         }
     }
+
     
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        if window == nil {
-            contentNode?.removeFromSuperview()
-            contentNode = nil
-        } else if let item = item, contentNode == nil {
-            self.set(item: item, animated: false)
+    override func layout() {
+        super.layout()
+        if let lockedView = lockedView {
+            let point = NSMakePoint(frame.width - lockedView.frame.width - 4, frame.height - lockedView.frame.height - 4)
+            lockedView.frame = CGRect.init(origin: point, size: lockedView.frame.size)
         }
     }
     
     override func set(item:TableRowItem, animated:Bool = false) {
+        
+        super.set(item: item, animated: animated)
+
+        
         if let item = item as? StickerPackRowItem {
-            if contentNode == nil || !contentNode!.isKind(of: item.contentNode())  {
-                self.contentNode?.removeFromSuperview()
-                let node = item.contentNode()
-                self.contentNode = node.init(frame:NSZeroRect)
-                self.addSubview(self.contentNode!)
-            }
             
             var file: TelegramMediaFile?
             if let thumbnail = item.info.thumbnail {
@@ -301,28 +325,125 @@ private final class StickerPackRowView : HorizontalRowView {
             } else if let item = item.topItem {
                 file = item.file
             }
-            self.contentNode?.userInteractionEnabled = false
-            self.contentNode?.isEventLess = true
-            if let file = file {
-                self.contentNode?.update(with: file, size: NSMakeSize(30, 30), context: item.context, parent: nil, table: item.table, parameters: nil, animated: animated, positionFlags: nil, approximateSynchronousValue: false)
+            
+            
+            let current: InlineStickerItemLayer?
+            if let view = self.inlineSticker, view.file?.fileId == file?.fileId {
+                current = view
+            } else {
+                self.inlineSticker?.removeFromSuperlayer()
+                self.inlineSticker = nil
+                if let file = file {
+                    current = InlineStickerItemLayer(account: item.context.account, file: file, size: NSMakeSize(26, 26))
+                    self.container.layer?.addSublayer(current!)
+                    self.inlineSticker = current
+                } else {
+                    current = nil
+                }
+            }
+            current?.superview = self.container
+            current?.frame = CGRect(origin: NSMakePoint(5, 5), size: NSMakeSize(26, 26))
+            
+            let unlock: Bool
+            if !item.context.isPremium && item.isPremium {
+                unlock = true
+            } else if (item.installed != nil && !item.installed!) {
+                unlock = false
+            } else {
+                unlock = true
             }
             
+            self.set(locked: (!item.context.isPremium && item.isPremium) || (item.installed != nil && !item.installed!), unlock: unlock, animated: animated)
+
         }
         
-        overlay.set(image: theme.icons.stickerPackSelection, for: .Normal)
-        overlay.set(image: theme.icons.stickerPackSelectionActive, for: .Highlight)
-        
-        overlay.isSelected = item.isSelected
-        
-        super.set(item: item, animated: animated)
         
         needsLayout = true
     }
     
+}
+
+
+
+
+
+class ETabRowItem: TableRowItem {
+    
+    let icon:CGImage
+    let iconSelected: CGImage
+        
+    override func viewClass() -> AnyClass {
+        return ETabRowView.self
+    }
+    
+    let _stableId:AnyHashable
+    override var stableId: AnyHashable {
+        return _stableId
+    }
+    
+    override var height: CGFloat {
+        return 36
+    }
+    
+    override var width: CGFloat {
+        return 36
+    }
+    
+    init(_ initialSize:NSSize, stableId: AnyHashable, icon: CGImage, iconSelected: CGImage) {
+        self.icon = icon
+        self._stableId = stableId
+        self.iconSelected = iconSelected
+        super.init(initialSize)
+    }
+    
+    func animateAppearance(delay: Double, duration: Double, ignoreCount: Int) {
+        (self.view as? ETabRowView)?.animateAppearance(delay: delay, duration: duration, ignoreCount: ignoreCount)
+    }
+    
+}
+
+
+
+class ETabRowView: HorizontalRowView {
+    
+    private let image:ImageView = ImageView()
+
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+    
+        addSubview(image)
+
+        image.isEventLess = true
+
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func draw(_ layer: CALayer, in ctx: CGContext) {
+        super.draw(layer, in: ctx)
+        
+    }
+    override var backdorColor: NSColor {
+        return .clear
+    }
+    
     override func layout() {
         super.layout()
-        
-        self.contentNode?.center()
-        overlay.center()
+        image.center()
+    }
+    
+    override func set(item: TableRowItem, animated: Bool) {
+        super.set(item: item, animated:animated)
+        if let item = item as? ETabRowItem {
+            image.image = item.isSelected ? item.iconSelected : item.icon
+            image.sizeToFit()
+        }
+        needsLayout = true
+    }
+    
+    func animateAppearance(delay: Double, duration: Double, ignoreCount: Int) {
+        image.layer?.animateScaleSpring(from: 0.1, to: 1, duration: duration, delay: delay)
     }
 }

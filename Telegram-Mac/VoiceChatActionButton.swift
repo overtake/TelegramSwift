@@ -180,7 +180,7 @@ final class VoiceChatActionButtonBackgroundView: View {
 //        isCurrentlyInHierarchy = window != nil
         if let window = window as? Window {
             occlusionDisposable.set(window.takeOcclusionState.start(next: { [weak self] value in
-                self?.isCurrentlyInHierarchy = value.contains(.visible)
+                self?.isCurrentlyInHierarchy = true
             }))
         } else {
             occlusionDisposable.set(nil)
@@ -701,7 +701,7 @@ final class VoiceChatActionButtonBackgroundView: View {
 
 
 
-final class VoiceChatBlobLayer: CALayer {
+final class VoiceChatBlobLayer: SimpleLayer {
     private let mediumBlob: BlobLayer
     private let bigBlob: BlobLayer
 
@@ -767,31 +767,6 @@ final class VoiceChatBlobLayer: CALayer {
         }
     }
     
-    override init(layer: Any) {
-        let mediumBlobRange:BlobRange = (0.69, 0.87)
-        let bigBlobRange:BlobRange = (0.71, 1.0)
-        self.maxLevel = 1.5
-
-        self.mediumBlob = BlobLayer(
-            pointsCount: 8,
-            minRandomness: 1,
-            maxRandomness: 1,
-            minSpeed: 0.9,
-            maxSpeed: 4.0,
-            minScale: mediumBlobRange.min,
-            maxScale: mediumBlobRange.max
-        )
-        self.bigBlob = BlobLayer(
-            pointsCount: 8,
-            minRandomness: 1,
-            maxRandomness: 1,
-            minSpeed: 1.0,
-            maxSpeed: 4.4,
-            minScale: bigBlobRange.min,
-            maxScale: bigBlobRange.max
-        )
-        super.init(layer: layer)
-    }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -858,7 +833,7 @@ final class VoiceChatBlobLayer: CALayer {
     }
 }
 
-final class BlobLayer: CAShapeLayer {
+final class BlobLayer: SimpleShapeLayer {
     let pointsCount: Int
     let smoothness: CGFloat
 
@@ -903,8 +878,23 @@ final class BlobLayer: CAShapeLayer {
     private var transition: CGFloat = 0 {
         didSet {
             guard let currentPoints = currentPoints else { return }
-
-            shapeLayer.path = CGPath.smoothCurve(through: currentPoints, length: bounds.width, smoothness: smoothness)
+            let width = self.bounds.width
+            let smoothness = self.smoothness
+            
+            let signal: Signal<CGPath, NoError> = Signal { subscriber in
+                
+                subscriber.putNext(.smoothCurve(through: currentPoints, length: width, smoothness: smoothness))
+                subscriber.putCompletion()
+                
+                return EmptyDisposable
+                
+            }
+            |> runOn(resourcesQueue)
+            |> deliverOnMainQueue
+            
+            _ = signal.start(next: { [weak self] path in
+                self?.shapeLayer.path = path
+            })
         }
     }
 
@@ -950,21 +940,6 @@ final class BlobLayer: CAShapeLayer {
 
     }
     
-    override init(layer: Any) {
-        let prev = layer as! BlobLayer
-        self.pointsCount = prev.pointsCount
-        self.minRandomness = prev.minRandomness
-        self.maxRandomness = prev.maxRandomness
-        self.minSpeed = prev.minSpeed
-        self.maxSpeed = prev.maxSpeed
-        self.minScale = prev.minScale
-        self.maxScale = prev.maxScale
-        let angle = (CGFloat.pi * 2) / CGFloat(pointsCount)
-        self.smoothness = ((4 / 3) * tan(angle / 4)) / sin(angle / 2) / 2
-        super.init(layer: layer)
-        self.addSublayer(shapeLayer)
-        shapeLayer.transform = CATransform3DMakeScale(minScale, minScale, 1)
-    }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

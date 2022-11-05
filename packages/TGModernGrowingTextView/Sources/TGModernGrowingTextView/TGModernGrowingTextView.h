@@ -11,6 +11,15 @@
 
 extern NSString * _Nonnull const TGCustomLinkAttributeName;
 extern NSString * _Nonnull const TGSpoilerAttributeName;
+extern NSString * _Nonnull const TGAnimatedEmojiAttributeName;
+extern NSString * _Nonnull const TGEmojiHolderAttributeName;
+
+
+typedef NS_ENUM(NSInteger, TGTextInputTagId) {
+    inputTagIdSpoiler = -1,
+    inputTagIdEmojiHolder = -2
+};
+
 @class TGModernGrowingTextView;
 
 @interface MarkdownUndoItem : NSObject
@@ -77,9 +86,12 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar);
 
 @property (nonatomic,strong) NSColor* _Nonnull cursorColor;
 @property (nonatomic,strong) NSColor* _Nonnull textColor;
+@property (nonatomic,strong) NSColor* _Nonnull selectedTextColor;
+
 @property (nonatomic,strong) NSColor* _Nonnull linkColor;
 @property (nonatomic,strong) NSFont* _Nonnull textFont;
 @property (nonatomic,strong,readonly) TGGrowingTextView* _Nonnull inputView;
+@property (nonatomic,strong,readonly) NSScrollView* _Nonnull scroll;
 
 
 @property (nonatomic,strong, nullable) NSAttributedString *placeholderAttributedString;
@@ -127,5 +139,7 @@ void setTextViewEnableTouchBar(BOOL enableTouchBar);
 - (void)addSimpleItem:(SimpleUndoItem *)item;
 
 -(void)setBackgroundColor:(NSColor * __nonnull)color;
+-(NSRect)highlightRectForRange:(NSRange)aRange whole: (BOOL)whole;
+-(void)installGetAttachView:(NSView* _Nullable (^_Nonnull)(TGTextAttachment * _Nonnull, NSSize size))getAttachView;
 
 @end

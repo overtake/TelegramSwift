@@ -51,6 +51,8 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
     case code(Range<Int>)
     case uid(Range<Int>, Int64)
     case url(Range<Int>, String)
+    case animated(Range<Int>, String, Int64, TelegramMediaFile?, ItemCollectionId?, CGRect?)
+    case emojiHolder(Range<Int>, Int64, CGRect, String)
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: StringCodingKey.self)
         
@@ -78,6 +80,8 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
             self = .spoiler(range)
         case 8:
             self = .underline(range)
+        case 9:
+            self = .animated(range, try container.decode(String.self, forKey: "id"), try container.decode(Int64.self, forKey: "fileId"), try container.decodeIfPresent(TelegramMediaFile.self, forKey: "file"), try container.decodeIfPresent(ItemCollectionId.self, forKey: "info"), nil)
         default:
             fatalError("input attribute not supported")
         }
@@ -102,6 +106,10 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
             return 7
         case .underline:
             return 8
+        case .animated:
+            return 9
+        case .emojiHolder:
+            return 10
         }
     }
     
@@ -139,6 +147,18 @@ enum ChatTextInputAttribute : Equatable, Comparable, Codable {
         case let .url(_, url):
             try container.encode(Int32(5), forKey: "_rawValue")
             try container.encode(url, forKey: "url")
+        case let .animated(_, id, fileId, file, info, _):
+            try container.encode(Int32(9), forKey: "_rawValue")
+            try container.encode(id, forKey: "id")
+            try container.encode(fileId, forKey: "fileId")
+            if let file = file {
+                try container.encode(file, forKey: "file")
+            }
+            if let info = info {
+                try container.encode(info, forKey: "info")
+            }
+        case .emojiHolder:
+           break
         }
     }
 
@@ -166,6 +186,12 @@ extension ChatTextInputAttribute {
         case let .url(range, url):
             let tag = TGInputTextTag(uniqueId: Int64(arc4random()), attachment: url, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link))
             return (TGCustomLinkAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+        case let .animated(range, id, fileId, file, info, fromRect):
+            let tag = TGTextAttachment(identifier: "\(id)", fileId: fileId, file: file, text: "", info: info, from: fromRect ?? .zero)
+            return (TGAnimatedEmojiAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
+        case let .emojiHolder(range, id, fromRect, emoji):
+            let tag = TGInputTextEmojiHolder(uniqueId: id, emoji: emoji, rect: fromRect, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: NSColor.clear))
+            return (TGEmojiHolderAttributeName, tag, NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound))
         }
     }
 
@@ -176,6 +202,10 @@ extension ChatTextInputAttribute {
         case let .uid(range, _):
             return range
         case let .url(range, _):
+            return range
+        case let .animated(range, _, _, _, _, _):
+            return range
+        case let .emojiHolder(range, _, _, _):
             return range
         }
     }
@@ -200,12 +230,16 @@ extension ChatTextInputAttribute {
             return .uid(range, uid)
         case let .url(_, url):
             return .url(range, url)
+        case let .animated(_, id, fileId, file, info, fromRect):
+            return .animated(range, id, fileId, file, info, fromRect)
+        case let .emojiHolder(_, id, rect, emoji):
+            return .emojiHolder(range, id, rect, emoji)
         }
     }
 }
 
 
-func chatTextAttributes(from entities:TextEntitiesMessageAttribute) -> [ChatTextInputAttribute] {
+func chatTextAttributes(from entities:TextEntitiesMessageAttribute, associatedMedia:[MediaId : Media] = [:]) -> [ChatTextInputAttribute] {
     var inputAttributes:[ChatTextInputAttribute] = []
     for entity in entities.entities {
         switch entity.type {
@@ -227,6 +261,8 @@ func chatTextAttributes(from entities:TextEntitiesMessageAttribute) -> [ChatText
             inputAttributes.append(.spoiler(entity.range))
         case .Underline:
             inputAttributes.append(.underline(entity.range))
+        case let .CustomEmoji(_, fileId):
+            inputAttributes.append(.animated(entity.range, "\(arc4random())", fileId, nil, nil, nil))
         default:
             break
         }
@@ -272,12 +308,37 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
                 } else if let url = tag.attachment as? String {
                     inputAttributes.append(.url(range.location ..< range.location + range.length, url))
                 }
+            } else if let attachment = value as? TGTextAttachment {
+                if let fileId = attachment.fileId as? Int64 {
+                    inputAttributes.append(.animated(range.location ..< range.location + range.length, attachment.identifier, fileId, attachment.file as? TelegramMediaFile, attachment.info as? ItemCollectionId, attachment.fromRect == .zero ? nil : attachment.fromRect))
+                }
+            } else if let attachment = value as? TGInputTextEmojiHolder {
+                inputAttributes.append(.emojiHolder(range.location ..< range.location + range.length, attachment.uniqueId, attachment.rect, attachment.emoji))
             }
         }
     }
 
-
-    return Array(inputAttributes.prefix(100))
+    var count: Int = 0
+    var animatedCount: Int = 0
+    var attrs:[ChatTextInputAttribute] = []
+    for attr in inputAttributes {
+        switch attr {
+        case .emojiHolder:
+            attrs.append(attr)
+        case .animated:
+            if animatedCount < 100 {
+                attrs.append(attr)
+            }
+            animatedCount += 1
+        default:
+            if count < 100 {
+                attrs.append(attr)
+            }
+            count += 1
+        }
+    }
+    
+    return attrs
 }
 
 //x/m
@@ -306,6 +367,114 @@ final class ChatTextInputState: Codable, Equatable {
         self.selectionRange = selectionRange
         self.attributes = attributes.sorted(by: <)
     }
+    
+    var inlineMedia: [MediaId : Media] {
+        var media:[MediaId : Media] = [:]
+        for attribute in attributes {
+            switch attribute {
+            case .animated(_, _, let fileId, let file, _, _):
+                if let file = file {
+                    media[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] = file
+                }
+            default:
+                break
+            }
+        }
+        return media
+    }
+    var holdedEmojies: [(NSRange, Int64, NSRect, String)] {
+        var values:[(NSRange, Int64, NSRect, String)] = []
+        for attribute in attributes {
+            switch attribute {
+            case let .emojiHolder(range, id, rect, emoji):
+                values.append((NSMakeRange(range.lowerBound, range.upperBound - range.lowerBound), id, rect, emoji))
+            default:
+                break
+            }
+        }
+        return values
+    }
+    
+    var upCollections: [ItemCollectionId] {
+        var media:[ItemCollectionId] = []
+        for attribute in attributes {
+            switch attribute {
+            case let .animated(_, _, _, _, info, _):
+                if let info = info {
+                    if !media.contains(info) {
+                        media.append(info)
+                    }
+                }
+            default:
+                break
+            }
+        }
+        return media
+    }
+    
+    var withoutAnimatedEmoji: ChatTextInputState {
+        let attrs = self.attributes.filter { attr in
+            switch attr {
+            case .animated:
+                return false
+            default:
+                return true
+            }
+        }
+        return .init(inputText: self.inputText, selectionRange: self.selectionRange, attributes: attrs)
+    }
+    
+    func withRemovedHolder(_ id: Int64) -> ChatTextInputState {
+        let attrs = self.attributes.filter { attr in
+            switch attr {
+            case .emojiHolder(_, id, _, _):
+                return false
+            default:
+                return true
+            }
+        }
+        return .init(inputText: self.inputText, selectionRange: self.selectionRange, attributes: attrs)
+    }
+    
+    func isFirstAnimatedEmoji(_ string: String) -> Bool {
+        for attribute in attributes {
+            switch attribute {
+            case let .animated(range, _, _, _, _, _):
+                if range == 0 ..< string.length {
+                    return true
+                }
+            default:
+                break
+            }
+        }
+        return false
+    }
+    func isAnimatedEmoji(at r: NSRange) -> Bool {
+        for attribute in attributes {
+            switch attribute {
+            case let .animated(range, _, _, _, _, _):
+                if range.lowerBound == r.lowerBound && range.upperBound == range.upperBound {
+                    return true
+                }
+            default:
+                break
+            }
+        }
+        return false
+    }
+    func isEmojiHolder(at r: NSRange) -> Bool {
+        for attribute in attributes {
+            switch attribute {
+            case let .emojiHolder(range, _, _, _):
+                if range.lowerBound == r.lowerBound && range.upperBound == range.upperBound {
+                    return true
+                }
+            default:
+                break
+            }
+        }
+        return false
+    }
 
     init(inputText: String) {
         self.inputText = inputText
@@ -327,11 +496,25 @@ final class ChatTextInputState: Codable, Equatable {
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: StringCodingKey.self)
-
         try container.encode(self.inputText, forKey: "t")
         try container.encode(Int32(self.selectionRange.lowerBound), forKey: "s0")
         try container.encode(Int32(self.selectionRange.upperBound), forKey: "s1")
         try container.encode(self.attributes, forKey: "t.a")
+    }
+    
+    func unique(isPremium: Bool) -> ChatTextInputState {
+        let attributes:[ChatTextInputAttribute] = self.attributes.compactMap { attr in
+            switch attr {
+            case let .animated(range, _, fileId, file, info, fromRect):
+                if !isPremium && file?.isPremiumEmoji == true {
+                    return nil
+                }
+                return .animated(range, "\(arc4random64())", fileId, file, info, fromRect)
+            default:
+                return attr
+            }
+        }
+        return .init(inputText: self.inputText, selectionRange: self.selectionRange, attributes: attributes)
     }
 
     var attributedString:NSAttributedString {
@@ -339,7 +522,7 @@ final class ChatTextInputState: Codable, Equatable {
         _ = string.append(string: inputText, color: theme.colors.text, font: .normal(theme.fontSize), coreText: false)
 
 
-        string.fixEmojiesFont(theme.fontSize)
+//        string.fixEmojiesFont(theme.fontSize)
 
         var fontAttributes: [NSRange: ChatTextFontAttributes] = [:]
 
@@ -371,7 +554,6 @@ final class ChatTextInputState: Codable, Equatable {
             default:
                 break inner
             }
-
             string.addAttribute(NSAttributedString.Key(rawValue: attr.0), value: attr.1, range: attr.2)
         }
         for (range, fontAttributes) in fontAttributes {
@@ -572,6 +754,10 @@ final class ChatTextInputState: Codable, Equatable {
                     attributes.append(.uid(newRange.min ..< newRange.max, uid))
                 case let .url(_, url):
                     attributes.append(.url(newRange.min ..< newRange.max, url))
+                case let .animated(_, id, fileId, file, info, fromRect):
+                    attributes.append(.animated(newRange.min ..< newRange.max, id, fileId, file, info, fromRect))
+                case let .emojiHolder(_, id, rect, emoji):
+                    attributes.append(.emojiHolder(newRange.min ..< newRange.max, id, rect, emoji))
                 }
           //  }
         }
@@ -609,7 +795,6 @@ final class ChatTextInputState: Codable, Equatable {
             
             for (i, attr) in attributes.enumerated() {
                 let updated: ChatTextInputAttribute
-                NSLog("\(attr.range.lowerBound), \(attr.range.upperBound)")
                 updated = attr.updateRange(attr.range.lowerBound ..< max(attr.range.upperBound - symbolLength, attr.range.lowerBound))
                 attributes[i] = updated
             }
@@ -623,7 +808,7 @@ final class ChatTextInputState: Codable, Equatable {
     func messageTextEntities(_ detectLinks: ParsingType = [.Hashtags]) -> [MessageTextEntity] {
         var entities:[MessageTextEntity] = []
         for attribute in attributes {
-            switch attribute {
+            sw: switch attribute {
             case let .bold(range):
                 entities.append(.init(range: range, type: .Bold))
             case let .strikethrough(range):
@@ -642,6 +827,10 @@ final class ChatTextInputState: Codable, Equatable {
                 entities.append(.init(range: range, type: .TextMention(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(uid)))))
             case let .url(range, url):
                 entities.append(.init(range: range, type: .TextUrl(url: url)))
+            case let .animated(range, _, fileId, _, _, _):
+                entities.append(.init(range: range, type: .CustomEmoji(stickerPack: nil, fileId: fileId)))
+            case .emojiHolder:
+                break sw
             }
         }
 
@@ -829,7 +1018,7 @@ final class ChatEditState : Equatable {
     init(message:Message, originalMedia: Media? = nil, state:ChatTextInputState? = nil, loadingState: EditStateLoading = .none, editMedia: RequestEditMessageMedia = .keep, editedData: EditedImageData? = nil) {
         self.message = message
         if originalMedia == nil {
-            self.originalMedia = message.media.first
+            self.originalMedia = message.effectiveMedia
         } else {
             self.originalMedia = originalMedia
         }
@@ -864,7 +1053,7 @@ final class ChatEditState : Equatable {
     }
     func withUpdatedMedia(_ media: Media) -> ChatEditState {
 
-        return ChatEditState(message: self.message.withUpdatedMedia([media]), originalMedia: self.originalMedia ?? self.message.media.first, state: self.inputState, loadingState: loadingState, editMedia: .update(AnyMediaReference.standalone(media: media)), editedData: self.editedData)
+        return ChatEditState(message: self.message.withUpdatedMedia([media]), originalMedia: self.originalMedia ?? self.message.effectiveMedia, state: self.inputState, loadingState: loadingState, editMedia: .update(AnyMediaReference.standalone(media: media)), editedData: self.editedData)
     }
     func withUpdatedLoadingState(_ loadingState: EditStateLoading) -> ChatEditState {
         return ChatEditState(message: self.message, originalMedia: self.originalMedia, state: self.inputState, loadingState: loadingState, editMedia: self.editMedia, editedData: self.editedData)
@@ -930,21 +1119,14 @@ struct ChatInterfaceState: Codable, Equatable {
         guard let state = state else {
             return nil
         }
+
         guard let opaqueData = state.opaqueData else {
-            return ChatInterfaceState().withUpdatedSynchronizeableInputState(state.synchronizeableInputState).updatedEditState({ _ in
-                return context?.getChatInterfaceTempState(peerId)?.editState
-            })
+            return ChatInterfaceState().withUpdatedSynchronizeableInputState(state.synchronizeableInputState)
         }
         guard var decodedState = try? EngineDecoder.decode(ChatInterfaceState.self, from: opaqueData) else {
-            return ChatInterfaceState().withUpdatedSynchronizeableInputState(state.synchronizeableInputState).updatedEditState({ _ in
-                return context?.getChatInterfaceTempState(peerId)?.editState
-            })
+            return ChatInterfaceState().withUpdatedSynchronizeableInputState(state.synchronizeableInputState)
         }
-        decodedState = decodedState
-            .withUpdatedSynchronizeableInputState(state.synchronizeableInputState)
-            .updatedEditState({ _ in
-                return context?.getChatInterfaceTempState(peerId)?.editState
-            })
+        decodedState = decodedState.withUpdatedSynchronizeableInputState(state.synchronizeableInputState)
         return decodedState
     }
 
@@ -1015,6 +1197,13 @@ struct ChatInterfaceState: Codable, Equatable {
     func withUpdatedSynchronizeableInputState(_ state: SynchronizeableChatInputState?) -> ChatInterfaceState {
         var result = self
         if let state = state {
+            if !state.entities.isEmpty {
+                var bp = 0
+                bp += 1
+            } else {
+                var bp = 0
+                bp += 1
+            }
             let selectRange = state.textSelection ?? state.text.length ..< state.text.length
             result = result.withUpdatedInputState(ChatTextInputState(inputText: state.text, selectionRange: selectRange, attributes: chatTextAttributes(from: TextEntitiesMessageAttribute(entities: state.entities))))
                 .withUpdatedReplyMessageId(state.replyToMessageId)

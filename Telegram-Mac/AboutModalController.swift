@@ -84,7 +84,7 @@ fileprivate class AboutModalView : Control {
     
     fileprivate override func layout() {
         super.layout()
-        descView.setFrameOrigin(20, 20)
+        descView.centerX(y: 20)
         copyright.centerX(y:frame.height - copyright.frame.height - 20)
     }
     

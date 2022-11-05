@@ -780,7 +780,8 @@ final class GroupCallUIController : ViewController {
                 
         let peerId = self.data.call.peerId
         let account = self.data.call.account
-                
+        let context = self.data.call.accountContext
+
         let videoSources = ValuePromise<GroupCallUIState.VideoSources>(.init())
         let videoSourcesValue: Atomic<GroupCallUIState.VideoSources> = Atomic(value: .init())
         let updateVideoSources:(@escaping(GroupCallUIState.VideoSources)->GroupCallUIState.VideoSources)->Void = { f in
@@ -819,7 +820,7 @@ final class GroupCallUIController : ViewController {
                 modernConfirm(for: window, account: account, peerId: nil, header: strings().voiceChatEndTitle, information: strings().voiceChatEndText, okTitle: strings().voiceChatEndOK, thridTitle: strings().voiceChatEndThird, thridAutoOn: false, successHandler: {
                     [weak self] result in
                     _ = self?.data.call.sharedContext.endGroupCall(terminate: result == .thrid).start()
-                })
+                }, appearance: darkPalette.appearance)
             } else {
                 _ = self.data.call.sharedContext.endGroupCall(terminate: false).start()
             }
@@ -827,9 +828,14 @@ final class GroupCallUIController : ViewController {
             guard let `self` = self else {
                 return
             }
-            self.navigationController?.push(GroupCallSettingsController(sharedContext: sharedContext, account: account, callState: callState.get(), call: self.data.call))
+            self.navigationController?.push(GroupCallSettingsController(sharedContext: sharedContext, context: context, callState: callState.get(), call: self.data.call))
         }, invite: { [weak self] peerId in
-            _ = self?.data.call.invitePeer(peerId)
+            let invite = self?.data.call.invitePeer(peerId)
+            
+            if invite == false {
+                var bp = 0
+                bp += 1
+            }
         }, mute: { [weak self] peerId, isMuted in
             _ = self?.data.call.updateMuteState(peerId: peerId, isMuted: isMuted)
         }, toggleSpeaker: { [weak self] in
@@ -860,6 +866,8 @@ final class GroupCallUIController : ViewController {
                 if let peerId = peerId.first, let window = window, let `self` = self {
                     if self.data.call.invitePeer(peerId) {
                         _ = showModalSuccess(for: window, icon: theme.icons.successModalProgress, delay: 2.0).start()
+                    } else {
+                        showModalText(for: window, text: strings().unknownError)
                     }
                 }
             }))
@@ -905,7 +913,7 @@ final class GroupCallUIController : ViewController {
                                 f(true)
                             }, cancelHandler: {
                                 f(false)
-                            })
+                            }, appearance: darkPalette.appearance)
                         } else {
                             f(true)
                         }
@@ -1092,7 +1100,7 @@ final class GroupCallUIController : ViewController {
                         if let window = window {
                             showModalText(for: window, text: strings().voiceChatToastStop)
                         }
-                    })
+                    }, appearance: darkPalette.appearance)
                 } else {
                     showModalText(for: window, text: strings().voiceChatAlertRecording)
                 }
@@ -1553,18 +1561,24 @@ final class GroupCallUIController : ViewController {
                     var videoQuality: PresentationGroupCallRequestedVideo.Quality = selectBest ? .full : tiles[i].bestQuality
                     var screencastQuality: PresentationGroupCallRequestedVideo.Quality = selectBest ? .full : tiles[i].bestQuality
 
-                    let dominant = dominant.permanent ?? dominant.focused?.id
+                    var dominant = dominant.permanent ?? dominant.focused?.id
+                    
+                    let hasDominant = members?.participants.contains(where: { participant in
+                        return participant.videoEndpointId == dominant || participant.presentationEndpointId == dominant
+                    }) == true
+                    
+                    if !hasDominant {
+                        dominant = nil
+                    }
+                    
                     if let dominant = dominant {
                         videoQuality = .thumbnail
                         screencastQuality = .thumbnail
-                        if dominant == member.videoEndpointId {
+                        if dominant == member.videoEndpointId || dominant == member.presentationEndpointId {
                             videoQuality = .full
-                        } else {
-                            videoQuality = .thumbnail
-                        }
-                        if dominant == member.presentationEndpointId {
                             screencastQuality = .full
                         } else {
+                            videoQuality = .thumbnail
                             screencastQuality = .thumbnail
                         }
                     }

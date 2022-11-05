@@ -19,9 +19,12 @@ protocol ChatInputDelegate : AnyObject {
     func inputChanged(height:CGFloat, animated:Bool);
 }
 
+
 let yInset:CGFloat = 8;
 
 class ChatInputView: View, TGModernGrowingDelegate, Notifable {
+    
+    private let emojiHolderAnimator = EmojiHolderAnimator()
     
     private let sendActivityDisposable = MetaDisposable()
     
@@ -33,13 +36,12 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     var chatInteraction:ChatInteraction
     
-    var accessory:ChatInputAccessory!
+    let accessory:ChatInputAccessory
     
     private var _ts:View!
     
     
     //containers
-    private var accessoryView:View!
     private var contentView:View!
     private var bottomView:NSScrollView = NSScrollView()
     
@@ -79,6 +81,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     private var sendAsView: ChatInputSendAsView?
     init(frame frameRect: NSRect, chatInteraction:ChatInteraction) {
         self.chatInteraction = chatInteraction
+        self.accessory = ChatInputAccessory(chatInteraction:chatInteraction)
         super.init(frame: frameRect)
         
         self.animates = true
@@ -87,7 +90,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         _ts.backgroundColor = .border;
         
         
-        accessoryView = View(frame: NSMakeRect(20.0, frameRect.height, 0, 0))
         contentView = View(frame: NSMakeRect(0, 0, NSWidth(frameRect), NSHeight(frameRect)))
         
         contentView.flip = false
@@ -103,14 +105,22 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         textView = TGModernGrowingTextView(frame: NSMakeRect(attachView.frame.width, yInset, contentView.frame.width - actionsView.frame.width, contentView.frame.height - yInset * 2.0))
         textView.textFont = .normal(.text)
         
+        let context = self.chatInteraction.context
+                
+        textView.installGetAttach({ attachment, size in
+            let rect = size.bounds.insetBy(dx: -1.5, dy: -1.5)
+            let view = ChatInputAnimatedEmojiAttach(frame: rect)
+            view.set(attachment, size: rect.size, context: context)
+            return view
+        })
         
         contentView.addSubview(textView)
         contentView.addSubview(actionsView)
         self.background = theme.colors.background
         
-        accessory = ChatInputAccessory(accessoryView, chatInteraction:chatInteraction)
         
-        self.addSubview(accessoryView)
+        self.addSubview(accessory)
+
         
         self.addSubview(contentView)
         self.addSubview(bottomView)
@@ -133,15 +143,15 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         
         
         textView.textColor = theme.colors.text
+        textView.selectedTextColor = theme.colors.selectText
         textView.linkColor = theme.colors.link
         textView.textFont = .normal(CGFloat(theme.fontSize))
         
         textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(theme.fontSize), coreText: false), update: false)
         textView.delegate = self
         
-        DispatchQueue.main.async { [weak self] in
-            self?.updateInput(interaction.presentation, prevState: ChatPresentationInterfaceState(chatLocation: interaction.chatLocation, chatMode: interaction.mode), animated: false, initial: true)
-        }
+        self.updateInput(interaction.presentation, prevState: ChatPresentationInterfaceState(chatLocation: interaction.chatLocation, chatMode: interaction.mode), animated: false, initial: true)
+
         
         updateAdditions(interaction.presentation, false)
         
@@ -153,16 +163,21 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     private var textPlaceholder: String {
         
-        if case let .replyThread(_, mode) = chatInteraction.mode {
+        if case let .thread(_, mode) = chatInteraction.mode {
             switch mode {
             case .comments:
                 return strings().messagesPlaceholderComment
             case .replies:
                 return strings().messagesPlaceholderReply
+            case .topic:
+                return strings().messagesPlaceholderSentMessage
             }
         }
         if chatInteraction.presentation.interfaceState.editState != nil {
             return strings().messagePlaceholderEdit
+        }
+        if chatInteraction.mode == .scheduled {
+            return strings().messagesPlaceholderScheduled
         }
         if let replyMarkup = chatInteraction.presentation.keyboardButtonsMessage?.replyMarkup {
             if let placeholder = replyMarkup.placeholder {
@@ -194,6 +209,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         contentView.backgroundColor = theme.colors.background
         textView.background = theme.colors.background
         textView.textColor = theme.colors.text
+        textView.selectedTextColor = theme.colors.selectText
         actionsView.backgroundColor = theme.colors.background
         blockedActionView?.disableActions()
         textView.textFont = .normal(theme.fontSize)
@@ -201,15 +217,28 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         blockedActionView?.style = ControlStyle(font: .normal(.title), foregroundColor: theme.colors.accent,backgroundColor: theme.colors.background, highlightColor: theme.colors.grayBackground)
         bottomView.backgroundColor = theme.colors.background
         bottomView.documentView?.background = theme.colors.background
-        replyMarkupModel?.layout()
-        accessory.update(with: chatInteraction.presentation, account: chatInteraction.context.account, animated: false)
-        accessoryView.backgroundColor = theme.colors.background
+        self.needUpdateReplyMarkup(with: chatInteraction.presentation, false)
+    
+        accessory.update(with: chatInteraction.presentation, context: chatInteraction.context, animated: false)
+        accessory.backgroundColor = theme.colors.background
         accessory.container.backgroundColor = theme.colors.background
         textView.setBackgroundColor(theme.colors.background)
                 
     }
     
     func notify(with value: Any, oldValue:Any, animated:Bool) {
+        
+        let transition: ContainedViewLayoutTransition
+        if animated {
+            transition = .animated(duration: 0.2, curve: .easeOut)
+        } else {
+            transition = .immediate
+        }
+        
+        updateLayout(size: frame.size, transition: transition)
+
+        self.actionsView.notify(with: value, oldValue: oldValue, animated: animated)
+
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
             
             if value.effectiveInput != oldValue.effectiveInput {
@@ -313,7 +342,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         case .normal, .editing:
             self.contentView.isHidden = false
             self.contentView.change(opacity: 1.0, animated: animated)
-            self.accessoryView.change(opacity: 1.0, animated: animated)
+            self.accessory.change(opacity: 1.0, animated: animated)
             break
         case .selecting:
             self.messageActionsPanelView = MessageActionsPanelView(frame: bounds)
@@ -324,7 +353,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             self.addSubview(self.messageActionsPanelView!, positioned: .below, relativeTo: _ts)
             self.contentView.isHidden = true
             self.contentView.change(opacity: 0.0, animated: animated)
-            self.accessoryView.change(opacity: 0.0, animated: animated)
+            self.accessory.change(opacity: 0.0, animated: animated)
             break
         case .block(_):
             break
@@ -363,7 +392,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
 
             self.contentView.isHidden = true
             self.contentView.change(opacity: 0.0, animated: animated)
-            self.accessoryView.change(opacity: 0.0, animated: animated)
+            self.accessory.change(opacity: 0.0, animated: animated)
         case let .channelWithDiscussion(discussionGroupId, leftAction, rightAction):
             self.messageActionsPanelView?.removeFromSuperview()
             self.chatDiscussionView = ChannelDiscussionInputView(frame: bounds)
@@ -372,7 +401,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             self.addSubview(self.chatDiscussionView!, positioned: .below, relativeTo: _ts)
             self.contentView.isHidden = true
             self.contentView.change(opacity: 0.0, animated: animated)
-            self.accessoryView.change(opacity: 0.0, animated: animated)
+            self.accessory.change(opacity: 0.0, animated: animated)
         case let .recording(recorder):
             textView.isHidden = true
             recordingPanelView = ChatInputRecordingView(frame: NSMakeRect(0,0,frame.width,standart), chatInteraction:chatInteraction, recorder:recorder)
@@ -389,7 +418,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             self.addSubview(self.restrictedView!, positioned: .below, relativeTo: _ts)
             self.contentView.isHidden = true
             self.contentView.change(opacity: 0.0, animated: animated)
-            self.accessoryView.change(opacity: 0.0, animated: animated)
+            self.accessory.change(opacity: 0.0, animated: animated)
         }
         
         CATransaction.commit()
@@ -397,12 +426,28 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     func updateInput(_ state:ChatPresentationInterfaceState, prevState: ChatPresentationInterfaceState, animated:Bool = true, initial: Bool = false) -> Void {
         if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes {
-            self.textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
+            let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
+
+            if !state.effectiveInput.attributes.isEmpty {
+                var bp = 0
+                bp += 1
+            }
+            
+            let current = textView.attributedString().copy() as! NSAttributedString
+            let currentRange = textView.selectedRange()
+
+            let item = SimpleUndoItem(attributedString: current, be: state.effectiveInput.attributedString, wasRange: currentRange, be: range)
+            if !initial {
+                self.textView.addSimpleItem(item)
+            } else {
+                self.textView.setAttributedString(state.effectiveInput.attributedString, animated:animated)
+                if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length {
+                    textView.setSelectedRange(range)
+                }
+            }
+
         }
-        let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
-        if textView.selectedRange().location != range.location || textView.selectedRange().length != range.length {
-            textView.setSelectedRange(range)
-        }
+
         if prevState.effectiveInput.inputText.isEmpty {
             self.textView.scrollToCursor()
         }
@@ -410,10 +455,16 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             self.textView.update(true)
             self.textViewHeightChanged(self.textView.frame.height, animated: animated)
         }
+        if state.effectiveInput != prevState.effectiveInput {
+            self.emojiHolderAnimator.apply(self.textView, chatInteraction: self.chatInteraction, current: state.effectiveInput)
+            if state.effectiveInput.inputText.count != prevState.effectiveInput.inputText.count {
+                self.textView.scrollToCursor()
+            }
+        }
     }
     private var updateFirstTime: Bool = true
     func updateAdditions(_ state:ChatPresentationInterfaceState, _ animated:Bool = true) -> Void {
-        accessory.update(with: state, account: chatInteraction.context.account, animated: animated)
+        accessory.update(with: state, context: chatInteraction.context, animated: animated)
         
         accessoryDispose.set(accessory.nodeReady.get().start(next: { [weak self] animated in
             self?.updateAccesory(animated: animated)
@@ -525,12 +576,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         
         transition.updateFrame(view: _ts, frame: NSMakeRect(0, size.height - .borderSize, size.width, .borderSize))
             
-        if let view = accessory.view {
-            accessory.measureSize(size.width - 64)
-            transition.updateFrame(view: view, frame: NSMakeRect(15, contentView.frame.maxY, size.width - 39, accessory.size.height))
-            accessory.updateLayout(NSMakeSize(size.width - 39, accessory.size.height), transition: transition)
-        }
-        
+        accessory.measureSize(size.width - 64)
+        transition.updateFrame(view: accessory, frame: NSMakeRect(15, contentView.frame.maxY, size.width - 39, accessory.size.height))
+        accessory.updateLayout(NSMakeSize(size.width - 39, accessory.size.height), transition: transition)
+                
         if let view = messageActionsPanelView {
             transition.updateFrame(view: view, frame: bounds)
         }
@@ -592,8 +641,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         if chatInteraction.presentation.isKeyboardShown {
             sumHeight += bottomHeight
         }
-        
-        
+                
         if previousHeight != sumHeight {
             previousHeight = sumHeight
             let bottomInset = chatInteraction.presentation.isKeyboardShown ? bottomHeight : 0
@@ -606,8 +654,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             bottomView._change(size: NSMakeSize(frame.width - 40, bottomHeight), animated: animated)
             bottomView._change(pos: NSMakePoint(20, chatInteraction.presentation.isKeyboardShown ? 0 : -bottomHeight), animated: animated)
             
-            accessory.view?.change(opacity: accessory.isVisibility() ? 1.0 : 0.0, animated: animated)
-            accessory.view?.change(pos: NSMakePoint(15, contentHeight + bottomHeight), animated: animated)
+            accessory.change(opacity: accessory.isVisibility() ? 1.0 : 0.0, animated: animated)
+            accessory.change(pos: NSMakePoint(15, contentHeight + bottomHeight), animated: animated)
             
             
             change(size: NSMakeSize(NSWidth(frame), sumHeight), animated: animated)
@@ -622,8 +670,21 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         
         if FastSettings.checkSendingAbility(for: event) {
             let text = textView.string().trimmed
-            if text.length > chatInteraction.presentation.maxInputCharacters {
-                alert(for: chatInteraction.context.window, info: strings().chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.presentation.maxInputCharacters)))
+            let context = chatInteraction.context
+            if text.length > chatInteraction.maxInputCharacters {
+                if context.isPremium || context.premiumIsBlocked {
+                    alert(for: context.window, info: strings().chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.maxInputCharacters)))
+                } else {
+                    confirm(for: context.window, information: strings().chatInputErrorMessageTooLongCountable(text.length - Int(chatInteraction.maxInputCharacters)), okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().premiumGetPremiumDouble, successHandler: { result in
+                        switch result {
+                        case .thrid:
+                            showPremiumLimit(context: context, type: .caption(text.length))
+                        default:
+                            break
+                        }
+
+                    })
+                }
                 return true
             }
             if !text.isEmpty || !chatInteraction.presentation.interfaceState.forwardMessageIds.isEmpty || chatInteraction.presentation.state == .editing {
@@ -644,6 +705,9 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     var currentActionView: NSView {
         return self.actionsView.currentActionView
+    }
+    var emojiView: NSView {
+        return self.actionsView.entertaiments
     }
     
     func makeSpoiler() {
@@ -699,7 +763,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     public func textViewTextDidChangeSelectedRange(_ range: NSRange) {
         let attributed = self.textView.attributedString()
         
-        let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.min ..< range.max, attributes: chatTextAttributes(from: attributed))
+        let attrs = chatTextAttributes(from: attributed)
+        let state = ChatTextInputState(inputText: attributed.string, selectionRange: range.min ..< range.max, attributes: attrs)
         
         chatInteraction.update({ current in
             var current = current
@@ -753,7 +818,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         if let sendAsView = self.sendAsView {
             leftInset += sendAsView.frame.width
         }
-        return NSMakeSize(contentView.frame.width - actionsView.frame.width - leftInset, textView.frame.height)
+        let size = NSMakeSize(contentView.frame.width - actionsView.size(chatInteraction.presentation).width - leftInset, textView.frame.height)
+        return size
     }
     
     func textViewIsTypingEnabled() -> Bool {
@@ -786,7 +852,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     }
     
     func maxCharactersLimit(_ textView: TGModernGrowingTextView!) -> Int32 {
-        return ChatPresentationInterfaceState.maxInput
+        return ChatInteraction.maxInput
     }
     
     @available(OSX 10.12.2, *)
@@ -817,7 +883,23 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             
             let result = InputPasteboardParser.proccess(pasteboard: pasteboard, chatInteraction:self.chatInteraction, window: window)
             if result {
-                if let data = pasteboard.data(forType: .rtf) {
+                
+                if let data = pasteboard.data(forType: .kInApp) {
+                    let decoder = AdaptedPostboxDecoder()
+                    if let decoded = try? decoder.decode(ChatTextInputState.self, from: data) {
+                        let attributed = decoded.unique(isPremium: chatInteraction.context.isPremium).attributedString
+                        let current = textView.attributedString().copy() as! NSAttributedString
+                        let currentRange = textView.selectedRange()
+                        let (attributedString, range) = current.appendAttributedString(attributed, selectedRange: currentRange)
+                        let item = SimpleUndoItem(attributedString: current, be: attributedString, wasRange: currentRange, be: range)
+                        self.textView.addSimpleItem(item)
+                        DispatchQueue.main.async { [weak self] in
+                            self?.textView.scrollToCursor()
+                        }
+                        
+                        return true
+                    }
+                } else if let data = pasteboard.data(forType: .rtf) {
                     if let attributed = (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtfd], documentAttributes: nil)) ?? (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtf], documentAttributes: nil))  {
                         
                         let (attributed, attachments) = attributed.applyRtf()
@@ -835,7 +917,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                             let item = SimpleUndoItem(attributedString: current, be: attributedString, wasRange: currentRange, be: range)
                             self.textView.addSimpleItem(item)
                         }
-                        Queue.mainQueue().async { [weak self] in
+                        DispatchQueue.main.async { [weak self] in
                             self?.textView.scrollToCursor()
                         }
                         return true

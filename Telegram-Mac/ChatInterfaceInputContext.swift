@@ -29,6 +29,7 @@ struct PossibleContextQueryTypes: OptionSet {
     static let stickers = PossibleContextQueryTypes(rawValue: (1 << 4))
     static let emoji = PossibleContextQueryTypes(rawValue: (1 << 5))
     static let emojiFast = PossibleContextQueryTypes(rawValue: (1 << 6))
+    static let swapEmoji = PossibleContextQueryTypes(rawValue: (1 << 7))
 }
 
 private func makeScalar(_ c: Character) -> Character {
@@ -92,13 +93,13 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
         }
         var index = inputText.index(before: maxIndex)
         
-        if inputText.length <= 7, inputText.isSingleEmoji {
-            var inputText = inputText
-            if inputText.canHaveSkinToneModifier {
-                inputText = inputText.emojiUnmodified
-            }
-            return (inputText.startIndex ..< maxIndex, [.stickers], nil)
-        }
+//        if inputText.length <= 7, inputText.isSingleEmoji {
+//            var inputText = inputText
+//            if inputText.canHaveSkinToneModifier {
+//                inputText = inputText.emojiUnmodified
+//            }
+//            return (inputText.startIndex ..< maxIndex, [.stickers], nil)
+//        }
         
        
         
@@ -143,56 +144,76 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
         characterSet.insert(atScalar.unicodeScalars.first!)
         characterSet.insert(slashScalar.unicodeScalars.first!)
         characterSet.insert(emojiScalar.unicodeScalars.first!)
+        
+        let lowerUtfIndex = inputText.utf16.index(inputText.utf16.startIndex, offsetBy: inputState.selectionRange.lowerBound)
+        let upperUtfIndex = inputText.utf16.index(inputText.utf16.startIndex, offsetBy: inputState.selectionRange.upperBound)
+
+        let lowerIndex = lowerUtfIndex.samePosition(in: inputText)
+        let upperIndex = upperUtfIndex.samePosition(in: inputText)
+
+        
+        
+        if let lowerIndex = lowerIndex, let upperIndex = upperIndex {
+            let text = String(inputText[lowerIndex ..< upperIndex])
+            if text.isSingleEmoji {
+                return (lowerIndex ..< upperIndex, [.swapEmoji], nil)
+            }
+        }
+        
         for _ in 0 ..< 20 {
             let c = inputText[index]
+                    
+            let f = inputText[index ..< maxIndex]
             
-            
-            
-            
-            //if index == inputText.startIndex {
-                //|| (inputText[inputText.index(before: index)] == spaceScalar || inputText[inputText.index(before: index)] == newlineScalar)
-                if !characterSet.contains(c.unicodeScalars.first!) {
-                    possibleTypes = []
-                } else if c == hashScalar {
-                    possibleTypes = possibleTypes.intersection([.hashtag])
-                    definedType = true
-                    index = inputText.index(after: index)
-                    possibleQueryRange = index ..< maxIndex
-                    
-                    check()
-                    
-                    break
-                } else if c == atScalar {
-                    possibleTypes = possibleTypes.intersection([.mention])
-                    definedType = true
-                    index = inputText.index(after: index)
-                    possibleQueryRange = index ..< maxIndex
-                    
-                    check()
-                    
-                    break
-                } else if c == slashScalar, inputText.startIndex == index {
-                    possibleTypes = possibleTypes.intersection([.command])
-                    definedType = true
-                    index = inputText.index(after: index)
-                    possibleQueryRange = index ..< maxIndex
-                    
-                    check()
-                    
-                    break
-                } else if c == emojiScalar {
-                    possibleTypes = possibleTypes.intersection([.emoji])
-                    definedType = true
-                    index = inputText.index(after: index)
-                    possibleQueryRange = index ..< maxIndex
-                    
-                    check()
-                    
-                    break
+            if String(f).containsOnlyEmoji {
+                if index == inputText.startIndex {
+                    possibleTypes = [.swapEmoji, .stickers]
+                } else {
+                    possibleTypes = [.swapEmoji]
                 }
-          //  }
-           
-            
+                definedType = true
+                possibleQueryRange = index ..< maxIndex
+
+                break
+            } else if !characterSet.contains(c.unicodeScalars.first!) {
+                possibleTypes = []
+            } else if c == hashScalar {
+                possibleTypes = possibleTypes.intersection([.hashtag])
+                definedType = true
+                index = inputText.index(after: index)
+                possibleQueryRange = index ..< maxIndex
+                
+                check()
+                
+                break
+            } else if c == atScalar {
+                possibleTypes = possibleTypes.intersection([.mention])
+                definedType = true
+                index = inputText.index(after: index)
+                possibleQueryRange = index ..< maxIndex
+                
+                check()
+                
+                break
+            } else if c == slashScalar, inputText.startIndex == index {
+                possibleTypes = possibleTypes.intersection([.command])
+                definedType = true
+                index = inputText.index(after: index)
+                possibleQueryRange = index ..< maxIndex
+                
+                check()
+                
+                break
+            } else if c == emojiScalar {
+                possibleTypes = possibleTypes.intersection([.emoji])
+                definedType = true
+                index = inputText.index(after: index)
+                possibleQueryRange = index ..< maxIndex
+                
+                check()
+                
+                break
+            }
             if index == inputText.startIndex {
                 break
             } else {
@@ -224,23 +245,19 @@ func inputContextQueryForChatPresentationIntefaceState(_ chatPresentationInterfa
         }
         
         var possibleQueryRange = possibleQueryRange
-//        if possibleQueryRange.upperBound > inputState.inputText.endIndex {
-//            possibleQueryRange = possibleQueryRange.lowerBound ..< inputState.inputText.endIndex
-//        }
-        
-//        possibleQueryRange.lowerBound.encodedOffset
-//        
-//        if let index = inputState.inputText.index(possibleQueryRange.upperBound, offsetBy: 0, limitedBy: inputState.inputText.endIndex) {
-//            possibleQueryRange = possibleQueryRange.lowerBound ..< index
-//        } else {
-//            return .none
-//        }
 
         if chatPresentationInterfaceState.botMenu?.revealed == true {
             return .command("")
         }
         
         let value = inputState.inputText[possibleQueryRange]
+        
+        let range = NSRange(string: inputState.inputText, range: possibleQueryRange)
+        
+        if inputState.isEmojiHolder(at: range) {
+            return .none
+        }
+        
         let query = String(value) 
         if possibleTypes == [.hashtag] {
             return .hashtag(query)
@@ -251,8 +268,12 @@ func inputContextQueryForChatPresentationIntefaceState(_ chatPresentationInterfa
         } else if possibleTypes == [.contextRequest], let additionalStringRange = additionalStringRange {
             let additionalString = String(inputState.inputText[additionalStringRange])
             return .contextRequest(addressName: query, query: additionalString)
-        } else if possibleTypes == [.stickers] {
-            return .stickers(query.emojiUnmodified)
+        } else if possibleTypes.contains(.stickers) {
+            if !inputState.isFirstAnimatedEmoji(query) {
+                return .stickers(query.emojiUnmodified)
+            } else {
+                return .none
+            }
         } else if possibleTypes == [.emoji] {
             if query.trimmingCharacters(in: CharacterSet.letters).isEmpty {
                 return .emoji(query, firstWord: false)

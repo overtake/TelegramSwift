@@ -9,8 +9,11 @@
 import Cocoa
 import TGUIKit
 import SwiftSignalKit
+import TelegramCore
+import Postbox
+
+
 class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
-    
     
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
@@ -111,12 +114,18 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         let point = self.contentView.convert(location, from: nil)
         return true
     }
+    
+    
+
 
     override func set(item:TableRowItem, animated:Bool = false) {
         super.set(item: item, animated: animated)
 
         if let item = item as? ChatMessageItem {
             self.text.update(item.textLayout)
+            
+            updateInlineStickers(context: item.context, view: self.text, textLayout: item.textLayout)
+            
             if let webpageLayout = item.webpageLayout {
                 let updated = webpageContent == nil || !webpageContent!.isKind(of: webpageLayout.viewClass())
                 

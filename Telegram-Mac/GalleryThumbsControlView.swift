@@ -101,7 +101,7 @@ class GalleryThumbContainer : Control {
         backgroundColor = .clear
         if let signal = item.signal, let size = item.size {
             let arguments = TransformImageArguments(corners: ImageCorners(), imageSize:size.aspectFilled(NSMakeSize(80, 80)), boundingSize: NSMakeSize(80, 80), intrinsicInsets: NSEdgeInsets())
-            let media = item.item.entry.message?.media.first
+            let media = item.item.entry.message?.effectiveMedia
 
             if let media = media {
                 imageView.setSignal(signal: cachedMedia(media: media, arguments: arguments, scale: System.backingScale), clearInstantly: true)

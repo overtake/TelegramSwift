@@ -57,7 +57,7 @@ private final class ContextAccountMenuRowItem : AppMenuRowItem {
     
     override var effectiveSize: NSSize {
         var size = super.effectiveSize
-        size.width += badge.size.width
+        size.width += max(30, badge.size.width)
         return size
     }
     

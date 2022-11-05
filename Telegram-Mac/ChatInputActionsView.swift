@@ -16,13 +16,13 @@ import SwiftSignalKit
 //
 let iconsInset:CGFloat = 20.0
 
-class ChatInputActionsView: View, Notifable {
+class ChatInputActionsView: View {
     
     let chatInteraction:ChatInteraction
     private let send:ImageButton = ImageButton()
     private let voice:ImageButton = ImageButton()
     private let muteChannelMessages:ImageButton = ImageButton()
-    private let entertaiments:ImageButton = ImageButton()
+    let entertaiments:ImageButton = ImageButton()
     private let slowModeTimeout:TitleButton = TitleButton()
     private let inlineCancel:ImageButton = ImageButton()
     private let keyboard:ImageButton = ImageButton()
@@ -151,9 +151,9 @@ class ChatInputActionsView: View, Notifable {
     
     var entertaimentsPopover: ViewController {
         if chatInteraction.presentation.state == .editing {
-            let emoji = EmojiViewController(chatInteraction.context)
+            let emoji = EmojiesController(chatInteraction.context)
             if let interactions = chatInteraction.context.bindings.entertainment().interactions {
-                emoji.update(with: interactions)
+                emoji.update(with: interactions, chatInteraction: chatInteraction)
             }
             return emoji
         }
@@ -165,14 +165,11 @@ class ChatInputActionsView: View, Notifable {
         entertaiments.set(handler: { [weak self] (state) in
             guard let `self` = self else {return}
             let chatInteraction = self.chatInteraction
-            var enabled = false
             
-            if let sidebarEnabled = chatInteraction.presentation.sidebarEnabled {
-                enabled = sidebarEnabled
-            }
-            let window = chatInteraction.context.window
-            let sharedContext = chatInteraction.context.sharedContext
-            if !((window.frame.width >= 1030 && sharedContext.layout == .dual) || (window.frame.width >= 880 && sharedContext.layout == .minimisize)) || !enabled {
+            let context = chatInteraction.context
+            let navigation = context.bindings.rootNavigation()
+            NSLog("\(navigation.frame.width), \(context.layout == .dual)")
+            if (navigation.frame.width <= 730 && context.layout == .dual) || !FastSettings.sidebarEnabled {
                 self.showEntertainment()
             }
         }, for: .Hover)
@@ -182,17 +179,16 @@ class ChatInputActionsView: View, Notifable {
         let rect = NSMakeRect(0, 0, 350, min(max(chatInteraction.context.window.frame.height - 250, 300), 550))
         entertaimentsPopover._frameRect = rect
         entertaimentsPopover.view.frame = rect
-        showPopover(for: entertaiments, with: entertaimentsPopover, edge: .maxX, inset:NSMakePoint(frame.width - entertaiments.frame.maxX + 38, 10), delayBeforeShown: 0.0)
+        showPopover(for: entertaiments, with: entertaimentsPopover, edge: .maxX, inset:NSMakePoint(frame.width - entertaiments.frame.maxX + 38, 10), delayBeforeShown: 0.1)
     }
     
     private func addClickObserver() {
         entertaiments.set(handler: { [weak self] (state) in
             if let strongSelf = self {
                 let chatInteraction = strongSelf.chatInteraction
-                let window = chatInteraction.context.window
+                let navigation = chatInteraction.context.bindings.rootNavigation()
                 if let sidebarEnabled = chatInteraction.presentation.sidebarEnabled, sidebarEnabled {
-                    if window.frame.width >= 1100 && chatInteraction.context.sharedContext.layout == .dual || window.frame.width >= 880 && chatInteraction.context.sharedContext.layout == .minimisize {
-                        
+                    if navigation.frame.width > 730 && chatInteraction.context.layout == .dual {
                         chatInteraction.toggleSidebar()
                     }
                 }
@@ -306,8 +302,12 @@ class ChatInputActionsView: View, Notifable {
                 var newInlineLoading: Bool = false
                 var oldInlineLoading: Bool = false
                 
-                if let query = value.inputQueryResult, case .contextRequestResult(_, let data) = query {
-                    newInlineLoading = data == nil && !value.effectiveInput.inputText.isEmpty
+                if let query = value.inputQueryResult, case let .contextRequestResult(peer, data) = query {
+                    if let address = peer.addressName, "@\(address)" != value.effectiveInput.inputText {
+                        newInlineLoading = data == nil
+                    } else {
+                        newInlineLoading = false
+                    }
                 }
                 
                 
@@ -319,8 +319,12 @@ class ChatInputActionsView: View, Notifable {
                 
 
                 
-                if let query = oldValue.inputQueryResult, case .contextRequestResult(_, let data) = query {
-                    oldInlineLoading = data == nil
+                if let query = oldValue.inputQueryResult, case let .contextRequestResult(peer, data) = query {
+                    if let address = peer.addressName, "@\(address)" != oldValue.effectiveInput.inputText {
+                        oldInlineLoading = data == nil
+                    } else {
+                        oldInlineLoading = false
+                    }
                 }
                 
                 let newSlowModeCounter: Bool = value.slowMode?.timeout != nil && value.interfaceState.editState == nil && !newInlineLoading && !newInlineRequest
@@ -363,9 +367,9 @@ class ChatInputActionsView: View, Notifable {
                     if anim {
                         newView.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.1)
                         newView.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.6)
-                        prevView.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, completion:{ complete in
+                        prevView.layer?.animateAlpha(from: 1.0, to: 0.0, duration: 0.2, completion:{ [weak prevView] complete in
                             if complete {
-                                prevView.isHidden = true
+                                prevView?.isHidden = true
                             }
                         })
                     } else if prevView != newView {
@@ -519,7 +523,7 @@ class ChatInputActionsView: View, Notifable {
     }
     
     deinit {
-        chatInteraction.remove(observer: self)
+        
     }
     
     func prepare(with chatInteraction:ChatInteraction) -> Void {
@@ -545,7 +549,7 @@ class ChatInputActionsView: View, Notifable {
                     }, itemImage: MenuAnimation.menu_mute.value))
                 }
                 switch chatInteraction.mode {
-                case .history:
+                case .history, .thread:
                     if !peer.isSecretChat {
                         let text = peer.id == chatInteraction.context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage
                         items.append(ContextMenuItem(text, handler: {
@@ -577,9 +581,7 @@ class ChatInputActionsView: View, Notifable {
                 showSlowModeTimeoutTooltip(slowMode, for: control)
             }
         }, for: .Click)
-        
-        chatInteraction.add(observer: self)
-        
+                
 
         
         notify(with: chatInteraction.presentation, oldValue: chatInteraction.presentation, animated: false)

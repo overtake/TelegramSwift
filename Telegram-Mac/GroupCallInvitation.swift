@@ -320,7 +320,7 @@ final class GroupCallInviteMembersBehaviour : SelectPeersBehavior {
                     var entries:[Peer] = []
                     for entry in value.0.entries.reversed() {
                         switch entry {
-                        case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _):
+                        case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _):
                             if let peer = renderedPeer.chatMainPeer, peer.canSendMessage() {
                                 entries.append(peer)
                             }
@@ -538,7 +538,7 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                                     link = links.speakerLink ?? links.listenerLink
                                 }
                                 for peerId in peerIds {
-                                    _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: [], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil)]).start()
+                                    _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: link, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
                                 }
                                 
                                 subscriber.putNext(true)
@@ -547,7 +547,7 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                             }, appearance: GroupCallTheme.customTheme.appearance)
                         } else {
                             for peerId in peerIds {
-                                _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: links.listenerLink, attributes: [], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil)]).start()
+                                _ = enqueueMessages(account: account, peerId: peerId, messages: [EnqueueMessage.message(text: links.listenerLink, attributes: [], inlineStickers: [:], mediaReference: nil, replyToMessageId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
                             }
                             subscriber.putNext(true)
                             subscriber.putCompletion()
@@ -582,7 +582,7 @@ func GroupCallAddmembers(_ data: GroupCallUIController.UIData, window: Window) -
                     })
                 } else {
                     _ = showModalProgress(signal: permanentExportedInvitation(context: context, peerId: callPeerId), for: window).start(next: { [weak window] link in
-                        if let link = link, let window = window {
+                        if let link = link, let window = window, let link = link._invitation {
                             copyToClipboard(link.link)
                             showModalText(for: window, text: strings().shareLinkCopied)
                         }

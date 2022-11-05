@@ -100,6 +100,7 @@ final class MenuView: View, TableViewDelegate {
     
     weak var controller: AppMenuController?
     
+    
     let tableView: TableView = TableView(frame: .zero)
     private var contextItems: [Entry] = []
     private let backgroundView: View
@@ -158,7 +159,7 @@ final class MenuView: View, TableViewDelegate {
     
     func makeSize(presentation: AppMenu.Presentation, screen: NSScreen, maxHeight: CGFloat? = nil, appearMode: AppMenu.AppearMode) {
         
-        var max: CGFloat = 0
+        var max: CGFloat = 100
         tableView.enumerateItems(with: { item in
             if let item = item as? AppMenuBasicItem {
                 if max < item.effectiveSize.width {
@@ -167,7 +168,6 @@ final class MenuView: View, TableViewDelegate {
             }
             return true
         })
-        
         
         self.setFrameSize(max, min(tableView.listHeight, min(maxHeight ?? appearMode.max, screen.visibleFrame.height - 200)))
         if presentation.colors.isDark {
@@ -301,6 +301,7 @@ final class MenuView: View, TableViewDelegate {
     
     var submenuId: Int64?
     weak var parentView: Window?
+    weak var childView: Window?
 }
 
 final class AppMenuController : NSObject  {
@@ -334,7 +335,6 @@ final class AppMenuController : NSObject  {
     private weak var parentView: NSView?
     private let delayDisposable = MetaDisposable()
     
-    private var topBubbleWindow: Window?
     
     init(_ menu: ContextMenu, presentation: AppMenu.Presentation, holder: AppMenu, betterInside: Bool, appearMode: AppMenu.AppearMode, parentView: NSView?) {
         self.menu = menu
@@ -561,10 +561,12 @@ final class AppMenuController : NSObject  {
     
     private var isClosed = false
     func close() {
+        
+        let duration: Double = 0.2
         if !isClosed {
             for (_, panel) in self.windows {
                 var panel: Window? = panel
-                panel?.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { _ in
+                panel?.view.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { _ in
                     panel?.orderOut(nil)
                     panel = nil
                 })
@@ -576,13 +578,8 @@ final class AppMenuController : NSObject  {
             self.parent?.copyhandler = self.previousCopyHandler
 
             if let window = self.menu.topWindow, let view = window.contentView {
-                view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view, weak window] _ in
-                    view?.removeFromSuperview()
-                    window?.orderOut(nil)
-                })
-            }
-            if let window = self.topBubbleWindow, let view = window.contentView {
-                view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view, weak window] _ in
+                view.layer?.animateAlpha(from: 1, to: 0, duration: duration, removeOnCompletion: false, completion: { [weak view, weak window] _ in
+                    
                     view?.removeFromSuperview()
                     window?.orderOut(nil)
                 })
@@ -714,6 +711,10 @@ final class AppMenuController : NSObject  {
             $0.key.submenuId != submenu.view.submenuId
         })
         submenu.view.parentView?.view.tableView.cancelSelection()
+        
+        submenu.view.parentView?.view.childView = nil
+        submenu.view.parentView = nil
+        
         submenu.view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak submenu] _ in
             if let submenu = submenu {
                 submenu.orderOut(nil)
@@ -730,7 +731,7 @@ final class AppMenuController : NSObject  {
             let tableItem = submenu?.view.parentView?.view.tableView.item(stableId: AnyHashable(item.id))
             let insideItem = tableItem?.view?.mouseInside() ?? false
             
-            if let submenu = submenu, (!submenu.view.mouseInside() && !insideItem) {
+            if let submenu = submenu, submenu.view.childView == nil, (!submenu.view.mouseInside() && !insideItem) {
                 self.cancelSubmenuNow(submenu)
             }
         })
@@ -738,23 +739,27 @@ final class AppMenuController : NSObject  {
     }
     
     private func presentSubmenu(_ menu: ContextMenu, parentView: Window, for id: Int64) {
-        
-        guard findSubmenu(id) == nil, let screen = self.parent?.screen else {
+        guard self.findSubmenu(id) == nil, let screen = self.parent?.screen else {
             return
         }
         
         if let active = self.activeMenu, active.submenuId != nil {
             if active.parentView == parentView, let window = active.kitWindow {
-                cancelSubmenuNow(window)
+                self.cancelSubmenuNow(window)
+                parentView.view.childView = nil
             }
         }
+        if parentView.view.childView != nil {
+            return
+        }
         
-        let view = getView(for: menu, screen: screen, parentView: parentView, submenuId: id)
+        let view = self.getView(for: menu, screen: screen, parentView: parentView, submenuId: id)
         guard let parentItem = parentView.view.item(for: id), let parentItemView = parentItem.view else {
             return
         }
         _ = parentView.view.tableView.select(item: parentItem)
         
+        parentView.view.childView = view
 
         
         var point = parentItemView.convert(NSMakePoint(parentItemView.frame.width - 5, -parentItemView.frame.height), to: nil)
@@ -763,7 +768,7 @@ final class AppMenuController : NSObject  {
         point.y -= view.frame.height
         point.x -= 20
         
-        let rect = adjust(CGRect(origin: point, size: view.frame.size), parent: parentView)
+        let rect = self.adjust(CGRect(origin: point, size: view.frame.size), parent: parentView)
         
         view.setFrame(rect, display: true)
         view.makeKeyAndOrderFront(nil)
@@ -822,15 +827,14 @@ final class AppMenuController : NSObject  {
         
         if let window = menu.topWindow {
             
-            let width = min(window.frame.width, rect.width - 20)
-            
-            let rect = NSMakeRect(rect.minX + 10, rect.maxY - 18, width, window.frame.height)
+            let width = window.frame.width
+            let rect = NSMakeRect(rect.maxX - width + 40, rect.maxY - 25, width, window.frame.height)
             window.setFrame(rect, display: true)
             window.makeKeyAndOrderFront(nil)
             
             let view = window.contentView!.subviews.first!
             
-            view.frame = rect.size.bounds.insetBy(dx: 10, dy: 5)
+            view.frame = NSMakeRect(rect.focus(view.frame.size).minX, 0, view.frame.width, view.frame.height)
             
             window.contentView?.layer?.animateAlpha(from: 0.1, to: 1, duration: 0.2)
             window.contentView?.layer?.animateScaleSpringFrom(anchor: NSMakePoint(anchor.x, rect.height / 2), from: 0.1, to: 1, duration: 0.2, bounce: false)
@@ -838,7 +842,7 @@ final class AppMenuController : NSObject  {
             window.set(mouseHandler: { [weak self] event in
                 self?.closeAll()
                 return .rejected
-            }, with: self, for: .leftMouseUp)
+            }, with: self, for: .leftMouseUp, priority: .supreme)
             
 //            let topBubble = Window(contentRect: .zero, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
 //            topBubble._canBecomeMain = false
@@ -940,5 +944,16 @@ final class AppMenuController : NSObject  {
     
     deinit {
         self.delayDisposable.dispose()
+        self.keyDisposable?.dispose()
     }
+}
+
+
+func contextMenuOnScreen()->Bool {
+    for window in NSApp.windows {
+        if let window = window as? Window, let _ = window.weakView {
+            return true
+        }
+    }
+    return false
 }

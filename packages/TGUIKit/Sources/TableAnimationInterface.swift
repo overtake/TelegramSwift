@@ -30,7 +30,7 @@ open class TableAnimationInterface: NSObject {
         
         var height:CGFloat = 0
         
-        
+        table.tile()
        
         
         let contentView = table.contentView
@@ -65,11 +65,11 @@ open class TableAnimationInterface: NSObject {
         }
         
         for item in added {
-            height += item.height
+            height += item.heightValue
         }
         
         for item in removed {
-            height -= item.height
+            height -= item.heightValue
         }
         
         if previousRange.length == 0  {

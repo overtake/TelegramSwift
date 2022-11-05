@@ -63,6 +63,16 @@ public class TabBarController: ViewController, TabViewDelegate {
         }
     }
     
+    public override var navigationController: NavigationViewController? {
+        didSet {
+            current?.navigationController = self.navigationController
+        }
+    }
+    
+    public override var redirectUserInterfaceCalls: Bool {
+        return true
+    }
+    
     private var genericView:TabBarViewController {
         return view as! TabBarViewController
     }
@@ -157,4 +167,20 @@ public class TabBarController: ViewController, TabViewDelegate {
         genericView.tabView.showTooltip(text: text, for: index)
     }
     
+    public override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.current?.viewWillAppear(animated)
+    }
+    public override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        self.current?.viewDidAppear(animated)
+    }
+    public override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.current?.viewWillDisappear(animated)
+    }
+    public override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        self.current?.viewDidDisappear(animated)
+    }
 }

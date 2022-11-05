@@ -10,10 +10,11 @@ public func roundImage(_ data:Data, _ s:NSSize, cornerRadius:CGFloat = -1, rever
         let image:CGImageSource? = CGImageSourceCreateWithData(data as CFData, nil)
         
         let size = NSMakeSize(s.width * scale, s.height * scale)
-
-        let context:CGContext? = CGContext(data: nil, width: Int(size.width), height: Int(size.height), bitsPerComponent: 8, bytesPerRow: Int(4*size.width), space: NSColorSpace.genericRGB.cgColorSpace!, bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue)
         
-        if let ctx = context {
+        let context = DrawingContext(size: size, scale: 1)
+        
+        context.withContext { ctx in
+            ctx.clear(size.bounds)
             if let img = image {
                 let cimage = CGImageSourceCreateImageAtIndex(img, 0, nil)
                 if let c = cimage {
@@ -28,11 +29,14 @@ public func roundImage(_ data:Data, _ s:NSSize, cornerRadius:CGFloat = -1, rever
                         endAngle = endAngle - Float(Double.pi / 2)
                         ctx.addArc(center: center, radius: CGFloat(radius), startAngle: CGFloat(startAngle), endAngle: CGFloat(endAngle), clockwise: false)
                     } else if cornerRadius > 0 {
-                        
+                        var cornerRadius = cornerRadius * System.backingScale
                         let minx:CGFloat = 0, midx = size.width/2.0, maxx = size.width
                         let miny:CGFloat = 0, midy = size.height/2.0, maxy = size.height
                         
-                    
+                        if size.width < 40, cornerRadius / 2 == size.width / 3 {
+                            cornerRadius = size.width / 3
+                        }
+                        
                         ctx.move(to: NSMakePoint(minx, midy))
                         ctx.addArc(tangent1End: NSMakePoint(minx, miny), tangent2End: NSMakePoint(midx, miny), radius: cornerRadius)
                         ctx.addArc(tangent1End: NSMakePoint(maxx, miny), tangent2End: NSMakePoint(maxx, midy), radius: cornerRadius)
@@ -53,15 +57,10 @@ public func roundImage(_ data:Data, _ s:NSSize, cornerRadius:CGFloat = -1, rever
 
                     }
                     ctx.draw(c, in: NSMakeRect(0, 0, size.width, size.height))
-                    
-
-                    return ctx.makeImage()
-                    
                 }
-        
             }
         }
-        return nil
+        return context.generateImage()
     }
 }
 

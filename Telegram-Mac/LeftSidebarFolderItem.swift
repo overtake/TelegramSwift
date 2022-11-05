@@ -12,8 +12,11 @@ import TelegramCore
 import SwiftSignalKit
 
 extension FolderIcon {
-    convenience init(_ filter: ChatListFilter?) {
-        if let filter = filter {
+    convenience init(_ filter: ChatListFilter) {
+        switch filter {
+        case .allChats:
+            self.init(emoticon: .allChats)
+        case .filter:
             if let emoticon = filter.emoticon {
                 self.init(emoticon: .emoji(emoticon))
             } else {
@@ -36,31 +39,29 @@ extension FolderIcon {
                     self.init(emoticon: .folder)
                 }
             }
-        } else {
-            self.init(emoticon: .allChats)
         }
     }
 }
 
 class LeftSidebarFolderItem: TableRowItem {
 
-    fileprivate let folder: ChatListFilter?
+    fileprivate let folder: ChatListFilter
     fileprivate let selected: Bool
-    fileprivate let callback: (ChatListFilter?)->Void
-    fileprivate let menuItems: (ChatListFilter?)-> [ContextMenuItem]
+    fileprivate let callback: (ChatListFilter)->Void
+    fileprivate let menuItems: (ChatListFilter)-> [ContextMenuItem]
     
     let icon: CGImage
     let badge: CGImage?
     let nameLayout: TextViewLayout
     
     
-    init(_ initialSize: NSSize, folder: ChatListFilter?, selected: Bool, unreadCount: Int, hasUnmutedUnread: Bool, callback: @escaping(ChatListFilter?)->Void, menuItems: @escaping(ChatListFilter?) -> [ContextMenuItem]) {
+    init(_ initialSize: NSSize, folder: ChatListFilter, selected: Bool, unreadCount: Int, hasUnmutedUnread: Bool, callback: @escaping(ChatListFilter)->Void, menuItems: @escaping(ChatListFilter) -> [ContextMenuItem]) {
         self.folder = folder
         self.selected = selected
         self.callback = callback
         self.menuItems = menuItems
         var folderIcon = FolderIcon(folder).icon(for: selected ? .sidebarActive : .sidebar)
-        nameLayout = TextViewLayout(.initialize(string: folder != nil ? folder!.title : strings().chatListFilterAllChats, color: !selected ? NSColor.white.withAlphaComponent(0.5) : .white, font: .medium(10)), alignment: .center)
+        nameLayout = TextViewLayout(.initialize(string: folder.title, color: !selected ? NSColor.white.withAlphaComponent(0.5) : .white, font: .medium(10)), alignment: .center)
         nameLayout.measure(width: initialSize.width - 10)
         
         
@@ -127,7 +128,7 @@ class LeftSidebarFolderItem: TableRowItem {
     }
     
     override var stableId: AnyHashable {
-        return folder?.id ?? -1
+        return folder.id
     }
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {

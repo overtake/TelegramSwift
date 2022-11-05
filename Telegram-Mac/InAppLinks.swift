@@ -27,9 +27,9 @@ private let tgme:String = "tg://"
 
 
 func resolveUsername(username: String, context: AccountContext) -> Signal<Peer?, NoError> {
-    if username.hasPrefix("_private_"), let range = username.range(of: "_private_") {
-        if let channelId = Int64(username[range.upperBound...]) {
-            let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: PeerId.Id._internalFromInt64Value(channelId))
+    if username.hasPrefix(_private_), let range = username.range(of: _private_) {
+        if let channelId = Int64(username[range.upperBound...]), let id = PeerId._optionalInternalFromInt64Value(channelId) {
+            let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: id)
             
             let peerSignal: Signal<Peer?, NoError> = context.account.postbox.transaction { transaction -> Peer? in
                 return transaction.getPeer(peerId)
@@ -37,7 +37,7 @@ func resolveUsername(username: String, context: AccountContext) -> Signal<Peer?,
                     if let peer = peer {
                         return .single(peer)
                     } else {
-                        return context.engine.peers.findChannelById(channelId: peerId.id._internalGetInt64Value())
+                        return context.engine.peers.findChannelById(channelId: peerId.id._internalGetInt64Value()) |> map { $0?._asPeer() }
                     }
             }
             
@@ -82,12 +82,12 @@ enum ChatInitialAction : Equatable {
     case inputText(text: String, behavior: ChatInitialActionBehavior)
     case files(list: [String], behavior: ChatInitialActionBehavior)
     case forward(messageIds: [MessageId], text: ChatTextInputState?, behavior: ChatInitialActionBehavior)
-    case ad(PromoChatListItem.Kind)
+    case ad(EngineChatList.AdditionalItem.PromoInfo.Content)
     case source(MessageId)
     case closeAfter(Int32)
     case selectToReport(reason: ReportReasonValue)
     case joinVoiceChat(_ joinHash: String?)
-    case attachBot(_ bot: String, _ payload: String?)
+    case attachBot(_ bot: String, _ payload: String?, _ choose:[String]?)
     case openMedia(_ timemark: Int32?)
     var selectionNeeded: Bool {
         switch self {
@@ -150,8 +150,13 @@ var globalLinkExecutor:TextViewInteractions {
                     } else {
                         return .plain
                     }
-                case .stickerPack:
-                    return .stickerPack
+                case let .stickerPack(_, source, _, _):
+                    switch source {
+                    case .emoji:
+                        return .emojiPack
+                    case .stickers:
+                        return .stickerPack
+                    }
                 case .joinchat:
                     return .inviteLink
                 default:
@@ -174,7 +179,9 @@ var globalLinkExecutor:TextViewInteractions {
             }
             let modified: NSMutableAttributedString = string.mutableCopy() as! NSMutableAttributedString
             
-            string.enumerateAttributes(in: string.range, options: [], using: { attr, range, _ in
+            var replaceRanges:[(NSRange, String)] = []
+            
+            string.enumerateAttributes(in: string.range, options: [.reverse], using: { attr, range, _ in
                 if let appLink = attr[NSAttributedString.Key.link] as? inAppLink {
                     switch appLink {
                     case .code, .hashtag, .callback:
@@ -182,31 +189,53 @@ var globalLinkExecutor:TextViewInteractions {
                     default:
                         if appLink.link != modified.string.nsstring.substring(with: range) {
                             modified.addAttribute(NSAttributedString.Key.link, value: appLink.link, range: range)
+                            modified.addAttribute(.init(TGCustomLinkAttributeName), value: TGInputTextTag(uniqueId: arc4random64(), attachment: appLink.link, attribute: TGInputTextAttribute(name: NSAttributedString.Key.foregroundColor.rawValue, value: theme.colors.link)), range: range)
                         }
                     }
                     
-                } else if let appLink = attr[NSAttributedString.Key(TGCustomLinkAttributeName)] as? TGInputTextTag {
+                }
+                if let appLink = attr[NSAttributedString.Key(TGCustomLinkAttributeName)] as? TGInputTextTag {
                     if (appLink.attachment as? String) != modified.string.nsstring.substring(with: range) {
                         modified.addAttribute(NSAttributedString.Key.link, value: appLink.attachment, range: range)
                     }
-                } else if attr[.foregroundColor] != nil {
+                }
+                if let sticker = attr[.init("Attribute__EmbeddedItem")] as? InlineStickerItem, case let .attribute(emoji) = sticker.source {
+                    modified.addAttribute(.init(TGAnimatedEmojiAttributeName), value: emoji.attachment, range: range)
+                    replaceRanges.append((range, emoji.attachment.text))
+                }
+                if attr[.foregroundColor] != nil {
                     modified.removeAttribute(.foregroundColor, range: range)
-                } else if let font = attr[.font] as? NSFont {
+                }
+                if let font = attr[.font] as? NSFont {
                     if let newFont = NSFont(name: font.fontName, size: 0) {
                         modified.setFont(font: newFont, range: range)
                     }
-                } else if attr[.paragraphStyle] != nil {
+                }
+                if attr[.paragraphStyle] != nil {
                     modified.removeAttribute(.paragraphStyle, range: range)
                 }
             })
             
+            for range in replaceRanges.sorted(by: { $0.0.lowerBound > $1.0.lowerBound }) {
+                modified.replaceCharacters(in: range.0, with: range.1)
+            }
+            
+            let input = ChatTextInputState(inputText: modified.string, selectionRange: 0 ..< modified.string.length, attributes: chatTextAttributes(from: modified))
             
             if !modified.string.isEmpty {
                 pb.clearContents()
-                
                 let rtf = try? modified.data(from: modified.range, documentAttributes: [NSAttributedString.DocumentAttributeKey.documentType : NSAttributedString.DocumentType.rtf])
+                
+                
+                pb.declareTypes([.rtf, .kInApp, .string], owner: nil)
+
+                let encoder = AdaptedPostboxEncoder()
+                let encoded = try? encoder.encode(input)
+                
+                if let data = encoded {
+                    pb.setData(data, forType: .kInApp)
+                }
                 if let rtf = rtf {
-                    pb.declareTypes([.rtf], owner: nil)
                     pb.setData(rtf, forType: .rtf)
                     pb.setString(modified.string, forType: .string)
                     return true
@@ -251,6 +280,8 @@ func copyContextText(from type: LinkType) -> String {
         return strings().textContextCopyInviteLink
     case .stickerPack:
         return strings().textContextCopyStickerPack
+    case .emojiPack:
+        return strings().textContextCopyEmojiPack
     case .code:
         return strings().textContextCopyCode
     }
@@ -261,8 +292,6 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
     switch inapp {
     case let .external(link, needConfirm):
         var url:String = link.trimmed
-
-
 
         var reversedUrl = String(url.reversed())
         while reversedUrl.components(separatedBy: "#").count > 2 {
@@ -291,7 +320,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 var needConfirm = needConfirm || url.host != URL(string: urlValue)?.host
                 
                 if needConfirm {
-                    let allowed = ["telegram.org", "telegram.dog", "telegram.me", "telesco.pe"]
+                    let allowed = appDelegate?.allowedDomains ?? []
                     if let url = URL(string: urlValue) {
                         if let host = url.host, allowed.contains(host) {
                             needConfirm = false
@@ -356,9 +385,9 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         }
         
         var peerSignal: Signal<Peer, Error> = .fail(.doesntExists)
-        if username.hasPrefix("_private_"), let range = username.range(of: "_private_") {
-            if let channelId = Int64(username[range.upperBound...]) {
-                let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: PeerId.Id._internalFromInt64Value(channelId))
+        if username.hasPrefix(_private_), let range = username.range(of: _private_) {
+            if let channelId = Int64(username[range.upperBound...]), let id = PeerId._optionalInternalFromInt64Value(channelId) {
+                let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: id)
                 peerSignal = context.account.postbox.transaction { transaction -> Peer? in
                     return transaction.getPeer(peerId)
                 } |> mapToSignalPromotingError { peer in
@@ -368,7 +397,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         return context.engine.peers.findChannelById(channelId: peerId.id._internalGetInt64Value())
                             |> mapToSignalPromotingError { value in
                                 if let value = value {
-                                    return .single(value)
+                                    return .single(value._asPeer())
                                 } else {
                                     return .fail(.privateAccess)
                                 }
@@ -388,7 +417,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             }
         }
         
-        let signal:Signal<(ReplyThreadInfo, Peer), Error> = peerSignal |> mapToSignal { peer in
+        let signal:Signal<(ThreadInfo, Peer), Error> = peerSignal |> mapToSignal { peer in
             let messageId: MessageId = MessageId(peerId: peer.id, namespace: Namespaces.Message.Cloud, id: threadId)
             return fetchAndPreloadReplyThreadInfo(context: context, subject: peer.isChannel ? .channelPost(messageId) : .groupMessage(messageId))
                 |> map {
@@ -417,6 +446,8 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 let mode: ReplyThreadMode
                 if peer.isChannel {
                     mode = .comments(origin: threadMessageId)
+                } else if peer.isForum {
+                    mode = .topic(origin: threadMessageId)
                 } else {
                     mode = .replies(origin: threadMessageId)
                 }
@@ -425,25 +456,99 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     commentMessageId = MessageId(peerId: result.message.messageId.peerId, namespace: Namespaces.Message.Cloud, id: commentId)
                 }
                 
-                navigation.push(ChatAdditionController(context: context, chatLocation: .replyThread(result.message), mode: .replyThread(data: result.message, mode: mode), messageId: commentMessageId, initialAction: nil, chatLocationContextHolder: result.contextHolder))
+                navigation.push(ChatAdditionController(context: context, chatLocation: .thread(result.message), mode: .thread(data: result.message, mode: mode), messageId: commentMessageId, initialAction: nil, chatLocationContextHolder: result.contextHolder))
             }
         }, error: { error in
             switch error {
             case .doesntExists:
-                alert(for: context.window, info: strings().alertUserDoesntExists)
+                showModalText(for: context.window, text: strings().alertUserDoesntExists)
             case .privateAccess:
-                 alert(for: context.window, info: strings().alertPrivateChannelAccessError)
+                showModalText(for: context.window, text: strings().alertPrivateChannelAccessError)
             case .generic:
                 break
             }
         })
         
         afterComplete(true)
+    case let .topic(_, username, context, threadId, commentId):
+        
+        enum Error {
+            case doesntExists
+            case privateAccess
+            case generic
+        }
+        
+        var peerSignal: Signal<Peer, Error> = .fail(.doesntExists)
+        if username.hasPrefix(_private_), let range = username.range(of: _private_) {
+            if let channelId = Int64(username[range.upperBound...]), let id = PeerId._optionalInternalFromInt64Value(channelId) {
+                let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: id)
+                peerSignal = context.account.postbox.transaction { transaction -> Peer? in
+                    return transaction.getPeer(peerId)
+                } |> mapToSignalPromotingError { peer in
+                    if let peer = peer {
+                        return .single(peer)
+                    } else {
+                        return context.engine.peers.findChannelById(channelId: peerId.id._internalGetInt64Value())
+                            |> mapToSignalPromotingError { value in
+                                if let value = value {
+                                    return .single(value._asPeer())
+                                } else {
+                                    return .fail(.privateAccess)
+                                }
+                            }
+                        
+                    }
+                }
+            }
+        } else {
+            peerSignal = context.engine.peers.resolvePeerByName(name: username) |> mapToSignalPromotingError { peerId -> Signal<Peer, Error> in
+                if let peerId = peerId {
+                    return context.account.postbox.loadedPeerWithId(peerId._asPeer().id) |> castError(Error.self)
+                }
+                return .fail(.doesntExists)
+            } |> mapError { _ in
+                return .doesntExists
+            }
+        }
+        _ = (peerSignal |> deliverOnMainQueue).start(next: { peer in
+            var toMessageId: MessageId? = nil
+            if let commentId = commentId {
+                toMessageId = MessageId(peerId: peer.id, namespace: Namespaces.Message.Cloud, id: commentId)
+            }
+            _ = ForumUI.openTopic(Int64(threadId), peerId: peer.id, context: context, messageId: toMessageId, animated: true, addition: true).start()
+        }, error: { error in
+            switch error {
+            case .doesntExists:
+                showModalText(for: context.window, text: strings().alertUserDoesntExists)
+            case .privateAccess:
+                showModalText(for: context.window, text: strings().alertPrivateChannelAccessError)
+            case .generic:
+                break
+            }
+        })
+
+        afterComplete(true)
     case let .followResolvedName(_, username, postId, context, action, callback):
         
-        if username.hasPrefix("_private_"), let range = username.range(of: "_private_") {
-            if let channelId = Int64(username[range.upperBound...]) {
-                let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: PeerId.Id._internalFromInt64Value(channelId))
+        let invokeCallback:(Peer, MessageId?, ChatInitialAction?) -> Void = { peer, messageId, action in
+            if peer.isForum {
+                if let messageId = messageId {
+                    _ = ForumUI.openTopic(makeMessageThreadId(messageId), peerId: peer.id, context: context, animated: true, addition: true).start(next: { result in
+                        if !result {
+                            ForumUI.open(peer.id, context: context)
+                        }
+                    })
+                } else {
+                    ForumUI.open(peer.id, context: context)
+                }
+            } else {
+                callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
+            }
+        }
+        
+        if username.hasPrefix(_private_), let range = username.range(of: _private_) {
+            if let channelId = Int64(username[range.upperBound...]), let id = PeerId._optionalInternalFromInt64Value(channelId) {
+                let peerId = PeerId(namespace: Namespaces.Peer.CloudChannel, id: id)
                 
                 let peerSignal: Signal<Peer?, NoError> = context.account.postbox.transaction { transaction -> Peer? in
                     return transaction.getPeer(peerId)
@@ -451,7 +556,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         if let peer = peer {
                             return .single(peer)
                         } else {
-                            return context.engine.peers.findChannelById(channelId: peerId.id._internalGetInt64Value())
+                            return context.engine.peers.findChannelById(channelId: peerId.id._internalGetInt64Value()) |> map { $0?._asPeer() }
                         }
                 }
                 
@@ -465,17 +570,17 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         }
                         if let peer = peer as? TelegramChannel {
                             if peer.participationStatus == .kicked {
-                                alert(for: context.window, info: strings().alertPrivateChannelAccessError)
+                                showModalText(for: context.window, text: strings().alertPrivateChannelAccessError)
                                 return
                             }
                         }
-                        callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
+                        invokeCallback(peer, messageId, action)
                     } else {
-                        alert(for: context.window, info: strings().alertPrivateChannelAccessError)
+                        showModalText(for: context.window, text: strings().alertPrivateChannelAccessError)
                     }
                 })
             } else {
-                alert(for: context.window, info: strings().alertPrivateChannelAccessError)
+                showModalText(for: context.window, text: strings().alertPrivateChannelAccessError)
             }
         } else {
             let phone = username.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
@@ -503,20 +608,62 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     if peer.isBot {
                         if let action = action {
                             switch action {
-                            case let .attachBot(botname, _):
-                                if peer.username == botname {
-                                    let chat = context.bindings.rootNavigation().controller as? ChatController
-                                    chat?.chatInteraction.invokeInitialAction(action: action)
-                                    return
+                            case let .attachBot(botname, _, choose):
+                                
+                                let invoke:(Peer)->Void = { peer in
+                                    let signal = context.engine.messages.getAttachMenuBot(botId: peer.id)
+                                    let openAttach:()->Void = {
+                                        let chat = context.bindings.rootNavigation().controller as? ChatController
+                                        chat?.chatInteraction.invokeInitialAction(action: action)
+                                    }
+                                    _ = showModalProgress(signal: signal, for: context.window).start(next: { _ in
+                                        openAttach()
+                                    }, error: { _ in
+                                        if peer.username == botname {
+                                            openAttach()
+                                        } else {
+                                            callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
+                                        }
+                                    })
+                                }
+                                if let choose = choose, !choose.isEmpty {
+                                    var settings:SelectPeerSettings = .init()
+                                    if choose.contains("users") {
+                                        settings.insert(.contacts)
+                                        settings.insert(.remote)
+                                    }
+                                    if choose.contains("bots") {
+                                        settings.insert(.bots)
+                                    }
+                                    if choose.contains("groups") {
+                                        settings.insert(.groups)
+                                    }
+                                    if choose.contains("channels") {
+                                        settings.insert(.channels)
+                                    }
+                                    
+                                    _ = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectChat, limit: 1, behavior: SelectChatsBehavior(settings: settings, checkInvite: false, excludePeerIds: [], limit: 1)).start(next: { peerIds in
+                                        if let peerId = peerIds.first {
+                                            let signal = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
+                                            _ = signal.start(next: { peer in
+                                                invoke(peer)
+                                            })
+                                        }
+                                    })
+                                } else {
+                                    invoke(peer)
                                 }
                             default:
-                                break
+                                invokeCallback(peer, messageId, action)
                             }
+                        } else {
+                            invokeCallback(peer, messageId, action)
                         }
+                    } else {
+                        invokeCallback(peer, messageId, action)
                     }
-                    callback(peer.id, peer.isChannel || peer.isSupergroup || peer.isBot, messageId, action)
                 } else {
-                    alert(for: context.window, info: strings().alertUserDoesntExists)
+                    showModalText(for: context.window, text: strings().alertUserDoesntExists)
                 }
                     
             })
@@ -536,7 +683,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 }
             }
             
-            let result = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectGroupOrChannel, behavior: payload.isEmpty ? SelectGroupOrChannelBehavior(limit: 1) : SelectChatsBehavior(limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
+            let result = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectGroupOrChannel, behavior: SelectChatsBehavior(settings: payload.isEmpty ? [.groups, .channels] : [.groups], checkInvite: true, limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
                 return .single(true)
             })
             |> filter { $0.first != nil }
@@ -602,30 +749,6 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                         addSimple()
                     }
                 }
-                
-//
-//                if !payload.isEmpty {
-//
-//
-//
-//                    let signal = showModalProgress(signal: context.engine.messages.requestStartBotInGroup(botPeerId: botPeerId._asPeer().id, groupPeerId: values.dest.id, payload: payload), for: context.window)
-//                        |> map {
-//                            ($0, values.dest.id)
-//                        }
-//                    _ = signal.start(next: { result, peerId in
-//                        switch result {
-//                        case let .channelParticipant(participant):
-//                            context.peerChannelMemberCategoriesContextsManager.externallyAdded(peerId: peerId, participant: participant)
-//                        case .none:
-//                            break
-//                        }
-//                        callback(peerId, true, nil, nil)
-//                    }, error: { error in
-//                        alert(for: context.window, info: strings().unknownError)
-//                    })
-//                } else {
-//
-//                }
             })
             
         })
@@ -637,28 +760,45 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         interaction(hashtag)
         afterComplete(true)
     case let .joinchat(_, hash, context, interaction):
+        
+        let openForum:(PeerId)->Void = { peerId in
+            ForumUI.open(peerId, context: context)
+        }
+        
         _ = showModalProgress(signal: context.engine.peers.joinLinkInformation(hash), for: context.window).start(next: { (result) in
             switch result {
-            case let .alreadyJoined(peerId):
-                interaction(peerId, true, nil, nil)
+            case let .alreadyJoined(peer):
+                if peer._asPeer().isForum {
+                    openForum(peer.id)
+                } else {
+                    interaction(peer.id, true, nil, nil)
+                }
             case let .invite(state):
                 if state.flags.requestNeeded {
-                    showModal(with: RequestJoinChatModalController(context: context, joinhash: hash, invite: result, interaction: { peerId in
-                        if let peerId = peerId {
-                            interaction(peerId, true, nil, nil)
+                    showModal(with: RequestJoinChatModalController(context: context, joinhash: hash, invite: result, interaction: { peer in
+                        if peer.isForum {
+                            openForum(peer.id)
+                        } else {
+                            interaction(peer.id, true, nil, nil)
                         }
                     }), for: context.window)
                 } else {
-                    showModal(with: JoinLinkPreviewModalController(context, hash: hash, join: result, interaction: { peerId in
-                        if let peerId = peerId {
-                            interaction(peerId, true, nil, nil)
+                    showModal(with: JoinLinkPreviewModalController(context, hash: hash, join: result, interaction: { peer in
+                        if peer.isForum {
+                            openForum(peer.id)
+                        } else {
+                            interaction(peer.id, true, nil, nil)
                         }
                     }), for: context.window)
                 }
-            case let .peek(peerId, peek):
-                 interaction(peerId, true, nil, .closeAfter(peek))
+            case let .peek(peer, peek):
+                if peer._asPeer().isForum {
+                    openForum(peer.id)
+                } else {
+                    interaction(peer.id, true, nil, .closeAfter(peek))
+                }
             case .invalidHash:
-                alert(for: context.window, info: strings().linkExpired)
+                showModalText(for: context.window, text: strings().linkExpired)
             }
         })
         afterComplete(true)
@@ -690,13 +830,13 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             }, error: { error in
                 switch error {
                 case .generic:
-                    alert(for: context.window, info: strings().wallpaperPreviewDoesntExists)
+                    showModalText(for: context.window, text: strings().wallpaperPreviewDoesntExists)
                 }
             })
         }
         afterComplete(true)
     case let .stickerPack(_, reference, context, peerId):
-        showModal(with: StickerPackPreviewModalController(context, peerId: peerId, reference: reference), for: context.window)
+        showModal(with: StickerPackPreviewModalController(context, peerId: peerId, references: [reference]), for: context.window)
         afterComplete(true)
     case let .confirmPhone(_, context, phone, hash):
         _ = showModalProgress(signal: context.engine.auth.requestCancelAccountResetData(hash: hash) |> deliverOnMainQueue, for: context.window).start(next: { data in
@@ -721,7 +861,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             return
         }
         _ = showModalProgress(signal: (requestSecureIdForm(postbox: context.account.postbox, network: context.account.network, peerId: value.peerId, scope: value.scope, publicKey: value.publicKey) |> mapToSignal { form in
-            return context.account.postbox.loadedPeerWithId(context.peerId) |> mapError {_ in return .generic} |> map { peer in
+            return context.account.postbox.loadedPeerWithId(context.peerId) |> castError(RequestSecureIdFormError.self) |> map { peer in
                 return (form, peer)
             }
         } |> deliverOnMainQueue), for: context.window).start(next: { form, peer in
@@ -789,7 +929,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             }
         })
         afterComplete(true)
-    case let .tonTransfer(_, context, data: data):
+    case .tonTransfer:
         if #available(OSX 10.12, *) {
 
         }
@@ -822,6 +962,34 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             })
         })
        
+        afterComplete(true)
+    case let .invoice(_, context, slug):
+        let signal = showModalProgress(signal: context.engine.payments.fetchBotPaymentInvoice(source: .slug(slug)), for: context.window)
+        
+        _ = signal.start(next: { invoice in
+            showModal(with: PaymentsCheckoutController(context: context, source: .slug(slug), invoice: invoice), for: context.window)
+        }, error: { error in
+            showModalText(for: context.window, text: strings().paymentsInvoiceNotExists)
+        })
+        
+        afterComplete(true)
+    case let .premiumOffer(_, ref, context):
+        if !context.premiumIsBlocked {
+            if context.isPremium {
+                showModalText(for: context.window, text: strings().premiumOffsetAlreadyHave)
+            } else {
+                if let modal = findModal(PremiumBoardingController.self) {
+                    modal.buy()
+                } else {
+                    showModal(with: PremiumBoardingController(context: context, source: .deeplink(ref)), for: context.window)
+                }
+            }
+        }
+        afterComplete(true)
+    case let .restorePurchase(_, context):
+        if let modal = findModal(PremiumBoardingController.self) {
+            modal.restore()
+        }
         afterComplete(true)
     }
     
@@ -933,6 +1101,7 @@ enum inAppLink {
     case peerInfo(link: String, peerId:PeerId, action:ChatInitialAction?, openChat:Bool, postId:Int32?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
     case followResolvedName(link: String, username:String, postId:Int32?, context: AccountContext, action:ChatInitialAction?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
     case comments(link: String, username:String, context: AccountContext, threadId: Int32, commentId: Int32?)
+    case topic(link: String, username:String, context: AccountContext, threadId: Int32, commentId: Int32?)
     case inviteBotToGroup(link: String, username:String, context: AccountContext, action:ChatInitialAction?, rights: String?, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
     case botCommand(String, (String)->Void)
     case callback(String, (String)->Void)
@@ -941,7 +1110,7 @@ enum inAppLink {
     case shareUrl(link: String, AccountContext, String)
     case joinchat(link: String, String, context: AccountContext, callback:(PeerId, Bool, MessageId?, ChatInitialAction?)->Void)
     case logout(()->Void)
-    case stickerPack(link: String, StickerPackReference, context: AccountContext, peerId:PeerId?)
+    case stickerPack(link: String, StickerPackPreviewSource, context: AccountContext, peerId:PeerId?)
     case confirmPhone(link: String, context: AccountContext, phone: String, hash: String)
     case nothing
     case socks(link: String, ProxyServerSettings, applyProxy:(ProxyServerSettings)->Void)
@@ -954,6 +1123,9 @@ enum inAppLink {
     case instantView(link: String, webpage: TelegramMediaWebpage, anchor: String?)
     case settings(link: String, context: AccountContext, section: InAppSettingsSection)
     case joinGroupCall(link: String, context: AccountContext, peerId: PeerId, call: CachedChannelData.ActiveCall)
+    case invoice(link: String, context: AccountContext, slug: String)
+    case premiumOffer(link: String, ref: String?, context: AccountContext)
+    case restorePurchase(link: String, context: AccountContext)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -961,36 +1133,38 @@ enum inAppLink {
                 return link.replacingOccurrences(of: "mailto:", with: "")
             }
             return link
-        case let .peerInfo(values):
-            return values.link
-        case let .comments(values):
-            return values.link
-        case let .followResolvedName(values):
-            return values.link
-        case let .inviteBotToGroup(values):
-            return values.link
+        case let .peerInfo(link, _, _, _, _, _):
+            return link
+        case let .comments(link, _, _, _, _):
+            return link
+        case let .topic(link, _, _, _, _):
+            return link
+        case let .followResolvedName(link, _, _, _, _, _):
+            return link
+        case let .inviteBotToGroup(link, _, _, _, _, _):
+            return link
         case let .botCommand(link, _), let .callback(link, _), let .code(link, _), let .hashtag(link, _):
             return link
-        case let .shareUrl(values):
-            return values.link
-        case let .joinchat(values):
-            return values.link
-        case let .stickerPack(values):
-            return values.link
-        case let .confirmPhone(values):
-            return values.link
-        case let .socks(values):
-            return values.link
-        case let .requestSecureId(values):
-            return values.link
-        case let .unsupportedScheme(values):
-            return values.link
-        case let .applyLocalization(values):
-            return values.link
-        case let .wallpaper(values):
-            return values.link
-        case let .theme(values):
-            return values.link
+        case let .shareUrl(link, _, _):
+            return link
+        case let .joinchat(link, _, _, _):
+            return link
+        case let .stickerPack(link, _, _, _):
+            return link
+        case let .confirmPhone(link, _, _, _):
+            return link
+        case let .socks(link, _, _):
+            return link
+        case let .requestSecureId(link, _, _):
+            return link
+        case let .unsupportedScheme(link, _, _):
+            return link
+        case let .applyLocalization(link, _, _):
+            return link
+        case let .wallpaper(link, _, _):
+            return link
+        case let .theme(link, _, _):
+            return link
         case let .tonTransfer(link, _, _):
             return link
         case let .instantView(link, _, _):
@@ -998,6 +1172,12 @@ enum inAppLink {
         case let .settings(link, _, _):
             return link
         case let .joinGroupCall(link, _, _, _):
+            return link
+        case let .invoice(link, _, _):
+            return link
+        case let .premiumOffer(link, _, _):
+            return link
+        case let .restorePurchase(link, _):
             return link
         case .nothing:
             return ""
@@ -1008,10 +1188,10 @@ enum inAppLink {
 }
 
 let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
-let actions_me:[String] = ["joinchat/","addstickers/","confirmphone","socks", "proxy", "setlanguage", "bg", "addtheme/"]
+let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases"]
 
 let ton_scheme:String = "ton://"
 
@@ -1021,6 +1201,7 @@ private let keyURLPostId = "post";
 private let keyURLCommentId = "comment";
 private let keyURLAdmin = "admin";
 private let keyURLThreadId = "thread";
+private let keyURLTopicId = "topic";
 private let keyURLInvite = "invite";
 private let keyURLUrl = "url";
 private let keyURLSet = "set";
@@ -1033,7 +1214,13 @@ private let keyURLStartGroup = "startgroup";
 private let keyURLSecret = "secret";
 private let keyURLproxy = "proxy";
 private let keyURLLivestream = "livestream";
-
+private let keyURLRef = "ref";
+private let keyURLSlug = "slug";
+private let keyURLChoose = "choose";
+private let keyURLLang = "lang";
+private let keyURLRotation = "rotation";
+private let keyURLTimecode = "t";
+private let keyURLBgColor = "bg_color";
 private let keyURLHash = "hash";
 
 private let keyURLHost = "server";
@@ -1041,14 +1228,53 @@ private let keyURLPort = "port";
 private let keyURLUser = "user";
 private let keyURLPass = "pass";
 
+private let _private_ = "_private_"
+
 let legacyPassportUsername = "telegrampassport"
 
 func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = nil, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, command:((String)->Void)? = nil, applyProxy:((ProxyServerSettings) -> Void)? = nil, confirm: Bool = false) -> inAppLink {
-    let external = url
-    let urlString = external as String
-    let url = url.lowercased.nsstring
     
-
+    var value = url
+    let subdomainRange = url.range(of: ".t.me")
+    if subdomainRange.location != NSNotFound, let subdomain = URL(string: url as String) {
+        var subdomain = subdomain
+        if subdomain.scheme == nil, let domain = URL(string: "https://" + subdomain.path) {
+            subdomain = domain
+        }
+        if let host = subdomain.host {
+            var components:[String] = []
+            components = host.components(separatedBy: ".")
+            var newValue: String = ""
+            if components.count == 3, components[1] == "t", components[2] == "me" {
+                newValue = "https://" + components[1] + "." + components[2] + "/" + components[0]
+                let queryRange = url.range(of: host + "/?")
+                if queryRange.location != NSNotFound {
+                    let query = url.substring(with: NSMakeRange(queryRange.max, url.length - queryRange.max))
+                    newValue += "?" + query
+                } else {
+                    let queryRange = url.range(of: host + "/")
+                    if queryRange.location != NSNotFound {
+                        let query = url.substring(with: NSMakeRange(queryRange.max, url.length - queryRange.max))
+                        newValue += "/" + query
+                    }
+                }
+            }
+            if !newValue.isEmpty {
+                value = newValue.nsstring
+            }
+        }
+    }
+    
+    let external = value
+    let urlString = external as String
+    let url = value.lowercased.nsstring
+    
+    
+    if let url = URL(string: url as String), url.scheme == "file" {
+        return .nothing
+    }
+    
+    
     
     for domain in telegram_me {
         let range = url.range(of: domain)
@@ -1064,14 +1290,18 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         }
                     case actions_me[1]:
                         if let context = context {
-                            return .stickerPack(link: urlString, StickerPackReference.name(value), context: context, peerId: peerId)
+                            return .stickerPack(link: urlString, .stickers(.name(value)), context: context, peerId: peerId)
                         }
                     case actions_me[2]:
+                        if let context = context {
+                            return .stickerPack(link: urlString, .emoji(.name(value)), context: context, peerId: peerId)
+                        }
+                    case actions_me[3]:
                         let (vars, _) = urlVars(with: string)
                         if let context = context, let phone = vars[keyURLPhone], let hash = vars[keyURLHash] {
                             return .confirmPhone(link: urlString, context: context, phone: phone, hash: hash)
                         }
-                    case actions_me[3]:
+                    case actions_me[4]:
                         let (vars, _) = urlVars(with: string)
                         if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort) {
                             let server = escape(with: server)
@@ -1079,7 +1309,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             let pass = vars[keyURLPass] != nil ? escape(with: vars[keyURLPass]!) : nil
                             return .socks(link: urlString, ProxyServerSettings(host: server, port: port, connection: .socks5(username: username, password: pass)), applyProxy: applyProxy)
                         }
-                    case actions_me[4]:
+                    case actions_me[5]:
                         let (vars, _) = urlVars(with: string)
                         if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort), let rawSecret = vars[keyURLSecret]  {
                             let server = escape(with: server)
@@ -1087,20 +1317,20 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 return .socks(link: urlString, ProxyServerSettings(host: server, port: port, connection: .mtp(secret: secret)), applyProxy: applyProxy)
                             }
                         }
-                    case actions_me[5]:
+                    case actions_me[6]:
                         if let context = context, !value.isEmpty {
                             return .applyLocalization(link: urlString, context: context, value: String(value[value.index(after: value.startIndex) ..< value.endIndex]))
                         } else {
                             
                         }
-                    case actions_me[6]:
+                    case actions_me[7]:
                         if !value.isEmpty {
                             var component = String(value[value.index(after: value.startIndex) ..< value.endIndex])
                             component = component.components(separatedBy: "?")[0]
                             
                             if let context = context {
                                 let (vars, emptyVars) = urlVars(with: value)
-                                var rotation:Int32? = vars["rotation"] != nil ? Int32(vars["rotation"]!) : nil
+                                var rotation:Int32? = vars[keyURLRotation] != nil ? Int32(vars[keyURLRotation]!) : nil
                                 
                                 if let r = rotation {
                                     let available:[Int32] = [0, 45, 90, 135, 180, 225, 270, 310]
@@ -1114,7 +1344,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 var intensity: Int32? = 80
                                 var colors: [UInt32] = []
                                 
-                                if let bgcolor = vars["bg_color"], !bgcolor.isEmpty {
+                                if let bgcolor = vars[keyURLBgColor], !bgcolor.isEmpty {
                                     var components = bgcolor.components(separatedBy: "~")
                                     if components.count == 1 {
                                         components = bgcolor.components(separatedBy: "-")
@@ -1165,10 +1395,16 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             }
                         }
                         return .external(link: urlString, false)
-                    case actions_me[7]:
-                        let userAndPost = string.components(separatedBy: "/")
-                        if userAndPost.count == 2, let context = context {
-                            return .theme(link: urlString, context: context, name: userAndPost[1])
+                    case actions_me[8]:
+                        let data = string.components(separatedBy: "/")
+                        if data.count == 2, let context = context {
+                            return .theme(link: urlString, context: context, name: data[1])
+                        }
+                        return .external(link: urlString, false)
+                    case actions_me[9]:
+                        let data = string.components(separatedBy: "/")
+                        if data.count == 2, let context = context {
+                            return .invoice(link: urlString, context: context, slug: value)
                         }
                         return .external(link: urlString, false)
                     default:
@@ -1216,7 +1452,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             action = .joinVoiceChat(value)
                             break loop;
                         case keyURLAttach:
-                            action = .attachBot(value, nil)
+                            let choose = vars[keyURLChoose]?.split(separator: "+").compactMap { String($0) }
+                            action = .attachBot(value, nil, choose)
                             break loop
                         default:
                             break
@@ -1226,12 +1463,16 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         action = .joinVoiceChat(nil)
                     }
                 }
-
+                 
                 if let openInfo = openInfo {
                     if username == "iv" || username.isEmpty {
                         return .external(link: urlString, username.isEmpty)
                     } else if let context = context {
 
+                        if username.hasPrefix("$") {
+                            return .invoice(link: urlString, context: context, slug: String(username.suffix(username.length - 1)))
+                        }
+                        
                         let joinKeys:[String] = ["+", "%20"]
                         let phone = username.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
                         if "+\(phone)" == username {
@@ -1247,29 +1488,43 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         let (vars, empty) = urlVars(with: string)
 
                         if vars[keyURLStartattach] != nil || empty.contains(keyURLStartattach) {
-                            action = .attachBot(vars[keyURLAttach] ?? username, vars[keyURLStartattach])
+                            let choose = vars[keyURLChoose]?.split(separator: "+").compactMap { String($0) }
+                            action = .attachBot(vars[keyURLAttach] ?? username, vars[keyURLStartattach], choose)
                         } else if components.contains(keyURLLivestream) {
                             action = .joinVoiceChat(nil)
                         }
-                        return .followResolvedName(link: urlString, username: username, postId: nil, context: context, action: action, callback: openInfo)
+                        if username.hasPrefix("$") {
+                            return .invoice(link: urlString, context: context, slug: String(username.suffix(username.length - 1)))
+                        }
+                        if let topicId = vars[keyURLTopicId]?.nsstring.intValue {
+                            return .topic(link: urlString, username: username, context: context, threadId: topicId, commentId: nil)
+                        } else  {
+                            return .followResolvedName(link: urlString, username: username, postId: nil, context: context, action: action, callback: openInfo)
+                        }
                     }
                 }
             } else if let openInfo = openInfo {
                 let userAndPost = string.components(separatedBy: "/")
                 if userAndPost.count >= 2 {
                     let name = userAndPost[0]
-                    
                     if name == "c" {
+                        
                         if let context = context {
-                            var post = userAndPost.count >= 3 ? (userAndPost[2].isEmpty ? nil : Int32(userAndPost[2])) : nil
-                            if userAndPost.count >= 3, let range = userAndPost[2].range(of: "?") {
-                                post = Int32(userAndPost[2][..<range.lowerBound])
+                            let postIndex = userAndPost.count - 1
+                            var post = userAndPost[postIndex].isEmpty ? nil : Int32(userAndPost[postIndex])
+                            let username = userAndPost[1]
+                            if let range = userAndPost[postIndex].range(of: "?") {
+                                post = Int32(userAndPost[postIndex][..<range.lowerBound])
                             }
                             let (params, _) = urlVars(with: url as String)
                             if let thread = params[keyURLThreadId]?.nsstring.intValue, let post = post {
-                                return .comments(link: urlString, username: "_private_\(userAndPost[1])", context: context, threadId: thread, commentId: post)
+                                return .comments(link: urlString, username: "\(_private_)\(username)", context: context, threadId: thread, commentId: post)
+                            } else if let topic = params[keyURLTopicId]?.nsstring.intValue {
+                                return .topic(link: urlString, username: "\(_private_)\(username)", context: context, threadId: topic, commentId: post)
+                            } else if userAndPost.count == 4, let threadId = Int32(userAndPost[2]) {
+                                return .topic(link: urlString, username: "\(_private_)\(username)", context: context, threadId: threadId, commentId: post)
                             } else {
-                                return .followResolvedName(link: urlString, username: "_private_\(userAndPost[1])", postId: post, context: context, action:nil, callback: openInfo)
+                                return .followResolvedName(link: urlString, username: "\(_private_)\(username)", postId: post, context: context, action:nil, callback: openInfo)
                             }
                         }
                     } else if name == "s" {
@@ -1279,15 +1534,16 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             return .theme(link: urlString, context: context, name: userAndPost[1])
                         }
                     } else {
-                        var post = userAndPost[1].isEmpty ? nil : Int32(userAndPost[1])//.intValue
-                        if let range = userAndPost[1].range(of: "?") {
-                            post = Int32(userAndPost[1][..<range.lowerBound])
+                        var postIndex: Int = userAndPost.count - 1
+                        var post = userAndPost[postIndex].isEmpty ? nil : Int32(userAndPost[postIndex])
+                        if let range = userAndPost[postIndex].range(of: "?") {
+                            post = Int32(userAndPost[postIndex][..<range.lowerBound])
                         }
                         if name.hasPrefix("iv?") {
                             return .external(link: urlString, false)
                         } else if name.hasPrefix("share?") || name == "share" {
                             let (params, _) = urlVars(with: url as String)
-                            if let url = params["url"], let context = context {
+                            if let url = params[keyURLLang], let context = context {
                                 return .shareUrl(link: urlString, context, url)
                             }
                             return .external(link: urlString, false)
@@ -1296,7 +1552,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             
                             var action: ChatInitialAction? = nil
                             
-                            if let t = params["t"], let timemark = Double(t) {
+                            if let t = params[keyURLTimecode], let timemark = Double(t) {
                                 if Int(timemark) < Int32.max {
                                     action = .openMedia(Int32(timemark))
                                 }
@@ -1306,6 +1562,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 return .comments(link: urlString, username: name, context: context, threadId: post, commentId: comment)
                             } else if let thread = params[keyURLThreadId]?.nsstring.intValue, let comment = post {
                                  return .comments(link: urlString, username: name, context: context, threadId: thread, commentId: comment)
+                            } else if let topic = params[keyURLTopicId]?.nsstring.intValue {
+                                return .topic(link: urlString, username: name, context: context, threadId: topic, commentId: post)
+                            } else if userAndPost.count == 3, let threadId = Int32(userAndPost[1]) {
+                                return .topic(link: urlString, username: name, context: context, threadId: threadId, commentId: post)
                             } else {
                                 return .followResolvedName(link: urlString, username: name, postId: post, context: context, action: action, callback: openInfo)
                             }
@@ -1342,6 +1602,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         let post = vars[keyURLPostId]?.nsstring.intValue
                         let comment = vars[keyURLCommentId]?.nsstring.intValue
                         let thread = vars[keyURLThreadId]?.nsstring.intValue
+                        let topic = vars[keyURLTopicId]?.nsstring.intValue
                         var action:ChatInitialAction? = nil
                         loop: for (key,value) in vars {
                             switch key {
@@ -1357,7 +1618,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 action = .joinVoiceChat(value)
                                 break loop
                             case keyURLAttach:
-                                action = .attachBot(value, vars[keyURLStartattach])
+                                let choose = vars[keyURLChoose]?.split(separator: "+").compactMap { String($0) }
+                                action = .attachBot(value, vars[keyURLStartattach], choose)
                                 break loop
                             default:
                                 break
@@ -1366,7 +1628,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         if action == nil && emptyVars.contains(keyURLVoiceChat) {
                             action = .joinVoiceChat(nil)
                         } else if action == nil, vars[keyURLStartattach] != nil || vars[keyURLAttach] != nil {
-                            action = .attachBot(vars[keyURLAttach] ?? username, vars[keyURLStartattach])
+                            let choose = vars[keyURLChoose]?.split(separator: "+").compactMap { String($0) }
+                            action = .attachBot(vars[keyURLAttach] ?? username, vars[keyURLStartattach], choose)
                         }
                         if username == legacyPassportUsername {
                             return inApp(for: external.replacingOccurrences(of: "tg://resolve", with: "tg://passport").nsstring, context: context, peerId: peerId, openInfo: openInfo, hashtag: hashtag, command: command, applyProxy: applyProxy, confirm: confirm)
@@ -1378,6 +1641,8 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                                 return .comments(link: urlString, username: username, context: context, threadId: post, commentId: comment)
                             } else if let thread = thread, let comment = post {
                                 return .comments(link: urlString, username: username, context: context, threadId: thread, commentId: comment)
+                            } else if let topic = topic {
+                                return .comments(link: urlString, username: username, context: context, threadId: topic, commentId: comment)
                             } else {
                                 return .followResolvedName(link: urlString, username: username, postId: post, context: context, action: action, callback:openInfo)
                             }
@@ -1404,25 +1669,29 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                     }
                 case known_scheme[3]:
                     if let set = vars[keyURLSet], let context = context {
-                        return .stickerPack(link: urlString, .name(set), context: context, peerId:nil)
+                        return .stickerPack(link: urlString, .stickers(.name(set)), context: context, peerId:nil)
                     }
                 case known_scheme[4]:
+                    if let set = vars[keyURLSet], let context = context {
+                        return .stickerPack(link: urlString, .emoji(.name(set)), context: context, peerId:nil)
+                    }
+                case known_scheme[5]:
                     if let context = context, let phone = vars[keyURLPhone], let hash = vars[keyURLHash] {
                         return .confirmPhone(link: urlString, context: context, phone: phone, hash: hash)
                     }
-                case known_scheme[5]:
+                case known_scheme[6]:
                     if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort) {
                         let server = escape(with: server)
                         return .socks(link: urlString, ProxyServerSettings(host: server, port: port, connection: .socks5(username: vars[keyURLUser], password: vars[keyURLPass])), applyProxy: applyProxy)
                     }
-                case known_scheme[6]:
+                case known_scheme[7]:
                     if let applyProxy = applyProxy, let server = vars[keyURLHost], let maybePort = vars[keyURLPort], let port = Int32(maybePort), let rawSecret = vars[keyURLSecret] {
                         let server = escape(with: server)
                         if let secret = MTProxySecret.parse(rawSecret)?.serialize() {
                             return .socks(link: urlString, ProxyServerSettings(host: server, port: port, connection: .mtp(secret: secret)), applyProxy: applyProxy)
                         }
                     }
-                case known_scheme[7]:
+                case known_scheme[8]:
                     if let scope = vars["scope"], let publicKey = vars["public_key"], let rawBotId = vars["bot_id"], let botId = Int64(rawBotId), let context = context {
                         
                         
@@ -1438,12 +1707,12 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         let callbackUrl = vars["callback_url"] != nil ? escape(with: vars["callback_url"]!, addPercent: false) : nil
                         return .requestSecureId(link: urlString, context: context, value: inAppSecureIdRequest(peerId: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(botId)), scope: scope, callback: callbackUrl, publicKey: escape(with: publicKey, addPercent: false), nonce: nonce, isModern: isModern))
                     }
-                case known_scheme[8]:
+                case known_scheme[9]:
                     if let context = context, let value = vars["lang"] {
                         return .applyLocalization(link: urlString, context: context, value: value)
                     }
-                case known_scheme[9]:
-                    if let context = context, let value = vars["slug"] {
+                case known_scheme[10]:
+                    if let context = context, let value = vars[keyURLSlug] {
                         
                         var blur: Bool = false
                         var intensity: Int32? = 80
@@ -1509,26 +1778,42 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                             return .wallpaper(link: urlString, context: context, preview: .gradient(0, colors, WallpaperSettings(rotation: rotation)))
                         }
                     }
-                case known_scheme[10]:
+                case known_scheme[11]:
                     if let username = vars["channel"], let openInfo = openInfo {
                         let post = vars[keyURLPostId]?.nsstring.intValue
                         let threadId = vars[keyURLThreadId]?.nsstring.intValue
+                        let topicId = vars[keyURLTopicId]?.nsstring.intValue
+                        
                         if let threadId = threadId, let post = post, let context = context {
-                            return .comments(link: urlString, username: "_private_\(username)", context: context, threadId: threadId, commentId: post)
+                            return .comments(link: urlString, username: "\(_private_)\(username)", context: context, threadId: threadId, commentId: post)
+                        } else if let topicId = topicId, let context = context {
+                            return .topic(link: urlString, username: "\(_private_)\(username)", context: context, threadId: topicId, commentId: post)
                         } else if let context = context {
-                            return .followResolvedName(link: urlString, username: "_private_\(username)", postId: post, context: context, action:nil, callback: openInfo)
+                            return .followResolvedName(link: urlString, username: "\(_private_)\(username)", postId: post, context: context, action:nil, callback: openInfo)
                         }
                     }
-                case known_scheme[11]:
-                    if let context = context, let value = vars["slug"] {
+                case known_scheme[12]:
+                    if let context = context, let value = vars[keyURLSlug] {
                         return .theme(link: urlString, context: context, name: value)
                     }
-                case known_scheme[12]:
+                case known_scheme[13]:
                     if let context = context, let range = action.range(of: known_scheme[12] + "/") {
                         let section = String(action[range.upperBound...])
                         if let section = InAppSettingsSection(rawValue: section) {
                             return .settings(link: urlString, context: context, section: section)
                         }
+                    }
+                case known_scheme[14]:
+                    if let context = context, let value = vars[keyURLSlug] {
+                        return .invoice(link: urlString, context: context, slug: value)
+                    }
+                case known_scheme[15]:
+                    if let context = context {
+                        return .premiumOffer(link: urlString, ref: vars[keyURLRef], context: context)
+                    }
+                case known_scheme[16]:
+                    if let context = context {
+                        return .restorePurchase(link: urlString, context: context)
                     }
                 default:
                     break
@@ -1545,27 +1830,6 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
             return .unsupportedScheme(link: urlString, context: context, path: path)
         }
        
-    } else if url.hasPrefix(ton_scheme), let context = context {
-        return .nothing
-//        let action = url.substring(from: ton_scheme.length)
-//        if action.hasPrefix("transfer/") {
-//            let (vars, emptyVars) = urlVars(with: url as String)
-//            let preAddressLength = ton_scheme.length + "transfer/".length + walletAddressLength
-//            let address = urlString.prefix(preAddressLength)
-//            if address.length == preAddressLength {
-//                let address = String(address.suffix(walletAddressLength))
-//                var amount: Int64? = nil
-//                var comment: String? = nil
-//                if let varAmount = vars["amount"], !varAmount.isEmpty, let intAmount = Int64(varAmount) {
-//                    amount = intAmount
-//                }
-//                if let varComment = vars["text"], !varComment.isEmpty  {
-//                    comment = escape(with: varComment, addPercent: false)
-//                }
-//                return .tonTransfer(link: urlString, context: context, data: ParsedWalletUrl(address: address, amount: amount, comment: comment))
-//            }
-//        }
-        return .nothing
     }
     
     return .external(link: urlString as String, confirm)

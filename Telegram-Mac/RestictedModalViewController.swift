@@ -166,7 +166,7 @@ private enum RestrictedEntry: TableItemListNodeEntry {
                 let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
                 (string,_, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.context.timeDifference, relativeTo: Int32(timestamp))
             }
-            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, stableId: stableId, enabled: true, height: 60, photoSize: NSMakeSize(40, 40), statusStyle: ControlStyle(font: .normal(.title), foregroundColor: color), status: string, borderType: [], drawCustomSeparator: false, drawLastSeparator: false, inset: NSEdgeInsets(left: 25, right: 25), drawSeparatorIgnoringInset: false, viewType: viewType, action: {})
+            return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: true, height: 60, photoSize: NSMakeSize(40, 40), statusStyle: ControlStyle(font: .normal(.title), foregroundColor: color), status: string, borderType: [], drawCustomSeparator: false, drawLastSeparator: false, inset: NSEdgeInsets(left: 25, right: 25), drawSeparatorIgnoringInset: false, viewType: viewType, action: {})
         case let .rightItem(_, _, name, right, value, enabled, viewType):
             //ControlStyle(font: NSFont.)
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: name, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: enabled ? theme.colors.text : theme.colors.grayText), type: .switchable(value), viewType: viewType, action: {
@@ -268,7 +268,7 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
         
         for right in allGroupPermissionList {
             let defaultEnabled = !defaultBannedRights.flags.contains(right)
-            entries.append(.rightItem(sectionId, index, stringForGroupPermission(right: right), right, defaultEnabled && !currentRightsFlags.contains(right), defaultEnabled && !state.updating, bestGeneralViewType(allGroupPermissionList, for: right)))
+            entries.append(.rightItem(sectionId, index, stringForGroupPermission(right: right, channel: peer), right, defaultEnabled && !currentRightsFlags.contains(right), defaultEnabled && !state.updating, bestGeneralViewType(allGroupPermissionList, for: right)))
             index += 1
         }
         
@@ -328,7 +328,7 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
         
         for right in allGroupPermissionList {
             let defaultEnabled = !defaultBannedRights.flags.contains(right)
-            entries.append(.rightItem(sectionId, index, stringForGroupPermission(right: right), right, defaultEnabled && !currentRightsFlags.contains(right), defaultEnabled && !state.updating, bestGeneralViewType(allGroupPermissionList, for: right)))
+            entries.append(.rightItem(sectionId, index, stringForGroupPermission(right: right, channel: nil), right, defaultEnabled && !currentRightsFlags.contains(right), defaultEnabled && !state.updating, bestGeneralViewType(allGroupPermissionList, for: right)))
             index += 1
         }
         
