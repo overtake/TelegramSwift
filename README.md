@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="Telegram-Mac/Assets.xcassets/AppIcon.appiconset/Default_128x128.png">
+  <img src="images/tg_circle.png" alt="Telegram logotype" width="200" height="200">
   <h2 align="center">Telegram for macOS</h2>
 </div>
 
