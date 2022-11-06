@@ -14,7 +14,7 @@ import InAppSettings
 import SwiftSignalKit
 import TGUIKit
 
-enum ChatHistoryInitialSearchLocation {
+enum ChatHistoryInitialSearchLocation : Equatable {
     case index(MessageIndex)
     case id(MessageId)
 }
@@ -56,20 +56,6 @@ enum ChatHistoryLocation: Equatable {
         default:
             return nil
         }
-    }
-}
-
-func ==(lhs: ChatHistoryLocation, rhs: ChatHistoryLocation) -> Bool {
-    switch lhs {
-    case let .Navigation(lhsIndex, lhsAnchorIndex, lhsCount, lhsSide):
-        switch rhs {
-        case let .Navigation(rhsIndex, rhsAnchorIndex, rhsCount, rhsSide) where lhsIndex == rhsIndex && lhsAnchorIndex == rhsAnchorIndex && lhsCount == rhsCount && lhsSide == rhsSide:
-            return true
-        default:
-            return false
-        }
-    default:
-        return false
     }
 }
 
