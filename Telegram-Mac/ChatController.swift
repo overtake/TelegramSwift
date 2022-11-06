@@ -1522,18 +1522,17 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
     }
     
-    private let location:Promise<ChatHistoryLocation> = Promise()
-    private let _locationValue:Atomic<ChatHistoryLocation?> = Atomic(value: nil)
-    private var locationValue:ChatHistoryLocation? {
+    private let location:Promise<ChatHistoryLocationInput> = Promise()
+    private let _locationValue:Atomic<ChatHistoryLocationInput?> = Atomic(value: nil)
+    private var locationValue:ChatHistoryLocationInput? {
         return _locationValue.with { $0 }
     }
 
-    private func setLocation(_ location: ChatHistoryLocation) {
+    private func setLocation(_ location: ChatHistoryLocationInput) {
         _ = _locationValue.swap(location)
         self.location.set(.single(location))
     }
 
-    private let chatHistoryLocationPromise = ValuePromise<ChatHistoryLocationInput>()
     private var nextHistoryLocationId: Int32 = 1
     private func takeNextHistoryLocationId() -> Int32 {
         let id = self.nextHistoryLocationId
@@ -1648,7 +1647,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     })
 
                 messageIndexDisposable.set(showModalProgress(signal: signal, for: context.window).start(next: { [weak self] _ in
-                    self?.setLocation(history)
+                    self?.setLocation(.init(content: history, id: self?.takeNextHistoryLocationId() ?? 0))
                 }, completed: {
 
                 }))
@@ -2026,7 +2025,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         var wasUsedLocation = false
 
         let historyViewUpdate1 = location.get() |> deliverOn(messagesViewQueue)
-            |> mapToSignal { location -> Signal<(ChatHistoryViewUpdate, TableSavingSide?, ChatHistoryLocation), NoError> in
+            |> mapToSignal { inputLocation -> Signal<(ChatHistoryViewUpdate, TableSavingSide?, ChatHistoryLocationInput), NoError> in
+                
+                let location = inputLocation.content
                 
                 var additionalData: [AdditionalMessageHistoryViewData] = []
                 additionalData.append(.cachedPeerData(peerId))
@@ -2075,7 +2076,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         maxReadIndex.set(nil)
                     }
                 } |> map { view in
-                    return (view, location.side, location)
+                    return (view, location.side, inputLocation)
                 }
         }
         let historyViewUpdate = historyViewUpdate1
@@ -2167,10 +2168,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let previousAppearance:Atomic<Appearance> = Atomic(value: appAppearance)
         let firstInitialUpdate:Atomic<Bool> = Atomic(value: true)
                 
-        let applyHole:(ChatHistoryLocation) -> Void = { [weak self] current in
+        let applyHole:(ChatHistoryLocationInput) -> Void = { [weak self] current in
             guard let `self` = self else { return }
-
-            if current != self.locationValue {
+            let locationValue = self.locationValue
+            if current != locationValue {
                 return
             }
             let visibleRows = self.genericView.tableView.visibleRows()
@@ -2182,9 +2183,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
             }
             if let messageIndex = messageIndex {
-                self.setLocation(.Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex), count: self.requestCount, side: .upper))
+                self.setLocation(.init(content: .Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex), count: self.requestCount, side: .upper), id: self.takeNextHistoryLocationId()))
             } else if let location = self.locationValue {
-                self.setLocation(location)
+                self.setLocation(.init(content: location.content, id: location.id + 1))
             }
         }
         
@@ -3488,7 +3489,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.setLocation = { [weak self] location in
-            self?.setLocation(location)
+            self?.setLocation(.init(content: location, id: self?.takeNextHistoryLocationId() ?? 0))
         }
         
         
@@ -3522,7 +3523,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             strongSelf.chatInteraction.loadingMessage.set(.single(true) |> delay(0.2, queue: Queue.mainQueue()))
             strongSelf.messageIndexDisposable.set(showModalProgress(signal: signal, for: context.window).start(next: { [weak strongSelf] _ in
-                strongSelf?.setLocation(scroll)
+                strongSelf?.setLocation(.init(content: scroll, id: strongSelf?.takeNextHistoryLocationId() ?? 0))
             }, completed: {
                     
             }))
@@ -3632,8 +3633,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 let message = message
                                 let toIndex = MessageIndex(message)
                                 let requestCount = strongSelf.requestCount
+                                let content: ChatHistoryLocation = .Scroll(index: .message(toIndex), anchorIndex: .message(toIndex), sourceIndex: .message(fromIndex), scrollPosition: state.swap(to: ChatHistoryEntryId.message(message)), count: requestCount, animated: state.animated)
+                                let id = strongSelf.takeNextHistoryLocationId()
                                 delay(0.15, closure: { [weak strongSelf] in
-                                    strongSelf?.setLocation(.Scroll(index: .message(toIndex), anchorIndex: .message(toIndex), sourceIndex: .message(fromIndex), scrollPosition: state.swap(to: ChatHistoryEntryId.message(message)), count: requestCount, animated: state.animated))
+                                    strongSelf?.setLocation(.init(content: content, id: id))
                                 })
                             }
                         }))
@@ -5152,7 +5155,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                 break
                             }
                         }
-                    } else if view.laterId == nil, !view.holeLater, let locationValue = self.locationValue, !locationValue.isAtUpperBound, view.anchorIndex != .upperBound {
+                    } else if view.laterId == nil, !view.holeLater, let locationValue = self.locationValue, !locationValue.content.isAtUpperBound, view.anchorIndex != .upperBound {
                         messageIndex = .upperBound(peerId: self.chatInteraction.peerId)
                     }
                 case .bottom:
@@ -5169,10 +5172,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 }
                 if let messageIndex = messageIndex {
                     let location: ChatHistoryLocation = .Navigation(index: MessageHistoryAnchorIndex.message(messageIndex), anchorIndex: MessageHistoryAnchorIndex.message(messageIndex), count: 100, side: scroll.direction == .bottom ? .upper : .lower)
-                    guard location != self.locationValue else {
+                    guard location != self.locationValue?.content else {
                         return
                     }
-                    self.setLocation(location)
+                    self.setLocation(.init(content: location, id: self.takeNextHistoryLocationId()))
                 }
             }
             self.chatInteraction.update({$0.withUpdatedTempPinnedMaxId(nil)})
@@ -5640,7 +5643,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             break
         }
         if !isLoading && checkMessageExists {
-            switch self.locationValue {
+            switch self.locationValue?.content {
             case let .InitialSearch(location, _):
                 switch location {
                 case let .id(messageId):
@@ -6781,7 +6784,8 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         location = .Initial(count: count)
                     }
                 }
-                strongSelf.setLocation(location)
+                let id = strongSelf.takeNextHistoryLocationId()
+                strongSelf.setLocation(.init(content: location, id: id))
             }
         })
             
