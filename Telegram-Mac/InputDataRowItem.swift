@@ -767,8 +767,8 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
             self.secureField.delegate = self
             self.textView.delegate = self
         } else {
-            self.secureField.delegate = nil
-            self.textView.delegate = nil
+            self.secureField.delegate = self
+            self.textView.delegate = self
         }
     }
     
