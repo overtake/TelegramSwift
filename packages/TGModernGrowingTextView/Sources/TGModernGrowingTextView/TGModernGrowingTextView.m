@@ -225,6 +225,10 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
     
 }
 
+- (id)accessibilityFocusedUIElement {
+    return nil;
+}
+
 
 - (NSRect) highlightRectForRange:(NSRange)aRange whole: (BOOL)whole
 {
@@ -268,6 +272,9 @@ NSString *const TGEmojiHolderAttributeName = @"TGEmojiHolderAttributeName";
     return aRect;
 }
     
+- (id)accessibilityParent {
+    return nil;
+}
     
 -(void)setSelectedRange:(NSRange)selectedRange {
     [super setSelectedRange:selectedRange];

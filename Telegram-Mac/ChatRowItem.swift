@@ -1664,7 +1664,7 @@ class ChatRowItem: TableRowItem {
                                 range.length += subrange.length
                             }
                             
-                            let link = source.addressName == nil ? "https://t.me/c/\(source.id.id)/\(info.sourceMessageId?.id != nil ? "\(info.sourceMessageId!.id)" : "")" : "https://t.me/\(source.addressName!)/\(info.sourceMessageId?.id != nil ? "\(info.sourceMessageId!.id)" : "")"
+                            let link = source.addressName == nil ? "https://t.me/c/\(source.id.id._internalGetInt64Value())/\(info.sourceMessageId?.id != nil ? "\(info.sourceMessageId!.id)" : "")" : "https://t.me/\(source.addressName!)/\(info.sourceMessageId?.id != nil ? "\(info.sourceMessageId!.id)" : "")"
                             let appLink = inApp(for: link.nsstring, context: context, peerId: nil, openInfo: chatInteraction.openInfo)
                             attr.add(link: appLink, for: range, color: color)
                             
