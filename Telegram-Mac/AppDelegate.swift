@@ -121,6 +121,19 @@ private final class CtxInstallLayer : SimpleLayer {
     }
 }
 
+private final class TextFieldOverrideClass : NSTextFieldCell {
+    private var cached: String = ""
+    override var stringValue: String {
+        get {
+            return cached
+        }
+        set {
+            cached = newValue
+            super.stringValue = newValue
+        }
+    }
+}
+
 
 @NSApplicationMain
 class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterDelegate, NSWindowDelegate {
@@ -191,6 +204,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         UserDefaults.standard.set(false, forKey: "NSTableViewCanEstimateRowHeights")
+        NSTextField.cellClass = TextFieldOverrideClass.self
         
     }
     
