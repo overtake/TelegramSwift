@@ -299,7 +299,7 @@ fileprivate class ModernPictureInPictureVideoWindow: NSPanel {
             var rect = saver.rect.size.bounds
             rect.origin = NSMakePoint(screen.frame.width - convert_s.width - 30, screen.frame.height - convert_s.height - 50)
 
-            self.setFrame(NSMakeRect(saver.rect.minX, saver.rect.minY, convert_s.width, convert_s.height), display: true, animate: true)
+            self.setFrame(NSMakeRect(rect.minX, rect.minY, convert_s.width, convert_s.height), display: true, animate: true)
            
         }
     }
