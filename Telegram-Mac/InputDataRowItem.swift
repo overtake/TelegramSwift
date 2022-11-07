@@ -763,8 +763,13 @@ class InputDataRowView : GeneralRowView, TGModernGrowingDelegate, NSTextFieldDel
     
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        self.secureField.delegate = self
-        self.textView.delegate = self
+        if window != nil {
+            self.secureField.delegate = self
+            self.textView.delegate = self
+        } else {
+            self.secureField.delegate = nil
+            self.textView.delegate = nil
+        }
     }
     
     override func set(item: TableRowItem, animated: Bool) {
