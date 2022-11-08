@@ -544,7 +544,9 @@ class ChatListController : PeersListController {
         var pinnedCount: Int = 0
         self.genericView.tableView.enumerateItems { item -> Bool in
             guard let item = item as? ChatListRowItem, item.isFixedItem else {return false}
-            pinnedCount += 1
+            if item.canResortPinned {
+                pinnedCount += 1
+            }
             return item.isFixedItem
         }
         
@@ -765,48 +767,81 @@ class ChatListController : PeersListController {
     }
     
     private func resortPinned(_ from: Int, _ to: Int) {
-        
-        var items:[PinnedItemId] = []
+        let context = self.context
+        switch mode {
+        case let .forum(peerId):
+            var items:[Int64] = []
 
-        var offset: Int = 0
-        
-        let groupId: EngineChatList.Group = self.mode.groupId
-
-        let location: TogglePeerChatPinnedLocation
-        
-        if let filter = self.filterValue?.filter {
-            switch filter {
-            case .allChats:
-                location = .group(groupId._asGroup())
-            case let .filter(id, _, _, _):
-                location = .filter(id)
-            }
-        } else {
-            location = .group(groupId._asGroup())
-        }
-        
-        self.genericView.tableView.enumerateItems { item -> Bool in
-            guard let item = item as? ChatListRowItem else {
-                offset += 1
-                return true
-            }
-            if item.groupId != .root || item.isAd {
-                offset += 1
-            }
-            if let location = item.chatLocation {
+            var offset: Int = 0
+                       
+            
+            self.genericView.tableView.enumerateItems { item -> Bool in
+                guard let item = item as? ChatListRowItem else {
+                    offset += 1
+                    return true
+                }
+                if item.isAd {
+                    offset += 1
+                }
                 switch item.pinnedType {
                 case .some, .last:
-                    items.append(location.pinnedItemId)
+                    if let threadId = item.mode.threadId {
+                        items.append(threadId)
+                    }
                 default:
                     break
                 }
+               
+                return item.isFixedItem || item.groupId != .root
             }
-           
-            return item.isFixedItem || item.groupId != .root
+            items.move(at: from - offset, to: to - offset)
+            let signal = context.engine.peers.setForumChannelPinnedTopics(id: peerId, threadIds: items) |> deliverOnMainQueue
+            reorderDisposable.set(signal.start())
+
+        default:
+            var items:[PinnedItemId] = []
+
+            var offset: Int = 0
+            
+            let groupId: EngineChatList.Group = self.mode.groupId
+
+            let location: TogglePeerChatPinnedLocation
+            
+            if let filter = self.filterValue?.filter {
+                switch filter {
+                case .allChats:
+                    location = .group(groupId._asGroup())
+                case let .filter(id, _, _, _):
+                    location = .filter(id)
+                }
+            } else {
+                location = .group(groupId._asGroup())
+            }
+            
+            self.genericView.tableView.enumerateItems { item -> Bool in
+                guard let item = item as? ChatListRowItem else {
+                    offset += 1
+                    return true
+                }
+                if item.groupId != .root || item.isAd {
+                    offset += 1
+                }
+                if let location = item.chatLocation {
+                    switch item.pinnedType {
+                    case .some, .last:
+                        items.append(location.pinnedItemId)
+                    default:
+                        break
+                    }
+                }
+               
+                return item.isFixedItem || item.groupId != .root
+            }
+            
+            items.move(at: from - offset, to: to - offset)
+            reorderDisposable.set(context.engine.peers.reorderPinnedItemIds(location: location, itemIds: items).start())
         }
         
-        items.move(at: from - offset, to: to - offset)
-        reorderDisposable.set(context.engine.peers.reorderPinnedItemIds(location: location, itemIds: items).start())
     }
     
     override var collectPinnedItems:[PinnedItemId] {

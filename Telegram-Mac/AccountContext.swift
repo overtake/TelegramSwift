@@ -296,7 +296,6 @@ final class AccountContext {
     
     public var closeFolderFirst: Bool = false
     
-    private let preloadGifsDisposable = MetaDisposable()
     let engine: TelegramEngine
     
     private let giftStickersValues:Promise<[TelegramMediaFile]> = Promise([])
@@ -345,7 +344,6 @@ final class AccountContext {
         prefDisposable.add(account.postbox.preferencesView(keys: [PreferencesKeys.limitsConfiguration]).start(next: { view in
             _ = limitConfiguration.swap(view.values[PreferencesKeys.limitsConfiguration]?.get(LimitsConfiguration.self) ?? LimitsConfiguration.defaultValue)
         }))
-        let preloadGifsDisposable = self.preloadGifsDisposable
         let appConfiguration = _appConfiguration
         prefDisposable.add(account.postbox.preferencesView(keys: [PreferencesKeys.appConfiguration]).start(next: { view in
             let configuration = view.values[PreferencesKeys.appConfiguration]?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
@@ -357,31 +355,6 @@ final class AccountContext {
         
         
         #if !SHARE
-        let signal:Signal<Void, NoError> = Signal { subscriber in
-            
-            let signal: Signal<Never, NoError> = account.postbox.transaction {
-                return $0.getPreferencesEntry(key: PreferencesKeys.appConfiguration)?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
-            } |> mapToSignal { configuration in
-                let value = GIFKeyboardConfiguration.with(appConfiguration: configuration)
-                var signals = value.emojis.map {
-                    engine.stickers.searchGifs(query: $0)
-                }
-                signals.insert(engine.stickers.searchGifs(query: ""), at: 0)
-                return combineLatest(signals) |> ignoreValues
-            }
-            
-            let disposable = signal.start(completed: {
-                subscriber.putCompletion()
-            })
-            
-            return ActionDisposable {
-                disposable.dispose()
-            }
-        }
-        
-        let updated = (signal |> then(.complete() |> suspendAwareDelay(20.0 * 60.0, queue: .concurrentDefaultQueue()))) |> restart
-        preloadGifsDisposable.set(updated.start())
-        
        
         let chatThemes: Signal<[(String, TelegramPresentationTheme)], NoError> = combineLatest(appearanceSignal, engine.themes.getChatThemes(accountManager: sharedContext.accountManager)) |> mapToSignal { appearance, themes in
             var signals:[Signal<(String, TelegramPresentationTheme), NoError>] = []
@@ -720,7 +693,6 @@ final class AccountContext {
         actualizeCloudTheme.dispose()
         applyThemeDisposable.dispose()
         cloudThemeObserver.dispose()
-        preloadGifsDisposable.dispose()
         freeSpaceDisposable.dispose()
         premiumDisposable.dispose()
         NotificationCenter.default.removeObserver(self)
@@ -1129,3 +1101,30 @@ private final class ChatLocationContextHolderImpl: ChatLocationContextHolder {
     }
 }
 
+
+/*
+ let signal:Signal<Void, NoError> = Signal { subscriber in
+     
+     let signal: Signal<Never, NoError> = account.postbox.transaction {
+         return $0.getPreferencesEntry(key: PreferencesKeys.appConfiguration)?.get(AppConfiguration.self) ?? AppConfiguration.defaultValue
+     } |> mapToSignal { configuration in
+         let value = GIFKeyboardConfiguration.with(appConfiguration: configuration)
+         var signals = value.emojis.map {
+             engine.stickers.searchGifs(query: $0)
+         }
+         signals.insert(engine.stickers.searchGifs(query: ""), at: 0)
+         return combineLatest(signals) |> ignoreValues
+     }
+     
+     let disposable = signal.start(completed: {
+         subscriber.putCompletion()
+     })
+     
+     return ActionDisposable {
+         disposable.dispose()
+     }
+ }
+ 
+ let updated = (signal |> then(.complete() |> suspendAwareDelay(20.0 * 60.0, queue: .concurrentDefaultQueue()))) |> restart
+ preloadGifsDisposable.set(updated.start())
+ */

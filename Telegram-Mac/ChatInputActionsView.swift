@@ -168,7 +168,6 @@ class ChatInputActionsView: View {
             
             let context = chatInteraction.context
             let navigation = context.bindings.rootNavigation()
-            NSLog("\(navigation.frame.width), \(context.layout == .dual)")
             if (navigation.frame.width <= 730) || !FastSettings.sidebarEnabled {
                 self.showEntertainment()
             }

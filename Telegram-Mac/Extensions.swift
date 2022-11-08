@@ -2256,7 +2256,6 @@ public extension NSAttributedString {
                 break
             }
         }
-        NSLog("\(modified)")
         
         var attachments:[NSTextAttachment] = []
         

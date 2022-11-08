@@ -867,6 +867,18 @@ class ChatListRowItem: TableRowItem {
             return false
         }
     }
+    var canResortPinned: Bool {
+        switch mode {
+        case .topic:
+            if let peer = self.peer as? TelegramChannel {
+                return peer.hasPermission(.pinMessages)
+            } else {
+                return false
+            }
+        default:
+            return true
+        }
+    }
 
     var isAd: Bool {
         switch pinnedType {
@@ -1090,7 +1102,19 @@ class ChatListRowItem: TableRowItem {
         
         switch mode {
         case let .topic(threadId, _):
-            _ = context.engine.peers.setForumChannelTopicPinned(id: peerId, threadId: threadId, isPinned: !isPinned).start()
+            let signal = context.engine.peers.toggleForumChannelTopicPinned(id: peerId, threadId: threadId) |> deliverOnMainQueue
+            _ = signal.start(error: { error in
+                switch error {
+                case let .limitReached(count):
+                    if context.isPremium {
+                        alert(for: context.window, info: strings().chatListContextPinErrorNew2)
+                    } else {
+                        showPremiumLimit(context: context, type: .pin)
+                    }
+                default:
+                    alert(for: context.window, info: strings().unknownError)
+                }
+            })
         case .chat:
             let location: TogglePeerChatPinnedLocation
             let itemId: PinnedItemId = .peer(peerId)
@@ -1209,7 +1233,9 @@ class ChatListRowItem: TableRowItem {
             
             var items:[ContextMenuItem] = []
             
-            items.append(ContextMenuItem(!isPinned ? strings().chatListContextPin : strings().chatListContextUnpin, handler: togglePin, itemImage: !isPinned ? MenuAnimation.menu_pin.value : MenuAnimation.menu_unpin.value))
+            if peer.hasPermission(.pinMessages) {
+                items.append(ContextMenuItem(!isPinned ? strings().chatListContextPin : strings().chatListContextUnpin, handler: togglePin, itemImage: !isPinned ? MenuAnimation.menu_pin.value : MenuAnimation.menu_unpin.value))
+            }
 
             
             items.append(ContextMenuItem(isMuted ? strings().chatListContextUnmute : strings().chatListContextMute, handler: toggleMute, itemImage: isMuted ? MenuAnimation.menu_unmuted.value : MenuAnimation.menu_mute.value))
