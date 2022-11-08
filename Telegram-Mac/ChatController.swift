@@ -1982,23 +1982,46 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return [SendAsPeer(peer: peer, subscribers: nil, isPremiumRequired: false)]
         }
         
-        sendAsPeersDisposable.set((combineLatest(queue: Queue.mainQueue(), currentAccountPeer, peerView.get(), self.context.engine.peers.sendAsAvailablePeers(peerId: self.chatLocation.peerId)))
-        .start(next: { [weak self] currentAccountPeer, peerView, peers in
-            guard let strongSelf = self, let peerView = peerView as? PeerView else {
-                return
+        let signal: Signal<[SendAsPeer]?, NoError> = peerView.get() |> map { peerView -> TelegramChannel? in
+            if let peerView = peerView as? PeerView {
+                return peerViewMainPeer(peerView) as? TelegramChannel
+            } else {
+                return nil
+            }
+        } |> mapToSignal { channel in
+            if let channel = channel, channel.isSupergroup || channel.isGigagroup, channel.addressName != nil {
+                return combineLatest(currentAccountPeer, context.engine.peers.sendAsAvailablePeers(peerId: peerId)) |> map { current, peers in
+                    var items:[SendAsPeer] = []
+                    if !channel.hasPermission(.canBeAnonymous) {
+                        items = current
+                    }
+                    items.append(contentsOf: peers)
+                    return items
+                }
+            } else {
+                return .single(nil)
             }
             
-            var allPeers: [SendAsPeer]?
-            if !peers.isEmpty {
-                if let channel = peerViewMainPeer(peerView) as? TelegramChannel, case .group = channel.info, channel.hasPermission(.canBeAnonymous) {
-                    allPeers = []
-                } else {
-                    allPeers = currentAccountPeer
-                }
-                allPeers?.append(contentsOf: peers)
+        } |> deliverOnMainQueue
+        
+        /*
+         var allPeers: [SendAsPeer]?
+         if !peers.isEmpty {
+             if let channel = peerViewMainPeer(peerView) as? TelegramChannel, case .group = channel.info, channel.hasPermission(.canBeAnonymous) {
+                 allPeers = []
+             } else {
+                 allPeers = currentAccountPeer
+             }
+             allPeers?.append(contentsOf: peers)
+         }
+         */
+        
+        sendAsPeersDisposable.set(signal.start(next: { [weak self] peers in
+            guard let strongSelf = self else {
+                return
             }
             strongSelf.chatInteraction.update({
-                $0.withUpdatedSendAsPeers(allPeers)
+                $0.withUpdatedSendAsPeers(peers)
             })
         }))
 
@@ -7076,12 +7099,19 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             dismissedPinnedIds.set(ChatDismissedPins(ids: value.interfaceState.dismissedPinnedMessageId, tempMaxId: value.tempPinnedMaxId))
            
             
-            if value.inviteRequestsPending != oldValue.inviteRequestsPending, let value = value.inviteRequestsPending, value > 0, !self.mode.isTopicMode {
+            if value.inviteRequestsPending != oldValue.inviteRequestsPending, let count = value.inviteRequestsPending, count > 0, !self.mode.isTopicMode, let peer = value.peer as? TelegramChannel, peer.groupAccess.canCreateInviteLink {
+        
                 let peerId = self.chatLocation.peerId
-                let importersContext = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .requests(query: nil))
-                importersContext.loadMore()
-                self.tempImportersContext = importersContext
-                let state = importersContext.state
+                let current:PeerInvitationImportersContext
+                if let value = self.tempImportersContext {
+                    current = value
+                } else {
+                    let importersContext = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .requests(query: nil))
+                    importersContext.loadMore()
+                    current = importersContext
+                }
+                self.tempImportersContext = current
+                let state = current.state
                 |> filter { !$0.isLoadingMore }
                 |> deliverOnMainQueue
                 tempImportersContextDisposable.set(state.start(next: { [weak self] state in

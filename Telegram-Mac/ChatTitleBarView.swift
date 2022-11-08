@@ -257,16 +257,21 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 } else {
                     answersCount = .single(nil)
                 }
-                if let cachedData = peerView?.cachedData as? CachedChannelData {
-                    if (cachedData.participantsSummary.memberCount ?? 0) > 200 {
-                        onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: self.chatInteraction.peerId)  |> map(Optional.init) |> deliverOnMainQueue
-                    } else {
-                        onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(peerId: self.chatInteraction.peerId)  |> map(Optional.init) |> deliverOnMainQueue
-                    }
+                if let peerView = peerView, let peer = peerViewMainPeer(peerView), peer.isSupergroup || peer.isGigagroup {
+                    if let cachedData = peerView.cachedData as? CachedChannelData {
+                        if (cachedData.participantsSummary.memberCount ?? 0) > 200 {
+                            onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: self.chatInteraction.peerId)  |> map(Optional.init) |> deliverOnMainQueue
+                        } else {
+                            onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(peerId: self.chatInteraction.peerId)  |> map(Optional.init) |> deliverOnMainQueue
+                        }
 
+                    } else {
+                        onlineMemberCount = .single(nil)
+                    }
                 } else {
                     onlineMemberCount = .single(nil)
                 }
+                
                 self.counterDisposable.set(combineLatest(queue: .mainQueue(), onlineMemberCount, answersCount).start(next: { [weak self] online, answers in
                     let counters = Counters(replies: answers, online: online)
                     self?.counters = counters

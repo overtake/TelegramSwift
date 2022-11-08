@@ -431,7 +431,7 @@
             if isLoaded(), let peerView = peerView, isProfileIntended {
                 let context = self.context
                 
-                if let cachedData = peerView.cachedData as? CachedChannelData {
+                if let cachedData = peerView.cachedData as? CachedChannelData, let peer = peerViewMainPeer(peerView), peer.isGroup || peer.isSupergroup || peer.isGigagroup {
                     let onlineMemberCount:Signal<Int32?, NoError>
                     if (cachedData.participantsSummary.memberCount ?? 0) > 200 {
                         onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: self.peerId)  |> map(Optional.init) |> deliverOnMainQueue

@@ -2429,9 +2429,15 @@ final class ChatPendingRequests : Control, ChatHeaderProtocol {
     override func layout() {
         super.layout()
         dismiss.centerY(x: frame.width - 20 - dismiss.frame.width)
-        textView.resize(frame.width - 60)
+        textView.resize(frame.width - 60 - avatarsContainer.frame.width)
         textView.center()
         self.avatarsContainer.centerY(x: 22)
+        
+        var x = textView.frame.minX
+        if x < self.avatarsContainer.frame.maxX {
+            x = self.avatarsContainer.frame.maxX + 10
+        }
+        textView.setFrameOrigin(NSMakePoint(x, textView.frame.minY))
     }
     
     

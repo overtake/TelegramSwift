@@ -607,8 +607,14 @@ class PeerListContainerView : View {
     private func updateAdditionHeader(_ state: PeerListState, size: NSSize, arguments: Arguments, animated: Bool) {
         
         let inviteRequestsPending = state.forumPeer?.invitationState?.waitingCount ?? 0
-        
-        let hasInvites: Bool = state.forumPeer != nil && inviteRequestsPending > 0 && state.splitState != .minimisize
+        let check: Bool
+        if let peer = state.forumPeer?.peer {
+            check = FastSettings.canBeShownPendingRequests(state.forumPeer?.invitationState?.importers.compactMap { $0.peer.peer?.id } ?? [], for: peer.id)
+        } else {
+            check = false
+        }
+        let hasInvites: Bool = state.forumPeer != nil && inviteRequestsPending > 0 && state.splitState != .minimisize && check
+
         if let state = state.forumPeer?.invitationState, hasInvites {
             self.updatePendingRequests(state, arguments: arguments, animated: animated)
         } else {
@@ -1174,12 +1180,39 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         let forumPeer: Signal<PeerListState.ForumData?, NoError>
 
         if case let .forum(peerId) = self.mode {
-            let tempImportersContext = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .requests(query: nil))
             
-            self.tempImportersContext = tempImportersContext
+            let importState: Promise<PeerInvitationImportersState?> = Promise()
+            
+            let isAllowed: Signal<Bool, NoError> = getPeerView(peerId: peerId, postbox: context.account.postbox) |> map { value in
+                if let peer = value as? TelegramChannel, peer.groupAccess.canCreateInviteLink {
+                    return true
+                } else {
+                    return false
+                }
+            } |> deliverOnMainQueue
+            
+            actionsDisposable.add(isAllowed.start(next: { [weak self] canCreateLink in
+                if canCreateLink {
+                    let current: PeerInvitationImportersContext
+                    if let value = self?.tempImportersContext {
+                        current = value
+                    } else {
+                        current = context.engine.peers.peerInvitationImporters(peerId: peerId, subject: .requests(query: nil))
+                        self?.tempImportersContext = current
+                    }
+                    importState.set(current.state |> map(Optional.init))
+                } else {
+                    self?.tempImportersContext = nil
+                    importState.set(.single(nil))
+                }
 
-            let signal = combineLatest(context.account.postbox.peerView(id: peerId), getGroupCallPanelData(context: context, peerId: peerId), tempImportersContext.state)
-            forumPeer = signal |> mapToSignal { view, call, invitationState in
+            }))
+
+            
+            
+
+            let signal = combineLatest(context.account.postbox.peerView(id: peerId), getGroupCallPanelData(context: context, peerId: peerId), importState.get())
+            forumPeer = signal |> map { view, call, invitationState in
                 if let peer = peerViewMainPeer(view) as? TelegramChannel, let cachedData = view.cachedData as? CachedChannelData, peer.isForum {
                     
                     let info: ChatActiveGroupCallInfo?
@@ -1188,19 +1221,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     } else {
                         info = nil
                     }
-                    
                     let membersCount = cachedData.participantsSummary.memberCount ?? 0
-                    let online: Signal<Int32, NoError>
-                    if membersCount < 200 {
-                        online = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(peerId: peerId)
-                    } else {
-                        online = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: peerId)
-                    }
-                    return online |> map {
-                        return .init(peer: peer, peerView: view, online: $0, call: info, invitationState: invitationState)
-                    }
+                    
+                    return .init(peer: peer, peerView: view, online: 0, call: info, invitationState: invitationState)
                 } else {
-                    return .single(nil)
+                    return nil
                 }
             }
             

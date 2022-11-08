@@ -21,6 +21,8 @@ class PeerInfoArguments {
     let isAd: Bool
     let pushViewController:(ViewController) -> Void
     
+    var peer: Peer?
+    
     let pullNavigation:()->NavigationViewController?
     let mediaController: ()->PeerMediaController?
     
@@ -400,6 +402,11 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         arguments.set(context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue |> mapToSignal { [weak self] peer in
             guard let `self` = self else {return .never()}
             
+            self._topicArguments?.peer = peer
+            self._groupArguments?.peer = peer
+            self._channelArguments?.peer = peer
+            self._userArguments?.peer = peer
+
             if peer.isForum && threadId != nil {
                 return .single(self._topicArguments)
             }
@@ -420,22 +427,6 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         
         var loadMoreControl: PeerChannelMemberCategoryControl?
         
-        let channelMembersPromise = Promise<[RenderedChannelParticipant]>()
-        if peerId.namespace == Namespaces.Peer.CloudChannel {
-            let (disposable, control) = context.peerChannelMemberCategoriesContextsManager.recent(peerId: peerId, updated: { state in
-                channelMembersPromise.set(.single(state.list))
-            })
-            actionsDisposable.add(disposable)
-
-            let (contactsDisposable, _) = context.peerChannelMemberCategoriesContextsManager.contacts(peerId: peerId, updated: { _ in
-                
-            })
-            actionsDisposable.add(contactsDisposable)
-            
-            loadMoreControl = control
-        } else {
-            channelMembersPromise.set(.single([]))
-        }
         
         
         let mediaTabsData: Signal<PeerMediaTabsData, NoError> = mediaController.tabsValue
@@ -448,30 +439,61 @@ class PeerInfoController: EditableViewController<PeerInfoView> {
         let transition: Signal<(PeerView, TableUpdateTransition, MessageHistoryThreadData?), NoError> = arguments.get() |> mapToSignal { arguments in
             
             let inviteLinksCount: Signal<Int32, NoError>
-            if let arguments = arguments as? GroupInfoArguments {
-                inviteLinksCount = arguments.linksManager.state |> map {
-                    $0.effectiveCount
-                }
-            } else if let arguments = arguments as? ChannelInfoArguments {
-                inviteLinksCount = arguments.linksManager.state |> map {
-                    $0.effectiveCount
+            if let peer = arguments.peer as? TelegramChannel, peer.groupAccess.canCreateInviteLink {
+                if let arguments = arguments as? GroupInfoArguments {
+                    inviteLinksCount = arguments.linksManager.state |> map {
+                        $0.effectiveCount
+                    }
+                } else if let arguments = arguments as? ChannelInfoArguments {
+                    inviteLinksCount = arguments.linksManager.state |> map {
+                        $0.effectiveCount
+                    }
+                } else {
+                    inviteLinksCount = .single(0)
                 }
             } else {
                 inviteLinksCount = .single(0)
             }
             
-            let joinRequestsCount: Signal<Int32, NoError>
-            if let arguments = arguments as? GroupInfoArguments {
-                joinRequestsCount = arguments.requestManager.state |> map {
-                    Int32($0.waitingCount)
+            
+            let channelMembersPromise = Promise<[RenderedChannelParticipant]>()
+            if peerId.namespace == Namespaces.Peer.CloudChannel {
+                if let peer = arguments.peer as? TelegramChannel, peer.isSupergroup || peer.isGigagroup {
+                    let (disposable, control) = context.peerChannelMemberCategoriesContextsManager.recent(peerId: peerId, updated: { state in
+                        channelMembersPromise.set(.single(state.list))
+                    })
+                    actionsDisposable.add(disposable)
+
+                    let (contactsDisposable, _) = context.peerChannelMemberCategoriesContextsManager.contacts(peerId: peerId, updated: { _ in
+                        
+                    })
+                    actionsDisposable.add(contactsDisposable)
+                    
+                    loadMoreControl = control
+                } else {
+                    channelMembersPromise.set(.single([]))
                 }
-            } else if let arguments = arguments as? ChannelInfoArguments {
-                joinRequestsCount = arguments.requestManager.state |> map {
-                    Int32($0.waitingCount)
+            } else {
+                channelMembersPromise.set(.single([]))
+            }
+            
+            let joinRequestsCount: Signal<Int32, NoError>
+            if let peer = arguments.peer as? TelegramChannel, peer.groupAccess.canCreateInviteLink {
+                if let arguments = arguments as? GroupInfoArguments {
+                    joinRequestsCount = arguments.requestManager.state |> map {
+                        Int32($0.waitingCount)
+                    }
+                } else if let arguments = arguments as? ChannelInfoArguments {
+                    joinRequestsCount = arguments.requestManager.state |> map {
+                        Int32($0.waitingCount)
+                    }
+                } else {
+                    joinRequestsCount = .single(0)
                 }
             } else {
                 joinRequestsCount = .single(0)
             }
+            
             
             let availableReactions: Signal<AvailableReactions?, NoError> = context.reactions.stateValue
             

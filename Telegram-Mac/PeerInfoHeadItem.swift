@@ -406,7 +406,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     fileprivate var photoDimension:CGFloat {
         return self.threadData != nil ? 60 : 120
     }
-
+    
     
     fileprivate var statusLayout: TextViewLayout
     fileprivate var nameLayout: TextViewLayout
@@ -438,7 +438,7 @@ class PeerInfoHeadItem: GeneralRowItem {
     fileprivate let updatePhoto:(NSImage?, Control?)->Void
     fileprivate let arguments: PeerInfoArguments
     fileprivate let threadData: MessageHistoryThreadData?
-
+    
     let canEditPhoto: Bool
     
     
@@ -494,7 +494,7 @@ class PeerInfoHeadItem: GeneralRowItem {
                 .withUpdatedTitle(threadData.info.title)
                 .withUpdatedStatus(strings().peerInfoTopicStatusIn(peer?.displayTitle ?? ""))
         }
-
+        
         self.result = result
         
         
@@ -505,7 +505,7 @@ class PeerInfoHeadItem: GeneralRowItem {
         super.init(initialSize, stableId: stableId, viewType: viewType)
         
         
-        if let cachedData = peerView.cachedData as? CachedChannelData, threadData == nil {
+        if let cachedData = peerView.cachedData as? CachedChannelData, threadData == nil, let peer = peer, peer.isGroup || peer.isSupergroup || peer.isGigagroup {
             let onlineMemberCount:Signal<Int32?, NoError>
             if (cachedData.participantsSummary.memberCount ?? 0) > 200 {
                 onlineMemberCount = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: peerView.peerId) |> map(Optional.init) |> deliverOnMainQueue
@@ -517,10 +517,7 @@ class PeerInfoHeadItem: GeneralRowItem {
                     return
                 }
                 var result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge)), onlineMemberCount: count)
-                if let threadData = threadData {
-                    result = result.withUpdatedTitle(threadData.info.title)
-                    result = result.withUpdatedStatus(strings().peerInfoTopicStatusIn(peer?.displayTitle ?? ""))
-                }
+
                 if result != self.result {
                     self.result = result
                     _ = self.makeSize(self.width, oldWidth: 0)
