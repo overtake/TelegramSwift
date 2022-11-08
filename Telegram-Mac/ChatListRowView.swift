@@ -998,7 +998,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 
                 groupActivityView.setFrameOrigin(photo.frame.maxX - groupActivityView.frame.width + 3, photo.frame.maxY - 18)
                 
-                let isActive = item.context.layout != .single && item.isSelected
+                let isActive = item.isHighlighted
                 
                 groupActivityView.update(context: item.context, tableView: item.table, foregroundColor: isActive ? theme.colors.underSelectedColor : theme.colors.accentSelect, backgroundColor: backdorColor, animColor: isActive ? theme.colors.accentSelect : theme.colors.underSelectedColor)
                 if animated && animate {
