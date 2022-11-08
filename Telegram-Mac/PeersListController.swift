@@ -608,7 +608,14 @@ class PeerListContainerView : View {
         
         let inviteRequestsPending = state.forumPeer?.invitationState?.waitingCount ?? 0
         
-        let hasInvites: Bool = state.forumPeer != nil && inviteRequestsPending > 0 && state.splitState != .minimisize
+        let check: Bool
+        if let peer = state.forumPeer?.peer {
+            check = FastSettings.canBeShownPendingRequests(state.forumPeer?.invitationState?.importers.compactMap { $0.peer.peer?.id } ?? [], for: peer.id)
+        } else {
+            check = false
+        }
+        let hasInvites: Bool = state.forumPeer != nil && inviteRequestsPending > 0 && state.splitState != .minimisize && check
+
         if let state = state.forumPeer?.invitationState, hasInvites {
             self.updatePendingRequests(state, arguments: arguments, animated: animated)
         } else {

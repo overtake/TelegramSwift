@@ -796,7 +796,7 @@ final class ForwardMessagesObject : ShareObject {
                                 _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
                             })
                         } else {
-                            if let controller = navigation.controller as? ChatController, controller.chatInteraction.peerId == peerId {
+                            if let controller = navigation.controller as? ChatController, controller.chatInteraction.chatLocation == .peer(peerId) {
                                 controller.chatInteraction.update({$0.withoutSelectionState().updatedInterfaceState({$0.withUpdatedForwardMessageIds(messageIds).withUpdatedInputState(comment ?? $0.inputState)})})
                             } else {
                                 
