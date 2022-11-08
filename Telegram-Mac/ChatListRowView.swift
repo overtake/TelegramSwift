@@ -1450,7 +1450,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             }, for: .Click)
             
             
-            revealRightView.addSubview(pin)
+            if item.isTopic, let peer = item.peer as? TelegramChannel {
+                if peer.hasPermission(.pinMessages) {
+                    revealRightView.addSubview(pin)
+                }
+            } else {
+                revealRightView.addSubview(pin)
+            }
 
             if (item.isTopic && item.canDeleteTopic) || !item.isTopic {
                 revealRightView.addSubview(delete)
@@ -1467,19 +1473,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 revealLeftView.addSubview(unread)
                 revealLeftView.backgroundColor = unreadBackground
             }
-            
-            let revealBackgroundColor: NSColor
-            if item.isTopic && !item.canDeleteTopic {
-                revealBackgroundColor = theme.colors.revealAction_constructive_background
-            } else if item.filter == .allChats && !item.isTopic {
-                revealBackgroundColor = theme.colors.revealAction_inactive_background
-            } else {
-                revealBackgroundColor = theme.colors.revealAction_destructive_background
-            }
-            //item.mode.threadId == nil
-            
-            revealRightView.backgroundColor = revealBackgroundColor
-            
+
             
             unread.setFrameSize(frame.height, frame.height)
             mute.setFrameSize(frame.height, frame.height)
@@ -1495,6 +1489,21 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             mute.setFrameOrigin(unread.frame.maxX, 0)
             
+            var found: Control?
+            for view in revealRightView.subviews {
+                if let view = view as? Control {
+                    if let current = found {
+                        if view.frame.maxX > current.frame.maxX {
+                            found = view
+                        }
+                    } else {
+                        found = view
+                    }
+                }
+                
+            }
+            revealRightView.layer?.backgroundColor = found?.layer?.backgroundColor ?? theme.colors.revealAction_constructive_background.cgColor
+
             
             revealRightView.setFrameSize(rightRevealWidth, frame.height)
             revealLeftView.setFrameSize(leftRevealWidth, frame.height)

@@ -867,6 +867,20 @@ class ChatListRowItem: TableRowItem {
             return false
         }
     }
+    
+    var canResortPinned: Bool {
+        switch mode {
+        case .topic:
+            if let peer = self.peer as? TelegramChannel {
+                return peer.hasPermission(.pinMessages)
+            } else {
+                return false
+            }
+        default:
+            return true
+        }
+    }
+
 
     var isAd: Bool {
         switch pinnedType {
@@ -1208,8 +1222,9 @@ class ChatListRowItem: TableRowItem {
         if case let .topic(_, data) = self.mode, let peer = peer as? TelegramChannel {
             
             var items:[ContextMenuItem] = []
-            
-            items.append(ContextMenuItem(!isPinned ? strings().chatListContextPin : strings().chatListContextUnpin, handler: togglePin, itemImage: !isPinned ? MenuAnimation.menu_pin.value : MenuAnimation.menu_unpin.value))
+            if peer.hasPermission(.pinMessages) {
+                items.append(ContextMenuItem(!isPinned ? strings().chatListContextPin : strings().chatListContextUnpin, handler: togglePin, itemImage: !isPinned ? MenuAnimation.menu_pin.value : MenuAnimation.menu_unpin.value))
+            }
 
             
             items.append(ContextMenuItem(isMuted ? strings().chatListContextUnmute : strings().chatListContextMute, handler: toggleMute, itemImage: isMuted ? MenuAnimation.menu_unmuted.value : MenuAnimation.menu_mute.value))
