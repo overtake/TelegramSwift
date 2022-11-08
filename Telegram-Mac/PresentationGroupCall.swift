@@ -1164,7 +1164,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
             if let current = self.genericCallContext {
                 genericCallContext = current
             } else {
-                genericCallContext = OngoingGroupCallContext(inputDeviceId: devicesContext.currentMicroId ?? "", outputDeviceId: devicesContext.currentOutputId ?? "", video: self.videoCapturer, requestMediaChannelDescriptions: { [weak self] ssrcs, completion in
+                genericCallContext = OngoingGroupCallContext(inputDeviceId: devicesContext.currentMicroId ?? "", outputDeviceId: devicesContext.currentOutputId ?? "", audioSessionActive: .single(true), video: self.videoCapturer, requestMediaChannelDescriptions: { [weak self] ssrcs, completion in
                     let disposable = MetaDisposable()
                     Queue.mainQueue().async {
                         guard let strongSelf = self else {
@@ -2351,7 +2351,7 @@ final class PresentationGroupCallImpl: PresentationGroupCall {
         })
 
         let screencastCallContext = OngoingGroupCallContext(
-            video: self.screenCapturer,
+            audioSessionActive: .single(true), video: self.screenCapturer,
             requestMediaChannelDescriptions: { _, completion in
                 completion([])
                 return EmptyDisposable

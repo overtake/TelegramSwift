@@ -2046,3 +2046,9 @@ public func performSubviewPosRemoval(_ view: NSView, pos: NSPoint, animated: Boo
         view.removeFromSuperview()
     }
 }
+
+public extension NSView {
+    override class func accessibilityFocusedUIElement() -> Any? {
+        return nil
+    }
+}

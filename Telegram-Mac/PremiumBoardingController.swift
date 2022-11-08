@@ -32,6 +32,7 @@ enum PremiumLogEventsSource : Equatable {
         case dialog_filters_chats
         case dialog_filters_pinned
         case dialog_pinned
+        case topics_pin
         case caption_length
         case upload_max_fileparts
         case dialogs_folder_pinned

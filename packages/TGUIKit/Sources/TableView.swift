@@ -408,6 +408,13 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     var border:BorderType?
     
     
+    override func accessibilityParent() -> Any? {
+        return nil
+    }
+    override class func accessibilityFocusedUIElement() -> Any? {
+        return nil
+    }
+    
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         backgroundColor = .clear
