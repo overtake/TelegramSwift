@@ -435,6 +435,14 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         return true
     }
     
+    override func accessibilityParent() -> Any? {
+        return nil
+    }
+    override class func accessibilityFocusedUIElement() -> Any? {
+        return nil
+    }
+
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
