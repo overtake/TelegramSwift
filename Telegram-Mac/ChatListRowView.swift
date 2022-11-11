@@ -1712,10 +1712,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 
             }
             revealRightView.layer?.backgroundColor = found?.layer?.backgroundColor ?? theme.colors.revealAction_constructive_background.cgColor
-<<<<<<< HEAD
-=======
-
->>>>>>> release
             
             revealRightView.setFrameSize(rightRevealWidth, frame.height)
             revealLeftView.setFrameSize(leftRevealWidth, frame.height)
