@@ -2015,7 +2015,7 @@ class ChatRowItem: TableRowItem {
                 if let attribute = attribute as? ReplyMessageAttribute, threadId != attribute.messageId, let replyMessage = message.associatedMessages[attribute.messageId] {
                     
                     var ignore: Bool = false
-                    if let threadId = message.effectiveReplyThreadMessageId, threadId == attribute.messageId {
+                    if let threadId = message.effectiveReplyThreadMessageId, threadId == attribute.messageId, message.associatedThreadInfo != nil {
                         ignore = true
                     }
                     if !ignore {
