@@ -2438,6 +2438,7 @@ final class ChatPendingRequests : Control, ChatHeaderProtocol {
             x = self.avatarsContainer.frame.maxX + 10
         }
         textView.setFrameOrigin(NSMakePoint(x, textView.frame.minY))
+
     }
     
     

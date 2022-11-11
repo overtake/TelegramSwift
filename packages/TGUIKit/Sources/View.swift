@@ -241,6 +241,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
     open override func accessibilityParent() -> Any? {
         return nil
     }
+
     
     public init() {
         super.init(frame: NSZeroRect)
