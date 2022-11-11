@@ -1240,10 +1240,6 @@ class ChatListRowItem: TableRowItem {
         if case let .topic(_, data) = self.mode, let peer = peer as? TelegramChannel {
             
             var items:[ContextMenuItem] = []
-<<<<<<< HEAD
-            
-=======
->>>>>>> release
             if peer.hasPermission(.pinMessages) {
                 items.append(ContextMenuItem(!isPinned ? strings().chatListContextPin : strings().chatListContextUnpin, handler: togglePin, itemImage: !isPinned ? MenuAnimation.menu_pin.value : MenuAnimation.menu_unpin.value))
             }
