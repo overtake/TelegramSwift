@@ -676,12 +676,15 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                         
                         
                         
-                        attrsLoop: for attr in message.attributes {
-                            let contains = allowAttributes.contains(where: { type(of: attr) == $0 })
-                            if !contains {
-                                canShort = false
-                                break attrsLoop
-                            }
+//                        attrsLoop: for attr in message.attributes {
+//                            let contains = allowAttributes.contains(where: { type(of: attr) == $0 })
+//                            if !contains {
+//                                canShort = false
+//                                break attrsLoop
+//                            }
+//                        }
+                        if message.threadId != prev.message.threadId {
+                            canShort = false
                         }
                         itemType = !canShort ? .Full(rank: rank, header: .normal) : .Short(rank: rank, header: .normal)
                         
@@ -715,6 +718,9 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                     accept = false
                 }
                 if rhs.isAnonymousMessage {
+                    accept = false
+                }
+                if lhs.threadId != rhs.threadId {
                     accept = false
                 }
                 return accept

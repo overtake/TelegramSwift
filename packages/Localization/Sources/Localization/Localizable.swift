@@ -1455,6 +1455,8 @@ public final class L10n {
   public static var channelTransferOwnerErrorText: String  { return L10n.tr("Localizable", "Channel.TransferOwner.Error.Text") }
   /// Security Check
   public static var channelTransferOwnerErrorTitle: String  { return L10n.tr("Localizable", "Channel.TransferOwner.Error.Title") }
+  /// Sorry, this link is occupied by someone. But it's available for purchase on [fragment.com]().
+  public static var channelUsernameUsernamePurchaseAvailable: String  { return L10n.tr("Localizable", "Channel.Username.UsernamePurchaseAvailable") }
   /// Do you want to show this link on channel info page?
   public static var channelUsernameActivateInfoChannel: String  { return L10n.tr("Localizable", "Channel.Username.Activate.Info.Channel") }
   /// Do you want to show this link on group info page?
@@ -11419,6 +11421,8 @@ public final class L10n {
   public static var usernameActive: String  { return L10n.tr("Localizable", "Username.Active") }
   /// not active
   public static var usernameNotActive: String  { return L10n.tr("Localizable", "Username.NotActive") }
+  /// Sorry, this username is occupied by someone. But it's available for purchase on [fragment.com]().
+  public static var usernameUsernamePurchaseAvailable: String  { return L10n.tr("Localizable", "Username.UsernamePurchaseAvailable") }
   /// Do you want to show this link on your profile page?
   public static var usernameActivateInfo: String  { return L10n.tr("Localizable", "Username.Activate.Info") }
   /// Show

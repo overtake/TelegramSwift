@@ -1239,7 +1239,7 @@ private final class LottieRenderer : RenderContainer {
                 data = frame
             }
         }
-        if frame > endFrame - 1 {
+        if frame > endFrame {
             return nil
         }
         if data == nil {

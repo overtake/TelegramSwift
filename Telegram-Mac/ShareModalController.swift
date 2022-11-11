@@ -1366,6 +1366,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
         var filter = chatListViewForLocation(chatListLocation: .forum(peerId: peerId), location: .Initial(100, nil), filter: nil, account: context.account) |> filter {
             !$0.list.isLoading
         } |> take(1)
+        genericView.basicSearchView.setString("")
         filter = showModalProgress(signal: filter, for: context.window)
         let signal: Signal<[EngineChatList.Item], NoError> = combineLatest(filter, self.search.get()) |> map { update, query in
             let items = update.list.items.reversed().filter {
@@ -1622,7 +1623,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         var peerIds:[PeerId] = []
                         for entry in value.0.entries {
                             switch entry {
-                            case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _):
+                            case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _, _):
                                 peerIds.append(renderedPeer.peerId)
                             default:
                                 break
@@ -1678,7 +1679,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         
                         for entry in value.0.entries {
                             switch entry {
-                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _, _, _, _):
+                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _, _, _, _, _):
                                 if let main = renderedPeer.peer {
                                     if contains[main.id] == nil {
                                         if share.possibilityPerformTo(main) {

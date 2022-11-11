@@ -14,6 +14,199 @@ import Postbox
 
 
 
+final class ChatListTopicNameAndTextLayout {
+    private let context: AccountContext
+    private let message: Message
+    private let items: [EngineChatList.ForumTopicData]
+    private let draft:EngineChatList.Draft?
+    
+    private(set) var size: NSSize = .zero
+    
+    var first: EngineChatList.ForumTopicData? {
+        return items.first
+    }
+    var peerId: PeerId {
+        return message.id.peerId
+    }
+    
+    private(set) var mainText: TextViewLayout?
+    private(set) var selectedMain: TextViewLayout?
+    private(set) var allNames: TextViewLayout?
+    
+    init(_ context: AccountContext, message: Message, items: [EngineChatList.ForumTopicData], draft: EngineChatList.Draft?) {
+        self.message = message
+        self.items = items
+        self.context = context
+        self.draft = draft
+    }
+    
+    func measure(_ width: CGFloat) {
+        
+        self.mainText = nil
+        self.allNames = nil
+        self.selectedMain = nil
+        
+        if let data = items.first {
+            let attr = NSMutableAttributedString()
+            let title = "🤡 " + data.title
+            let temp = NSAttributedString.initialize(string: title, color: theme.colors.text, font: .normal(.text))
+            
+            
+            let titleSize = temp.sizeFittingWidth(.greatestFiniteMagnitude)
+             
+            let perSymbol = titleSize.width / CGFloat(title.length)
+            let maxCount = (width - 20) / perSymbol
+            
+            _ = attr.append(string: title.prefixWithDots(Int(maxCount - 3)), color: theme.colors.text, font: .normal(.text))
+            
+            let range = attr.string.nsstring.range(of: "🤡")
+            if range.location != NSNotFound {
+                let item: InlineStickerItem
+                if let fileId = data.iconFileId {
+                    item = .init(source: .attribute(.init(fileId: fileId, file: message.associatedMedia[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] as? TelegramMediaFile, emoji: "")))
+                } else {
+                    let file = ForumUI.makeIconFile(title: data.title, iconColor: data.iconColor)
+                    item = .init(source: .attribute(.init(fileId: Int64(data.iconColor), file: file, emoji: "")))
+                }
+                attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: item, range: range)
+            }
+            
+            _ = attr.append(string: "\n")
+            
+            let text = chatListText(account: context.account, for: message, messagesCount: 1, draft: draft, folder: false, applyUserName: false, isPremium: context.isPremium).mutableCopy() as! NSMutableAttributedString
+            
+            if let author = message.author {
+                let name = author.id == context.peerId ? strings().you : author.compactDisplayTitle
+                text.insert(.initialize(string: "\(name): ", color: theme.colors.text, font: .normal(.text)), at: 0)
+            }
+            
+            attr.append(text)
+            
+            self.selectedMain = .init(attr, maximumNumberOfLines: 2)
+            self.mainText = .init(attr, maximumNumberOfLines: 2)
+            
+        }
+        
+        self.mainText?.measure(width: width - 20)
+        self.mainText?.generateAutoBlock(backgroundColor: theme.colors.grayText.withAlphaComponent(0.1))
+        
+        self.selectedMain?.measure(width: width - 20)
+        self.selectedMain?.generateAutoBlock(backgroundColor: .clear)
+
+        var size = NSMakeSize(width, 0)
+        if let mainText = mainText {
+            size.height += mainText.layoutSize.height
+        }
+        self.size = size
+    }
+}
+
+
+
+private final class TopicNameAndTextView : View {
+    
+    private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
+
+    private let mainView = TextView()
+    private var highlighted = false
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(mainView)
+        mainView.isSelectable = false
+        
+        mainView.scaleOnClick = true
+        mainView.set(handler: { _ in
+            
+        }, for: .Click)
+        
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func update(context: AccountContext, item: ChatListTopicNameAndTextLayout, highlighted: Bool, animated: Bool) {
+        mainView.update(highlighted ? item.selectedMain : item.mainText)
+        updateInlineStickers(context: context, views: [mainView])
+        
+        mainView.removeAllHandlers()
+        mainView.set(handler: { _ in
+            if let first = item.first {
+                ForumUI.openTopic(first.id, peerId: item.peerId, context: context)
+            }
+        }, for: .Click)
+    }
+    
+    func updateInlineStickers(context: AccountContext, views: [TextView]) {
+        var validIds: [InlineStickerItemLayer.Key] = []
+        
+        var index: Int = 0
+        
+        for textView in views {
+            if let textLayout = textView.textLayout {
+                for item in textLayout.embeddedItems {
+                    if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
+                        
+                        let id = InlineStickerItemLayer.Key(id: emoji.fileId, index: index)
+                        validIds.append(id)
+                        
+                        
+                        var rect: NSRect
+                        rect = item.rect.insetBy(dx: -2, dy: -2)
+
+                        rect = rect.offsetBy(dx: 6, dy: 2)
+
+                        
+                        let view: InlineStickerItemLayer
+                        if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
+                            view = current
+                        } else {
+                            self.inlineStickerItemViews[id]?.removeFromSuperlayer()
+                            view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size)
+                            self.inlineStickerItemViews[id] = view
+                            view.superview = textView
+                            textView.addEmbeddedLayer(view)
+                        }
+                        index += 1
+                        view.frame = rect
+                    }
+                }
+            }
+        }
+        
+        var removeKeys: [InlineStickerItemLayer.Key] = []
+        for (key, itemLayer) in self.inlineStickerItemViews {
+            if !validIds.contains(key) {
+                removeKeys.append(key)
+                itemLayer.removeFromSuperlayer()
+            }
+        }
+        for key in removeKeys {
+            self.inlineStickerItemViews.removeValue(forKey: key)
+        }
+        updateAnimatableContent()
+    }
+    
+    
+    func updateAnimatableContent() -> Void {
+        for (_, value) in inlineStickerItemViews {
+            if let superview = value.superview {
+                var isKeyWindow: Bool = false
+                if let window = self.window {
+                    if !window.canBecomeKey {
+                        isKeyWindow = true
+                    } else {
+                        isKeyWindow = window.isKeyWindow
+                    }
+                }
+                value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
+            }
+        }
+    }
+}
+
+
+
 private class ChatListDraggingContainerView : View {
     fileprivate var item: ChatListRowItem?
     fileprivate var activeDragging:Bool = false
@@ -295,7 +488,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     private var forumTopicTextView: TextView? = nil
     private var forumTopicNameIcon: ForumTopicArrow?
-
+    
+    private var topicsView: TopicNameAndTextView?
+    
     private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
     
     private var inlineTopicPhotoLayer: InlineStickerItemLayer?
@@ -691,6 +886,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             checkValue(value)
         }
         updatePlayerIfNeeded()
+        topicsView?.updateAnimatableContent()
     }
     
     
@@ -850,6 +1046,21 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              } else if let view = self.forumTopicNameIcon {
                  self.forumTopicNameIcon = nil
                  performSubviewRemoval(view, animated: false)
+             }
+             
+             if let layout = item.topicsLayout {
+                 let current: TopicNameAndTextView
+                 if let view = self.topicsView {
+                     current = view
+                 } else {
+                     current = .init(frame: layout.size.bounds)
+                     self.topicsView = current
+                     self.containerView.addSubview(current)
+                 }
+                 current.update(context: item.context, item: layout, highlighted: item.isSelected, animated: animated)
+             } else if let view = self.topicsView {
+                 performSubviewRemoval(view, animated: false)
+                 self.topicsView = nil
              }
              
              
@@ -1279,7 +1490,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              }
 
             
-            if let peerId = item.peerId {
+             if let peerId = item.peerId, item.forumTopicItems.isEmpty {
                 let activities = item.activities.map {
                     ($0.peer.peer, $0.activity)
                 }
@@ -2008,6 +2219,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     messageTextView.setFrameOrigin(NSMakePoint(item.leftInset, displayHeight + item.margin + 1 + messageOffset))
                 }
                 
+                if let topicsView = topicsView, let layout = item.topicsLayout {
+                    let point = NSMakePoint(item.leftInset, displayHeight + item.margin + 2)
+                    topicsView.frame = CGRect(origin: point, size: layout.size)
+                }
+                
                 if let chatNameTextView = chatNameTextView {
                     chatNameTextView.setFrameOrigin(NSMakePoint(item.leftInset, displayHeight + item.margin + 2))
                     if let forumTopicNameIcon = forumTopicNameIcon {
@@ -2018,7 +2234,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                     }
                 }
             }
-            
         }
     }
     

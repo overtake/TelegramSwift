@@ -111,7 +111,7 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
         |> map { view in
             return view.0.entries.compactMap { entry in
                 switch entry {
-                case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _):
+                case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _, _):
                     return renderedPeer.peer
                 default:
                     return nil

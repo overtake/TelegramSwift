@@ -88,7 +88,6 @@ enum ChatListRowState : Equatable {
 }
 
 
-
 class ChatListRowItem: TableRowItem {
 
     struct Badge {
@@ -114,7 +113,7 @@ class ChatListRowItem: TableRowItem {
     let renderedPeer:EngineRenderedPeer?
     let groupId: EngineChatList.Group
     let forumTopicData: EngineChatList.ForumTopicData?
-    
+    let forumTopicItems:[EngineChatList.ForumTopicData]
     var hasForumIcon: Bool {
         if chatNameLayout != nil, forumTopicNameLayout != nil {
             if forumTopicData != nil {
@@ -180,7 +179,7 @@ class ChatListRowItem: TableRowItem {
     private var messageLayout:TextViewLayout?
     private var messageSelectedLayout:TextViewLayout?
     
-    
+    private(set) var topicsLayout: ChatListTopicNameAndTextLayout?
     
     private var chatNameLayout:TextViewLayout?
     private var chatNameSelectedLayout:TextViewLayout?
@@ -397,6 +396,7 @@ class ChatListRowItem: TableRowItem {
         self.pinnedType = pinnedType
         self.renderedPeer = nil
         self.forumTopicData = nil
+        self.forumTopicItems = []
         self.associatedGroupId = .root
         self.isMuted = false
         self.isOnline = nil
@@ -455,7 +455,6 @@ class ChatListRowItem: TableRowItem {
             badgeNode = BadgeNode(.initialize(string: "\(mutedCount)", color: theme.chatList.badgeTextColor, font: .medium(.small)), theme.chatList.badgeMutedBackgroundColor)
             badgeSelectedNode = BadgeNode(.initialize(string: "\(mutedCount)", color: theme.chatList.badgeSelectedTextColor, font: .medium(.small)), theme.chatList.badgeSelectedBackgroundColor)
         }
-        
         
         let messageText: NSAttributedString
         if groupItems.count == 1 {
@@ -527,7 +526,7 @@ class ChatListRowItem: TableRowItem {
   
     
     
-    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, titleMode: TitleMode = .normal) {
+    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, titleMode: TitleMode = .normal) {
         
         
         var draft = draft
@@ -572,6 +571,7 @@ class ChatListRowItem: TableRowItem {
         self.pinnedType = pinnedType
         self.archiveStatus = nil
         self.forumTopicData = forumTopicData
+        self.forumTopicItems = forumTopicItems
         self.hasDraft = draft != nil
         self.draft = draft
         self.peer = renderedPeer.chatMainPeer?._asPeer()
@@ -608,6 +608,10 @@ class ChatListRowItem: TableRowItem {
         }
         titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
         self.titleText = titleText
+        
+        if !forumTopicItems.isEmpty, let message = messages.first {
+            self.topicsLayout = .init(context, message: message, items: forumTopicItems, draft: draft)
+        }
     
         
         if case let .ad(item) = pinnedType {
@@ -623,7 +627,7 @@ class ChatListRowItem: TableRowItem {
             self.date = sponsored
             dateLayout = TextNode.layoutText(maybeNode: nil,  sponsored, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, false, .left)
             dateSelectedLayout = TextNode.layoutText(maybeNode: nil,  sponsored, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, true, .left)
-        } else if let message = messages.first {
+        } else if let message = messages.first, forumTopicItems.isEmpty {
             let date:NSMutableAttributedString = NSMutableAttributedString()
             var time:TimeInterval = TimeInterval(message.timestamp)
             time -= context.timeDifference
@@ -689,7 +693,7 @@ class ChatListRowItem: TableRowItem {
             let isSecret: Bool
             isSecret = renderedPeer.peers[renderedPeer.peerId]?._asPeer() is TelegramSecretChat
             
-            if draft == nil, !isSecret {
+            if draft == nil, !isSecret, forumTopicItems.isEmpty {
                 for message in messages {
                     inner: for media in message.media {
                         if !message.containsSecretMedia {
@@ -775,35 +779,36 @@ class ChatListRowItem: TableRowItem {
             })
             presenceManager?.reset(presence: presence, timeDifference: Int32(context.timeDifference))
         }
-        
-        var messageText: NSAttributedString?
-        var textCutout: TextViewCutout?
-        if case let .ad(promo) = pinnedType, message == nil {
-            switch promo.promoInfo.content {
-            case let .psa(_, message):
-                if let message = message {
-                    let attr = NSMutableAttributedString()
-                    _ = attr.append(string: message, color: theme.colors.grayText, font: .normal(.text))
-                    attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
-                    messageText = attr
+        if forumTopicItems.isEmpty {
+            var messageText: NSAttributedString?
+            var textCutout: TextViewCutout?
+            if case let .ad(promo) = pinnedType, message == nil {
+                switch promo.promoInfo.content {
+                case let .psa(_, message):
+                    if let message = message {
+                        let attr = NSMutableAttributedString()
+                        _ = attr.append(string: message, color: theme.colors.grayText, font: .normal(.text))
+                        attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
+                        messageText = attr
+                    }
+                default:
+                    break
                 }
-            default:
-                break
+            } else {
+                messageText = chatListText(account: context.account, for: message, messagesCount: messages.count, draft: draft, folder: false, applyUserName: false, isPremium: context.isPremium)
+                if !textLeftCutout.isZero {
+                    textCutout = TextViewCutout(topLeft: CGSize(width: textLeftCutout, height: 14))
+                }
             }
-        } else {
-            messageText = chatListText(account: context.account, for: message, messagesCount: messages.count, draft: draft, folder: false, applyUserName: false, isPremium: context.isPremium)
-            if !textLeftCutout.isZero {
-                textCutout = TextViewCutout(topLeft: CGSize(width: textLeftCutout, height: 14))
+            if let messageText = messageText, !messageText.string.isEmpty {
+                self.messageLayout = .init(messageText, maximumNumberOfLines: chatNameLayout != nil ? 1 : 2, cutout: textCutout)
+                
+                let selectedText:NSMutableAttributedString = messageText.mutableCopy() as! NSMutableAttributedString
+                if let color = selectedText.attribute(.selectedColor, at: 0, effectiveRange: nil) {
+                    selectedText.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedText.range)
+                }
+                self.messageSelectedLayout = .init(selectedText, maximumNumberOfLines: chatNameLayout != nil ? 1 : 2, cutout: textCutout)
             }
-        }
-        if let messageText = messageText, !messageText.string.isEmpty {
-            self.messageLayout = .init(messageText, maximumNumberOfLines: chatNameLayout != nil ? 1 : 2, cutout: textCutout)
-            
-            let selectedText:NSMutableAttributedString = messageText.mutableCopy() as! NSMutableAttributedString
-            if let color = selectedText.attribute(.selectedColor, at: 0, effectiveRange: nil) {
-                selectedText.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedText.range)
-            }
-            self.messageSelectedLayout = .init(selectedText, maximumNumberOfLines: chatNameLayout != nil ? 1 : 2, cutout: textCutout)
         }
         
         _ = makeSize(initialSize.width, oldWidth: 0)
@@ -1012,6 +1017,7 @@ class ChatListRowItem: TableRowItem {
         messageLayout?.measure(width: messageWidth)
         messageSelectedLayout?.measure(width: messageWidth)
 
+        self.topicsLayout?.measure(messageWidth)
    
         return result
     }
