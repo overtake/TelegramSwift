@@ -381,7 +381,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
     
-    open func onInsert(_ animation: NSTableView.AnimationOptions) {
+    open func onInsert(_ animation: NSTableView.AnimationOptions, appearAnimated: Bool) {
         
     }
     

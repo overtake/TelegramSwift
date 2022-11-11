@@ -99,6 +99,7 @@
 		273367452762584F0027441E /* menu_view_sticker_set.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 273367442762584E0027441E /* menu_view_sticker_set.tgs */; };
 		2733674727625A270027441E /* menu_show_message.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2733674627625A270027441E /* menu_show_message.tgs */; };
 		2733674927625BD80027441E /* menu_promote.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2733674827625BD80027441E /* menu_promote.tgs */; };
+		2733F0ED291BB4C700A4552B /* TopicReplyItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2733F0EC291BB4C700A4552B /* TopicReplyItemView.swift */; };
 		27361ED4282122C700808241 /* StickerPremiumHolderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27361ED3282122C700808241 /* StickerPremiumHolderView.swift */; };
 		27361ED62821234200808241 /* PremiumReactionsModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27361ED52821234200808241 /* PremiumReactionsModal.swift */; };
 		2737557E27E396AB007DC755 /* PhoneNumberConfirmCodeController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2737557D27E396AB007DC755 /* PhoneNumberConfirmCodeController.swift */; };
@@ -1464,6 +1465,7 @@
 		273367442762584E0027441E /* menu_view_sticker_set.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_view_sticker_set.tgs; sourceTree = "<group>"; };
 		2733674627625A270027441E /* menu_show_message.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_show_message.tgs; sourceTree = "<group>"; };
 		2733674827625BD80027441E /* menu_promote.tgs */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = menu_promote.tgs; sourceTree = "<group>"; };
+		2733F0EC291BB4C700A4552B /* TopicReplyItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopicReplyItemView.swift; sourceTree = "<group>"; };
 		27361ED3282122C700808241 /* StickerPremiumHolderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StickerPremiumHolderView.swift; sourceTree = "<group>"; };
 		27361ED52821234200808241 /* PremiumReactionsModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumReactionsModal.swift; sourceTree = "<group>"; };
 		2737557D27E396AB007DC755 /* PhoneNumberConfirmCodeController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberConfirmCodeController.swift; sourceTree = "<group>"; };
@@ -3923,6 +3925,7 @@
 				D048EDDD24FFEC5600977606 /* ChannelCommentsControls.swift */,
 				270F020626F0B0830099D2AA /* EmojiAnimationEffectView.swift */,
 				276885022770D7BE0021C891 /* AddReactionManager.swift */,
+				2733F0EC291BB4C700A4552B /* TopicReplyItemView.swift */,
 			);
 			name = views;
 			sourceTree = "<group>";
@@ -6830,6 +6833,7 @@
 				9FA0E53D205693DA001E5649 /* WebSessionsController.swift in Sources */,
 				C250B01F1DB67B42004E9FBE /* WPLayout.swift in Sources */,
 				D0D7520924C03CD60037D73A /* VideoEditorThumbs.swift in Sources */,
+				2733F0ED291BB4C700A4552B /* TopicReplyItemView.swift in Sources */,
 				27ABFD192858A4C4006C3301 /* PremiumDemoLegacyPhoneView.swift in Sources */,
 				9F0367F22272108800456348 /* ProxyQRCodeRowItem.swift in Sources */,
 				D098C7191D7E175A007784E4 /* AppDelegate.swift in Sources */,

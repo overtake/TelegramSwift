@@ -306,7 +306,7 @@ class ChatRowItem: TableRowItem {
             height += defaultReactionsInset
             height += reactions.size.height
         }
-
+        
         return max(rightSize.height + 8, height)
     }
     
@@ -350,8 +350,21 @@ class ChatRowItem: TableRowItem {
                 top += header.size.height
             }
         }
+        
+        if let value = topicLinkLayout {
+            top += value.size.height + defaultContentInnerInset
+        }
        
         return top
+    }
+    
+    var topicLinkOffset:CGFloat {
+        var offset = self.replyOffset
+        
+        if let value = topicLinkLayout {
+            offset -= (value.size.height + defaultContentInnerInset)
+        }
+        return offset
     }
     
     var isBubbleFullFilled: Bool {
@@ -508,6 +521,13 @@ class ChatRowItem: TableRowItem {
             }
         }
         
+        if let value = topicLinkLayout {
+            top += value.size.height + defaultContentInnerInset
+            if authorText == nil {
+                top -= 3
+            }
+        }
+        
         if let replyModel = replyModel {
             var apply: Bool = true
             if isBubbled {
@@ -551,6 +571,8 @@ class ChatRowItem: TableRowItem {
         if forwardNameLayout != nil {
             left += leftContentInset
         }
+        
+       
         
 //        if let item = self as? ChatMessageItem, item.containsBigEmoji {
 //            if commentsBubbleDataOverlay != nil || isSharable || hasSource {
@@ -1332,6 +1354,45 @@ class ChatRowItem: TableRowItem {
         return _commentsData
     }
     
+    private var _topicLinkLayout: TopicReplyItemLayout?
+    var topicLinkLayout: TopicReplyItemLayout? {
+        if let value = _topicLinkLayout {
+            return value
+        } else if let message = self.message, let threadInfo = message.associatedThreadInfo, chatInteraction.mode == .history {
+            var ignore: Bool = false
+            
+            if renderType == .bubble {
+                let header: ChatItemType.Header
+                switch itemType {
+                case let .Full(_, current):
+                    header = current
+                case let .Short(_, current):
+                    header = current
+                }
+                switch header {
+                case .short:
+                    ignore = true
+                default:
+                    break
+                }
+            } else {
+                switch itemType {
+                case .Short:
+                    ignore = true
+                default:
+                    break
+                }
+            }
+            if !ignore {
+                let value = TopicReplyItemLayout(context: context, message: message, isIncoming: isIncoming, isBubbled: isBubbled, threadData: threadInfo, maxiumLines: 2, isSideAccessory: isBubbled && !hasBubble)
+                _topicLinkLayout = value
+                return value
+            }
+        }
+        return nil
+    }
+
+    
     private var _reactionsLayout: ChatReactionsLayout?
     var reactionsLayout: ChatReactionsLayout? {
         if let value = _reactionsLayout {
@@ -1951,11 +2012,18 @@ class ChatRowItem: TableRowItem {
             }
             
             for attribute in message.attributes {
-                if let attribute = attribute as? ReplyMessageAttribute, threadId != attribute.messageId, let replyMessage = message.associatedMessages[attribute.messageId]  {
-                    let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?  presentation.colors.grayForeground : presentation.colors.background, title: presentation.chat.replyTitle(self), enabledText: presentation.chat.replyText(self), disabledText: presentation.chat.replyDisabledText(self), border: presentation.chat.replyTitle(self))
+                if let attribute = attribute as? ReplyMessageAttribute, threadId != attribute.messageId, let replyMessage = message.associatedMessages[attribute.messageId] {
                     
-                    self.replyModel = ReplyModel(replyMessageId: attribute.messageId, context: context, replyMessage:replyMessage, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation)
-                    replyModel?.isSideAccessory = isBubbled && !hasBubble
+                    var ignore: Bool = false
+                    if let threadId = message.effectiveReplyThreadMessageId, threadId == attribute.messageId {
+                        ignore = true
+                    }
+                    if !ignore {
+                        let replyPresentation = ChatAccessoryPresentation(background: hasBubble ? presentation.chat.backgroundColor(isIncoming, object.renderType == .bubble) : isBubbled ?  presentation.colors.grayForeground : presentation.colors.background, title: presentation.chat.replyTitle(self), enabledText: presentation.chat.replyText(self), disabledText: presentation.chat.replyDisabledText(self), border: presentation.chat.replyTitle(self))
+                        
+                        self.replyModel = ReplyModel(replyMessageId: attribute.messageId, context: context, replyMessage:replyMessage, autodownload: downloadSettings.isDownloable(replyMessage), presentation: replyPresentation)
+                        replyModel?.isSideAccessory = isBubbled && !hasBubble
+                    }
                 }
                 if let attribute = attribute as? ViewCountMessageAttribute {
                     let attr: NSAttributedString = .initialize(string: max(1, attribute.count).prettyNumber, color: isStateOverlayLayout ? stateOverlayTextColor : !hasBubble ? presentation.colors.grayText : presentation.chat.grayText(isIncoming, object.renderType == .bubble), font: renderType == .bubble ? .italic(.small) : .normal(.short))
@@ -2160,6 +2228,7 @@ class ChatRowItem: TableRowItem {
                 break
             }
         }
+        
         self.rightFrames = ChatRightView.Frames(self, size: NSMakeSize(.greatestFiniteMagnitude, rightHeight))
         
         var widthForContent: CGFloat = blockWidth
@@ -2202,7 +2271,7 @@ class ChatRowItem: TableRowItem {
                 break
             }
         }
-        
+       
        
         if !(self is ChatGroupedItem) {
             for layout in captionLayouts {
@@ -2255,7 +2324,26 @@ class ChatRowItem: TableRowItem {
             }
         }
         
-       
+        if let value = topicLinkLayout {
+            if !isBubbled {
+                value.measure(widthForContent)
+            } else  {
+                if let item = self as? ChatMessageItem, item.webpageLayout == nil && !value.isSideAccessory {
+                    if isBubbled {
+                        value.measure(max(blockWidth, 200))
+                    } else {
+                        value.measure(max(contentSize.width, 200))
+                    }
+                } else {
+                    if !hasBubble {
+                        value.measure(min(width - _contentSize.width - contentOffset.x - 80, 300))
+                    } else {
+                        value.measure(_contentSize.width - bubbleDefaultInnerInset)
+                    }
+                }
+            }
+        }
+        
         
         if !canFillAuthorName, let replyModel = replyModel, let authorText = authorText, replyModel.isSideAccessory {
             var adminWidth: CGFloat = 0
@@ -2355,7 +2443,9 @@ class ChatRowItem: TableRowItem {
         
         let replyWidth = min(hasBubble ? (replyModel?.size.width ?? 0) : 0, 200)
         
-        return max(max(nameWidth, forwardWidth), replyWidth)//min(max(max(nameWidth, forwardWidth), replyWidth), contentSize.width)
+        let topicReplyWidth = min(hasBubble ? (topicLinkLayout?.size.width ?? 0) : 0, 200)
+
+        return max(nameWidth, forwardWidth, replyWidth, topicReplyWidth)//min(max(max(nameWidth, forwardWidth), replyWidth), contentSize.width)
     }
     
     var hasStatus: Bool {
@@ -2402,6 +2492,7 @@ class ChatRowItem: TableRowItem {
         
         let forwardWidth = hasBubble ? (forwardNameLayout?.layoutSize.width ?? 0) + forwardStatusSize + (isPsa ? 30 : 0) : 0
         let replyWidth: CGFloat = hasBubble ? (replyModel?.size.width ?? 0) : 0
+        let topicLinkWidth: CGFloat = hasBubble ? (topicLinkLayout?.size.width ?? 0) : 0
 
         var rect = NSMakeRect(defLeftInset, 2, contentSize.width, height - 4)
         
@@ -2453,6 +2544,8 @@ class ChatRowItem: TableRowItem {
         
         rect.size.width = max(rect.width, forwardWidth + bubbleDefaultInnerInset)
         
+        rect.size.width = max(rect.width, topicLinkWidth + bubbleDefaultInnerInset)
+
         if let reactions = reactionsLayout, reactions.mode == .full, !reactions.presentation.isOutOfBounds {
             rect.size.width = max(reactions.size.width + bubbleDefaultInnerInset, rect.width)
         }
@@ -2531,6 +2624,12 @@ class ChatRowItem: TableRowItem {
                 
             }
         }.start()
+    }
+    
+    func openTopic() {
+        if let message = message, let threadId = message.threadId {
+            _ = ForumUI.openTopic(threadId, peerId: chatInteraction.peerId, context: context, messageId: message.id, animated: true, addition: true).start()
+        }
     }
     
     func openInfo() {

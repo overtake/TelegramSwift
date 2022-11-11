@@ -1150,5 +1150,13 @@ class ChatServiceRowView: TableRowView {
         }
     }
     
+    override func onInsert(_ animation: NSTableView.AnimationOptions, appearAnimated: Bool) {
+        if let item = item as? ChatRowItem {
+            if item.isBubbled, appearAnimated {
+                self.layer?.animateScaleSpring(from: 0.5, to: 1, duration: 0.4, bounce: false)
+                self.layer?.animateAlpha(from: 0, to: 1, duration: 0.35)
+            }
+        }
+    }
     
 }

@@ -471,11 +471,15 @@ class PeerListContainerView : View {
         self.state = state
         
         var voiceChat: ChatActiveGroupCallInfo?
-        if state.forumPeer?.call?.data?.groupCall == nil {
-            if let data = state.forumPeer?.call?.data, data.participantCount == 0 && state.forumPeer?.call?.activeCall.scheduleTimestamp == nil {
-                voiceChat = nil
+        if let forumPeer = state.forumPeer, forumPeer.call?.data?.groupCall == nil {
+            if let data = forumPeer.call?.data {
+                if data.participantCount == 0 && forumPeer.call?.activeCall.scheduleTimestamp == nil {
+                    voiceChat = nil
+                } else {
+                    voiceChat = forumPeer.call
+                }
             } else {
-                voiceChat = state.forumPeer?.call
+                voiceChat = nil
             }
         } else {
             voiceChat = nil

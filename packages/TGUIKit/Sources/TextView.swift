@@ -769,7 +769,7 @@ public final class TextViewLayout : Equatable {
         self.layoutSize = layoutSize
     }
     
-    public func generateAutoBlock(backgroundColor: NSColor) {
+    public func generateAutoBlock(backgroundColor: NSColor, minusHeight: CGFloat = 0) {
         
         var rects = self.lines.map({$0.frame})
         
@@ -779,7 +779,7 @@ public final class TextViewLayout : Equatable {
                 let index = sortedIndices[i]
                 for j in -1 ... 1 {
                     if j != 0 && index + j >= 0 && index + j < sortedIndices.count {
-                        if abs(rects[index + j].width - rects[index].width) < 40.0 {
+                        if abs(rects[index + j].width - rects[index].width) < 15 {
                             rects[index + j].size.width = max(rects[index + j].width, rects[index].width)
                         }
                     }
@@ -790,17 +790,30 @@ public final class TextViewLayout : Equatable {
                 let height = rects[i].size.height + 7
                 rects[i] = rects[i].insetBy(dx: 0, dy: floor((rects[i].height - height) / 2.0))
                 rects[i].size.height = height
-                
-                rects[i].origin.x = floor((layoutSize.width - rects[i].width) / 2.0)
-                rects[i].size.width += 20
+                if self.penFlush == 0.5 {
+                    rects[i].origin.x = floor((layoutSize.width - rects[i].width) / 2.0)
+                    rects[i].size.width += 20
+                } else {
+                    rects[i].size.width += 10
+                    rects[i].origin.x -= 5
+                }
             }
             
-            self.blockImage = generateRectsImage(color: backgroundColor, rects: rects, inset: 0, outerRadius: rects[0].height / 2, innerRadius: .cornerRadius)
+            self.blockImage = generateRectsImage(color: backgroundColor, rects: rects, inset: 0, outerRadius: lines.count == 1 ? rects[0].height / 2 : 10, innerRadius: .cornerRadius)
             self.blockImage.0 = NSMakePoint(0, 0)
-            
-            layoutSize.width += 20
-            lines[0] = TextViewLine(line: lines[0].line, frame: lines[0].frame.offsetBy(dx: 0, dy: 2), range: lines[0].range, penFlush: self.penFlush, strikethrough: lines[0].strikethrough, embeddedItems: lines[0].embeddedItems)
-            layoutSize.height = rects.last!.maxY
+            var offset: NSPoint = NSPoint(x: 0, y: 2)
+            if self.penFlush == 0.5 {
+                layoutSize.width += 20
+            } else {
+                layoutSize.width += 10
+                offset.x = 5
+                offset.y = 1
+            }
+            for i in 0 ..< lines.count {
+                let line = lines[i]
+                lines[i] = TextViewLine(line: line.line, frame: line.frame.offsetBy(dx: offset.x, dy: offset.y), range: line.range, penFlush: self.penFlush, strikethrough: line.strikethrough, embeddedItems: line.embeddedItems)
+            }
+            layoutSize.height = rects.last!.maxY - minusHeight
         }
         
     }

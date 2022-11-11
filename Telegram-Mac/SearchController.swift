@@ -1363,7 +1363,7 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
     }
     
     override func scrollup(force: Bool = false) {
-        genericView.clipView.scroll(to: NSMakePoint(0, frame.minY), animated: false)
+        genericView.clipView.scroll(to: NSMakePoint(0, 0), animated: false)
     }
     
     private var closeNext: Bool = false

@@ -1299,7 +1299,12 @@ extension AddressNameFormatError {
 
 extension AddressNameAvailability {
 
-    func description(for username: String) -> String {
+    enum Target {
+        case username
+        case channel
+    }
+    
+    func description(for username: String, target: Target) -> String {
         switch self {
         case .available:
             return strings().usernameSettingsAvailable(username)
@@ -1307,6 +1312,13 @@ extension AddressNameAvailability {
             return strings().errorUsernameInvalid
         case .taken:
             return strings().errorUsernameAlreadyTaken
+        case .purchaseAvailable:
+            switch target {
+            case .username:
+                return strings().usernameUsernamePurchaseAvailable
+            case .channel:
+                return strings().channelUsernameUsernamePurchaseAvailable
+            }
         }
     }
 }

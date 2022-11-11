@@ -209,6 +209,13 @@ public class TGClipView: NSClipView,CALayerDelegate {
 //        return -endValue/2 * ((newElapsedTimeMs)*(newElapsedTimeMs-2) - 1) + startValue
 //    }
 
+    public func reset() {
+        if let destinationOrigin = destinationOrigin {
+            endScroll()
+            super.scroll(to: destinationOrigin)
+            handleCompletionIfNeeded(withSuccess: true)
+        }
+    }
     
     public func updateOrigin() -> Void {
         if (self.window == nil) {
@@ -335,7 +342,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
             self.beginScroll()
         } else {
             if !isAnimateScrolling {
-                self.destinationOrigin = newOrigin;
+                self.destinationOrigin = nil;
                 self.endScroll()
                 super.scroll(to: newOrigin)
                 Queue.mainQueue().justDispatch {
@@ -358,6 +365,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     func handleCompletionIfNeeded(withSuccess success: Bool) {
         if self.scrollCompletion != nil {
+            self.destinationOrigin = nil
           //  super.scroll(to: bounds.origin)
             self.scrollCompletion!(success)
             self.scrollCompletion = nil

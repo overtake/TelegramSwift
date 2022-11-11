@@ -266,13 +266,16 @@ class ChatMediaItem: ChatRowItem {
     }
     
 
+    var hasUpsideSomething: Bool {
+        return authorText != nil || replyModel != nil || topicLinkLayout != nil || forwardNameLayout != nil
+    }
     
     override var contentOffset: NSPoint {
         var offset = super.contentOffset
         
-        if hasBubble, isBubbleFullFilled, (authorText == nil && replyModel == nil && forwardNameLayout == nil) {
+        if hasBubble, isBubbleFullFilled, !hasUpsideSomething {
             offset.y -= (defaultContentInnerInset + 1)
-        } else if hasBubble, !isBubbleFullFilled, replyModel != nil || forwardNameLayout != nil {
+        } else if hasBubble, !isBubbleFullFilled, hasUpsideSomething {
             offset.y += defaultContentInnerInset
         }
         
@@ -503,7 +506,7 @@ class ChatMediaItem: ChatRowItem {
                 positionFlags.insert(.left)
                 positionFlags.insert(.right)
             }
-            if authorText == nil && replyModel == nil && forwardNameLayout == nil {
+            if !hasUpsideSomething {
                 positionFlags.insert(.top)
                 positionFlags.insert(.left)
                 positionFlags.insert(.right)

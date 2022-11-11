@@ -45,6 +45,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     private var channelCommentsBubbleSmallControl: ChannelCommentsSmallControl?
     private var channelCommentsControl: ChannelCommentsControl?
 
+    private var topicLinkView:TopicReplyItemView?
+
+    
     private var nameView:TextView?
     private var adminBadge: TextView?
     let rightView:ChatRightView = ChatRightView(frame:NSZeroRect)
@@ -435,6 +438,26 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         self.contentView.addSubview(view)
     }
     
+    func fillTopicLink(_ item: ChatRowItem, animated: Bool) -> Void {
+        if let value = item.topicLinkLayout {
+            if topicLinkView == nil {
+                topicLinkView = TopicReplyItemView(frame: topicLinkFrame(item))
+                rowView.addSubview(topicLinkView!)
+            }
+            topicLinkView?.removeAllHandlers()
+            topicLinkView?.set(handler: { [weak item] _ in
+                item?.openTopic()
+            }, for: .Click)
+            
+            topicLinkView?.update(item: value, animated: animated)
+        } else {
+            if let view = topicLinkView {
+                performSubviewRemoval(view, animated: animated, scale: true)
+                topicLinkView = nil
+            }
+        }
+    }
+    
     func fillReply(_ item:ChatRowItem, animated: Bool) -> Void {
         
         if let reply = item.replyModel {
@@ -573,6 +596,29 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 frame.origin.x = contentFrame.maxX + 6
             } else {
                 frame.origin.x = contentFrame.minX - reply.size.width - 6
+            }
+            if item.isSharable || item.hasSource || item.commentsBubbleDataOverlay != nil {
+                if item.isIncoming {
+                    frame.origin.x += 46
+                } else {
+                    frame.origin.x -= 46
+                }
+            }
+        }
+        return frame
+    }
+    
+    func topicLinkFrame(_ item: ChatRowItem) -> NSRect {
+        guard let value = item.topicLinkLayout else {return NSZeroRect}
+        
+        let contentFrame = self.contentFrame(item)
+        
+        var frame: NSRect = NSMakeRect(contentFrame.minX + item.elementsContentInset, item.topicLinkOffset, value.size.width, value.size.height)
+        if item.isBubbled, !item.hasBubble {
+            if item.isIncoming {
+                frame.origin.x = contentFrame.maxX + 6
+            } else {
+                frame.origin.x = contentFrame.minX - value.size.width - 6
             }
             if item.isSharable || item.hasSource || item.commentsBubbleDataOverlay != nil {
                 if item.isIncoming {
@@ -870,28 +916,6 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
-    func fillForwardStatus(_ item: ChatRowItem, animated: Bool) -> Void {
-//        if item.isForwardScam || item.isForwardFake {
-//            if scamForwardButton == nil {
-//                let text: String = !item.isForwardScam ? strings().peerInfoFakeWarning : strings().peerInfoScamWarning
-//                scamForwardButton = ImageButton(frame: CGRect(origin: statusForwardPoint(item), size: item.forwardBadIcon.backingSize))
-//                scamForwardButton?.autohighlight = false
-//                rowView.addSubview(scamForwardButton!)
-//                scamForwardButton?.set(handler: { control in
-//                    tooltip(for: control, text: text)
-//                }, for: .Click)
-//            }
-//            scamForwardButton?.set(image: item.forwardBadIcon, for: .Normal)
-//
-//        } else {
-//            if let view = scamForwardButton {
-//                performSubviewRemoval(view, animated: animated, scale: true)
-//                scamForwardButton = nil
-//            }
-//        }
-    }
-
-
     
     func fillCaption(_ item:ChatRowItem, animated: Bool) -> Void {
         
@@ -949,6 +973,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
             }
         }
+        topicLinkView?.updateAnimatableContent()
     }
     
     
@@ -1516,13 +1541,19 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
 
         super.set(item: item, animated: animated)
 
-
+       
         if let item = previousItem {
             item.chatInteraction.remove(observer: self)
         }
         guard let item = item as? ChatRowItem else {
             return
         }
+        
+        if previousItem == nil {
+            bubbleView.frame = bubbleFrame(item)
+            rowView.frame = CGRect(origin: rowPoint(item), size: frame.size)
+        }
+
         
         if self.animatedView != nil && self.animatedView?.stableId != item.stableId {
             self.animatedView?.removeFromSuperview()
@@ -1544,12 +1575,12 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         updateSelectingState(selectingMode:item.chatInteraction.presentation.selectionState != nil, item: item, needUpdateColors: false)
         
         rightView.set(item:item, animated:animated)
+        fillTopicLink(item, animated: animated)
         fillReply(item, animated: animated)
         fillName(item, animated: animated)
         fillForward(item, animated: animated)
         fillPhoto(item, animated: animated)
         fillStatus(item, animated: animated)
-        fillForwardStatus(item, animated: animated)
         fillPsaButton(item, animated: animated)
         fillShareView(item, animated: animated)
         fillReactions(item, animated: animated)
@@ -1626,7 +1657,11 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         if let view = viaAccessory {
             transition.updateFrame(view: view, frame: CGRect(origin: viaAccesoryPoint(item), size: view.frame.size))
         }
-        
+        if let view = topicLinkView, view.superview == rowView {
+            let frame = topicLinkFrame(item)
+            transition.updateFrame(view: view, frame: frame)
+            view.updateLayout(size: frame.size, transition: transition)
+        }
         if let view = item.replyModel?.view, view.superview == rowView {
             transition.updateFrame(view: view, frame: replyFrame(item))
             view.needsDisplay = true
@@ -1943,4 +1978,16 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
     }
     
+    override func onInsert(_ animation: NSTableView.AnimationOptions, appearAnimated: Bool) {
+        if let item = item as? ChatRowItem, visibleRect != .zero {
+            if item.isBubbled, appearAnimated {
+                if item.isIncoming {
+                    self.rowView.layer?.animateScaleSpringFrom(anchor: NSMakePoint(bubbleView.frame.minX, rowView.frame.height / 2), from: 0.1, to: 1, duration: 0.35, bounce: false)
+                } else {
+                    self.rowView.layer?.animateScaleSpringFrom(anchor: NSMakePoint(rowView.frame.width - 20, rowView.frame.height / 2), from: 0.1, to: 1, duration: 0.35, bounce: false)
+                }
+                self.rowView.layer?.animateAlpha(from: 0, to: 1, duration: 0.35)
+            }
+        }
+    }
 }

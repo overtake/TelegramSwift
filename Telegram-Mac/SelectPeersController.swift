@@ -804,7 +804,7 @@ final class SelectChatsBehavior: SelectPeersBehavior {
 
                     for entry in value.0.entries.reversed() {
                         switch entry {
-                        case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _):
+                        case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _, _):
                             if let peer = renderedPeer.chatMainPeer {
                                 entries.append(peer)
                             }
@@ -899,7 +899,7 @@ final class SelectGroupOrChannelBehavior: SelectPeersBehavior {
 
                     for entry in value.0.entries.reversed() {
                         switch entry {
-                        case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _):
+                        case let .MessageEntry(_, _, _, _, _, renderedPeer, _, _, _, _, _, _):
                             if let peer = renderedPeer.chatMainPeer, peer.canSendMessage(false), peer.canInviteUsers, peer.isSupergroup || peer.isGroup || peer.isChannel {
                                 entries.append(peer)
                             }
@@ -979,7 +979,7 @@ class SelectUsersAndGroupsBehavior : SelectPeersBehavior {
                     var presences:[PeerId : PeerPresence] = [:]
                     for entry in entries.reversed() {
                         switch entry {
-                        case let .MessageEntry(_, _, _, _, _, peer, presence, _, _, _, _):
+                        case let .MessageEntry(_, _, _, _, _, peer, presence, _, _, _, _, _):
                             if let peer = peer.chatMainPeer, !peer.isChannel && !peer.isBot {
                                 peers.append(peer)
                                 if let presence = presence {

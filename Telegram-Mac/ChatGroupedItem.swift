@@ -258,7 +258,7 @@ class ChatGroupedItem: ChatRowItem {
                 positionFlags.insert(.left)
                 positionFlags.insert(.right)
             }
-            if authorText == nil && replyModel == nil && forwardNameLayout == nil {
+            if !hasUpsideSomething {
                 positionFlags.insert(.top)
                 positionFlags.insert(.left)
                 positionFlags.insert(.right)
@@ -277,6 +277,10 @@ class ChatGroupedItem: ChatRowItem {
         default:
             break
         }
+    }
+    
+    var hasUpsideSomething: Bool {
+        return authorText != nil || replyModel != nil || topicLinkLayout != nil || forwardNameLayout != nil
     }
     
     override func share() {
@@ -353,9 +357,9 @@ class ChatGroupedItem: ChatRowItem {
     override var contentOffset: NSPoint {
         var offset = super.contentOffset
         
-        if hasBubble, isBubbleFullFilled, (authorText == nil && replyModel == nil && forwardNameLayout == nil) {
+        if hasBubble, isBubbleFullFilled, !hasUpsideSomething {
             offset.y -= (defaultContentInnerInset + 1)
-        } else if hasBubble, !isBubbleFullFilled, replyModel != nil || forwardNameLayout != nil {
+        } else if hasBubble, !isBubbleFullFilled, hasUpsideSomething {
             offset.y += defaultContentInnerInset
         }
         
@@ -705,7 +709,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                 if !item.captionLayouts.isEmpty || item.commentsBubbleData != nil {
                     positionFlags.remove(.bottom)
                 }
-                if item.authorText != nil || item.replyModel != nil || item.forwardNameLayout != nil {
+                if item.hasUpsideSomething {
                     positionFlags.remove(.top)
                 }
             }
@@ -1031,7 +1035,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                         if item.captionLayouts.first(where: { $0.id == item.firstMessage?.stableId }) == nil {
                             positionFlags.remove(.bottom)
                         }
-                        if item.authorText != nil || item.replyModel != nil || item.forwardNameLayout != nil {
+                        if item.hasUpsideSomething {
                             positionFlags.remove(.top)
                         }
                     }
@@ -1085,7 +1089,7 @@ class ChatGroupedView : ChatRowView , ModalPreviewRowViewProtocol {
                     if item.captionLayouts.first(where: { $0.id == item.firstMessage?.stableId }) != nil {
                         positionFlags.remove(.bottom)
                     }
-                    if item.authorText != nil || item.replyModel != nil || item.forwardNameLayout != nil {
+                    if item.hasUpsideSomething{
                         positionFlags.remove(.top)
                     }
                 }
