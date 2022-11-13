@@ -355,7 +355,8 @@ public final class TextViewLayout : Equatable {
     fileprivate let spoilers:[Spoiler]
     private let onSpoilerReveal: ()->Void
     public private(set) var embeddedItems: [EmbeddedItem] = []
-    public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil, alignment:NSTextAlignment = .left, lineSpacing:CGFloat? = nil, selectText: NSColor = presentation.colors.selectText, strokeLinks: Bool = false, alwaysStaticItems: Bool = false, disableTooltips: Bool = true, mayItems: Bool = true, spoilers:[Spoiler] = [], onSpoilerReveal: @escaping()->Void = {}) {
+    public var truncatingColor: NSColor? = nil
+    public init(_ attributedString:NSAttributedString, constrainedWidth:CGFloat = 0, maximumNumberOfLines:Int32 = INT32_MAX, truncationType: CTLineTruncationType = .end, cutout:TextViewCutout? = nil, alignment:NSTextAlignment = .left, lineSpacing:CGFloat? = nil, selectText: NSColor = presentation.colors.selectText, strokeLinks: Bool = false, alwaysStaticItems: Bool = false, disableTooltips: Bool = true, mayItems: Bool = true, spoilers:[Spoiler] = [], onSpoilerReveal: @escaping()->Void = {}, truncatingColor: NSColor? = nil) {
         self.spoilers = spoilers
         self.truncationType = truncationType
         self.maximumNumberOfLines = maximumNumberOfLines
@@ -369,6 +370,7 @@ public final class TextViewLayout : Equatable {
         self.strokeLinks = strokeLinks
         self.mayItems = mayItems
         self.onSpoilerReveal = onSpoilerReveal
+        self.truncatingColor = truncatingColor
         switch alignment {
         case .center:
             penFlush = 0.5
@@ -593,7 +595,8 @@ public final class TextViewLayout : Equatable {
                 } else {
                     var truncationTokenAttributes: [NSAttributedString.Key : Any] = [:]
                     truncationTokenAttributes[NSAttributedString.Key(kCTFontAttributeName as String)] = font
-                    truncationTokenAttributes[NSAttributedString.Key(kCTForegroundColorAttributeName as String)] = attributedString.attribute(.foregroundColor, at: min(lastLineCharacterIndex, attributedString.length - 1), effectiveRange: nil) as? NSColor ?? NSColor.black
+                    truncationTokenAttributes[NSAttributedString.Key(kCTForegroundColorAttributeName as String)] = truncatingColor ?? attributedString.attribute(.foregroundColor, at: min(lastLineCharacterIndex, attributedString.length - 1), effectiveRange: nil) as? NSColor ?? NSColor.black
+                    
                     let tokenString = "\u{2026}"
                     let truncatedTokenString = NSAttributedString(string: tokenString, attributes: truncationTokenAttributes)
                     let truncationToken = CTLineCreateWithAttributedString(truncatedTokenString)
