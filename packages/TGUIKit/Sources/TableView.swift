@@ -3172,9 +3172,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let oldHeight = frame.height
         super.setFrameSize(newSize)
         
-        self.tableView.frame = CGRect(origin: .zero, size: NSMakeSize(frame.width, self.tableView.frame.height))
-        
-
         if newSize.width > 0 || newSize.height > 0 {
             if oldWidth != frame.width, newSize.width > 0 && newSize.height > 0 {
                 self.layoutIfNeeded(with: self.visibleRows(), oldWidth: oldWidth)

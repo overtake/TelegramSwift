@@ -83,7 +83,7 @@ final class ChatListTopicNameAndTextLayout {
             attr.append(text)
             
             self.selectedMain = .init(attr, maximumNumberOfLines: 2)
-            self.mainText = .init(attr, maximumNumberOfLines: 2)
+            self.mainText = .init(attr, maximumNumberOfLines: 2, truncatingColor: theme.colors.grayText)
             
         }
         
