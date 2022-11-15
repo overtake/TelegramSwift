@@ -111,8 +111,8 @@ private func generateRectsImage(color: NSColor, rects: [CGRect], inset: CGFloat,
     
     topLeft.x -= inset
     topLeft.y -= inset
-    bottomRight.x += inset
-    bottomRight.y += inset 
+    bottomRight.x += inset * 2
+    bottomRight.y += inset * 2
     
     return (topLeft, generateImage(CGSize(width: bottomRight.x - topLeft.x, height: bottomRight.y - topLeft.y), contextGenerator: { size, context in
         context.clear(CGRect(origin: CGPoint(), size: size))
@@ -342,6 +342,10 @@ public final class TextViewLayout : Equatable {
     
     public fileprivate(set) var lineSpacing:CGFloat?
     
+    public var hasBlock: Bool {
+        return blockImage.1 != nil
+    }
+    
     public private(set) var layoutSize:NSSize = NSZeroSize
     public private(set) var perfectSize:NSSize = NSZeroSize
     public var alwaysStaticItems: Bool
@@ -393,7 +397,7 @@ public final class TextViewLayout : Equatable {
         self.layoutSize = .zero
     }
     
-    func calculateLayout(isBigEmoji: Bool = false) -> Void {
+    func calculateLayout(isBigEmoji: Bool = false, lineSpacing: CGFloat? = nil) -> Void {
         self.isBigEmoji = isBigEmoji
         isPerfectSized = true
         
@@ -419,7 +423,7 @@ public final class TextViewLayout : Equatable {
         
         var monospacedRects:[NSRect] = []
         
-        var fontLineSpacing:CGFloat = floor(fontLineHeight * 0.12)
+        var fontLineSpacing:CGFloat = lineSpacing ?? floor(fontLineHeight * 0.12)
 
         
         
@@ -505,7 +509,7 @@ public final class TextViewLayout : Equatable {
 
             var isPreformattedLine: CGFloat? = nil
             
-            fontLineSpacing = isBigEmoji ? 0 : floor(fontLineHeight * 0.12)
+            fontLineSpacing = lineSpacing ?? (isBigEmoji ? 0 : floor(fontLineHeight * 0.12))
             
             if isBigEmoji {
                 lineOriginY += 2
@@ -782,7 +786,7 @@ public final class TextViewLayout : Equatable {
                 let index = sortedIndices[i]
                 for j in -1 ... 1 {
                     if j != 0 && index + j >= 0 && index + j < sortedIndices.count {
-                        if abs(rects[index + j].width - rects[index].width) < 15 {
+                        if abs(rects[index + j].width - rects[index].width) < 10 {
                             rects[index + j].size.width = max(rects[index + j].width, rects[index].width)
                         }
                     }
@@ -790,7 +794,7 @@ public final class TextViewLayout : Equatable {
             }
             
             for i in 0 ..< rects.count {
-                let height = rects[i].size.height + 7
+                let height = rects[i].size.height + 5
                 rects[i] = rects[i].insetBy(dx: 0, dy: floor((rects[i].height - height) / 2.0))
                 rects[i].size.height = height
                 if self.penFlush == 0.5 {
@@ -804,15 +808,20 @@ public final class TextViewLayout : Equatable {
             
             self.blockImage = generateRectsImage(color: backgroundColor, rects: rects, inset: 0, outerRadius: lines.count == 1 ? rects[0].height / 2 : 10, innerRadius: .cornerRadius)
             self.blockImage.0 = NSMakePoint(0, 0)
-            var offset: NSPoint = NSPoint(x: 0, y: 2)
-            if self.penFlush == 0.5 {
-                layoutSize.width += 20
-            } else {
-                layoutSize.width += 10
-                offset.x = 5
-                offset.y = 1
-            }
+            
             for i in 0 ..< lines.count {
+                var offset: NSPoint = NSPoint(x: 0, y: 2)
+                if self.penFlush == 0.5 {
+                    layoutSize.width += 20
+                } else {
+                    layoutSize.width += 10
+                    offset.x = 5
+                    if i == 0 {
+                        offset.y -= 3
+                    } else {
+                        offset.y = 1
+                    }
+                }
                 let line = lines[i]
                 lines[i] = TextViewLine(line: line.line, frame: line.frame.offsetBy(dx: offset.x, dy: offset.y), range: line.range, penFlush: self.penFlush, strikethrough: line.strikethrough, embeddedItems: line.embeddedItems)
             }
@@ -863,7 +872,7 @@ public final class TextViewLayout : Equatable {
         selectedRange.range = NSMakeRange(location, length)
     }
     
-    public func measure(width: CGFloat = 0, isBigEmoji: Bool = false) -> Void {
+    public func measure(width: CGFloat = 0, isBigEmoji: Bool = false, lineSpacing: CGFloat? = nil) -> Void {
         
         if width != 0 {
             constrainedWidth = width
@@ -871,7 +880,7 @@ public final class TextViewLayout : Equatable {
         
         toolTipRects.removeAll()
         
-        calculateLayout(isBigEmoji: isBigEmoji)
+        calculateLayout(isBigEmoji: isBigEmoji, lineSpacing: lineSpacing)
 
         strokeRects.removeAll()
         
@@ -2019,6 +2028,9 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         layout.interactions.processURL(link)
                     }
                 } else {
+                    if layout.findCharacterIndex(at: point) == -1 {
+                        moveNextEventDeep = true
+                    }
                     super.mouseUp(with: event)
                 }
             } else if layout.selectedRange.hasSelectText && event.clickCount == 1 && event.modifierFlags.contains(.shift) {

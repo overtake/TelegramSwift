@@ -197,6 +197,7 @@ class ChatMessageItem: ChatRowItem {
                 return bubbleFrame.width - bubbleDefaultInnerInset
             }
         }
+        
         return self.contentSize.width
     }
     
@@ -211,6 +212,7 @@ class ChatMessageItem: ChatRowItem {
             }
         }
         if let webpage = webpageLayout, !webpage.hasInstantPage {
+            let content = webpage.content
             let link = inApp(for: webpage.content.url.nsstring, context: context, openInfo: chatInteraction.openInfo)
             switch link {
             case let .followResolvedName(_, _, postId, _, action, _):
@@ -224,6 +226,21 @@ class ChatMessageItem: ChatRowItem {
                         }
                     default:
                         break inner
+                    }
+                } else {
+                    switch content.type {
+                    case "telegram_channel":
+                        return strings().chatMessageViewChannel
+                    case "telegram_group":
+                        return strings().chatMessageViewGroup
+                    case "telegram_megagroup":
+                        return strings().chatMessageViewGroup
+                    case "telegram_gigagroup":
+                        return strings().chatMessageViewGroup
+                    case "telegram_user":
+                        return strings().chatMessageSendMessage
+                    default:
+                        break
                     }
                 }
                 if let postId = postId, postId > 0 {

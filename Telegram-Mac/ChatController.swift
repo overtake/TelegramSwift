@@ -982,9 +982,9 @@ fileprivate func prepareEntries(from fromView:ChatHistoryView?, to toView:ChatHi
         let firstTransition = Queue.mainQueue().isCurrent()
         let cancelled = Atomic(value: false)
         
-//        let prevIsLoading = fromView == nil || fromView?.originalView?.isLoading == true
+        let prevIsLoading = fromView?.originalView == nil || fromView?.originalView?.isLoading == true || fromView?.originalView?.entries == []
         
-        if firstTransition, let state = scrollToItem {
+        if firstTransition, let state = scrollToItem, prevIsLoading {
                         
             var initialIndex:Int = 0
             var height:CGFloat = 0
@@ -6286,17 +6286,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         chatInteraction.remove(observer: self)
     }
     
-    private var splitStateFirstUpdate: Bool = true
-    override func viewDidChangedNavigationLayout(_ state: SplitViewState) -> Void {
-        super.viewDidChangedNavigationLayout(state)
-        chatInteraction.update(animated: false, {$0.withUpdatedLayout(state).withToggledSidebarEnabled(FastSettings.sidebarEnabled).withToggledSidebarShown(FastSettings.sidebarShown)})
-        if !splitStateFirstUpdate {
-            Queue.mainQueue().justDispatch { [weak self] in
-                self?.genericView.tableView.layoutItems()
-            }
-        }
-        splitStateFirstUpdate = false
-    }
+
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)

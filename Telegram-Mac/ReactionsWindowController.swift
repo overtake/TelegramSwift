@@ -169,7 +169,7 @@ final class ReactionsWindowController : NSObject {
         initialView.frame = NSMakeRect(v.frame.minX + 1, v.frame.maxY - initialView.frame.height - 48, initialView.frame.width, initialView.frame.height)
 //        initialView.background = .red
 //        initialView.layer?.opacity = 0.5
-        
+        initialView.removeFromSuperview()
         contentView.addSubview(initialView)
         
         return (panel, v)
@@ -267,15 +267,15 @@ final class ReactionsWindowController : NSObject {
     
     private func ready(_ initialView: NSView & StickerFramesCollector, animated: Bool) {
         
-        
-        let initialScreenRect = initialView.window!.convertToScreen(initialView.convert(initialView.bounds, to: nil))
+        let initialWindow = initialView.window!
+        let initialScreenRect = initialWindow.convertToScreen(initialView.convert(initialView.bounds, to: nil))
         
         self.emojies.view.frame = self.emojies.view.bounds
         let (panel, view) = makeView(self.emojies.view, initialView, initialScreenRect, animated: animated)
         
         panel.makeKeyAndOrderFront(nil)
         
-        panel.order(.below, relativeTo: initialView.window!.windowNumber)
+        panel.order(.below, relativeTo: initialWindow.windowNumber)
         
         self.panel = panel
                 

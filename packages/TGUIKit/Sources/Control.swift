@@ -401,9 +401,17 @@ open class Control: View {
         }
     }
     
+    public var moveNextEventDeep: Bool = false
+    
     override open func mouseUp(with event: NSEvent) {
         longHandleDisposable.set(nil)
         longOverHandleDisposable.set(nil)
+        
+        if moveNextEventDeep {
+            super.mouseUp(with: event)
+            moveNextEventDeep = false
+            return
+        }
         
         if userInteractionEnabled && !event.modifierFlags.contains(.control) {
             if isEnabled && layer!.opacity > 0 {

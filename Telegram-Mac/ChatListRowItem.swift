@@ -353,7 +353,14 @@ class ChatListRowItem: TableRowItem {
         return peer?.id == repliesPeerId
     }
     
-    
+    override var identifier: String {
+        if archiveStatus == .collapsed {
+            return super.identifier + "collapsed"
+        } else if archiveStatus == .normal {
+            return super.identifier + "normal"
+        }
+        return super.identifier
+    }
     
     let hasDraft:Bool
     private let hasFailed: Bool
@@ -382,7 +389,7 @@ class ChatListRowItem: TableRowItem {
 
 
     
-    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, pinnedType: ChatListPinnedType, groupId: EngineChatList.Group, groupItems: [EngineChatList.GroupItem.Item], messages: [Message], unreadCount: Int, activities: [PeerListState.InputActivities.Activity] = [], animateGroup: Bool = false, archiveStatus: HiddenArchiveStatus = .normal, hasFailed: Bool = false, filter: ChatListFilter = .allChats) {
+    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, pinnedType: ChatListPinnedType, groupId: EngineChatList.Group, groupItems: [EngineChatList.GroupItem.Item], messages: [Message], unreadCount: Int, activities: [PeerListState.InputActivities.Activity] = [], animateGroup: Bool = false, archiveStatus: HiddenArchiveStatus = .normal, hasFailed: Bool = false, filter: ChatListFilter = .allChats, appearMode: PeerListState.AppearMode = .normal) {
         self.groupId = groupId
         self.peer = nil
         self.mode = .chat
@@ -398,6 +405,7 @@ class ChatListRowItem: TableRowItem {
         self.forumTopicData = nil
         self.forumTopicItems = []
         self.associatedGroupId = .root
+        self.appearMode = appearMode
         self.isMuted = false
         self.isOnline = nil
         self.archiveStatus = archiveStatus
@@ -408,6 +416,7 @@ class ChatListRowItem: TableRowItem {
         self.isFake = false
         self.filter = filter
         self.hasFailed = hasFailed
+                
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
         let _ = titleText.append(string: strings().chatListArchivedChats, color: theme.chatList.textColor, font: .medium(.title))
         titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
@@ -522,11 +531,11 @@ class ChatListRowItem: TableRowItem {
     
     let mode: Mode
     let titleMode: TitleMode
-    
+    let appearMode: PeerListState.AppearMode
   
     
     
-    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, titleMode: TitleMode = .normal) {
+    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal) {
         
         
         var draft = draft
@@ -578,6 +587,7 @@ class ChatListRowItem: TableRowItem {
         self.groupId = .root
         self.hasFailed = hasFailed
         self.filter = filter
+        self.appearMode = appearMode
         self.associatedGroupId = associatedGroupId
         self.highlightText = highlightText
         self._stableId = stableId
@@ -917,15 +927,16 @@ class ChatListRowItem: TableRowItem {
         if isSecret {
             offset += 10
         }
-        if isTopic && titleMode == .normal {
-            offset += 30
-        } else {
-            offset += 50
+        offset += (leftInset - 20)
+        
+        if appearMode == .short {
+            offset += 20
         }
+
         if isClosedTopic {
             offset += 10
         }
-        return max(300, size.width) - margin * 4 - dateSize - (isOutMessage ? isRead ? 14 : 8 : 0) - offset
+        return max(200, size.width) - margin * 4 - dateSize - (isOutMessage ? isRead ? 14 : 8 : 0) - offset
     }
     
     var chatNameWidth:CGFloat {
@@ -942,12 +953,9 @@ class ChatListRowItem: TableRowItem {
         if let additionalBadgeNode = additionalBadgeNode {
             w += additionalBadgeNode.size.width + 15
         }
-        if isTopic && titleMode == .normal {
-            w += 30
-        } else {
-            w += 50
-        }
-        return max(300, size.width) - margin * 4 - w - (isOutMessage ? isRead ? 14 : 8 : 0)
+        w += (leftInset - 20)
+
+        return max(200, size.width) - margin * 4 - w - (isOutMessage ? isRead ? 14 : 8 : 0)
     }
     
     var messageWidth:CGFloat {
@@ -967,24 +975,24 @@ class ChatListRowItem: TableRowItem {
         if isPinned && badgeNode == nil {
             w += 15
         }
-        if isTopic && titleMode == .normal {
-            w += 30
-        } else {
-            w += 50
-        }
+        w += (leftInset - 20)
         
-        return (max(300, size.width) - margin * 4) - w - (chatNameLayout != nil ? textLeftCutout : 0)
+        return (max(200, size.width) - margin * 4) - w - (chatNameLayout != nil ? textLeftCutout : 0)
     }
     
     var leftInset:CGFloat {
         switch mode {
         case .chat:
-            return 50 + (10 * 2.0);
+            return 50 + (10 * 2.0)
         case .topic:
             if titleMode == .forumInfo {
-                return 50 + (10 * 2.0);
+                return 50 + (10 * 2.0)
             } else {
-                return 30 + (10 * 2.0);
+                if appearMode == .short {
+                    return 10.0
+                } else {
+                    return 30 + (10 * 2.0)
+                }
             }
         }
     }
@@ -992,8 +1000,7 @@ class ChatListRowItem: TableRowItem {
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         let result = super.makeSize(width, oldWidth: oldWidth)
         
-        
-        
+
         if displayLayout == nil || !displayLayout!.0.isPerfectSized || self.oldWidth > width {
             displayLayout = TextNode.layoutText(maybeNode: displayNode,  titleText, nil, isTopic ? 2 : 1, .end, NSMakeSize(titleWidth, size.height), nil, false, .left)
         }

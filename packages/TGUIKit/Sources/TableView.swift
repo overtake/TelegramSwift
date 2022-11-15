@@ -412,12 +412,6 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     var border:BorderType?
     
     
-    override func accessibilityParent() -> Any? {
-        return nil
-    }
-    override class func accessibilityFocusedUIElement() -> Any? {
-        return nil
-    }
     
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -881,11 +875,11 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView.allowsColumnReordering = false
         self.tableView.headerView = nil;
         self.tableView.intercellSpacing = NSMakeSize(0, 0)
-//        self.tableView.columnAutoresizingStyle = .noColumnAutoresizing
-//        let tableColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(rawValue: "column"))
-//        tableColumn.width = frame.width
-//
-//        self.tableView.addTableColumn(tableColumn)
+        self.tableView.columnAutoresizingStyle = .noColumnAutoresizing
+        let tableColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(rawValue: "column"))
+        tableColumn.width = frame.width
+
+        self.tableView.addTableColumn(tableColumn)
        
         
         mergeDisposable.set(mergePromise.get().start(next: { [weak self] (transition) in
@@ -1895,7 +1889,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         }
         NSAnimationContext.current.duration = animated ? duration : 0.0
         NSAnimationContext.current.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        self.tableView.beginUpdates()
         self.tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: row))
+        self.tableView.removeRows(at: IndexSet(integer: row), withAnimation: !animated ? .none : .effectFade)
+        self.tableView.insertRows(at: IndexSet(integer: row), withAnimation: !animated ? .none :  .effectFade)
+        self.tableView.endUpdates()
+
     }
     
     fileprivate func reloadHeightItems() {
@@ -2219,15 +2218,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     }
     
     public func reloadData() -> Void {
-        if documentSize.height > frame.height, window != nil {
-            self.beginTableUpdates()
-            NSAnimationContext.beginGrouping()
-            NSAnimationContext.current.duration = 0
-            let entireTableView: IndexSet = .init(0 ..< self.tableView.numberOfRows)
-            self.tableView.noteHeightOfRows(withIndexesChanged: entireTableView)
-            NSAnimationContext.endGrouping()
-            self.endTableUpdates()
+        self.beginTableUpdates()
+        self.enumerateItems { item -> Bool in
+            self.reloadData(row: item.index)
+            return true
         }
+        self.endTableUpdates()
     }
     
     
@@ -2732,6 +2728,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         self.updatedItems?(self.list)
         
+        self.reflectScrolledClipView(self.clipView)
+        self.flashScrollers()
+        self.tile()
+        
         if oldEmpty != isEmpty || first {
             updateEmpties(animated: !first)
         }
@@ -2838,12 +2838,13 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     
     public func replace(item:TableRowItem, at index:Int, animated:Bool) {
         if index < count {
+            let prev = list[index]
             listhash.removeValue(forKey: list[index].stableId)
             list[index] = item
             listhash[item.stableId] = item
             item.table = self
             item._index = index
-            reloadData(row: index, animated: animated)
+            reloadData(row: index, animated: animated, presentAsNew: prev.identifier != item.identifier)
         }
     }
 

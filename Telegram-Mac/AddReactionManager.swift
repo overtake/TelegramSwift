@@ -380,6 +380,7 @@ final class ContextAddReactionsListView : View, StickerFramesCollector  {
     private let backgroundColorView = View()
     private let shadowLayer = SimpleShapeLayer()
     
+    
     required init(frame frameRect: NSRect, context: AccountContext, list: [ContextReaction], add:@escaping(MessageReaction.Reaction, Bool, NSRect?)->Void, radiusLayer: CGFloat? = 15, revealReactions:((NSView & StickerFramesCollector)->Void)? = nil) {
         self.list = list
         self.revealReactions = revealReactions

@@ -52,21 +52,21 @@ struct UIChatAdditionalItem : Equatable {
 
 
 enum UIChatListEntry : Identifiable, Comparable {
-    case chat(EngineChatList.Item, [PeerListState.InputActivities.Activity], UIChatAdditionalItem?, filter: ChatListFilter)
-    case group(Int, EngineChatList.GroupItem, Bool, HiddenArchiveStatus)
+    case chat(EngineChatList.Item, [PeerListState.InputActivities.Activity], UIChatAdditionalItem?, filter: ChatListFilter, appearMode: PeerListState.AppearMode)
+    case group(Int, EngineChatList.GroupItem, Bool, HiddenArchiveStatus, PeerListState.AppearMode)
     case reveal([ChatListFilter], ChatListFilter, ChatListFilterBadges)
     case empty(ChatListFilter, PeerListMode, SplitViewState, PeerEquatable?)
     case loading(ChatListFilter)
     static func == (lhs: UIChatListEntry, rhs: UIChatListEntry) -> Bool {
         switch lhs {
-        case let .chat(entry, activity, additionItem, filter):
-            if case .chat(entry, activity, additionItem, filter) = rhs {
+        case let .chat(entry, activity, additionItem, filter, appearMode):
+            if case .chat(entry, activity, additionItem, filter, appearMode) = rhs {
                return true
             } else {
                 return false
             }
-        case let .group(index, item, animated, isHidden):
-            if case .group(index, item, animated, isHidden) = rhs {
+        case let .group(index, item, animated, isHidden, appearMode):
+            if case .group(index, item, animated, isHidden, appearMode) = rhs {
                 return true
             } else {
                 return false
@@ -94,7 +94,7 @@ enum UIChatListEntry : Identifiable, Comparable {
     
     var index: ChatListIndex {
         switch self {
-        case let .chat(entry, _, additionItem, _):
+        case let .chat(entry, _, additionItem, _, _):
             if let additionItem = additionItem {
                 var current = MessageIndex.absoluteUpperBound().globalPredecessor()
                 for _ in 0 ..< additionItem.index {
@@ -117,7 +117,7 @@ enum UIChatListEntry : Identifiable, Comparable {
             }
         case .reveal:
             return ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex.absoluteUpperBound())
-        case let .group(id, _, _, _):
+        case let .group(id, _, _, _, _):
             var index = MessageIndex.absoluteUpperBound().globalPredecessor()
             for _ in 0 ..< id {
                 index = index.peerLocalPredecessor()
@@ -136,13 +136,13 @@ enum UIChatListEntry : Identifiable, Comparable {
     
     var stableId: UIChatListEntryId {
         switch self {
-        case let .chat(entry, _, _, filterId):
+        case let .chat(entry, _, _, filterId, _):
             if entry.renderedPeer.peer?._asPeer().isForum == true, entry.threadData == nil {
                 return .forum(entry.renderedPeer.peerId)
             } else {
                 return .chatId(entry.id, entry.renderedPeer.peerId, filterId.id)
             }
-        case let .group(_, group, _, _):
+        case let .group(_, group, _, _, _):
             return .groupId(group.id)
         case .reveal:
             return .reveal
@@ -163,7 +163,7 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 
         func makeItem(_ entry: AppearanceWrapperEntry<UIChatListEntry>) -> TableRowItem {
             switch entry.entry {
-            case let .chat(item, activities, addition, filter):
+            case let .chat(item, activities, addition, filter, appearMode):
                 var pinnedType: ChatListPinnedType = .some
                 if let addition = addition {
                     pinnedType = .ad(addition.item)
@@ -179,14 +179,14 @@ fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?,
                 } else {
                     mode = .chat
                 }
-                return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, mode: mode, messages: messages, index: entry.entry.index, readState: item.readCounters, draft: item.draft, pinnedType: pinnedType, renderedPeer: item.renderedPeer, peerPresence: item.presence, forumTopicData: item.forumTopicData, forumTopicItems: item.topForumTopicItems, activities: activities, associatedGroupId: groupId, isMuted: item.isMuted, hasFailed: item.hasFailed, hasUnreadMentions: item.hasUnseenMentions, hasUnreadReactions: item.hasUnseenReactions, filter: filter)
+                return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, mode: mode, messages: messages, index: entry.entry.index, readState: item.readCounters, draft: item.draft, pinnedType: pinnedType, renderedPeer: item.renderedPeer, peerPresence: item.presence, forumTopicData: item.forumTopicData, forumTopicItems: item.topForumTopicItems, activities: activities, associatedGroupId: groupId, isMuted: item.isMuted, hasFailed: item.hasFailed, hasUnreadMentions: item.hasUnseenMentions, hasUnreadReactions: item.hasUnseenReactions, filter: filter, appearMode: appearMode)
 
-            case let .group(_, item, animated, archiveStatus):
+            case let .group(_, item, animated, archiveStatus, appearMode):
                 var messages:[Message] = []
                 if let message = item.topMessage {
                     messages.append(message._asMessage())
                 }
-                return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, pinnedType: .none, groupId: item.id, groupItems: item.items, messages: messages, unreadCount: item.unreadCount, animateGroup: animated, archiveStatus: archiveStatus)
+                return ChatListRowItem(initialSize, context: arguments.context, stableId: entry.entry.stableId, pinnedType: .none, groupId: item.id, groupItems: item.items, messages: messages, unreadCount: item.unreadCount, animateGroup: animated, archiveStatus: archiveStatus, appearMode: appearMode)
             case let .reveal(tabs, selected, counters):
                 return ChatListRevealItem(initialSize, context: arguments.context, tabs: tabs, selected: selected, counters: counters, action: arguments.setupFilter, openSettings: {
                     arguments.openFilterSettings(.allChats)
@@ -479,13 +479,25 @@ class ChatListController : PeersListController {
                 case let .chatList(peerId):
                     space = .init(peerId: peerId, category: .global)
                 }
-                return .chat(item.0, state?.activities.activities[space] ?? [], item.1, filter: filterData.filter)
+                return .chat(item.0, state?.activities.activities[space] ?? [], item.1, filter: filterData.filter, appearMode: state?.controllerAppear ?? .normal)
             }
             
             if case .filter = filterData.filter, mapped.isEmpty {} else {
                 if !update.list.hasLater {
                     for (i, group) in update.list.groupItems.reversed().enumerated() {
-                        mapped.append(.group(i, group, animateGroupNextTransition.swap(nil) == group.id, hiddenItems.archive))
+                        
+                        let archiveStatus: HiddenArchiveStatus
+                        if state?.appear == .short || state?.splitState == .minimisize {
+                            switch hiddenItems.archive {
+                            case .hidden:
+                                archiveStatus = hiddenItems.archive
+                            default:
+                                archiveStatus = .normal
+                            }
+                        } else {
+                            archiveStatus = hiddenItems.archive
+                        }
+                        mapped.append(.group(i, group, animateGroupNextTransition.swap(nil) == group.id, archiveStatus, state?.controllerAppear ?? .normal))
                     }
                 }
             }
@@ -503,7 +515,7 @@ class ChatListController : PeersListController {
             }
             
             
-            if !filterData.isEmpty && !filterData.sidebar {
+            if !filterData.isEmpty && !filterData.sidebar, state?.appear == .normal {
                 mapped.append(.reveal(filterData.tabs, filterData.filter, filtersCounter))
             }
             
@@ -1326,8 +1338,6 @@ class ChatListController : PeersListController {
                     open(with: item.entryId, initialAction: nil, addition: false)
                 }
                 return false
-            } else if item.isForum && !item.isTopic {
-                item.view?.focusAnimation(nil)
             }
         }
         if item is ChatListRevealItem {

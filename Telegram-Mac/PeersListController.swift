@@ -106,6 +106,12 @@ final class FilterTabsView : View {
 }
 
 struct PeerListState : Equatable {
+    
+    enum AppearMode : Equatable {
+        case normal
+        case short
+    }
+    
     struct InputActivities : Equatable {
         struct Activity : Equatable {
             let peer: PeerEquatable
@@ -156,9 +162,12 @@ struct PeerListState : Equatable {
     var forumPeer: ForumData?
     var mode: PeerListMode
     var activities: InputActivities
+    
+    var appear: AppearMode
+    var controllerAppear: AppearMode
 }
 
-class PeerListContainerView : View {
+class PeerListContainerView : Control {
     
     private final class ProxyView : Control {
         fileprivate let button:ImageButton = ImageButton()
@@ -440,6 +449,11 @@ class PeerListContainerView : View {
             updateLayout(self.frame.size, transition: .immediate)
         }
     }
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+    }
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         self.border = [.Right]
@@ -534,13 +548,13 @@ class PeerListContainerView : View {
             self.actionView = nil
         }
         
-        self.searchView.isHidden = state.splitState == .minimisize
+        self.searchView.isHidden = state.splitState == .minimisize || state.appear == .short
         
         let componentSize = NSMakeSize(40, 30)
         
         var controlPoint = NSMakePoint(frame.width - 12 - compose.frame.width, floorToScreenPixels(backingScaleFactor, (containerView.frame.height - componentSize.height)/2.0))
         
-        let hasControls = state.splitState != .minimisize && state.searchState != .Focus && mode.isPlain
+        let hasControls = state.splitState != .minimisize && state.searchState != .Focus && mode.isPlain && state.appear != .short
         
         let hasProxy = (!state.proxySettings.servers.isEmpty || state.proxySettings.effectiveActiveServer != nil) && hasControls
         
@@ -813,6 +827,7 @@ class PeerListContainerView : View {
         compose.set(image: theme.icons.composeNewChat, for: .Hover)
         compose.set(image: theme.icons.composeNewChatActive, for: .Highlight)
         compose.layer?.cornerRadius = .cornerRadius
+        compose.sizeToFit()
         super.updateLocalizationAndTheme(theme: theme)
     }
     
@@ -867,10 +882,14 @@ class PeerListContainerView : View {
 
         }
         
+
         let componentSize = NSMakeSize(40, 30)
         
-        transition.updateFrame(view: self.containerView, frame: NSMakeRect(0, 0, size.width, offset))
+        let containerSize = NSMakeSize(state.splitState == .minimisize || state.appear == .short ? 70 : size.width, offset)
+        
+        transition.updateFrame(view: self.containerView, frame: NSMakeRect(0, 0, containerSize.width, offset))
 
+                
         var searchWidth = (size.width - 10 * 2)
         
         if state.searchState != .Focus && state.mode.isPlain {
@@ -899,7 +918,7 @@ class PeerListContainerView : View {
             let rect = NSMakeRect(0, size.height - downloads.frame.height, size.width - .borderSize, downloads.frame.height)
             transition.updateFrame(view: downloads, frame: rect)
         }
-        if state.splitState == .minimisize {
+        if state.splitState == .minimisize || state.appear == .short {
             transition.updateFrame(view: compose, frame: compose.centerFrame())
         } else {
             
@@ -1019,6 +1038,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     
     private var tempImportersContext: PeerInvitationImportersContext? = nil
 
+    private let appearMode: ValuePromise<PeerListState.AppearMode> = ValuePromise(.normal, ignoreRepeated: true)
+    private let controllerAppear: ValuePromise<PeerListState.AppearMode> = ValuePromise(.normal, ignoreRepeated: true)
     
     let mode:PeerListMode
     private(set) var searchController:SearchController? {
@@ -1121,6 +1142,13 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         let mode = self.mode
 
         
+        switch mode {
+        case .forum:
+            controllerAppear.set(.short)
+        default:
+            break
+        }
+        
         genericView.showDownloads = { [weak self] in
             self?.showDownloads(animated: true)
         }
@@ -1168,6 +1196,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
 
         let layoutSignal = context.layoutValue
+        
         let proxy = proxySettings(accountManager: context.sharedContext.accountManager) |> mapToSignal { ps -> Signal<(ProxySettings, ConnectionStatus), NoError> in
             return context.account.network.connectionStatus |> map { status -> (ProxySettings, ConnectionStatus) in
                 return (ps, status)
@@ -1319,9 +1348,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
         
         
-        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, appearanceSignal).start(next: { pref, layout, peer, forumPeer, inputActivities, _ in
-            updateState { state in
-                let state: PeerListState = .init(proxySettings: pref.0, connectionStatus: pref.1, splitState: layout, searchState: state?.searchState ?? .None, peer: peer, forumPeer: forumPeer, mode: mode, activities: inputActivities)
+        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, appearMode.get(), controllerAppear.get(), appearanceSignal).start(next: { pref, layout, peer, forumPeer, inputActivities, appearMode, controllerAppear, _ in
+            updateState { current in
+                let state: PeerListState = .init(proxySettings: pref.0, connectionStatus: pref.1, splitState: layout, searchState: current?.searchState ?? .None, peer: peer, forumPeer: forumPeer, mode: mode, activities: inputActivities, appear: layout == .minimisize ? .normal : appearMode, controllerAppear: controllerAppear)
                 return state
             }
         }))
@@ -1507,6 +1536,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             self.checkSearchMedia()
             self.genericView.tableView.alwaysOpenRowsOnMouseUp = state.splitState == .single
             self.genericView.tableView.reloadData()
+            self.requestUpdateBackBar()
+            
             DispatchQueue.main.async {
                 self.requestUpdateBackBar()
             }
@@ -1520,7 +1551,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             setCenterStatus(nil)
         }
         
-        self.genericView.searchStateChanged(state, arguments: arguments, animated: true, updateSearchTags: { [weak self] tags in
+        let animated = state.splitState == previous?.splitState
+        
+        self.genericView.searchStateChanged(state, arguments: arguments, animated: animated, updateSearchTags: { [weak self] tags in
             self?.searchController?.updateSearchTags(tags)
             self?.sharedMediaWithToken(tags)
         }, updatePeerTag: { [weak self] f in
@@ -1880,6 +1913,15 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     func open(with entryId: UIChatListEntryId, messageId:MessageId? = nil, initialAction: ChatInitialAction? = nil, close:Bool = true, addition: Bool = false, forceAnimated: Bool = false) ->Void {
         
         let navigation = context.bindings.rootNavigation()
+//
+        if self.navigationController?.controller !== self {
+            switch entryId {
+            case .chatId:
+                self.navigationController?.back()
+            default:
+                break
+            }
+        }
         
         var addition = addition
         var close = close
@@ -2010,12 +2052,37 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
     }
     
-
+    override func setToNextController(_ controller: ViewController, animated: Bool) {
+        if controller.stake.isCustom {
+            appearMode.set(.short)
+        } else {
+            appearMode.set(.normal)
+        }
+    }
+    override func setToPreviousController(_ controller: ViewController, animated: Bool) {
+        appearMode.set(.normal)
+    }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         context.window.removeAllHandlers(for: self)
-
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+    }
+    
+    override var stake: StakeSettings {
+        switch mode {
+        case .forum:
+          //  if context.layout != .minimisize {
+                return .init(keepLeft: 70, straightMove: true, keepIn: false)
+          //  }
+        case .plain:
+            return .init(keepLeft: 0, straightMove: false, keepIn: true)
+        default:
+            break
+        }
+        return super.stake
     }
     
 }

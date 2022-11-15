@@ -371,7 +371,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         }
     }
     private let shimmerColor: Shimmer
-    
+    let size: NSSize
     
     init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, playPolicy: LottiePlayPolicy = .loop, checkStatus: Bool = false, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false)) {
         self.aspectFilled = aspectFilled
@@ -380,6 +380,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.getColors = getColors
         self.shimmerColor = shimmerColor
         self.fileId = emoji.fileId
+        self.size = size
         super.init()
         self.frame = size.bounds
         self.initialize()
@@ -411,6 +412,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.getColors = getColors
         self.shimmerColor = shimmerColor
         self.fileId = file.fileId.id
+        self.size = size
         super.init()
         self.frame = size.bounds
         self.initialize()

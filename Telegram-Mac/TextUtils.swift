@@ -438,22 +438,23 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                 } else {
                     text = isVideo ? strings().chatListServiceVideoCallIncoming(.stringForShortCallDurationSeconds(for: duration)) : strings().chatListServiceCallIncoming(.stringForShortCallDurationSeconds(for: duration))
                 }
-            }
-            
-            if let reason = reason {
-                let outgoing = !message.flags.contains(.Incoming)
-                
-                switch reason {
-                case .busy:
-                    text = outgoing ? (isVideo ? strings().chatListServiceVideoCallCancelled : strings().chatListServiceCallCancelled) : (isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed)
-                case .disconnect:
-                    text = isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed
-                case .hangup:
-                    text = outgoing ? (isVideo ? strings().chatListServiceVideoCallCancelled : strings().chatListServiceCallCancelled) : (isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed)
-                case .missed:
-                    text = outgoing ? (isVideo ? strings().chatListServiceVideoCallCancelled : strings().chatListServiceCallCancelled) : (isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed)
+            } else {
+                if let reason = reason {
+                    let outgoing = !message.flags.contains(.Incoming)
+                    
+                    switch reason {
+                    case .busy:
+                        text = outgoing ? (isVideo ? strings().chatListServiceVideoCallCancelled : strings().chatListServiceCallCancelled) : (isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed)
+                    case .disconnect:
+                        text = isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed
+                    case .hangup:
+                        text = outgoing ? (isVideo ? strings().chatListServiceVideoCallCancelled : strings().chatListServiceCallCancelled) : (isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed)
+                    case .missed:
+                        text = outgoing ? (isVideo ? strings().chatListServiceVideoCallCancelled : strings().chatListServiceCallCancelled) : (isVideo ? strings().chatListServiceVideoCallMissed : strings().chatListServiceCallMissed)
+                    }
                 }
             }
+           
         case let .gameScore(gameId: _, score: score):
             var gameName:String = ""
             for attr in message.attributes {

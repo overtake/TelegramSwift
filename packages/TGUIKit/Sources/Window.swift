@@ -561,12 +561,7 @@ open class Window: NSWindow {
     open override func becomeFirstResponder() -> Bool {
         return false
     }
-    open override var accessibilityFocusedUIElement: Any? {
-        return nil
-    }
-    open override func accessibilityParent() -> Any? {
-        return nil
-    }
+   
 
     public func sendKeyEvent(_ key: KeyboardKey, modifierFlags: NSEvent.ModifierFlags) {
         guard let event = NSEvent.keyEvent(with: .keyDown, location: mouseLocationOutsideOfEventStream, modifierFlags: modifierFlags, timestamp: Date().timeIntervalSince1970, windowNumber: windowNumber, context: graphicsContext, characters: "", charactersIgnoringModifiers: "", isARepeat: false, keyCode: key.rawValue) else {return}
