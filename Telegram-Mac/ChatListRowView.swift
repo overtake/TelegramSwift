@@ -31,13 +31,19 @@ final class ChatListTopicNameAndTextLayout {
     
     private(set) var mainText: TextViewLayout?
     private(set) var selectedMain: TextViewLayout?
-    private(set) var allNames: TextViewLayout?
     
+    private(set) var allNames: TextViewLayout?
+    private(set) var allSelectedNames: TextViewLayout?
+
     init(_ context: AccountContext, message: Message, items: [EngineChatList.ForumTopicData], draft: EngineChatList.Draft?) {
         self.message = message
         self.items = items
         self.context = context
         self.draft = draft
+    }
+    
+    var fastTrack: Bool {
+        return first?.isUnread == true
     }
     
     func measure(_ width: CGFloat) {
@@ -55,7 +61,7 @@ final class ChatListTopicNameAndTextLayout {
             let titleSize = temp.sizeFittingWidth(.greatestFiniteMagnitude)
              
             let perSymbol = titleSize.width / CGFloat(title.length)
-            let maxCount = (width - 20) / perSymbol
+            let maxCount = (width - 10) / perSymbol
             
             _ = attr.append(string: title.prefixWithDots(Int(maxCount - 3)), color: theme.colors.text, font: .normal(.text))
             
@@ -76,22 +82,66 @@ final class ChatListTopicNameAndTextLayout {
             let text = chatListText(account: context.account, for: message, messagesCount: 1, draft: draft, folder: false, applyUserName: false, isPremium: context.isPremium).mutableCopy() as! NSMutableAttributedString
             
             if let author = message.author {
-                let name = author.id == context.peerId ? strings().you : author.compactDisplayTitle
-                text.insert(.initialize(string: "\(name): ", color: theme.colors.text, font: .normal(.text)), at: 0)
+                let ignore: Bool
+                if message.media.first is TelegramMediaAction {
+                    ignore = true
+                } else {
+                    ignore = false
+                }
+                if !ignore {
+                    let name = author.id == context.peerId ? strings().you : author.compactDisplayTitle
+                    text.insert(.initialize(string: "\(name): ", color: theme.colors.text, font: .normal(.text)), at: 0)
+                }
             }
             
             attr.append(text)
+            attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
+
+            self.selectedMain = .init(attr, maximumNumberOfLines: 2, mayItems: false, truncatingColor: theme.colors.grayText)
+            self.mainText = .init(attr, maximumNumberOfLines: 2, mayItems: false, truncatingColor: theme.colors.grayText)
             
-            self.selectedMain = .init(attr, maximumNumberOfLines: 2)
-            self.mainText = .init(attr, maximumNumberOfLines: 2, truncatingColor: theme.colors.grayText)
+            self.mainText?.measure(width: width - 20)
+            self.selectedMain?.measure(width: width - 20)
+
+            if data.isUnread {
+                self.mainText?.generateAutoBlock(backgroundColor: theme.colors.grayText.withAlphaComponent(0.1))
+                self.selectedMain?.generateAutoBlock(backgroundColor: .clear)
+            }
             
+            var main: CGFloat = 0
+            if let mainText = mainText, let line = mainText.lines.first {
+                main = line.frame.width
+            }
+            
+            if items.count > 1, width - main > 40 {
+                let rest = items.suffix(items.count - 1)
+                let attr = NSMutableAttributedString()
+                for item in rest {
+                    
+                    var range = attr.append(string: "🤡" + item.title, color: theme.colors.text, font: .normal(.text))
+                    
+                    range = NSMakeRange(range.location, 2)
+                    
+                    let embedded: InlineStickerItem
+                    if let fileId = item.iconFileId {
+                        embedded = .init(source: .attribute(.init(fileId: fileId, file: message.associatedMedia[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] as? TelegramMediaFile, emoji: "")))
+                    } else {
+                        let file = ForumUI.makeIconFile(title: item.title, iconColor: item.iconColor)
+                        embedded = .init(source: .attribute(.init(fileId: Int64(item.iconColor), file: file, emoji: "")))
+                    }
+                    attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: embedded, range: range)
+                    
+                    _ = attr.append(string: " ")
+                }
+                self.allNames = .init(attr, maximumNumberOfLines: 1)
+                
+   
+                
+                self.allNames?.measure(width: width - 15 - main)
+            }
         }
         
-        self.mainText?.measure(width: width - 20)
-        self.mainText?.generateAutoBlock(backgroundColor: theme.colors.grayText.withAlphaComponent(0.1))
-        
-        self.selectedMain?.measure(width: width - 20)
-        self.selectedMain?.generateAutoBlock(backgroundColor: .clear)
+      
 
         var size = NSMakeSize(width, 0)
         if let mainText = mainText {
@@ -108,7 +158,11 @@ private final class TopicNameAndTextView : View {
     private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
 
     private let mainView = TextView()
+    private var allView: TextView?
     private var highlighted = false
+    
+    private var validLayout: ChatListTopicNameAndTextLayout?
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(mainView)
@@ -126,15 +180,36 @@ private final class TopicNameAndTextView : View {
     }
     
     func update(context: AccountContext, item: ChatListTopicNameAndTextLayout, highlighted: Bool, animated: Bool) {
+        self.validLayout = item
         mainView.update(highlighted ? item.selectedMain : item.mainText)
-        updateInlineStickers(context: context, views: [mainView])
         
         mainView.removeAllHandlers()
         mainView.set(handler: { _ in
             if let first = item.first {
-                ForumUI.openTopic(first.id, peerId: item.peerId, context: context)
+                _ = ForumUI.openTopic(first.id, peerId: item.peerId, context: context).start()
             }
         }, for: .Click)
+        
+        mainView.userInteractionEnabled = item.fastTrack
+        
+        if let all = item.allNames {
+            let current: TextView
+            if let view = self.allView {
+                current = view
+            } else {
+                current = TextView()
+                current.isSelectable = false
+                current.userInteractionEnabled = false
+                self.allView = current
+                addSubview(current)
+            }
+            current.update(all)
+        } else if let view = self.allView {
+            performSubviewRemoval(view, animated: animated)
+            self.allView = nil
+        }
+        
+        updateInlineStickers(context: context, views: [mainView, allView].compactMap { $0 })
     }
     
     func updateInlineStickers(context: AccountContext, views: [TextView]) {
@@ -154,7 +229,9 @@ private final class TopicNameAndTextView : View {
                         var rect: NSRect
                         rect = item.rect.insetBy(dx: -2, dy: -2)
 
-                        rect = rect.offsetBy(dx: 6, dy: 2)
+                        if textLayout.hasBlock {
+                            rect = rect.offsetBy(dx: 6, dy: 1)
+                        }
 
                         
                         let view: InlineStickerItemLayer
@@ -185,6 +262,8 @@ private final class TopicNameAndTextView : View {
             self.inlineStickerItemViews.removeValue(forKey: key)
         }
         updateAnimatableContent()
+        
+        needsLayout = true
     }
     
     
@@ -200,6 +279,17 @@ private final class TopicNameAndTextView : View {
                     }
                 }
                 value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
+            }
+        }
+    }
+    
+    override func layout() {
+        super.layout()
+        
+        if let main = mainView.textLayout, let first = main.lines.first {
+            mainView.setFrameOrigin(.zero)
+            if let allView = allView {
+                allView.setFrameOrigin(NSMakePoint(first.frame.maxX + 6, first.frame.minY - first.frame.height + 2))
             }
         }
     }
@@ -746,6 +836,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         addition += theme.icons.secretImage.backingSize.height
                         
                     }
+                    if item.appearMode == .short, item.isTopic {
+                        addition += 20
+                    }
                     displayLayout.1.draw(NSMakeRect(item.leftInset + addition, item.margin - 1, displayLayout.0.size.width, displayLayout.0.size.height), in: ctx, backingScaleFactor: backingScaleFactor, backgroundColor: backgroundColor)
                     
                     if let statusControl = statusControl {
@@ -1241,15 +1334,16 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              switch item.mode {
              case let .topic(_, data):
                  if item.titleMode == .normal {
-                     let size = NSMakeSize(30, 30)
+                     let value: CGFloat = item.appearMode == .short && item.context.layout != .minimisize ? 16 : 30
+                     let size = NSMakeSize(value, value)
                      let current: InlineStickerItemLayer
                      let forumIconFile = ForumUI.makeIconFile(title: data.info.title, iconColor: data.info.iconColor)
                      let checkFileId = data.info.icon ?? forumIconFile.fileId.id
-                     if let layer = self.inlineTopicPhotoLayer, layer.fileId == checkFileId {
+                     if let layer = self.inlineTopicPhotoLayer, layer.fileId == checkFileId, layer.size == size {
                          current = layer
                      } else {
                          if let layer = inlineTopicPhotoLayer {
-                             performSublayerRemoval(layer, animated: animated)
+                             performSublayerRemoval(layer, animated: false)
                              self.inlineTopicPhotoLayer = nil
                          }
                          if let fileId = data.info.icon {
@@ -1264,7 +1358,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                      if item.context.layout == .minimisize {
                          current.frame = CGRect(origin: NSMakePoint(20, 20), size: size)
                      } else {
-                         current.frame = CGRect(origin: NSMakePoint(10, 12), size: size)
+                         if item.appearMode == .short {
+                             current.frame = CGRect(origin: NSMakePoint(10, item.margin), size: size)
+                         } else {
+                             current.frame = CGRect(origin: NSMakePoint(10, 12), size: size)
+                         }
                      }
                      photo.isHidden = true
                  } else {
@@ -2154,7 +2252,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         if item.context.layout == .minimisize {
             self.inlineTopicPhotoLayer?.frame = NSMakeRect(20, 20, 30, 30)
         } else {
-            self.inlineTopicPhotoLayer?.frame = NSMakeRect(10, 12, 30, 30)
+            if item.appearMode == .short {
+                self.inlineTopicPhotoLayer?.frame = NSMakeRect(10, item.margin, 16, 16)
+            } else {
+                self.inlineTopicPhotoLayer?.frame = NSMakeRect(10, 12, 30, 30)
+            }
         }
         
         animatedView?.frame = bounds

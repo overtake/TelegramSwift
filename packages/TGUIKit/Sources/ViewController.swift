@@ -451,6 +451,39 @@ public class ControllerToaster {
 }
 
 open class ViewController : NSObject {
+    
+    
+    public struct StakeSettings {
+        
+        
+        let keepLeft: CGFloat
+        let straightMove: Bool
+        let keepIn: Bool
+        
+        public var isCustom: Bool {
+            if keepLeft > 0 {
+                return true
+            }
+            if straightMove {
+                return true
+            }
+            if keepIn {
+                return true
+            }
+            return false
+        }
+        
+        public init(keepLeft: CGFloat, straightMove: Bool, keepIn: Bool) {
+            self.keepLeft = keepLeft
+            self.straightMove = straightMove
+            self.keepIn = keepIn
+        }
+        
+        public static var `default`: StakeSettings {
+            return .init(keepLeft: 0, straightMove: false, keepIn: false)
+        }
+    }
+    
     fileprivate var _view:NSView?
     public var _frameRect:NSRect
     
@@ -470,7 +503,7 @@ open class ViewController : NSObject {
     
     public var noticeResizeWhenLoaded: Bool = true
     
-    public var animationStyle:AnimationStyle = AnimationStyle(duration:0.4, function:CAMediaTimingFunctionName.spring)
+    public var animationStyle:AnimationStyle = AnimationStyle(duration: 0.4, function:CAMediaTimingFunctionName.spring)
     public var bar:NavigationBarStyle = NavigationBarStyle(height:50)
     
     public var leftBarView:BarView!
@@ -760,6 +793,16 @@ open class ViewController : NSObject {
     open func viewDidChangedNavigationLayout(_ state: SplitViewState) -> Void {
         
     }
+    open func setToNextController(_ controller: ViewController, animated: Bool) {
+        
+    }
+    open func setToPreviousController(_ controller: ViewController, animated: Bool) {
+        
+    }
+    open var stake: StakeSettings {
+        return .default
+    }
+    open weak var tied: ViewController?
     
     deinit {
         self.window?.removeObserver(for: self)
@@ -1050,7 +1093,7 @@ open class GenericViewController<T> : ViewController where T:NSView {
     }
     
     public var initializationRect: NSRect {
-        return NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width, _frameRect.height - bar.height)
+        return NSMakeRect(_frameRect.minX, _frameRect.minY, _frameRect.width - self.stake.keepLeft, _frameRect.height - bar.height)
     }
     
 

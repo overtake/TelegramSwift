@@ -24,6 +24,33 @@ private let tgme:String = "tg://"
 
 
 
+private struct UrlHandlingConfiguration {
+    static var defaultValue: UrlHandlingConfiguration {
+        return UrlHandlingConfiguration(token: nil, domains: [], urlAuthDomains: [])
+    }
+    
+    public let token: String?
+    public let domains: [String]
+    public let urlAuthDomains: [String]
+    
+    fileprivate init(token: String?, domains: [String], urlAuthDomains: [String]) {
+        self.token = token
+        self.domains = domains
+        self.urlAuthDomains = urlAuthDomains
+    }
+    
+    static func with(appConfiguration: AppConfiguration) -> UrlHandlingConfiguration {
+        if let data = appConfiguration.data {
+            let urlAuthDomains = data["url_auth_domains"] as? [String] ?? []
+            if let token = data["autologin_token"] as? String, let domains = data["autologin_domains"] as? [String] {
+                return UrlHandlingConfiguration(token: token, domains: domains, urlAuthDomains: urlAuthDomains)
+            }
+        }
+        return .defaultValue
+    }
+}
+
+
 
 
 func resolveUsername(username: String, context: AccountContext) -> Signal<Peer?, NoError> {
@@ -991,6 +1018,30 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
             modal.restore()
         }
         afterComplete(true)
+    case let .urlAuth(link, context):
+        _ = showModalProgress(signal: context.engine.messages.requestMessageActionUrlAuth(subject: .url(link)), for: context.window).start(next: { result in
+            switch result {
+            case let .accepted(url):
+                execute(inapp: .external(link: url, false))
+            case .default:
+                execute(inapp: .external(link: link, true))
+            case let .request(requestURL, peer, writeAllowed):
+                showModal(with: InlineLoginController(context: context, url: requestURL, originalURL: link, writeAllowed: writeAllowed, botPeer: peer, authorize: { allowWriteAccess in
+                    _ = showModalProgress(signal: context.engine.messages.acceptMessageActionUrlAuth(subject: .url(link), allowWriteAccess: allowWriteAccess), for: context.window).start(next: { result in
+                        switch result {
+                        case .default:
+                            execute(inapp: .external(link: link, true))
+                        case let .accepted(url):
+                            execute(inapp: .external(link: url, false))
+                        default:
+                            break
+                        }
+                    })
+                }), for: context.window)
+            }
+        })
+        
+        afterComplete(true)
     }
     
 }
@@ -1126,6 +1177,7 @@ enum inAppLink {
     case invoice(link: String, context: AccountContext, slug: String)
     case premiumOffer(link: String, ref: String?, context: AccountContext)
     case restorePurchase(link: String, context: AccountContext)
+    case urlAuth(link: String, context: AccountContext)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -1178,6 +1230,8 @@ enum inAppLink {
         case let .premiumOffer(link, _, _):
             return link
         case let .restorePurchase(link, _):
+            return link
+        case let .urlAuth(link, _):
             return link
         case .nothing:
             return ""
@@ -1275,6 +1329,14 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
     }
     
     
+    if let urlValue = URL(string: url as String), let host = urlValue.host?.lowercased(), let context = context {
+        let urlHandlingConfiguration: UrlHandlingConfiguration = .with(appConfiguration: context.appConfiguration)
+        
+        if urlHandlingConfiguration.urlAuthDomains.contains(host) {
+            return .urlAuth(link: url as String, context: context)
+        }
+    }
+
     
     for domain in telegram_me {
         let range = url.range(of: domain)

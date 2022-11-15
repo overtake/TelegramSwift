@@ -472,7 +472,9 @@ class ChatRowItem: TableRowItem {
     var hasPhoto: Bool {
         if let adAttribute = message?.adAttribute {
             if adAttribute.displayAvatar {
-                return true
+                return false
+            } else {
+                return false
             }
         }
         if !isBubbled {

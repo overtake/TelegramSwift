@@ -162,6 +162,9 @@ class WPArticleLayout: WPLayout {
                     return false
                 }
             }
+            if type == "telegram_user" {
+                return false
+            }
             return true
         }
         return content.text == nil || content.text!.trimmed.isEmpty

@@ -169,7 +169,7 @@ func InlineLoginController(context: AccountContext, url: String, originalURL: St
         theme.colors.background
     }
     
-    let modalController = InputDataModalController(controller, modalInteractions: interactions)
+    let modalController = InputDataModalController(controller, modalInteractions: interactions, size: NSMakeSize(300, 300))
     
     controller.leftModalHeader = ModalHeaderData(image: theme.icons.modalClose, handler: { [weak modalController] in
         modalController?.close()

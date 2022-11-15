@@ -2581,6 +2581,8 @@ public final class L10n {
   public static var chatMessageImportedShort: String  { return L10n.tr("Localizable", "Chat.Message.ImportedShort") }
   /// recommended
   public static var chatMessageRecommended: String  { return L10n.tr("Localizable", "Chat.Message.Recommended") }
+  /// SEND MESSAGE
+  public static var chatMessageSendMessage: String  { return L10n.tr("Localizable", "Chat.Message.SendMessage") }
   /// sponsored
   public static var chatMessageSponsored: String  { return L10n.tr("Localizable", "Chat.Message.Sponsored") }
   /// %d
