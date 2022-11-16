@@ -42,8 +42,12 @@ struct ForumUI {
         return (colors.0.map { NSColor($0) }, colors.1.map { NSColor($0) })
     }
     
-    static func makeIconFile(title: String, iconColor: Int32 = 0) -> TelegramMediaFile {
+    static func makeIconFile(title: String, iconColor: Int32 = 0, isGeneral: Bool = false) -> TelegramMediaFile {
         let colors: ([NSColor], [NSColor]) = topicColor(iconColor)
+        
+        if isGeneral {
+            return TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_Topic_General", ext: ""), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
+        }
         
         let resource = ForumTopicIconResource(title: title.prefix(1), bgColors: colors.0, strokeColors: colors.1, iconColor: iconColor)
         let id = Int64(resource.id.stringRepresentation.hashValue)

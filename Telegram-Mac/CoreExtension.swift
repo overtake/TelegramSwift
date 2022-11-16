@@ -3679,6 +3679,7 @@ extension String {
 
 
 func joinChannel(context: AccountContext, peerId: PeerId) {
+    
     _ = showModalProgress(signal: context.engine.peers.joinChannel(peerId: peerId, hash: nil) |> deliverOnMainQueue, for: context.window).start(error: { error in
         let text: String
         switch error {

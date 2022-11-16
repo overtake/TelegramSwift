@@ -642,7 +642,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         let keepLeft = frame.width == controller.stake.keepLeft ? 0 : controller.stake.keepLeft
 
         
-        let size = CGSize(width: containerView.frame.width - keepLeft, height: containerView.frame.height - contentInset)
+        let size = CGSize(width: containerView.frame.width - keepLeft, height: containerView.frame.height)
         let point = NSMakePoint(keepLeft, contentInset)
         
         let previous:ViewController = self.controller;
@@ -698,7 +698,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         let popInteractiveInset: CGFloat? = window.inLiveSwiping ? controller.frame.minX : nil
         
-        controller.view.frame = NSMakeRect(point.x, contentInset, size.width, size.height)
+        controller.view.frame = NSMakeRect(point.x, contentInset, size.width, size.height - contentInset)
        
         
         let reloadHeaders = { [weak self] in

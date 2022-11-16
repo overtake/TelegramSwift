@@ -13,33 +13,98 @@ import Localization
 import Postbox
 import SwiftSignalKit
 
+/*
+ class AccountViewController: NavigationViewController {
+     private var layoutController:LayoutAccountController
+     private let disposable = MetaDisposable()
+     init(_ context: AccountContext) {
+         self.layoutController = LayoutAccountController(context)
+         super.init(layoutController, context.window)
+         self.ready.set(layoutController.ready.get())
+         disposable.set(context.hasPassportSettings.get().start(next: { [weak self] value in
+             self?.layoutController.passportPromise.set(.single(value))
+         }))
+         self.applyAppearOnLoad = false
+     }
+     
+     override func viewDidLoad() {
+         super.viewDidLoad()
+         (self.view as? View)?.border = [.Right]
+     }
+     
+     deinit {
+         disposable.dispose()
+     }
+     
+     override func viewDidResized(_ size: NSSize) {
+         super.viewDidResized(size)
+         layoutController._frameRect = size.bounds
+         layoutController.frame = NSMakeRect(0, layoutController.bar.height, size.width, size.height - layoutController.bar.height)
+     }
+     
+     override func viewWillAppear(_ animated: Bool) {
+         super.viewWillAppear(animated)
+         layoutController.viewWillAppear(animated)
+     }
+     
+     override func scrollup(force: Bool = false) {
+         layoutController.scrollup()
+     }
+     
+     override func viewDidAppear(_ animated: Bool) {
+         super.viewDidAppear(animated)
+         layoutController.viewDidAppear(animated)
+     }
+     override func viewWillDisappear(_ animated: Bool) {
+         super.viewWillDisappear(animated)
+         layoutController.viewWillDisappear(animated)
+     }
+     override func viewDidDisappear(_ animated: Bool) {
+         super.viewDidDisappear(animated)
+         layoutController.viewDidDisappear(animated)
+     }
+ }
+
+ */
+
 let normalAccountsLimit: Int = 3
 
 
-private final class AccountSearchBarView: TitledBarView {
+private final class AccountSearchBarView: View {
     fileprivate let searchView = SearchView(frame: NSMakeRect(0, 0, 100, 30))
-    init(controller: ViewController) {
-        super.init(controller: controller)
-        addSubview(searchView)
-    }
+    
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    fileprivate let edit = TitleButton()
+    
     
     required init(frame frameRect: NSRect) {
-        fatalError("init(frame:) has not been implemented")
+        super.init(frame: frameRect)
+        addSubview(searchView)
+        addSubview(edit)
+        border = [.Bottom, .Right]
+        updateLocalizationAndTheme(theme: theme)
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         searchView.updateLocalizationAndTheme(theme: theme)
+        borderColor = theme.colors.border
+        edit.set(font: .medium(.title), for: .Normal)
+        edit.set(text: strings().navigationEdit, for: .Normal)
+        edit.set(color: theme.colors.accent, for: .Normal)
+        edit.scaleOnClick = true
+        needsLayout = true
     }
     
     override func layout() {
         super.layout()
-        searchView.setFrameSize(NSMakeSize(frame.width, 30))
-        searchView.center()
+        searchView.setFrameSize(NSMakeSize(frame.width - 72, 30))
+        searchView.centerY(x: 10)
+        edit.sizeToFit(.zero, NSMakeSize(62, 40), thatFit: true)
+        edit.centerY(x: searchView.frame.maxX)
     }
     
 }
@@ -68,56 +133,6 @@ fileprivate final class AccountInfoArguments {
     }
 }
 
-class AccountViewController: NavigationViewController {
-    private var layoutController:LayoutAccountController
-    private let disposable = MetaDisposable()
-    init(_ context: AccountContext) {
-        self.layoutController = LayoutAccountController(context)
-        super.init(layoutController, context.window)
-        self.ready.set(layoutController.ready.get())
-        disposable.set(context.hasPassportSettings.get().start(next: { [weak self] value in
-            self?.layoutController.passportPromise.set(.single(value))
-        }))
-        self.applyAppearOnLoad = false
-    }
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        (self.view as? View)?.border = [.Right]
-    }
-    
-    deinit {
-        disposable.dispose()
-    }
-    
-    override func viewDidResized(_ size: NSSize) {
-        super.viewDidResized(size)
-        layoutController._frameRect = size.bounds
-        layoutController.frame = NSMakeRect(0, layoutController.bar.height, size.width, size.height - layoutController.bar.height)
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        layoutController.viewWillAppear(animated)
-    }
-    
-    override func scrollup(force: Bool = false) {
-        layoutController.scrollup()
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        layoutController.viewDidAppear(animated)
-    }
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        layoutController.viewWillDisappear(animated)
-    }
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        layoutController.viewDidDisappear(animated)
-    }
-}
 
 private enum AccountInfoEntryId : Hashable {
     case index(Int)
@@ -555,7 +570,39 @@ private func prepareEntries(left: [AppearanceWrapperEntry<AccountInfoEntry>], ri
 }
 
 
-class LayoutAccountController : TableViewController {
+final class AccountControllerView : Control {
+    fileprivate let searchView: AccountSearchBarView
+    fileprivate let tableView: TableView
+    required init(frame frameRect: NSRect) {
+        searchView = AccountSearchBarView(frame: NSMakeRect(0, 0, frameRect.width, 50))
+        tableView = TableView(frame: NSMakeRect(0, 50, frameRect.width, frameRect.height - 50))
+        super.init(frame: frameRect)
+        addSubview(searchView)
+        addSubview(tableView)
+        border = [.Right]
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        borderColor = theme.colors.border
+        
+        self.backgroundColor = theme.colors.background
+    }
+    
+    override func layout() {
+        super.layout()
+        searchView.frame = NSMakeRect(0, 0, frame.width, 50)
+        tableView.frame = NSMakeRect(0, searchView.frame.maxY, frame.width, frame.height - searchView.frame.maxY)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+class AccountViewController : TelegramGenericViewController<AccountControllerView>, TableViewDelegate {
+    
+    
     private let disposable = MetaDisposable()
     
     private var searchController: InputDataController?
@@ -569,25 +616,6 @@ class LayoutAccountController : TableViewController {
         self.searchController?.view.frame = bounds
     }
     
-    override func getCenterBarViewOnce() -> TitledBarView {
-        let searchBar = AccountSearchBarView(controller: self)
-        
-        searchBar.searchView.searchInteractions = SearchInteractions({ [weak self] state, animated in
-            guard let `self` = self else {return}
-            self.searchState.set(state)
-            switch state.state {
-            case .Focus:
-                self.showSearchController(animated: animated)
-            case .None:
-                self.hideSearchController(animated: animated)
-            }
-            
-        }, { [weak self] state in
-            self?.searchState.set(state)
-        })
-        
-        return searchBar
-    }
     
     private func showSearchController(animated: Bool) {
         if searchController == nil {
@@ -645,31 +673,15 @@ class LayoutAccountController : TableViewController {
         return .rejected
     }
     
-    override func getRightBarViewOnce() -> BarView {
-        let button = TextButtonBarView(controller: self, text: strings().navigationEdit, style: navigationButtonStyle, alignment:.Right)
-        let context = self.context
-        button.set(handler: { [weak self] _ in
-            guard let `self` = self else {return}
-            let first: Atomic<Bool> = Atomic(value: true)
-            EditAccountInfoController(context: context, f: { [weak self] controller in
-                self?.arguments?.presentController(controller, first.swap(false))
-            })
-        }, for: .Click)
-        return button
-    }
+ 
     
-    override func requestUpdateRightBar() {
-        super.requestUpdateRightBar()
-        (rightBarView as? TextButtonBarView)?.set(text: strings().navigationEdit, for: .Normal)
-        (rightBarView as? TextButtonBarView)?.set(color: theme.colors.accent, for: .Normal)
-        (rightBarView as? TextButtonBarView)?.needsLayout = true
-    }
-    
-    override func selectionWillChange(row: Int, item: TableRowItem, byClick: Bool) -> Bool {
+    func selectionWillChange(row: Int, item: TableRowItem, byClick: Bool) -> Bool {
         return item is GeneralInteractedRowItem || item is AccountInfoItem || item is ShortPeerRowItem
     }
-    
-    override func isSelectable(row: Int, item: TableRowItem) -> Bool {
+    func selectionDidChange(row: Int, item: TableRowItem, byClick: Bool, isNew: Bool) {
+        
+    }
+    func isSelectable(row: Int, item: TableRowItem) -> Bool {
         return true
     }
     
@@ -681,14 +693,36 @@ class LayoutAccountController : TableViewController {
     private weak var arguments: AccountInfoArguments?
     override func viewDidLoad() {
         super.viewDidLoad()
-        genericView.border = [.Right]
-        genericView.delegate = self
+//        genericView.border = [.Right]
+        tableView.delegate = self
        // self.rightBarView.border = [.Right]
         let context = self.context
         //theme.colors.listBackground
-        genericView.getBackgroundColor = {
+        tableView.getBackgroundColor = {
             return .clear
         }
+        
+        searchView.searchInteractions = SearchInteractions({ [weak self] state, animated in
+            guard let `self` = self else {return}
+            self.searchState.set(state)
+            switch state.state {
+            case .Focus:
+                self.showSearchController(animated: animated)
+            case .None:
+                self.hideSearchController(animated: animated)
+            }
+            
+        }, { [weak self] state in
+            self?.searchState.set(state)
+        })
+        
+        genericView.searchView.edit.set(handler: { [weak self] _ in
+            guard let `self` = self else {return}
+            let first: Atomic<Bool> = Atomic(value: true)
+            EditAccountInfoController(context: context, f: { [weak self] controller in
+                self?.arguments?.presentController(controller, first.swap(false))
+            })
+        }, for: .Click)
         
         let privacySettings = context.engine.privacy.requestAccountPrivacySettings() |> map(Optional.init)
         
@@ -751,7 +785,7 @@ class LayoutAccountController : TableViewController {
         }, setStatus: { control, user in
             setStatus(control, user)
         }, runStatusPopover: { [weak self] in
-            guard let item = self?.genericView.item(at: 1) as? AccountInfoItem else {
+            guard let item = self?.tableView.item(at: 1) as? AccountInfoItem else {
                 return
             }
             if let control = item.statusControl {
@@ -785,81 +819,88 @@ class LayoutAccountController : TableViewController {
         } |> deliverOnMainQueue
         
         disposable.set(apply.start(next: { [weak self] transition in
-            self?.genericView.merge(with: transition)
+            self?.tableView.merge(with: transition)
             self?.readyOnce()
         }))
     }
     
+    
+    var tableView: TableView {
+        return genericView.tableView
+    }
+    var searchView: SearchView {
+        return genericView.searchView.searchView
+    }
     
     
     
     override func navigationWillChangeController() {
         if let navigation = navigation as? ExMajorNavigationController {
             if navigation.controller is DataAndStorageViewController {
-                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(6))) {
-                    _ = genericView.select(item: item)
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(6))) {
+                    _ = tableView.select(item: item)
                 }
             } else if navigation.controller is PrivacyAndSecurityViewController {
-                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(8))) {
-                    _ = genericView.select(item: item)
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(8))) {
+                    _ = tableView.select(item: item)
                 }
             } else if navigation.controller is LanguageViewController {
-                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(9))) {
-                    _ = genericView.select(item: item)
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(9))) {
+                    _ = tableView.select(item: item)
                 }
             } else if navigation.controller is InstalledStickerPacksController {
-                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(10))) {
-                    _ = genericView.select(item: item)
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(10))) {
+                    _ = tableView.select(item: item)
                 }
                 
             } else if navigation.controller is GeneralSettingsViewController {
-                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(3))) {
-                    _ = genericView.select(item: item)
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(3))) {
+                    _ = tableView.select(item: item)
                 }
             }  else if navigation.controller is RecentSessionsController {
-                if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(7))) {
-                    _ = genericView.select(item: item)
+                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(7))) {
+                    _ = tableView.select(item: item)
                 }
             } else if navigation.controller is PassportController {
-                if let item = genericView.item(stableId: AccountInfoEntryId.index(Int(14))) {
-                    _ = genericView.select(item: item)
+                if let item = tableView.item(stableId: AccountInfoEntryId.index(Int(14))) {
+                    _ = tableView.select(item: item)
                 }
             } else if let controller = navigation.controller as? InputDataController {
                 switch true {
                 case controller.identifier == "proxy":
-                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(4))) {
-                        _ = genericView.select(item: item)
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(4))) {
+                        _ = tableView.select(item: item)
                     }
                 case controller.identifier == "account":
-                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(0))) {
-                        _ = genericView.select(item: item)
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(0))) {
+                        _ = tableView.select(item: item)
                     }
                 case controller.identifier == "passport":
-                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(14))) {
-                        _ = genericView.select(item: item)
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(14))) {
+                        _ = tableView.select(item: item)
                     }
                 case controller.identifier == "app_update":
-                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(12))) {
-                        _ = genericView.select(item: item)
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(12))) {
+                        _ = tableView.select(item: item)
                     }
                 case controller.identifier == "filters":
-                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(11))) {
-                        _ = genericView.select(item: item)
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(11))) {
+                        _ = tableView.select(item: item)
                     }
                 case controller.identifier == "notification-settings":
-                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(5))) {
-                        _ = genericView.select(item: item)
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(5))) {
+                        _ = tableView.select(item: item)
                     }
                 case controller.identifier == "app_appearance":
-                    if let item = genericView.item(stableId: AnyHashable(AccountInfoEntryId.index(13))) {
-                        _ = genericView.select(item: item)
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(13))) {
+                        _ = tableView.select(item: item)
                     }
                 default:
-                    genericView.cancelSelection()
+                    tableView.cancelSelection()
                 }
                
             } else {
-                genericView.cancelSelection()
+                tableView.cancelSelection()
             }
         }
     }
@@ -912,6 +953,7 @@ class LayoutAccountController : TableViewController {
     
     override init(_ context: AccountContext) {
         super.init(context)
+        bar = .init(height: 0)
     }
     
 
@@ -928,8 +970,7 @@ class LayoutAccountController : TableViewController {
     override func scrollup(force: Bool = false) {
         
         if searchController != nil {
-            let searchView = (self.centerBarView as? AccountSearchBarView)?.searchView
-            searchView?.cancel(true)
+            self.searchView.cancel(true)
             return
         }
         
@@ -937,7 +978,7 @@ class LayoutAccountController : TableViewController {
             context.bindings.rootNavigation().push(DeveloperViewController(context: context))
         }
         
-        genericView.scroll(to: .up(true))
+        tableView.scroll(to: .up(true))
     }
     
     deinit {

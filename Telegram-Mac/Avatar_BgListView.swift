@@ -396,8 +396,9 @@ final class Avatar_BgListView : View {
    
 
     
-    private let tableView = TableView()
+    private let tableView: TableView
     required init(frame frameRect: NSRect) {
+        tableView = TableView(frame: frameRect.size.bounds)
         super.init(frame: frameRect)
         addSubview(tableView)
         tableView.getBackgroundColor = {
@@ -419,7 +420,10 @@ final class Avatar_BgListView : View {
     }
     
     func set(colors: [AvatarColor], context: AccountContext, select: @escaping(AvatarColor)->Void, animated: Bool) {
+        
+        NSLog("\(tableView.frame)")
         tableView.beginTableUpdates()
+        
         
         
         tableView.replace(item: GeneralRowItem(frame.size, height: 20, stableId: "1", backgroundColor: .clear), at: 0, animated: animated)

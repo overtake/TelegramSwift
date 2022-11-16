@@ -295,7 +295,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     func needUpdateReplyMarkup(with state:ChatPresentationInterfaceState, _ animated:Bool) {
         if let keyboardMessage = state.keyboardButtonsMessage, let attribute = keyboardMessage.replyMarkup, state.isKeyboardShown {
             replyMarkupModel = ReplyMarkupNode(attribute.rows, attribute.flags, chatInteraction.processBotKeyboard(with: keyboardMessage), theme, bottomView.documentView as? View, true)
-            replyMarkupModel?.measureSize(frame.width - 40)
+            replyMarkupModel?.measureSize(frame.width - 30)
             replyMarkupModel?.redraw()
             replyMarkupModel?.layout()
             bottomView.contentView.scroll(to: NSZeroPoint)
@@ -537,7 +537,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         
         
         let bottomInset = chatInteraction.presentation.isKeyboardShown ? bottomHeight : 0
-        let keyboardWidth = frame.width - 40
+        let keyboardWidth = frame.width - 30
         var leftInset: CGFloat = 0
 
 

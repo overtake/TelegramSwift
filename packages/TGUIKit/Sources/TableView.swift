@@ -876,10 +876,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.tableView.headerView = nil;
         self.tableView.intercellSpacing = NSMakeSize(0, 0)
         self.tableView.columnAutoresizingStyle = .noColumnAutoresizing
-        let tableColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(rawValue: "column"))
-        tableColumn.width = frame.width
-
-        self.tableView.addTableColumn(tableColumn)
+//        let tableColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier(rawValue: "column"))
+//        tableColumn.width = frame.width
+//
+//        self.tableView.addTableColumn(tableColumn)
        
         
         mergeDisposable.set(mergePromise.get().start(next: { [weak self] (transition) in

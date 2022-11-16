@@ -71,7 +71,7 @@ final class ChatListTopicNameAndTextLayout {
                 if let fileId = data.iconFileId {
                     item = .init(source: .attribute(.init(fileId: fileId, file: message.associatedMedia[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] as? TelegramMediaFile, emoji: "")))
                 } else {
-                    let file = ForumUI.makeIconFile(title: data.title, iconColor: data.iconColor)
+                    let file = ForumUI.makeIconFile(title: data.title, iconColor: data.iconColor, isGeneral: data.id == 1)
                     item = .init(source: .attribute(.init(fileId: Int64(data.iconColor), file: file, emoji: "")))
                 }
                 attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: item, range: range)
@@ -126,7 +126,7 @@ final class ChatListTopicNameAndTextLayout {
                     if let fileId = item.iconFileId {
                         embedded = .init(source: .attribute(.init(fileId: fileId, file: message.associatedMedia[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] as? TelegramMediaFile, emoji: "")))
                     } else {
-                        let file = ForumUI.makeIconFile(title: item.title, iconColor: item.iconColor)
+                        let file = ForumUI.makeIconFile(title: item.title, iconColor: item.iconColor, isGeneral: data.id == 1)
                         embedded = .init(source: .attribute(.init(fileId: Int64(item.iconColor), file: file, emoji: "")))
                     }
                     attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: embedded, range: range)
@@ -168,10 +168,8 @@ private final class TopicNameAndTextView : View {
         addSubview(mainView)
         mainView.isSelectable = false
         
+        mainView.onlyTextIsInteractive = true
         mainView.scaleOnClick = true
-        mainView.set(handler: { _ in
-            
-        }, for: .Click)
         
     }
     
@@ -1333,11 +1331,12 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              
              switch item.mode {
              case let .topic(_, data):
+                 
                  if item.titleMode == .normal {
                      let value: CGFloat = item.appearMode == .short && item.context.layout != .minimisize ? 16 : 30
                      let size = NSMakeSize(value, value)
                      let current: InlineStickerItemLayer
-                     let forumIconFile = ForumUI.makeIconFile(title: data.info.title, iconColor: data.info.iconColor)
+                     let forumIconFile = ForumUI.makeIconFile(title: data.info.title, iconColor: data.info.iconColor, isGeneral: item.mode.isGeneralTopic)
                      let checkFileId = data.info.icon ?? forumIconFile.fileId.id
                      if let layer = self.inlineTopicPhotoLayer, layer.fileId == checkFileId, layer.size == size {
                          current = layer

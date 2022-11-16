@@ -519,8 +519,7 @@ class ChatControllerView : View, ChatInputDelegate {
     }
     
     func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
-    
-        
+            
         if let view = inputContextHelper.accessoryView {
             transition.updateFrame(view: view, frame: NSMakeRect(0, frame.height - inputView.frame.height - view.frame.height, frame.width, view.frame.height))
         }
@@ -2048,6 +2047,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 self?.requestUpdateBackBar()
                 if let modalAction = navigation.modalAction {
                     navigation.set(modalAction: modalAction, state != .single)
+                }
+                DispatchQueue.main.async {
+                    self?.genericView.tableView.reloadData()
                 }
             }
         }))

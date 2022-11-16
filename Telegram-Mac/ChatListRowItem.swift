@@ -523,6 +523,9 @@ class ChatListRowItem: TableRowItem {
                 return nil
             }
         }
+        var isGeneralTopic: Bool {
+            return threadId == 1
+        }
     }
     enum TitleMode {
         case normal
@@ -936,7 +939,7 @@ class ChatListRowItem: TableRowItem {
         if isClosedTopic {
             offset += 10
         }
-        return max(200, size.width) - margin * 3 - dateSize - (isOutMessage ? isRead ? 14 : 8 : 0) - offset
+        return max(200, size.width) - margin * 3 - dateSize - (isOutMessage ? isRead ? 20 : 12 : 0) - offset
     }
     
     var chatNameWidth:CGFloat {
@@ -955,7 +958,7 @@ class ChatListRowItem: TableRowItem {
         }
         w += (leftInset - 20)
 
-        return max(200, size.width) - margin * 3 - w - (isOutMessage ? isRead ? 14 : 8 : 0)
+        return max(200, size.width) - margin * 3 - w - (isOutMessage ? isRead ? 20 : 12 : 0)
     }
     
     var messageWidth:CGFloat {
@@ -973,7 +976,7 @@ class ChatListRowItem: TableRowItem {
             w += additionalBadgeNode.size.width + 15
         }
         if isPinned && badgeNode == nil {
-            w += 15
+            w += 20
         }
         w += (leftInset - 20)
         
