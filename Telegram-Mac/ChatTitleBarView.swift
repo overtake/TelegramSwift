@@ -802,7 +802,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 if let fileId = info.icon {
                     current = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .playCount(2))
                 } else {
-                    let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor)
+                    let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor, isGeneral: chatInteraction.mode.threadId64 == 1)
                     current = .init(account: context.account, file: file, size: size, playPolicy: .playCount(2))
                 }
                 current.superview = containerView

@@ -18,7 +18,7 @@ let graphicsThreadPool = ThreadPool(threadCount: 5, threadPriority: 1)
 
 enum PeerPhoto {
     case peer(Peer, TelegramMediaImageRepresentation?, [String], Message?)
-    case topic(EngineMessageHistoryThread.Info)
+    case topic(EngineMessageHistoryThread.Info, Bool)
 }
 
 private let capHolder:Atomic<[String : CGImage]> = Atomic(value: [:])
@@ -186,7 +186,7 @@ func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSi
     switch photo {
     case let .peer(peer, representation, displayLetters, message):
         return peerImage(account: account, peer: peer, displayDimensions: displayDimensions, representation: representation, message: message, displayLetters: displayLetters, font: font, scale: scale, genCap: genCap, synchronousLoad: synchronousLoad)
-    case let .topic(info):
+    case let .topic(info, isGeneral):
         #if !SHARE
       
         let file: Signal<TelegramMediaFile, NoError>
@@ -198,7 +198,7 @@ func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSi
             |> filter { $0 != nil }
             |> map { $0! }
         } else {
-            file = .single(ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor))
+            file = .single(ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor, isGeneral: isGeneral))
         }
         
         return file |> mapToSignal { file in

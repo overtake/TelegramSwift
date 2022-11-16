@@ -159,6 +159,11 @@ enum UIChatListEntry : Identifiable, Comparable {
 
 fileprivate func prepareEntries(from:[AppearanceWrapperEntry<UIChatListEntry>]?, to:[AppearanceWrapperEntry<UIChatListEntry>], adIndex: UInt16?, arguments: Arguments, initialSize:NSSize, animated:Bool, scrollState:TableScrollState? = nil, groupId: EngineChatList.Group) -> Signal<TableUpdateTransition, NoError> {
     
+    if !animated {
+        var bp = 0
+        bp += 1
+    }
+    
     return Signal { subscriber in
                 
         func makeItem(_ entry: AppearanceWrapperEntry<UIChatListEntry>) -> TableRowItem {
@@ -436,7 +441,7 @@ class ChatListController : PeersListController {
         let chatHistoryView: Signal<(ChatListViewUpdate, FilterData, Bool), NoError> = signal |> mapToSignal { data -> Signal<(ChatListViewUpdate, FilterData, Bool), NoError> in
             
             return chatListViewForLocation(chatListLocation: mode.location, location: data.request, filter: data.filter, account: context.account) |> map {
-                return ($0, data, previousfilter.swap(data)?.filter.id != data.filter.id)
+                return ($0, data, false)
             }
         }
         

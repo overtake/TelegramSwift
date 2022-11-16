@@ -1461,6 +1461,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             }
         }
     }
+    public var onlyTextIsInteractive: Bool = false
 
     
     
@@ -2053,7 +2054,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                         layout.interactions.processURL(link)
                     }
                 } else {
-                    if layout.findCharacterIndex(at: point) == -1 {
+                    if layout.findCharacterIndex(at: point) == -1, onlyTextIsInteractive {
                         moveNextEventDeep = true
                     }
                     super.mouseUp(with: event)

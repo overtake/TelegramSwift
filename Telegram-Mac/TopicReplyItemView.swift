@@ -52,7 +52,7 @@ final class TopicReplyItemLayout {
             if let fileId = threadData.icon {
                 item = .init(source: .attribute(.init(fileId: fileId, file: message.associatedMedia[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] as? TelegramMediaFile, emoji: "")))
             } else {
-                let file = ForumUI.makeIconFile(title: threadData.title, iconColor: threadData.iconColor)
+                let file = ForumUI.makeIconFile(title: threadData.title, iconColor: threadData.iconColor, isGeneral: message.threadId == 1)
                 item = .init(source: .attribute(.init(fileId: Int64(threadData.iconColor), file: file, emoji: "")))
             }
             attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: item, range: range)

@@ -438,20 +438,21 @@ class PeerInfoHeadItem: GeneralRowItem {
     fileprivate let updatePhoto:(NSImage?, Control?)->Void
     fileprivate let arguments: PeerInfoArguments
     fileprivate let threadData: MessageHistoryThreadData?
-    
+    fileprivate let threadId: Int64?
     let canEditPhoto: Bool
     
     
     let peerPhotosDisposable = MetaDisposable()
     
     var photos: [TelegramPeerPhoto] = []
-    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, threadData: MessageHistoryThreadData?, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping(NSImage?, Control?)->Void = { _, _ in }) {
+    init(_ initialSize:NSSize, stableId:AnyHashable, context: AccountContext, arguments: PeerInfoArguments, peerView:PeerView, threadData: MessageHistoryThreadData?, threadId: Int64?, viewType: GeneralViewType, editing: Bool, updatingPhotoState:PeerInfoUpdatingPhotoState? = nil, updatePhoto:@escaping(NSImage?, Control?)->Void = { _, _ in }) {
         let peer = peerViewMainPeer(peerView)
         self.peer = peer
         self.threadData = threadData
         self.peerView = peerView
         self.context = context
         self.editing = editing
+        self.threadId = threadId
         self.arguments = arguments
         self.isVerified = peer?.isVerified ?? false
         self.isPremium = peer?.isPremium ?? false
@@ -1168,7 +1169,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                 if let fileId = info.icon {
                     current = .init(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: fileId, file: nil, emoji: ""), size: size, playPolicy: .loop)
                 } else {
-                    let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor)
+                    let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor, isGeneral: item.threadId == 1)
                     current = .init(account: context.account, file: file, size: size, playPolicy: .loop)
                 }
                 current.superview = containerView

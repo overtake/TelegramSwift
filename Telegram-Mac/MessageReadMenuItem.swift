@@ -651,16 +651,20 @@ final class ReactionPeerMenu : ContextMenuItem {
                 let menu = ContextMenu()
                 for item in list.prefix(20) {
                     if let threadData = item.threadData {
+                        let threadId: Int64?
+                        switch item.id {
+                        case let .forum(id):
+                            threadId = id
+                        default:
+                            threadId = nil
+                        }
                         if peer.canSendMessage(true, threadData: threadData) {
                             let menuItem = ContextMenuItem(threadData.info.title, handler: {
-                                switch item.id {
-                                case let .forum(threadId):
+                                if let threadId = threadId {
                                     callback(threadId)
-                                default:
-                                    break
                                 }
                             })
-                            ContextMenuItem.makeItemAvatar(menuItem, account: context.account, peer: peer, source: .topic(threadData.info))
+                            ContextMenuItem.makeItemAvatar(menuItem, account: context.account, peer: peer, source: .topic(threadData.info, threadId == 1))
                             menu.addItem(menuItem)
                         }
                        
