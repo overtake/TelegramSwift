@@ -3201,6 +3201,10 @@ public final class L10n {
   public static func chatServiceGroupTopicCreatedIcon(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TopicCreated.Icon", p1, p2)
   }
+  /// %1$@ hided general topic
+  public static func chatServiceGroupTopicEditedHided(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.Hided", p1)
+  }
   /// %1$@ changed topic icon to %2$@
   public static func chatServiceGroupTopicEditedIcon(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.Icon", p1, p2)
@@ -3221,10 +3225,16 @@ public final class L10n {
   public static func chatServiceGroupTopicEditedTitle(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.Title", p1, p2)
   }
+  /// %1$@ unhided general topic
+  public static func chatServiceGroupTopicEditedUnhided(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.Unhided", p1)
+  }
   /// %1$@ removed icon
   public static func chatServiceGroupTopicEditedIconRemoved(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.Icon.Removed", p1)
   }
+  /// You hided general topic
+  public static var chatServiceGroupTopicEditedYouHided: String  { return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Hided") }
   /// You changed topic icon to %1$@
   public static func chatServiceGroupTopicEditedYouIcon(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Icon", p1)
@@ -3241,6 +3251,8 @@ public final class L10n {
   public static func chatServiceGroupTopicEditedYouTitle(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Title", p1)
   }
+  /// You unhided general topic
+  public static var chatServiceGroupTopicEditedYouUnhided: String  { return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Unhided") }
   /// You removed icon
   public static var chatServiceGroupTopicEditedYouIconRemoved: String  { return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Icon.Removed") }
   /// %d

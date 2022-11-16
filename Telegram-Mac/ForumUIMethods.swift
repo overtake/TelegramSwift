@@ -65,7 +65,7 @@ struct ForumUI {
         
         let controller = context.bindings.rootNavigation().controller as? ChatController
         
-        if let controller = controller, controller.chatInteraction.chatLocation.threadId == threadId {
+        if let controller = controller, controller.chatLocation.peerId == peerId, controller.chatLocation.threadId == threadId {
             if let messageId = messageId {
                 controller.chatInteraction.focusMessageId(nil, messageId, .CenterEmpty)
             }

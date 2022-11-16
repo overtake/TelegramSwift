@@ -474,6 +474,7 @@ class PeerListContainerView : Control {
     }
     
     private var state: PeerListState?
+    private var arguments: Arguments?
     
     
     var openProxy:((Control)->Void)? = nil
@@ -481,9 +482,12 @@ class PeerListContainerView : Control {
 
     fileprivate func updateState(_ state: PeerListState, arguments: Arguments, animated: Bool) {
         
+        let previous = self.state
+        
         let animated = animated && self.state?.splitState == state.splitState && self.state != nil
         self.state = state
-        
+        self.arguments = arguments
+
         var voiceChat: ChatActiveGroupCallInfo?
         if let forumPeer = state.forumPeer, forumPeer.call?.data?.groupCall == nil {
             if let data = forumPeer.call?.data {
@@ -548,13 +552,20 @@ class PeerListContainerView : Control {
             self.actionView = nil
         }
         
-        self.searchView.isHidden = state.splitState == .minimisize || state.appear == .short
+        let progress: CGFloat
+        if let delta = delta {
+            progress = delta / (frame.width - 70)
+        } else {
+            progress = 1.0
+        }
+        
+        self.searchView.isHidden = (state.splitState == .minimisize) || (state.appear == .short && delta == nil)
         
         let componentSize = NSMakeSize(40, 30)
         
-        var controlPoint = NSMakePoint(frame.width - 12 - compose.frame.width, floorToScreenPixels(backingScaleFactor, (containerView.frame.height - componentSize.height)/2.0))
+        var controlPoint = NSMakePoint(frame.width - 15 - compose.frame.width, floorToScreenPixels(backingScaleFactor, (containerView.frame.height - componentSize.height)/2.0))
         
-        let hasControls = state.splitState != .minimisize && state.searchState != .Focus && mode.isPlain && state.appear != .short
+        let hasControls = state.splitState != .minimisize && state.searchState != .Focus && mode.isPlain && (state.appear != .short || delta != nil)
         
         let hasProxy = (!state.proxySettings.servers.isEmpty || state.proxySettings.effectiveActiveServer != nil) && hasControls
         
@@ -609,13 +620,29 @@ class PeerListContainerView : Control {
             self.premiumStatus = nil
         }
         
+        premiumStatus?.change(opacity: progress, animated: animated)
+        proxy?.change(opacity: progress, animated: animated)
+        searchView.change(opacity: progress, animated: animated)
+        
+
+        if previous?.appear != state.appear {
+            self.delta = nil
+        } else if previous?.splitState != state.splitState {
+            self.delta = nil
+        }
         
         let transition: ContainedViewLayoutTransition
         if animated {
-            transition = .animated(duration: 0.2, curve: .easeOut)
+            if previous?.appear != state.appear {
+                transition = .animated(duration: 0.4, curve: .spring)
+            } else {
+                transition = .animated(duration: 0.2, curve: .easeOut)
+            }
         } else {
             transition = .immediate
         }
+        
+        
   
         self.updateLayout(self.frame.size, transition: transition)
     }
@@ -840,6 +867,47 @@ class PeerListContainerView : Control {
         self.updateLayout(frame.size, transition: .immediate)
     }
     
+    private var delta: CGFloat? = nil
+    
+    func updateSwipingState(_ state: SwipeState, controller: ViewController) -> Void {
+        let transition: ContainedViewLayoutTransition
+        switch state {
+        case let .swiping(delta, prev):
+            if controller.stake.keepLeft > 0 {
+                self.delta = max(0, min(delta, frame.width - controller.stake.keepLeft))
+            } else {
+                self.delta = nil
+            }
+            transition = .immediate
+        case let .success(delta, prev):
+            if controller.stake.keepLeft > 0 {
+                self.delta = frame.width - controller.stake.keepLeft
+            } else {
+                self.delta = nil
+            }
+            transition = .animated(duration: controller.animationStyle.duration, curve: .spring)
+        case let .failed(delta, prev):
+            if controller.stake.keepLeft > 0 {
+                self.delta = 0
+            } else {
+                self.delta = nil
+            }
+            transition = .animated(duration: controller.animationStyle.duration, curve: .spring)
+        case .start:
+            if controller.stake.keepLeft > 0 {
+                self.delta = 0
+            } else {
+                self.delta = nil
+            }
+            transition = .immediate
+        }
+        if let arguments = arguments, let state = self.state {
+            self.updateState(state, arguments: arguments, animated: transition.isAnimated)
+        }
+
+        self.updateLayout(frame.size, transition: transition)
+    }
+    
     func updateLayout(_ size: NSSize, transition: ContainedViewLayoutTransition) {
         
         
@@ -885,12 +953,12 @@ class PeerListContainerView : Control {
 
         let componentSize = NSMakeSize(40, 30)
         
-        let containerSize = NSMakeSize(state.splitState == .minimisize || state.appear == .short ? 70 : size.width, offset)
-        
+        let containerSize = NSMakeSize(state.splitState == .minimisize || state.appear == .short ? 70 + (delta ?? 0) : size.width, offset)
+                
         transition.updateFrame(view: self.containerView, frame: NSMakeRect(0, 0, containerSize.width, offset))
 
                 
-        var searchWidth = (size.width - 10 * 2)
+        var searchWidth = (containerSize.width - 10 * 2)
         
         if state.searchState != .Focus && state.mode.isPlain {
             searchWidth -= (componentSize.width + 12)
@@ -901,6 +969,9 @@ class PeerListContainerView : Control {
         if let _ = self.premiumStatus {
             searchWidth -= componentSize.width
         }
+        if searchWidth < 5 {
+            searchWidth = 0
+        }
         
         let searchRect = NSMakeRect(10, floorToScreenPixels(backingScaleFactor, inset + (offset - inset - componentSize.height)/2.0), searchWidth, componentSize.height)
         
@@ -910,6 +981,8 @@ class PeerListContainerView : Control {
         }
         
         transition.updateFrame(view: searchView, frame: searchRect)
+        searchView.updateLayout(size: searchRect.size, transition: transition)
+        
         transition.updateFrame(view: tableView, frame: NSMakeRect(0, offset, size.width, size.height - offset - bottomInset))
 
         transition.updateFrame(view: backgroundView, frame: size.bounds)
@@ -918,24 +991,20 @@ class PeerListContainerView : Control {
             let rect = NSMakeRect(0, size.height - downloads.frame.height, size.width - .borderSize, downloads.frame.height)
             transition.updateFrame(view: downloads, frame: rect)
         }
-        if state.splitState == .minimisize || state.appear == .short {
-            transition.updateFrame(view: compose, frame: compose.centerFrame())
-        } else {
-            
-            var controlPoint = NSMakePoint(size.width - 12, floorToScreenPixels(backingScaleFactor, (offset - componentSize.height)/2.0))
+        
+        var controlPoint = NSMakePoint(containerSize.width - 14, floorToScreenPixels(backingScaleFactor, (offset - componentSize.height)/2.0))
 
+        controlPoint.x -= componentSize.width
+        
+        transition.updateFrame(view: compose, frame: CGRect(origin: controlPoint, size: componentSize))
+                    
+        if let view = proxy {
             controlPoint.x -= componentSize.width
-            
-            transition.updateFrame(view: compose, frame: CGRect(origin: controlPoint, size: componentSize))
-                        
-            if let view = proxy {
-                controlPoint.x -= componentSize.width
-                transition.updateFrame(view: view, frame: CGRect(origin: controlPoint, size: componentSize))
-            }
-            if let view = premiumStatus {
-                controlPoint.x -= componentSize.width
-                transition.updateFrame(view: view, frame: CGRect(origin: controlPoint, size: componentSize))
-            }
+            transition.updateFrame(view: view, frame: CGRect(origin: controlPoint, size: componentSize))
+        }
+        if let view = premiumStatus {
+            controlPoint.x -= componentSize.width
+            transition.updateFrame(view: view, frame: CGRect(origin: controlPoint, size: componentSize))
         }
         if let actionView = self.actionView {
             transition.updateFrame(view: actionView, frame: CGRect(origin: CGPoint(x: 0, y: size.height - actionView.frame.height), size: NSMakeSize(frame.width, actionView.frame.height)))
@@ -1535,7 +1604,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
             self.checkSearchMedia()
             self.genericView.tableView.alwaysOpenRowsOnMouseUp = state.splitState == .single
-            self.genericView.tableView.reloadData()
             self.requestUpdateBackBar()
             
             DispatchQueue.main.async {
@@ -1567,6 +1635,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 self.navigationController?.back()
             }
         }
+        if previous?.splitState != state.splitState {
+            DispatchQueue.main.async {
+                self.genericView.tableView.reloadData()
+            }
+        }
     }
     
     private var topicRightBar: ImageButton?
@@ -1584,10 +1657,21 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         return nil
     }
     
+    override func getCenterBarViewOnce() -> TitledBarView {
+        let view = super.getCenterBarViewOnce()
+        switch mode {
+        case .forum:
+            view.textInset = 0
+        default:
+            break
+        }
+        return view
+    }
+    
     override func getRightBarViewOnce() -> BarView {
         switch self.mode {
         case .forum:
-            let bar = BarView(70, controller: self)
+            let bar = BarView(50, controller: self)
             let button = ImageButton()
             bar.addSubview(button)
             let context = self.context
@@ -1728,19 +1812,42 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     override func requestUpdateBackBar() {
-        self.leftBarView.minWidth = 70
+        switch mode {
+        case .forum:
+            if self.context.layout == .minimisize {
+                self.leftBarView.minWidth = 70
+            } else {
+                self.leftBarView.minWidth = 20
+            }
+        default:
+            self.leftBarView.minWidth = 70
+        }
         self.centerBarView.isHidden = context.layout == .minimisize
         self.rightBarView.isHidden = context.layout == .minimisize
+        
         super.requestUpdateBackBar()
     }
     
     override func getLeftBarViewOnce() -> BarView {
         let view = BackNavigationBar(self, canBeEmpty: true)
-        view.minWidth = 70
+        switch mode {
+        case .forum:
+            view.minWidth = 20
+        default:
+            view.minWidth = 70
+        }
         return view
     }
     
     override func backSettings() -> (String, CGImage?) {
+        switch mode {
+        case .forum:
+            if context.layout != .minimisize {
+                return (" ", theme.icons.calendarBack)
+            }
+        default:
+            break
+        }
         return context.layout == .minimisize ? ("", theme.icons.instantViewBack) : super.backSettings()
     }
     
@@ -2083,6 +2190,12 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             break
         }
         return super.stake
+    }
+    
+    override func updateSwipingState(_ state: SwipeState, controller: ViewController, isPrevious: Bool) -> Void {
+        if isPrevious {
+            self.genericView.updateSwipingState(state, controller: controller)
+        }
     }
     
 }

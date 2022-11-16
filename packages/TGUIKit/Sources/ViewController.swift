@@ -456,9 +456,9 @@ open class ViewController : NSObject {
     public struct StakeSettings {
         
         
-        let keepLeft: CGFloat
-        let straightMove: Bool
-        let keepIn: Bool
+        public let keepLeft: CGFloat
+        public let straightMove: Bool
+        public let keepIn: Bool
         
         public var isCustom: Bool {
             if keepLeft > 0 {
@@ -803,6 +803,10 @@ open class ViewController : NSObject {
         return .default
     }
     open weak var tied: ViewController?
+    
+    open func updateSwipingState(_ state: SwipeState, controller: ViewController, isPrevious: Bool) -> Void {
+        
+    }
     
     deinit {
         self.window?.removeObserver(for: self)

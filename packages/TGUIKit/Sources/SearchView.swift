@@ -204,7 +204,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         
         inputContainer.backgroundColor = .clear
         input.textColor = presentation.search.textColor
-        input.backgroundColor = presentation.colors.background
+        input.backgroundColor = .random
         placeholder.attributedString = .initialize(string: presentation.search.placeholder(), color: presentation.search.placeholderColor, font: .normal(.text))
         placeholder.backgroundColor = presentation.search.backgroundColor
         self.backgroundColor = presentation.search.backgroundColor
@@ -543,38 +543,9 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             
             if state == .Focus {
                 
-               window?.makeFirstResponder(input)
-                
-                let inputInset = placeholderTextInset + 8
-                
-                let fromX:CGFloat = animateContainer.frame.minX
-                animateContainer.centerY(x: leftInset)
-                
-                let tagsWidth: CGFloat = tags.reduce(0, { current, value in
-                    return current + value.frame.width + 10
-                })
-                
-                inputContainer.frame = NSMakeRect(inputInset, animateContainer.frame.minY + 2, frame.width - (inset * 3) - (clear.frame.width * 2) - tagsWidth, animateContainer.frame.height)
-                input.frame = inputContainer.bounds
-                
-                input.isHidden = false
-                
-                if  animated {
-                    
-                    inputContainer.layer?.animate(from: fromX as NSNumber, to: inputContainer.frame.minX as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration)
-                    
-                    animateContainer.layer?.animate(from: fromX as NSNumber, to: leftInset as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion: true, additive: false, completion: {[weak self] (complete) in
-                        self?.input.isHidden = false
-                        if self?.window?.firstResponder != self?.input {
-                            self?.window?.makeFirstResponder(self?.input)
-                        }
-                        self?.lock = false
-                    })
-                } else {
-                    self.input.isHidden = false
-                    self.window?.makeFirstResponder(self.input)
-                    self.lock = false
-                }
+                self.input.isHidden = false
+                self.window?.makeFirstResponder(self.input)
+                self.lock = false
                
 
                 clear.isHidden = false
@@ -595,23 +566,17 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
                 self.window?.makeFirstResponder(nil)
                 self.placeholder.isHidden = false
                 
-                animateContainer.center()
-                if animated {
-                    animateContainer.layer?.animate(from: leftInset as NSNumber, to: NSMinX(animateContainer.frame) as NSNumber, keyPath: "position.x", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion: true)
-                    
-                    clear.layer?.animate(from: 1.0 as NSNumber, to: 0.0 as NSNumber, keyPath: "opacity", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion:true, additive:false, completion: {[weak self] (complete) in
-                        self?.clear.isHidden = true
-                        self?.lock = false
-                    })
-                } else {
-                    clear.isHidden = true
-                    lock = false
-                }
+                self.clear.isHidden = true
+                self.lock = false
                 
+                if animated {
+                    clear.layer?.animate(from: 1.0 as NSNumber, to: 0.0 as NSNumber, keyPath: "opacity", timingFunction: animationStyle.function, duration: animationStyle.duration, removeOnCompletion:true, additive:false)
+                }
                 clear.layer?.opacity = 0.0
             }
             updateLoading()
-            self.needsLayout = true
+            
+            self.updateLayout(size: frame.size, transition: animated ? .animated(duration: 0.2, curve: .easeOut) : .immediate)
         }
   
     }
@@ -660,24 +625,56 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     
     
     open override func layout() {
+        super.layout()
+        self.updateLayout(size: frame.size, transition: .immediate)
+    }
+    
+    public func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        
         switch state {
         case .None:
-            animateContainer.center()
+            transition.updateFrame(view: self.animateContainer, frame: animateContainer.centerFrame())
         case .Focus:
-            animateContainer.centerY(x: leftInset)
+            transition.updateFrame(view: self.animateContainer, frame: animateContainer.centerFrameY(x: leftInset))
         }
-        placeholder.centerY(addition: -1)
-        clear.centerY(x: frame.width - inset - clear.frame.width)
-        progressIndicator.centerY(x: frame.width - inset - progressIndicator.frame.width + 2)
+        
+        transition.updateFrame(view: placeholder, frame: placeholder.centerFrameY(addition: -1))
+        transition.updateFrame(view: clear, frame: clear.centerFrameY(x: size.width - inset - clear.frame.width))
+        transition.updateFrame(view: progressIndicator, frame: progressIndicator.centerFrameY(x: size.width - inset - progressIndicator.frame.width + 2))
         
         let tagsWidth: CGFloat = tags.reduce(0, { current, value in
             return current + value.frame.width + 10
         })
         
-        inputContainer.setFrameSize(NSMakeSize(frame.width - (inset * 3) - (clear.frame.width * 2) - tagsWidth, inputContainer.frame.height))
-        inputContainer.setFrameOrigin(placeholderTextInset + 8, inputContainer.frame.minY)
-        search.centerY(addition: -1)
+        let inputRect = CGRect(origin: CGPoint(x: placeholderTextInset + 8, y: animateContainer.frame.minY + 2), size: NSMakeSize(size.width - (inset * 3) - (clear.frame.width * 2) - tagsWidth, animateContainer.frame.height))
+        
+        transition.updateFrame(view: inputContainer, frame: inputRect)
+        transition.updateFrame(view: input, frame: inputRect.size.bounds)
+
+        transition.updateFrame(view: search, frame: search.centerFrameY(addition: -1))
+        
+        
     }
+    
+    /*
+     switch state {
+     case .None:
+         animateContainer.center()
+     case .Focus:
+         animateContainer.centerY(x: leftInset)
+     }
+     placeholder.centerY(addition: -1)
+     clear.centerY(x: frame.width - inset - clear.frame.width)
+     progressIndicator.centerY(x: frame.width - inset - progressIndicator.frame.width + 2)
+     
+     let tagsWidth: CGFloat = tags.reduce(0, { current, value in
+         return current + value.frame.width + 10
+     })
+     
+     inputContainer.setFrameSize(NSMakeSize(frame.width - (inset * 3) - (clear.frame.width * 2) - tagsWidth, inputContainer.frame.height))
+     inputContainer.setFrameOrigin(placeholderTextInset + 8, inputContainer.frame.minY)
+     search.centerY(addition: -1)
+     */
 
     public func changeResponder(_ animated:Bool = true) -> Bool {
         if state == .Focus {

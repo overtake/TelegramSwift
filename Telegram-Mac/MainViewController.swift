@@ -507,6 +507,11 @@ class MainViewController: TelegramViewController {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         tabController.updateLocalizationAndTheme(theme: theme)
+        
+        navigation.hasBarRightBorder = true
+        navigation.hasBarLeftBorder = true
+
+        
         let theme = (theme as! TelegramPresentationTheme)
         #if !APP_STORE
         updateController.updateLocalizationAndTheme(theme: theme)

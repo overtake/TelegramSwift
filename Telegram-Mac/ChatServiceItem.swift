@@ -646,6 +646,20 @@ class ChatServiceItem: ChatRowItem {
                                     text = strings().chatServiceGroupTopicEditedResumed(authorName)
                                 }
                             }
+                        case let .isHidden(hidden):
+                            if authorId == context.peerId {
+                                if hidden {
+                                    text = strings().chatServiceGroupTopicEditedYouHided
+                                } else {
+                                    text = strings().chatServiceGroupTopicEditedYouUnhided
+                                }
+                            } else {
+                                if hidden {
+                                    text = strings().chatServiceGroupTopicEditedHided(authorName)
+                                } else {
+                                    text = strings().chatServiceGroupTopicEditedUnhided(authorName)
+                                }
+                            }
                         }
                     } else {
                         var title: String = ""
@@ -657,6 +671,8 @@ class ChatServiceItem: ChatRowItem {
                             case let .iconFileId(value):
                                 iconFileId = value
                             case .isClosed:
+                                break
+                            case .isHidden:
                                 break
                             }
                         }
@@ -726,7 +742,7 @@ class ChatServiceItem: ChatRowItem {
     }
     
     override var isBubbled: Bool {
-        return presentation.wallpaper.wallpaper != .none
+        return presentation.wallpaper.wallpaper != .none && super.isBubbled
     }
     
     override var height: CGFloat {

@@ -1456,7 +1456,7 @@ private final class ChatAdData {
 
 class ChatController: EditableViewController<ChatControllerView>, Notifable, TableViewDelegate {
     
-    private var chatLocation:ChatLocation
+    let chatLocation: ChatLocation
     private let peerView = Promise<PostboxView?>()
     
     private let emojiEffects: EmojiScreenEffect
@@ -1520,6 +1520,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
 
    
     var chatInteraction:ChatInteraction
+    
     
     var nextTransaction:TransactionHandler = TransactionHandler()
     
@@ -1983,7 +1984,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         switch chatLocation {
         case let .peer(peerId):
-            self.peerView.set(context.account.viewTracker.peerView(peerId) |> map {Optional($0)})
+            self.peerView.set(context.account.viewTracker.peerView(peerId, updateData: true) |> map {Optional($0)})
             let _ = context.engine.peers.checkPeerChatServiceActions(peerId: peerId).start()
         case let .thread(data):
             self.peerView.set(context.account.viewTracker.peerView(data.messageId.peerId) |> map {Optional($0)})

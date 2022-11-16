@@ -617,6 +617,20 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                             text = strings().chatServiceGroupTopicEditedResumed(authorName)
                         }
                     }
+                case let .isHidden(isHidden):
+                    if authorId == account.peerId {
+                        if isHidden {
+                            text = strings().chatServiceGroupTopicEditedYouHided
+                        } else {
+                            text = strings().chatServiceGroupTopicEditedYouUnhided
+                        }
+                    } else {
+                        if isHidden {
+                            text = strings().chatServiceGroupTopicEditedHided(authorName)
+                        } else {
+                            text = strings().chatServiceGroupTopicEditedUnhided(authorName)
+                        }
+                    }
                 }
             } else {
                 var title: String = ""
@@ -628,6 +642,8 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                     case let .iconFileId(value):
                         iconFileId = value
                     case .isClosed:
+                        break
+                    case .isHidden:
                         break
                     }
                 }
