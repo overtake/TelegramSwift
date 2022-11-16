@@ -2220,6 +2220,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public func reloadData() -> Void {
         self.beginTableUpdates()
         self.enumerateItems { item -> Bool in
+            _ = item.makeSize(frame.width)
             self.reloadData(row: item.index)
             return true
         }

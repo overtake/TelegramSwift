@@ -187,7 +187,7 @@ open class TitledBarView: BarView {
     }
     
     open var inset:CGFloat {
-        return 10
+        return 0
     }
 
     public var textInset:CGFloat? {

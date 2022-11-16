@@ -2319,7 +2319,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 }
                 
                 if let topicsView = topicsView, let layout = item.topicsLayout {
-                    let point = NSMakePoint(item.leftInset, displayHeight + item.margin + 2)
+                    var inset: CGPoint = .zero
+                    if layout.fastTrack {
+                        inset.x += 5
+                    }
+                    let point = NSMakePoint(item.leftInset - inset.x, displayHeight + item.margin + 2 - inset.y)
                     topicsView.frame = CGRect(origin: point, size: layout.size)
                 }
                 

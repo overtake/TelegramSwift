@@ -448,7 +448,6 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 
 func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil, addRepliesHeader: Bool = false, addTopThreadInset: CGFloat? = nil, updatingMedia: [MessageId: ChatUpdatingMessageMedia] = [:], adMessage:Message? = nil, dynamicAdMessages: [Message] = [], chatTheme: TelegramPresentationTheme = theme, reactions: AvailableReactions? = nil, transribeState: [MessageId : TranscribeAudioState] = [:], topicCreatorId: PeerId? = nil) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
-
     
     var groupedPhotos:[ChatHistoryEntry] = []
     var groupInfo: MessageGroupInfo?
@@ -653,9 +652,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         if message.itHasRestrictedContent {
             message = message.withUpdatedMedia([]).withUpdatedText(" ")
         }
-        
-        let allowAttributes:[MessageAttribute.Type] = [ReplyThreadMessageAttribute.self, OutgoingMessageInfoAttribute.self, TextEntitiesMessageAttribute.self, EditedMessageAttribute.self, ForwardSourceInfoAttribute.self, ViewCountMessageAttribute.self, ConsumableContentMessageAttribute.self, NotificationInfoMessageAttribute.self, ChannelMessageStateVersionAttribute.self, AutoremoveTimeoutMessageAttribute.self, ReactionsMessageAttribute.self, PendingReactionsMessageAttribute.self]
-        
+                
         if renderType == .list {
             if let prev = prev {
                 var actionShortAccess: Bool = true

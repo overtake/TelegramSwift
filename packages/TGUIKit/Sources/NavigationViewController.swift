@@ -300,12 +300,14 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     
     public var hasBarRightBorder: Bool = false {
         didSet {
+            navigationRightBorder.isEventLess = true
             navigationRightBorder.isHidden = !hasBarRightBorder
             navigationRightBorder.backgroundColor = presentation.colors.border
         }
     }
     public var hasBarLeftBorder: Bool = false {
         didSet {
+            navigationLeftBorder.isEventLess = true
             navigationLeftBorder.isHidden = !hasBarLeftBorder
             navigationLeftBorder.backgroundColor = presentation.colors.border
         }
@@ -443,7 +445,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         self.view.addSubview(navigationRightBorder)
         self.view.addSubview(navigationLeftBorder)
 //        self.view.addSubview(navigationLeftBorder)
-        navigationRightBorder.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, 50)
+        navigationRightBorder.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
         
         navigationLeftBorder.frame = NSMakeRect(-.borderSize, 0, .borderSize, frame.height)
 
@@ -501,7 +503,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         
         
         navigationBar.frame = NSMakeRect(point.x, navigationBar.frame.minY, width, controller.bar.height)
-        navigationRightBorder.frame = NSMakeRect(size.width - .borderSize, 0, .borderSize, navigationBar.frame.height)
+        navigationRightBorder.frame = NSMakeRect(size.width - .borderSize, 0, .borderSize, frame.height)
         
         
         navigationLeftBorder.frame = NSMakeRect(point.x - .borderSize, 0, .borderSize, size.height)
@@ -655,7 +657,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             _ = controller.becomeFirstResponder()
             lock = false
             
-            navigationRightBorder.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, navigationBar.frame.height)
+            navigationRightBorder.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
             
             navigationLeftBorder.frame = NSMakeRect(keepLeft - .borderSize, 0, .borderSize, frame.height)
 
@@ -820,7 +822,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
 
             reloadHeaders()
             
-            navigationRightBorder.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, navigationBar.frame.height)
+            navigationRightBorder.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
             navigationLeftBorder.frame = NSMakeRect(keepLeft - .borderSize, 0, .borderSize, frame.height)
 
             return // without animations
@@ -858,7 +860,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                 
               
         
-        navigationRightBorder.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, navigationBar.frame.height)
+        navigationRightBorder.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
         navigationLeftBorder.frame = NSMakeRect(keepLeft - .borderSize, 0, .borderSize, frame.height)
         
 
@@ -866,7 +868,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
 
 
         
-        shadowView.change(opacity: shadowView.direction == .left ? 0.2 : 1, animated: true, duration: previous.animationStyle.duration, timingFunction: previous.animationStyle.function)
+        shadowView.change(opacity: shadowView.direction == .left || keepLeft > 0 ? 0.2 : 1, animated: true, duration: previous.animationStyle.duration, timingFunction: previous.animationStyle.function)
         
         shadowView.change(pos: NSMakePoint(sto, shadowView.frame.minY), animated: true, duration: previous.animationStyle.duration, timingFunction: previous.animationStyle.function, completion: { [weak self] completed in
             if completed {
@@ -895,7 +897,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                 _ = controller.becomeFirstResponder()
                 nextBackgroundView?.removeFromSuperview()
             }
-            self.navigationRightBorder.frame = NSMakeRect(self.frame.width - .borderSize, 0, .borderSize, controller.bar.height)
+            self.navigationRightBorder.frame = NSMakeRect(self.frame.width - .borderSize, 0, .borderSize, self.frame.height)
             self.lock = false
             controller.view.restoreHierarchyDynamicContent()
 
@@ -1122,7 +1124,10 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         super.viewDidAppear(animated)
         
         self.window?.add(swipe: { [weak self] direction, animated -> SwipeHandlerResult in
-            guard let `self` = self, self.controller.view.layer?.animationKeys() == nil, let window = self.window else {return .failed}
+                        
+            guard let `self` = self, self.controller.view.layer?.animationKeys() == nil, let window = self.window else {
+                return .failed
+            }
             
             if let view = window.contentView!.hitTest(window.contentView!.convert(window.mouseLocationOutsideOfEventStream, from: nil))?.superview {
                 if view is HorizontalRowView || view.superview is HorizontalRowView {
@@ -1133,8 +1138,13 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                 return .failed
             }
             
+            
             switch direction {
             case let .left(state):
+                
+                self.controller.updateSwipingState(state, controller: self.controller, isPrevious: false)
+                self.previousController?.updateSwipingState(state, controller: self.controller, isPrevious: true)
+
                 switch state {
                 case .start:
                     
@@ -1164,21 +1174,31 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                     self.lock = true
                     return .success(previous)
                 case let .swiping(delta, previous):
+                    let settings = self.controller.stake
+                                        
+                    let keepLeft: CGFloat = self.frame.width == settings.keepLeft ? 0 : settings.keepLeft
                     
-                    let nPosition = min(max(0, delta), self.containerView.frame.width)
+                    
+                    let nPosition = min(max(keepLeft, delta + keepLeft), self.containerView.frame.width)
                     self.controller.view._change(pos: NSMakePoint(nPosition, self.controller.view.frame.minY), animated: false)
-                    let previousStart = -round(NSWidth(self.containerView.frame)/3.0)
-                    previous.view._change(pos: NSMakePoint(min(previousStart + delta / 3.0, 0), previous.view.frame.minY), animated: false)
+                    let previousStart = keepLeft > 0 ? 0 : -round(NSWidth(self.containerView.frame)/3.0)
+                    
+                    
+                    previous.view._change(pos: NSMakePoint(min(previousStart + max(delta, 0) / 3.0, 0), previous.view.frame.minY), animated: false)
                     
                     self.shadowView.setFrameOrigin(nPosition - self.shadowView.frame.width, self.shadowView.frame.minY)
+                    
+                    self.navigationLeftBorder.setFrameOrigin(nPosition - self.navigationLeftBorder.frame.width, self.navigationLeftBorder.frame.minY)
+                    
                     self.shadowView.layer?.opacity = min(1.0 - Float(nPosition / self.containerView.frame.width) + 0.2, 1.0)
+                    
                     
                     if previous.bar.has {
                         self.navigationBar.moveViews(left: previous.leftBarView, center: previous.centerBarView, right: previous.rightBarView, direction: direction, percent: nPosition / self.containerView.frame.width)
                     } else {
                         self.navigationBar.setFrameOrigin(nPosition, self.navigationBar.frame.minY)
                     }
-                    return .deltaUpdated(available: nPosition)
+                    return .deltaUpdated(available: nPosition - keepLeft)
                     
                 case let .success(_, controller):
                     self.lock = false
@@ -1190,30 +1210,43 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                 case let .failed(_, previous):
                     //   CATransaction.begin()
                     let animationStyle = previous.animationStyle
-                    self.controller.view._change(pos: NSMakePoint(0, self.controller.frame.minY), animated: animated, duration: animationStyle.duration, timingFunction: animationStyle.function)
+                    let settings = self.controller.stake
+
+                    let keepLeft: CGFloat = self.frame.width == settings.keepLeft ? 0 : settings.keepLeft
+
                     
+                    self.controller.view._change(pos: NSMakePoint(keepLeft, self.controller.frame.minY), animated: animated, duration: animationStyle.duration, timingFunction: animationStyle.function)
                     
-                    previous.view._change(pos: NSMakePoint(-round(self.containerView.frame.width / 3), previous.view.frame.minY), animated: animated, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self, weak previous] completed in
-                        if completed {
+                    let previousStart = keepLeft > 0 ? 0 : -round(NSWidth(self.containerView.frame)/3.0)
+
+                    previous.view._change(pos: NSMakePoint(previousStart, previous.view.frame.minY), animated: animated, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self, weak previous] completed in
+                        if completed, keepLeft == 0 {
                             previous?.view.removeFromSuperview()
                             self?.controller.removeBackgroundCap()
                             previous?.removeBackgroundCap()
                         }
                     })
-                    self.shadowView.change(pos: NSMakePoint(-self.shadowView.frame.width, self.shadowView.frame.minY), animated: animated, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self] completed in
+                    self.shadowView.change(pos: NSMakePoint(-self.shadowView.frame.width + keepLeft, self.shadowView.frame.minY), animated: animated, duration: animationStyle.duration, timingFunction: animationStyle.function, completion: { [weak self] completed in
                         self?.shadowView.removeFromSuperview()
                     })
-                    self.shadowView.change(opacity: 1, animated: animated, duration: animationStyle.duration, timingFunction: animationStyle.function)
+                    
+                    self.navigationLeftBorder.change(pos: NSMakePoint(keepLeft - .borderSize, self.navigationLeftBorder.frame.minY), animated: animated, duration: animationStyle.duration, timingFunction: animationStyle.function)
+
+                    
+                    self.shadowView.change(opacity: 0, animated: animated, duration: animationStyle.duration, timingFunction: animationStyle.function)
                     if previous.bar.has {
                         self.navigationBar.moveViews(left: previous.leftBarView, center: previous.centerBarView, right: previous.rightBarView, direction: direction, percent: 0, animationStyle: animationStyle)
                     } else {
-                        self.navigationBar.change(pos: NSMakePoint(0, self.navigationBar.frame.minY), animated: animated, duration: animationStyle.duration, timingFunction: animationStyle.function)
+                        self.navigationBar.change(pos: NSMakePoint(keepLeft, self.navigationBar.frame.minY), animated: animated, duration: animationStyle.duration, timingFunction: animationStyle.function)
                     }
                     self.lock = false
                     //  CATransaction.commit()
                 }
             case let .right(state):
                 
+                self.controller.updateSwipingState(state, controller: self.controller, isPrevious: false)
+                self.previousController?.updateSwipingState(state, controller: self.controller, isPrevious: true)
+
                 switch state {
                 case .start:
                     guard let new = self.controller.rightSwipeController, !self.isLocked else {return .failed}

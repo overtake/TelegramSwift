@@ -588,6 +588,12 @@ public final class TextViewLayout : Equatable {
                     layoutSize.height += fontLineSpacing
                 }
                 
+                var brokenLineRange = CFRange(location: lastLineCharacterIndex, length: lineCharacterCount)
+                if brokenLineRange.location + brokenLineRange.length > attributedString.length {
+                    brokenLineRange.length = attributedString.length - brokenLineRange.location
+                }
+
+                
                 let coreTextLine: CTLine
                 
                 let originalLine = CTTypesetterCreateLineWithOffset(typesetter, CFRange(location: lastLineCharacterIndex, length: attributedString.length - lastLineCharacterIndex), 0.0)
@@ -613,32 +619,51 @@ public final class TextViewLayout : Equatable {
 
                     
                     coreTextLine = CTLineCreateTruncatedLine(originalLine, Double(lineConstrainedWidth), truncationType, truncationToken) ?? truncationToken
+                    
+                    let runs = (CTLineGetGlyphRuns(coreTextLine) as [AnyObject]) as! [CTRun]
+                    for run in runs {
+                        let runAttributes: NSDictionary = CTRunGetAttributes(run)
+                        if let _ = runAttributes["CTForegroundColorFromContext"] {
+                            brokenLineRange.length = CTRunGetStringRange(run).location - brokenLineRange.location
+                            break
+                        }
+                    }
+                    if brokenLineRange.location + brokenLineRange.length > attributedString.length {
+                        brokenLineRange.length = attributedString.length - brokenLineRange.location
+                    }
+
+                    
                     isPerfectSized = false
                 }
                 lineRange = CTLineGetStringRange(coreTextLine)
+                
+                
                 
                 let lineWidth = ceil(CGFloat(CTLineGetTypographicBounds(coreTextLine, nil, nil, nil) - CTLineGetTrailingWhitespaceWidth(coreTextLine)))
                 let lineFrame = CGRect(x: lineCutoutOffset, y: lineOriginY, width: lineWidth, height: lineHeight)
                 layoutSize.height += lineHeight + fontLineSpacing
                 layoutSize.width = max(layoutSize.width, lineWidth + lineAdditionalWidth)
                 
-                
-                attributedString.enumerateAttributes(in: NSMakeRange(lineRange.location, lineRange.length), options: []) { attributes, range, _ in
-                    if let _ = attributes[.strikethroughStyle] {
-                        let color = attributes[.foregroundColor] as? NSColor ?? presentation.colors.text
-                        let lowerX = floor(CTLineGetOffsetForStringIndex(coreTextLine, range.location, nil))
-                        let upperX = ceil(CTLineGetOffsetForStringIndex(coreTextLine, range.location + range.length, nil))
-                        let x = lowerX < upperX ? lowerX : upperX
-                        strikethroughs.append(TextViewStrikethrough(color: color, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
-                    } else if let embeddedItem = attributes[NSAttributedString.Key(rawValue: "Attribute__EmbeddedItem")] as? AnyHashable {
-                        var ascent: CGFloat = 0.0
-                        var descent: CGFloat = 0.0
-                        CTLineGetTypographicBounds(coreTextLine, &ascent, &descent, nil)
-                        
-                        addEmbeddedItem(item: embeddedItem, line: coreTextLine, ascent: ascent, descent: descent, startIndex: range.location, endIndex: range.location + range.length)
-                    }
+                if brokenLineRange.location >= 0 && brokenLineRange.length > 0 && brokenLineRange.location + brokenLineRange.length <= attributedString.length {
+                    attributedString.enumerateAttributes(in: NSMakeRange(brokenLineRange.location, brokenLineRange.length), options: []) { attributes, range, _ in
+                        if let _ = attributes[.strikethroughStyle] {
+                            let color = attributes[.foregroundColor] as? NSColor ?? presentation.colors.text
+                            let lowerX = floor(CTLineGetOffsetForStringIndex(coreTextLine, range.location, nil))
+                            let upperX = ceil(CTLineGetOffsetForStringIndex(coreTextLine, range.location + range.length, nil))
+                            let x = lowerX < upperX ? lowerX : upperX
+                            strikethroughs.append(TextViewStrikethrough(color: color, frame: CGRect(x: x, y: 0.0, width: abs(upperX - lowerX), height: fontLineHeight)))
+                        } else if let embeddedItem = attributes[NSAttributedString.Key(rawValue: "Attribute__EmbeddedItem")] as? AnyHashable {
+                            var ascent: CGFloat = 0.0
+                            var descent: CGFloat = 0.0
+                            CTLineGetTypographicBounds(coreTextLine, &ascent, &descent, nil)
+                            
+                            addEmbeddedItem(item: embeddedItem, line: coreTextLine, ascent: ascent, descent: descent, startIndex: range.location, endIndex: range.location + range.length)
+                        }
 
+                    }
+                    
                 }
+                
 
                 var isRTL = false
                 let glyphRuns = CTLineGetGlyphRuns(coreTextLine) as NSArray
@@ -810,17 +835,17 @@ public final class TextViewLayout : Equatable {
             self.blockImage.0 = NSMakePoint(0, 0)
             
             for i in 0 ..< lines.count {
-                var offset: NSPoint = NSPoint(x: 0, y: 2)
+                var offset: NSPoint = NSPoint(x: 0, y: 0)
                 if self.penFlush == 0.5 {
                     layoutSize.width += 20
                 } else {
                     layoutSize.width += 10
                     offset.x = 5
-                    if i == 0 {
-                        offset.y -= 3
-                    } else {
-                        offset.y = 1
-                    }
+//                    if i == 0 {
+//                        offset.y -= 3
+//                    } else {
+//                        offset.y = 1
+//                    }
                 }
                 let line = lines[i]
                 lines[i] = TextViewLine(line: line.line, frame: line.frame.offsetBy(dx: offset.x, dy: offset.y), range: line.range, penFlush: self.penFlush, strikethrough: line.strikethrough, embeddedItems: line.embeddedItems)

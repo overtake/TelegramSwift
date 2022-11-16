@@ -936,7 +936,7 @@ class ChatListRowItem: TableRowItem {
         if isClosedTopic {
             offset += 10
         }
-        return max(200, size.width) - margin * 4 - dateSize - (isOutMessage ? isRead ? 14 : 8 : 0) - offset
+        return max(200, size.width) - margin * 3 - dateSize - (isOutMessage ? isRead ? 14 : 8 : 0) - offset
     }
     
     var chatNameWidth:CGFloat {
@@ -945,17 +945,17 @@ class ChatListRowItem: TableRowItem {
             w += badgeNode.size.width + 5
         }
         if let _ = mentionsCount {
-            w += 30
+            w += 24
         }
         if let _ = reactionsCount {
-            w += 30
+            w += 24
         }
         if let additionalBadgeNode = additionalBadgeNode {
             w += additionalBadgeNode.size.width + 15
         }
         w += (leftInset - 20)
 
-        return max(200, size.width) - margin * 4 - w - (isOutMessage ? isRead ? 14 : 8 : 0)
+        return max(200, size.width) - margin * 3 - w - (isOutMessage ? isRead ? 14 : 8 : 0)
     }
     
     var messageWidth:CGFloat {
@@ -964,10 +964,10 @@ class ChatListRowItem: TableRowItem {
             w += badgeNode.size.width + 5
         }
         if let _ = mentionsCount {
-            w += 30
+            w += 24
         }
         if let _ = reactionsCount {
-            w += 30
+            w += 24
         }
         if let additionalBadgeNode = additionalBadgeNode {
             w += additionalBadgeNode.size.width + 15
@@ -977,7 +977,7 @@ class ChatListRowItem: TableRowItem {
         }
         w += (leftInset - 20)
         
-        return (max(200, size.width) - margin * 4) - w - (chatNameLayout != nil ? textLeftCutout : 0)
+        return (max(200, size.width) - margin * 3) - w - (chatNameLayout != nil ? textLeftCutout : 0)
     }
     
     var leftInset:CGFloat {

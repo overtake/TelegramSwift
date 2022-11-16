@@ -704,7 +704,7 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
                         let currentInChat = navigation.controller is ChatController
                         let controller = navigation.controller as? ChatController
                         
-                        if controller?.chatInteraction.mode.threadId == threadId {
+                        if controller?.chatLocation.peerId == threadId.peerId,  controller?.chatLocation.threadMsgId == threadId {
                             controller?.scrollup()
                         } else {
                             
