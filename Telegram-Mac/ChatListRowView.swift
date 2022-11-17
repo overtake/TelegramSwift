@@ -184,7 +184,7 @@ private final class TopicNameAndTextView : View {
         mainView.removeAllHandlers()
         mainView.set(handler: { _ in
             if let first = item.first {
-                _ = ForumUI.openTopic(first.id, peerId: item.peerId, context: context).start()
+                ForumUI.open(item.peerId, context: context, threadId: first.id)
             }
         }, for: .Click)
         
