@@ -150,6 +150,14 @@ class ChatListRowItem: TableRowItem {
     var entryId: UIChatListEntryId {
         return _stableId
     }
+    
+    var lastThreadId: Int64? {
+        if let item = forumTopicItems.first, item.isUnread {
+            return item.id
+        }
+        return nil
+    }
+    
     var isForum: Bool {
         return self.peer?.isForum ?? false
     }

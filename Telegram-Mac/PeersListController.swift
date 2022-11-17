@@ -1043,7 +1043,7 @@ enum PeerListMode : Equatable {
     case plain
     case folder(EngineChatList.Group)
     case filter(Int32)
-    case forum(PeerId)
+    case forum(PeerId, Bool)
     var isPlain:Bool {
         switch self {
         case .plain:
@@ -1074,7 +1074,7 @@ enum PeerListMode : Equatable {
             return .chatList(groupId: .root)
         case let .folder(group):
             return .chatList(groupId: group._asGroup())
-        case let .forum(peerId):
+        case let .forum(peerId, _):
             return .forum(peerId: peerId)
         case let .filter(filterId):
             return .chatList(groupId: .group(filterId))
@@ -1132,7 +1132,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         self.mode = mode
         self.searchOptions = searchOptions
         switch mode {
-        case let .forum(peerId):
+        case let .forum(peerId, _):
             self.topics = ForumChannelTopics(account: context.account, peerId: peerId)
         default:
             self.topics = nil
@@ -1211,12 +1211,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         let mode = self.mode
 
         
-        switch mode {
-        case .forum:
-            controllerAppear.set(.short)
-        default:
-            break
-        }
         
         genericView.showDownloads = { [weak self] in
             self?.showDownloads(animated: true)
@@ -1281,7 +1275,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }
         let forumPeer: Signal<PeerListState.ForumData?, NoError>
 
-        if case let .forum(peerId) = self.mode {
+        if case let .forum(peerId, isFull) = self.mode {
             
             let importState: Promise<PeerInvitationImportersState?> = Promise()
             
@@ -1416,10 +1410,17 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 } ?? .init(activities: [:])
             }
         
+        let isFull: Bool
+        switch mode {
+        case let .forum(_, value):
+            isFull = value
+        default:
+            isFull = true
+        }
         
-        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, appearMode.get(), controllerAppear.get(), appearanceSignal).start(next: { pref, layout, peer, forumPeer, inputActivities, appearMode, controllerAppear, _ in
+        actionsDisposable.add(combineLatest(queue: .mainQueue(), proxy, layoutSignal, peer, forumPeer, inputActivities, appearMode.get(), appearanceSignal).start(next: { pref, layout, peer, forumPeer, inputActivities, appearMode, _ in
             updateState { current in
-                let state: PeerListState = .init(proxySettings: pref.0, connectionStatus: pref.1, splitState: layout, searchState: current?.searchState ?? .None, peer: peer, forumPeer: forumPeer, mode: mode, activities: inputActivities, appear: layout == .minimisize ? .normal : appearMode, controllerAppear: controllerAppear)
+                let state: PeerListState = .init(proxySettings: pref.0, connectionStatus: pref.1, splitState: layout, searchState: current?.searchState ?? .None, peer: peer, forumPeer: forumPeer, mode: mode, activities: inputActivities, appear: layout == .minimisize ? .normal : appearMode, controllerAppear: isFull ? .normal : .short)
                 return state
             }
         }))
@@ -1516,7 +1517,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
         
         let arguments = Arguments(context: context, joinGroupCall: { info in
-            if case let .forum(peerId) = mode {
+            if case let .forum(peerId, _) = mode {
                 let join:(PeerId, Date?, Bool)->Void = { joinAs, _, _ in
                     _ = showModalProgress(signal: requestOrJoinGroupCall(context: context, peerId: peerId, joinAs: joinAs, initialCall: info.activeCall, initialInfo: info.data?.info, joinHash: nil), for: context.window).start(next: { result in
                         switch result {
@@ -1538,14 +1539,14 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         }, joinGroup: { peerId in
             joinChannel(context: context, peerId: peerId)
         }, openPendingRequests: { [weak self] in
-            if let importersContext = self?.tempImportersContext, case let .forum(peerId) = mode {
+            if let importersContext = self?.tempImportersContext, case let .forum(peerId, _) = mode {
                 let navigation = context.bindings.rootNavigation()
                 navigation.push(RequestJoinMemberListController(context: context, peerId: peerId, manager: importersContext, openInviteLinks: { [weak navigation] in
                     navigation?.push(InviteLinksController(context: context, peerId: peerId, manager: nil))
                 }))
             }
         }, dismissPendingRequests: { peerIds in
-            if case let .forum(peerId) = mode {
+            if case let .forum(peerId, _) = mode {
                 FastSettings.dismissPendingRequests(peerIds, for: peerId)
                 updateState { current in
                     var current = current
@@ -1566,7 +1567,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
         centerBarView.set(handler: { _ in
             switch mode {
-            case let .forum(peerId):
+            case let .forum(peerId, _):
                 ForumUI.openInfo(peerId, context: context)
             default:
                 break
@@ -1582,7 +1583,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         if previous?.forumPeer != state.forumPeer {
             if state.forumPeer == nil {
                 switch self.mode {
-                case let .forum(peerId):
+                case let .forum(peerId, _):
                     if state.splitState == .single {
                         let controller = ChatController(context: context, chatLocation: .peer(peerId))
                         self.navigationController?.push(controller)
@@ -1888,7 +1889,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             let initialTags: SearchTags
             let target: SearchController.Target
             switch self.mode {
-            case let .forum(peerId):
+            case let .forum(peerId, _):
                 initialTags = .init(messageTags: nil, peerTag: nil)
                 target = .forum(peerId)
             default:
@@ -2017,19 +2018,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         return .rejected
     }
     
-    func open(with entryId: UIChatListEntryId, messageId:MessageId? = nil, initialAction: ChatInitialAction? = nil, close:Bool = true, addition: Bool = false, forceAnimated: Bool = false) ->Void {
+    func open(with entryId: UIChatListEntryId, messageId:MessageId? = nil, initialAction: ChatInitialAction? = nil, close:Bool = true, addition: Bool = false, forceAnimated: Bool = false, threadId: Int64? = nil) ->Void {
         
         let navigation = context.bindings.rootNavigation()
 //
-        if self.navigationController?.controller !== self {
-            switch entryId {
-            case .chatId:
-                self.navigationController?.back()
-            default:
-                break
-            }
-        }
-        
+
         var addition = addition
         var close = close
         if let searchTags = self.searchController?.searchTags {
@@ -2045,6 +2038,15 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         case let .chatId(type, peerId, _):
             switch type {
             case let .chatList(peerId):
+                
+                if self.navigationController?.controller !== self {
+                    switch entryId {
+                    case .chatId:
+                        self.navigationController?.back()
+                    default:
+                        break
+                    }
+                }
                 if let modalAction = navigation.modalAction as? FWDNavigationAction, peerId == context.peerId {
                     _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, context: context, peerId: context.peerId, replyId: nil).start()
                     _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
@@ -2065,13 +2067,14 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                         navigation.push(chat, context.layout == .single || forceAnimated, style: animated ? .push : ViewControllerStyle.none)
                     }
                 }
+                
             case let .forum(threadId):
                 _ = ForumUI.openTopic(threadId, peerId: peerId, context: context, messageId: messageId).start()
             }
         case let .groupId(groupId):
             self.navigationController?.push(ChatListController(context, modal: false, mode: .folder(groupId)))
         case let .forum(peerId):
-            ForumUI.open(peerId, context: context)
+            ForumUI.open(peerId, context: context, threadId: threadId)
         case .reveal:
             break
         case .empty:
@@ -2180,10 +2183,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     
     override var stake: StakeSettings {
         switch mode {
-        case .forum:
-          //  if context.layout != .minimisize {
+        case let .forum(_, isFull):
+            if !isFull {
                 return .init(keepLeft: 70, straightMove: true, keepIn: false)
-          //  }
+            }
         case .plain:
             return .init(keepLeft: 0, straightMove: false, keepIn: true)
         default:

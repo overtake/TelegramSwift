@@ -187,7 +187,7 @@ class ChatInputActionsView: View {
                 let chatInteraction = strongSelf.chatInteraction
                 let navigation = chatInteraction.context.bindings.rootNavigation()
                 if let sidebarEnabled = chatInteraction.presentation.sidebarEnabled, sidebarEnabled {
-                    if navigation.frame.width > 730 && chatInteraction.context.layout == .dual {
+                    if navigation.frame.width > 730 {
                         chatInteraction.toggleSidebar()
                     }
                 }

@@ -619,7 +619,7 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
     
     private func showSearchController(animated: Bool) {
         if searchController == nil {
-            let rect = genericView.bounds
+            let rect = tableView.frame
             let searchController = SearchSettingsController(context: context, searchQuery: self.searchState.get(), archivedStickerPacks: .single(nil), privacySettings: self.settings.get() |> map { $0.0 })
             searchController.bar = .init(height: 0)
             searchController._frameRect = rect
@@ -628,16 +628,13 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
             searchController.navigationController = self.navigationController
             searchController.viewWillAppear(true)
             if animated {
-                searchController.view.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.25, completion:{ [weak self] complete in
-                    if complete {
-                        self?.searchController?.viewDidAppear(animated)
-                    }
-                })
+                searchController.view.layer?.animateAlpha(from: 0.0, to: 1.0, duration: 0.25)
             } else {
                 searchController.viewDidAppear(animated)
             }
             
             self.addSubview(searchController.view)
+            searchController.viewDidAppear(animated)
         }
     }
     
@@ -661,14 +658,11 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
         guard context.layout != .minimisize else {
             return .invoked
         }
-        let searchView = (self.centerBarView as? AccountSearchBarView)?.searchView
-        if let searchView = searchView {
-            if searchView.state == .None {
-                return searchView.changeResponder() ? .invoked : .rejected
-            } else if searchView.state == .Focus && searchView.query.length > 0 {
-                searchView.change(state: .None,  true)
-                return .invoked
-            }
+        if searchView.state == .None {
+            return searchView.changeResponder() ? .invoked : .rejected
+        } else if searchView.state == .Focus && searchView.query.length > 0 {
+            searchView.change(state: .None,  true)
+            return .invoked
         }
         return .rejected
     }

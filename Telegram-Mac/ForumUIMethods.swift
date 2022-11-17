@@ -55,15 +55,32 @@ struct ForumUI {
     }
     
     
-    static func open(_ peerId: PeerId, context: AccountContext) {
-        let navigation = context.bindings.mainController().effectiveNavigation
+    static func open(_ peerId: PeerId, context: AccountContext, threadId: Int64? = nil) {
 
-        if let controller = navigation.controller as? ChatListController {
-            if controller.mode == .forum(peerId) {
-                return
-            }
+        let signal: Signal<Bool, NoError>
+        
+        if let threadId = threadId {
+            signal = openTopic(threadId, peerId: peerId, context: context)
+        } else {
+            signal = .single(true)
         }
-        navigation.push(ChatListController(context, modal: false, mode: .forum(peerId)))
+        
+        _ = signal.start(next: { value in
+            if value {
+                let navigation = context.bindings.mainController().effectiveNavigation
+                var isFull: Bool = false
+                if let controller = navigation.controller as? ChatListController {
+                    if case .forum(peerId, _) = controller.mode {
+                        return
+                    }
+                    if case .folder = controller.mode {
+                        isFull = true
+                    }
+                }
+                navigation.push(ChatListController(context, modal: false, mode: .forum(peerId, isFull)))
+            }
+        })
+       
     }
     static func openTopic(_ threadId: Int64, peerId: PeerId, context: AccountContext, messageId: MessageId? = nil, animated: Bool = false, addition: Bool = false, initialAction: ChatInitialAction? = nil) -> Signal<Bool, NoError> {
         

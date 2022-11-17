@@ -466,17 +466,20 @@ class ChatControllerView : View, ChatInputDelegate {
             scroller.isHidden = false
         }
         
-        scroller.change(opacity: isHidden ? 0 : 1, animated: true) { [weak scroller] completed in
-            if completed {
-                scroller?.isHidden = isHidden
-            }
-        }
         let transition: ContainedViewLayoutTransition
-        if prev == nil || tableView.inLiveResize {
+        if prev == nil || (NSEvent.pressedMouseButtons & (1 << 0)) != 0 {
             transition = .immediate
         } else {
             transition = .animated(duration: 0.2, curve: .easeOut)
         }
+        
+        scroller.change(opacity: isHidden ? 0 : 1, animated: transition.isAnimated) { [weak scroller] completed in
+            if completed {
+                scroller?.isHidden = isHidden
+            }
+        }
+        
+
         transition.updateFrame(view: scroller, frame: scrollerRect)
         
         if let mentions = mentions {
@@ -519,7 +522,8 @@ class ChatControllerView : View, ChatInputDelegate {
     }
     
     func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
-            
+        
+        
         if let view = inputContextHelper.accessoryView {
             transition.updateFrame(view: view, frame: NSMakeRect(0, frame.height - inputView.frame.height - view.frame.height, frame.width, view.frame.height))
         }

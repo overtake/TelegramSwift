@@ -1153,7 +1153,9 @@ class SearchController: GenericViewController<TableView>,TableViewDelegate {
         genericView.setScrollHandler { position in
             switch position.direction {
             case .bottom:
-                searchMessagesState.set(searchMessagesStateValue.swap(nil))
+                if !target.isForum {
+                    searchMessagesState.set(searchMessagesStateValue.swap(nil))
+                }
             default:
                 break
             }

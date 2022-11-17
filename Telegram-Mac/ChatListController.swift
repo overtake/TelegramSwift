@@ -402,14 +402,14 @@ class ChatListController : PeersListController {
             return filterContextMenuItems(filter, context: context)
         }, createTopic: {
             switch mode {
-            case let .forum(peerId):
+            case let .forum(peerId, _):
                 ForumUI.createTopic(peerId, context: context)
             default:
                 break
             }
         }, switchOffForum: {
             switch mode {
-            case let .forum(peerId):
+            case let .forum(peerId, _):
                 _ = context.engine.peers.setChannelForumMode(id: peerId, isForum: false).start()
             default:
                 break
@@ -786,7 +786,7 @@ class ChatListController : PeersListController {
     private func resortPinned(_ from: Int, _ to: Int) {
         let context = self.context
         switch mode {
-        case let .forum(peerId):
+        case let .forum(peerId, _):
             var items:[Int64] = []
 
             var offset: Int = 0
