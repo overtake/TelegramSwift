@@ -182,7 +182,12 @@ class ChatListRowItem: TableRowItem {
 
     private var date:NSAttributedString?
 
-    private var displayLayout:(TextNodeLayout, TextNode)?
+    private var displayLayout:TextViewLayout?
+    private var displaySelectedLayout:TextViewLayout?
+    
+    private var dateLayout:TextViewLayout?
+    private var dateSelectedLayout:TextViewLayout?
+
 
     private var messageLayout:TextViewLayout?
     private var messageSelectedLayout:TextViewLayout?
@@ -195,17 +200,7 @@ class ChatListRowItem: TableRowItem {
     private var forumTopicNameLayout:TextViewLayout?
     private var forumTopicNameSelectedLayout:TextViewLayout?
 
-    
-    private var displaySelectedLayout:(TextNodeLayout, TextNode)?
-    private var dateLayout:(TextNodeLayout, TextNode)?
-    private var dateSelectedLayout:(TextNodeLayout, TextNode)?
-
-    private var displayNode:TextNode = TextNode()
-    private var displaySelectedNode:TextNode = TextNode()
-
-    
-    private let titleText:NSAttributedString?
-        
+            
     private(set) var peerNotificationSettings:PeerNotificationSettings?
     private(set) var readState:EnginePeerReadCounters?
     
@@ -214,8 +209,6 @@ class ChatListRowItem: TableRowItem {
     private var badgeNode:BadgeNode? = nil
     private var badgeSelectedNode:BadgeNode? = nil
     
-    private var additionalBadgeNode:BadgeNode? = nil
-    private var additionalBadgeSelectedNode:BadgeNode? = nil
 
 
     private let _animateArchive:Atomic<Bool> = Atomic(value: false)
@@ -371,6 +364,7 @@ class ChatListRowItem: TableRowItem {
     }
     
     let hasDraft:Bool
+    let hideContent: Bool
     private let hasFailed: Bool
     let pinnedType:ChatListPinnedType
     let activities: [PeerListState.InputActivities.Activity]
@@ -397,7 +391,7 @@ class ChatListRowItem: TableRowItem {
 
 
     
-    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, pinnedType: ChatListPinnedType, groupId: EngineChatList.Group, groupItems: [EngineChatList.GroupItem.Item], messages: [Message], unreadCount: Int, activities: [PeerListState.InputActivities.Activity] = [], animateGroup: Bool = false, archiveStatus: HiddenArchiveStatus = .normal, hasFailed: Bool = false, filter: ChatListFilter = .allChats, appearMode: PeerListState.AppearMode = .normal) {
+    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, pinnedType: ChatListPinnedType, groupId: EngineChatList.Group, groupItems: [EngineChatList.GroupItem.Item], messages: [Message], unreadCount: Int, activities: [PeerListState.InputActivities.Activity] = [], animateGroup: Bool = false, archiveStatus: HiddenArchiveStatus = .normal, hasFailed: Bool = false, filter: ChatListFilter = .allChats, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil) {
         self.groupId = groupId
         self.peer = nil
         self.mode = .chat
@@ -416,11 +410,13 @@ class ChatListRowItem: TableRowItem {
         self.appearMode = appearMode
         self.isMuted = false
         self.isOnline = nil
+        self.getHideProgress = getHideProgress
         self.archiveStatus = archiveStatus
         self.groupItems = groupItems
         self.isVerified = false
         self.isPremium = false
         self.isScam = false
+        self.hideContent = hideContent
         self.isFake = false
         self.filter = filter
         self.hasFailed = hasFailed
@@ -429,9 +425,13 @@ class ChatListRowItem: TableRowItem {
         let _ = titleText.append(string: strings().chatListArchivedChats, color: theme.chatList.textColor, font: .medium(.title))
         titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
         
+        self.displayLayout = TextViewLayout(titleText, maximumNumberOfLines: 1)
         
-        self.titleText = titleText
-        
+        let selected = titleText.mutableCopy() as! NSMutableAttributedString
+        if let color = selected.attribute(.selectedColor, at: 0, effectiveRange: nil) {
+            selected.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selected.range)
+            self.displaySelectedLayout = TextViewLayout(selected, mayItems: false)
+        }
         
         hasDraft = false
         
@@ -446,8 +446,16 @@ class ChatListRowItem: TableRowItem {
             date.setSelected(color: theme.colors.underSelectedColor,range: range)
             self.date = date.copy() as? NSAttributedString
             
-            dateLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, false, .left)
-            dateSelectedLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, true, .left)
+            self.dateLayout = TextViewLayout(date, mayItems: false)
+            self.dateLayout?.measure(width: .greatestFiniteMagnitude)
+            
+            let selectedDate = date.mutableCopy() as! NSMutableAttributedString
+            if let color = selectedDate.attribute(.selectedColor, at: 0, effectiveRange: nil) {
+                selectedDate.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedDate.range)
+                self.dateSelectedLayout = TextViewLayout(selectedDate, mayItems: false)
+                self.dateSelectedLayout?.measure(width: .greatestFiniteMagnitude)
+            }
+            
         }
         
         
@@ -543,10 +551,12 @@ class ChatListRowItem: TableRowItem {
     let mode: Mode
     let titleMode: TitleMode
     let appearMode: PeerListState.AppearMode
-  
+    let getHideProgress:(()->CGFloat?)?
     
     
-    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal) {
+    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil) {
+        
+        
         
         
         var draft = draft
@@ -590,6 +600,7 @@ class ChatListRowItem: TableRowItem {
         self.activities = activities
         self.pinnedType = pinnedType
         self.archiveStatus = nil
+        self.getHideProgress = getHideProgress
         self.forumTopicData = forumTopicData
         self.forumTopicItems = forumTopicItems
         self.hasDraft = draft != nil
@@ -598,6 +609,7 @@ class ChatListRowItem: TableRowItem {
         self.groupId = .root
         self.hasFailed = hasFailed
         self.filter = filter
+        self.hideContent = hideContent
         self.appearMode = appearMode
         self.associatedGroupId = associatedGroupId
         self.highlightText = highlightText
@@ -620,16 +632,25 @@ class ChatListRowItem: TableRowItem {
         
         
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
+        let isTopic: Bool
         switch mode {
         case .chat:
             let _ = titleText.append(string: peer?.id == context.peerId ? strings().peerSavedMessages : peer?.displayTitle, color: renderedPeer.peers[renderedPeer.peerId]?._asPeer() is TelegramSecretChat ? theme.chatList.secretChatTextColor : theme.chatList.textColor, font: .medium(.title))
-
+            isTopic = false
         case let .topic(_, data):
             let _ = titleText.append(string: data.info.title, color: theme.chatList.textColor, font: .medium(.title))
+            isTopic = true
         }
         titleText.setSelected(color: theme.colors.underSelectedColor ,range: titleText.range)
-        self.titleText = titleText
         
+        self.displayLayout = TextViewLayout(titleText, maximumNumberOfLines: isTopic ? 2 : 1)
+        
+        let selected = titleText.mutableCopy() as! NSMutableAttributedString
+        if let color = selected.attribute(.selectedColor, at: 0, effectiveRange: nil) {
+            selected.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selected.range)
+            self.displaySelectedLayout = TextViewLayout(selected, maximumNumberOfLines: isTopic ? 2 : 1)
+        }
+                
         if !forumTopicItems.isEmpty, let message = messages.first {
             self.topicsLayout = .init(context, message: message, items: forumTopicItems, draft: draft)
         }
@@ -646,9 +667,18 @@ class ChatListRowItem: TableRowItem {
             }
             sponsored.setSelected(color: theme.colors.underSelectedColor, range: range)
             self.date = sponsored
-            dateLayout = TextNode.layoutText(maybeNode: nil,  sponsored, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, false, .left)
-            dateSelectedLayout = TextNode.layoutText(maybeNode: nil,  sponsored, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, true, .left)
-        } else if let message = messages.first, forumTopicItems.isEmpty {
+            
+            self.dateLayout = TextViewLayout(sponsored, mayItems: false)
+            self.dateLayout?.measure(width: .greatestFiniteMagnitude)
+            
+            let selectedDate = sponsored.mutableCopy() as! NSMutableAttributedString
+            if let color = selectedDate.attribute(.selectedColor, at: 0, effectiveRange: nil) {
+                selectedDate.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedDate.range)
+                self.dateSelectedLayout = TextViewLayout(selectedDate, mayItems: false)
+                self.dateSelectedLayout?.measure(width: .greatestFiniteMagnitude)
+            }
+            
+        } else if let message = messages.first {
             let date:NSMutableAttributedString = NSMutableAttributedString()
             var time:TimeInterval = TimeInterval(message.timestamp)
             time -= context.timeDifference
@@ -656,80 +686,87 @@ class ChatListRowItem: TableRowItem {
             date.setSelected(color: theme.colors.underSelectedColor, range: range)
             self.date = date.copy() as? NSAttributedString
             
-            dateLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, false, .left)
-            dateSelectedLayout = TextNode.layoutText(maybeNode: nil,  date, nil, 1, .end, NSMakeSize( .greatestFiniteMagnitude, 20), nil, true, .left)
+            self.dateLayout = TextViewLayout(date, mayItems: false)
+            self.dateLayout?.measure(width: .greatestFiniteMagnitude)
             
-            
-            var author: Peer?
-            if message.isImported, let info = message.forwardInfo {
-                if let peer = info.author {
-                    author = peer
-                } else if let signature = info.authorSignature {
-                    author = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [])
-                }
-            } else {
-                author = message.author
+            let selectedDate = date.mutableCopy() as! NSMutableAttributedString
+            if let color = selectedDate.attribute(.selectedColor, at: 0, effectiveRange: nil) {
+                selectedDate.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedDate.range)
+                self.dateSelectedLayout = TextViewLayout(selectedDate, mayItems: false)
+                self.dateSelectedLayout?.measure(width: .greatestFiniteMagnitude)
             }
-            
-            if let author = author, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, draft == nil {
-                if !(message.effectiveMedia is TelegramMediaAction) {
-                    var peerText: String = (author.id == context.account.peerId ? "\(strings().chatListYou)" : author.displayTitle)
-                    
-                    let topicNameAttributed = NSMutableAttributedString()
-
-                    if let forumTopicData = forumTopicData, peer.isForum {
-                        _ = topicNameAttributed.append(string: forumTopicData.title, color: theme.chatList.peerTextColor, font: .normal(.text))
-                    } else if peer.isForum, titleMode == .forumInfo, case let .topic(_, data) = mode {
-                        peerText = author.compactDisplayTitle
-                        _ = topicNameAttributed.append(string: data.info.title, color: theme.chatList.peerTextColor, font: .normal(.text))
+                      
+            if forumTopicItems.isEmpty {
+                var author: Peer?
+                if message.isImported, let info = message.forwardInfo {
+                    if let peer = info.author {
+                        author = peer
+                    } else if let signature = info.authorSignature {
+                        author = TelegramUser(id: PeerId(namespace: Namespaces.Peer.CloudUser, id: PeerId.Id._internalFromInt64Value(0)), accessHash: nil, firstName: signature, lastName: nil, username: nil, phone: nil, photo: [], botInfo: nil, restrictionInfo: nil, flags: [], emojiStatus: nil, usernames: [])
                     }
-
-                    if !topicNameAttributed.string.isEmpty {
-                        self.forumTopicNameLayout = .init(topicNameAttributed, maximumNumberOfLines: 1)
+                } else {
+                    author = message.author
+                }
+                if let author = author, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, draft == nil {
+                    if !(message.effectiveMedia is TelegramMediaAction) {
+                        var peerText: String = (author.id == context.account.peerId ? "\(strings().chatListYou)" : author.displayTitle)
                         
-                        let selectedText:NSMutableAttributedString = topicNameAttributed.mutableCopy() as! NSMutableAttributedString
-                        selectedText.addAttribute(.foregroundColor, value: theme.colors.underSelectedColor, range: selectedText.range)
+                        let topicNameAttributed = NSMutableAttributedString()
 
-                        self.forumTopicNameSelectedLayout = .init(selectedText, maximumNumberOfLines: 1)
-                    }
-                    
-                    let attr = NSMutableAttributedString()
-                    _ = attr.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
-                    attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
-                    
-                    if !attr.string.isEmpty {
-                        self.chatNameLayout = .init(attr, maximumNumberOfLines: 1)
-                        
-                        let selectedText:NSMutableAttributedString = attr.mutableCopy() as! NSMutableAttributedString
-                        if let color = selectedText.attribute(.selectedColor, at: 0, effectiveRange: nil) {
-                            selectedText.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedText.range)
+                        if let forumTopicData = forumTopicData, peer.isForum {
+                            _ = topicNameAttributed.append(string: forumTopicData.title, color: theme.chatList.peerTextColor, font: .normal(.text))
+                        } else if peer.isForum, titleMode == .forumInfo, case let .topic(_, data) = mode {
+                            peerText = author.compactDisplayTitle
+                            _ = topicNameAttributed.append(string: data.info.title, color: theme.chatList.peerTextColor, font: .normal(.text))
                         }
-                        self.chatNameSelectedLayout = .init(selectedText, maximumNumberOfLines: 1)
+
+                        if !topicNameAttributed.string.isEmpty {
+                            self.forumTopicNameLayout = .init(topicNameAttributed, maximumNumberOfLines: 1)
+                            
+                            let selectedText:NSMutableAttributedString = topicNameAttributed.mutableCopy() as! NSMutableAttributedString
+                            selectedText.addAttribute(.foregroundColor, value: theme.colors.underSelectedColor, range: selectedText.range)
+
+                            self.forumTopicNameSelectedLayout = .init(selectedText, maximumNumberOfLines: 1)
+                        }
+                        
+                        let attr = NSMutableAttributedString()
+                        _ = attr.append(string: peerText, color: theme.chatList.peerTextColor, font: .normal(.text))
+                        attr.setSelected(color: theme.colors.underSelectedColor, range: attr.range)
+                        
+                        if !attr.string.isEmpty {
+                            self.chatNameLayout = .init(attr, maximumNumberOfLines: 1)
+                            
+                            let selectedText:NSMutableAttributedString = attr.mutableCopy() as! NSMutableAttributedString
+                            if let color = selectedText.attribute(.selectedColor, at: 0, effectiveRange: nil) {
+                                selectedText.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: selectedText.range)
+                            }
+                            self.chatNameSelectedLayout = .init(selectedText, maximumNumberOfLines: 1)
+                        }
                     }
                 }
-            }
-            
-            let contentImageFillSize = CGSize(width: 8.0, height: contentImageSize.height)
-            _ = contentImageFillSize
-            let isSecret: Bool
-            isSecret = renderedPeer.peers[renderedPeer.peerId]?._asPeer() is TelegramSecretChat
-            
-            if draft == nil, !isSecret, forumTopicItems.isEmpty {
-                for message in messages {
-                    inner: for media in message.media {
-                        if !message.containsSecretMedia {
-                            if let image = media as? TelegramMediaImage {
-                                if let _ = largestImageRepresentation(image.representations) {
-                                    let fitSize = contentImageSize
-                                    contentImageSpecs.append((message, image, fitSize))
+                
+                let contentImageFillSize = CGSize(width: 8.0, height: contentImageSize.height)
+                _ = contentImageFillSize
+                let isSecret: Bool
+                isSecret = renderedPeer.peers[renderedPeer.peerId]?._asPeer() is TelegramSecretChat
+                
+                if draft == nil, !isSecret, forumTopicItems.isEmpty {
+                    for message in messages {
+                        inner: for media in message.media {
+                            if !message.containsSecretMedia {
+                                if let image = media as? TelegramMediaImage {
+                                    if let _ = largestImageRepresentation(image.representations) {
+                                        let fitSize = contentImageSize
+                                        contentImageSpecs.append((message, image, fitSize))
+                                    }
+                                    break inner
+                                } else if let file = media as? TelegramMediaFile {
+                                    if file.isVideo, !file.isInstantVideo, let _ = file.dimensions, !file.probablySticker {
+                                        let fitSize = contentImageSize
+                                        contentImageSpecs.append((message, file, fitSize))
+                                    }
+                                    break inner
                                 }
-                                break inner
-                            } else if let file = media as? TelegramMediaFile {
-                                if file.isVideo, !file.isInstantVideo, let _ = file.dimensions, !file.probablySticker {
-                                    let fitSize = contentImageSize
-                                    contentImageSpecs.append((message, file, fitSize))
-                                }
-                                break inner
                             }
                         }
                     }
@@ -926,7 +963,7 @@ class ChatListRowItem: TableRowItem {
     var titleWidth:CGFloat {
         var dateSize:CGFloat = 0
         if let dateLayout = dateLayout {
-            dateSize = dateLayout.0.size.width
+            dateSize = dateLayout.layoutSize.width
         }
         var offset: CGFloat = 0
         if let peer = peer, peer.id != context.peerId, let controlSize = PremiumStatusControl.controlSize(peer, false) {
@@ -961,9 +998,6 @@ class ChatListRowItem: TableRowItem {
         if let _ = reactionsCount {
             w += 24
         }
-        if let additionalBadgeNode = additionalBadgeNode {
-            w += additionalBadgeNode.size.width + 15
-        }
         w += (leftInset - 20)
 
         return max(200, size.width) - margin * 3 - w - (isOutMessage ? isRead ? 20 : 12 : 0)
@@ -979,9 +1013,6 @@ class ChatListRowItem: TableRowItem {
         }
         if let _ = reactionsCount {
             w += 24
-        }
-        if let additionalBadgeNode = additionalBadgeNode {
-            w += additionalBadgeNode.size.width + 15
         }
         if isPinned && badgeNode == nil {
             w += 20
@@ -1008,17 +1039,17 @@ class ChatListRowItem: TableRowItem {
         }
     }
     
+    var shouldHideContent: Bool {
+        return hideContent || context.layout == .minimisize
+    }
+    
     override func makeSize(_ width: CGFloat, oldWidth:CGFloat) -> Bool {
         let result = super.makeSize(width, oldWidth: oldWidth)
         
 
-        if displayLayout == nil || !displayLayout!.0.isPerfectSized || self.oldWidth > width {
-            displayLayout = TextNode.layoutText(maybeNode: displayNode,  titleText, nil, isTopic ? 2 : 1, .end, NSMakeSize(titleWidth, size.height), nil, false, .left)
-        }
-        
-        if displaySelectedLayout == nil || !displaySelectedLayout!.0.isPerfectSized || self.oldWidth > width {
-            displaySelectedLayout = TextNode.layoutText(maybeNode: displaySelectedNode,  titleText, nil, isTopic ? 2 : 1, .end, NSMakeSize(titleWidth, size.height), nil, true, .left)
-        }
+        displayLayout?.measure(width: titleWidth)
+        displaySelectedLayout?.measure(width: titleWidth)
+
         
         if let forumTopicNameLayout = forumTopicNameLayout, let chatNameLayout = self.chatNameLayout {
             var width = chatNameWidth / 2 - 20
@@ -1578,7 +1609,7 @@ class ChatListRowItem: TableRowItem {
         }
     }
     
-    var ctxDisplayLayout:(TextNodeLayout, TextNode)? {
+    var ctxDisplayLayout:TextViewLayout? {
         if isActiveSelected {
             return displaySelectedLayout
         }
@@ -1614,7 +1645,10 @@ class ChatListRowItem: TableRowItem {
         return nil
     }
     
-    var ctxDateLayout:(TextNodeLayout, TextNode)? {
+    var ctxDateLayout:TextViewLayout? {
+        if hasDraft {
+            return nil
+        }
         if isActiveSelected {
             return dateSelectedLayout
         }
@@ -1635,13 +1669,6 @@ class ChatListRowItem: TableRowItem {
 //        return badge
 //    }
     
-    var ctxAdditionalBadgeNode:BadgeNode? {
-        if isActiveSelected {
-            return additionalBadgeSelectedNode
-        }
-        return additionalBadgeNode
-    }
-    
     
     override var instantlyResize: Bool {
         return true
@@ -1655,7 +1682,7 @@ class ChatListRowItem: TableRowItem {
     }
   
     override var height: CGFloat {
-        if let archiveStatus = archiveStatus, context.layout != .minimisize {
+        if let archiveStatus = archiveStatus, !shouldHideContent {
             switch archiveStatus {
             case .collapsed:
                 return 30
@@ -1663,7 +1690,7 @@ class ChatListRowItem: TableRowItem {
                 return 70
             }
         }
-        if context.layout == .minimisize {
+        if shouldHideContent {
             return 70
         }
         
@@ -1671,7 +1698,7 @@ class ChatListRowItem: TableRowItem {
         case .chat:
             return 70
         case .topic:
-            return 53 + (displayLayout?.0.size.height ?? 17)
+            return 53 + (displayLayout?.layoutSize.height ?? 17)
         }
     }
     

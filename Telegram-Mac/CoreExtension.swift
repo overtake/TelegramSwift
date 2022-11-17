@@ -730,13 +730,7 @@ public extension Message {
             return true
         }
         
-        if id.peerId == account.peerId {
-            if let _ = forwardInfo {
-                return true
-            }
-            return false
-        }
-        return flags.contains(.Incoming)
+        return effectivelyIncoming(account.peerId)
     }
     
     func chatPeer(_ accountPeerId: PeerId) -> Peer? {

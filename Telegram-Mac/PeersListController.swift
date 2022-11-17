@@ -2039,14 +2039,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             switch type {
             case let .chatList(peerId):
                 
-                if self.navigationController?.controller !== self {
-                    switch entryId {
-                    case .chatId:
-                        self.navigationController?.back()
-                    default:
-                        break
-                    }
-                }
                 if let modalAction = navigation.modalAction as? FWDNavigationAction, peerId == context.peerId {
                     _ = Sender.forwardMessages(messageIds: modalAction.messages.map{$0.id}, context: context, peerId: context.peerId, replyId: nil).start()
                     _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
@@ -2065,6 +2057,15 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                         }
                         let animated = context.layout == .single || forceAnimated
                         navigation.push(chat, context.layout == .single || forceAnimated, style: animated ? .push : ViewControllerStyle.none)
+                    }
+                }
+                
+                if self.navigationController?.controller !== self {
+                    switch entryId {
+                    case .chatId:
+                        self.navigationController?.back()
+                    default:
+                        break
                     }
                 }
                 
@@ -2162,15 +2163,28 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         
     }
     
-    override func setToNextController(_ controller: ViewController, animated: Bool) {
-        if controller.stake.isCustom {
-            appearMode.set(.short)
-        } else {
-            appearMode.set(.normal)
+    override func setToNextController(_ controller: ViewController, style: ViewControllerStyle) {
+        switch style {
+        case .push:
+            swipeState = nil
+            if controller.stake.isCustom {
+                appearMode.set(.short)
+            } else {
+                appearMode.set(.normal)
+            }
+        default:
+            break
         }
+        
     }
-    override func setToPreviousController(_ controller: ViewController, animated: Bool) {
-        appearMode.set(.normal)
+    override func setToPreviousController(_ controller: ViewController, style: ViewControllerStyle) {
+        switch style {
+        case .pop:
+            swipeState = nil
+            appearMode.set(.normal)
+        default:
+            break
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -2195,10 +2209,39 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         return super.stake
     }
     
+    private(set) var swipeState: SwipeState?
+    
+    func getSwipeProgress() -> CGFloat? {
+        if let swipeState = swipeState {
+            switch swipeState {
+            case .swiping, .success:
+                return swipeState.delta / (frame.width - 70)
+            default:
+                return nil
+            }
+        }
+        return nil
+    }
+    
     override func updateSwipingState(_ state: SwipeState, controller: ViewController, isPrevious: Bool) -> Void {
         if isPrevious {
             self.genericView.updateSwipingState(state, controller: controller)
+            self.swipeState = state
         }
+        genericView.tableView.enumerateViews(with: { view in
+            if let view = view as? ChatListRowView {
+                let animated: Bool
+                switch swipeState {
+                case .swiping, .success:
+                    animated = false
+                default:
+                    animated = true
+                }
+                view.updateHideProgress(animated: animated)
+            }
+            return true
+        })
+        
     }
     
 }

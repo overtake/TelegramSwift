@@ -397,6 +397,13 @@ public final class TextViewLayout : Equatable {
         self.layoutSize = .zero
     }
     
+    public var numberOfLines: Int {
+        return lines.count
+    }
+    public var firstLineWidth: CGFloat {
+        return lines[0].frame.width
+    }
+    
     func calculateLayout(isBigEmoji: Bool = false, lineSpacing: CGFloat? = nil) -> Void {
         self.isBigEmoji = isBigEmoji
         isPerfectSized = true
@@ -838,6 +845,7 @@ public final class TextViewLayout : Equatable {
                 var offset: NSPoint = NSPoint(x: 0, y: 0)
                 if self.penFlush == 0.5 {
                     layoutSize.width += 20
+                    offset.y = 2
                 } else {
                     layoutSize.width += 10
                     offset.x = 5

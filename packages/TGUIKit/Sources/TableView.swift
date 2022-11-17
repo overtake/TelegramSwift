@@ -2730,7 +2730,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.updatedItems?(self.list)
         
         self.reflectScrolledClipView(self.clipView)
-        self.flashScrollers()
         self.tile()
         
         if oldEmpty != isEmpty || first {
