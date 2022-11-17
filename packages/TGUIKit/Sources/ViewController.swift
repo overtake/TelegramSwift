@@ -793,10 +793,10 @@ open class ViewController : NSObject {
     open func viewDidChangedNavigationLayout(_ state: SplitViewState) -> Void {
         
     }
-    open func setToNextController(_ controller: ViewController, animated: Bool) {
+    open func setToNextController(_ controller: ViewController, style: ViewControllerStyle) {
         
     }
-    open func setToPreviousController(_ controller: ViewController, animated: Bool) {
+    open func setToPreviousController(_ controller: ViewController, style: ViewControllerStyle) {
         
     }
     open var stake: StakeSettings {

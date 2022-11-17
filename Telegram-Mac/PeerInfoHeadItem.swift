@@ -1033,6 +1033,9 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                     self.photoVideoView = nil
                     
                     self.photoVideoView = MediaPlayerView(backgroundThread: true)
+                    if #available(macOS 10.15, *) {
+                        self.photoView.layer?.cornerCurve = .circular
+                    } 
                     if let photoEditableView = self.photoEditableView {
                         self.addSubview(self.photoVideoView!, positioned: .below, relativeTo: photoEditableView)
                     } else {

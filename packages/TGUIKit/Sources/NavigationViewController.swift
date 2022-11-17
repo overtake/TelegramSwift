@@ -718,8 +718,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
         var sto: CGFloat = 0
         
         
-        previous.setToNextController(controller, animated: style != .none)
-        controller.setToPreviousController(controller, animated: style != .none)
+        previous.setToNextController(controller, style: style)
+        controller.setToPreviousController(previous, style: style)
         
         switch style {
         case .push:
