@@ -1307,32 +1307,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 containerView.change(pos: NSMakePoint(0, item.isCollapsed ? -item.height : 0), animated: !revealActionInvoked && animated)
             }
 
-            if let isOnline = item.isOnline {
-                if isOnline {
-                    var animate: Bool = false
-                    if activeImage == nil {
-                        activeImage = ImageView()
-                        self.containerView.addSubview(activeImage!)
-                        animate = true
-                    }
-                    guard let activeImage = self.activeImage else { return }
-                    activeImage.image = item.isSelected && item.context.layout != .single ? theme.icons.hintPeerActiveSelected : theme.icons.hintPeerActive
-                    activeImage.sizeToFit()
-
-                    activeImage.setFrameOrigin(photo.frame.maxX - activeImage.frame.width - 3, photo.frame.maxY - 12)
-
-                    if animated && animate {
-                        activeImage.layer?.animateAlpha(from: 0.5, to: 1.0, duration: 0.2)
-                        activeImage.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
-                    }
-                } else if let view = self.activeImage {
-                    performSubviewRemoval(view, animated: animated, scale: true)
-                    self.activeImage = nil
-                }
-            } else {
-                activeImage?.removeFromSuperview()
-                activeImage = nil
-            }
             
             if item.hasActiveGroupCall {
                 var animate: Bool = false
@@ -1516,6 +1490,34 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  performSubviewRemoval(view, animated: animated, scale: true)
                  self.badgeShortView = nil
              }
+             
+             if let isOnline = item.isOnline {
+                 if isOnline, self.badgeShortView == nil {
+                     var animate: Bool = false
+                     if activeImage == nil {
+                         activeImage = ImageView()
+                         self.containerView.addSubview(activeImage!, positioned: .below, relativeTo: badgeShortView)
+                         animate = true
+                     }
+                     guard let activeImage = self.activeImage else { return }
+                     activeImage.image = item.isSelected && item.context.layout != .single ? theme.icons.hintPeerActiveSelected : theme.icons.hintPeerActive
+                     activeImage.sizeToFit()
+
+                     activeImage.setFrameOrigin(photo.frame.maxX - activeImage.frame.width - 3, photo.frame.maxY - 12)
+
+                     if animated && animate {
+                         activeImage.layer?.animateAlpha(from: 0.5, to: 1.0, duration: 0.2)
+                         activeImage.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
+                     }
+                 } else if let view = self.activeImage {
+                     performSubviewRemoval(view, animated: animated, scale: true)
+                     self.activeImage = nil
+                 }
+             } else {
+                 activeImage?.removeFromSuperview()
+                 activeImage = nil
+             }
+
              
              if let _ = item.mentionsCount {
                  

@@ -1173,7 +1173,7 @@ class ChatListRowItem: TableRowItem {
             _ = signal.start(error: { error in
                 switch error {
                 case let .limitReached(count):
-                    alert(for: context.window, info: strings().chatListContextPinErrorNew2)
+                    alert(for: context.window, info: strings().chatListContextPinErrorTopicsCountable(count))
                 default:
                     alert(for: context.window, info: strings().unknownError)
                 }
