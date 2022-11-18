@@ -3743,6 +3743,34 @@ public final class L10n {
   public static var chatListContextUnmute: String  { return L10n.tr("Localizable", "ChatList.Context.Unmute") }
   /// Unpin
   public static var chatListContextUnpin: String  { return L10n.tr("Localizable", "ChatList.Context.Unpin") }
+  /// %d
+  public static func chatListContextPinErrorTopicsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Context.PinError.Topics_countable", p1)
+  }
+  /// Sorry, you can only pin %d topics to the top. Unpin some that are currently pinned.
+  public static func chatListContextPinErrorTopicsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Context.PinError.Topics_few", p1)
+  }
+  /// Sorry, you can only pin %d topics to the top. Unpin some that are currently pinned.
+  public static func chatListContextPinErrorTopicsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Context.PinError.Topics_many", p1)
+  }
+  /// Sorry, you can only pin %d topics to the top. Unpin some that are currently pinned.
+  public static func chatListContextPinErrorTopicsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Context.PinError.Topics_one", p1)
+  }
+  /// Sorry, you can only pin %d topics to the top. Unpin some that are currently pinned.
+  public static func chatListContextPinErrorTopicsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Context.PinError.Topics_other", p1)
+  }
+  /// Sorry, you can only pin %d topics to the top. Unpin some that are currently pinned.
+  public static func chatListContextPinErrorTopicsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Context.PinError.Topics_two", p1)
+  }
+  /// Sorry, you can only pin %d topics to the top. Unpin some that are currently pinned.
+  public static func chatListContextPinErrorTopicsZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "ChatList.Context.PinError.Topics_zero", p1)
+  }
   /// Set Up Folders
   public static var chatListContextPinErrorNewSetupFolders: String  { return L10n.tr("Localizable", "ChatList.Context.PinErrorNew.SetupFolders") }
   /// Create New Topic
