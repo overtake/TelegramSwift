@@ -1939,7 +1939,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let threadId = chatInteraction.mode.threadId
 
         let takeReplyId:()->MessageId? = { [weak self] in
-            return self?.chatInteraction.presentation.interfaceState.replyMessage?.id ?? threadId
+            return self?.chatInteraction.presentation.interfaceState.replyMessageId ?? threadId
         }
         
         if chatInteraction.peerId.namespace == Namespaces.Peer.CloudChannel {

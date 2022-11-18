@@ -374,6 +374,8 @@ class InputDataController: GenericViewController<InputDataView> {
     var getTitle:(()->String)? = nil
     var getStatus:(()->String?)? = nil
     
+    var autoInputAction: Bool = false
+    
     init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping(InputDataController, [InputDataIdentifier : InputDataValue]) -> Void = { _, _ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.listBackground }) {
         self.title = title
         self.validateData = validateData
@@ -640,10 +642,11 @@ class InputDataController: GenericViewController<InputDataView> {
                 if event.type != .keyDown || FastSettings.checkSendingAbility(for: event) {
                     self.validateInput(data: self.fetchData())
                 } else {
+                    
                     let containsString = fetchData().compactMap {
                         $0.value.stringValue
                     }
-                    if event.type == .keyDown, containsString.isEmpty {
+                    if event.type == .keyDown, containsString.isEmpty || autoInputAction {
                         self.validateInput(data: self.fetchData())
                     } else {
                         return .invokeNext

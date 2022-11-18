@@ -638,7 +638,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                 emptyColor = nil
             }
             if file.mimeType == "bundle/jpeg", let resource = file.resource as? LocalBundleResource {
-                let image = NSImage(named: resource.name)?.precomposed(theme.colors.accentIcon)
+                let image = NSImage(named: resource.name)?.precomposed(resource.color ?? theme.colors.accentIcon)
                 self.contents = image
                 self.contentsGravity = .resizeAspect
             } else {

@@ -117,6 +117,8 @@ func InputPasswordController(context: AccountContext, title: String, desc: Strin
         checkPassword.dispose()
     }, hasDone: true)
     
+    controller.autoInputAction = true
+    
     let interactions = ModalInteractions(acceptTitle: strings().navigationDone, accept: { [weak controller] in
         
         controller?.validateInputValues()

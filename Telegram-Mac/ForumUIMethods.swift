@@ -46,7 +46,7 @@ struct ForumUI {
         let colors: ([NSColor], [NSColor]) = topicColor(iconColor)
         
         if isGeneral {
-            return TelegramMediaFile(fileId: .init(namespace: 0, id: 0), partialReference: nil, resource: LocalBundleResource(name: "Icon_Topic_General", ext: ""), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
+            return TelegramMediaFile(fileId: .init(namespace: 0, id: 523134), partialReference: nil, resource: LocalBundleResource(name: "Icon_Topic_General", ext: "", color: theme.chatList.badgeMutedBackgroundColor), previewRepresentations: [], videoThumbnails: [], immediateThumbnailData: nil, mimeType: "bundle/jpeg", size: nil, attributes: [])
         }
         
         let resource = ForumTopicIconResource(title: title.prefix(1), bgColors: colors.0, strokeColors: colors.1, iconColor: iconColor)
@@ -140,9 +140,9 @@ struct ForumUI {
         let navigation = context.bindings.rootNavigation()
         navigation.push(ForumTopicInfoController(context: context, purpose: .create, peerId: peerId))
     }
-    static func editTopic(_ peerId: PeerId, info: EngineMessageHistoryThread.Info, threadId: Int64, context: AccountContext) {
+    static func editTopic(_ peerId: PeerId, data: MessageHistoryThreadData, threadId: Int64, context: AccountContext) {
         let navigation = context.bindings.rootNavigation()
-        navigation.push(ForumTopicInfoController(context: context, purpose: .edit(info, threadId), peerId: peerId))
+        navigation.push(ForumTopicInfoController(context: context, purpose: .edit(data, threadId), peerId: peerId))
     }
 }
 

@@ -19,31 +19,37 @@ fileprivate final class ChannelAdminsControllerArguments {
     let openAdmin: (RenderedChannelParticipant) -> Void
     let removeAdmin: (PeerId) -> Void
     let eventLogs:() -> Void
-    init(context: AccountContext, addAdmin:@escaping()->Void, openAdmin:@escaping(RenderedChannelParticipant) -> Void, removeAdmin:@escaping(PeerId)->Void, eventLogs: @escaping()->Void) {
+    let toggleAntispam: (Bool)->Void
+    init(context: AccountContext, addAdmin:@escaping()->Void, openAdmin:@escaping(RenderedChannelParticipant) -> Void, removeAdmin:@escaping(PeerId)->Void, eventLogs: @escaping()->Void, toggleAntispam:@escaping(Bool)->Void) {
         self.context = context
         self.addAdmin = addAdmin
         self.openAdmin = openAdmin
         self.removeAdmin = removeAdmin
         self.eventLogs = eventLogs
+        self.toggleAntispam = toggleAntispam
     }
 }
 
 fileprivate enum ChannelAdminsEntryStableId: Hashable {
     case index(Int32)
     case peer(PeerId)
-    var hashValue: Int {
+    
+    var index: Int32 {
         switch self {
         case let .index(index):
-            return index.hashValue
-        case let .peer(peerId):
-            return peerId.hashValue
+            return index
+        case .peer:
+            return 20
         }
     }
+    
 }
 
 
 fileprivate enum ChannelAdminsEntry : Identifiable, Comparable {
     case eventLogs(sectionId:Int32, GeneralViewType)
+    case antispam(sectionId:Int32, Bool, GeneralViewType)
+    case antispamInfo(sectionId:Int32, GeneralViewType)
     case adminsHeader(sectionId:Int32, String, GeneralViewType)
     case adminPeerItem(sectionId:Int32, Int32, RenderedChannelParticipant, ShortPeerDeleting?, GeneralViewType)
     case addAdmin(sectionId:Int32, GeneralViewType)
@@ -52,15 +58,19 @@ fileprivate enum ChannelAdminsEntry : Identifiable, Comparable {
     case loading
     var stableId: ChannelAdminsEntryStableId {
         switch self {
-        case .adminsHeader:
-            return .index(2)
-        case .addAdmin:
-            return .index(3)
-        case .adminsInfo:
-            return .index(4)
-        case .eventLogs:
-            return .index(5)
         case .loading:
+            return .index(0)
+        case .eventLogs:
+            return .index(1)
+        case .antispam:
+            return .index(2)
+        case .antispamInfo:
+            return .index(3)
+        case .adminsHeader:
+            return .index(4)
+        case .addAdmin:
+            return .index(5)
+        case .adminsInfo:
             return .index(6)
         case let .section(sectionId):
             return .index((sectionId + 1) * 1000 - sectionId)
@@ -75,15 +85,19 @@ fileprivate enum ChannelAdminsEntry : Identifiable, Comparable {
         case .loading:
             return 0
         case let .eventLogs(sectionId, _):
-            return (sectionId * 1000) + 1
+            return (sectionId * 1000) + stableId.index
+        case let .antispam(sectionId, _, _):
+            return (sectionId * 1000) + stableId.index
+        case let .antispamInfo(sectionId, _):
+            return (sectionId * 1000) + stableId.index
         case let .adminsHeader(sectionId, _, _):
-            return (sectionId * 1000) + 2
+            return (sectionId * 1000) + stableId.index
         case let .addAdmin(sectionId, _):
-            return (sectionId * 1000) + 3
+            return (sectionId * 1000) + stableId.index
         case let .adminsInfo(sectionId, _, _):
-            return (sectionId * 1000) + 4
+            return (sectionId * 1000) + stableId.index
         case let .adminPeerItem(sectionId, index, _, _, _):
-            return (sectionId * 1000) + index + 20
+            return (sectionId * 1000) + index + stableId.index
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
         }
@@ -148,13 +162,20 @@ private func channelAdminsControllerEntries(accountPeerId: PeerId, view: PeerVie
     entries.append(.section(sectionId))
     sectionId += 1
     
-    if let peer = view.peers[view.peerId] as? TelegramChannel {
+    if let peer = view.peers[view.peerId] as? TelegramChannel, let cachedData = view.cachedData as? CachedChannelData {
         var isGroup = false
         if case .group = peer.info {
             isGroup = true
         }
         
-        entries.append(.eventLogs(sectionId: sectionId, .singleItem))
+        
+        if isGroup, peer.isForum {
+            entries.append(.eventLogs(sectionId: sectionId, .firstItem))
+            entries.append(.antispam(sectionId: sectionId, cachedData.flags.contains(.antiSpamEnabled), .lastItem))
+            entries.append(.antispamInfo(sectionId: sectionId, .textBottomItem))
+        } else {
+            entries.append(.eventLogs(sectionId: sectionId, .singleItem))
+        }
         
         entries.append(.section(sectionId))
         sectionId += 1
@@ -314,9 +335,13 @@ fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelAdminsEnt
         case let .addAdmin(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: strings().adminsAddAdmin,  nameStyle: blueActionButton, type: .next, viewType: viewType, action: arguments.addAdmin)
         case let .eventLogs(_, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: strings().channelAdminsRecentActions, type: .next, viewType: viewType, action: {
-                arguments.eventLogs()
+            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: strings().channelAdminsRecentActions, type: .next, viewType: viewType, action: arguments.eventLogs)
+        case let .antispam(_, value, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: strings().channelAdminsAggressiveAntiSpam, type: .switchable(value), viewType: viewType, action: {
+                arguments.toggleAntispam(!value)
             })
+        case let .antispamInfo(_, viewType):
+            return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: strings().channelAdminsAggressiveAntiSpamInfo, viewType: viewType)
         case .section:
             return GeneralRowItem(initialSize, height: 30, stableId: entry.stableId, viewType: .separator)
         case .loading:
@@ -361,6 +386,27 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
         let context = self.context
         let peerId = self.peerId
         
+        
+        let antiSpamBotConfiguration = AntiSpamBotConfiguration.with(appConfiguration: context.appConfiguration)
+        
+        let resolveAntiSpamPeerDisposable = MetaDisposable()
+        if let antiSpamBotId = antiSpamBotConfiguration.antiSpamBotId {
+            resolveAntiSpamPeerDisposable.set(
+                (context.engine.data.get(TelegramEngine.EngineData.Item.Peer.Peer(id: antiSpamBotId))
+                |> mapToSignal { peer -> Signal<Never, NoError> in
+                    if let _ = peer {
+                        return .never()
+                    } else {
+                        return context.engine.peers.updatedRemotePeer(peer: .user(id: antiSpamBotId.id._internalGetInt64Value(), accessHash: 0))
+                        |> ignoreValues
+                        |> `catch` { _ -> Signal<Never, NoError> in
+                            return .never()
+                        }
+                    }
+                }).start()
+            )
+        }
+
         
         var upgradedToSupergroupImpl: ((PeerId, @escaping () -> Void) -> Void)?
         
@@ -420,6 +466,8 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
 
         }, eventLogs: { [weak self] in
             self?.navigationController?.push(ChannelEventLogController(context, peerId: peerId))
+        }, toggleAntispam: { value in
+            _ = showModalProgress(signal: context.engine.peers.toggleAntiSpamProtection(peerId: peerId, enabled: value), for: context.window).start()
         })
         
         let peerView = Promise<PeerView>()

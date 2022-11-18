@@ -220,8 +220,8 @@ class ChatListRowItem: TableRowItem {
     let filter: ChatListFilter
     
     var isCollapsed: Bool {
-        if let archiveStatus = archiveStatus {
-            switch archiveStatus {
+        if let hideStatus = hideStatus {
+            switch hideStatus {
             case .collapsed:
                 return context.layout != .minimisize
             default:
@@ -355,9 +355,9 @@ class ChatListRowItem: TableRowItem {
     }
     
     override var identifier: String {
-        if archiveStatus == .collapsed {
+        if hideStatus == .collapsed {
             return super.identifier + "collapsed"
-        } else if archiveStatus == .normal {
+        } else if hideStatus == .normal {
             return super.identifier + "normal"
         }
         return super.identifier
@@ -379,7 +379,7 @@ class ChatListRowItem: TableRowItem {
     
     private var presenceManager:PeerPresenceStatusManager?
     
-    let archiveStatus: HiddenArchiveStatus?
+    let hideStatus: ItemHideStatus?
     
     private var groupItems:[EngineChatList.GroupItem.Item] = []
     
@@ -390,8 +390,9 @@ class ChatListRowItem: TableRowItem {
     private(set) var contentImageSpecs: [(message: Message, media: Media, size: CGSize)] = []
 
 
+    let isArchiveItem: Bool
     
-    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, pinnedType: ChatListPinnedType, groupId: EngineChatList.Group, groupItems: [EngineChatList.GroupItem.Item], messages: [Message], unreadCount: Int, activities: [PeerListState.InputActivities.Activity] = [], animateGroup: Bool = false, archiveStatus: HiddenArchiveStatus = .normal, hasFailed: Bool = false, filter: ChatListFilter = .allChats, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil) {
+    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, pinnedType: ChatListPinnedType, groupId: EngineChatList.Group, groupItems: [EngineChatList.GroupItem.Item], messages: [Message], unreadCount: Int, activities: [PeerListState.InputActivities.Activity] = [], animateGroup: Bool = false, hideStatus: ItemHideStatus = .normal, hasFailed: Bool = false, filter: ChatListFilter = .allChats, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil) {
         self.groupId = groupId
         self.peer = nil
         self.mode = .chat
@@ -401,6 +402,7 @@ class ChatListRowItem: TableRowItem {
         self.context = context
         self.mentionsCount = nil
         self.reactionsCount = nil
+        self.selectedForum = nil
         self._stableId = stableId
         self.pinnedType = pinnedType
         self.renderedPeer = nil
@@ -411,7 +413,7 @@ class ChatListRowItem: TableRowItem {
         self.isMuted = false
         self.isOnline = nil
         self.getHideProgress = getHideProgress
-        self.archiveStatus = archiveStatus
+        self.hideStatus = hideStatus
         self.groupItems = groupItems
         self.isVerified = false
         self.isPremium = false
@@ -420,6 +422,7 @@ class ChatListRowItem: TableRowItem {
         self.isFake = false
         self.filter = filter
         self.hasFailed = hasFailed
+        self.isArchiveItem = true
                 
         let titleText:NSMutableAttributedString = NSMutableAttributedString()
         let _ = titleText.append(string: strings().chatListArchivedChats, color: theme.chatList.textColor, font: .medium(.title))
@@ -469,7 +472,7 @@ class ChatListRowItem: TableRowItem {
         
         super.init(initialSize)
         
-        if case .hidden(true) = archiveStatus {
+        if case .hidden(true) = hideStatus {
             hideItem(animated: false, reload: false)
         }
         
@@ -552,9 +555,10 @@ class ChatListRowItem: TableRowItem {
     let titleMode: TitleMode
     let appearMode: PeerListState.AppearMode
     let getHideProgress:(()->CGFloat?)?
+    let selectedForum: PeerId?
     
     
-    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil) {
+    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, hideStatus: ItemHideStatus? = nil, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil, selectedForum: PeerId? = nil) {
         
         
         
@@ -599,16 +603,18 @@ class ChatListRowItem: TableRowItem {
         self.messages = messages
         self.activities = activities
         self.pinnedType = pinnedType
-        self.archiveStatus = nil
+        self.hideStatus = hideStatus
         self.getHideProgress = getHideProgress
         self.forumTopicData = forumTopicData
         self.forumTopicItems = forumTopicItems
+        self.selectedForum = selectedForum
         self.hasDraft = draft != nil
         self.draft = draft
         self.peer = renderedPeer.chatMainPeer?._asPeer()
         self.groupId = .root
         self.hasFailed = hasFailed
         self.filter = filter
+        self.isArchiveItem = false
         self.hideContent = hideContent
         self.appearMode = appearMode
         self.associatedGroupId = associatedGroupId
@@ -813,6 +819,10 @@ class ChatListRowItem: TableRowItem {
         }
         
         super.init(initialSize)
+        
+        if case .hidden(true) = hideStatus {
+            hideItem(animated: false, reload: false)
+        }
         
         if showBadge {
             
@@ -1163,11 +1173,7 @@ class ChatListRowItem: TableRowItem {
             _ = signal.start(error: { error in
                 switch error {
                 case let .limitReached(count):
-                    if context.isPremium {
-                        alert(for: context.window, info: strings().chatListContextPinErrorNew2)
-                    } else {
-                        showPremiumLimit(context: context, type: .pin)
-                    }
+                    alert(for: context.window, info: strings().chatListContextPinErrorNew2)
                 default:
                     alert(for: context.window, info: strings().unknownError)
                 }
@@ -1247,7 +1253,7 @@ class ChatListRowItem: TableRowItem {
         let groupId = self.groupId
         let markAsUnread = self.markAsUnread
         let isPinned = self.isPinned
-        let archiveStatus = archiveStatus
+        let hideStatus = hideStatus
         let isSecret = self.isSecret
         let isUnread = badgeNode != nil || mentionsCount != nil || isUnreadMarked
         let threadId = self.mode.threadId
@@ -1296,6 +1302,15 @@ class ChatListRowItem: TableRowItem {
             
             items.append(ContextMenuItem(isMuted ? strings().chatListContextUnmute : strings().chatListContextMute, handler: toggleMute, itemImage: isMuted ? MenuAnimation.menu_unmuted.value : MenuAnimation.menu_mute.value))
             
+            if threadId == 1, peer.hasPermission(.manageTopics), let peerId = peerId, let threadId = threadId {
+                items.append(ContextMenuItem(data.isHidden ? strings().chatListContextUnhideGeneral : strings().chatListContextHideGeneral, handler: {
+                    
+                    _ = context.engine.peers.setForumChannelTopicHidden(id: peerId, threadId: threadId, isHidden: !data.isHidden).start()
+                    
+                }, itemImage: !data.isHidden ? MenuAnimation.menu_hide.value : MenuAnimation.menu_show.value))
+
+            }
+            
             if data.isOwnedByMe || peer.isAdmin {
                 items.append(ContextMenuItem(!isClosedTopic ? strings().chatListContextPause : strings().chatListContextStart, handler: toggleTopic, itemImage: !isClosedTopic ? MenuAnimation.menu_pause.value : MenuAnimation.menu_play.value))
                 
@@ -1303,6 +1318,8 @@ class ChatListRowItem: TableRowItem {
                 items.append(ContextMenuItem(strings().chatListContextDelete, handler: deleteChat, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
             }
             
+           
+ 
             
             return .single(items)
         }
@@ -1523,8 +1540,8 @@ class ChatListRowItem: TableRowItem {
                 }
             }
             
-            if groupId != .root, context.layout != .minimisize, let archiveStatus = archiveStatus {
-                switch archiveStatus {
+            if groupId != .root, context.layout != .minimisize, let hideStatus = hideStatus {
+                switch hideStatus {
                 case .collapsed:
                     firstGroup.append(ContextMenuItem(strings().chatListRevealActionExpand , handler: {
                         ChatListRowItem.collapseOrExpandArchive(context: context)
@@ -1682,8 +1699,8 @@ class ChatListRowItem: TableRowItem {
     }
   
     override var height: CGFloat {
-        if let archiveStatus = archiveStatus, !shouldHideContent {
-            switch archiveStatus {
+        if let hideStatus = hideStatus, !shouldHideContent {
+            switch hideStatus {
             case .collapsed:
                 return 30
             default:
