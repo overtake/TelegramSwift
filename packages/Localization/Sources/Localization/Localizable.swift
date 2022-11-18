@@ -1487,8 +1487,12 @@ public final class L10n {
   public static var channelUsernameListInfoChannel: String  { return L10n.tr("Localizable", "Channel.Username.List.Info.Channel") }
   /// Drag and drop links to change order in which they will be displayed on group info page.
   public static var channelUsernameListInfoGroup: String  { return L10n.tr("Localizable", "Channel.Username.List.Info.Group") }
+  /// Aggressive Anti-Spam
+  public static var channelAdminsAggressiveAntiSpam: String  { return L10n.tr("Localizable", "ChannelAdmins.AggressiveAntiSpam") }
   /// Recent Actions
   public static var channelAdminsRecentActions: String  { return L10n.tr("Localizable", "ChannelAdmins.RecentActions") }
+  /// Telegram will filter more spam but may occasionally affect ordinary mesages. You can report false positives in Recent Actions.
+  public static var channelAdminsAggressiveAntiSpamInfo: String  { return L10n.tr("Localizable", "ChannelAdmins.AggressiveAntiSpam.Info") }
   /// BLOCKED
   public static var channelBlacklistBlocked: String  { return L10n.tr("Localizable", "ChannelBlacklist.Blocked") }
   /// Blacklisted users are removed from the group and can only come back if they are invited back by an admin. Invite links won't work for blacklisted users.
@@ -3704,6 +3708,8 @@ public final class L10n {
   /// Delete Chat
   public static var chatListContextDeleteChat: String  { return L10n.tr("Localizable", "ChatList.Context.DeleteChat") }
   /// Hide
+  public static var chatListContextHideGeneral: String  { return L10n.tr("Localizable", "ChatList.Context.HideGeneral") }
+  /// Hide
   public static var chatListContextHidePromo: String  { return L10n.tr("Localizable", "ChatList.Context.HidePromo") }
   /// Leave Channel
   public static var chatListContextLeaveChannel: String  { return L10n.tr("Localizable", "ChatList.Context.LeaveChannel") }
@@ -3731,6 +3737,8 @@ public final class L10n {
   public static var chatListContextSound: String  { return L10n.tr("Localizable", "ChatList.Context.Sound") }
   /// Restart
   public static var chatListContextStart: String  { return L10n.tr("Localizable", "ChatList.Context.Start") }
+  /// Unhide
+  public static var chatListContextUnhideGeneral: String  { return L10n.tr("Localizable", "ChatList.Context.UnhideGeneral") }
   /// Unmute
   public static var chatListContextUnmute: String  { return L10n.tr("Localizable", "ChatList.Context.Unmute") }
   /// Unpin
@@ -5185,6 +5193,10 @@ public final class L10n {
   public static var forumTopicEditTopicIcon: String  { return L10n.tr("Localizable", "ForumTopic.Edit.TopicIcon") }
   /// TOPIC NAME
   public static var forumTopicEditTopicName: String  { return L10n.tr("Localizable", "ForumTopic.Edit.TopicName") }
+  /// If the 'General' topic is hidden, group members can pull down in the topic list to view it.
+  public static var forumTopicEditGeneralInfo: String  { return L10n.tr("Localizable", "ForumTopic.Edit.General.Info") }
+  /// Show in Topics
+  public static var forumTopicEditGeneralShow: String  { return L10n.tr("Localizable", "ForumTopic.Edit.General.Show") }
   /// Topic Name
   public static var forumTopicNamePlaceholder: String  { return L10n.tr("Localizable", "ForumTopic.Name.Placeholder") }
   /// SELECT TOPIC ICON

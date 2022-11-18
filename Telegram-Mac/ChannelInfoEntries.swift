@@ -1147,7 +1147,7 @@ func channelInfoEntries(view: PeerView, arguments:PeerInfoArguments, mediaTabsDa
             if channel.adminRights != nil || channel.flags.contains(.isCreator) {
                 var block: [ChannelInfoEntry] = []
                 if channel.flags.contains(.isCreator) {
-                    block.append(.link(sectionId: .type, addressName: channel.username ?? "", viewType: .singleItem))
+                    block.append(.link(sectionId: .type, addressName: channel.usernames.first(where: { $0.isActive })?.username ?? channel.username ?? "", viewType: .singleItem))
                 }
                
                 let group: Peer?

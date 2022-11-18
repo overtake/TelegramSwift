@@ -448,10 +448,10 @@ class FastSettings {
         return !UserDefaults.standard.bool(forKey: kAutomaticallyPlayGifs)
     }
     
-    static var archiveStatus: HiddenArchiveStatus {
+    static var archiveStatus: ItemHideStatus {
         get {
             let value = UserDefaults.standard.integer(forKey: kArchiveIsHidden)
-            return HiddenArchiveStatus(rawValue: min(value, 3))!
+            return ItemHideStatus(rawValue: min(value, 3))!
         }
         set {
             UserDefaults.standard.set(newValue.rawValue, forKey: kArchiveIsHidden)

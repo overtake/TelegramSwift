@@ -861,10 +861,17 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
               
         
         navigationRightBorder.frame = NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height)
-        navigationLeftBorder.frame = NSMakeRect(keepLeft - .borderSize, 0, .borderSize, frame.height)
+       
+        
+        if keepLeft > 0 {
+            navigationLeftBorder.frame = NSMakeRect(keepLeft - .borderSize, 0, .borderSize, frame.height)
+            navigationLeftBorder.layer?.animatePosition(from: NSMakePoint(nfrom, 0), to: navigationLeftBorder.frame.origin, duration: controller.animationStyle.duration, timingFunction: controller.animationStyle.function)
+        } else {
+            navigationLeftBorder.frame = NSMakeRect(pto - .borderSize, 0, .borderSize, frame.height)
+            navigationLeftBorder.layer?.animatePosition(from: NSMakePoint(pfrom, 0), to: navigationLeftBorder.frame.origin, duration: controller.animationStyle.duration, timingFunction: controller.animationStyle.function)
+        }
         
 
-        navigationLeftBorder.layer?.animatePosition(from: controller.frame.origin, to: navigationLeftBorder.frame.origin, duration: controller.animationStyle.duration, timingFunction: controller.animationStyle.function)
 
 
         

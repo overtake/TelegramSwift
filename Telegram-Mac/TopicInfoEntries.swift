@@ -19,7 +19,7 @@ final class TopicInfoArguments : PeerInfoArguments {
     override func updateEditable(_ editable: Bool, peerView: PeerView, controller: PeerInfoController) -> Bool {
         
         if let threadData = threadData, let state = state as? TopicInfoState {
-            let controller = ForumTopicInfoController(context: context, purpose: .edit(threadData.info, state.threadId), peerId: peerId)
+            let controller = ForumTopicInfoController(context: context, purpose: .edit(threadData, state.threadId), peerId: peerId)
             self.pullNavigation()?.push(controller)
         }
         

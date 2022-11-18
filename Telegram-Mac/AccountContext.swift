@@ -21,6 +21,29 @@ import ApiCredentials
 
 
 
+
+struct AntiSpamBotConfiguration {
+    static var defaultValue: AntiSpamBotConfiguration {
+        return AntiSpamBotConfiguration(antiSpamBotId: nil)
+    }
+    
+    let antiSpamBotId: EnginePeer.Id?
+    
+    fileprivate init(antiSpamBotId: EnginePeer.Id?) {
+        self.antiSpamBotId = antiSpamBotId
+    }
+    
+    static func with(appConfiguration: AppConfiguration) -> AntiSpamBotConfiguration {
+        if let data = appConfiguration.data, let string = data["telegram_antispam_user_id"] as? String, let value = Int64(string) {
+            return AntiSpamBotConfiguration(antiSpamBotId: EnginePeer.Id(namespace: Namespaces.Peer.CloudUser, id: EnginePeer.Id.Id._internalFromInt64Value(value)))
+        } else {
+            return .defaultValue
+        }
+    }
+}
+
+
+
 protocol ChatLocationContextHolder: AnyObject {
 }
 
@@ -203,10 +226,18 @@ final class AccountContext {
     
     private let premiumDisposable = MetaDisposable()
     
+    private let globalLocationDisposable = MetaDisposable()
     let globalPeerHandler:Promise<ChatLocation?> = Promise()
     
+    private let _globalLocationId = Atomic<ChatLocation?>(value: nil)
+    var globalLocationId: ChatLocation? {
+        return _globalLocationId.with { $0 }
+    }
+    
     func updateGlobalPeer() {
-        globalPeerHandler.set(globalPeerHandler.get() |> take(1))
+        _ = (self.globalPeerHandler.get() |> take(1)).start(next: { [weak self] location in
+            self?.globalPeerHandler.set(.single(location))
+        })
     }
     
     let hasPassportSettings: Promise<Bool> = Promise(false)
@@ -606,6 +637,10 @@ final class AccountContext {
             self?.isPremium = value
         }))
         
+        self.globalLocationDisposable.set(globalPeerHandler.get().start(next: { [weak self] value in
+            _ = self?._globalLocationId.swap(value)
+        }))
+        
     }
     
     @objc private func updateKeyWindow() {
@@ -695,6 +730,7 @@ final class AccountContext {
         cloudThemeObserver.dispose()
         freeSpaceDisposable.dispose()
         premiumDisposable.dispose()
+        globalLocationDisposable.dispose()
         NotificationCenter.default.removeObserver(self)
         #if !SHARE
       //  self.walletPasscodeTimeoutContext.clear()

@@ -118,7 +118,7 @@ final class ChatListTopicNameAndTextLayout {
                 let attr = NSMutableAttributedString()
                 for item in rest {
                     
-                    var range = attr.append(string: "🤡" + item.title, color: theme.colors.text, font: .normal(.text))
+                    var range = attr.append(string: "🤡" + item.title, color: item.isUnread ? theme.colors.text : theme.colors.grayText, font: .normal(.text))
                     
                     range = NSMakeRange(range.location, 2)
                     
@@ -590,6 +590,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
 
     private var mentionsView: ImageView?
     private var reactionsView: ImageView?
+    
+    private var selectionView: View?
 
     
     private var activeImage: ImageView?
@@ -615,6 +617,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
    
     private let containerView: ChatListDraggingContainerView = ChatListDraggingContainerView(frame: NSZeroRect)
     private let contentView: View = View()
+    private var leftHolder: View?
 
     private var expandView: ChatListExpandView?
     
@@ -762,6 +765,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     override var backdorColor: NSColor {
         if let item = item as? ChatListRowItem {
+            if item.isForum && !item.isTopic {
+                return theme.colors.background
+            }
             if item.isCollapsed {
                 return theme.colors.grayBackground
             }
@@ -793,7 +799,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         
 //
          if let item = self.item as? ChatListRowItem {
-            if !item.isSelected {
+             if !item.isSelected, !item.isAutohidden {
                 
                 if layer != contentView.layer {
                     ctx.setFillColor(theme.colors.border.cgColor)
@@ -1040,6 +1046,37 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              
              contentView.change(opacity: unhideProgress ?? (item.shouldHideContent ? 0 : 1), animated: animated)
              contentView.change(pos: contentPoint(item), animated: animated)
+             
+             
+             if item.isForum && !item.isTopic, item.selectedForum == item.peerId {
+                 let current: View
+                 let isNew: Bool
+                 if let view = self.selectionView {
+                     current = view
+                     isNew = false
+                 } else {
+                     isNew = true
+                     current = View()
+                     current.layer?.cornerRadius = 4
+                     containerView.addSubview(current)
+                     self.selectionView = current
+                 }
+                 current.backgroundColor = theme.colors.accentSelect
+                 let rect = selectionViewRect(item)
+                 if isNew {
+                     current.frame = rect
+                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                     current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2, bounce: false)
+                 } else {
+                     current.change(pos: rect.origin, animated: animated)
+                     current.change(size: rect.size, animated: animated)
+                 }
+             } else if let view = self.selectionView {
+                 
+                 performSubviewRemoval(view, animated: animated, scale: true)
+                 self.selectionView = nil
+             }
+             
              
              if let displayLayout = item.ctxDisplayLayout {
                  let current: TextView
@@ -1350,18 +1387,21 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                          } else {
                              current = .init(account: item.context.account, file: forumIconFile, size: size, playPolicy: .playCount(2))
                          }
-                         current.superview = contentView
-                         self.contentView.layer?.addSublayer(current)
                          self.inlineTopicPhotoLayer = current
                      }
+                     
                      if item.shouldHideContent {
                          current.frame = CGRect(origin: NSMakePoint(20, 20), size: size)
+                         current.superview = containerView
+                         self.containerView.layer?.addSublayer(current)
                      } else {
                          if item.appearMode == .short {
                              current.frame = CGRect(origin: NSMakePoint(10, item.margin), size: size)
                          } else {
                              current.frame = CGRect(origin: NSMakePoint(10, 12), size: size)
                          }
+                         current.superview = contentView
+                         self.contentView.layer?.addSublayer(current)
                      }
                      photo.isHidden = true
                  } else {
@@ -1401,8 +1441,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 }
                 self.archivedPhoto?.frame = self.photo.frame
                 self.archivedPhoto?.userInteractionEnabled = false
-                self.archivedPhoto?.set(keysToColor: ["box2.box2.Fill 1"], color: item.archiveStatus?.isHidden == false ? theme.colors.revealAction_accent_background : theme.colors.grayForeground)
-                self.archivedPhoto?.background = item.archiveStatus?.isHidden == false ? theme.colors.revealAction_accent_background : theme.colors.grayForeground
+                self.archivedPhoto?.set(keysToColor: ["box2.box2.Fill 1"], color: item.hideStatus?.isHidden == false ? theme.colors.revealAction_accent_background : theme.colors.grayForeground)
+                self.archivedPhoto?.background = item.hideStatus?.isHidden == false ? theme.colors.revealAction_accent_background : theme.colors.grayForeground
                 self.archivedPhoto?.layer?.cornerRadius = photo.frame.height / 2
 
                 let animateArchive = item.animateArchive && animated
@@ -1768,13 +1808,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             
             
             
-            if let archiveStatus = item.archiveStatus {
+            if let hideStatus = item.hideStatus {
                 
 
                 let hideOrPin: LAnimationButton
                 let hideOrPinTitle = TextViewLabel()
 
-                switch archiveStatus {
+                switch hideStatus {
                 case .hidden:
                     hideOrPin = LAnimationButton(animation: "anim_hide", size: NSMakeSize(frame.height, frame.height), keysToColor: ["Path 2.Path 2.Fill 1"], color: theme.colors.revealAction_accent_background, offset: NSMakeSize(0, 0), autoplaySide: .left, rotated: true)
                     hideOrPinTitle.attributedString = .initialize(string: strings().chatListRevealActionPin, color: theme.colors.revealAction_accent_foreground, font: .medium(12))
@@ -1795,7 +1835,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 
                 hideOrPin.setFrameSize(frame.height, frame.height)
                 revealLeftView.addSubview(hideOrPin)
-                revealLeftView.backgroundColor = item.archiveStatus?.isHidden == true ? theme.colors.revealAction_accent_background : theme.colors.revealAction_inactive_background
+                revealLeftView.backgroundColor = item.hideStatus?.isHidden == true ? theme.colors.revealAction_accent_background : theme.colors.revealAction_inactive_background
                 revealLeftView.setFrameSize(leftRevealWidth, frame.height)
                 
                 hideOrPin.set(handler: { [weak self] _ in
@@ -2199,6 +2239,17 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         return .zero
     }
     
+    func selectionViewRect(_ item: ChatListRowItem) -> NSRect {
+        let rect = NSMakeRect(-5, 10, 10, frame.height - 20)
+//        if let progress = item.getHideProgress?() {
+//            return rect.scaleLinear(amount:  1 - progress)
+//        } else {
+//            var bp = 0
+//            bp += 1
+//        }
+        return rect
+    }
+    
     func mentionPoint(_ item: ChatListRowItem) -> NSPoint {
         let point = NSMakePoint(self.contentView.frame.width - (item.ctxBadgeNode != nil ? item.ctxBadgeNode!.size.width + item.margin : 0) - 20 - item.margin, self.contentView.frame.height - 20 - (item.margin + 1))
         return point
@@ -2275,6 +2326,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 mentionsView.setFrameOrigin(point)
             }
 
+            if let selectionView = self.selectionView {
+                selectionView.frame = selectionViewRect(item)
+            }
 
             
             if let displayNameView = self.displayNameView {

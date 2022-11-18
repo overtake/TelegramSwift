@@ -1119,15 +1119,23 @@ struct ChatInterfaceState: Codable, Equatable {
         guard let state = state else {
             return nil
         }
-
         guard let opaqueData = state.opaqueData else {
-            return ChatInterfaceState().withUpdatedSynchronizeableInputState(state.synchronizeableInputState)
+            return ChatInterfaceState().withUpdatedSynchronizeableInputState(state.synchronizeableInputState).updatedEditState({ _ in
+                return context?.getChatInterfaceTempState(peerId)?.editState
+            })
         }
         guard var decodedState = try? EngineDecoder.decode(ChatInterfaceState.self, from: opaqueData) else {
-            return ChatInterfaceState().withUpdatedSynchronizeableInputState(state.synchronizeableInputState)
+            return ChatInterfaceState().withUpdatedSynchronizeableInputState(state.synchronizeableInputState).updatedEditState({ _ in
+                return context?.getChatInterfaceTempState(peerId)?.editState
+            })
         }
-        decodedState = decodedState.withUpdatedSynchronizeableInputState(state.synchronizeableInputState)
+        decodedState = decodedState
+            .withUpdatedSynchronizeableInputState(state.synchronizeableInputState)
+            .updatedEditState({ _ in
+                return context?.getChatInterfaceTempState(peerId)?.editState
+            })
         return decodedState
+
     }
 
     
