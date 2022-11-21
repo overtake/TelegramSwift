@@ -84,7 +84,7 @@ class InputDataRowItem: GeneralRowItem, InputDataRowDataValue {
              _currentText = copy
             
             if copy != newValue {
-                self.redraw()
+                self.noteHeightOfRow()
             }
         }
         get {

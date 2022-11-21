@@ -61,7 +61,7 @@ open class Node: NSObject, ViewDisplayDelegate {
     open func setNeedDisplay() -> Void {
         if let view = view {
             view.displayDelegate = self
-            view.setNeedsDisplay()
+            view.display()
         }
     }
     

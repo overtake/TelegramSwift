@@ -675,7 +675,9 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public var selectedhash:AnyHashable? = nil
     public var highlitedHash:AnyHashable? = nil
 
-    
+    public var isUpdating: Bool {
+        return self.updating
+    }
     private var updating:Bool = false
     
     private var previousScroll:ScrollPosition?
@@ -1935,14 +1937,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         item._index = to
         
         if(redraw) {
-            
-            if from == to {
-                self.reloadData(row: to)
-            } else {
-                self.tableView.removeRows(at: IndexSet(integer:from), withAnimation: from == to ? .none : animation)
-                self.tableView.insertRows(at: IndexSet(integer:to), withAnimation: from == to ? .none :  animation)
-            }
-            
+            self.reloadData(row: to)
         }
         
     }

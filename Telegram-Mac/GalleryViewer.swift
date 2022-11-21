@@ -1312,7 +1312,16 @@ class GalleryViewer: NSResponder {
                 operationDisposable.set((item.path.get() |> take(1) |> deliverOnMainQueue).start(next: { path in
                     let pb = NSPasteboard.general
                     pb.clearContents()
-                    pb.writeObjects([NSURL(fileURLWithPath: path)])
+                    var url = NSURL(fileURLWithPath: path)
+                    let image = NSImage(contentsOf: url as URL)
+
+                    let dst = try? FileManager.default.destinationOfSymbolicLink(atPath: path)
+                    if let dst = dst {
+                        let updated = NSTemporaryDirectory() + dst.nsstring.lastPathComponent + "." +  path.nsstring.pathExtension
+                        try? FileManager.default.copyItem(atPath: dst, toPath: updated)
+                        url = NSURL(fileURLWithPath: updated)
+                    }
+                    pb.writeObjects([url, image].compactMap { $0 })
                 }))
             } else if let item = item as? MGalleryExternalVideoItem {
                 let pb = NSPasteboard.general

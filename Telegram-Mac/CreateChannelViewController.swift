@@ -37,7 +37,7 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
         let initialSize = atomicSize.with { $0 }
         let context = self.context
         
-        nameItem = GroupNameRowItem(initialSize, stableId: 0, account: context.account, placeholder: strings().channelChannelNameHolder, viewType: .singleItem, limit: 140, textChangeHandler:{ [weak self] text in
+        nameItem = GroupNameRowItem(initialSize, stableId: 0, account: context.account, placeholder: strings().channelChannelNameHolder, viewType: .singleItem, limit: 140, textChangeHandler: { [weak self] text in
             self?.nextEnabled(!text.isEmpty)
         }, pickPicture: { [weak self] select in
             if select {

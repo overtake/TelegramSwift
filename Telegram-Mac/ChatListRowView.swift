@@ -1034,7 +1034,6 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 }
             }
         }
-        let previous = self.item as? ChatListRowItem
         
          let wasHidden: Bool = (self.item as? ChatListRowItem)?.isCollapsed ?? false
          super.set(item:item, animated:animated)
@@ -1043,6 +1042,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
          if let item = item as? ChatListRowItem {
                           
              let unhideProgress = item.getHideProgress?()
+             
              
              contentView.change(opacity: unhideProgress ?? (item.shouldHideContent ? 0 : 1), animated: animated)
              contentView.change(pos: contentPoint(item), animated: animated)
@@ -1440,6 +1440,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                      presented = true
                  }
                  badgeView?.setFrameSize(badgeNode.size)
+                 badgeNode.aroundFill = nil
                  badgeNode.view = badgeView
                  badgeNode.setNeedDisplay()
                  
@@ -1467,6 +1468,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                      presented = true
                  }
                  badgeShortView?.setFrameSize(badgeNode.size)
+                 badgeNode.aroundFill = theme.colors.background
                  badgeNode.view = badgeShortView
                  badgeNode.setNeedDisplay()
                  
@@ -1496,7 +1498,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                      var animate: Bool = false
                      if activeImage == nil {
                          activeImage = ImageView()
-                         self.containerView.addSubview(activeImage!, positioned: .below, relativeTo: badgeShortView)
+                         self.containerView.addSubview(activeImage!, positioned: .above, relativeTo: photoVideoView ?? photo)
                          animate = true
                      }
                      guard let activeImage = self.activeImage else { return }

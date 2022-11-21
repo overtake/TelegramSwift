@@ -68,6 +68,11 @@ class ChatSearchView: SearchView {
         super.updateLocalizationAndTheme(theme: theme)
     }
     
+    deinit {
+        var bp = 0
+        bp += 1
+    }
+    
     override func cancelSearch() {
         switch tokenState {
         case let .from(q, complete):

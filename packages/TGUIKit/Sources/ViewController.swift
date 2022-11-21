@@ -513,7 +513,7 @@ open class ViewController : NSObject {
     public var popover:Popover?
     open var modal:Modal?
     
-    private var widthOnDisappear: CGFloat? = nil
+    var widthOnDisappear: CGFloat? = nil
     
     public var ableToNextController:(ViewController, @escaping(ViewController, Bool)->Void)->Void = { controller, f in
         f(controller, true)

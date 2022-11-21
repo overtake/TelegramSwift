@@ -123,8 +123,14 @@ open class TableRowItem: NSObject {
     }
     
     public func redraw(animated: Bool = false, options: NSTableView.AnimationOptions = .effectFade, presentAsNew: Bool = false)->Void {
-        if index != -1 {
-            table?.reloadData(row: index, animated: animated, options: options, presentAsNew: presentAsNew)
+        if index != -1, let table = table {
+            assert(!table.isUpdating)
+            table.reloadData(row: index, animated: animated, options: options, presentAsNew: presentAsNew)
+        }
+    }
+    public func noteHeightOfRow(animated: Bool = false) {
+        if index != -1, let table = table {
+            table.noteHeightOfRow(index, animated)
         }
     }
     
