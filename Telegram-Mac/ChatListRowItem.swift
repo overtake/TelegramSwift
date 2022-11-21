@@ -209,6 +209,8 @@ class ChatListRowItem: TableRowItem {
     private var badgeNode:BadgeNode? = nil
     private var badgeSelectedNode:BadgeNode? = nil
     
+    private var shortBadgeNode:BadgeNode? = nil
+    private var shortBadgeSelectedNode:BadgeNode? = nil
 
 
     private let _animateArchive:Atomic<Bool> = Atomic(value: false)
@@ -843,10 +845,11 @@ class ChatListRowItem: TableRowItem {
         if let _ = self.isOnline, let presence = peerPresence?._asPresence() {
             presenceManager = PeerPresenceStatusManager(update: { [weak self] in
                 self?.isOnline = false
-                self?.redraw(animated: true)
+                self?.noteHeightOfRow(animated: true)
             })
             presenceManager?.reset(presence: presence, timeDifference: Int32(context.timeDifference))
         }
+        
         if forumTopicItems.isEmpty {
             var messageText: NSAttributedString?
             var textCutout: TextViewCutout?
@@ -888,7 +891,7 @@ class ChatListRowItem: TableRowItem {
             peerPhotosDisposable.set(signal.start(next: { [weak self] photos in
                 if self?.photos != photos {
                     self?.photos = photos
-                    self?.redraw(animated: true, options: .effectFade)
+                    self?.noteHeightOfRow(animated: true)
                 }
             }))
         }
@@ -994,6 +997,7 @@ class ChatListRowItem: TableRowItem {
         if isClosedTopic {
             offset += 10
         }
+        offset += 5
         return max(200, size.width) - margin * 3 - dateSize - (isOutMessage ? isRead ? 20 : 12 : 0) - offset
     }
     

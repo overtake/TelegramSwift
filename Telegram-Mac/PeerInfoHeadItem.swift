@@ -522,7 +522,7 @@ class PeerInfoHeadItem: GeneralRowItem {
                 if result != self.result {
                     self.result = result
                     _ = self.makeSize(self.width, oldWidth: 0)
-                    self.redraw(animated: true, options: .effectFade)
+                    self.noteHeightOfRow(animated: true)
                 }
             }))
         }
@@ -538,7 +538,7 @@ class PeerInfoHeadItem: GeneralRowItem {
                 if self?.photos != photos {
                     self?.photos = photos
                     if !first {
-                        self?.redraw(animated: true, options: .effectFade)
+                        self?.noteHeightOfRow(animated: true)
                     }
                     first = false
                 }
@@ -805,7 +805,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
     
     private var activeDragging: Bool = false {
         didSet {
-            self.item?.redraw(animated: true)
+            self.item?.noteHeightOfRow(animated: true)
         }
     }
     

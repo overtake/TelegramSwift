@@ -67,7 +67,7 @@ class AccountInfoItem: GeneralRowItem {
         let signal = peerPhotos(context: context, peerId: peer.id) |> deliverOnMainQueue
         peerPhotosDisposable.set(signal.start(next: { [weak self] photos in
             self?.photos = photos
-            self?.redraw()
+            self?.noteHeightOfRow()
         }))
         
     }

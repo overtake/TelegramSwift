@@ -513,9 +513,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            showModal(with: InputPasswordController(context: context, title: "f", desc: "f", checker: { _ in
-                return .fail(.generic)
-            }), for: context.window)
+            showInactiveChannels(context: context, source: .join)
             
 //            context.bindings.rootNavigation().push(ForumTopicInfoController(context: context, purpose: .create))
             

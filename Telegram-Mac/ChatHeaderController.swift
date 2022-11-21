@@ -20,6 +20,8 @@ import TGModernGrowingTextView
 
 protocol ChatHeaderProtocol {
     func update(with state: ChatHeaderState, animated: Bool)
+    
+    func remove(animated: Bool)
 }
 
 
@@ -261,10 +263,10 @@ class ChatHeaderController {
                     self.currentView = current
                 }
                 for view in removed {
+                    if let view = view as? ChatHeaderProtocol {
+                        view.remove(animated: animated)
+                    }
                     if animated {
-//                        view.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
-//                            view?.removeFromSuperview()
-//                        })
                         view.layer?.animatePosition(from: view.frame.origin, to: NSMakePoint(0, view.frame.minY - view.frame.height), removeOnCompletion: false, completion: { [weak view] _ in
                             view?.removeFromSuperview()
                         })
@@ -476,6 +478,10 @@ private final class ChatSponsoredView : Control, ChatHeaderProtocol {
         update(with: state, animated: false)
 
     }
+    
+    func remove(animated: Bool) {
+        
+    }
 
     func update(with state: ChatHeaderState, animated: Bool) {
         switch state {
@@ -592,6 +598,10 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
         addSubview(particleList)
 
         update(with: state, animated: false)
+    }
+    
+    func remove(animated: Bool) {
+        
     }
 
     func update(with state: ChatHeaderState, animated: Bool) {
@@ -830,6 +840,9 @@ class ChatReportView : Control, ChatHeaderProtocol {
         needsLayout = true
     }
 
+    func remove(animated: Bool) {
+        
+    }
 
     func update(with state: ChatHeaderState, animated: Bool) {
         buttonsContainer.removeAllSubviews()
@@ -972,6 +985,10 @@ class ShareInfoView : Control, ChatHeaderProtocol {
         addSubview(dismiss)
         updateLocalizationAndTheme(theme: theme)
     }
+    
+    func remove(animated: Bool) {
+        
+    }
 
     func update(with state: ChatHeaderState, animated: Bool) {
 
@@ -1075,6 +1092,10 @@ class AddContactView : Control, ChatHeaderProtocol {
         needsLayout = true
     }
 
+    func remove(animated: Bool) {
+        
+    }
+    
     func update(with state: ChatHeaderState, animated: Bool) {
         switch state {
         case let .addContact(_, canBlock, autoArchived):
@@ -1332,6 +1353,12 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
             self?.applySearchResponder(false)
         }
     }
+    
+    func remove(animated: Bool) {
+        self.inputInteraction.update {$0.updatedTokenState(.none).updatedSelectedIndex(-1).updatedMessages(([], nil)).updatedSearchState(SearchState(state: .None, request: ""))}
+        self.parentInteractions.updateSearchRequest(SearchMessagesResultState("", []))
+    }
+    
     
     func update(with state: ChatHeaderState, animated: Bool) {
         
@@ -1709,13 +1736,13 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
     
     
     deinit {
-        inputInteraction.update(animated: false, { state in
+        self.inputInteraction.update(animated: false, { state in
             return state.updatedInputQueryResult( { _ in return nil } )
         })
-        parentInteractions.updateSearchRequest(SearchMessagesResultState("", []))
-        disposable.dispose()
-        inputInteraction.remove(observer: self)
-        loadingDisposable.set(nil)
+        self.parentInteractions.updateSearchRequest(SearchMessagesResultState("", []))
+        self.disposable.dispose()
+        self.inputInteraction.remove(observer: self)
+        self.loadingDisposable.dispose()
         if let window = window as? Window {
             window.removeAllHandlers(for: self)
         }
@@ -1914,6 +1941,9 @@ final class ChatGroupCallView : Control, ChatHeaderProtocol {
         updateLocalizationAndTheme(theme: theme)
     }
     
+    func remove(animated: Bool) {
+        
+    }
 
     func update(with state: ChatHeaderState, animated: Bool) {
         if let data = state.voiceChat {
@@ -2230,6 +2260,10 @@ private final class ChatRequestChat : Control, ChatHeaderProtocol {
         update(with: state, animated: false)
 
     }
+    
+    func remove(animated: Bool) {
+        
+    }
 
     func update(with state: ChatHeaderState, animated: Bool) {
         _state = state
@@ -2337,6 +2371,10 @@ final class ChatPendingRequests : Control, ChatHeaderProtocol {
         
         update(with: state, animated: false)
 
+    }
+    
+    func remove(animated: Bool) {
+        
     }
 
     func update(with state: ChatHeaderState, animated: Bool) {
@@ -2490,6 +2528,10 @@ private final class ChatRestartTopic : Control, ChatHeaderProtocol {
         
         update(with: state, animated: false)
 
+    }
+    
+    func remove(animated: Bool) {
+        
     }
 
     func update(with state: ChatHeaderState, animated: Bool) {

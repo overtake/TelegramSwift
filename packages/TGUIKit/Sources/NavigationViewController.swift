@@ -521,6 +521,9 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             if let tied = controller.tied {
                 containerView.addSubview(tied.view, positioned: .below, relativeTo: controller.view)
                 tied.view.frame = NSMakeRect(0, barInset + tied.bar.height, containerSize.width, containerSize.height - barInset - tied.bar.height)
+                if tied.widthOnDisappear != nil {
+                    tied.widthOnDisappear = containerSize.width
+                }
             }
 
         }

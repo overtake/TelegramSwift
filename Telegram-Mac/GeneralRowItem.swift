@@ -308,7 +308,7 @@ class GeneralRowItem: TableRowItem {
     var drawCustomSeparator:Bool = true {
         didSet {
             if drawCustomSeparator != oldValue {
-                self.redraw()
+                self.noteHeightOfRow()
             }
         }
     }
