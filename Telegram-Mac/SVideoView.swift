@@ -776,6 +776,14 @@ class SVideoView: NSView {
                 } else {
                     bufferingIndicatorValue.set(.single(!isStreamable))
                 }
+                if let status = status, status.status != oldValue?.status {
+                    switch status.status {
+                    case .playing, .paused:
+                        self.hideScrubblerPreviewIfNeeded(live: true)
+                    default:
+                        break
+                    }
+                }
             }
             
         }
@@ -878,6 +886,7 @@ class SVideoView: NSView {
                 
                 current.playOrPause.set(handler: { [weak self] _ in
                     self?.interactions?.playOrPause()
+                    self?.hideScrubblerPreviewIfNeeded(live: true)
                 }, for: .Click)
                 
                 current.progress.onUserChanged = { [weak self] value in
@@ -1123,8 +1132,11 @@ class SVideoView: NSView {
                 self.addSubview(overlayPreview!, positioned: .above, relativeTo: mediaPlayer)
                 self.overlayPreview?.background = theme.colors.blackTransparent
             }
+            if let _ = previewView {
+                self.previewView?.removeFromSuperview()
+                self.previewView = nil
+            }
         }
-        self.hideScrubblerPreviewIfNeeded(live: !live)
     }
     
     private var currentPreviewState: MediaPlayerFramePreviewResult?
@@ -1181,11 +1193,15 @@ class SVideoView: NSView {
     func hideScrubblerPreviewIfNeeded(live: Bool) {
         self.currentPreviewState = nil
         if live {
-            self.overlayPreview?.removeFromSuperview()
-            self.overlayPreview = nil
+            if let _ = self.overlayPreview {
+                self.overlayPreview?.removeFromSuperview()
+                self.overlayPreview = nil
+            }
         } else {
-            previewView?.removeFromSuperview()
-            previewView = nil
+            if let _ = previewView {
+                previewView?.removeFromSuperview()
+                previewView = nil
+            }
         }
     }
 }
