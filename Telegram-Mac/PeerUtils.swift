@@ -210,11 +210,11 @@ extension Peer {
     
     var username:String? {
         if let peer = self as? TelegramChannel {
-            return peer.username
+            return peer.addressName
         } else if let peer = self as? TelegramGroup {
-            return peer.username
+            return peer.addressName
         } else if let peer = self as? TelegramUser {
-            return peer.username
+            return peer.addressName
         }
         return nil
     }

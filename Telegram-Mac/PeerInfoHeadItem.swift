@@ -664,6 +664,9 @@ private final class PeerInfoPhotoEditableView : Control {
         backgroundView.backgroundColor = .blackTransparent
         backgroundView.frame = bounds
         
+        if #available(macOS 10.15, *) {
+            self.layer?.cornerCurve = .circular
+        }
         
         set(handler: { [weak self] control in
             if self?.updatingPhotoState == nil {
