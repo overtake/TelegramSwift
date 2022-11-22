@@ -2133,9 +2133,9 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             } else {
                 ForumUI.open(peerId, context: context, threadId: threadId)
             }
-            _ = updateChatListFolderSettings(context.account.postbox, {
-                $0.withUpdatedSidebar(true)
-            }).start()
+//            _ = updateChatListFolderSettings(context.account.postbox, {
+//                $0.withUpdatedSidebar(true)
+//            }).start()
             
         case .reveal:
             break
