@@ -220,6 +220,7 @@ class ChatListRowItem: TableRowItem {
     }
     
     let filter: ChatListFilter
+    let splitState: SplitViewState
     
     var isCollapsed: Bool {
         if let hideStatus = hideStatus {
@@ -232,6 +233,7 @@ class ChatListRowItem: TableRowItem {
         }
         return false
     }
+    
     
     var canDeleteTopic: Bool {
         if isTopic, let peer = peer as? TelegramChannel, peer.isAdmin {
@@ -407,6 +409,7 @@ class ChatListRowItem: TableRowItem {
         self.selectedForum = nil
         self._stableId = stableId
         self.pinnedType = pinnedType
+        self.splitState = context.layout
         self.renderedPeer = nil
         self.forumTopicData = nil
         self.forumTopicItems = []
@@ -605,6 +608,7 @@ class ChatListRowItem: TableRowItem {
         self.messages = messages
         self.activities = activities
         self.pinnedType = pinnedType
+        self.splitState = context.layout
         self.hideStatus = hideStatus
         self.getHideProgress = getHideProgress
         self.forumTopicData = forumTopicData

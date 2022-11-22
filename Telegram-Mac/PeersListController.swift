@@ -12,6 +12,7 @@ import Postbox
 import TelegramCore
 import Reactions
 import SwiftSignalKit
+import InAppSettings
 
 struct PeerListHiddenItems : Equatable {
     var archive: ItemHideStatus
@@ -1175,6 +1176,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             self.topics = nil
         }
         super.init(context)
+        
         self.bar = .init(height: !mode.isPlain ? 50 : 0)
     }
     
@@ -1266,9 +1268,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         genericView.mode = mode
         
         if followGlobal {
-            actionsDisposable.add((context.globalPeerHandler.get() |> deliverOnMainQueue).start(next: { [weak self] location in
+            let combined = combineLatest(queue: .mainQueue(), context.globalPeerHandler.get(), context.globalForumId.get())
+            
+            actionsDisposable.add(combined.start(next: { [weak self] location, forumId in
                 guard let `self` = self else {return}
-                self.changeSelection(location)
+                self.changeSelection(location, globalForumId: forumId)
                 if location == nil {
                     if !self.genericView.searchView.isEmpty {
                         _ = self.window?.makeFirstResponder(self.genericView.searchView.input)
@@ -1345,7 +1349,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             
 
             let signal = combineLatest(context.account.postbox.peerView(id: peerId), getGroupCallPanelData(context: context, peerId: peerId), importState.get())
-            forumPeer = signal |> map { view, call, invitationState in
+            forumPeer = signal |> mapToSignal { view, call, invitationState in
                 if let peer = peerViewMainPeer(view) as? TelegramChannel, let cachedData = view.cachedData as? CachedChannelData, peer.isForum {
                     
                     let info: ChatActiveGroupCallInfo?
@@ -1355,10 +1359,18 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                         info = nil
                     }
                     let membersCount = cachedData.participantsSummary.memberCount ?? 0
-                    
-                    return .init(peer: peer, peerView: view, online: 0, call: info, invitationState: invitationState)
+                    let online: Signal<Int32, NoError>
+                    if membersCount < 200 {
+                        online = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(peerId: peerId)
+                    } else {
+                        online = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: peerId)
+                    }
+                    return online |> map {
+                        return .init(peer: peer, peerView: view, online: $0, call: info, invitationState: invitationState)
+                    }
+
                 } else {
-                    return nil
+                    return .single(nil)
                 }
             }
             
@@ -1659,7 +1671,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             setCenterStatus(nil)
         }
         
-        let animated = state.splitState == previous?.splitState
+        let animated = state.splitState == previous?.splitState && !context.window.inLiveResize
         
         self.genericView.searchStateChanged(state, arguments: arguments, animated: animated, updateSearchTags: { [weak self] tags in
             self?.searchController?.updateSearchTags(tags)
@@ -1892,7 +1904,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     
-    func changeSelection(_ location: ChatLocation?) {
+    func changeSelection(_ location: ChatLocation?, globalForumId: PeerId?) {
         if let location = location {
             var id: UIChatListEntryId
             switch location {
@@ -1918,12 +1930,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         } else {
             self.genericView.tableView.changeSelection(stableId: nil)
         }
-        let controller = self.navigationController?.controller as? PeersListController
-        if let controller = controller, case .forum(let peerId, _) = controller.mode {
-            self.updateHighlight(peerId)
-        } else {
-            self.updateHighlight(location?.peerId)
-        }
+        self.updateHighlight(globalForumId ?? location?.peerId)
     }
     
     private func showSearchController(animated: Bool) {
@@ -2126,6 +2133,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             } else {
                 ForumUI.open(peerId, context: context, threadId: threadId)
             }
+            _ = updateChatListFolderSettings(context.account.postbox, {
+                $0.withUpdatedSidebar(true)
+            }).start()
+            
         case .reveal:
             break
         case .empty:
@@ -2237,16 +2248,21 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     private func updateHighlight(_ peerId: PeerId?) -> Void {
-        let state = self.stateSignal
-        let stateValue = self.stateValue
-       
-        let updateState:((PeerListState?)->PeerListState?) -> Void = { f in
-            state.set(stateValue.modify(f))
-        }
-        updateState { current in
-            var current = current
-            current?.selectedForum = peerId
-            return current
+        switch self.mode {
+        case .forum:
+            break
+        default:
+            let state = self.stateSignal
+            let stateValue = self.stateValue
+           
+            let updateState:((PeerListState?)->PeerListState?) -> Void = { f in
+                state.set(stateValue.modify(f))
+            }
+            updateState { current in
+                var current = current
+                current?.selectedForum = peerId
+                return current
+            }
         }
     }
     
@@ -2264,9 +2280,21 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         context.window.removeAllHandlers(for: self)
+        switch mode {
+        case .forum:
+            context.globalForumId.set(nil)
+        default:
+            break
+        }
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        switch mode {
+        case let .forum(peerId, _):
+            context.globalForumId.set(peerId)
+        default:
+            break
+        }
     }
     
     override var stake: StakeSettings {

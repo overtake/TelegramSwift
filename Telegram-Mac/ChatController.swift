@@ -1927,6 +1927,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self?.updateFloatingPhotos(position, animated: false)
         }))
         
+        self.genericView.tableView.scrollDidUpdate = { [weak self] position in
+            self?.updateFloatingPhotos(position, animated: false)
+        }
         
         let previousView = self.previousView
         let context = self.context

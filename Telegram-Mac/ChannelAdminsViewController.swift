@@ -151,7 +151,7 @@ fileprivate struct ChannelAdminsControllerState: Equatable {
     }
 }
 
-private func channelAdminsControllerEntries(accountPeerId: PeerId, view: PeerView, state: ChannelAdminsControllerState, participants: [RenderedChannelParticipant]?, isCreator: Bool) -> [ChannelAdminsEntry] {
+private func channelAdminsControllerEntries(context: AccountContext, accountPeerId: PeerId, view: PeerView, state: ChannelAdminsControllerState, participants: [RenderedChannelParticipant]?, isCreator: Bool) -> [ChannelAdminsEntry] {
     var entries: [ChannelAdminsEntry] = []
     
     let participants = participants ?? []
@@ -169,7 +169,12 @@ private func channelAdminsControllerEntries(accountPeerId: PeerId, view: PeerVie
         }
         
         
-        if isGroup, peer.isForum {
+        
+        let configuration = AntiSpamBotConfiguration.with(appConfiguration: context.appConfiguration)
+        
+        let members = cachedData.participantsSummary.memberCount ?? 0
+        
+        if isGroup, peer.isForum, members >= configuration.group_size_min {
             entries.append(.eventLogs(sectionId: sectionId, .firstItem))
             entries.append(.antispam(sectionId: sectionId, cachedData.flags.contains(.antiSpamEnabled), .lastItem))
             entries.append(.antispamInfo(sectionId: sectionId, .textBottomItem))
@@ -546,7 +551,7 @@ class ChannelAdminsViewController: EditableViewController<TableView> {
                     isSupergroup = channel.isSupergroup
                 }
                 _ = viewValue.swap(view)
-                let entries = channelAdminsControllerEntries(accountPeerId: context.peerId, view: view, state: state, participants: admins, isCreator: isCreator).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+                let entries = channelAdminsControllerEntries(context: context, accountPeerId: context.peerId, view: view, state: state, participants: admins, isCreator: isCreator).map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
                 return (prepareTransition(left: previousEntries.swap(entries), right: entries, initialSize: initialSize.modify{$0}, arguments: arguments, isSupergroup: isSupergroup), isCreator)
         }
         

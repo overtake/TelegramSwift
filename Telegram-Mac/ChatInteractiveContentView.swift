@@ -194,9 +194,12 @@ class ChatInteractiveContentView: ChatMediaContentView {
     }
     
     deinit {
-        removeNotificationListeners()
-        mediaPlayerStatusDisposable.dispose()
-        partDisposable.dispose()
+        let deInit = {
+            self.removeNotificationListeners()
+            self.mediaPlayerStatusDisposable.dispose()
+            self.partDisposable.dispose()
+        }
+        deInit()
     }
     
     
@@ -335,19 +338,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
     override func executeInteraction(_ isControl: Bool) {
         
-        
-//        if let image = self.image.image {
-//            if #available(macOS 10.15, *) {
-//                let context = self.context!
-//                let signal = TextRecognizing.recognize(image) |> deliverOnMainQueue
-//                _ = signal.start(next: { result in
-//
-//                    showModal(with: visionPreview(context: context, result: result), for: context.window)
-//                })
-//            }
-//            return
-//        }
-//
         if let progressView = progressView {
             switch progressView.state {
             case .Fetching:
@@ -604,16 +594,11 @@ class ChatInteractiveContentView: ChatMediaContentView {
             
             self.image._change(size: size, animated: animated)
             
-            if arguments.imageSize.width == arguments.boundingSize.width {
-                if let positionFlags = positionFlags {
-                    autoplayVideoView?.view.positionFlags = positionFlags
-                } else  {
-                    autoplayVideoView?.view.positionFlags = nil
-                    autoplayVideoView?.view.layer?.cornerRadius = .cornerRadius
-                }
-            } else {
+            if let positionFlags = positionFlags {
+                autoplayVideoView?.view.positionFlags = positionFlags
+            } else  {
                 autoplayVideoView?.view.positionFlags = nil
-                autoplayVideoView?.view.layer?.cornerRadius = 0
+                autoplayVideoView?.view.layer?.cornerRadius = .cornerRadius
             }
             
             

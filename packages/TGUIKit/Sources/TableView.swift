@@ -993,13 +993,21 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
     public var updateScrollPoint:((NSPoint)->NSPoint)? = nil
     private var beginPendingTime:CFAbsoluteTime?
     private var dispatchRange: NSRange = NSMakeRange(NSNotFound, 0)
+    
+    public var scrollDidUpdate: ((ScrollPosition)->Void)? = nil
 
     open override func scroll(_ clipView: NSClipView, to point: NSPoint) {
         var point = point
         if let updateScrollPoint = updateScrollPoint {
             point = updateScrollPoint(point)
         }
+        
+        let position = ScrollPosition(NSMakeRect(point.x, point.y,contentView.documentRect.width, contentView.documentRect.height), .none, NSMakeRange(0, 0))
+        
+        self.scrollDidUpdate?(position)
+        
         clipView.scroll(to: point)
+                
     }
     
     private func updateScroll() {

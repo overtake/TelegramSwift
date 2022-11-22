@@ -239,21 +239,45 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 let answersCount: Signal<Int32?, NoError>
                 let onlineMemberCount:Signal<Int32?, NoError>
 
-                if chatInteraction.mode.isThreadMode {
+                let peerId = chatInteraction.peerId
+                let threadId = chatInteraction.mode.threadId64
+                let isThread = chatInteraction.mode.isThreadMode
+                
+                if let threadId = threadId {
                     switch chatInteraction.mode {
                     case let .thread(data, _):
-                        answersCount = context.account.postbox.messageView(data.messageId)
-                            |> map {
-                                $0.message?.attributes.compactMap { $0 as? ReplyThreadMessageAttribute }.first
-                            }
-                            |> map {
-                                $0?.count
-                            }
-                            |> deliverOnMainQueue
+                        if isThread {
+                            answersCount = context.account.postbox.messageView(data.messageId)
+                                |> map {
+                                    $0.message?.attributes.compactMap { $0 as? ReplyThreadMessageAttribute }.first
+                                }
+                                |> map {
+                                    $0?.count
+                                }
+                                |> deliverOnMainQueue
+                        } else {
+                            let countViewKey: PostboxViewKey = .historyTagSummaryView(tag: MessageTags(), peerId: peerId, threadId: threadId, namespace: Namespaces.Message.Cloud)
+                            let localCountViewKey: PostboxViewKey = .historyTagSummaryView(tag: MessageTags(), peerId: peerId, threadId: threadId, namespace: Namespaces.Message.Local)
+                            
+                            answersCount = context.account.postbox.combinedView(keys: [countViewKey, localCountViewKey])
+                            |> map { views -> Int32 in
+                                var messageCount = 0
+                                if let summaryView = views.views[countViewKey] as? MessageHistoryTagSummaryView, let count = summaryView.count {
+                                    if threadId == 1 {
+                                        messageCount += Int(count)
+                                    } else {
+                                        messageCount += max(Int(count) - 1, 0)
+                                    }
+                                }
+                                if let summaryView = views.views[localCountViewKey] as? MessageHistoryTagSummaryView, let count = summaryView.count {
+                                    messageCount += Int(count)
+                                }
+                                return Int32(messageCount)
+                            } |> map(Optional.init) |> deliverOnMainQueue
+                        }
                     default:
                         answersCount = .single(nil)
                     }
-                   
                 } else {
                     answersCount = .single(nil)
                 }
@@ -840,9 +864,15 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
                 case .replies:
                     result = result.withUpdatedTitle(strings().chatTitleRepliesCountable(Int(self.counters.replies ?? 0)))
                 case .topic:
-                    result = result
-                        .withUpdatedTitle(presentation.threadInfo?.info.title ?? "")
-                        .withUpdatedStatus(strings().peerInfoTopicStatusIn(peer.displayTitle))
+                    if let count = self.counters.replies, count > 0 {
+                        result = result
+                            .withUpdatedTitle(presentation.threadInfo?.info.title ?? "")
+                            .withUpdatedStatus(strings().chatTitleTopicCountable(Int(count)))
+                    } else {
+                        result = result
+                            .withUpdatedTitle(presentation.threadInfo?.info.title ?? "")
+                            .withUpdatedStatus(strings().peerInfoTopicStatusIn(peer.displayTitle))
+                    }
                 }
                 switch mode {
                 case .topic:

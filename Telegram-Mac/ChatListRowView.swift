@@ -1035,11 +1035,16 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             }
         }
         
-         let wasHidden: Bool = (self.item as? ChatListRowItem)?.isCollapsed ?? false
+        let previous = self.item as? ChatListRowItem
+        
+        
+         let wasHidden: Bool = previous?.isCollapsed ?? false
          super.set(item:item, animated:animated)
         
                 
          if let item = item as? ChatListRowItem {
+             
+             let animated = animated && previous?.splitState == item.splitState
                           
              let unhideProgress = item.getHideProgress?()
              
