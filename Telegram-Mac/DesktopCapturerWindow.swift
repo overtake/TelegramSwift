@@ -78,6 +78,8 @@ private final class DesktopCapturerView : View {
     
     fileprivate class Micro : Control {
         
+        private(set) var valueIsUpdated: Bool = false
+        
         var isOn: Bool = false {
             didSet {
                 if isOn != oldValue {
@@ -104,6 +106,7 @@ private final class DesktopCapturerView : View {
                     return
                 }
                 strongSelf.isOn = !strongSelf.isOn
+                strongSelf.valueIsUpdated = true
             }, for: .Click)
         }
         
@@ -369,6 +372,12 @@ final class DesktopCapturerWindow : Window {
             }
         }, for: .Click)
 
+    }
+    
+    func updateDefaultMuted(_ defaultMuted: Bool) {
+        if !self.genericView.micro.valueIsUpdated {
+            self.genericView.micro.isOn = !defaultMuted
+        }
     }
     
     private var genericView:DesktopCapturerView {

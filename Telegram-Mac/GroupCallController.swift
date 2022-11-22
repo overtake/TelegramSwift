@@ -839,6 +839,9 @@ final class GroupCallUIController : ViewController {
         }, mute: { [weak self] peerId, isMuted in
             _ = self?.data.call.updateMuteState(peerId: peerId, isMuted: isMuted)
         }, toggleSpeaker: { [weak self] in
+            if let value = self?.genericView.state?.isMuted {
+                self?.sharing?.updateDefaultMuted(!value)
+            }
             self?.data.call.toggleIsMuted()
         }, remove: { [weak self] peer in
             guard let window = self?.window, let accountContext = self?.data.call.accountContext else {
