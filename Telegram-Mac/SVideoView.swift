@@ -1124,6 +1124,7 @@ class SVideoView: NSView {
                 self.overlayPreview?.background = theme.colors.blackTransparent
             }
         }
+        self.hideScrubblerPreviewIfNeeded(live: !live)
     }
     
     private var currentPreviewState: MediaPlayerFramePreviewResult?
