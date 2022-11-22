@@ -336,7 +336,6 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             switch status.status {
             case .playing:
                 _ = self?.disableScreenSleep()
-                self?.genericView.hideScrubblerPreviewIfNeeded(live: true)
             case let .buffering(_, whilePlaying):
                 if whilePlaying {
                     _ = self?.disableScreenSleep()
