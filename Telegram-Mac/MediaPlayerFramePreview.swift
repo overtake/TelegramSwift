@@ -78,6 +78,7 @@ private final class MediaPlayerFramePreviewImpl {
                                     strongSelf.framePipe.putNext(.waitingForData)
                                 case let .image(image):
                                     if let image = image {
+                                        NSLog("generated")
                                         strongSelf.framePipe.putNext(.image(image._cgImage!))
                                     }
                                     strongSelf.currentFrameTimestamp = nil

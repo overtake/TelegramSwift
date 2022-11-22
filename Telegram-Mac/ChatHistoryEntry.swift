@@ -137,7 +137,8 @@ struct MessageEntryAdditionalData : Equatable {
     let reactions: AvailableReactions?
     let animatedEmojiStickers: [String: StickerPackItem]
     let transribeState:TranscribeAudioState?
-    init(pollStateData: ChatPollStateData = ChatPollStateData(), highlightFoundText: HighlightFoundText? = nil, isThreadLoading: Bool = false, updatingMedia: ChatUpdatingMessageMedia? = nil, chatTheme: TelegramPresentationTheme? = nil, reactions: AvailableReactions? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], transribeState:TranscribeAudioState? = nil) {
+    let eventLog: AdminLogEvent?
+    init(pollStateData: ChatPollStateData = ChatPollStateData(), highlightFoundText: HighlightFoundText? = nil, isThreadLoading: Bool = false, updatingMedia: ChatUpdatingMessageMedia? = nil, chatTheme: TelegramPresentationTheme? = nil, reactions: AvailableReactions? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], transribeState:TranscribeAudioState? = nil, eventLog: AdminLogEvent? = nil) {
         self.pollStateData = pollStateData
         self.highlightFoundText = highlightFoundText
         self.isThreadLoading = isThreadLoading
@@ -146,6 +147,7 @@ struct MessageEntryAdditionalData : Equatable {
         self.reactions = reactions
         self.animatedEmojiStickers = animatedEmojiStickers
         self.transribeState = transribeState
+        self.eventLog = eventLog
     }
 }
 

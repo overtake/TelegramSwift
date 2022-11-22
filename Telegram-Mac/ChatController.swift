@@ -3178,7 +3178,6 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     
                     if peerId == strongSelf.chatInteraction.peerId {
                         if let postId = postId {
-                            
                             var fromId: MessageId? = nil
                             if let action = action {
                                 switch action {
@@ -3188,8 +3187,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     break
                                 }
                             }
-                            
                             strongSelf.chatInteraction.focusMessageId(fromId, postId, TableScrollState.CenterEmpty)
+                        } else {
+                            strongSelf.view.shake(beep: false)
                         }
                         if let action = action {
                             strongSelf.chatInteraction.update({ $0.updatedInitialAction(action) })
