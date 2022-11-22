@@ -73,7 +73,12 @@ struct ForumUI {
                     if case .forum(peerId, _) = controller.mode {
                         if context.layout == .single {
                             context.bindings.rootNavigation().gotoEmpty()
+                        } else {
+                            if controller.isLoaded() {
+                                controller.view.shake(beep: false)
+                            }
                         }
+                        
                         return
                     }
                     if case .folder = controller.mode {

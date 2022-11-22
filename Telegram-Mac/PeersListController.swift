@@ -1665,7 +1665,7 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
               
         setCenterTitle(self.defaultBarTitle)
         if let forum = state.forumPeer {
-            let title = stringStatus(for: forum.peerView, context: context, onlineMemberCount: nil, expanded: true)
+            let title = stringStatus(for: forum.peerView, context: context, onlineMemberCount: forum.online, expanded: true)
             setCenterStatus(title.status.string)
         } else {
             setCenterStatus(nil)

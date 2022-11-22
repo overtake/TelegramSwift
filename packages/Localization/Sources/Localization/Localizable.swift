@@ -2115,6 +2115,8 @@ public final class L10n {
   }
   /// Remove from Favorites
   public static var chatContextRemoveFavoriteSticker: String  { return L10n.tr("Localizable", "Chat.Context.RemoveFavoriteSticker") }
+  /// Report False Positive
+  public static var chatContextReportFalsePositive: String  { return L10n.tr("Localizable", "Chat.Context.ReportFalsePositive") }
   /// Restrict
   public static var chatContextRestrict: String  { return L10n.tr("Localizable", "Chat.Context.Restrict") }
   /// Save as...
@@ -2225,6 +2227,8 @@ public final class L10n {
   public static var chatContextPinnedHide: String  { return L10n.tr("Localizable", "Chat.Context.Pinned.Hide") }
   /// Set As Quick
   public static var chatContextReactionQuick: String  { return L10n.tr("Localizable", "Chat.Context.Reaction.Quick") }
+  /// Thank you for your report.
+  public static var chatContextReportFalsePositiveThanks: String  { return L10n.tr("Localizable", "Chat.Context.ReportFalsePositive.Thanks") }
   /// Save for Notifications
   public static var chatContextSaveRingtoneAdd: String  { return L10n.tr("Localizable", "Chat.Context.SaveRingtone.Add") }
   /// Ringtone successfully saved

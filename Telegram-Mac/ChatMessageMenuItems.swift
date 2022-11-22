@@ -191,6 +191,19 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
 func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (TextViewLayout?, LinkType?)?, chatInteraction: ChatInteraction) -> Signal<[ContextMenuItem], NoError> {
     
     if chatInteraction.isLogInteraction {
+        let context = chatInteraction.context
+        if let adminLog = entry?.additionalData.eventLog {
+            let config = AntiSpamBotConfiguration.with(appConfiguration: context.appConfiguration)
+            if adminLog.peerId == config.antiSpamBotId {
+                return.single([ContextMenuItem(strings().chatContextReportFalsePositive, handler: {
+                    
+                    _ = context.engine.peers.reportAntiSpamFalsePositive(peerId: message.id.peerId, messageId: message.id).start()
+                    
+                    showModalText(for: context.window, text: strings().chatContextReportFalsePositiveThanks)
+                    
+                }, itemImage: MenuAnimation.menu_report_false_positive.value)])
+            }
+        }
         return .single([])
     } else if chatInteraction.disableSelectAbility {
         return .single([])

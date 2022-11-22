@@ -336,6 +336,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             switch status.status {
             case .playing:
                 _ = self?.disableScreenSleep()
+                self?.genericView.hideScrubblerPreviewIfNeeded(live: true)
             case let .buffering(_, whilePlaying):
                 if whilePlaying {
                     _ = self?.disableScreenSleep()
@@ -365,21 +366,22 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
                 guard let `self` = self else {
                     return
                 }
+                let live = (NSEvent.pressedMouseButtons & (1 << 0)) != 0
                 if let result = result {
-                    self.genericView.showScrubblerPreviewIfNeeded()
-                    self.genericView.setCurrentScrubblingState(result)
+                    self.genericView.showScrubblerPreviewIfNeeded(live: live)
+                    self.genericView.setCurrentScrubblingState(result, live: live)
                 } else {
-                    self.genericView.hideScrubblerPreviewIfNeeded()
+                    self.genericView.hideScrubblerPreviewIfNeeded(live: live)
                     // empty image
                 }
             })
 
+        var paused: Bool? = nil
         
         genericView.interactions = SVideoInteractions(playOrPause: { [weak self] in
             self?.playOrPause()
         }, rewind: { [weak self] timestamp in
-            guard let `self` = self else { return }
-            self.mediaPlayer.seek(timestamp: timestamp)
+            self?.mediaPlayer.seek(timestamp: timestamp)
         }, scrobbling: { [weak self] timecode in
             guard let `self` = self else { return }
 
@@ -409,6 +411,16 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
             closePipVideo()
         }, setBaseRate: { [weak self] rate in
             self?.setBaseRate(rate)
+        }, pause: { [weak self] in
+            if self?.isPaused == false {
+                self?.pause()
+                paused = true
+            }
+        }, play: { [weak self] in
+            if paused == true {
+                self?.play()
+                paused = nil
+            }
         })
         
         if let duration = reference.media.duration, duration < 30 {

@@ -567,6 +567,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         
         let userScript = WKUserScript(source: js, injectionTime: .atDocumentStart, forMainFrameOnly: false)
         userController.addUserScript(userScript)
+        
 
         userController.add(WeakScriptMessageHandler { [weak self] message in
             if let strongSelf = self {
@@ -707,7 +708,7 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         alert(for: context.window, header: requestData?.bot.displayTitle ?? appName, info: message, completion: completionHandler)
     }
 
-    
+
     
     @available(macOS 12.0, *)
     func webView(_ webView: WKWebView, requestMediaCapturePermissionFor origin: WKSecurityOrigin, initiatedByFrame frame: WKFrameInfo, type: WKMediaCaptureType, decisionHandler: @escaping(WKPermissionDecision)->Void) {

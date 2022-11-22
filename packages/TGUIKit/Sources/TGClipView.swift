@@ -241,28 +241,9 @@ public class TGClipView: NSClipView,CALayerDelegate {
             self.containingScrollView?.reflectScrolledClipView(self);
             
             if ((abs(o.x - lastOrigin.x) < 0.1 && abs(o.y - lastOrigin.y) < 0.1)) {
-                if destination.x == o.x && destination.y == o.y {
-                    self.endScroll()
-                    super.scroll(to: o)
-                    handleCompletionIfNeeded(withSuccess: true)
-                } else {
-                    _ = destination.x - o.x
-                    let ydif = ceil(destination.y - o.y)
-                    let xdif = ceil(destination.x - o.x)
-
-         
-                    if ydif != 0 {
-                        let incY = abs(ydif) - abs(ydif + 1)
-                        o.y -= incY
-                    }
-                    if xdif != 0 {
-                        let incX = abs(xdif) - abs(xdif + 1)
-                        o.x -= incX
-                    }
-                    super.scroll(to: o)
-                }
-                
-                
+                self.endScroll()
+                super.scroll(to: destination)
+                handleCompletionIfNeeded(withSuccess: true)
             }
         }
         
