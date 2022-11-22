@@ -808,7 +808,7 @@ public final class TextViewLayout : Equatable {
         self.layoutSize = layoutSize
     }
     
-    public func generateAutoBlock(backgroundColor: NSColor, minusHeight: CGFloat = 0) {
+    public func generateAutoBlock(backgroundColor: NSColor, minusHeight: CGFloat = 0, yInset: CGFloat = 0) {
         
         var rects = self.lines.map({$0.frame})
         

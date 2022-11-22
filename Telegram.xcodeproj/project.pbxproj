@@ -138,6 +138,7 @@
 		2747969928FEB00700A891F3 /* InlineStickersContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2726BDD42869DCB00044D260 /* InlineStickersContext.swift */; };
 		2747FD3B2927BFBE0045B95C /* menu_show.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2747FD392927BFBD0045B95C /* menu_show.tgs */; };
 		2747FD3C2927BFBE0045B95C /* menu_hide.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2747FD3A2927BFBE0045B95C /* menu_hide.tgs */; };
+		2747FD3E292CD4530045B95C /* menu_report_false_positive.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2747FD3D292CD4530045B95C /* menu_report_false_positive.tgs */; };
 		2748C56127BA477900F05503 /* Auth_Token.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748C56027BA477900F05503 /* Auth_Token.swift */; };
 		2748C56327BA53C800F05503 /* Auth_Loading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748C56227BA53C800F05503 /* Auth_Loading.swift */; };
 		2748C56527BA959F00F05503 /* Auth_PhoneNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748C56427BA959F00F05503 /* Auth_PhoneNumber.swift */; };
@@ -1495,6 +1496,7 @@
 		2747969728F9645900A891F3 /* SearchTopicRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchTopicRowItem.swift; sourceTree = "<group>"; };
 		2747FD392927BFBD0045B95C /* menu_show.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_show.tgs; sourceTree = "<group>"; };
 		2747FD3A2927BFBE0045B95C /* menu_hide.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_hide.tgs; sourceTree = "<group>"; };
+		2747FD3D292CD4530045B95C /* menu_report_false_positive.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_report_false_positive.tgs; sourceTree = "<group>"; };
 		2748C56027BA477900F05503 /* Auth_Token.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_Token.swift; sourceTree = "<group>"; };
 		2748C56227BA53C800F05503 /* Auth_Loading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_Loading.swift; sourceTree = "<group>"; };
 		2748C56427BA959F00F05503 /* Auth_PhoneNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_PhoneNumber.swift; sourceTree = "<group>"; };
@@ -3213,6 +3215,7 @@
 				27093B2A279FD70F001C36D8 /* folders */,
 				27E070F5278D9C120026BFA1 /* menu_poll.tgs */,
 				2747FD3A2927BFBE0045B95C /* menu_hide.tgs */,
+				2747FD3D292CD4530045B95C /* menu_report_false_positive.tgs */,
 				2747FD392927BFBD0045B95C /* menu_show.tgs */,
 				277C208827A2858D0070B3BF /* menu_speaker_muted.tgs */,
 				2747968C28F5983E00A891F3 /* menu_pause.tgs */,
@@ -6229,6 +6232,7 @@
 				27B8AFEC26380B4E0044C71B /* screenoff.tgs in Resources */,
 				27F4F1882848CFCC00A3B4D4 /* premium_unlock.tgs in Resources */,
 				27CB176227637D7400DD25E0 /* menu_create_group.tgs in Resources */,
+				2747FD3E292CD4530045B95C /* menu_report_false_positive.tgs in Resources */,
 				A731925925DBA60000218E0E /* gigagroup.tgs in Resources */,
 				C21074241E77F5DF006EE5EF /* dsa_pub_prod.pem in Resources */,
 				2733672C276214050027441E /* menu_select_messages.tgs in Resources */,

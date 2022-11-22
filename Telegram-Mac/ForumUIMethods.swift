@@ -71,6 +71,9 @@ struct ForumUI {
                 var isFull: Bool = false
                 if let controller = navigation.controller as? ChatListController {
                     if case .forum(peerId, _) = controller.mode {
+                        if context.layout == .single {
+                            context.bindings.rootNavigation().gotoEmpty()
+                        }
                         return
                     }
                     if case .folder = controller.mode {
@@ -78,6 +81,9 @@ struct ForumUI {
                     }
                 }
                 navigation.push(ChatListController(context, modal: false, mode: .forum(peerId, isFull)))
+                if context.layout == .single {
+                    context.bindings.rootNavigation().gotoEmpty()
+                }
             }
         })
        

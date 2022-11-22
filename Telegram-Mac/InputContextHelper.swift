@@ -540,12 +540,12 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
         if let selectedItem = genericView.selectedItem() as? ContextStickerRowItem {
             prev = selectedItem.selectedIndex
             selectedItem.selectedIndex = nil
-            selectedItem.noteHeightOfRow(animated: true)
+            selectedItem.redraw(animated: true)
         }
         if let selectedItem = genericView.selectedItem() as? ContextClueRowItem {
             prev = selectedItem.selectedIndex
             selectedItem.selectedIndex = nil
-            selectedItem.noteHeightOfRow(animated: true)
+            selectedItem.redraw(animated: true)
         }
         return prev
     }
@@ -558,7 +558,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 
                 let count = selectedItem.clues.count + selectedItem.animated.count
                 selectedItem.selectedIndex = max(min(index, count - 1), 0)
-                selectedItem.noteHeightOfRow(animated: true)
+                selectedItem.redraw(animated: true)
             }
             
             return selectedItem.selectedIndex != nil ? .invoked : .rejected
@@ -573,7 +573,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 index -= 1
                 let count = selectedItem.clues.count + selectedItem.animated.count
                 selectedItem.selectedIndex = max(min(index, count - 1), 0)
-                selectedItem.noteHeightOfRow(animated: true)
+                selectedItem.redraw(animated: true)
             }
             return selectedItem.selectedIndex != nil ? .invoked : .rejected
         }
@@ -586,7 +586,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 selectedItem.selectedIndex! -= 1
             } else {
                 selectedItem.selectedIndex = selectedItem.result.entries.count - 1
-                selectedItem.noteHeightOfRow()
+                selectedItem.redraw()
             }
             
             if selectedItem.selectedIndex! < 0 {
@@ -594,7 +594,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 genericView.selectPrev(true,true)
                 selectLastInRowIfCan()
             } else {
-                selectedItem.noteHeightOfRow()
+                selectedItem.redraw()
             }
         }
     }
@@ -613,7 +613,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
                 genericView.selectNext(true,true)
                 selectFirstInRowIfCan()
             } else {
-                selectedItem.noteHeightOfRow()
+                selectedItem.redraw()
             }
         }
     }
@@ -623,7 +623,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             var index = start ?? 0
             index = max(index, 0)
             selectedItem.selectedIndex = index
-            selectedItem.noteHeightOfRow()
+            selectedItem.redraw()
         }
         if let selectedItem = genericView.selectedItem() as? ContextClueRowItem {
             var index: Int
@@ -635,7 +635,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             }
             index = min(max(index, 0), count - 1)
             selectedItem.selectedIndex = index
-            selectedItem.noteHeightOfRow(animated: true)
+            selectedItem.redraw(animated: true)
         }
     }
     
@@ -644,7 +644,7 @@ class InputContextViewController : GenericViewController<InputContextView>, Tabl
             var index = start ?? selectedItem.result.entries.count - 1
             index = min(index, selectedItem.result.entries.count - 1)
             selectedItem.selectedIndex = index
-            selectedItem.noteHeightOfRow(animated: true)
+            selectedItem.redraw(animated: true)
         }
     }
     

@@ -1019,7 +1019,9 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                 controller.didRemovedFromStack()
                 controller.viewDidDisappear(false)
             }
-            stack.removeAll()
+            while stack.count != 1 {
+                stack.removeLast()
+            }
             show(empty, animated ? .pop : .none)
         }
     }

@@ -3415,6 +3415,32 @@ public final class L10n {
   public static var chatTitleScheduledMessages: String  { return L10n.tr("Localizable", "Chat.Title.ScheduledMessages") }
   /// Your cloud storage
   public static var chatTitleSelf: String  { return L10n.tr("Localizable", "Chat.Title.self") }
+  /// %d
+  public static func chatTitleTopicCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Topic_countable", p1)
+  }
+  /// %d Messages
+  public static func chatTitleTopicFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Topic_few", p1)
+  }
+  /// %d Messages
+  public static func chatTitleTopicMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Topic_many", p1)
+  }
+  /// %d Message
+  public static func chatTitleTopicOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Topic_one", p1)
+  }
+  /// %d Messages
+  public static func chatTitleTopicOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Topic_other", p1)
+  }
+  /// Messages
+  public static var chatTitleTopicZero: String  { return L10n.tr("Localizable", "Chat.Title.Topic_zero") }
+  /// %d Messages
+  public static func chatTitleTopicsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "Chat.Title.Topics_two", p1)
+  }
   /// Telegram moderators will study your report. Thank You.
   public static var chatToastReportSuccess: String  { return L10n.tr("Localizable", "Chat.Toast.ReportSuccess") }
   /// The account was hidden by the user

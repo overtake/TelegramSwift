@@ -384,7 +384,7 @@ class MainViewController: TelegramViewController {
             }, itemImage: MenuAnimation.menu_read.value))
         }
         
-        if self.tabController.current == chatList, !items.isEmpty, let event = NSApp.currentEvent {
+        if self.tabController.current == navigation, !items.isEmpty, let event = NSApp.currentEvent {
             let menu = ContextMenu(betterInside: true)
             for item in items {
                 menu.addItem(item)

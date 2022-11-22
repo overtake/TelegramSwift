@@ -488,19 +488,19 @@ class PeerInfoHeadItem: GeneralRowItem {
                 }
             }
         }
-        var result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge), highlightIfActivity: false), expanded: true)
+        var result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge), statusFont: threadId != nil ? .medium(.text) : .normal(.text), statusColor: threadId != nil ? theme.colors.accent : theme.colors.grayText, highlightIfActivity: false), expanded: true)
         
         if let threadData = threadData {
             result = result
                 .withUpdatedTitle(threadData.info.title)
-                .withUpdatedStatus(strings().peerInfoTopicStatusIn(peer?.displayTitle ?? ""))
+                .withUpdatedStatus(peer?.displayTitle ?? "")
         }
         
         self.result = result
         
         
         nameLayout = TextViewLayout(result.title, maximumNumberOfLines: 1)
-        statusLayout = TextViewLayout(result.status, maximumNumberOfLines: 1, alwaysStaticItems: true)
+        statusLayout = TextViewLayout(result.status, maximumNumberOfLines: 1, alignment: threadData != nil ? .center : .left, alwaysStaticItems: true)
         
         
         super.init(initialSize, stableId: stableId, viewType: viewType)
@@ -517,7 +517,7 @@ class PeerInfoHeadItem: GeneralRowItem {
                 guard let `self` = self else {
                     return
                 }
-                var result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge)), onlineMemberCount: count)
+                let result = stringStatus(for: peerView, context: context, theme: PeerStatusStringTheme(titleFont: .medium(.huge)), onlineMemberCount: count)
 
                 if result != self.result {
                     self.result = result
@@ -572,10 +572,21 @@ class PeerInfoHeadItem: GeneralRowItem {
         }
         nameLayout.measure(width: textWidth)
         statusLayout.measure(width: textWidth)
+        
+        if let _ = threadData {
+            statusLayout.generateAutoBlock(backgroundColor: theme.colors.accent.withAlphaComponent(0.2))
+        }
+        
 
         return success
     }
 
+    
+    func openNavigationTopics() {
+        if let peer = peer {
+            ForumUI.open(peer.id, context: context)
+        }
+    }
     
     var stateText: String? {
         if isScam {
@@ -1094,6 +1105,15 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         nameView.change(pos: NSMakePoint(containerView.focus(item.nameSize).minX, nameView.frame.minY), animated: animated)
         
         statusView.update(item.statusLayout)
+        statusView.isSelectable = item.threadId == nil
+        statusView.scaleOnClick = item.threadId != nil
+        
+        statusView.removeAllHandlers()
+        statusView.set(handler: { [weak item] _ in
+            if let item = item {
+                item.openNavigationTopics()
+            }
+        }, for: .Click)
         
         layoutActionItems(item.items, animated: animated)
         

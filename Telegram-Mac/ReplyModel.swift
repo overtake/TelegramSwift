@@ -235,6 +235,9 @@ class ReplyModel: ChatAccessoryModel {
                     break
                 }
             }
+            if isPinned {
+                title = strings().chatHeaderPinnedMessage
+            }
             
             
             let text = chatListText(account: context.account, for: message, isPremium: context.isPremium, isReplied: true)

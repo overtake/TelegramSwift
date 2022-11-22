@@ -81,7 +81,7 @@ final class MediaPlayerView: View {
         }
     }
     
-    private let maskLayer = CAShapeLayer()
+    private let maskLayer = SimpleShapeLayer()
     
     var cornerRadius: CGFloat = .cornerRadius
     
