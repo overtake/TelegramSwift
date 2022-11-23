@@ -1122,12 +1122,13 @@ func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context
     for attr in message.attributes {
         if attr is InlineBotMessageAttribute {
             return false
-        } else if attr is AutoremoveTimeoutMessageAttribute {
-            if !chatInteraction.hasSetDestructiveTimer {
-                return false
-            }
+        } else if let attr = attr as? AutoremoveTimeoutMessageAttribute, attr.timeout <= 60 {
+            return false
         }
     }
+//    if !chatInteraction.hasSetDestructiveTimer {
+//        return false
+//    }
     
     var timeInCondition = Int(message.timestamp) + Int(context.limitConfiguration.maxMessageEditingInterval) > context.account.network.getApproximateRemoteTimestamp()
     
@@ -2531,7 +2532,7 @@ func removeChatInteractively(context: AccountContext, peerId:PeerId, threadId: I
                 if let threadId = threadId {
                     _ = context.engine.peers.removeForumChannelThread(id: peerId, threadId: threadId).start()
                 } else {
-                    _ = context.engine.peers.removePeerChat(peerId: peerId, reportChatSpam: false, deleteGloballyIfPossible: canRemoveGlobally).start()
+                    _ = context.engine.peers.removePeerChat(peerId: peerId, reportChatSpam: false, deleteGloballyIfPossible: result == .thrid).start()
                     if peer.isBot && result == .thrid {
                         _ = context.blockedPeersContext.add(peerId: peerId).start()
                     }

@@ -2002,14 +2002,24 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return [SendAsPeer(peer: peer, subscribers: nil, isPremiumRequired: false)]
         }
         
-        let signal: Signal<[SendAsPeer]?, NoError> = peerView.get() |> map { peerView -> TelegramChannel? in
-            if let peerView = peerView as? PeerView {
-                return peerViewMainPeer(peerView) as? TelegramChannel
-            } else {
-                return nil
+        let signal: Signal<[SendAsPeer]?, NoError> = peerView.get()
+        |> map { $0 as? PeerView }
+        |> filter { $0?.cachedData != nil }
+        |> map { $0! }
+        |> take(1)
+        |> map { peerView -> TelegramChannel? in
+            if let channel = peerViewMainPeer(peerView) as? TelegramChannel {
+                if channel.isSupergroup || channel.isGigagroup {
+                    if channel.addressName != nil {
+                        return channel
+                    } else if let cachedData = peerView.cachedData as? CachedChannelData, cachedData.linkedDiscussionPeerId.peerId != nil {
+                        return channel
+                    }
+                }
             }
+            return nil
         } |> mapToSignal { channel in
-            if let channel = channel, channel.isSupergroup || channel.isGigagroup, channel.addressName != nil {
+            if let channel = channel {
                 return combineLatest(currentAccountPeer, context.engine.peers.sendAsAvailablePeers(peerId: peerId)) |> map { current, peers in
                     var items:[SendAsPeer] = []
                     if !channel.hasPermission(.canBeAnonymous) {
@@ -2023,18 +2033,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
             
         } |> deliverOnMainQueue
-        
-        /*
-         var allPeers: [SendAsPeer]?
-         if !peers.isEmpty {
-             if let channel = peerViewMainPeer(peerView) as? TelegramChannel, case .group = channel.info, channel.hasPermission(.canBeAnonymous) {
-                 allPeers = []
-             } else {
-                 allPeers = currentAccountPeer
-             }
-             allPeers?.append(contentsOf: peers)
-         }
-         */
+
         
         sendAsPeersDisposable.set(signal.start(next: { [weak self] peers in
             guard let strongSelf = self else {

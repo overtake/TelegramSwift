@@ -88,7 +88,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     index += 1
     
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: .init("calls"), data: InputDataGeneralData(name: strings().sessionPreviewAcceptCalls, color: theme.colors.text, type: .switchable(state.session.flags.contains(.acceptsSecretChats)), viewType: .lastItem, enabled: true, action: {
-        arguments.toggleChats(!state.session.flags.contains(.acceptsSecretChats))
+        arguments.toggleIncomingCalls(!state.session.flags.contains(.acceptsIncomingCalls))
     })))
     index += 1
     
