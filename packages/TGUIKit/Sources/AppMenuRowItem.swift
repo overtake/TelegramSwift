@@ -245,11 +245,16 @@ open class AppMenuRowItem : AppMenuBasicItem {
     }
     
     open override var height: CGFloat {
-        return 28
+        if self.text.lines.count == 1 {
+            return 28
+        } else {
+            return self.text.layoutSize.height + 8
+        }
     }
     
     open override func makeSize(_ width: CGFloat = CGFloat.greatestFiniteMagnitude, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
+        let width = item.overrideWidth ?? width
         self.text.measure(width: width - leftInset * 2 - innerInset * 2)
         self.keyEquivalentText?.measure(width: .greatestFiniteMagnitude)
         return true
@@ -445,7 +450,11 @@ open class AppMenuRowView: AppMenuBasicItemView {
         }
         
         if let drawable = drawable {
-            drawable.centerY(x: item.leftInset)
+            if item.text.numberOfLines == 1 {
+                drawable.centerY(x: item.leftInset)
+            } else {
+                drawable.setFrameOrigin(NSMakePoint(item.leftInset, 4))
+            }
             textView.setFrameOrigin(NSMakePoint(drawable.frame.maxX + item.leftInset - 2, textY))
         } else if let imageView = imageView {
             imageView.centerY(x: item.leftInset)

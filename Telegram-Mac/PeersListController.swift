@@ -429,7 +429,7 @@ class PeerListContainerView : Control {
     private var callView: ChatGroupCallView?
     private var header: NSView?
     
-    private let backgroundView = BackgroundView(frame: NSZeroRect)
+    let backgroundView = View(frame: NSZeroRect)
     
     let tableView = TableView(frame:NSZeroRect, drawBorder: true)
     private let containerView: View = View()
@@ -473,12 +473,15 @@ class PeerListContainerView : Control {
         self.border = [.Right]
         compose.autohighlight = false
         autoresizesSubviews = false
+        
+        backgroundView.layer?.opacity = 0
+        
+        addSubview(backgroundView)
         addSubview(containerView)
         addSubview(tableView)
         containerView.addSubview(compose)
         containerView.addSubview(searchView)
-        addSubview(backgroundView)
-        backgroundView.isHidden = true
+        
         
         tableView.getBackgroundColor = {
             .clear
@@ -861,6 +864,7 @@ class PeerListContainerView : Control {
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
         let theme = (theme as! TelegramPresentationTheme)
         self.backgroundColor = theme.colors.background
+        self.backgroundView.backgroundColor = theme.colors.listBackground
         compose.set(background: .clear, for: .Normal)
         compose.set(background: .clear, for: .Hover)
         compose.set(background: theme.colors.accent, for: .Highlight)
@@ -1904,32 +1908,36 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
     }
     
     
+    private var previousLocation: (ChatLocation?, PeerId?) = (nil, nil)
     func changeSelection(_ location: ChatLocation?, globalForumId: PeerId?) {
-        if let location = location {
-            var id: UIChatListEntryId
-            switch location {
-            case .peer:
-                id = .chatId(.chatList(location.peerId), location.peerId, -1)
-            case let .thread(data):
-                let threadId = makeMessageThreadId(data.messageId)
-                
-                switch self.mode {
-                case .plain, .filter, .folder:
-                    id = .forum(location.peerId)
-                case .forum:
-                    id = .chatId(.forum(threadId), location.peerId, -1)
+        if previousLocation.0 != location {
+            if let location = location {
+                var id: UIChatListEntryId
+                switch location {
+                case .peer:
+                    id = .chatId(.chatList(location.peerId), location.peerId, -1)
+                case let .thread(data):
+                    let threadId = makeMessageThreadId(data.messageId)
+                    
+                    switch self.mode {
+                    case .plain, .filter, .folder:
+                        id = .forum(location.peerId)
+                    case .forum:
+                        id = .chatId(.forum(threadId), location.peerId, -1)
+                    }
                 }
-            }
-            if self.genericView.tableView.item(stableId: id) == nil {
-                let fId = UIChatListEntryId.forum(location.peerId)
-                if self.genericView.tableView.item(stableId: fId) != nil {
-                    id = fId
+                if self.genericView.tableView.item(stableId: id) == nil {
+                    let fId = UIChatListEntryId.forum(location.peerId)
+                    if self.genericView.tableView.item(stableId: fId) != nil {
+                        id = fId
+                    }
                 }
+                self.genericView.tableView.changeSelection(stableId: id)
+            } else {
+                self.genericView.tableView.changeSelection(stableId: nil)
             }
-            self.genericView.tableView.changeSelection(stableId: id)
-        } else {
-            self.genericView.tableView.changeSelection(stableId: nil)
         }
+        self.previousLocation = (location, globalForumId)
         self.updateHighlight(globalForumId ?? location?.peerId)
     }
     
@@ -2230,8 +2238,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             swipeState = nil
             if controller.stake.isCustom {
                 appearMode.set(.short)
+                genericView.backgroundView.change(opacity: 1, animated: true)
             } else {
                 appearMode.set(.normal)
+                genericView.backgroundView.change(opacity: 0, animated: true)
             }
             if let controller = controller as? PeersListController {
                 if case let .forum(peerId, _) = controller.mode {
@@ -2242,6 +2252,19 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             } else {
                 self.updateHighlight(context.globalLocationId?.peerId)
             }
+        default:
+            break
+        }
+    }
+    
+    
+    override func setToPreviousController(_ controller: ViewController, style: ViewControllerStyle) {
+        switch style {
+        case .pop:
+            self.swipeState = nil
+            self.appearMode.set(.normal)
+            self.updateHighlight(context.globalLocationId?.peerId)
+            genericView.backgroundView.change(opacity: 0, animated: true)
         default:
             break
         }
@@ -2263,17 +2286,6 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 current?.selectedForum = peerId
                 return current
             }
-        }
-    }
-    
-    override func setToPreviousController(_ controller: ViewController, style: ViewControllerStyle) {
-        switch style {
-        case .pop:
-            self.swipeState = nil
-            self.appearMode.set(.normal)
-            self.updateHighlight(context.globalLocationId?.peerId)
-        default:
-            break
         }
     }
     
@@ -2344,6 +2356,10 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                 }
                 return true
             })
+
+            if let progress = getSwipeProgress() {
+                genericView.backgroundView.layer?.opacity = Float(1 - progress)
+            }
         }
     }
         

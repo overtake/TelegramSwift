@@ -70,6 +70,7 @@ final class ChatReactionsLayout {
         let selectedColor: NSColor
         let textSelectedColor: NSColor
         let reactionSize: NSSize
+        let avatarSize: NSSize
         let insetOuter: CGFloat
         let insetInner: CGFloat
 
@@ -132,7 +133,7 @@ final class ChatReactionsLayout {
                 size = NSMakeSize(12, 12)
             }
             
-            return .init(bgColor: bgColor, textColor: textColor, borderColor: borderColor, selectedColor: selectedColor, textSelectedColor: textSelectedColor, reactionSize: size, insetOuter: 10, insetInner: mode == .short ? 1 : 5, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isOutOfBounds, hasWallpaper: hasWallpaper)
+            return .init(bgColor: bgColor, textColor: textColor, borderColor: borderColor, selectedColor: selectedColor, textSelectedColor: textSelectedColor, reactionSize: size, avatarSize: NSMakeSize(20, 20), insetOuter: 10, insetInner: mode == .short ? 1 : 5, renderType: renderType, isIncoming: isIncoming, isOutOfBounds: isOutOfBounds, hasWallpaper: hasWallpaper)
 
         }
     }
@@ -705,7 +706,7 @@ final class ChatReactionsView : View {
         fileprivate private(set) var reaction: ChatReactionsLayout.Reaction?
         fileprivate let imageView: AnimationLayerContainer = AnimationLayerContainer(frame: NSMakeRect(0, 0, 16, 16))
         private var textView: DynamicCounterTextView?
-        private let avatarsContainer = View(frame: NSMakeRect(0, 0, 16 * 3, 16))
+        private let avatarsContainer = View(frame: NSMakeRect(0, 0, 24 * 3, 24))
         private var avatars:[AvatarContentView] = []
         private var peers:[ChatReactionsLayout.Reaction.Avatar] = []
         private var first: Bool = true
@@ -861,11 +862,12 @@ final class ChatReactionsView : View {
                     control.removeFromSuperview()
                 }
             }
+            let avatarSize = reaction.presentation.avatarSize
             for inserted in inserted {
-                let control = AvatarContentView(context: reaction.context, peer: inserted.1.peer, message: reaction.message, synchronousLoad: false, size: size)
-                control.updateLayout(size: size, isClipped: inserted.0 != 0, animated: animated)
+                let control = AvatarContentView(context: reaction.context, peer: inserted.1.peer, message: reaction.message, synchronousLoad: false, size: avatarSize, inset: 6)
+                control.updateLayout(size: avatarSize, isClipped: inserted.0 != 0, animated: animated)
                 control.userInteractionEnabled = false
-                control.setFrameSize(size)
+                control.setFrameSize(avatarSize)
                 control.setFrameOrigin(NSMakePoint(CGFloat(inserted.0) * 12, 0))
                 avatars.insert(control, at: inserted.0)
                 avatarsContainer.subviews.insert(control, at: inserted.0)
@@ -880,7 +882,7 @@ final class ChatReactionsView : View {
             }
             for updated in updated {
                 let control = avatars[updated.0]
-                control.updateLayout(size: size, isClipped: updated.0 != 0, animated: animated)
+                control.updateLayout(size: avatarSize, isClipped: updated.0 != 0, animated: animated)
                 let updatedPoint = NSMakePoint(CGFloat(updated.0) * 12, 0)
                 if animated {
                     control.layer?.animatePosition(from: control.frame.origin - updatedPoint, to: .zero, duration: 0.2, timingFunction: .easeOut, additive: true)
@@ -988,7 +990,7 @@ final class ChatReactionsView : View {
                 transition.updateFrame(view: textView, frame: CGRect(origin: NSMakePoint(self.imageView.frame.maxX + presentation.insetInner, center.minY), size: text.size))
             }
             
-            let center = focus(presentation.reactionSize)
+            let center = focus(presentation.avatarSize)
             transition.updateFrame(view: avatarsContainer, frame: CGRect(origin: NSMakePoint(self.imageView.frame.maxX + presentation.insetInner, center.minY), size: avatarsContainer.frame.size))
             
         }

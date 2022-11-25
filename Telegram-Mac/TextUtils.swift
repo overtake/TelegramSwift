@@ -311,7 +311,8 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             }
         }
         if !applyUserName {
-            let range = attributedText.string.nsstring.range(of: effective.text)
+            let range = attributedText.string.nsstring.range(of: messageText as String)
+        
             if range.location != NSNotFound {
                 InlineStickerItem.apply(to: attributedText, associatedMedia: effective.associatedMedia, entities:  effective.entities, isPremium: isPremium, ignoreSpoiler: true, offset: range.location)
             }
@@ -384,7 +385,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 text = strings().chatServiceGroupJoinedByLink(authorName)
             }
-        case let .messageAutoremoveTimeoutUpdated(seconds):
+        case let .messageAutoremoveTimeoutUpdated(seconds, _):
             if seconds > 0 {
                 text = strings().chatServiceSecretChatSetTimer1(authorName, autoremoveLocalized(Int(seconds)))
             } else {
@@ -579,8 +580,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             }
         case let .topicEdited(components):
             var fileId: Int64?
-            if components.count == 1 {
-                let component = components[0]
+            if let component = components.last {
                 switch component {
                 case let .title(title):
                     if authorId == account.peerId {

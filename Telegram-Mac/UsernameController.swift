@@ -83,12 +83,12 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
             case .available:
                 color = theme.colors.accent
             case .purchaseAvailable:
-                color = theme.colors.text
+                color = theme.colors.grayText
             default:
                 color = theme.colors.redUI
             }
             entries.append(.desc(sectionId: sectionId, index: 1, text: .markdown(text, linkHandler: { link in
-                if let username = username, link == "fragment" {
+                if let username = username {
                     let link: String = "fragment.com/username/\(username)"
                     execute(inapp: inApp(for: link.nsstring))
                 }

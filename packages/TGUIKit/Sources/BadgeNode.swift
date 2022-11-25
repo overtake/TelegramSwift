@@ -43,7 +43,7 @@ public class BadgeNode: Node {
                 outerPath.addRoundedRect(in: rect, cornerWidth: rect.height / 2, cornerHeight: rect.height / 2)
                 outerPath.closeSubpath()
                 
-                let innerRect = rect.insetBy(dx: 1, dy: 1)
+                let innerRect = rect.insetBy(dx: 2, dy: 2)
                 
                 let innerPath = CGMutablePath()
                 innerPath.addRoundedRect(in: innerRect, cornerWidth: innerRect.height / 2, cornerHeight: innerRect.height / 2)

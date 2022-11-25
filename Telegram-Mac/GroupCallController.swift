@@ -1206,6 +1206,12 @@ final class GroupCallUIController : ViewController {
                     arguments.openInfo(state.peer)
                 }, itemImage: MenuAnimation.menu_open_profile.value))
                 
+                if let about = state.about {
+                    firstBlock.append(ContextMenuItem(about, handler: {
+                        arguments.openInfo(state.peer)
+                    }, itemImage: MenuAnimation.menu_bio.value, removeTail: false, overrideWidth: 200))
+                }
+
                 if data.peer.id != data.accountPeerId, state.muteState == nil || state.muteState?.canUnmute == true {
                     secondBlock.append(GroupCallVolumeMenuItem(volume: CGFloat((state.volume ?? 10000)) / 10000.0, { value, sync in
                         if value == 0 {
@@ -1249,11 +1255,11 @@ final class GroupCallUIController : ViewController {
                         if muteState.mutedByYou {
                             secondBlock.append(.init(strings().voiceChatUnmuteForMe, handler: {
                                 arguments.mute(data.peer.id, false)
-                            }, itemImage: MenuAnimation.menu_unmuted.value))
+                            }, itemImage: MenuAnimation.menu_speaker.value))
                         } else {
                             secondBlock.append(.init(strings().voiceChatMuteForMe, handler: {
                                 arguments.mute(data.peer.id, true)
-                            }, itemImage: MenuAnimation.menu_mute.value))
+                            }, itemImage: MenuAnimation.menu_speaker_muted.value))
                         }
                     } else {
                         secondBlock.append(.init(strings().voiceChatMuteForMe, handler: {

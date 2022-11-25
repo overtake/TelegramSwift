@@ -5153,6 +5153,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var privacy_settings_autodelete: CGImage {
+      if let image = cached.with({ $0["privacy_settings_autodelete"] }) {
+          return image
+      } else {
+          let image = _privacy_settings_autodelete()
+          _ = cached.modify { current in 
+              var current = current
+              current["privacy_settings_autodelete"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var deletedAccount: CGImage {
       if let image = cached.with({ $0["deletedAccount"] }) {
           return image
@@ -9307,6 +9320,7 @@ public final class TelegramIconsTheme {
   private let _privacySettings_activeSessions: ()->CGImage
   private let _privacySettings_passcode: ()->CGImage
   private let _privacySettings_twoStep: ()->CGImage
+  private let _privacy_settings_autodelete: ()->CGImage
   private let _deletedAccount: ()->CGImage
   private let _stickerPackSelection: ()->CGImage
   private let _stickerPackSelectionActive: ()->CGImage
@@ -9994,6 +10008,7 @@ public final class TelegramIconsTheme {
       privacySettings_activeSessions: @escaping()->CGImage,
       privacySettings_passcode: @escaping()->CGImage,
       privacySettings_twoStep: @escaping()->CGImage,
+      privacy_settings_autodelete: @escaping()->CGImage,
       deletedAccount: @escaping()->CGImage,
       stickerPackSelection: @escaping()->CGImage,
       stickerPackSelectionActive: @escaping()->CGImage,
@@ -10680,6 +10695,7 @@ public final class TelegramIconsTheme {
       self._privacySettings_activeSessions = privacySettings_activeSessions
       self._privacySettings_passcode = privacySettings_passcode
       self._privacySettings_twoStep = privacySettings_twoStep
+      self._privacy_settings_autodelete = privacy_settings_autodelete
       self._deletedAccount = deletedAccount
       self._stickerPackSelection = stickerPackSelection
       self._stickerPackSelectionActive = stickerPackSelectionActive

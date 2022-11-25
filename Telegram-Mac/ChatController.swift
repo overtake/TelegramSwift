@@ -1508,6 +1508,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     private let sendAsPeersDisposable = MetaDisposable()
     private let startSecretChatDisposable = MetaDisposable()
     private let inputSwapDisposable = MetaDisposable()
+    
+    private var keepMessageCountersSyncrhonizedDisposable: Disposable?
+    
     private let searchState: ValuePromise<SearchMessagesResultState> = ValuePromise(SearchMessagesResultState("", []), ignoreRepeated: true)
 
     
@@ -1902,6 +1905,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         super.viewDidLoad()
         
         
+        
         sizeValue.set(frame.size)
         self.chatInteraction.add(observer: self)
         
@@ -1944,6 +1948,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         let takeReplyId:()->MessageId? = { [weak self] in
             return self?.chatInteraction.presentation.interfaceState.replyMessageId ?? threadId
         }
+        if let id = threadId {
+            let threadId = makeMessageThreadId(id)
+            keepMessageCountersSyncrhonizedDisposable = self.context.engine.messages.keepMessageCountersSyncrhonized(peerId: peerId, threadId: threadId).start()
+        }
+
         
         if chatInteraction.peerId.namespace == Namespaces.Peer.CloudChannel {
             slowModeInProgressDisposable.set((context.account.postbox.unsentMessageIdsView() |> mapToSignal { view -> Signal<[MessageId], NoError> in
@@ -2748,7 +2757,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         
         chatInteraction.sendMessage = { [weak self] silent, atDate in
-            if let strongSelf = self {
+            if let strongSelf = self, !strongSelf.nextTransaction.isExutable {
                 let presentation = strongSelf.chatInteraction.presentation
                 let peerId = strongSelf.chatInteraction.peerId
                 let threadId = strongSelf.chatInteraction.mode.threadId
@@ -6260,9 +6269,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         transcribeDisposable.dispose()
         startSecretChatDisposable.dispose()
         inputSwapDisposable.dispose()
+        keepMessageCountersSyncrhonizedDisposable?.dispose()
         _ = previousView.swap(nil)
         
         context.closeFolderFirst = false
+        
     }
     
     

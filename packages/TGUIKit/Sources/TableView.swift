@@ -419,6 +419,7 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         self.autoresizesSubviews = false
         usesAlternatingRowBackgroundColors = false
         layerContentsRedrawPolicy = .never
+        usesAutomaticRowHeights = false
     }
     
     override func becomeFirstResponder() -> Bool {
@@ -435,6 +436,9 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         return super.rows(in: rect)
     }
     
+    override func isAccessibilityElement() -> Bool {
+        return false
+    }
     
     override public static var isCompatibleWithResponsiveScrolling: Bool {
         return true
@@ -469,6 +473,11 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     override func addSubview(_ view: NSView) {
         super.addSubview(view)
     }
+    
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+    }
+    
     
     func draw(_ layer: CALayer, in ctx: CGContext) {
 
@@ -849,6 +858,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         clipView.autoresizingMask = []
         clipView.autoresizesSubviews = false
         clipView.copiesOnScroll = true
+        
+        self.tableView.autoresizingMask = []
+        self.tableView.rowSizeStyle = .custom
+
         
        // self.scrollsDynamically = true
        // self.verticalLineScroll = 0
@@ -2230,7 +2243,16 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.endTableUpdates()
     }
     
-    
+    public func reloadHeight() {
+        self.beginTableUpdates()
+        for index in 0 ..< list.count {
+            NSAnimationContext.current.duration = 0
+            NSAnimationContext.current.timingFunction = nil
+            tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: index))
+        }
+        self.endTableUpdates()
+        self.tableView.tile()
+    }
     
     public func item(at:Int) -> TableRowItem {
         return self.list[at]
@@ -2733,8 +2755,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         self.updatedItems?(self.list)
         
         self.reflectScrolledClipView(self.clipView)
-        self.tile()
-        
+        self.tableView.tile()
+
         if oldEmpty != isEmpty || first {
             updateEmpties(animated: !first)
         }
@@ -3175,7 +3197,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let oldWidth = frame.width
         let oldHeight = frame.height
         super.setFrameSize(newSize)
-        
+                    
+       
         if newSize.width > 0 || newSize.height > 0 {
             if oldWidth != frame.width, newSize.width > 0 && newSize.height > 0 {
                 self.layoutIfNeeded(with: self.visibleRows(), oldWidth: oldWidth)
@@ -3187,6 +3210,10 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         //updateStickAfterScroll(false)
         if oldWidth != newSize.width, !inLiveResize && newSize.width > 0 && newSize.height > 0 {
             saveScrollState(visible)
+        }
+        
+        if listHeight != tableView.frame.size.height, newSize.height <= listHeight, !inLiveResize {
+            self.tableView.reloadData()
         }
     }
     

@@ -64,17 +64,19 @@ open class ContextMenuItem : NSMenuItem {
     public let itemMode: AppMenu.ItemMode
     
     public let keyEquivalentValue: KeyEquiavalent
+    let overrideWidth: CGFloat?
     
-    public init(_ title:String, handler: (()->Void)? = nil, hover: (()->Void)? = nil, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil, itemMode: AppMenu.ItemMode = .normal, itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? = nil, keyEquivalent: KeyEquiavalent = .none) {
+    public init(_ title:String, handler: (()->Void)? = nil, hover: (()->Void)? = nil, image:NSImage? = nil, dynamicTitle:(()->String)? = nil, state: NSControl.StateValue? = nil, itemMode: AppMenu.ItemMode = .normal, itemImage: ((NSColor, ContextMenuItem)->AppMenuItemImageDrawable)? = nil, keyEquivalent: KeyEquiavalent = .none, removeTail: Bool = true, overrideWidth: CGFloat? = nil) {
         self.handler = handler
         self.hover = hover
         self.dynamicTitle = dynamicTitle
         self.itemMode = itemMode
         self.itemImage = itemImage
+        self.overrideWidth = overrideWidth
         self.keyEquivalentValue = keyEquivalent
         super.init(title: title, action: nil, keyEquivalent: "")
         
-        self.title = title.prefixWithDots(cuttail ?? Int.max)
+        self.title = title.prefixWithDots(removeTail ? cuttail ?? Int.max : Int.max)
         self.action = #selector(click)
         self.target = self
         self.isEnabled = true

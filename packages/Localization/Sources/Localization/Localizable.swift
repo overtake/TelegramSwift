@@ -2227,7 +2227,7 @@ public final class L10n {
   public static var chatContextPinnedHide: String  { return L10n.tr("Localizable", "Chat.Context.Pinned.Hide") }
   /// Set As Quick
   public static var chatContextReactionQuick: String  { return L10n.tr("Localizable", "Chat.Context.Reaction.Quick") }
-  /// Thank you for your report.
+  /// Telegram moderators will review your feedback. Thank you.
   public static var chatContextReportFalsePositiveThanks: String  { return L10n.tr("Localizable", "Chat.Context.ReportFalsePositive.Thanks") }
   /// Save for Notifications
   public static var chatContextSaveRingtoneAdd: String  { return L10n.tr("Localizable", "Chat.Context.SaveRingtone.Add") }
@@ -5515,6 +5515,26 @@ public final class L10n {
   public static var gifsPaneReactions: String  { return L10n.tr("Localizable", "GifsPane.Reactions") }
   /// TRENDING GIFS
   public static var gifsPaneTrending: String  { return L10n.tr("Localizable", "GifsPane.Trending") }
+  /// Off
+  public static var globalTimerOff: String  { return L10n.tr("Localizable", "GlobalTimer.Off") }
+  /// Set Custom Time
+  public static var globalTimerSetCustomTime: String  { return L10n.tr("Localizable", "GlobalTimer.SetCustomTime") }
+  /// Auto-Delete Messages
+  public static var globalTimerTitle: String  { return L10n.tr("Localizable", "GlobalTimer.Title") }
+  /// SELF-DESTRUCT TIMER
+  public static var globalTimerBlockHeader: String  { return L10n.tr("Localizable", "GlobalTimer.Block.Header") }
+  /// If enabled, all new messages in chats you start will be automatically deleted for everyone at some point after they have been sent. This will not affect your existing chats.
+  public static var globalTimerBlockInfo: String  { return L10n.tr("Localizable", "GlobalTimer.Block.Info") }
+  /// All new messages in chats you started will be automatically deleted for everyone 1 week after they have been sent. You can also [apply this setting for your existing chats]().
+  public static var globalTimerBlockEnabledInfo: String  { return L10n.tr("Localizable", "GlobalTimer.Block.Enabled.Info") }
+  /// Enable Auto-Deletion
+  public static var globalTimerConfirmOk: String  { return L10n.tr("Localizable", "GlobalTimer.Confirm.Ok") }
+  /// Are you sure you want all messages in new chats started by you to be automatically deleted for everyone %1$@ after they have been sent?
+  public static func globalTimerConfirmText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "GlobalTimer.Confirm.Text", p1)
+  }
+  /// Self-Destruct Timer
+  public static var globalTimerConfirmTitle: String  { return L10n.tr("Localizable", "GlobalTimer.Confirm.Title") }
   /// Total
   public static var graphTotal: String  { return L10n.tr("Localizable", "Graph.Total") }
   /// Zoom Out
@@ -8641,6 +8661,8 @@ public final class L10n {
   public static var privacySettingsDeleteAccountHeader: String  { return L10n.tr("Localizable", "PrivacySettings.DeleteAccountHeader") }
   /// Forwarded Messages
   public static var privacySettingsForwards: String  { return L10n.tr("Localizable", "PrivacySettings.Forwards") }
+  /// Auto-Delete Messages
+  public static var privacySettingsGlobalTimer: String  { return L10n.tr("Localizable", "PrivacySettings.GlobalTimer") }
   /// %d
   public static func privacySettingsGroupMembersCountCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PrivacySettings.GroupMembersCount_countable", p1)
@@ -8713,6 +8735,14 @@ public final class L10n {
   public static var privacySettingsVoiceCalls: String  { return L10n.tr("Localizable", "PrivacySettings.VoiceCalls") }
   /// Voice Messages
   public static var privacySettingsVoiceMessages: String  { return L10n.tr("Localizable", "PrivacySettings.VoiceMessages") }
+  /// Disable
+  public static var privacySettingsGlobalTimerDisable: String  { return L10n.tr("Localizable", "PrivacySettings.GlobalTimer.Disable") }
+  /// Automatically delete messages sent in this group for everyone after a period of time
+  public static var privacySettingsGlobalTimerGroup: String  { return L10n.tr("Localizable", "PrivacySettings.GlobalTimer.Group") }
+  /// Automatically delete messages for everyone after a period of time in all new chats you start.
+  public static var privacySettingsGlobalTimerInfo: String  { return L10n.tr("Localizable", "PrivacySettings.GlobalTimer.Info") }
+  /// Never
+  public static var privacySettingsGlobalTimerNever: String  { return L10n.tr("Localizable", "PrivacySettings.GlobalTimer.Never") }
   /// Add New
   public static var privacySettingsPeerSelectAddNew: String  { return L10n.tr("Localizable", "PrivacySettings.PeerSelect.AddNew") }
   /// Add Users or Groups

@@ -398,6 +398,7 @@ func initialize() -> [String] {
     array.append("privacySettings_activeSessions")
     array.append("privacySettings_passcode")
     array.append("privacySettings_twoStep")
+    array.append("privacy_settings_autodelete")
     array.append("deletedAccount")
     array.append("stickerPackSelection")
     array.append("stickerPackSelectionActive")

@@ -754,7 +754,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             }
             
             if animatePosBar {
-                navigationBar.layer?.animatePosition(from: NSMakePoint(nfrom, navigationBar.frame.minY), to: NSMakePoint(nto, barInset), duration: previous.animationStyle.duration, timingFunction: .spring)
+                navigationBar.layer?.animatePosition(from: NSMakePoint(nfrom, navigationBar.frame.minY), to: NSMakePoint(nto, barInset), duration: previous.animationStyle.duration, timingFunction: previous.animationStyle.function)
             }
             
             
@@ -784,7 +784,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
             
             
             if animatePosBar {
-                navigationBar.layer?.animatePosition(from: NSMakePoint(pfrom, barInset), to: NSMakePoint(pto, barInset), duration: previous.animationStyle.duration, timingFunction: .spring, removeOnCompletion: false, completion: { [weak controller, weak navigationBar] completed in
+                navigationBar.layer?.animatePosition(from: NSMakePoint(pfrom, barInset), to: NSMakePoint(pto, barInset), duration: previous.animationStyle.duration, timingFunction: previous.animationStyle.function, removeOnCompletion: false, completion: { [weak controller, weak navigationBar] completed in
                     if let controller = controller, completed {
                         navigationBar?.frame = NSMakeRect(0, barInset, controller.frame.width, controller.bar.height)
                         navigationBar?.layer?.removeAllAnimations()

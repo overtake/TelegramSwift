@@ -106,6 +106,9 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
         
     }
 
+    open override func isAccessibilityElement() -> Bool {
+        return false
+    }
     
     open func draw(_ layer: CALayer, in ctx: CGContext) {
 //        ctx.setFillColor(backdorColor.cgColor)
