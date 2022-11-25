@@ -38,6 +38,7 @@ enum LocalAnimatedSticker : String {
     case group_call_chatlist_typing
     case invitations
     case destructor
+    case global_autoremove
     case gigagroup
     case police
     
@@ -246,6 +247,7 @@ enum LocalAnimatedSticker : String {
     case menu_hide
     case menu_show
     case menu_report_false_positive
+    case menu_bio
 
     case forum_topic
     

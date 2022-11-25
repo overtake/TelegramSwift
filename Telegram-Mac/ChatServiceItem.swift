@@ -240,7 +240,7 @@ class ChatServiceItem: ChatRowItem {
                     
                 case .channelMigratedFromGroup, .groupMigratedToChannel:
                     let _ =  attributedString.append(string: strings().chatServiceGroupMigratedToSupergroup, color: grayTextColor, font: NSFont.normal(theme.fontSize))
-                case let .messageAutoremoveTimeoutUpdated(seconds):
+                case let .messageAutoremoveTimeoutUpdated(seconds, _):
                     
                     if let authorId = authorId {
                         if authorId == context.peerId {
@@ -608,8 +608,7 @@ class ChatServiceItem: ChatRowItem {
                 case let .topicEdited(components):
                     let text: String
                     var fileId: Int64? = nil
-                    if components.count == 1 {
-                        let component = components[0]
+                    if let component = components.last {
                         switch component {
                         case let .title(title):
                             if authorId == context.peerId {
@@ -887,7 +886,7 @@ class ChatServiceRowView: TableRowView {
             if let item = self?.item as? ChatServiceItem {
                 if let message = item.message, let action = message.effectiveMedia as? TelegramMediaAction {
                     switch action.action {
-                    case let .messageAutoremoveTimeoutUpdated(timeout):
+                    case let .messageAutoremoveTimeoutUpdated(timeout, _):
                         if let peer = item.chatInteraction.peer {
                             if peer.canManageDestructTimer, timeout > 0 {
                                 item.chatInteraction.showDeleterSetup(control)
@@ -995,7 +994,7 @@ class ChatServiceRowView: TableRowView {
 
         if let message = item.message, let action = message.effectiveMedia as? TelegramMediaAction {
             switch action.action {
-            case let .messageAutoremoveTimeoutUpdated(timeout):
+            case let .messageAutoremoveTimeoutUpdated(timeout, _):
                 if let peer = item.chatInteraction.peer {
                     interactiveTextView = peer.canManageDestructTimer && timeout > 0
                 }

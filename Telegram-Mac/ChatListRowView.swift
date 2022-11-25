@@ -126,7 +126,7 @@ final class ChatListTopicNameAndTextLayout {
                     if let fileId = item.iconFileId {
                         embedded = .init(source: .attribute(.init(fileId: fileId, file: message.associatedMedia[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] as? TelegramMediaFile, emoji: "")))
                     } else {
-                        let file = ForumUI.makeIconFile(title: item.title, iconColor: item.iconColor, isGeneral: data.id == 1)
+                        let file = ForumUI.makeIconFile(title: item.title, iconColor: item.iconColor, isGeneral: item.id == 1)
                         embedded = .init(source: .attribute(.init(fileId: Int64(item.iconColor), file: file, emoji: "")))
                     }
                     attr.addAttribute(.init(rawValue: "Attribute__EmbeddedItem"), value: embedded, range: range)
@@ -692,11 +692,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
 
                 
                 if highlighted {
-                    activity = theme.activity(key: 10, foregroundColor: theme.chatList.activitySelectedColor, backgroundColor: theme.chatList.selectedBackgroundColor)
+                    activity = theme.activity(key: 10, foregroundColor: theme.chatList.activitySelectedColor, backgroundColor: .clear)
                 } else if item.isFixedItem {
-                    activity = theme.activity(key: 14, foregroundColor: theme.chatList.activityPinnedColor, backgroundColor: theme.chatList.pinnedBackgroundColor)
+                    activity = theme.activity(key: 14, foregroundColor: theme.chatList.activityPinnedColor, backgroundColor: .clear)
                 } else {
-                    activity = theme.activity(key: 15, foregroundColor: theme.chatList.activityColor, backgroundColor: theme.colors.background)
+                    activity = theme.activity(key: 15, foregroundColor: theme.chatList.activityColor, backgroundColor: .clear)
                 }
                 if oldValue != item.activities || activity != activitiesModel?.theme {
                     activitiesModel?.update(with: inputActivities, for: item.messageWidth, theme:  activity, layout: { [weak self] show in
@@ -761,12 +761,23 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         
     }
     
+    var _backgroundColor: NSColor {
+        if let item = item as? ChatListRowItem {
+            if item.shouldHideContent {
+                return theme.colors.listBackground
+            } else {
+                return theme.colors.background
+            }
+            
+        }
+        return theme.colors.background
+    }
     
     
     override var backdorColor: NSColor {
         if let item = item as? ChatListRowItem {
             if item.isForum && !item.isTopic {
-                return theme.colors.background
+                return .clear
             }
             if item.isCollapsed {
                 return theme.colors.grayBackground
@@ -780,15 +791,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             if !item.isSelected && containerView.activeDragging {
                 return theme.chatList.activeDraggingBackgroundColor
             }
-            if item.isFixedItem && !item.isSelected {
-                return theme.chatList.pinnedBackgroundColor
-            }
+
             if item.isSelected && item.isForum && !item.isTopic {
                 return theme.chatList.activeDraggingBackgroundColor
             }
-            return item.isSelected ? theme.chatList.selectedBackgroundColor : contextMenu != nil ? theme.chatList.contextMenuBackgroundColor : theme.colors.background
+            return item.isSelected && !item.isAutohidden ? theme.chatList.selectedBackgroundColor : contextMenu != nil ? theme.chatList.contextMenuBackgroundColor : .clear
         }
-        return theme.colors.background
+        return .clear
     }
     
     
@@ -840,8 +849,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         let y: CGFloat
                         let x: CGFloat
                         if displayLayout.numberOfLines > 1 {
-                            x = item.leftInset + displayLayout.firstLineWidth + 4 + addition
-                            y = item.margin + 4
+                            x = item.leftInset + displayLayout.lastLineWidth + 4 + addition
+                            y = item.margin + 2 + displayLayout.layoutSize.height - displayLayout.lastLineHeight
                         } else {
                             x = item.leftInset + displayLayout.layoutSize.width + 4 + addition
                             y = item.margin + round((displayLayout.layoutSize.height - icon.backingSize.height) / 2.0) - 1
@@ -1313,30 +1322,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             }
 
             
-            if item.hasActiveGroupCall {
-                var animate: Bool = false
-
-                if self.groupActivityView == nil {
-                    self.groupActivityView = GroupCallActivity(frame: .init(origin: .zero, size: NSMakeSize(20, 20)))
-                    self.containerView.addSubview(self.groupActivityView!)
-                    animate = true
-                }
-                
-                let groupActivityView = self.groupActivityView!
-                
-                groupActivityView.setFrameOrigin(photo.frame.maxX - groupActivityView.frame.width + 3, photo.frame.maxY - 18)
-                
-                let isActive = item.isHighlighted
-                
-                groupActivityView.update(context: item.context, tableView: item.table, foregroundColor: isActive ? theme.colors.underSelectedColor : theme.colors.accentSelect, backgroundColor: backdorColor, animColor: isActive ? theme.colors.accentSelect : theme.colors.underSelectedColor)
-                if animated && animate {
-                    groupActivityView.layer?.animateAlpha(from: 0.5, to: 1.0, duration: 0.2)
-                    groupActivityView.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
-                }
-            } else if let view = groupActivityView {
-                performSubviewRemoval(view, animated: animated, scale: true)
-                self.groupActivityView = nil
-            }
+            
             
             
             containerView.item = item
@@ -1473,7 +1459,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                      presented = true
                  }
                  badgeShortView?.setFrameSize(badgeNode.size)
-                 badgeNode.aroundFill = theme.colors.background
+                 badgeNode.aroundFill = _backgroundColor
                  badgeNode.view = badgeShortView
                  badgeNode.setNeedDisplay()
                  
@@ -1496,6 +1482,31 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              } else if let view = self.badgeShortView {
                  performSubviewRemoval(view, animated: animated, scale: true)
                  self.badgeShortView = nil
+             }
+             
+             if item.hasActiveGroupCall, badgeShortView == nil {
+                 var animate: Bool = false
+
+                 if self.groupActivityView == nil {
+                     self.groupActivityView = GroupCallActivity(frame: .init(origin: .zero, size: NSMakeSize(20, 20)))
+                     self.containerView.addSubview(self.groupActivityView!)
+                     animate = true
+                 }
+                 
+                 let groupActivityView = self.groupActivityView!
+                 
+                 groupActivityView.setFrameOrigin(photo.frame.maxX - groupActivityView.frame.width + 3, photo.frame.maxY - 18)
+                 
+                 let isActive = item.isSelected
+                 
+                 groupActivityView.update(context: item.context, tableView: item.table, foregroundColor: isActive ? theme.colors.underSelectedColor : theme.colors.accentSelect, backgroundColor: isActive ? theme.colors.accentSelect : _backgroundColor, animColor: isActive ? theme.colors.accentSelect : theme.colors.underSelectedColor)
+                 if animated && animate {
+                     groupActivityView.layer?.animateAlpha(from: 0.5, to: 1.0, duration: 0.2)
+                     groupActivityView.layer?.animateScaleSpring(from: 0.1, to: 1.0, duration: 0.3)
+                 }
+             } else if let view = groupActivityView {
+                 performSubviewRemoval(view, animated: animated, scale: true)
+                 self.groupActivityView = nil
              }
              
              if let isOnline = item.isOnline {

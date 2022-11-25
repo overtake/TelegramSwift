@@ -139,6 +139,8 @@
 		2747FD3B2927BFBE0045B95C /* menu_show.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2747FD392927BFBD0045B95C /* menu_show.tgs */; };
 		2747FD3C2927BFBE0045B95C /* menu_hide.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2747FD3A2927BFBE0045B95C /* menu_hide.tgs */; };
 		2747FD3E292CD4530045B95C /* menu_report_false_positive.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2747FD3D292CD4530045B95C /* menu_report_false_positive.tgs */; };
+		2747FD40292F85120045B95C /* GlobalAutoremoveMessagesController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2747FD3F292F85120045B95C /* GlobalAutoremoveMessagesController.swift */; };
+		2747FD422930FD570045B95C /* global_autoremove.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2747FD412930FD570045B95C /* global_autoremove.tgs */; };
 		2748C56127BA477900F05503 /* Auth_Token.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748C56027BA477900F05503 /* Auth_Token.swift */; };
 		2748C56327BA53C800F05503 /* Auth_Loading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748C56227BA53C800F05503 /* Auth_Loading.swift */; };
 		2748C56527BA959F00F05503 /* Auth_PhoneNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2748C56427BA959F00F05503 /* Auth_PhoneNumber.swift */; };
@@ -216,6 +218,7 @@
 		276885032770D7BE0021C891 /* AddReactionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276885022770D7BE0021C891 /* AddReactionManager.swift */; };
 		276957A92746C07400297991 /* SessionModalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276957A82746C07400297991 /* SessionModalController.swift */; };
 		276A6C0F26C5316F00E4FF34 /* StickerPackTrendingItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276A6C0E26C5316F00E4FF34 /* StickerPackTrendingItem.swift */; };
+		276F9B882931155D00E35997 /* menu_bio.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 276F9B872931155D00E35997 /* menu_bio.tgs */; };
 		2773A53525F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 2773A53425F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs */; };
 		2773A53A25FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2773A53925FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift */; };
 		2773A53E25FA220C00AB45E9 /* JoinVoiceChatAlertRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2773A53D25FA220B00AB45E9 /* JoinVoiceChatAlertRowItem.swift */; };
@@ -1497,6 +1500,8 @@
 		2747FD392927BFBD0045B95C /* menu_show.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_show.tgs; sourceTree = "<group>"; };
 		2747FD3A2927BFBE0045B95C /* menu_hide.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_hide.tgs; sourceTree = "<group>"; };
 		2747FD3D292CD4530045B95C /* menu_report_false_positive.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_report_false_positive.tgs; sourceTree = "<group>"; };
+		2747FD3F292F85120045B95C /* GlobalAutoremoveMessagesController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalAutoremoveMessagesController.swift; sourceTree = "<group>"; };
+		2747FD412930FD570045B95C /* global_autoremove.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = global_autoremove.tgs; sourceTree = "<group>"; };
 		2748C56027BA477900F05503 /* Auth_Token.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_Token.swift; sourceTree = "<group>"; };
 		2748C56227BA53C800F05503 /* Auth_Loading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_Loading.swift; sourceTree = "<group>"; };
 		2748C56427BA959F00F05503 /* Auth_PhoneNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_PhoneNumber.swift; sourceTree = "<group>"; };
@@ -1587,6 +1592,7 @@
 		276B5985261C79940029FD3F /* GroupCallControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallControlsView.swift; sourceTree = "<group>"; };
 		276B5988261C7AC60029FD3F /* GroupCallSchedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupCallSchedule.swift; sourceTree = "<group>"; };
 		276C1EBE261B451500FE41C9 /* Currency.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Currency.swift; sourceTree = "<group>"; };
+		276F9B872931155D00E35997 /* menu_bio.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_bio.tgs; sourceTree = "<group>"; };
 		2771AC77273C2B1F00245A48 /* TelegramVoip */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TelegramVoip; path = "submodules/telegram-ios/submodules/TelegramVoip"; sourceTree = "<group>"; };
 		2773A53425F91E1500AB45E9 /* voice_chat_raise_hand_1.tgs */ = {isa = PBXFileReference; lastKnownFileType = text; path = voice_chat_raise_hand_1.tgs; sourceTree = "<group>"; };
 		2773A53925FA1D9D00AB45E9 /* JoinVoiceChatAlertController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinVoiceChatAlertController.swift; sourceTree = "<group>"; };
@@ -3214,6 +3220,7 @@
 			children = (
 				27093B2A279FD70F001C36D8 /* folders */,
 				27E070F5278D9C120026BFA1 /* menu_poll.tgs */,
+				276F9B872931155D00E35997 /* menu_bio.tgs */,
 				2747FD3A2927BFBE0045B95C /* menu_hide.tgs */,
 				2747FD3D292CD4530045B95C /* menu_report_false_positive.tgs */,
 				2747FD392927BFBD0045B95C /* menu_show.tgs */,
@@ -4534,6 +4541,7 @@
 				C248BD271E706DBC004B9106 /* sessions */,
 				C24D9FC51E250094002CD3F3 /* passcode */,
 				C248BD231E706104004B9106 /* BlockedPeersViewController.swift */,
+				2747FD3F292F85120045B95C /* GlobalAutoremoveMessagesController.swift */,
 			);
 			name = privacy;
 			sourceTree = "<group>";
@@ -5402,6 +5410,7 @@
 				27F4F17E28463BF000A3B4D4 /* premium_addone.tgs */,
 				27F4F17F28463BF100A3B4D4 /* premium_double.tgs */,
 				27F4F1872848CFCC00A3B4D4 /* premium_unlock.tgs */,
+				2747FD412930FD570045B95C /* global_autoremove.tgs */,
 				27D91313283646CA007CF40F /* voice_to_text.tgs */,
 				27F37A252850F8F200AC8B90 /* voice_dots.tgs */,
 				2755490D2747C24B0098A3CD /* device_android.tgs */,
@@ -6025,6 +6034,7 @@
 				27CB1760276376DE00DD25E0 /* menu_change_colors.tgs in Resources */,
 				2744AE7225B58E6C00E8849F /* invitations.tgs in Resources */,
 				D0E7BE7C256D56DA0068644D /* group_call_member_unmute.json in Resources */,
+				276F9B882931155D00E35997 /* menu_bio.tgs in Resources */,
 				9F03681322771A9700456348 /* anim_delete.json in Resources */,
 				27E070F6278D9C120026BFA1 /* menu_poll.tgs in Resources */,
 				9F03681822771A9700456348 /* anim_group.json in Resources */,
@@ -6212,6 +6222,7 @@
 				C21A48B41F7D0D6B0095ADB1 /* VideoMessage.vsh in Resources */,
 				27A7D37E2600F58A00A67737 /* voip_group_recording_started.mp3 in Resources */,
 				A778DC3423C8988300DD307B /* quiz-correct.mp3 in Resources */,
+				2747FD422930FD570045B95C /* global_autoremove.tgs in Resources */,
 				27CE37692760960A007E6F1B /* menu_clear_history.tgs in Resources */,
 				27E969E6258B417200CB9F64 /* reconnecting.mp3 in Resources */,
 				9F03681022771A9700456348 /* anim_ungroup.json in Resources */,
@@ -6653,6 +6664,7 @@
 				9FDD78D121C8F0CC00F1B4EF /* ChatPollItem.swift in Sources */,
 				C250B0311DB78869004E9FBE /* QuickLookPreview.swift in Sources */,
 				D0BDD50123A38660002010A5 /* InactiveChannelsController.swift in Sources */,
+				2747FD40292F85120045B95C /* GlobalAutoremoveMessagesController.swift in Sources */,
 				C2DE5D3A1F3CAD990081EC1E /* InstantPageLayout.swift in Sources */,
 				9F153D1621F3662700B95D82 /* StoredMessageFromSearchPeer.swift in Sources */,
 				9F7D422A22240404007B68BB /* AccountContext.swift in Sources */,

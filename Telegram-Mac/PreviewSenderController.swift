@@ -98,7 +98,7 @@ fileprivate class PreviewSenderView : Control {
     fileprivate weak var controller: PreviewSenderController?
     fileprivate var stateValueInteractiveUpdate: ((PreviewSendingState)->Void)?
     
-    private var _state: PreviewSendingState = PreviewSendingState(state: .file, isCollage: FastSettings.isNeedCollage)
+    private var _state: PreviewSendingState = PreviewSendingState(state: .file, isCollage: true)
     var state: PreviewSendingState {
         set {
             _state = newValue
@@ -376,8 +376,11 @@ fileprivate class PreviewSenderView : Control {
         actionsContainerView.setFrameOrigin(frame.width - actionsContainerView.frame.width, frame.height - actionsContainerView.frame.height)
         headerView.setFrameSize(frame.width, 50)
         
-        tableView.setFrameSize(NSMakeSize(frame.width, frame.height - additionHeight))
-        tableView.centerX(y: headerView.frame.maxY - 6)
+        
+        let height = frame.height - additionHeight
+        
+        let listHeight = tableView.listHeight
+        tableView.frame = NSMakeRect(0, headerView.frame.maxY - 6, frame.width, min(height, listHeight))
         
         draggingView.frame = tableView.frame
 
@@ -1000,7 +1003,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         self.disposable.set(actionsDisposable)
         
         
-        let initialState = PreviewState(urls: [], medias: [], currentState: .init(state: .media, isCollage: FastSettings.isNeedCollage), editedData: [:])
+        let initialState = PreviewState(urls: [], medias: [], currentState: .init(state: .media, isCollage: true), editedData: [:])
         
         let statePromise:ValuePromise<PreviewState> = ValuePromise(ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -1168,7 +1171,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         default:
             break
         }
-        var state: PreviewSendingState = .init(state: mediaState, isCollage: canCollage && FastSettings.isNeedCollage)
+        var state: PreviewSendingState = .init(state: mediaState, isCollage: canCollage)
         if let _ = chatInteraction.presentation.slowMode {
             if state.state != .archive && self.urls.count > 1, !state.isCollage {
                 state = .init(state: .archive, isCollage: false)
@@ -1194,7 +1197,6 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             default:
                 break
             }
-            FastSettings.toggleIsNeedCollage(state.isCollage)
             if !canCollage && state.isCollage {
                 state = state.withUpdatedIsCollage(false)
             }

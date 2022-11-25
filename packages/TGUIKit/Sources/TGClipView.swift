@@ -213,20 +213,19 @@ public class TGClipView: NSClipView,CALayerDelegate {
         if let destinationOrigin = destinationOrigin {
             endScroll()
             super.scroll(to: destinationOrigin)
-            handleCompletionIfNeeded(withSuccess: true)
+            handleCompletionIfNeeded(withSuccess: false)
         }
     }
     
     public func updateOrigin() -> Void {
         if (self.window == nil) {
-            self.endScroll()
+            self.reset()
             return;
         }
         
         if let destination = self.destinationOrigin {
             var o:CGPoint = self.bounds.origin;
             let lastOrigin:CGPoint = o;
-            var _:CGFloat = self.decelerationRate;
             
             
             
@@ -240,10 +239,13 @@ public class TGClipView: NSClipView,CALayerDelegate {
             // Make this call so that we can force an update of the scroller positions.
             self.containingScrollView?.reflectScrolledClipView(self);
             
-            if ((abs(o.x - lastOrigin.x) < 0.1 && abs(o.y - lastOrigin.y) < 0.1)) {
+            if ((abs(o.x - lastOrigin.x) < 1 && abs(o.y - lastOrigin.y) < 1)) {
                 self.endScroll()
                 super.scroll(to: destination)
-                handleCompletionIfNeeded(withSuccess: true)
+                self.handleCompletionIfNeeded(withSuccess: true)
+            } else if o == destination {
+                self.endScroll()
+                self.handleCompletionIfNeeded(withSuccess: true)
             }
         }
         
@@ -345,12 +347,16 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     
     func handleCompletionIfNeeded(withSuccess success: Bool) {
+        self.destinationOrigin = nil
         if self.scrollCompletion != nil {
-            self.destinationOrigin = nil
           //  super.scroll(to: bounds.origin)
             self.scrollCompletion!(success)
             self.scrollCompletion = nil
         }
     }
     
+    
+    public override func isAccessibilityElement() -> Bool {
+        return false
+    }
 }

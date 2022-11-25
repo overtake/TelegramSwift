@@ -2249,6 +2249,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                privacySettings_activeSessions: { generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_ActiveSessions")!.precomposed(flipVertical: true)) },
                                                privacySettings_passcode: { generateSettingsIcon(NSImage(named: "Icon_SettingsSecurity")!.precomposed(palette.greenUI, flipVertical: true)) },
                                                privacySettings_twoStep: { generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_TwoStep")!.precomposed(flipVertical: true)) },
+                                               privacy_settings_autodelete: { generateSettingsIcon(NSImage(named: "Icon_PrivacySettings_AutoDelete")!.precomposed(flipVertical: true)) },
                                                deletedAccount: { NSImage(named: "Icon_DeletedAccount")!.precomposed() },
                                                stickerPackSelection: { generateStickerPackSelection(.clear) },
                                                stickerPackSelectionActive: { generateStickerPackSelection(palette.grayForeground.withAlphaComponent(0.8)) },

@@ -242,6 +242,9 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         return nil
     }
 
+    open override func isAccessibilityElement() -> Bool {
+        return false
+    }
     
     public init() {
         super.init(frame: NSZeroRect)

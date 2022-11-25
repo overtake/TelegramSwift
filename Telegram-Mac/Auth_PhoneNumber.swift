@@ -44,6 +44,11 @@ private func formatNumber(_ number: String, country: Country) -> String {
 }
 
 private func emojiFlagForISOCountryCode(_ countryCode: String) -> String {
+    
+    if countryCode == "FRAGMENT" {
+        return "🏴‍☠️"
+    }
+    
     if countryCode.count != 2 {
         return ""
     }
@@ -51,6 +56,7 @@ private func emojiFlagForISOCountryCode(_ countryCode: String) -> String {
     if countryCode == "TG" {
         return "🛰️"
     }
+   
     
     if countryCode == "XG" {
         return "🛰️"
@@ -92,17 +98,21 @@ private extension Country {
 final class Auth_CountryManager {
     let list: [Country]
     init(_ countries:[Country]) {
-        self.list = countries.sorted(by: { lhs, rhs in
+        self.list = (countries + [fragment]).sorted(by: { lhs, rhs in
             return lhs.name < rhs.name
         })
     }
     
     private let global: Country = .init(id: "TG", name: "Test", localizedName: "Test", countryCodes: [.init(code: "999", prefixes: [], patterns: ["XXXX X XX"])], hidden: false)
     
+    private let fragment: Country = .init(id: "FRAGMENT", name: "Anonymous Number", localizedName: "Anonymous Number", countryCodes: [.init(code: "888", prefixes: [], patterns: ["XXXX X XX"])], hidden: false)
+
+    
     func items(byCodeNumber codeNumber: String, checkAll: Bool = false) -> [Country] {
         
         var list = self.list
         list.append(global)
+
         
         return list.filter( { value in
             for code in value.countryCodes {
@@ -119,6 +129,9 @@ final class Auth_CountryManager {
     func item(byCodeNumber codeNumber: String, prefix: String?) -> Country? {
         if codeNumber == "999" {
             return global
+        }
+        if codeNumber == "888" {
+            return fragment
         }
         let firstTrip = self.list.first(where: { value in
             for code in value.countryCodes {

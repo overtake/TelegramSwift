@@ -403,6 +403,15 @@ public final class TextViewLayout : Equatable {
     public var firstLineWidth: CGFloat {
         return lines[0].frame.width
     }
+    public var lastLineWidth: CGFloat {
+        return lines[lines.count - 1].frame.width
+    }
+    public var firstLineHeight: CGFloat {
+        return lines[0].frame.height
+    }
+    public var lastLineHeight: CGFloat {
+        return lines[lines.count - 1].frame.height
+    }
     
     func calculateLayout(isBigEmoji: Bool = false, lineSpacing: CGFloat? = nil) -> Void {
         self.isBigEmoji = isBigEmoji
@@ -818,7 +827,8 @@ public final class TextViewLayout : Equatable {
                 let index = sortedIndices[i]
                 for j in -1 ... 1 {
                     if j != 0 && index + j >= 0 && index + j < sortedIndices.count {
-                        if abs(rects[index + j].width - rects[index].width) < 10 {
+                        let dif = minusHeight != 0 ? 10.0 : 40.0
+                        if abs(rects[index + j].width - rects[index].width) < dif {
                             rects[index + j].size.width = max(rects[index + j].width, rects[index].width)
                         }
                     }

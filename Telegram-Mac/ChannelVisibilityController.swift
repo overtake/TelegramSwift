@@ -326,7 +326,7 @@ private enum ChannelVisibilityEntry: TableItemListNodeEntry {
                 case .available:
                     color = theme.colors.accent
                 case .purchaseAvailable:
-                    color = theme.colors.text
+                    color = theme.colors.grayText
                 default:
                     color = theme.colors.redUI
                 }

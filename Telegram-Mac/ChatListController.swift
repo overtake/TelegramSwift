@@ -1358,6 +1358,9 @@ class ChatListController : PeersListController {
                     open(with: item.entryId, initialAction: nil, addition: false)
                 }
                 return false
+            } else if item.isForum {
+                open(with: item.entryId, initialAction: nil, addition: false)
+                return false
             }
         }
         if item is ChatListRevealItem {
