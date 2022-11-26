@@ -419,7 +419,9 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
         self.autoresizesSubviews = false
         usesAlternatingRowBackgroundColors = false
         layerContentsRedrawPolicy = .never
-        usesAutomaticRowHeights = false
+        if #available(macOS 13.0, *) {
+            usesAutomaticRowHeights = false
+        }
     }
     
     override func becomeFirstResponder() -> Bool {
