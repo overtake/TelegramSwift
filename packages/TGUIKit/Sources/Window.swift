@@ -945,7 +945,7 @@ open class Window: NSWindow {
     }
 
 
-    
+
     @objc open func windowDidBecomeKey() {
         isKeyWindowValue.set(true)
 
