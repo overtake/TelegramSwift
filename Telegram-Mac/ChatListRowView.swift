@@ -11,6 +11,243 @@ import TGUIKit
 import SwiftSignalKit
 import TelegramCore
 import Postbox
+import Accelerate
+
+private let badgeDiameter = floor(15.0 * 20.0 / 17.0)
+private let avatarBadgeDiameter: CGFloat = floor(floor(15.0 * 22.0 / 17.0))
+private let avatarTimerBadgeDiameter: CGFloat = floor(floor(15.0 * 24.0 / 17.0))
+
+
+private final class AvatarBadgeView: ImageView {
+    enum OriginalContent: Equatable {
+        case color(NSColor)
+        case image(CGImage)
+        
+        static func ==(lhs: OriginalContent, rhs: OriginalContent) -> Bool {
+            switch lhs {
+            case let .color(color):
+                if case .color(color) = rhs {
+                    return true
+                } else {
+                    return false
+                }
+            case let .image(lhsImage):
+                if case let .image(rhsImage) = rhs {
+                    return lhsImage === rhsImage
+                } else {
+                    return false
+                }
+            }
+        }
+    }
+    
+    private struct Parameters: Equatable {
+        var size: CGSize
+        var text: String
+    }
+    
+    private var originalContent: OriginalContent?
+    private var parameters: Parameters?
+    private var hasContent: Bool = false
+    
+    override public init(frame: CGRect) {
+        super.init(frame: frame)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func update(content: OriginalContent) {
+        if self.originalContent != content || !self.hasContent {
+            self.originalContent = content
+            self.update()
+        }
+    }
+    
+    public func update(size: CGSize, text: String) {
+        let parameters = Parameters(size: size, text: text)
+        if self.parameters != parameters || !self.hasContent {
+            self.parameters = parameters
+            self.update()
+        }
+    }
+    
+    private func update() {
+        guard let originalContent = self.originalContent, let parameters = self.parameters else {
+            return
+        }
+        
+        self.hasContent = true
+        
+        let blurredWidth = 16
+        let blurredHeight = 16
+        let blurredContext = DrawingContext(size: CGSize(width: CGFloat(blurredWidth), height: CGFloat(blurredHeight)), scale: 1.0)
+        
+        let blurredSize = CGSize(width: CGFloat(blurredWidth), height: CGFloat(blurredHeight))
+        blurredContext.withContext { c in
+            switch originalContent {
+            case let .color(color):
+                c.setFillColor(color.cgColor)
+                c.fill(CGRect(origin: CGPoint(), size: blurredSize))
+            case let .image(image):
+                c.setFillColor(NSColor.black.cgColor)
+                c.fill(CGRect(origin: CGPoint(), size: blurredSize))
+                
+                c.scaleBy(x: blurredSize.width / parameters.size.width, y: blurredSize.height / parameters.size.height)
+                let offsetFactor: CGFloat = 1.0 - 0.6
+                let imageFrame = CGRect(origin: CGPoint(x: parameters.size.width - image.size.width + offsetFactor * parameters.size.width, y: parameters.size.height - image.size.height + offsetFactor * parameters.size.height), size: image.size)
+                
+                c.draw(image, in: imageFrame)
+            }
+        }
+            
+        var destinationBuffer = vImage_Buffer()
+        destinationBuffer.width = UInt(blurredWidth)
+        destinationBuffer.height = UInt(blurredHeight)
+        destinationBuffer.data = blurredContext.bytes
+        destinationBuffer.rowBytes = blurredContext.bytesPerRow
+        
+        vImageBoxConvolve_ARGB8888(
+            &destinationBuffer,
+            &destinationBuffer,
+            nil,
+            0, 0,
+            UInt32(15),
+            UInt32(15),
+            nil,
+            vImage_Flags(kvImageTruncateKernel | kvImageDoNotTile)
+        )
+        
+        let divisor: Int32 = 0x1000
+
+        let rwgt: CGFloat = 0.3086
+        let gwgt: CGFloat = 0.6094
+        let bwgt: CGFloat = 0.0820
+
+        let adjustSaturation: CGFloat = 1.7
+
+        let a = (1.0 - adjustSaturation) * rwgt + adjustSaturation
+        let b = (1.0 - adjustSaturation) * rwgt
+        let c = (1.0 - adjustSaturation) * rwgt
+        let d = (1.0 - adjustSaturation) * gwgt
+        let e = (1.0 - adjustSaturation) * gwgt + adjustSaturation
+        let f = (1.0 - adjustSaturation) * gwgt
+        let g = (1.0 - adjustSaturation) * bwgt
+        let h = (1.0 - adjustSaturation) * bwgt
+        let i = (1.0 - adjustSaturation) * bwgt + adjustSaturation
+
+        let satMatrix: [CGFloat] = [
+            a, b, c, 0,
+            d, e, f, 0,
+            g, h, i, 0,
+            0, 0, 0, 1
+        ]
+        
+        let brightness: CGFloat = 0.94
+        let brighnessMatrix: [CGFloat] = [
+            brightness, 0, 0, 0,
+            0, brightness, 0, 0,
+            0, 0, brightness, 0,
+            0, 0, 0, 1
+        ]
+        
+        func matrixMul(a: [CGFloat], b: [CGFloat], result: inout [CGFloat]) {
+            for i in 0 ..< 4 {
+                for j in 0 ..< 4 {
+                    var sum: CGFloat = 0.0
+                    for k in 0 ..< 4 {
+                        sum += a[i + k * 4] * b[k + j * 4]
+                    }
+                    result[i + j * 4] = sum
+                }
+            }
+        }
+        
+        var resultMatrix = Array<CGFloat>(repeating: 0.0, count: 4 * 4)
+        matrixMul(a: satMatrix, b: brighnessMatrix, result: &resultMatrix)
+
+        var matrix: [Int16] = resultMatrix.map { value in
+            return Int16(value * CGFloat(divisor))
+        }
+
+        vImageMatrixMultiply_ARGB8888(&destinationBuffer, &destinationBuffer, &matrix, divisor, nil, nil, vImage_Flags(kvImageDoNotTile))
+        
+        guard let blurredImage = blurredContext.generateImage() else {
+            return
+        }
+        
+        self.image = generateImage(parameters.size, rotatedContext: { size, context in
+            
+            context.clear(CGRect(origin: CGPoint(), size: size))
+            
+            context.setBlendMode(.copy)
+            context.setFillColor(NSColor.black.cgColor)
+            context.fillEllipse(in: CGRect(origin: CGPoint(), size: size))
+            
+            context.setBlendMode(.sourceIn)
+            context.draw(blurredImage, in: CGRect(origin: CGPoint(), size: size))
+            
+            
+            context.setBlendMode(.normal)
+            
+            /*context.setFillColor(UIColor(white: 1.0, alpha: 0.08).cgColor)
+            context.fillEllipse(in: CGRect(origin: CGPoint(), size: size))
+            context.setFillColor(UIColor(white: 0.0, alpha: 0.05).cgColor)
+            context.fillEllipse(in: CGRect(origin: CGPoint(), size: size))*/
+            
+            var fontSize: CGFloat = floor(parameters.size.height * 0.48)
+            while true {
+                let string: NSAttributedString = .initialize(string: parameters.text, color: .white, font: .bold(fontSize))
+                
+                
+                let line = CTLineCreateWithAttributedString(string)
+                let stringBounds = CTLineGetBoundsWithOptions(line, [.excludeTypographicLeading])
+                
+                if stringBounds.width <= size.width - 5.0 * 2.0 || fontSize <= 2.0 {
+                
+                    context.saveGState()
+                    context.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
+                    
+                    context.textPosition = CGPoint(x: stringBounds.minX + floor((size.width - stringBounds.width) / 2.0), y: 9 + floor((size.height - stringBounds.height) / 2.0))
+                    
+                    CTLineDraw(line, context)
+                    
+                    context.restoreGState()
+                    
+                    break
+                } else {
+                    fontSize -= 1.0
+                }
+            }
+            
+            let lineWidth: CGFloat = 1.5
+            let lineInset: CGFloat = 2.0
+            let lineRadius: CGFloat = size.width * 0.5 - lineInset - lineWidth * 0.5
+            context.setLineWidth(lineWidth)
+            context.setStrokeColor(NSColor.white.cgColor)
+            context.setLineCap(.round)
+            
+            context.addArc(center: CGPoint(x: size.width * 0.5, y: size.height * 0.5), radius: lineRadius, startAngle: CGFloat.pi * 0.5, endAngle: -CGFloat.pi * 0.5, clockwise: false)
+            context.strokePath()
+            
+            let sectionAngle: CGFloat = CGFloat.pi / 11.0
+            
+            for i in 0 ..< 10 {
+                if i % 2 == 0 {
+                    continue
+                }
+                
+                let startAngle = CGFloat.pi * 0.5 - CGFloat(i) * sectionAngle - sectionAngle * 0.15
+                let endAngle = startAngle - sectionAngle * 0.75
+                
+                context.addArc(center: CGPoint(x: size.width * 0.5, y: size.height * 0.5), radius: lineRadius, startAngle: startAngle, endAngle: endAngle, clockwise: true)
+                context.strokePath()
+            }
+        })
+    }
+}
+
 
 
 
@@ -623,6 +860,8 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     private var statusControl: PremiumStatusControl?
     
+    private var avatarTimerBadge: AvatarBadgeView?
+
     
     private var currentTextLeftCutout: CGFloat = 0.0
     private var currentMediaPreviewSpecs: [(message: Message, media: Media, size: CGSize)] = []
@@ -908,6 +1147,15 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
         
         containerView.frame = bounds
         contentView.frame = bounds
+        
+        
+        photo.contentUpdated = { [weak self] image in
+            if let image = image {
+                self?.avatarTimerBadge?.update(content: .image(image as! CGImage))
+            } else {
+                self?.avatarTimerBadge?.update(content: .color(.white))
+            }
+        }
         
         contentView.displayDelegate = self
         
@@ -1535,7 +1783,45 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  activeImage?.removeFromSuperview()
                  activeImage = nil
              }
+             
+             
+             if let autoremoveTimeout = item.autoremoveTimeout, activeImage == nil {
+                 
+               
 
+
+                 
+                 let current: AvatarBadgeView
+                 let isNew: Bool
+                 if let view = self.avatarTimerBadge {
+                     current = view
+                     isNew = false
+                 } else {
+                     current = AvatarBadgeView(frame: CGRect())
+                     self.avatarTimerBadge = current
+                     self.containerView.addSubview(current, positioned: .above, relativeTo: photoVideoView ?? photo)
+                     isNew = true
+                 }
+                 let avatarFrame = self.photo.frame
+                 
+                 let avatarBadgeSize = CGSize(width: avatarTimerBadgeDiameter, height: avatarTimerBadgeDiameter)
+                 current.update(size: avatarBadgeSize, text: shortTimeIntervalString(value: autoremoveTimeout))
+                 let avatarBadgeFrame = CGRect(origin: CGPoint(x: avatarFrame.maxX - avatarBadgeSize.width, y: avatarFrame.maxY - avatarBadgeSize.height), size: avatarBadgeSize)
+                 
+                 
+                 current.frame = avatarBadgeFrame
+                 
+                 if isNew, animated {
+                     current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                     current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.2)
+                 }
+                 
+                 photo.callContentUpdater()
+                 
+             } else if let view = self.avatarTimerBadge {
+                 performSubviewRemoval(view, animated: animated, scale: true)
+                 self.avatarTimerBadge = nil
+             }
              
              if let _ = item.mentionsCount {
                  
@@ -2348,6 +2634,13 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
 
             if let selectionView = self.selectionView {
                 selectionView.frame = selectionViewRect(item)
+            }
+            
+            if let view = avatarTimerBadge {
+                let avatarFrame = self.photo.frame
+                let avatarBadgeSize = CGSize(width: avatarTimerBadgeDiameter, height: avatarTimerBadgeDiameter)
+                let avatarBadgeFrame = CGRect(origin: CGPoint(x: avatarFrame.maxX - avatarBadgeSize.width, y: avatarFrame.maxY - avatarBadgeSize.height), size: avatarBadgeSize)
+                view.frame = avatarBadgeFrame
             }
 
             

@@ -542,7 +542,7 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                                     reactionText = file?.customEmojiText ?? file?.stickerText ?? ""
                                 }
                                 
-                                let msg = pullText(from: message) as String
+                                let msg = pullText(from: message).string as String
                                 title = message.peers[message.id.peerId]?.displayTitle ?? ""
                                 if message.id.peerId.namespace == Namespaces.Peer.CloudUser {
                                     text = strings().notificationContactReacted(reactionText.fixed, msg)

@@ -190,7 +190,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     private(set) var appEncryption: AppEncryptionParameters!
 
     func applicationWillFinishLaunching(_ notification: Notification) {
-        UserDefaults.standard.set(false, forKey: "NSTableViewCanEstimateRowHeights")
+       // UserDefaults.standard.set(true, forKey: "NSTableViewCanEstimateRowHeights")
+     //   UserDefaults.standard.removeObject(forKey: "NSTableViewCanEstimateRowHeights")
     }
     
     var allowedDomains: [String] {

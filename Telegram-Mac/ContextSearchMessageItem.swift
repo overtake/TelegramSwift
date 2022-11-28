@@ -84,7 +84,7 @@ class ContextSearchMessageItem: GeneralRowItem {
         self.titleText = titleText
         let messageTitle = NSMutableAttributedString()
         
-        var text = pullText(from: message) as String
+        var text = pullText(from: message).string as String
         if text.isEmpty {
             text = serviceMessageText(message, account: context.account).0
         }

@@ -876,9 +876,7 @@ final class MessageContainsPacksItem : AppMenuRowItem {
 private final class MessageContainsPacksItemView: AppMenuRowView {
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        
-        backgroundColor = .random
-    }
+            }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")

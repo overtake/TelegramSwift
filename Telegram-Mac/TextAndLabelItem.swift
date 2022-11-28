@@ -54,10 +54,12 @@ class TextAndLabelItem: GeneralRowItem {
     let hideText: Bool?
     let toggleHide:(()->Void)?
     let borderColor: NSColor
-    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, copyMenuText: String, labelColor: NSColor = theme.colors.accent, textColor: NSColor = theme.colors.text, backgroundColor: NSColor = theme.colors.background, text:String, context: AccountContext?, viewType: GeneralViewType = .legacy, detectLinks:Bool = false, onlyInApp: Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false, canCopy: Bool = true, _copyToClipboard:(()->Void)? = nil, textFont: NSFont = .normal(.title), hideText: Bool? = nil, toggleHide: (()->Void)? = nil, accentColor: NSColor = theme.colors.accent, borderColor: NSColor = theme.colors.border, linkInteractions: TextViewInteractions = globalLinkExecutor) {
+    private let added_contextItems: [ContextMenuItem]
+    init(_ initialSize:NSSize, stableId:AnyHashable, label:String, copyMenuText: String, labelColor: NSColor = theme.colors.accent, textColor: NSColor = theme.colors.text, backgroundColor: NSColor = theme.colors.background, text:String, context: AccountContext?, viewType: GeneralViewType = .legacy, detectLinks:Bool = false, onlyInApp: Bool = false, isTextSelectable:Bool = true, callback:@escaping ()->Void = {}, openInfo:((PeerId, Bool, MessageId?, ChatInitialAction?)->Void)? = nil, hashtag:((String)->Void)? = nil, selectFullWord: Bool = false, canCopy: Bool = true, _copyToClipboard:(()->Void)? = nil, textFont: NSFont = .normal(.title), hideText: Bool? = nil, toggleHide: (()->Void)? = nil, accentColor: NSColor = theme.colors.accent, borderColor: NSColor = theme.colors.border, linkInteractions: TextViewInteractions = globalLinkExecutor, contextItems:[ContextMenuItem] = []) {
         self.callback = callback
         self.accentColor = accentColor
         self.hideText = hideText
+        self.added_contextItems = contextItems
         self.toggleHide = toggleHide
         self.isTextSelectable = isTextSelectable
         self.copyMenuText = copyMenuText
@@ -154,7 +156,11 @@ class TextAndLabelItem: GeneralRowItem {
         if !canCopy {
             return .single([])
         } else {
-            return .single([ContextMenuItem(self.copyMenuText, handler: { [weak self] in
+            
+            var items: [ContextMenuItem] = []
+            
+            
+            items.append(ContextMenuItem(self.copyMenuText, handler: { [weak self] in
                 if let strongSelf = self {
                     if let _copyToClipboard = strongSelf._copyToClipboard {
                         _copyToClipboard()
@@ -162,7 +168,11 @@ class TextAndLabelItem: GeneralRowItem {
                         copyToClipboard(strongSelf.textLayout.attributedString.string)
                     }
                 }
-            }, itemImage: MenuAnimation.menu_copy.value)])
+            }, itemImage: MenuAnimation.menu_copy.value))
+            
+            items.append(contentsOf: added_contextItems)
+            
+            return .single(items)
         }
        
     }

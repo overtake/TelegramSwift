@@ -63,6 +63,10 @@ open class ScrollView: NSScrollView{
         return currentpos
     }
     
+    open override func isAccessibilityElement() -> Bool {
+        return false
+    }
+    
     func resetScroll(_ visibleRange: NSRange = NSMakeRange(NSNotFound, 0)) -> Void {
         self.currentpos = ScrollPosition(NSMakeRect(contentView.bounds.minX, contentView.bounds.maxY,contentView.documentRect.width, contentView.documentRect.height), self.currentpos.direction, visibleRange)
     }

@@ -1455,7 +1455,7 @@ public final class L10n {
   public static var channelTransferOwnerErrorText: String  { return L10n.tr("Localizable", "Channel.TransferOwner.Error.Text") }
   /// Security Check
   public static var channelTransferOwnerErrorTitle: String  { return L10n.tr("Localizable", "Channel.TransferOwner.Error.Title") }
-  /// Sorry, this link is occupied by someone. But it's available for purchase on [fragment.com]().
+  /// This link is already taken. However, it is currently available for purchase. [Learn more...](fragment.com)
   public static var channelUsernameUsernamePurchaseAvailable: String  { return L10n.tr("Localizable", "Channel.Username.UsernamePurchaseAvailable") }
   /// Do you want to show this link on channel info page?
   public static var channelUsernameActivateInfoChannel: String  { return L10n.tr("Localizable", "Channel.Username.Activate.Info.Channel") }
@@ -1675,6 +1675,14 @@ public final class L10n {
   public static var chatAdminBadge: String  { return L10n.tr("Localizable", "Chat.AdminBadge") }
   /// ADD PROXY
   public static var chatApplyProxy: String  { return L10n.tr("Localizable", "Chat.ApplyProxy") }
+  /// %1$@ set a self-destruct timer for all chats.\nAll new messages in this chat will be automatically deleted after %2$@ they're sent.
+  public static func chatAutoremoveTimerSetUserGlobal(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.AutoremoveTimerSetUserGlobal", p1, p2)
+  }
+  /// You set a self-destruct timer for all chats.\nAll new messages in this chat will be automatically deleted after %1$@ they're sent.
+  public static func chatAutoremoveTimerSetUserGlobalYou(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.AutoremoveTimerSetUserGlobalYou", p1)
+  }
   /// Cancel
   public static var chatCancel: String  { return L10n.tr("Localizable", "Chat.Cancel") }
   /// channel
@@ -3209,7 +3217,7 @@ public final class L10n {
   public static func chatServiceGroupTopicCreatedIcon(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TopicCreated.Icon", p1, p2)
   }
-  /// %1$@ hided general topic
+  /// %1$@ hid general topic
   public static func chatServiceGroupTopicEditedHided(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.Hided", p1)
   }
@@ -3233,7 +3241,7 @@ public final class L10n {
   public static func chatServiceGroupTopicEditedTitle(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.Title", p1, p2)
   }
-  /// %1$@ unhided general topic
+  /// %1$@ unhid general topic
   public static func chatServiceGroupTopicEditedUnhided(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.Unhided", p1)
   }
@@ -3241,7 +3249,7 @@ public final class L10n {
   public static func chatServiceGroupTopicEditedIconRemoved(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.Icon.Removed", p1)
   }
-  /// You hided general topic
+  /// You hid general topic
   public static var chatServiceGroupTopicEditedYouHided: String  { return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Hided") }
   /// You changed topic icon to %1$@
   public static func chatServiceGroupTopicEditedYouIcon(_ p1: String) -> String {
@@ -3259,7 +3267,7 @@ public final class L10n {
   public static func chatServiceGroupTopicEditedYouTitle(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Title", p1)
   }
-  /// You unhided general topic
+  /// You unhid general topic
   public static var chatServiceGroupTopicEditedYouUnhided: String  { return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Unhided") }
   /// You removed icon
   public static var chatServiceGroupTopicEditedYouIconRemoved: String  { return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Icon.Removed") }
@@ -7457,6 +7465,8 @@ public final class L10n {
   public static var peerInfoAdministrators: String  { return L10n.tr("Localizable", "PeerInfo.Administrators") }
   /// admin
   public static var peerInfoAdminLabel: String  { return L10n.tr("Localizable", "PeerInfo.AdminLabel") }
+  /// anonymous phone
+  public static var peerInfoAnonymousPhone: String  { return L10n.tr("Localizable", "PeerInfo.AnonymousPhone") }
   /// bio
   public static var peerInfoBio: String  { return L10n.tr("Localizable", "PeerInfo.bio") }
   /// Removed Users
@@ -7793,6 +7803,8 @@ public final class L10n {
   public static var peerInfoInviteErrorContactNeeded: String  { return L10n.tr("Localizable", "PeerInfo.InviteError.ContactNeeded") }
   /// Last Name
   public static var peerInfoLastNamePlaceholder: String  { return L10n.tr("Localizable", "PeerInfo.LastName.Placeholder") }
+  /// This number is not tied to a SIM card and was acquired on [Fragment]().
+  public static var peerInfoPhoneAnonymousInfo: String  { return L10n.tr("Localizable", "PeerInfo.Phone.AnonymousInfo") }
   /// Hidden
   public static var peerInfoPreHistoryHidden: String  { return L10n.tr("Localizable", "PeerInfo.PreHistory.Hidden") }
   /// Visible
@@ -8741,7 +8753,7 @@ public final class L10n {
   public static var privacySettingsGlobalTimerGroup: String  { return L10n.tr("Localizable", "PrivacySettings.GlobalTimer.Group") }
   /// Automatically delete messages for everyone after a period of time in all new chats you start.
   public static var privacySettingsGlobalTimerInfo: String  { return L10n.tr("Localizable", "PrivacySettings.GlobalTimer.Info") }
-  /// Never
+  /// Off
   public static var privacySettingsGlobalTimerNever: String  { return L10n.tr("Localizable", "PrivacySettings.GlobalTimer.Never") }
   /// Add New
   public static var privacySettingsPeerSelectAddNew: String  { return L10n.tr("Localizable", "PrivacySettings.PeerSelect.AddNew") }
@@ -11535,7 +11547,7 @@ public final class L10n {
   public static var usernameActive: String  { return L10n.tr("Localizable", "Username.Active") }
   /// not active
   public static var usernameNotActive: String  { return L10n.tr("Localizable", "Username.NotActive") }
-  /// Sorry, this username is occupied by someone. But it's available for purchase on [fragment.com]().
+  /// This username is already taken. However, it is currently available for purchase. [Learn more...](fragment.com)
   public static var usernameUsernamePurchaseAvailable: String  { return L10n.tr("Localizable", "Username.UsernamePurchaseAvailable") }
   /// Do you want to show this link on your profile page?
   public static var usernameActivateInfo: String  { return L10n.tr("Localizable", "Username.Activate.Info") }

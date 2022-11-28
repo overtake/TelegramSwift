@@ -263,7 +263,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         if #available(macOS 10.15, *) {
             self.layer?.cornerCurve = .continuous
         }
-
+        self.translatesAutoresizingMaskIntoConstraints = false
     }
     
     override required public init(frame frameRect: NSRect) {
@@ -281,6 +281,7 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
         if #available(macOS 10.15, *) {
             self.layer?.cornerCurve = .continuous
         }
+        self.translatesAutoresizingMaskIntoConstraints = false
 
     }
     
@@ -288,14 +289,6 @@ open class View : NSView, CALayerDelegate, AppearanceViewProtocol {
 //        return false
 //    }
     
-    open override var translatesAutoresizingMaskIntoConstraints: Bool {
-        get {
-            return true
-        }
-        set {
-            
-        }
-    }
     
     open override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
