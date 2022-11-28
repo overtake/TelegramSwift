@@ -933,9 +933,18 @@ enum UserInfoEntry: PeerInfoEntry {
                 }
             })
         case let .phoneNumber(_, _, value, canCopy, viewType):
+            var items:[ContextMenuItem] = []
+            if value.number.hasPrefix("888") {
+                if canCopy {
+                    items.append(ContextSeparatorItem())
+                }
+                items.append(ContextMenuItem(strings().peerInfoPhoneAnonymousInfo, handler: {
+                    execute(inapp: .external(link: "https://fragment.com", false))
+                }, itemImage: MenuAnimation.menu_show_info.value, removeTail: false, overrideWidth: 200))
+            }
             return  TextAndLabelItem(initialSize, stableId: stableId.hashValue, label:value.label, copyMenuText: strings().textCopyLabelPhoneNumber, text: formatPhoneNumber(value.number), context: arguments.context, viewType: viewType, canCopy: canCopy, _copyToClipboard: {
                 arguments.copy("+\(value.number)")
-            })
+            }, contextItems: items)
         case let .userName(_, value, viewType):
             let link = "https://t.me/\(value[0])"
             
@@ -1113,7 +1122,7 @@ func userInfoEntries(view: PeerView, arguments: PeerInfoArguments, mediaTabsData
                 }
                 
                 if let phoneNumber = user.phone, !phoneNumber.isEmpty {
-                    infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: strings().peerInfoPhone, number: phoneNumber), canCopy: true, viewType: .singleItem))
+                    infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: phoneNumber.hasPrefix("888") ? strings().peerInfoAnonymousPhone : strings().peerInfoPhone, number: phoneNumber), canCopy: true, viewType: .singleItem))
                 } else if view.peerIsContact {
                     infoBlock.append(.phoneNumber(sectionId: sectionId, index: 0, value: PhoneNumberWithLabel(label: strings().peerInfoPhone, number: strings().newContactPhoneHidden), canCopy: false, viewType: .singleItem))
                 }

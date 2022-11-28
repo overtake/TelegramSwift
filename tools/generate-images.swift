@@ -791,6 +791,8 @@ func initialize() -> [String] {
     
     array.append("chatlist_arrow")
     array.append("chatlist_arrow_active")
+    
+    array.append("dialog_auto_delete")
 
     return array
 }

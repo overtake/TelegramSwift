@@ -441,6 +441,9 @@ class TGFlipableTableView : NSTableView, CALayerDelegate {
     override func isAccessibilityElement() -> Bool {
         return false
     }
+    override func accessibilityParent() -> Any? {
+        return nil
+    }
     
     override public static var isCompatibleWithResponsiveScrolling: Bool {
         return true
@@ -856,6 +859,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if #available(macOS 11.0, *) {
             self.tableView.style = .fullWidth
         }
+        
+        tableView.translatesAutoresizingMaskIntoConstraints = false
 
         clipView.autoresizingMask = []
         clipView.autoresizesSubviews = false
@@ -3213,10 +3218,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if oldWidth != newSize.width, !inLiveResize && newSize.width > 0 && newSize.height > 0 {
             saveScrollState(visible)
         }
-        
-        if listHeight != tableView.frame.size.height, newSize.height <= listHeight, !inLiveResize {
-            self.tableView.reloadData()
-        }
+        self.reflectScrolledClipView(self.clipView)
+
     }
     
     public func setScrollHandler(_ handler: @escaping (_ scrollPosition:ScrollPosition) ->Void) -> Void {

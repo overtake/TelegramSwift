@@ -7325,7 +7325,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 9.1;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -7372,7 +7372,7 @@
 					"$(PROJECT_DIR)/core-xprojects/Mozjpeg/build",
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 9.1;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -7417,7 +7417,7 @@
 					"$(PROJECT_DIR)/core-xprojects/Mozjpeg/build",
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 9.1;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -7533,7 +7533,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 9.1;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";

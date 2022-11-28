@@ -851,20 +851,15 @@ public final class TextViewLayout : Equatable {
             self.blockImage = generateRectsImage(color: backgroundColor, rects: rects, inset: 0, outerRadius: lines.count == 1 ? rects[0].height / 2 : 10, innerRadius: .cornerRadius)
             self.blockImage.0 = NSMakePoint(0, 0)
             
+            var offset: NSPoint = NSPoint(x: 0, y: 0)
+            if self.penFlush == 0.5 {
+                offset.y = 2
+                layoutSize.width += 20
+            } else {
+                layoutSize.width += 10
+                offset.x = 5
+            }
             for i in 0 ..< lines.count {
-                var offset: NSPoint = NSPoint(x: 0, y: 0)
-                if self.penFlush == 0.5 {
-                    layoutSize.width += 20
-                    offset.y = 2
-                } else {
-                    layoutSize.width += 10
-                    offset.x = 5
-//                    if i == 0 {
-//                        offset.y -= 3
-//                    } else {
-//                        offset.y = 1
-//                    }
-                }
                 let line = lines[i]
                 lines[i] = TextViewLine(line: line.line, frame: line.frame.offsetBy(dx: offset.x, dy: offset.y), range: line.range, penFlush: self.penFlush, strikethrough: line.strikethrough, embeddedItems: line.embeddedItems)
             }

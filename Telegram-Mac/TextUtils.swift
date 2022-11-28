@@ -20,7 +20,7 @@ enum MessageTextMediaViewType {
     case none
 }
 
-func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji, messagesCount: Int = 1) -> NSString {
+func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .emoji, messagesCount: Int = 1) -> (string: NSString, justSpoiled: String) {
     var messageText: String = message.text
     for attr in message.attributes {
         if let attr = attr as? TextEntitiesMessageAttribute {
@@ -34,6 +34,8 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             }
         }
     }
+    
+    let justSpoiled = messageText
     
     for media in message.media {
         switch media {
@@ -159,7 +161,7 @@ func pullText(from message:Message, mediaViewType: MessageTextMediaViewType = .e
             break
         }
     }
-    return messageText.nsstring
+    return (string: messageText.nsstring, justSpoiled: justSpoiled)
     
 }
 
@@ -245,7 +247,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             }
         }
         
-        let messageText: NSString = pullText(from: message, mediaViewType: mediaViewType, messagesCount: messagesCount)
+        let (messageText, justSpoiled) = pullText(from: message, mediaViewType: mediaViewType, messagesCount: messagesCount)
         let attributedText: NSMutableAttributedString = NSMutableAttributedString()
 
         
@@ -311,7 +313,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             }
         }
         if !applyUserName {
-            let range = attributedText.string.nsstring.range(of: messageText as String)
+            let range = attributedText.string.nsstring.range(of: justSpoiled)
         
             if range.location != NSNotFound {
                 InlineStickerItem.apply(to: attributedText, associatedMedia: effective.associatedMedia, entities:  effective.entities, isPremium: isPremium, ignoreSpoiler: true, offset: range.location)
@@ -414,7 +416,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                 var replyMessageText = ""
                 for attribute in message.attributes {
                     if let attribute = attribute as? ReplyMessageAttribute, let message = message.associatedMessages[attribute.messageId] {
-                        replyMessageText = pullText(from: message) as String
+                        replyMessageText = pullText(from: message).string as String
                     }
                 }
                 text = strings().chatServiceGroupUpdatedPinnedMessage1(authorName, replyMessageText.prefixWithDots(15))

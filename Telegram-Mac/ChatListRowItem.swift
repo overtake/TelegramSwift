@@ -419,6 +419,7 @@ class ChatListRowItem: TableRowItem {
         self.isOnline = nil
         self.getHideProgress = getHideProgress
         self.hideStatus = hideStatus
+        self.autoremoveTimeout = nil
         self.groupItems = groupItems
         self.isVerified = false
         self.isPremium = false
@@ -561,9 +562,9 @@ class ChatListRowItem: TableRowItem {
     let appearMode: PeerListState.AppearMode
     let getHideProgress:(()->CGFloat?)?
     let selectedForum: PeerId?
+    let autoremoveTimeout: Int32?
     
-    
-    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, hideStatus: ItemHideStatus? = nil, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil, selectedForum: PeerId? = nil) {
+    init(_ initialSize:NSSize, context: AccountContext, stableId: UIChatListEntryId, mode: Mode, messages: [Message], index: ChatListIndex? = nil, readState:EnginePeerReadCounters? = nil, draft:EngineChatList.Draft? = nil, pinnedType:ChatListPinnedType = .none, renderedPeer:EngineRenderedPeer, peerPresence: EnginePeer.Presence? = nil, forumTopicData: EngineChatList.ForumTopicData? = nil, forumTopicItems:[EngineChatList.ForumTopicData] = [], activities: [PeerListState.InputActivities.Activity] = [], highlightText: String? = nil, associatedGroupId: EngineChatList.Group = .root, isMuted:Bool = false, hasFailed: Bool = false, hasUnreadMentions: Bool = false, hasUnreadReactions: Bool = false, showBadge: Bool = true, filter: ChatListFilter = .allChats, hideStatus: ItemHideStatus? = nil, titleMode: TitleMode = .normal, appearMode: PeerListState.AppearMode = .normal, hideContent: Bool = false, getHideProgress:(()->CGFloat?)? = nil, selectedForum: PeerId? = nil, autoremoveTimeout: Int32? = nil) {
         
         
         
@@ -610,6 +611,7 @@ class ChatListRowItem: TableRowItem {
         self.pinnedType = pinnedType
         self.splitState = context.layout
         self.hideStatus = hideStatus
+        self.autoremoveTimeout = autoremoveTimeout
         self.getHideProgress = getHideProgress
         self.forumTopicData = forumTopicData
         self.forumTopicItems = forumTopicItems

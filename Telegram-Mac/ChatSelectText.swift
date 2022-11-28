@@ -113,7 +113,7 @@ class SelectManager : NSResponder {
                             text += "> " + (message.effectiveAuthor?.displayTitle ?? "") + ":"
                         }
                         text += "\n"
-                        text += pullText(from: message) as String
+                        text += pullText(from: message).string as String
                     }
                     copyToClipboard(text)
                 })

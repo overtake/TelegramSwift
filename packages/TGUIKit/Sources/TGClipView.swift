@@ -237,7 +237,7 @@ public class TGClipView: NSClipView,CALayerDelegate {
             
             
             // Make this call so that we can force an update of the scroller positions.
-            self.containingScrollView?.reflectScrolledClipView(self);
+      //      self.containingScrollView?.reflectScrolledClipView(self);
             
             if ((abs(o.x - lastOrigin.x) < 1 && abs(o.y - lastOrigin.y) < 1)) {
                 self.endScroll()
@@ -358,5 +358,8 @@ public class TGClipView: NSClipView,CALayerDelegate {
     
     public override func isAccessibilityElement() -> Bool {
         return false
+    }
+    public override func accessibilityParent() -> Any? {
+        return nil
     }
 }

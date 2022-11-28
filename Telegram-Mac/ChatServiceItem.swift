@@ -204,7 +204,7 @@ class ChatServiceItem: ChatRowItem {
                     var pinnedId: MessageId?
                     for attribute in message.attributes {
                         if let attribute = attribute as? ReplyMessageAttribute, let message = message.associatedMessages[attribute.messageId] {
-                            let text = (pullText(from: message) as String).replacingOccurrences(of: "\n", with: " ")
+                            let text = (pullText(from: message).string as String).replacingOccurrences(of: "\n", with: " ")
                             replyMessageText = message.restrictedText(context.contentSettings) ?? text
                             pinnedId = attribute.messageId
                         }
@@ -240,12 +240,18 @@ class ChatServiceItem: ChatRowItem {
                     
                 case .channelMigratedFromGroup, .groupMigratedToChannel:
                     let _ =  attributedString.append(string: strings().chatServiceGroupMigratedToSupergroup, color: grayTextColor, font: NSFont.normal(theme.fontSize))
-                case let .messageAutoremoveTimeoutUpdated(seconds, _):
+                case let .messageAutoremoveTimeoutUpdated(seconds, autoSourcePeerId):
                     
                     if let authorId = authorId {
                         if authorId == context.peerId {
                             if seconds > 0 {
-                                let _ =  attributedString.append(string: strings().chatServiceSecretChatSetTimerSelf1(autoremoveLocalized(Int(seconds))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                                if autoSourcePeerId == context.peerId {
+                                    let _ =  attributedString.append(string: strings().chatAutoremoveTimerSetUserGlobalYou(autoremoveLocalized(Int(seconds))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                                    
+                                } else {
+                                    let _ =  attributedString.append(string: strings().chatServiceSecretChatSetTimerSelf1(autoremoveLocalized(Int(seconds))), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                                }
+                                
                             } else {
                                 let _ =  attributedString.append(string: strings().chatServiceSecretChatDisabledTimerSelf1, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                             }
@@ -265,7 +271,11 @@ class ChatServiceItem: ChatRowItem {
                                     }
                                 } else {
                                     if seconds > 0 {
-                                        let _ =  attributedString.append(string: strings().chatServiceSecretChatSetTimer1(authorName, autoremoveLocalized(Int(seconds))), color: grayTextColor, font: .normal(theme.fontSize))
+                                        if autoSourcePeerId == authorId {
+                                            let _ =  attributedString.append(string: strings().chatAutoremoveTimerSetUserGlobal(authorName, autoremoveLocalized(Int(seconds))), color: grayTextColor, font: .normal(theme.fontSize))
+                                        } else {
+                                            let _ =  attributedString.append(string: strings().chatServiceSecretChatSetTimer1(authorName, autoremoveLocalized(Int(seconds))), color: grayTextColor, font: .normal(theme.fontSize))
+                                        }
                                     } else {
                                         let _ =  attributedString.append(string: strings().chatServiceSecretChatDisabledTimer1(authorName), color: grayTextColor, font: .normal(theme.fontSize))
                                     }
