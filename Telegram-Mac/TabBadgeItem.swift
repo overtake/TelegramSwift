@@ -66,6 +66,7 @@ private final class AvatarTabContainer : View {
                 circle.layer?.animateScaleSpring(from: 1.0, to: 0.5, duration: 0.3, removeOnCompletion: false, bounce: false)
             }
         } else {
+            avatar.layer?.removeAllAnimations()
             if selected {
                 avatar.setFrameSize(NSMakeSize(24, 24))
             } else {

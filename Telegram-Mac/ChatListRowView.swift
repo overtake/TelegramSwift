@@ -1699,7 +1699,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                  self.badgeView = nil
              }
              
-             if let badgeNode = item.ctxBadgeNode, item.shouldHideContent {
+             if let badgeNode = item.ctxShortBadgeNode, item.shouldHideContent {
                  var presented: Bool = false
                  if badgeShortView == nil {
                      badgeShortView = View()

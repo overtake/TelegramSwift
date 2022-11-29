@@ -523,8 +523,13 @@ class ShareObject {
     func possibilityPerformTo(_ peer:Peer) -> Bool {
         return peer.canSendMessage(false) && !self.excludePeerIds.contains(peer.id)
     }
-    
-    
+    func statusString(_ peer: Peer, presence: PeerStatusStringResult?, autoDeletion: Int32?) -> String? {
+        return peer.id == context.peerId ? (multipleSelection ? nil : strings().forwardToSavedMessages) : presence?.status.string
+    }
+    func statusStyle(_ peer: Peer, presence: PeerStatusStringResult?, autoDeletion: Int32?) -> ControlStyle {
+        let color = presence?.status.string.isEmpty == false ? presence?.status.attribute(NSAttributedString.Key.foregroundColor, at: 0, effectiveRange: nil) as? NSColor : nil
+        return ControlStyle(font: .normal(.text), foregroundColor: peer.id == context.peerId ? theme.colors.grayText : color ?? theme.colors.grayText, highlightColor:.white)
+    }
 }
 
 class ShareLinkObject : ShareObject {
@@ -919,12 +924,12 @@ enum SelectablePeersEntryStableId : Hashable {
 
 enum SelectablePeersEntry : Comparable, Identifiable {
     case secretChat(Peer, PeerId, ChatListIndex, PeerStatusStringResult?, Bool, Bool)
-    case plain(Peer, ChatListIndex, PeerStatusStringResult?, Bool, Bool)
+    case plain(Peer, ChatListIndex, PeerStatusStringResult?, Int32?, Bool, Bool)
     case separator(String, ChatListIndex)
     case emptySearch
     var stableId: SelectablePeersEntryStableId {
         switch self {
-        case let .plain(peer, index, _, _, _):
+        case let .plain(peer, index, _, _, _, _):
             return .plain(peer.id, index)
         case let .secretChat(_, peerId, index, _, _, _):
             return .plain(peerId, index)
@@ -937,7 +942,7 @@ enum SelectablePeersEntry : Comparable, Identifiable {
     
     var index:ChatListIndex {
         switch self {
-        case let .plain(_, id, _, _, _):
+        case let .plain(_, id, _, _, _, _):
             return id
         case let .secretChat(_, _, id, _, _, _):
             return id
@@ -955,8 +960,8 @@ func <(lhs:SelectablePeersEntry, rhs:SelectablePeersEntry) -> Bool {
 
 func ==(lhs:SelectablePeersEntry, rhs:SelectablePeersEntry) -> Bool {
     switch lhs {
-    case let .plain(lhsPeer, index, presence, separator, multiple):
-        if case .plain(let rhsPeer, index, presence, separator, multiple) = rhs {
+    case let .plain(lhsPeer, index, presence, autoDeletion, separator, multiple):
+        if case .plain(let rhsPeer, index, presence, autoDeletion, separator, multiple) = rhs {
             return lhsPeer.isEqual(rhsPeer)
         } else {
             return false
@@ -984,14 +989,13 @@ func ==(lhs:SelectablePeersEntry, rhs:SelectablePeersEntry) -> Bool {
 
 
 
-fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeersEntry], context: AccountContext, initialSize:NSSize, animated:Bool, multipleSelection: Bool, selectInteraction:SelectPeerInteraction) -> TableUpdateTransition {
+fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeersEntry], context: AccountContext, initialSize:NSSize, animated:Bool, multipleSelection: Bool, selectInteraction:SelectPeerInteraction, share: ShareObject) -> TableUpdateTransition {
   
     let (deleted,inserted,updated) = proccessEntries(from, right: to, { entry -> TableRowItem in
         
         switch entry {
-        case let .plain(peer, _, presence, drawSeparator, multiple):
-            let color = presence?.status.string.isEmpty == false ? presence?.status.attribute(NSAttributedString.Key.foregroundColor, at: 0, effectiveRange: nil) as? NSColor : nil
-            return  ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: peer.id == context.peerId ? theme.colors.grayText : color ?? theme.colors.grayText, highlightColor:.white), status: peer.id == context.peerId ? (multipleSelection ? nil : strings().forwardToSavedMessages) : presence?.status.string, drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction) : .plain, action: {
+        case let .plain(peer, _, presence, autoDeletion, drawSeparator, multiple):
+            return  ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), statusStyle: share.statusStyle(peer, presence: presence, autoDeletion: autoDeletion), status: share.statusString(peer, presence: presence, autoDeletion: autoDeletion), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction) : .plain, action: {
                 if peer.isForum {
                     selectInteraction.openForum(peer.id)
                 } else {
@@ -1561,7 +1565,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                             return ChatListIndex(pinningIndex: nil, messageIndex: index)
                         }
                         
-                        entries.append(.plain(user, ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: Int32.max), timestamp: Int32.max)), nil, top.isEmpty && recent.isEmpty, multipleSelection))
+                        entries.append(.plain(user, ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: Int32.max), timestamp: Int32.max)), nil, nil, top.isEmpty && recent.isEmpty, multipleSelection))
                         contains[user.id] = user.id
                         
                         if !top.isEmpty {
@@ -1571,7 +1575,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                             for peer in top {
                                 if contains[peer.id] == nil {
                                     if share.possibilityPerformTo(peer) {
-                                        entries.insert(.plain(peer, chatListIndex(), nil, count < 4, multipleSelection), at: 0)
+                                        entries.insert(.plain(peer, chatListIndex(), nil, nil, count < 4, multipleSelection), at: 0)
                                         contains[peer.id] = peer.id
                                         count += 1
                                     }
@@ -1590,7 +1594,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                                 if let peer = rendered.peer.chatMainPeer {
                                     if contains[peer.id] == nil {
                                         if share.possibilityPerformTo(peer) {
-                                            entries.insert(.plain(peer, chatListIndex(), nil, true, multipleSelection), at: 0)
+                                            entries.insert(.plain(peer, chatListIndex(), nil, nil, true, multipleSelection), at: 0)
                                             contains[peer.id] = peer.id
                                         }
                                     }
@@ -1600,7 +1604,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         
                         entries.sort(by: <)
                         
-                        return prepareEntries(from: previous.swap(entries), to: entries, context: context, initialSize: initialSize, animated: true, multipleSelection: multipleSelection, selectInteraction:selectInteraction)
+                        return prepareEntries(from: previous.swap(entries), to: entries, context: context, initialSize: initialSize, animated: true, multipleSelection: multipleSelection, selectInteraction:selectInteraction, share: share)
                         
                     }
                 } else {
@@ -1663,7 +1667,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                                 
                                 let status = NSAttributedString.initialize(string: item.status, color: theme.statusColor, font: theme.statusFont)
                                 let title = NSAttributedString.initialize(string: item.peer.displayTitle, color: theme.titleColor, font: theme.titleFont)
-                                entries.append(.plain(item.peer, index, PeerStatusStringResult(title, status), true, multipleSelection))
+                                entries.append(.plain(item.peer, index, PeerStatusStringResult(title, status), nil, true, multipleSelection))
                                 offset -= 1
                             }
                             
@@ -1673,13 +1677,13 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         }
                         
                         if !share.excludePeerIds.contains(value.3.id) {
-                            entries.append(.plain(value.3, ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: offset), timestamp: offset)), nil, true, multipleSelection))
+                            entries.append(.plain(value.3, ChatListIndex(pinningIndex: 0, messageIndex: MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: offset), timestamp: offset)), nil, nil, true, multipleSelection))
                             contains[value.3.id] = value.3.id
                         }
                         
                         for entry in value.0.entries {
                             switch entry {
-                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _, _, _, _, _, _):
+                            case let .MessageEntry(id, _, _, _, _, renderedPeer, _, _, _, _, _, _, autoremoveTimeout):
                                 if let main = renderedPeer.peer {
                                     if contains[main.id] == nil {
                                         if share.possibilityPerformTo(main) {
@@ -1687,7 +1691,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                                                 if main.id.namespace == Namespaces.Peer.SecretChat {
                                                     entries.append(.secretChat(peer, main.id, id, value.2[peer.id], true, multipleSelection))
                                                 } else {
-                                                    entries.append(.plain(peer, id, value.2[peer.id], true, multipleSelection))
+                                                    entries.append(.plain(peer, id, value.2[peer.id], autoremoveTimeout, true, multipleSelection))
                                                 }
                                             }
                                             contains[main.id] = main.id
@@ -1701,7 +1705,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         
                         entries.sort(by: <)
                         
-                        return prepareEntries(from: previous.swap(entries), to: entries, context: context, initialSize: initialSize, animated: true, multipleSelection: multipleSelection, selectInteraction:selectInteraction)
+                        return prepareEntries(from: previous.swap(entries), to: entries, context: context, initialSize: initialSize, animated: true, multipleSelection: multipleSelection, selectInteraction:selectInteraction, share: share)
                     }
                 }
                 
@@ -1743,7 +1747,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         var i:Int32 = Int32.max
                         if query.request.isSavedMessagesText || values.0.contains(where: {$0.peerId == context.peerId}), !share.excludePeerIds.contains(values.2.id) {
                             let index = MessageIndex(id: MessageId(peerId: PeerId(0), namespace: 0, id: i), timestamp: i)
-                            entries.append(.plain(values.2, ChatListIndex(pinningIndex: 0, messageIndex: index), nil, true, multipleSelection))
+                            entries.append(.plain(values.2, ChatListIndex(pinningIndex: 0, messageIndex: index), nil, nil, true, multipleSelection))
                             i -= 1
                             contains[values.2.id] = values.2.id
                         }
@@ -1760,7 +1764,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                                             if main.id.namespace == Namespaces.Peer.SecretChat {
                                                 entries.append(.secretChat(peer, main.id, id, values.1[peer.id], true, multipleSelection))
                                             } else {
-                                                entries.append(.plain(peer, id, values.1[peer.id], true, multipleSelection))
+                                                entries.append(.plain(peer, id, values.1[peer.id], nil, true, multipleSelection))
                                             }
                                         }
                                         contains[main.id] = main.id
@@ -1774,7 +1778,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                     
                         entries.sort(by: <)
                     
-                        return prepareEntries(from: previous.swap(entries), to: entries, context: context, initialSize: initialSize, animated: false, multipleSelection: multipleSelection, selectInteraction:selectInteraction)
+                        return prepareEntries(from: previous.swap(entries), to: entries, context: context, initialSize: initialSize, animated: false, multipleSelection: multipleSelection, selectInteraction:selectInteraction, share: share)
                 }
             } else {
                 return .complete()

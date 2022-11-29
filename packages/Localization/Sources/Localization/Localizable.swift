@@ -5543,6 +5543,16 @@ public final class L10n {
   }
   /// Self-Destruct Timer
   public static var globalTimerConfirmTitle: String  { return L10n.tr("Localizable", "GlobalTimer.Confirm.Title") }
+  /// Apply a %@ self-destruct timer
+  public static func globalTimerSelectApply(_ p1: String) -> String {
+    return L10n.tr("Localizable", "GlobalTimer.Select.Apply", p1)
+  }
+  /// auto-deletion disabled
+  public static var globalTimerSelectStatusDisabled: String  { return L10n.tr("Localizable", "GlobalTimer.Select.StatusDisabled") }
+  /// auto-delete after %@
+  public static func globalTimerSelectStatusEnabled(_ p1: String) -> String {
+    return L10n.tr("Localizable", "GlobalTimer.Select.StatusEnabled", p1)
+  }
   /// Total
   public static var graphTotal: String  { return L10n.tr("Localizable", "Graph.Total") }
   /// Zoom Out

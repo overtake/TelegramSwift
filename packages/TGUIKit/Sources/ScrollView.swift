@@ -40,6 +40,15 @@ open class ScrollView: NSScrollView{
     override public static var isCompatibleWithResponsiveScrolling: Bool {
         return true
     }
+    
+    open override var translatesAutoresizingMaskIntoConstraints: Bool {
+        get {
+            return true
+        }
+        set {
+
+        }
+    }
 
     public func scrollPosition(_ visibleRange: NSRange = NSMakeRange(NSNotFound, 0))  -> (current: ScrollPosition, previous: ScrollPosition) {
         

@@ -12,6 +12,72 @@ import SwiftSignalKit
 import TelegramCore
 import Postbox
 
+
+private class AutoremoveCallbackObject : ShareObject {
+    private let callback:([PeerId])->Signal<Never, NoError>
+    private let currentValue: Int32
+    init(_ context: AccountContext, currentValue: Int32, callback:@escaping([PeerId])->Signal<Never, NoError>) {
+        self.currentValue = currentValue
+        self.callback = callback
+        super.init(context)
+    }
+    
+    override var hasCaptionView: Bool {
+        return false
+    }
+    override var blockCaptionView: Bool {
+        return true
+    }
+    
+    
+    override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil) -> Signal<Never, String> {
+        return callback(peerIds) |> castError(String.self)
+    }
+ 
+    override var searchPlaceholderKey: String {
+        return "ChatList.Add.Placeholder"
+    }
+    override var interactionOk: String {
+        return strings().globalTimerSelectApply(timeIntervalString(Int(currentValue)))
+    }
+    override var alwaysEnableDone: Bool {
+        return true
+    }
+    override func possibilityPerformTo(_ peer: Peer) -> Bool {
+        if peer.isSecretChat || peer.isBot {
+            return false
+        }
+        if peer.isUser {
+            return true
+        }
+        if peer.groupAccess.canEditGroupInfo {
+            return true
+        }
+        return false
+    }
+    
+    override func statusString(_ peer: Peer, presence: PeerStatusStringResult?, autoDeletion: Int32?) -> String? {
+        if let value = autoDeletion {
+            return strings().globalTimerSelectStatusEnabled(timeIntervalString(Int(value)))
+        } else {
+            return strings().globalTimerSelectStatusDisabled
+        }
+    }
+    
+    override func statusStyle(_ peer: Peer, presence: PeerStatusStringResult?, autoDeletion: Int32?) -> ControlStyle {
+        let color: NSColor
+        if autoDeletion != nil {
+            color = theme.colors.accent
+        } else {
+            color = theme.colors.grayText
+        }
+        return ControlStyle(font: .normal(.text), foregroundColor: color, highlightColor: theme.colors.underSelectedColor)
+
+    }
+    
+}
+
+
 private let full: [Int32] = [
     1 * 24 * 60 * 60,
     2 * 24 * 60 * 60,
@@ -162,7 +228,18 @@ func GlobalAutoremoveMessagesController(context: AccountContext, privacy: Accoun
             update()
         }
     }, applyToExists: {
-        
+        if let value = stateValue.with ({ $0.current }) {
+            showModal(with: ShareModalController(AutoremoveCallbackObject(context, currentValue: value, callback: { peerIds in
+                
+                _ = context.engine.peers.setChatMessageAutoremoveTimeouts(peerIds: peerIds, timeout: value).start()
+                
+                DispatchQueue.main.async {
+                    _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.5).start()
+                }
+                
+                return .complete()
+            })), for: context.window)
+        }
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in
