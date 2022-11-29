@@ -35,10 +35,12 @@ final class UnauthorizedApplicationContext {
     let sharedContext: SharedAccountContext
     
     private let updatesDisposable: DisposableSet = DisposableSet()
+    private let authController: AuthController
     
     var rootView: NSView {
         return rootController.view
     }
+    
     
     init(window:Window, sharedContext: SharedAccountContext, account: UnauthorizedAccount, otherAccountPhoneNumbers: ((String, AccountRecordId, Bool)?, [(String, AccountRecordId, Bool)])) {
 
@@ -53,11 +55,11 @@ final class UnauthorizedApplicationContext {
             window.setFrame(NSMakeRect(window.frame.minX, window.frame.minY, window.minSize.width, window.minSize.height), display: true)
             window.center()
         }
-        
+        self.authController = AuthController(account, sharedContext: sharedContext, otherAccountPhoneNumbers: otherAccountPhoneNumbers)
         self.account = account
         self.window = window
         self.sharedContext = sharedContext
-        self.rootController = MajorNavigationController(AuthController.self, AuthController(account, sharedContext: sharedContext, otherAccountPhoneNumbers: otherAccountPhoneNumbers), window)
+        self.rootController = MajorNavigationController(AuthController.self, self.authController, window)
         rootController._frameRect = NSMakeRect(0, 0, window.frame.width, window.frame.height)
 
         self.modal = AuthModalController(rootController)
@@ -69,6 +71,11 @@ final class UnauthorizedApplicationContext {
  
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(receiveWakeNote(_:)), name: NSWorkspace.screensDidWakeNotification, object: nil)
         
+    }
+    
+    
+    func applyExternalLoginCode(_ code: String) {
+        authController.applyExternalLoginCode(code)
     }
     
     deinit {

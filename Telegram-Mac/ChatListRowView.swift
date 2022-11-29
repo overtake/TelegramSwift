@@ -208,8 +208,8 @@ private final class AvatarBadgeView: ImageView {
                 
                     context.saveGState()
                     context.textMatrix = CGAffineTransform(scaleX: 1.0, y: -1.0)
-                    
-                    context.textPosition = CGPoint(x: stringBounds.minX + floor((size.width - stringBounds.width) / 2.0), y: 9 + floor((size.height - stringBounds.height) / 2.0))
+                                        
+                    context.textPosition = CGPoint(x: stringBounds.minX + floor((size.width - stringBounds.width) / 2.0), y: stringBounds.maxY + floor((size.height - stringBounds.height) / 2.0))
                     
                     CTLineDraw(line, context)
                     
@@ -1785,12 +1785,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
              }
              
              
-             if let autoremoveTimeout = item.autoremoveTimeout, activeImage == nil {
-                 
-               
-
-
-                 
+             if let autoremoveTimeout = item.autoremoveTimeout, activeImage == nil, badgeShortView == nil {
                  let current: AvatarBadgeView
                  let isNew: Bool
                  if let view = self.avatarTimerBadge {

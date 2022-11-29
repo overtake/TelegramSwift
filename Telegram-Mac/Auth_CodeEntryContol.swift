@@ -238,7 +238,7 @@ final class Auth_CodeEntryContol : View {
         return NSMakeSize(subviewsSize.width + (CGFloat(subviews.count - 1) * 8) + 20, 40)
     }
     
-    private func insertAll(_ values: [Int]) {
+    func insertAll(_ values: [Int]) {
         let subviews = self.subviews.compactMap { $0 as? Auth_CodeElement }
         if values.count == subviews.count {
             for (i, subview) in subviews.enumerated() {

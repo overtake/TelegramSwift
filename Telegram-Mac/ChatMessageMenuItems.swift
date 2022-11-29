@@ -341,7 +341,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         }
         
         
-        if !data.message.isCopyProtected() {
+    //    if !data.message.isCopyProtected() {
             if let textLayout = data.textLayout?.0 {
                 
                 if !textLayout.selectedRange.hasSelectText {
@@ -438,7 +438,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                     }
                 }
             }
-        }
+     //   }
        
         
         if let peer = peer as? TelegramChannel, !isService {

@@ -6219,6 +6219,10 @@ public final class L10n {
   public static var loginNewCodeEnterCode: String  { return L10n.tr("Localizable", "Login.New.Code.EnterCode") }
   /// Enter Code
   public static var loginNewCodeEnterSms: String  { return L10n.tr("Localizable", "Login.New.Code.EnterSms") }
+  /// Get the code for **%1$@** in the Anonymous Numbers section on **Fragment** · [Edit]()
+  public static func loginNewCodeFragmentInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Login.New.Code.FragmentInfo", p1)
+  }
   /// We’ve sent an SMS with an activation code\non your phone **%@** · [Edit]()
   public static func loginNewCodeSmsInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "Login.New.Code.SmsInfo", p1)
@@ -6269,6 +6273,8 @@ public final class L10n {
   public static var loginNewResetWhen: String  { return L10n.tr("Localizable", "Login.New.Reset.When") }
   /// You'll be able to reset your account in:
   public static var loginNewResetWillAble: String  { return L10n.tr("Localizable", "Login.New.Reset.WillAble") }
+  /// Open Fragment
+  public static var loginNextFragment: String  { return L10n.tr("Localizable", "Login.Next.Fragment") }
   /// Switch
   public static var loginPhoneNumberAlreadyAuthorizedSwitch: String  { return L10n.tr("Localizable", "Login.PhoneNumberAlreadyAuthorized.Switch") }
   /// Log in by phone Number

@@ -1042,6 +1042,8 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         })
         
         afterComplete(true)
+    case let .loginCode(_, code):
+        appDelegate?.applyExternalLoginCode(code)
     }
     
 }
@@ -1178,6 +1180,7 @@ enum inAppLink {
     case premiumOffer(link: String, ref: String?, context: AccountContext)
     case restorePurchase(link: String, context: AccountContext)
     case urlAuth(link: String, context: AccountContext)
+    case loginCode(link: String, code: String)
     var link: String {
         switch self {
         case let .external(link,_):
@@ -1233,6 +1236,8 @@ enum inAppLink {
             return link
         case let .urlAuth(link, _):
             return link
+        case let .loginCode(link, _):
+            return link
         case .nothing:
             return ""
         case .logout:
@@ -1245,7 +1250,7 @@ let telegram_me:[String] = ["telegram.me/","telegram.dog/","t.me/"]
 let actions_me:[String] = ["joinchat/","addstickers/","addemoji/","confirmphone","socks", "proxy", "setlanguage/", "bg/", "addtheme/","invoice/"]
 
 let telegram_scheme:String = "tg://"
-let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases"]
+let known_scheme:[String] = ["resolve","msg_url","join","addstickers", "addemoji","confirmphone", "socks", "proxy", "passport", "setlanguage", "bg", "privatepost", "addtheme", "settings", "invoice", "premium_offer", "restore_purchases", "login"]
 
 let ton_scheme:String = "ton://"
 
@@ -1276,6 +1281,8 @@ private let keyURLRotation = "rotation";
 private let keyURLTimecode = "t";
 private let keyURLBgColor = "bg_color";
 private let keyURLHash = "hash";
+private let keyURLCode = "code";
+
 
 private let keyURLHost = "server";
 private let keyURLPort = "port";
@@ -1876,6 +1883,10 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                 case known_scheme[16]:
                     if let context = context {
                         return .restorePurchase(link: urlString, context: context)
+                    }
+                case known_scheme[17]:
+                    if let code = vars[keyURLCode] {
+                        return .loginCode(link: urlString, code: code)
                     }
                 default:
                     break
