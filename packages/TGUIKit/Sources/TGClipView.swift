@@ -210,8 +210,8 @@ public class TGClipView: NSClipView,CALayerDelegate {
 //    }
 
     public func reset() {
+        endScroll()
         if let destinationOrigin = destinationOrigin {
-            endScroll()
             super.scroll(to: destinationOrigin)
             handleCompletionIfNeeded(withSuccess: false)
         }
@@ -247,6 +247,8 @@ public class TGClipView: NSClipView,CALayerDelegate {
                 self.endScroll()
                 self.handleCompletionIfNeeded(withSuccess: true)
             }
+        } else {
+            endScroll()
         }
         
 

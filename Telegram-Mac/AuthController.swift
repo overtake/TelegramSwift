@@ -1033,7 +1033,6 @@ class AuthController : GenericViewController<AuthView> {
     
     private func set(_ controller: ViewController, animated: Bool) {
         if self.current != controller {
-            NSLog("controller: \(controller), prev: \(self.current)")
             let previous = self.current
 
             

@@ -8089,6 +8089,10 @@ public final class L10n {
   public static var phoneNumberCodeInfo: String  { return L10n.tr("Localizable", "PhoneNumber.Code.Info") }
   /// Enter Code
   public static var phoneNumberCodeTitle: String  { return L10n.tr("Localizable", "PhoneNumber.Code.Title") }
+  /// Get the code in the Anonymous Numbers section on [Fragment](%1$@)
+  public static func phoneNumberCodeFragmentInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "PhoneNumber.Code.Fragment.Info", p1)
+  }
   /// Sorry, public polls can’t be forwarded to channels.
   public static var pollForwardError: String  { return L10n.tr("Localizable", "Poll.Forward.Error") }
   /// [Collapse]()
