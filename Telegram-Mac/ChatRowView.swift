@@ -756,7 +756,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     func rowPoint(_ item: ChatRowItem) -> NSPoint {
         
-        if item.isBubbled {
+        if let swipeDelta = swipeDelta {
+            return NSMakePoint(swipeDelta, 0)
+        } else if item.isBubbled {
             return NSMakePoint((self.selectingView != nil && !item.isIncoming ? -20 : 0), 0)
         } else {
             return NSMakePoint(0, 0)
@@ -1632,6 +1634,11 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         transition.updateFrame(view: bubbleView, frame: bubbleFrame(item))
         bubbleView.updateLayout(size: bubbleView.frame.size, transition: transition)
         transition.updateFrame(view: contentView, frame: contentFrameModifier(item))
+        
+        
+        if let delta = swipeDelta {
+            transition.updateFrame(view: swipingRightView, frame: CGRect(origin: NSMakePoint(frame.width + delta, swipingRightView.frame.minY), size: NSMakeSize(max(rightRevealWidth, -delta), swipingRightView.frame.height)))
+        }
                 
         transition.updateFrame(view: rowView, frame: CGRect(origin: rowPoint(item), size: size))
         
@@ -1834,6 +1841,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
         guard let item = item as? ChatRowItem else {return}
         
+        self.swipeDelta = 0
+        
         let control = ImageButton()
         control.disableActions()
         
@@ -1860,6 +1869,8 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         
     }
     
+    private var swipeDelta: CGFloat? = nil
+    
     var hasRevealState: Bool {
         return !swipingRightView.subviews.isEmpty
     }
@@ -1869,12 +1880,14 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             initRevealState()
         }
         
+        
         let delta = delta - additionalRevealDelta
-
+        
+        self.swipeDelta = delta
         
         rowView.setFrameOrigin(NSMakePoint(delta, rowView.frame.minY))
-        swipingRightView.change(pos: NSMakePoint(frame.width + delta, swipingRightView.frame.minY), animated: false)
         
+        swipingRightView.change(pos: NSMakePoint(frame.width + delta, swipingRightView.frame.minY), animated: false)
         swipingRightView.change(size: NSMakeSize(max(rightRevealWidth, -delta), swipingRightView.frame.height), animated: false)
 
         
@@ -1902,6 +1915,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     }
     
     func completeReveal(direction: SwipeDirection) {
+        
+        self.swipeDelta = nil
+        self.animateOnceAfterDelta = true
         
         if swipingRightView.subviews.isEmpty {
             initRevealState()

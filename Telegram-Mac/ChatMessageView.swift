@@ -52,6 +52,7 @@ class ChatMessageView: ChatRowView, ModalPreviewRowViewProtocol {
         self.addSubview(text)
     }
     
+    
     override func layout() {
         super.layout()
        

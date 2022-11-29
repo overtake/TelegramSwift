@@ -73,6 +73,14 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
     }
     
 
+    open override var translatesAutoresizingMaskIntoConstraints: Bool {
+        get {
+            return true
+        }
+        set {
+
+        }
+    }
     
     open func updateColors() {
         self.layer?.backgroundColor = backdorColor.cgColor

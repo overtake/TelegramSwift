@@ -1029,7 +1029,7 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
     public func close(animated:Bool = true) ->Void {
         if stackCount > 1 && !isLocked {
             let controller = stack[0]
-            while stack.count != 1 {
+            while stack.last != self.empty {
                 stack.removeLast().didRemovedFromStack()
             }
             show(controller, animated ? .pop : .none)
