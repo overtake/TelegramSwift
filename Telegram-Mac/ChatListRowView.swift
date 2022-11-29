@@ -1047,14 +1047,11 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         
 //
          if let item = self.item as? ChatListRowItem {
-             if !item.isSelected, !item.isAutohidden {
+             if !item.isSelected || item.selectedForum == item.peerId , !item.isAutohidden {
                 
-                if layer != contentView.layer {
+                if layer == contentView.layer {
                     ctx.setFillColor(theme.colors.border.cgColor)
-                    ctx.fill(NSMakeRect(frame.width - .borderSize, 0, .borderSize, frame.height))
-                } else {
-                    ctx.setFillColor(theme.colors.border.cgColor)
-                    ctx.fill(NSMakeRect(item.isLastPinned ? 0 : item.leftInset, NSHeight(layer.bounds) - .borderSize, item.isLastPinned ? layer.frame.width : layer.bounds.width - item.leftInset, .borderSize))
+                    ctx.fill(NSMakeRect(item.isLastPinned ? 0 : item.leftInset, layer.bounds.height - .borderSize, item.isLastPinned ? layer.frame.width : layer.bounds.width - item.leftInset, .borderSize))
                 }
             }
             
@@ -1468,7 +1465,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                      self.topicsView = current
                      self.contentView.addSubview(current)
                  }
-                 current.update(context: item.context, item: layout, highlighted: item.isSelected, animated: animated)
+                 current.update(context: item.context, item: layout, highlighted: item.isSelected && item.selectedForum != item.peerId, animated: animated)
              } else if let view = self.topicsView {
                  performSubviewRemoval(view, animated: false)
                  self.topicsView = nil

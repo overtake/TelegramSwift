@@ -1464,6 +1464,13 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
     }
     
     func applyExternalLoginCode(_ code: String) {
+        if let modal = findModal(ModalController.self) {
+            let controller = modal.controller.controller as? PhoneNumberCodeConfirmController
+            if let controller = controller {
+                controller.applyExternalLoginCode(code)
+                return
+            }
+        }
         self.authContextValue?.applyExternalLoginCode(code)
     }
 }

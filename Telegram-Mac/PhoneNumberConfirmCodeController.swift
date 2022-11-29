@@ -16,6 +16,9 @@ final class PhoneNumberCodeConfirmView : View {
     private let desc = TextView()
     fileprivate let input: Auth_CodeEntryContol = Auth_CodeEntryContol(frame: .zero)
     fileprivate let next = TitleButton()
+    
+    private var aboutString: String = strings().phoneNumberCodeInfo
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(input)
@@ -29,14 +32,15 @@ final class PhoneNumberCodeConfirmView : View {
         updateLocalizationAndTheme(theme: theme)
     }
     
-    func update(with count: Int, locked: Bool, takeNext: @escaping(String)->Void, takeError: @escaping()->Void) {
+    func update(with count: Int, locked: Bool, aboutString: String, takeNext: @escaping(String)->Void, takeError: @escaping()->Void) {
         let size = self.input.update(count: count)
+        self.aboutString = aboutString
         self.input.setFrameSize(size)
         self.input.takeNext = takeNext
         self.input.takeError = takeError
         self.input.set(locked: locked, animated: true)
         
-        needsLayout = true
+        updateLocalizationAndTheme(theme: theme)
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -50,7 +54,19 @@ final class PhoneNumberCodeConfirmView : View {
         next.layer?.cornerRadius = 10
         
         
-        let infoLayout = TextViewLayout(.initialize(string: strings().phoneNumberCodeInfo, color: theme.colors.grayText, font: .normal(12)), alignment: .center)
+        let attr = parseMarkdownIntoAttributedString(aboutString, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(12), textColor: theme.colors.grayText), bold: MarkdownAttributeSet(font: .bold(12), textColor: theme.colors.grayText), link: MarkdownAttributeSet(font: .bold(12), textColor: theme.colors.accent), linkAttribute: { contents in
+            return (NSAttributedString.Key.link.rawValue, contents)
+        }))
+        let infoLayout = TextViewLayout(attr, alignment: .center)
+        
+        let interactions = TextViewInteractions()
+        interactions.processURL = { value in
+            if let value = value as? String {
+                execute(inapp: .external(link: value, false))
+            }
+        }
+        
+        infoLayout.interactions = interactions
         
         self.desc.update(infoLayout)
 
@@ -88,8 +104,18 @@ private extension SentAuthorizationCodeType {
             return length
         case let .sms(length):
             return length
+        case let .fragment(_, length):
+            return length
         default:
             return 5
+        }
+    }
+    var aboutString: String {
+        switch self {
+        case let .fragment(url, length):
+            return strings().phoneNumberCodeFragmentInfo(url)
+        default:
+            return strings().phoneNumberCodeInfo
         }
     }
 }
@@ -151,11 +177,8 @@ final class PhoneNumberCodeConfirmController : GenericViewController<PhoneNumber
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        let sharedContext = self.context.sharedContext
-        let engine = context.engine
-        
-        self.genericView.update(with: Int(self.data.type.lenght), locked: false, takeNext: { [weak self] _ in
+                
+        self.genericView.update(with: Int(self.data.type.lenght), locked: false, aboutString: self.data.type.aboutString, takeNext: { [weak self] _ in
             self?.checkCode()
         }, takeError: {
             
@@ -185,6 +208,13 @@ final class PhoneNumberCodeConfirmController : GenericViewController<PhoneNumber
     
     override func becomeFirstResponder() -> Bool? {
         return true
+    }
+    
+    func applyExternalLoginCode(_ code: String) {
+        if !code.isEmpty {
+            let chars = Array(code).map { String($0) }
+            genericView.input.insertAll(chars.compactMap { Int($0) })
+        }
     }
     
 }

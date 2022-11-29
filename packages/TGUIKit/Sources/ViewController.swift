@@ -1278,7 +1278,7 @@ open class ModalViewController : ViewController, ModalControllerHelper {
 }
 
 open class ModalController : ModalViewController {
-    private let controller: NavigationViewController
+    public let controller: NavigationViewController
     public init(_ controller: NavigationViewController) {
         self.controller = controller
         super.init(frame: controller._frameRect)
