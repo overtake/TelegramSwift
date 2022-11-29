@@ -2013,7 +2013,8 @@ public func arc4random64() -> Int64 {
 
 public func performSubviewRemoval(_ view: NSView, animated: Bool, duration: Double = 0.2, timingFunction: CAMediaTimingFunctionName = .easeOut, checkCompletion: Bool = false, scale: Bool = false, scaleTo: CGFloat? = nil, completed:((Bool)->Void)? = nil) {
     if animated {
-        view._change(opacity: 0, removeOnCompletion: false, duration: duration, timingFunction: timingFunction, completion: { [weak view] finish in
+        let from = view.layer?.presentation()?.opacity ?? view.layer?.opacity ?? 1
+        view.layer?.animateAlpha(from: CGFloat(from), to: 0, duration: duration, timingFunction: timingFunction, removeOnCompletion: false, completion: { [weak view] finish in
             completed?(finish)
             if checkCompletion {
                 if finish {
