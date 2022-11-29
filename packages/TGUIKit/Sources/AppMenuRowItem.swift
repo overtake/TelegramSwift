@@ -245,7 +245,7 @@ open class AppMenuRowItem : AppMenuBasicItem {
     }
     
     open override var height: CGFloat {
-        if self.text.lines.count == 1 {
+        if self.text.lines.count <= 1 {
             return 28
         } else {
             return self.text.layoutSize.height + 8
