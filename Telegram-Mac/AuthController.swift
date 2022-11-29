@@ -309,7 +309,9 @@ class AuthController : GenericViewController<AuthView> {
         bar = .init(height: 0)
     }
     
-    
+    func applyExternalLoginCode(_ code: String) {
+        self.code_entry_c.applyExternalLoginCode(code)
+    }
 
     deinit {
         disposable.dispose()

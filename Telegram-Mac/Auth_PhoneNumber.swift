@@ -15,9 +15,23 @@ import SwiftSignalKit
 private func formatNumber(_ number: String, country: Country) -> String {
     var formatted: String = ""
     
-    guard let pattern = country.countryCodes.first?.patterns.first else {
+    var pattern: String?
+    if number.isEmpty {
+        pattern = country.countryCodes.first?.patterns.first(where: { value in
+            return value.trimmingCharacters(in: CharacterSet(charactersIn: "0987654321")).count == value.count
+        })
+    } else {
+        pattern = country.countryCodes.first?.patterns.first(where: { value in
+            return value.first == number.first
+        })
+    }
+    if pattern == nil {
+        pattern = country.countryCodes.first?.patterns.last
+    }
+    guard let pattern = pattern else {
         return number
     }
+    
     let numberChars = Array(number)
     let patternChars = Array(pattern)
     
@@ -29,8 +43,10 @@ private func formatNumber(_ number: String, country: Country) -> String {
                 formatted.append(char)
             } else {
                 formatted.append("\(pattern)")
-                formatted.append(char)
-                patternIndex += 1
+                if pattern == " " {
+                    formatted.append(char)
+                    patternIndex += 1
+                }
             }
             patternIndex += 1
         } else {
@@ -105,7 +121,6 @@ final class Auth_CountryManager {
     
     private let global: Country = .init(id: "TG", name: "Test", localizedName: "Test", countryCodes: [.init(code: "999", prefixes: [], patterns: ["XXXX X XX"])], hidden: false)
     
-//    private let fragment: Country = .init(id: "FRAGMENT", name: "Anonymous Number", localizedName: "Anonymous Number", countryCodes: [.init(code: "888", prefixes: [], patterns: ["XXXX X XX"])], hidden: false)
 
     
     func items(byCodeNumber codeNumber: String, checkAll: Bool = false) -> [Country] {
@@ -341,7 +356,20 @@ final class Auth_PhoneInput: View, NSTextFieldDelegate {
         let number = numberText.stringValue
         var text: String = number.isEmpty ? strings().loginPhoneFieldPlaceholder : ""
         if let item = selected {
-            if let pattern = item.countryCodes.first?.patterns.first {
+            var pattern: String?
+            if number.isEmpty {
+                pattern = item.countryCodes.first?.patterns.first(where: { value in
+                    return value.trimmingCharacters(in: CharacterSet(charactersIn: "0987654321")).count == value.count
+                })
+            } else {
+                pattern = item.countryCodes.first?.patterns.first(where: { value in
+                    return value.first == number.first
+                })
+            }
+            if pattern == nil {
+                pattern = item.countryCodes.first?.patterns.last
+            }
+            if let pattern = pattern {
                 text = String(pattern.replacingOccurrences(of: "X", with: "-"))
             }
         }

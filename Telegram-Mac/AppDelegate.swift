@@ -1462,4 +1462,8 @@ class AppDelegate: NSResponder, NSApplicationDelegate, NSUserNotificationCenterD
         }
         window.makeKeyAndOrderFront(sender)
     }
+    
+    func applyExternalLoginCode(_ code: String) {
+        self.authContextValue?.applyExternalLoginCode(code)
+    }
 }

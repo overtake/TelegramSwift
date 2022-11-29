@@ -102,6 +102,7 @@ enum LocalAnimatedSticker : String {
     case device_windows
     
     case change_sim
+    case pirate_flag
     
     case text_to_voice
     case voice_to_text
