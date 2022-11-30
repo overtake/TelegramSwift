@@ -54,23 +54,17 @@ private final class AvatarTabContainer : View {
         
         avatar.setFrameSize(frame.size)
 
+        let from: CGFloat = selected ? 1 : 24 / frame.height
+        let to: CGFloat = selected ? 24 / frame.height : 1
+        avatar.layer?.animateScaleSpring(from: from, to: to, duration: 0.3, removeOnCompletion: false, bounce: false, completion: { completed in
+            
+        })
+        
         if animated {
-            let from: CGFloat = selected ? 1 : 24 / frame.height
-            let to: CGFloat = selected ? 24 / frame.height : 1
-            avatar.layer?.animateScaleSpring(from: from, to: to, duration: 0.3, removeOnCompletion: false, bounce: false, completion: { completed in
-                
-            })
             if selected {
                 circle.layer?.animateScaleSpring(from: 0.5, to: 1.0, duration: 0.3, bounce: false)
             } else {
                 circle.layer?.animateScaleSpring(from: 1.0, to: 0.5, duration: 0.3, removeOnCompletion: false, bounce: false)
-            }
-        } else {
-            avatar.layer?.removeAllAnimations()
-            if selected {
-                avatar.setFrameSize(NSMakeSize(24, 24))
-            } else {
-                avatar.setFrameSize(frame.size)
             }
         }
 
