@@ -1938,7 +1938,11 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
             }
         }
         self.previousLocation = (location, globalForumId)
-        self.updateHighlight(globalForumId ?? location?.peerId)
+        if globalForumId != nil || location?.threadId != nil {
+            self.updateHighlight(globalForumId ?? location?.peerId)
+        } else {
+            self.updateHighlight(nil)
+        }
     }
     
     private func showSearchController(animated: Bool) {

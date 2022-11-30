@@ -1047,7 +1047,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                         
 //
          if let item = self.item as? ChatListRowItem {
-             if !item.isSelected || item.selectedForum == item.peerId , !item.isAutohidden {
+             if !item.isSelected || item.selectedForum == item.peerId, !item.isAutohidden {
                 
                 if layer == contentView.layer {
                     ctx.setFillColor(theme.colors.border.cgColor)
