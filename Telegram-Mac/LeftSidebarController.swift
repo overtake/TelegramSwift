@@ -67,10 +67,11 @@ private final class LeftSidebarArguments {
 }
 
 
-final class LeftSidebarView: View {
+final class LeftSidebarView: Control {
     fileprivate let tableView = TableView()
     private let visualEffectView: NSVisualEffectView
     private let borderView = View()
+    fileprivate var context: AccountContext?
     required init(frame frameRect: NSRect) {
         self.visualEffectView = NSVisualEffectView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
@@ -88,6 +89,16 @@ final class LeftSidebarView: View {
         visualEffectView.state = .active
        
         updateLocalizationAndTheme(theme: theme)
+        
+        contextMenu = { [weak self] in
+            let menu = ContextMenu()
+            menu.addItem(ContextMenuItem(strings().navigationEdit, handler: {
+                if let context = self?.context {
+                    context.bindings.rootNavigation().push(ChatListFiltersListController(context: context))
+                }
+            }, itemImage: MenuAnimation.menu_edit.value))
+            return menu
+        }
     }
     
     override func updateLocalizationAndTheme(theme: PresentationTheme) {
@@ -191,6 +202,8 @@ class LeftSidebarController: TelegramGenericViewController<LeftSidebarView> {
     override func viewDidLoad() {
         super.viewDidLoad()
         let context = self.context
+        
+        genericView.context = context
         
         let arguments = LeftSidebarArguments(context: context, callback: { [weak self] filter in
             self?.updateFilter { state in
