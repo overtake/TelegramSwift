@@ -975,7 +975,7 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         
         photoVideoView?.frame = photoView.frame
         
-        if let photo = self.inlineTopicPhotoLayer {
+        if let photo = self.topicPhotoView {
             photo.frame = NSMakeRect(floorToScreenPixels(backingScaleFactor, containerView.frame.width - item.photoDimension) / 2, item.viewType.innerInset.top, item.photoDimension, item.photoDimension)
 
         }
@@ -1177,12 +1177,32 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
     }
     
     private var inlineTopicPhotoLayer: InlineStickerItemLayer?
+    private var topicPhotoView: Control?
 
     private func updatePhoto(_ item: PeerInfoHeadItem, animated: Bool) {
         let context = item.context
         
         if let threadData = item.threadData {
             let size = NSMakeSize(item.photoDimension, item.photoDimension)
+            let topicView: Control
+            if let view = self.topicPhotoView {
+                topicView = view
+            } else {
+                topicView = Control(frame: size.bounds)
+                topicView.scaleOnClick = true
+                self.topicPhotoView = topicView
+                self.containerView.addSubview(topicView)
+                
+                topicView.set(handler: { [weak self] _ in
+                    if let file = self?.inlineTopicPhotoLayer?.file {
+                        let reference = file.emojiReference ?? file.stickerReference
+                        if let reference = reference {
+                            showModal(with: StickerPackPreviewModalController(context, peerId: nil, references: [.emoji(reference)]), for: context.window)
+                        }
+                    }
+                }, for: .Click)
+            }
+                        
             let current: InlineStickerItemLayer
             if let layer = self.inlineTopicPhotoLayer, layer.file?.fileId.id == threadData.info.icon {
                 current = layer
@@ -1198,14 +1218,18 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                     let file = ForumUI.makeIconFile(title: info.title, iconColor: info.iconColor, isGeneral: item.threadId == 1)
                     current = .init(account: context.account, file: file, size: size, playPolicy: .loop)
                 }
-                current.superview = containerView
-                self.containerView.layer?.addSublayer(current)
+                current.superview = topicView
+                topicView.layer?.addSublayer(current)
                 self.inlineTopicPhotoLayer = current
             }
         } else {
             if let layer = inlineTopicPhotoLayer {
                 performSublayerRemoval(layer, animated: animated)
                 self.inlineTopicPhotoLayer = nil
+            }
+            if let view = self.topicPhotoView {
+                performSubviewRemoval(view, animated: animated)
+                self.topicPhotoView = nil
             }
         }
         self.updateAnimatableContent()

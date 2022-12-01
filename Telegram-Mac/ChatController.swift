@@ -4194,7 +4194,9 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         }
                     })
                 }
-                if let callJoinPeerId = groupCall?.callJoinPeerId {
+                if groupCall?.data?.info?.isStream == true {
+                    join(peerId, nil, false)
+                } else if let callJoinPeerId = groupCall?.callJoinPeerId {
                     join(callJoinPeerId, nil, false)
                 } else {
                     selectGroupCallJoiner(context: context, peerId: peerId, completion: join)
