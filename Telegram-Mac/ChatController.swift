@@ -4099,36 +4099,34 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        chatInteraction.toggleNotifications = { [weak self] isMuted in
-            if let strongSelf = self {
-                if isMuted == nil || isMuted == true {
-                    _ = context.engine.peers.togglePeerMuted(peerId: chatLocation.peerId, threadId: chatLocation.threadId).start()
-                } else {
-                    var options:[ModalOptionSet] = []
+        chatInteraction.toggleNotifications = { isMuted in
+            if isMuted == nil || isMuted == true {
+                _ = context.engine.peers.togglePeerMuted(peerId: chatLocation.peerId, threadId: chatLocation.threadId).start()
+            } else {
+                var options:[ModalOptionSet] = []
+                
+                options.append(ModalOptionSet(title: strings().chatListMute1Hour, selected: false, editable: true))
+                options.append(ModalOptionSet(title: strings().chatListMute4Hours, selected: false, editable: true))
+                options.append(ModalOptionSet(title: strings().chatListMute8Hours, selected: false, editable: true))
+                options.append(ModalOptionSet(title: strings().chatListMute1Day, selected: false, editable: true))
+                options.append(ModalOptionSet(title: strings().chatListMute3Days, selected: false, editable: true))
+                options.append(ModalOptionSet(title: strings().chatListMuteForever, selected: true, editable: true))
+                
+                var intervals:[Int32] = [60 * 60, 60 * 60 * 4, 60 * 60 * 8, 60 * 60 * 24, 60 * 60 * 24 * 3, Int32.max]
+                
+                showModal(with: ModalOptionSetController(context: context, options: options, selectOne: true, actionText: (strings().chatInputMute, theme.colors.accent), title: strings().peerInfoNotifications, result: { result in
                     
-                    options.append(ModalOptionSet(title: strings().chatListMute1Hour, selected: false, editable: true))
-                    options.append(ModalOptionSet(title: strings().chatListMute4Hours, selected: false, editable: true))
-                    options.append(ModalOptionSet(title: strings().chatListMute8Hours, selected: false, editable: true))
-                    options.append(ModalOptionSet(title: strings().chatListMute1Day, selected: false, editable: true))
-                    options.append(ModalOptionSet(title: strings().chatListMute3Days, selected: false, editable: true))
-                    options.append(ModalOptionSet(title: strings().chatListMuteForever, selected: true, editable: true))
-                    
-                    var intervals:[Int32] = [60 * 60, 60 * 60 * 4, 60 * 60 * 8, 60 * 60 * 24, 60 * 60 * 24 * 3, Int32.max]
-                    
-                    showModal(with: ModalOptionSetController(context: context, options: options, selectOne: true, actionText: (strings().chatInputMute, theme.colors.accent), title: strings().peerInfoNotifications, result: { result in
-                        
-                        for (i, option) in result.enumerated() {
-                            inner: switch option {
-                            case .selected:
-                                _ = context.engine.peers.updatePeerMuteSetting(peerId: chatLocation.peerId, threadId: chatLocation.threadId, muteInterval: intervals[i]).start()
-                                break
-                            default:
-                                break inner
-                            }
+                    for (i, option) in result.enumerated() {
+                        inner: switch option {
+                        case .selected:
+                            _ = context.engine.peers.updatePeerMuteSetting(peerId: chatLocation.peerId, threadId: chatLocation.threadId, muteInterval: intervals[i]).start()
+                            break
+                        default:
+                            break inner
                         }
-                        
-                    }), for: context.window)
-                }
+                    }
+                    
+                }), for: context.window)
             }
         }
         
