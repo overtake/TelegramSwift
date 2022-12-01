@@ -737,8 +737,10 @@ class ShareMessageObject : ShareObject {
 final class ForwardMessagesObject : ShareObject {
     fileprivate let messageIds: [MessageId]
     private let disposable = MetaDisposable()
-    init(_ context: AccountContext, messageIds: [MessageId], emptyPerformOnClose: Bool = false) {
+    private let album: Bool
+    init(_ context: AccountContext, messageIds: [MessageId], emptyPerformOnClose: Bool = false, album: Bool = false) {
         self.messageIds = messageIds
+        self.album = album
         super.init(context, emptyPerformOnClose: emptyPerformOnClose)
     }
     
@@ -754,6 +756,8 @@ final class ForwardMessagesObject : ShareObject {
         
         if peerIds.count == 1 {
             let context = self.context
+            let album = self.album
+            let messageIds = self.messageIds
             let comment = comment != nil ? comment!.inputText.isEmpty ? nil : comment : nil
             let peers = context.account.postbox.transaction { transaction -> Peer? in
                 for peerId in peerIds {
@@ -764,7 +768,19 @@ final class ForwardMessagesObject : ShareObject {
                 return nil
             }
             
-            return combineLatest(context.account.postbox.messagesAtIds(messageIds), peers)
+            let messages: Signal<[Message], NoError> = context.account.postbox.transaction { transaction in
+                var list:[Message] = []
+                for messageId in messageIds {
+                    if let messages = transaction.getMessageGroup(messageId), album {
+                        list.append(contentsOf: messages)
+                    } else if let message = transaction.getMessage(messageId) {
+                        list.append(message)
+                    }
+                }
+                return list
+            }
+            
+            return combineLatest(messages, peers)
                 |> deliverOnMainQueue
                 |> castError(String.self)
                 |> mapToSignal {  messages, peer in

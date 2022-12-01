@@ -34,8 +34,8 @@ final class TopicReplyItemLayout {
             self.textColor = theme.colors.text
         } else {
             if isIncoming || !isBubbled {
-                self.bgColor = colors.0[0].lighter()
-                self.textColor = colors.1[0].withAlphaComponent(0.6)
+                self.bgColor = theme.colors.accent.withAlphaComponent(0.2)
+                self.textColor = theme.colors.accent
             } else {
                 self.bgColor = theme.chat.grayText(false, true).withAlphaComponent(0.1)
                 self.textColor = theme.chat.grayText(false, true)
