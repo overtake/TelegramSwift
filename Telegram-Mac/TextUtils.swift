@@ -318,82 +318,85 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             if range.location != NSNotFound {
                 InlineStickerItem.apply(to: attributedText, associatedMedia: effective.associatedMedia, entities:  effective.entities, isPremium: isPremium, ignoreSpoiler: true, offset: range.location)
                 
-                var fontAttributes: [(NSRange, ChatTextFontAttributes)] = []
-                
-                for entity in effective.entities {
-                    let lower = entity.range.lowerBound + range.location
-                    let upper = entity.range.upperBound + range.location
-                    let range = NSRange(location: lower, length: upper - lower)
-                    
-                    inner: switch entity.type {
-                    case .Strikethrough:
-                        attributedText.addAttribute(.strikethroughStyle, value: true, range: range)
-                    case .Underline:
-                        attributedText.addAttribute(.underlineStyle, value: true, range: range)
-                    case .Bold:
-                        fontAttributes.append((range, .bold))
-                    case .Italic:
-                        fontAttributes.append((range, .italic))
-                    case .Code, .Pre:
-                        fontAttributes.append((range, .monospace))
-                    default:
-                        break inner
-                    }
-                    
-                }
-                
-                for (i, (range, attr)) in fontAttributes.enumerated() {
-                    var font: NSFont?
-                    var intersects:[(NSRange, ChatTextFontAttributes)] = []
-                    
-                    for (j, value) in fontAttributes.enumerated() {
-                        if j != i {
-                            if let intersection = value.0.intersection(range) {
-                                intersects.append((intersection, value.1))
-                            }
-                        }
-                    }
-                                
-                    switch attr {
-                    case .monospace, .blockQuote:
-                        font = .code(.text)
-                    case .italic:
-                        font = .italic(.text)
-                    case .bold:
-                        font = .bold(.text)
-                    default:
-                        break
-                    }
-                    if let font = font {
-                        attributedText.addAttribute(.font, value: font, range: range)
-                    }
-                    
-                     for intersect in intersects {
-                         var font: NSFont? = nil
-                         loop: switch intersect.1 {
-                         case .italic:
-                             switch attr {
-                             case .bold:
-                                 font = .boldItalic(.text)
-                             default:
-                                 break loop
-                             }
-                         case .bold:
-                            switch attr {
-                            case .bold:
-                                font = .boldItalic(.text)
-                            default:
-                                break loop
-                            }
-                         default:
-                             break loop
-                             
-                         }
-                         if let font = font {
-                             attributedText.addAttribute(.font, value: font, range: range)
-                         }
-                     }
-                }
+//                var fontAttributes: [(NSRange, ChatTextFontAttributes)] = []
+//                
+//                for entity in effective.entities {
+//                    let lower = entity.range.lowerBound + range.location
+//                    let upper = entity.range.upperBound + range.location
+//                    let range = NSRange(location: lower, length: upper - lower)
+//                    
+//                    inner: switch entity.type {
+//                    case .Strikethrough:
+//                        attributedText.addAttribute(.strikethroughStyle, value: true, range: range)
+//                    case .Underline:
+//                        attributedText.addAttribute(.underlineStyle, value: true, range: range)
+//                    case .Bold:
+//                        fontAttributes.append((range, .bold))
+//                        break
+//                    case .Italic:
+//                        fontAttributes.append((range, .italic))
+//                        break
+//                    case .Code, .Pre:
+//                        fontAttributes.append((range, .monospace))
+//                        break
+//                    default:
+//                        break inner
+//                    }
+//                    
+//                }
+//                
+//                for (i, (range, attr)) in fontAttributes.enumerated() {
+//                    var font: NSFont?
+//                    var intersects:[(NSRange, ChatTextFontAttributes)] = []
+//                    
+//                    for (j, value) in fontAttributes.enumerated() {
+//                        if j != i {
+//                            if let intersection = value.0.intersection(range) {
+//                                intersects.append((intersection, value.1))
+//                            }
+//                        }
+//                    }
+//                                
+//                    switch attr {
+//                    case .monospace, .blockQuote:
+//                        font = .code(.text)
+//                    case .italic:
+//                        font = .italic(.text)
+//                    case .bold:
+//                        font = .bold(.text)
+//                    default:
+//                        break
+//                    }
+//                    if let font = font {
+//                        attributedText.addAttribute(.font, value: font, range: range)
+//                    }
+//                    
+//                     for intersect in intersects {
+//                         var font: NSFont? = nil
+//                         loop: switch intersect.1 {
+//                         case .italic:
+//                             switch attr {
+//                             case .bold:
+//                                 font = .boldItalic(.text)
+//                             default:
+//                                 break loop
+//                             }
+//                         case .bold:
+//                            switch attr {
+//                            case .bold:
+//                                font = .boldItalic(.text)
+//                            default:
+//                                break loop
+//                            }
+//                         default:
+//                             break loop
+//                             
+//                         }
+//                         if let font = font {
+//                             attributedText.addAttribute(.font, value: font, range: range)
+//                         }
+//                     }
+//                }
                 
             }
             return attributedText.trimNewLinesToSpace
