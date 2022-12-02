@@ -683,7 +683,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
 //                            }
 //                        }
                         if message.threadId != prev.message.threadId {
-                            canShort = false
+                           // canShort = false
                         }
                         itemType = !canShort ? .Full(rank: rank, header: .normal) : .Short(rank: rank, header: .normal)
                         
