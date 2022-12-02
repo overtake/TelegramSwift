@@ -325,13 +325,11 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
                     let upper = entity.range.upperBound + range.location
                     let range = NSRange(location: lower, length: upper - lower)
                     
-                    var fontAttributes: [(NSRange, ChatTextFontAttributes)] = []
-
                     inner: switch entity.type {
                     case .Strikethrough:
-                        attributedText.addAttribute(NSAttributedString.Key.strikethroughStyle, value: true, range: range)
+                        attributedText.addAttribute(.strikethroughStyle, value: true, range: range)
                     case .Underline:
-                        attributedText.addAttribute(NSAttributedString.Key.underlineStyle, value: true, range: range)
+                        attributedText.addAttribute(.underlineStyle, value: true, range: range)
                     case .Bold:
                         fontAttributes.append((range, .bold))
                     case .Italic:
