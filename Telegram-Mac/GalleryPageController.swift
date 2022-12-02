@@ -433,7 +433,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                     }
                 }
                 
-                let max_dst: CGFloat = 150
+                let max_dst: CGFloat = max(150, self.textScrollView.frame.height)
                 
                 if min_dst < max_dst {
                     self.autohideTextDisposable.set(nil)
