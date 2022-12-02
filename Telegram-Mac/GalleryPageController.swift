@@ -411,12 +411,31 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
 
             if let view = view {
                 let point = view.convert(event.locationInWindow, from: nil)
-                let textPoint = NSMakePoint(self.textScrollView.frame.midX, self.textScrollView.frame.midY)
-                let dst = point.distance(p2: textPoint)
                 
-                let max_dst = max(self.textScrollView.frame.height * 1.5, 200)
+                var points:[NSPoint] = []
                 
-                if dst < max_dst {
+                points.append(NSMakePoint(self.textScrollView.frame.minX, self.textScrollView.frame.minY))
+                
+                points.append(NSMakePoint(self.textScrollView.frame.maxX, self.textScrollView.frame.minY))
+
+                points.append(NSMakePoint(self.textScrollView.frame.maxX, self.textScrollView.frame.maxY))
+
+                points.append(NSMakePoint(self.textScrollView.frame.minX, self.textScrollView.frame.maxY))
+
+                points.append(NSMakePoint(self.textScrollView.frame.midX, self.textScrollView.frame.midY))
+
+                
+                var min_dst = point.distance(p2: points[0])
+                for i in 1 ..< points.count {
+                    let dst = point.distance(p2: points[i])
+                    if dst < min_dst {
+                        min_dst = dst
+                    }
+                }
+                
+                let max_dst: CGFloat = 150
+                
+                if min_dst < max_dst {
                     self.autohideTextDisposable.set(nil)
                     if self.lockedTransition == false {
                         self.textScrollView.change(opacity: 1.0)
@@ -775,7 +794,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             
             
             view.addSubview(textScrollView)
-            textScrollView.change(opacity: 1.0)
+//            textScrollView.change(opacity: 1.0)
             textScrollView.setFrameSize(textView.frame.size.width + 10, min(120, textView.frame.height))
             textScrollView.centerX(y: 100)
             textScrollView.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.9).cgColor
@@ -989,7 +1008,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                         if value.hasValue, let strongSelf = self {
                             self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 0, newAlphaTo:1, oldAlphaFrom: 1, oldAlphaTo:0, contents: value, oldView: oldView, completion: { [weak strongSelf, weak selectedView] in
                                 selectedView?.isHidden = false
-                                strongSelf?.textScrollView.change(opacity: 1.0)
+//                                strongSelf?.textScrollView.change(opacity: 1.0)
                                 strongSelf?.hasInited = true
                                 strongSelf?.selectedItem?.appear(for: selectedView?.contentView)
                                 strongSelf?.lockedTransition = false
