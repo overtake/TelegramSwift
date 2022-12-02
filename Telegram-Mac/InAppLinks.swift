@@ -1394,7 +1394,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         }
                     case actions_me[7]:
                         if !value.isEmpty {
-                            var component = String(value[value.index(after: value.startIndex) ..< value.endIndex])
+                            var component = value
                             component = component.components(separatedBy: "?")[0]
                             
                             if let context = context {
