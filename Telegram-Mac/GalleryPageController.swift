@@ -414,9 +414,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 let textPoint = NSMakePoint(self.textScrollView.frame.midX, self.textScrollView.frame.midY)
                 let dst = point.distance(p2: textPoint)
                 
-                let max_dst = self.textScrollView.frame.height
+                let max_dst = max(self.textScrollView.frame.height * 1.5, 200)
                 
-                if dst < max_dst * 2 {
+                if dst < max_dst {
                     self.autohideTextDisposable.set(nil)
                     if self.lockedTransition == false {
                         self.textScrollView.change(opacity: 1.0)
