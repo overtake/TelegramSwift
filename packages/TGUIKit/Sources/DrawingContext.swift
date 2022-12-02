@@ -15,7 +15,7 @@ public func generateImage(_ size: CGSize, contextGenerator: (CGSize, CGContext) 
     if size.width.isZero || size.height.isZero {
         return nil
     }
-    let context = DrawingContext(size: size, scale: scale ?? 0.0, clear: false)
+    let context = DrawingContext(size: size, scale: scale, clear: false)
     context.withContext { c in
         contextGenerator(context.size, c)
     }

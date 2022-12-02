@@ -317,6 +317,26 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
         
             if range.location != NSNotFound {
                 InlineStickerItem.apply(to: attributedText, associatedMedia: effective.associatedMedia, entities:  effective.entities, isPremium: isPremium, ignoreSpoiler: true, offset: range.location)
+                
+                for entity in effective.entities {
+                    let lower = entity.range.lowerBound + range.location
+                    let upper = entity.range.upperBound + range.location
+                    let range = NSRange(location: lower, length: upper - lower)
+                    
+                    inner: switch entity.type {
+                    case .Strikethrough:
+                        attributedText.addAttribute(NSAttributedString.Key.strikethroughStyle, value: true, range: range)
+                    case .Underline:
+                        attributedText.addAttribute(NSAttributedString.Key.underlineStyle, value: true, range: range)
+                    case .Italic:
+                        attributedText.addAttribute(NSAttributedString.Key.font, value: NSFont.italic(.text), range: range)
+                    case .Code, .Pre:
+                        attributedText.addAttribute(NSAttributedString.Key.font, value: NSFont.code(.text), range: range)
+                        
+                    default:
+                        break inner
+                    }
+                }
             }
             return attributedText.trimNewLinesToSpace
         } else {
