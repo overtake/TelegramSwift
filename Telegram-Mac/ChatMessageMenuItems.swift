@@ -826,6 +826,30 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
         }
         
+//#if BETA || ALPHA || DEBUG
+//        if #available(macOS 10.15, *) {
+//            if let file = data.file, file.isAnimatedSticker || file.isVideoSticker {
+//                fifthBlock.append(ContextMenuItem("Export as mp4 (Debug)", handler: {
+//                    
+//                    let object = MediaObjectToAvatar(context: context, object: MediaObjectToAvatar.Object(foreground: .init(type: .animated(file), zoom: 1, offset: .zero), background: .colors([])), codec: AVVideoCodecType.hevcWithAlpha.rawValue)
+//                    
+//                    _ = object.start().start(next: { result in
+//                        if let result = result.result {
+//                            switch result {
+//                            case let .video(path, _):
+//                                savePanel(file: path, named: "sticker.mp4", for: context.window)
+//                            default:
+//                                break
+//                            }
+//                        }
+//                    })
+//                }))
+//            }
+//        }
+
+//#endif
+
+        
         if let attr = message.textEntities {
             var references: [StickerPackReference] = attr.entities.compactMap({ value in
                 if case let .CustomEmoji(reference, _) = value.type {
