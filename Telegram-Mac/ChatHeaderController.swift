@@ -2177,6 +2177,8 @@ final class ChatGroupCallView : Control, ChatHeaderProtocol {
     override func layout() {
         super.layout()
         
+        avatarsContainer.isHidden = frame.width < 300
+        
         if let scheduleButton = scheduleButton {
             scheduleButton.centerY(x: frame.width - scheduleButton.frame.width - 23)
         }

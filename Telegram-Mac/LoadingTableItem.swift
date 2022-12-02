@@ -11,8 +11,8 @@ import TGUIKit
 
 class LoadingTableItem: GeneralRowItem {
 
-    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, viewType: GeneralViewType = .legacy) {
-        super.init(initialSize, height: height, stableId: stableId, viewType: viewType)
+    init(_ initialSize: NSSize, height: CGFloat, stableId: AnyHashable, viewType: GeneralViewType = .legacy, backgroundColor: NSColor = theme.colors.background) {
+        super.init(initialSize, height: height, stableId: stableId, viewType: viewType, backgroundColor: backgroundColor)
     }
     
     override func viewClass() -> AnyClass {
@@ -40,6 +40,9 @@ class LoadingTableRowView : TableRowView {
     }
     
     override var backdorColor: NSColor {
+        if let item = item as? GeneralRowItem {
+            return item.backgroundColor
+        }
         return theme.colors.background
     }
     

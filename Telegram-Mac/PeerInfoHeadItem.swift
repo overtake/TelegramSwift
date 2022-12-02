@@ -583,7 +583,7 @@ class PeerInfoHeadItem: GeneralRowItem {
 
     
     func openNavigationTopics() {
-        if let peer = peer {
+        if let peer = peer, isTopic {
             ForumUI.open(peer.id, context: context)
         }
     }
@@ -1112,11 +1112,14 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
         statusView.scaleOnClick = item.threadId != nil
         
         statusView.removeAllHandlers()
-        statusView.set(handler: { [weak item] _ in
-            if let item = item {
-                item.openNavigationTopics()
-            }
-        }, for: .Click)
+        if item.isTopic {
+            statusView.set(handler: { [weak item] _ in
+                if let item = item {
+                    item.openNavigationTopics()
+                }
+            }, for: .Click)
+        }
+        
         
         layoutActionItems(item.items, animated: animated)
         
