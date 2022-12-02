@@ -161,6 +161,14 @@ private final class HorizontalThemeView : HorizontalRowView {
         }
         
         disposable.set(signal.start(next: { [weak self] image, data in
+            
+            switch item.themeType {
+            case .local:
+                break
+            case let .cloud(cloud):
+                NSLog("theme loaded: \(cloud.title)")
+            }
+            
             self?.imageView.setSignal(signal: .single(image), clearInstantly: true, animate: animated)
             self?.progressIndicator.isHidden = true
             cacheThemeThumb(image, source: item.themeType, bubbled: item.theme.bubbled)

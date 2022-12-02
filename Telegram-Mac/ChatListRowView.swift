@@ -931,11 +931,9 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
 
                 
                 if highlighted {
-                    activity = theme.activity(key: 10, foregroundColor: theme.chatList.activitySelectedColor, backgroundColor: .clear)
-                } else if item.isFixedItem {
-                    activity = theme.activity(key: 14, foregroundColor: theme.chatList.activityPinnedColor, backgroundColor: .clear)
+                    activity = theme.activity(key: 10, foregroundColor: theme.chatList.activitySelectedColor, backgroundColor: backdorColor)
                 } else {
-                    activity = theme.activity(key: 15, foregroundColor: theme.chatList.activityColor, backgroundColor: .clear)
+                    activity = theme.activity(key: 15, foregroundColor: theme.colors.grayIcon, backgroundColor: theme.colors.background)
                 }
                 if oldValue != item.activities || activity != activitiesModel?.theme {
                     activitiesModel?.update(with: inputActivities, for: item.messageWidth, theme:  activity, layout: { [weak self] show in

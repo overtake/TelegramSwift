@@ -139,8 +139,8 @@ private func cloudThemeData(context: AccountContext, theme: TelegramTheme, file:
                 case let .url(string):
                     let link = inApp(for: string as NSString, context: context)
                     switch link {
-                    case let .wallpaper(values):
-                        switch values.preview {
+                    case let .wallpaper(_, _, preview):
+                        switch preview {
                         case let .slug(slug, settings):
                             wallpaper = getWallpaper(network: context.account.network, slug: slug) |> map(Optional.init)
                             newSettings = settings
