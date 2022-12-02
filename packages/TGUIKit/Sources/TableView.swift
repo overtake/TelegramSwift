@@ -3199,12 +3199,15 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
 
     }
     
+    open override func accessibilityParent() -> Any? {
+        return nil
+    }
+    
     open override func setFrameSize(_ newSize: NSSize) {
         let visible = visibleItems()
         let oldWidth = frame.width
         let oldHeight = frame.height
         super.setFrameSize(newSize)
-                    
        
         if newSize.width > 0 || newSize.height > 0 {
             if oldWidth != frame.width, newSize.width > 0 && newSize.height > 0 {
@@ -3218,8 +3221,6 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         if oldWidth != newSize.width, !inLiveResize && newSize.width > 0 && newSize.height > 0 {
             saveScrollState(visible)
         }
-        self.reflectScrolledClipView(self.clipView)
-
     }
     
     public func setScrollHandler(_ handler: @escaping (_ scrollPosition:ScrollPosition) ->Void) -> Void {
