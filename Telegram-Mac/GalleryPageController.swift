@@ -220,11 +220,11 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     }
     private var startIndex:Int = -1
     let view:GalleryPageView = GalleryPageView()
-    private let captionView: TextView = TextView()
-    private let captionContainer = View()
-    private let captionScrollView = ScrollView()
+    private let textView: TextView = TextView()
+    private let textContainer = View()
+    private let textScrollView = ScrollView()
     private let window:Window
-    private let autohideCaptionDisposable = MetaDisposable()
+    private let autohideTextDisposable = MetaDisposable()
     private let magnifyDisposable = MetaDisposable()
     let selectedIndex:ValuePromise<Int> = ValuePromise(ignoreRepeated: false)
     let thumbsControl: GalleryThumbsControl
@@ -276,8 +276,13 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         _next.userInteractionEnabled = false
         _prev.userInteractionEnabled = false
 
-        captionContainer.addSubview(captionView)
-        captionScrollView.documentView = captionContainer
+        textContainer.addSubview(textView)
+        textScrollView.documentView = textContainer
+        
+        textScrollView.applyExternalScroll = { [weak self] event in
+            self?.adjustTextWith(event)
+            return true
+        }
         
         indexDisposable.set((selectedIndex.get()).start(next: { [weak self] index in
             guard let `self` = self else {return}
@@ -287,8 +292,8 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         }))
         
         cache.countLimit = 10
-        captionView.isSelectable = false
-        captionView.userInteractionEnabled = true
+        textView.isSelectable = false
+        textView.userInteractionEnabled = true
         
         var dragged: NSPoint? = nil
         
@@ -320,10 +325,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             let point = self.controller.view.convert(event.locationInWindow, from: nil)
             let hitTestView = self.window.contentView?.hitTest(event.locationInWindow)
 
-            if NSPointInRect(point, self.captionScrollView.frame) {
-                self.captionView.mouseUp(with: event)
+            if NSPointInRect(point, self.textScrollView.frame) {
+                self.textView.mouseUp(with: event)
                 return .invoked
-            } else if self.captionView.mouseInside() {
+            } else if self.textView.mouseInside() {
                 return .invoked
             }
             if let window = view.window as? Window, self.controller.view._mouseInside() {
@@ -399,13 +404,33 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             return .invoked
         }, with: self, for: .scrollWheel)
         
-        window.set(mouseHandler: { [weak self] (_) -> KeyHandlerResult in
+        window.set(mouseHandler: { [weak self] event -> KeyHandlerResult in
             guard let `self` = self else {return .rejected}
-            self.autohideCaptionDisposable.set(nil)
-            if self.lockedTransition == false {
-                self.captionScrollView.change(opacity: 1.0)
-                self.configureCaptionAutohide()
+            
+            let view = self.controller.selectedViewController?.view as? MagnifyView
+
+            if let view = view {
+                let point = view.convert(event.locationInWindow, from: nil)
+                let textPoint = NSMakePoint(self.textScrollView.frame.midX, self.textScrollView.frame.midY)
+                let dst = point.distance(p2: textPoint)
+                
+                let max_dst = self.textScrollView.frame.height
+                
+                if dst < max_dst * 2 {
+                    self.autohideTextDisposable.set(nil)
+                    if self.lockedTransition == false {
+                        self.textScrollView.change(opacity: 1.0)
+                    }
+                } else {
+                    if self.lockedTransition == false {
+                        self.textScrollView.change(opacity: 0.0)
+                    }
+                }
             }
+
+            self.configureTextAutohide()
+
+            
             (self.controller.selectedViewController?.view as? GMagnifyView)?.hideOrShowControls(hasPrev: self.hasPrev, hasNext: self.hasNext, animated: true)
             return .rejected
         }, with: self, for: .mouseMoved)
@@ -434,17 +459,17 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         controller.transitionStyle = .horizontalStrip
     }
     
-    private func configureCaptionAutohide() {
+    private func configureTextAutohide() {
         let view = controller.selectedViewController?.view as? MagnifyView
-        if captionScrollView.superview != nil {
-            captionScrollView.removeFromSuperview()
-            controller.view.addSubview(captionScrollView)
+        if textScrollView.superview != nil {
+            textScrollView.removeFromSuperview()
+            controller.view.addSubview(textScrollView)
         }
-        autohideCaptionDisposable.set((Signal<Void, NoError>.single(Void()) |> delay(view?.mouseInContent == true ? 5.0 : 1.5, queue: Queue.mainQueue())).start(next: { [weak self] in
+        autohideTextDisposable.set((Signal<Void, NoError>.single(Void()) |> delay(view?.mouseInContent == true ? 5.0 : 1.5, queue: Queue.mainQueue())).start(next: { [weak self] in
             guard let `self` = self else {
                 return
             }
-            self.captionScrollView.change(opacity: self.captionScrollView._mouseInside() ? 1 : 0)
+            self.textScrollView.change(opacity: self.textScrollView._mouseInside() ? 1 : 0)
         }))
     }
     
@@ -700,7 +725,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     
     func pageControllerWillStartLiveTransition(_ pageController: NSPageController) {
         lockedTransition = true
-        captionScrollView.change(opacity: 0)
+        textScrollView.change(opacity: 0)
         startIndex = pageController.selectedIndex
         
         if items.count > 1 {
@@ -712,9 +737,9 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     func pageControllerDidEndLiveTransition(_ pageController: NSPageController, force:Bool) {
         let previousView = currentController?.view as? MagnifyView
         
-        captionScrollView.change(opacity: 0, animated: captionScrollView.superview != nil, completion: { [weak captionScrollView] completed in
+        textScrollView.change(opacity: 0, animated: textScrollView.superview != nil, completion: { [weak textScrollView] completed in
             if completed {
-                captionScrollView?.removeFromSuperview()
+                textScrollView?.removeFromSuperview()
             }
         })
         
@@ -735,36 +760,64 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                 }
                 controllerView.frame = view.focus(contentFrame.size, inset:contentInset)
                 magnifyDisposable.set(controllerView.magnifyUpdaterValue.start(next: { [weak self] value in
-                    self?.captionScrollView.isHidden = value > 1.0
+                    self?.textScrollView.isHidden = value > 1.0
                 }))
                 
             }
         }
         
         let item = self.item(at: pageController.selectedIndex)
-        if let caption = item.caption {
-            caption.measure(width: min(item.sizeValue.width + 240, min(item.pagerSize.width - 200, 600)))
-            captionView.update(caption)
-            captionView.backgroundColor = .clear
-            captionView.disableBackgroundDrawing = true
+        if let text = item.caption {
+            text.measure(width: min(item.sizeValue.width + 240, min(item.pagerSize.width - 200, 600)))
+            textView.update(text)
+            textView.backgroundColor = .clear
+            textView.disableBackgroundDrawing = true
             
             
-            view.addSubview(captionScrollView)
-            captionScrollView.change(opacity: 1.0)
-            captionScrollView.setFrameSize(captionView.frame.size.width + 10, min(120, captionView.frame.height))
-            captionScrollView.centerX(y: 100)
-            captionScrollView.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.9).cgColor
-            captionScrollView.layer?.cornerRadius = .cornerRadius
+            view.addSubview(textScrollView)
+            textScrollView.change(opacity: 1.0)
+            textScrollView.setFrameSize(textView.frame.size.width + 10, min(120, textView.frame.height))
+            textScrollView.centerX(y: 100)
+            textScrollView.layer?.backgroundColor = NSColor.black.withAlphaComponent(0.9).cgColor
+            textScrollView.layer?.cornerRadius = .cornerRadius
             
-            captionContainer.frame = NSMakeRect(0, 0, captionScrollView.frame.width, captionView.frame.height)
-            captionView.center()
+            textContainer.frame = NSMakeRect(0, 0, textScrollView.frame.width, textView.frame.height)
+            textView.center()
 
         } else {
-            captionView.update(nil)
-            captionScrollView.removeFromSuperview()
+            textView.update(nil)
+            textScrollView.removeFromSuperview()
         }
         
-        configureCaptionAutohide()
+        configureTextAutohide()
+    }
+    
+    private func adjustTextWith(_ event: NSEvent) {
+        var frame = textScrollView.frame
+        let documentSize = textScrollView.documentSize
+        let documentOffset = textScrollView.documentOffset
+        
+        let nextScroll:()->CGFloat = {
+            return max(0, min(documentOffset.y - event.scrollingDeltaY, documentSize.height - frame.height))
+        }
+        if textScrollView.documentOffset.y == 0 {
+            frame.size.height -= event.scrollingDeltaY
+
+            let reach: CGFloat = 400
+            
+            let max_limit = min(frame.size.height, documentSize.height, reach)
+            let min_limit = min(100, documentSize.height)
+            frame.size.height = max(max_limit, min_limit)
+            
+           
+            textScrollView.frame = frame
+            
+            if max_limit == reach, documentSize.height > reach {
+                textScrollView.clipView.scroll(to: NSMakePoint(0, nextScroll()))
+            }
+        } else {
+            textScrollView.clipView.scroll(to: NSMakePoint(0, nextScroll()))
+        }
     }
     
     private var currentController:NSViewController?
@@ -918,7 +971,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         
         window.contentView?.addSubview(_prev)
         window.contentView?.addSubview(_next)
-        captionScrollView.change(opacity: 0, animated: false)
+        textScrollView.change(opacity: 0, animated: false)
         if let selectedView = controller.selectedViewController?.view as? MagnifyView, let item = self.selectedItem {
             item.request()
             lockedTransition = true
@@ -936,7 +989,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                         if value.hasValue, let strongSelf = self {
                             self?.animate(oldRect: oldRect, newRect: newRect, newAlphaFrom: 0, newAlphaTo:1, oldAlphaFrom: 1, oldAlphaTo:0, contents: value, oldView: oldView, completion: { [weak strongSelf, weak selectedView] in
                                 selectedView?.isHidden = false
-                                strongSelf?.captionScrollView.change(opacity: 1.0)
+                                strongSelf?.textScrollView.change(opacity: 1.0)
                                 strongSelf?.hasInited = true
                                 strongSelf?.selectedItem?.appear(for: selectedView?.contentView)
                                 strongSelf?.lockedTransition = false
@@ -1044,7 +1097,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         lockedTransition = true
         
         
-        captionScrollView.change(opacity: 0, animated: true)
+        textScrollView.change(opacity: 0, animated: true)
         
         if let selectedView = controller.selectedViewController?.view as? MagnifyView, let item = selectedItem {
             selectedView.isHidden = true
@@ -1083,7 +1136,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         window.removeAllHandlers(for: self)
         ioDisposabe.dispose()
         navigationDisposable.dispose()
-        autohideCaptionDisposable.dispose()
+        autohideTextDisposable.dispose()
         magnifyDisposable.dispose()
         indexDisposable.dispose()
         smartUpdaterDisposable.dispose()
