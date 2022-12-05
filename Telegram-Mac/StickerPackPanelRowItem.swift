@@ -104,7 +104,7 @@ class StickerPackPanelRowItem: TableRowItem {
                 _ = attributed.append(string: title.uppercased(), color: theme.colors.grayText, font: .medium(.text))
             }
             let layout = TextViewLayout(attributed, alwaysStaticItems: true)
-            layout.measure(width: 300)
+            layout.measure(width: 260)
             self.packNameLayout = layout
             
             self.namePoint = NSMakePoint(10, floorToScreenPixels(System.backingScale, ((packInfo.featured ? 50 : 30) - layout.layoutSize.height) / 2))

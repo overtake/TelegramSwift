@@ -448,45 +448,36 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
                     |> take(1)
                     |> map { data in return (sources, images, inAppSettings, data.isLocked)}
             }
-            |> mapToSignal { values -> Signal<([Source], [MessageId:NSImage], InAppNotificationSettings, Bool, Peer, String?), NoError> in
+            |> mapToSignal { values -> Signal<([Source], [MessageId:NSImage], InAppNotificationSettings, Bool, Peer, String?, TelegramPeerNotificationSettings?), NoError> in
             
                 return account.postbox.loadedPeerWithId(account.peerId) |> mapToSignal { peer in
                     if let message = values.0.first?.messages.first {
-                        return account.postbox.transaction { transaction -> Signal<([Source], [MessageId:NSImage], InAppNotificationSettings, Bool, Peer, String?), NoError> in
+                        return account.postbox.transaction { transaction -> Signal<([Source], [MessageId:NSImage], InAppNotificationSettings, Bool, Peer, String?, TelegramPeerNotificationSettings?), NoError> in
                             let notifications = transaction.getPeerNotificationSettings(id: message.id.peerId) as? TelegramPeerNotificationSettings
                             
-                            if let threadData = values.0.first?.threadData {
-                                if threadData.notificationSettings.isMuted {
-                                    return .complete()
-                                }
-                            }
-                            if notifications == nil || !notifications!.isMuted {
-                                if let messageSound = notifications?.messageSound {
-                                    switch messageSound {
-                                    case .none:
-                                        return .single((values.0, values.1, values.2, values.3, peer, nil))
-                                    case .default:
-                                        return getNotificationToneFile(account: account, sound: values.2.tone) |> map { soundPath in
-                                            return (values.0, values.1, values.2, values.3, peer, soundPath)
-                                        }
-                                    default:
-                                        return getNotificationToneFile(account: account, sound: messageSound) |> map { soundPath in
-                                            return (values.0, values.1, values.2, values.3, peer, soundPath)
-                                        }
-                                    }
-                                } else {
+                            if let messageSound = notifications?.messageSound {
+                                switch messageSound {
+                                case .none:
+                                    return .single((values.0, values.1, values.2, values.3, peer, nil, notifications))
+                                case .default:
                                     return getNotificationToneFile(account: account, sound: values.2.tone) |> map { soundPath in
-                                        return (values.0, values.1, values.2, values.3, peer, soundPath)
+                                        return (values.0, values.1, values.2, values.3, peer, soundPath, notifications)
+                                    }
+                                default:
+                                    return getNotificationToneFile(account: account, sound: messageSound) |> map { soundPath in
+                                        return (values.0, values.1, values.2, values.3, peer, soundPath, notifications)
                                     }
                                 }
                             } else {
-                                return .complete()
+                                return getNotificationToneFile(account: account, sound: values.2.tone) |> map { soundPath in
+                                    return (values.0, values.1, values.2, values.3, peer, soundPath, notifications)
+                                }
                             }
                         } |> switchToLatest
                     }
                     return .complete()
                 }
-            } |> deliverOnMainQueue).start(next: { sources, images, inAppSettings, screenIsLocked, accountPeer, soundPath in
+            } |> deliverOnMainQueue).start(next: { sources, images, inAppSettings, screenIsLocked, accountPeer, soundPath, notifications in
                 
                 if !primary, !inAppSettings.notifyAllAccounts {
                     return
@@ -501,6 +492,16 @@ final class SharedNotificationManager : NSObject, NSUserNotificationCenterDelega
 
                         if message.isImported {
                             continue
+                        }
+                        if let notifications = notifications, notifications.isMuted {
+                            if message.consumableMention == nil {
+                                continue
+                            }
+                        }
+                        if let thread = source.threadData, thread.notificationSettings.isMuted {
+                            if message.consumableMention == nil {
+                                continue
+                            }
                         }
                         
                         if message.author?.id != account.peerId || message.wasScheduled {

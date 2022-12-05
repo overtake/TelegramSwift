@@ -403,38 +403,40 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                                 }
                             }
                         })
-                        let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
-                        let text = selectedText.string
-                        let language = Translate.detectLanguage(for: text)
-                        let toLang = appAppearance.language.baseLanguageCode
-                        if language != toLang {
-                            thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
-                                showModal(with: TranslateModalController(context: context, from: language, toLang: toLang, text: text), for: context.window)
-                            }, itemImage: MenuAnimation.menu_translate.value))
-                        }
-                        thirdBlock.append(ContextMenuItem(strings().chatCopySelectedText, handler: { [weak textLayout] in
-                            if let textLayout = textLayout {
-                                let result = textLayout.interactions.copy?()
-                                let attr = textLayout.attributedString
-                                if let result = result, !result {
-                                    let pb = NSPasteboard.general
-                                    pb.clearContents()
-                                    pb.declareTypes([.string], owner: textLayout)
-                                    var effectiveRange = textLayout.selectedRange.range
-                                    let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
-                                    let isCopied = globalLinkExecutor.copyAttributedString(selectedText)
-                                    if !isCopied {
-                                        let attribute = attr.attribute(NSAttributedString.Key.link, at: textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
-                                        if let attribute = attribute as? inAppLink {
-                                            pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
-                                        } else {
-                                            pb.setString(selectedText.string, forType: .string)
+                        if let range = attr.range.intersection(textLayout.selectedRange.range) {
+                            let selectedText = attr.attributedSubstring(from: range)
+                            let text = selectedText.string
+                            let language = Translate.detectLanguage(for: text)
+                            let toLang = appAppearance.language.baseLanguageCode
+                            if language != toLang {
+                                thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
+                                    showModal(with: TranslateModalController(context: context, from: language, toLang: toLang, text: text), for: context.window)
+                                }, itemImage: MenuAnimation.menu_translate.value))
+                            }
+                            thirdBlock.append(ContextMenuItem(strings().chatCopySelectedText, handler: { [weak textLayout] in
+                                if let textLayout = textLayout {
+                                    let result = textLayout.interactions.copy?()
+                                    let attr = textLayout.attributedString
+                                    if let result = result, !result {
+                                        let pb = NSPasteboard.general
+                                        pb.clearContents()
+                                        pb.declareTypes([.string], owner: textLayout)
+                                        var effectiveRange = textLayout.selectedRange.range
+                                        let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
+                                        let isCopied = globalLinkExecutor.copyAttributedString(selectedText)
+                                        if !isCopied {
+                                            let attribute = attr.attribute(NSAttributedString.Key.link, at: textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
+                                            if let attribute = attribute as? inAppLink {
+                                                pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
+                                            } else {
+                                                pb.setString(selectedText.string, forType: .string)
+                                            }
                                         }
                                     }
                                 }
-                            }
-                        }, itemImage: MenuAnimation.menu_copy.value))
+                            }, itemImage: MenuAnimation.menu_copy.value))
 
+                        }
                     }
                 }
             }
@@ -830,9 +832,9 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
 //        if #available(macOS 10.15, *) {
 //            if let file = data.file, file.isAnimatedSticker || file.isVideoSticker {
 //                fifthBlock.append(ContextMenuItem("Export as mp4 (Debug)", handler: {
-//                    
+//
 //                    let object = MediaObjectToAvatar(context: context, object: MediaObjectToAvatar.Object(foreground: .init(type: .animated(file), zoom: 1, offset: .zero), background: .colors([])), codec: AVVideoCodecType.hevcWithAlpha.rawValue)
-//                    
+//
 //                    _ = object.start().start(next: { result in
 //                        if let result = result.result {
 //                            switch result {

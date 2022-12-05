@@ -3806,7 +3806,7 @@ public func chatMapSnapshotImage(account: Account, resource: MapSnapshotMediaRes
 
 
 
-func generateEmoji(_ emoji: NSAttributedString) -> Signal<CGImage, NoError> {
+func generateEmoji(_ emoji: NSAttributedString) -> Signal<CGImage?, NoError> {
     return Signal { subscriber in
         
         
@@ -3823,7 +3823,7 @@ func generateEmoji(_ emoji: NSAttributedString) -> Signal<CGImage, NoError> {
             ctx.clear(size.bounds)
             node.1.draw(size.bounds, in: ctx, backingScaleFactor: System.backingScale, backgroundColor: .clear)
             
-        })!
+        })
         
         subscriber.putNext(image)
         subscriber.putCompletion()

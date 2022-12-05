@@ -36,7 +36,9 @@ private final class LineLayer : SimpleLayer {
         if self.contents == nil {
             self.disposable = signal.start(next: { [weak self] image in
                 self?.content.contents = image
-                cacheEmoji(image, emoji: emoji.string, scale: System.backingScale)
+                if let image = image {
+                    cacheEmoji(image, emoji: emoji.string, scale: System.backingScale)
+                }
             })
         }
     }

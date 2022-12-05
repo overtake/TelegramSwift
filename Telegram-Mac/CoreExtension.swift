@@ -532,6 +532,14 @@ public extension Message {
         }
         return nil
     }
+    var consumableMention: ConsumablePersonalMentionMessageAttribute? {
+        for attr in attributes {
+            if let attr = attr as? ConsumablePersonalMentionMessageAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
     
     var entities:[MessageTextEntity] {
         return self.textEntities?.entities ?? []
