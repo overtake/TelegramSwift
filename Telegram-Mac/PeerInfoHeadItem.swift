@@ -68,8 +68,8 @@ fileprivate final class ActionButton : Control {
             }
         } else {
             self.contextMenu = nil
-            self.set(handler: { [weak item] _ in
-                item?.action()
+            self.set(handler: { _ in
+                item.action()
             }, for: .Click)
         }
         

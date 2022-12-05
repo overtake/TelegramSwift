@@ -337,7 +337,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
                             attributedText.addAttribute(.underlineStyle, value: true, range: range)
                         }
                     case .Bold:
-                        fontAttributes.append((range, .bold))
+                       // fontAttributes.append((range, .bold))
                         break
                     case .Italic:
                         fontAttributes.append((range, .italic))
