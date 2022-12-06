@@ -1013,7 +1013,7 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
     
     override var backdorColor: NSColor {
         if let item = item as? ChatListRowItem {
-            if item.isForum && !item.isTopic {
+            if item.isForum && !item.isTopic, !isResorting {
                 return .clear
             }
             if item.isCollapsed {
@@ -1032,9 +1032,26 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
             if item.isSelected && item.isForum && !item.isTopic {
                 return theme.chatList.activeDraggingBackgroundColor
             }
-            return item.isSelected && !item.isAutohidden ? theme.chatList.selectedBackgroundColor : contextMenu != nil ? theme.chatList.contextMenuBackgroundColor : .clear
+            
+            let effective: NSColor
+            if self.isResorting {
+                if item.shouldHideContent {
+                    effective = theme.colors.listBackground
+                } else {
+                    effective = theme.colors.background
+                }
+            } else {
+                effective = .clear
+            }
+            
+            return item.isSelected && !item.isAutohidden ? theme.chatList.selectedBackgroundColor : contextMenu != nil ? theme.chatList.contextMenuBackgroundColor : effective
         }
         return .clear
+    }
+    
+    override func updateIsResorting() {
+        super.updateIsResorting()
+        updateColors()
     }
     
     

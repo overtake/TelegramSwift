@@ -5533,8 +5533,10 @@ public final class L10n {
   public static var globalTimerBlockHeader: String  { return L10n.tr("Localizable", "GlobalTimer.Block.Header") }
   /// If enabled, all new messages in chats you start will be automatically deleted for everyone at some point after they have been sent. This will not affect your existing chats.
   public static var globalTimerBlockInfo: String  { return L10n.tr("Localizable", "GlobalTimer.Block.Info") }
-  /// All new messages in chats you started will be automatically deleted for everyone 1 week after they have been sent. You can also [apply this setting for your existing chats]().
-  public static var globalTimerBlockEnabledInfo: String  { return L10n.tr("Localizable", "GlobalTimer.Block.Enabled.Info") }
+  /// All new messages in chats you started will be automatically deleted for everyone %@ after they have been sent. You can also [apply this setting for your existing chats]().
+  public static func globalTimerBlockEnabledInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "GlobalTimer.Block.Enabled.Info", p1)
+  }
   /// Enable Auto-Deletion
   public static var globalTimerConfirmOk: String  { return L10n.tr("Localizable", "GlobalTimer.Confirm.Ok") }
   /// Are you sure you want all messages in new chats started by you to be automatically deleted for everyone %1$@ after they have been sent?
