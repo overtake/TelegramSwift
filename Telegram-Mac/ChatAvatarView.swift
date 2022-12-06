@@ -33,7 +33,7 @@ final class ChatAvatarView : Control {
         if peer.isPremium || force, peer.hasVideo {
             let signal = peerPhotos(context: context, peerId: peer.id) |> deliverOnMainQueue
             disposable.set(signal.start(next: { [weak self] photos in
-                self?.updatePhotos(photos, context: context, peer: peer)
+                self?.updatePhotos(photos.map { $0.value }, context: context, peer: peer)
             }))
         }
     }

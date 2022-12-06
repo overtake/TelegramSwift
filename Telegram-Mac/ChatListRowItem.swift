@@ -915,9 +915,10 @@ class ChatListRowItem: TableRowItem {
         
         
         if let peer = peer, peer.isPremium, peer.id != context.peerId, peer.hasVideo {
-            self.photos = syncPeerPhotos(peerId: peer.id)
+            self.photos = syncPeerPhotos(peerId: peer.id).map { $0.value }
             let signal = peerPhotos(context: context, peerId: peer.id, force: false) |> deliverOnMainQueue
             peerPhotosDisposable.set(signal.start(next: { [weak self] photos in
+                let photos = photos.map { $0.value }
                 if self?.photos != photos {
                     self?.photos = photos
                     self?.noteHeightOfRow(animated: true)

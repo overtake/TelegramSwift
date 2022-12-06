@@ -222,28 +222,28 @@ private final class GroupCallAvatarMenuRowView : AppMenuBasicItemView {
                 
                 if !photos.isEmpty {
                     let first = photos.removeFirst()
-                    if !first.image.videoRepresentations.isEmpty {
+                    if !first.value.image.videoRepresentations.isEmpty {
                         photos.insert(first, at: 0)
                         self.slider.removeSlide(view)
                     }
                 }
                 for photo in photos {
                     let view = PhotoOrVideoView(frame: self.slider.bounds)
-                    view.setPeer(peer, peerPhoto: photo, video: nil, account: context.account)
+                    view.setPeer(peer, peerPhoto: photo.value, video: nil, account: context.account)
                     self.slider.addSlide(view)
                 }
             }))
         } else {
             if !photos.isEmpty {
                 let first = photos.removeFirst()
-                if !first.image.videoRepresentations.isEmpty {
+                if !first.value.image.videoRepresentations.isEmpty {
                     photos.insert(first, at: 0)
                     self.slider.removeSlide(view)
                 }
             }
             for photo in photos {
                 let view = PhotoOrVideoView(frame: self.slider.bounds)
-                view.setPeer(peer, peerPhoto: photo, video: nil, account: context.account)
+                view.setPeer(peer, peerPhoto: photo.value, video: nil, account: context.account)
                 self.slider.addSlide(view)
             }
         }    }

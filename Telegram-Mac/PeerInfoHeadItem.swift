@@ -464,8 +464,12 @@ class PeerInfoHeadItem: GeneralRowItem {
         
         
         let canEditPhoto: Bool
-        if let _ = peer as? TelegramUser {
-            canEditPhoto = false
+        if let peer = peer as? TelegramUser {
+            if peerView.peerIsContact {
+                canEditPhoto = peer.photo.isEmpty
+            } else {
+                canEditPhoto = false
+            }
         } else if let _ = peer as? TelegramSecretChat {
             canEditPhoto = false
         } else if let peer = peer as? TelegramGroup {
@@ -494,6 +498,9 @@ class PeerInfoHeadItem: GeneralRowItem {
             result = result
                 .withUpdatedTitle(threadData.info.title)
                 .withUpdatedStatus(peer?.displayTitle ?? "")
+        }
+        if peerView.peerIsContact, let user = peer as? TelegramUser, user.photo.contains(where: { $0.isPersonal }) {
+            result = result.withUpdatedStatus(result.status.string + " \(strings().bullet) " + strings().userInfoSetByYou)
         }
         
         self.result = result
@@ -531,10 +538,11 @@ class PeerInfoHeadItem: GeneralRowItem {
         
         
         if let peer = peer, threadData == nil, peer.hasVideo {
-            self.photos = syncPeerPhotos(peerId: peer.id)
+            self.photos = syncPeerPhotos(peerId: peer.id).map { $0.value }
             let signal = peerPhotos(context: context, peerId: peer.id) |> deliverOnMainQueue
             var first: Bool = true
             peerPhotosDisposable.set(signal.start(next: { [weak self] photos in
+                let photos = photos.map { $0.value }
                 if self?.photos != photos {
                     self?.photos = photos
                     if !first {

@@ -45,7 +45,7 @@ class AccountInfoItem: GeneralRowItem {
         let activeTitle = titleAttr.mutableCopy() as! NSMutableAttributedString
         activeTitle.addAttribute(.foregroundColor, value: theme.colors.underSelectedColor, range: titleAttr.range)
         self.titleActiveLayout = .init(activeTitle, maximumNumberOfLines: 1)
-
+        
         if let phone = peer.phone {
             _ = attr.append(string: formatPhoneNumber(phone), color: theme.colors.grayText, font: .normal(.text))
         }
@@ -63,10 +63,10 @@ class AccountInfoItem: GeneralRowItem {
         activeTextlayout = TextViewLayout(active, maximumNumberOfLines: 4)
         super.init(initialSize, height: 90, stableId: stableId, viewType: viewType, action: action, inset: inset)
         
-        self.photos = syncPeerPhotos(peerId: peer.id)
+        self.photos = syncPeerPhotos(peerId: peer.id).map { $0.value }
         let signal = peerPhotos(context: context, peerId: peer.id) |> deliverOnMainQueue
         peerPhotosDisposable.set(signal.start(next: { [weak self] photos in
-            self?.photos = photos
+            self?.photos = photos.map { $0.value }
             self?.noteHeightOfRow()
         }))
         

@@ -7,6 +7,8 @@ import Foundation
 
 // swiftlint:disable identifier_name line_length type_body_length
 public final class L10n {
+  /// •
+  public static var bullet: String  { return L10n.tr("Localizable", "bullet") }
   /// %1$@ sent an invoice for %3$@ to the group %2$@
   public static func chatMessageInvoice(_ p1: String, _ p2: String, _ p3: String) -> String {
     return L10n.tr("Localizable", "CHAT_MESSAGE_INVOICE", p1, p2, p3)
@@ -1290,6 +1292,14 @@ public final class L10n {
   /// %@ edited this channel's description:
   public static func channelEventLogServiceAboutUpdated(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.EventLog.Service.AboutUpdated", p1)
+  }
+  /// %@ disabled anti-spam
+  public static func channelEventLogServiceAntispamDisabled(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.Service.AntispamDisabled", p1)
+  }
+  /// %@ enabled anti-spam
+  public static func channelEventLogServiceAntispamEnabled(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.EventLog.Service.AntispamEnabled", p1)
   }
   /// %@ disabled slowmode
   public static func channelEventLogServiceDisabledSlowMode(_ p1: String) -> String {
@@ -5327,6 +5337,8 @@ public final class L10n {
   public static var gallerySaveGif: String  { return L10n.tr("Localizable", "Gallery.SaveGif") }
   /// Edit & Send
   public static var gallerySendHere: String  { return L10n.tr("Localizable", "Gallery.SendHere") }
+  /// Only you can see this photo.
+  public static var galleryContactPhotoByYou: String  { return L10n.tr("Localizable", "Gallery.Contact.PhotoByYou") }
   /// Copy to Clipboard
   public static var galleryContextCopyToClipboard: String  { return L10n.tr("Localizable", "Gallery.Context.CopyToClipboard") }
   /// Set As Main Photo
@@ -11565,6 +11577,26 @@ public final class L10n {
   public static var updateAppUpdateTelegram: String  { return L10n.tr("Localizable", "UpdateApp.UpdateTelegram") }
   /// Sorry, you are a member of too many groups and channels. For technical reasons, you need to leave some first before changing this setting in your groups.
   public static var upgradeChannelsTooMuch: String  { return L10n.tr("Localizable", "Upgrade.ChannelsTooMuch") }
+  /// Reset to Original Photo
+  public static var userInfoResetPhoto: String  { return L10n.tr("Localizable", "UserInfo.ResetPhoto") }
+  /// photo set by you
+  public static var userInfoSetByYou: String  { return L10n.tr("Localizable", "UserInfo.SetByYou") }
+  /// Set Photo for %@
+  public static func userInfoSetPhoto(_ p1: String) -> String {
+    return L10n.tr("Localizable", "UserInfo.SetPhoto", p1)
+  }
+  /// Suggest Photo for %@
+  public static func userInfoSuggestPhoto(_ p1: String) -> String {
+    return L10n.tr("Localizable", "UserInfo.SuggestPhoto", p1)
+  }
+  /// Do you want to suggest a profile picture for %@?
+  public static func userInfoSetPhotoInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "UserInfo.SetPhoto.Info", p1)
+  }
+  /// You will now always see this photo for %@ account.
+  public static func userInfoSetPhotoTooltip(_ p1: String) -> String {
+    return L10n.tr("Localizable", "UserInfo.SetPhoto.Tooltip", p1)
+  }
   /// active
   public static var usernameActive: String  { return L10n.tr("Localizable", "Username.Active") }
   /// not active

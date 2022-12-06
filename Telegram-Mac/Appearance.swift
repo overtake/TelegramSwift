@@ -2545,9 +2545,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 chatlist_forum_closed_topic_active: { NSImage(named: "Icon_Forum_ClosedTopic")!.precomposed(palette.underSelectedColor, flipVertical: true) },
                                                 chatlist_arrow: { NSImage(named: "Icon_ChatList_Arrow")!.precomposed(palette.text) },
                                                 chatlist_arrow_active: { NSImage(named: "Icon_ChatList_Arrow")!.precomposed(palette.underSelectedColor) },
-                                                dialog_auto_delete: {NSImage(named: "Icon_AutoDeleteCircle")!.precomposed(.white)}
-
-
+                                                dialog_auto_delete: {NSImage(named: "Icon_AutoDeleteCircle")!.precomposed(.white)},
+                                                contact_set_photo: { NSImage(named: "Icon_PhotoCameraPlus")!.precomposed(palette.accent, flipVertical: true) },
+                                                contact_suggest_photo: { NSImage(named: "Icon_PhotoCameraSuggest")!.precomposed(palette.accent, flipVertical: true) }
     )
 
 }
