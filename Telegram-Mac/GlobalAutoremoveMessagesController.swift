@@ -183,7 +183,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     index += 1
     
     if let current = state.current, current > 0 {
-        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().globalTimerBlockEnabledInfo, linkHandler: { _ in
+        entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().globalTimerBlockEnabledInfo(timeIntervalString(Int(current))), linkHandler: { _ in
             arguments.applyToExists()
         }), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
     } else {
