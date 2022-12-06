@@ -128,7 +128,12 @@ final class TelegramFilterCategory : Peer {
 extension CachedPeerData {
     var photo: TelegramMediaImage? {
         if let data = self as? CachedUserData {
-            return data.photo
+            switch data.photo {
+            case let .known(image):
+                return image
+            default:
+                return nil
+            }
         }
         if let data = self as? CachedChannelData {
             return data.photo
