@@ -127,10 +127,10 @@ private func autoNightEntries(appearance: Appearance, settings: AutoNightThemePr
             
         case let .timeSensitive(from, to):
             
-            func items(from:Int32, to:Int32, isTo: Bool) -> [SPopoverItem] {
-                var items:[SPopoverItem] = []
+            func items(from:Int32, to:Int32, isTo: Bool) -> [ContextMenuItem] {
+                var items:[ContextMenuItem] = []
                 for i in from ..< to {
-                    items.append(SPopoverItem(i < 10 ? "0\(i):00" : "\(i):00", {
+                    items.append(ContextMenuItem(i < 10 ? "0\(i):00" : "\(i):00", handler: {
                         if isTo {
                             arguments.selectTimeTo(i)
                         } else {

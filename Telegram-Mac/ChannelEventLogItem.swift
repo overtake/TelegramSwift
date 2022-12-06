@@ -762,10 +762,17 @@ class ServiceEventLogItem: TableRowItem {
                     let text = strings().channelEventLogServiceTopicEdited(peer.displayTitle, newInfo.info.title)
                     serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
                 }
+            case let .toggleAntiSpam(isEnabled):
+                let text: String
+                if isEnabled {
+                    text = strings().channelEventLogServiceAntispamEnabled(peer.displayTitle)
+                } else {
+                    text = strings().channelEventLogServiceAntispamDisabled(peer.displayTitle)
+                }
+                serviceInfo = ServiceTextInfo(text: text, firstLink: peerLink, secondLink: nil)
             default:
                 break
             }
-            //
             if let serviceInfo = serviceInfo {
                 _ = attributedString.append(string: serviceInfo.text, color: theme.colors.grayText, font: .normal(.text))
                 

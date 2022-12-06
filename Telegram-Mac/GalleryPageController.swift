@@ -706,12 +706,11 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             } else {
                 if controller.selectedIndex != index {
                     controller.selectedIndex = index
-                    pageControllerDidEndLiveTransition(controller, force:true)
                 } else if currentController == nil {
                     selectedIndex.set(index)
                 }
                 currentController = controller.selectedViewController
-                
+                pageControllerDidEndLiveTransition(controller, force:true)                
             }
             
             if items.count > 1, hasInited {

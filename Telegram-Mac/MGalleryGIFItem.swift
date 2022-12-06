@@ -69,7 +69,7 @@ class MGalleryGIFItem: MGalleryItem {
             }
         case .instantMedia(let media, _):
             return media.media as! TelegramMediaFile
-        case let  .photo(_, _, photo, _, _, _, _):
+        case let  .photo(_, _, photo, _, _, _, _, _):
             let video = photo.videoRepresentations.last!
             let file = TelegramMediaFile(fileId: photo.imageId, partialReference: nil, resource: video.resource, previewRepresentations: photo.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [.Video(duration:0, size: PixelDimensions(640, 640), flags: [])])
             

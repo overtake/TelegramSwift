@@ -332,10 +332,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
                             attributedText.addAttribute(.strikethroughStyle, value: true, range: range)
                         }
                     case .Underline:
-                        let intersection = attributedText.range.intersection(range)
-                        if let range = intersection {
-                            attributedText.addAttribute(.underlineStyle, value: true, range: range)
-                        }
+                        break
                     case .Bold:
                        // fontAttributes.append((range, .bold))
                         break

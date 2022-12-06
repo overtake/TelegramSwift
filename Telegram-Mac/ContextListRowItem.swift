@@ -46,7 +46,7 @@ class ContextListRowItem: TableRowItem {
         switch result {
         case let .externalReference(values):
             if let thumbnail = values.thumbnail {
-                representation = TelegramMediaImageRepresentation(dimensions: PixelDimensions(NSMakeSize(50, 50)), resource: thumbnail.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)
+                representation = TelegramMediaImageRepresentation(dimensions: PixelDimensions(NSMakeSize(50, 50)), resource: thumbnail.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false)
             }
             if let content = values.content {
                 if content.mimeType.hasPrefix("audio") {

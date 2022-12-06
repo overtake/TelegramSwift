@@ -793,6 +793,9 @@ func initialize() -> [String] {
     array.append("chatlist_arrow_active")
     
     array.append("dialog_auto_delete")
+    
+    array.append("contact_set_photo")
+    array.append("contact_suggest_photo")
 
     return array
 }

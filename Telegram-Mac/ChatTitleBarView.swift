@@ -460,7 +460,7 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
         if NSPointInRect(point, avatarControl.frame), chatInteraction.mode == .history, let peer = chatInteraction.presentation.mainPeer, peer.hasVideo {
            let signal = peerPhotos(context: chatInteraction.context, peerId: peer.id) |> deliverOnMainQueue
             videoAvatarDisposable.set(signal.start(next: { [weak self] photos in
-                self?.applyVideoAvatarIfNeeded(photos.first)
+                self?.applyVideoAvatarIfNeeded(photos.first?.value)
             }))
         } else {
             videoAvatarDisposable.set(nil)

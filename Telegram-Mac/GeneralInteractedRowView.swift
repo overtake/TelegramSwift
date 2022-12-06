@@ -95,8 +95,8 @@ class GeneralInteractedRowView: GeneralRowView {
                 
                 textView?.set(layout: layout)
                 var nextVisible: Bool = true
-                if case let .contextSelector(_, items) = item.type {
-                    nextVisible = !items.isEmpty
+                if case let .contextSelector(value, items) = item.type {
+                    nextVisible = !items.isEmpty && !value.isEmpty
                 }
                 nextView.isHidden = !nextVisible
             default:
@@ -121,8 +121,8 @@ class GeneralInteractedRowView: GeneralRowView {
             if case .nextContext = item.type {
                 needNextImage = true
             }
-            if case let .contextSelector(_, items) = item.type {
-                needNextImage = !items.isEmpty
+            if case let .contextSelector(value, items) = item.type {
+                needNextImage = !items.isEmpty && !value.isEmpty
             }
             if needNextImage {
                 nextView.isHidden = false
@@ -353,21 +353,15 @@ class GeneralInteractedRowView: GeneralRowView {
         if item.enabled {
             if let textView = self.textView {
                 switch item.type {
-                case let .contextSelector(value, items):
+                case let .contextSelector(_, items):
                     if let event = NSApp.currentEvent {
                         let menu = ContextMenu()
 
-                        let items = items.map{ pItem -> ContextMenuItem in
-                            return ContextMenuItem(pItem.title, handler: pItem.handler, dynamicTitle: nil, state: value == pItem.title ? .on : nil)
-                        }
                         for item in items {
                             menu.addItem(item)
                         }
                         AppMenu.show(menu: menu, event: event, for: textView)
-                    } else {
-                        showPopover(for: textView, with: SPopoverViewController(items: items), edge: .minX, inset: NSMakePoint(0,-30))
                     }
-                    
                     
                     return
                 default:
