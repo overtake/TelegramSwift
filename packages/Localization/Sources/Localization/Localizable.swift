@@ -11589,14 +11589,30 @@ public final class L10n {
   public static func userInfoSuggestPhoto(_ p1: String) -> String {
     return L10n.tr("Localizable", "UserInfo.SuggestPhoto", p1)
   }
+  /// Do you want to set this photo for %@? Only you will see this photo and it will replace any photo %@ sets for themselves.
+  public static func userInfoSetPhotoConfirm(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "UserInfo.SetPhoto.Confirm", p1, p2)
+  }
   /// Do you want to suggest a profile picture for %@?
   public static func userInfoSetPhotoInfo(_ p1: String) -> String {
     return L10n.tr("Localizable", "UserInfo.SetPhoto.Info", p1)
   }
+  /// Set Photo
+  public static var userInfoSetPhotoTitle: String  { return L10n.tr("Localizable", "UserInfo.SetPhoto.Title") }
   /// You will now always see this photo for %@ account.
   public static func userInfoSetPhotoTooltip(_ p1: String) -> String {
     return L10n.tr("Localizable", "UserInfo.SetPhoto.Tooltip", p1)
   }
+  /// SET
+  public static var userInfoSetPhotoConfirmOK: String  { return L10n.tr("Localizable", "UserInfo.SetPhoto.Confirm.OK") }
+  /// Do you want to suggest %@ to set this photo for his/her page?
+  public static func userInfoSuggestConfirm(_ p1: String) -> String {
+    return L10n.tr("Localizable", "UserInfo.Suggest.Confirm", p1)
+  }
+  /// Suggest Photo
+  public static var userInfoSuggestTitle: String  { return L10n.tr("Localizable", "UserInfo.Suggest.Title") }
+  /// SUGGEST
+  public static var userInfoSuggestConfirmOK: String  { return L10n.tr("Localizable", "UserInfo.Suggest.Confirm.OK") }
   /// active
   public static var usernameActive: String  { return L10n.tr("Localizable", "Username.Active") }
   /// not active

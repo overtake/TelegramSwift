@@ -199,9 +199,11 @@ class EditImageModalController: ModalViewController {
     private var canReset: Bool
     
     var onClose: () -> Void = {}
+    private let confirm: ((@escaping()->Void)->Void)?
     
-    init(_ path: URL, defaultData: EditedImageData? = nil, settings: EditControllerSettings = .plain) {
+    init(_ path: URL, defaultData: EditedImageData? = nil, settings: EditControllerSettings = .plain, confirm: ((@escaping()->Void)->Void)? = nil) {
         self.canReset = defaultData != nil
+        self.confirm = confirm
         editState = Atomic(value: defaultData ?? EditedImageData(originalUrl: path))
         
         self.image = NSImage(contentsOf: path)!.cgImage(forProposedRect: nil, context: nil, hints: nil)!
@@ -229,17 +231,25 @@ class EditImageModalController: ModalViewController {
         
         guard !markAsClosed else { return .invoked }
         
-        let currentData = editState.modify {$0}
-        resultValue.set(EditedImageData.generateNewUrl(data: currentData, selectedRect: genericView.selectedRect) |> map { ($0, $0 == currentData.originalUrl ? nil : currentData)})
+        let invoke = { [weak self] in
+            guard let `self` = self else {
+                return
+            }
+            let currentData = self.editState.modify {$0}
+            self.resultValue.set(EditedImageData.generateNewUrl(data: currentData, selectedRect: self.genericView.selectedRect) |> map { ($0, $0 == currentData.originalUrl ? nil : currentData)})
+            
+            let signal = self.resultValue.get() |> take(1) |> deliverOnMainQueue |> delay(0.1, queue: .mainQueue())
+            self.markAsClosed = true
+            _ = signal.start(next: { [weak self] _ in
+                self?.close()
+            })
+        }
         
-        
-        
-        let signal = resultValue.get() |> take(1) |> deliverOnMainQueue |> delay(0.1, queue: .mainQueue())
-        markAsClosed = true
-        _ = signal.start(next: { [weak self] _ in
-            self?.close()
-        })
-        
+        if let confirm = self.confirm {
+            confirm(invoke)
+        } else {
+            invoke()
+        }
         return .invoked
     }
     

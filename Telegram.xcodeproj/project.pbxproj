@@ -589,6 +589,8 @@
 		27F73766274BE58B005DCC1C /* GalleryRecognition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F73765274BE58B005DCC1C /* GalleryRecognition.swift */; };
 		27F7EC782726D35F002B05FF /* AppearanceMoreItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F7EC772726D35F002B05FF /* AppearanceMoreItem.swift */; };
 		27F7EEC0293F53E600B6E324 /* UserInfoResetPhotoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F7EEBF293F53E600B6E324 /* UserInfoResetPhotoItem.swift */; };
+		27F7EED02940B43100B6E324 /* UserInfoSuggestPhotoItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F7EECF2940B43100B6E324 /* UserInfoSuggestPhotoItem.swift */; };
+		27F7EED22940C4ED00B6E324 /* UserInfoPhotoConfirmController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F7EED12940C4ED00B6E324 /* UserInfoPhotoConfirmController.swift */; };
 		27FE779A26F4944800E1C90B /* ChatThemeSelectorController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FE779926F4944800E1C90B /* ChatThemeSelectorController.swift */; };
 		27FE779C26F4AE4400E1C90B /* SmartThemePreviewRowItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FE779B26F4AE4400E1C90B /* SmartThemePreviewRowItem.swift */; };
 		27FFCEC52694BA58006CA024 /* WidgetAppearance.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27FFCEC42694BA58006CA024 /* WidgetAppearance.swift */; };
@@ -1925,6 +1927,8 @@
 		27F73765274BE58B005DCC1C /* GalleryRecognition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryRecognition.swift; sourceTree = "<group>"; };
 		27F7EC772726D35F002B05FF /* AppearanceMoreItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceMoreItem.swift; sourceTree = "<group>"; };
 		27F7EEBF293F53E600B6E324 /* UserInfoResetPhotoItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserInfoResetPhotoItem.swift; sourceTree = "<group>"; };
+		27F7EECF2940B43100B6E324 /* UserInfoSuggestPhotoItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserInfoSuggestPhotoItem.swift; sourceTree = "<group>"; };
+		27F7EED12940C4ED00B6E324 /* UserInfoPhotoConfirmController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserInfoPhotoConfirmController.swift; sourceTree = "<group>"; };
 		27FE779926F4944800E1C90B /* ChatThemeSelectorController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatThemeSelectorController.swift; sourceTree = "<group>"; };
 		27FE779B26F4AE4400E1C90B /* SmartThemePreviewRowItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartThemePreviewRowItem.swift; sourceTree = "<group>"; };
 		27FFCEC42694BA58006CA024 /* WidgetAppearance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetAppearance.swift; sourceTree = "<group>"; };
@@ -4114,6 +4118,7 @@
 				C2271DBE1DAE563D001792B6 /* PeerInfoHeaderItem.swift */,
 				D0FCA7612434867400B72F18 /* PeerInfoHeadItem.swift */,
 				27F7EEBF293F53E600B6E324 /* UserInfoResetPhotoItem.swift */,
+				27F7EECF2940B43100B6E324 /* UserInfoSuggestPhotoItem.swift */,
 			);
 			name = table;
 			sourceTree = "<group>";
@@ -4968,6 +4973,7 @@
 				A731924A25CAE9DC00218E0E /* AutoremoMessagesController.swift */,
 				271D4F37276B69BD004FD034 /* ReactionsSettingsController.swift */,
 				27A08A1F27E4BD7300284048 /* ChannelBotAdminController.swift */,
+				27F7EED12940C4ED00B6E324 /* UserInfoPhotoConfirmController.swift */,
 			);
 			name = controllers;
 			sourceTree = "<group>";
@@ -6527,6 +6533,7 @@
 				A7C41DB4235862BB00CF9402 /* PeerMediaPhotosController.swift in Sources */,
 				9F0F8E82226DCD1C00A97F6A /* OpmizeDatabaseView.swift in Sources */,
 				D0E52B3222FD66C4000C0306 /* MessageTimecode.swift in Sources */,
+				27F7EED02940B43100B6E324 /* UserInfoSuggestPhotoItem.swift in Sources */,
 				2764A5B125E0173900F9A20D /* AutoDeleteContextMenuView.swift in Sources */,
 				A731925525DA7AA400218E0E /* GigagroupLanding.swift in Sources */,
 				D0A75F25244843D3001F84A0 /* EditImageCanvasController.swift in Sources */,
@@ -6553,6 +6560,7 @@
 				C218FF9A1F42030B00DD7D35 /* InstantPageChannelItem.swift in Sources */,
 				D01CBE2D22A5384700F6A971 /* NotificationPreferencesController.swift in Sources */,
 				C2D187F21E28D0840038961D /* ChatSwitchInlineController.swift in Sources */,
+				27F7EED22940C4ED00B6E324 /* UserInfoPhotoConfirmController.swift in Sources */,
 				C2A12FE61E0C503900EC2239 /* ChatContactRowItem.swift in Sources */,
 				2747969828F9645900A891F3 /* SearchTopicRowItem.swift in Sources */,
 				D014AA242316CE0700CE5362 /* NewThemeController.swift in Sources */,
