@@ -435,19 +435,24 @@ class UserInfoArguments : PeerInfoArguments {
         pushViewController(SecretChatKeyViewController(context, peerId: peerId))
     }
     
-    private func makeUpdatePhotoItems(_ custom: NSImage?) -> [ContextMenuItem] {
+    private func makeUpdatePhotoItems(_ custom: NSImage?, type: SetPhotoType) -> [ContextMenuItem] {
         let context = self.context
+        let peerId = self.peerId
         let info = strings().userInfoSetPhotoInfo(peer?.compactDisplayTitle ?? "")
-
+        
         let updatePhoto:(Signal<NSImage, NoError>) -> Void = { [weak self] image in
             let signal = image |> mapToSignal { image in
                 return putToTemp(image: image, compress: true)
             } |> deliverOnMainQueue
             _ = signal.start(next: { [weak self] path in
-                let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
+                let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square), confirm: { f in
+                    showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, type: type, confirm: f), for: context.window)
+                })
                 showModal(with: controller, for: context.window, animationType: .scaleCenter)
                 _ = controller.result.start(next: { [weak self] url, _ in
-                    self?.updatePhoto(url.path)
+                    DispatchQueue.main.async {
+                        self?.updatePhoto(url.path, type: type)
+                    }
                 })
                 controller.onClose = {
                     removeFile(at: path)
@@ -499,7 +504,7 @@ class UserInfoArguments : PeerInfoArguments {
                             return .error
                         }
                     }
-                    updateVideo(signal)
+                    updateVideo(signal, type)
                 }
             }
             
@@ -512,14 +517,18 @@ class UserInfoArguments : PeerInfoArguments {
                         updatePhoto(.single(image))
                     } else if let path = paths?.first {
                         selectVideoAvatar(context: context, path: path, localize: info, signal: { signal in
-                            updateVideo(signal)
+                            updateVideo(signal, type)
+                        }, confirm: { f in
+                            showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, type: type, confirm: f), for: context.window)
                         })
                     }
                 })
             }, itemImage: MenuAnimation.menu_shared_media.value))
             
             items.append(.init(strings().editAvatarCustomize, handler: {
-                showModal(with: AvatarConstructorController(context, target: .avatar, videoSignal: makeVideo), for: context.window)
+                showModal(with: AvatarConstructorController(context, target: .avatar, videoSignal: makeVideo, confirm: { f in
+                    showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, type: type, confirm: f), for: context.window)
+                }), for: context.window)
             }, itemImage: MenuAnimation.menu_view_sticker_set.value))
             
             return items
@@ -529,6 +538,7 @@ class UserInfoArguments : PeerInfoArguments {
     
     func updateContactPhoto(_ custom: NSImage?, control: Control?) {
         let context = self.context
+        let peerId = self.peerId
         let info = strings().userInfoSetPhotoInfo(peer?.compactDisplayTitle ?? "")
         let updateVideo = self.updateVideo
 
@@ -540,7 +550,9 @@ class UserInfoArguments : PeerInfoArguments {
                 let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
                 showModal(with: controller, for: context.window, animationType: .scaleCenter)
                 _ = controller.result.start(next: { [weak self] url, _ in
-                    self?.updatePhoto(url.path)
+                    DispatchQueue.main.async {
+                        self?.updatePhoto(url.path, type: .set)
+                    }
                 })
                 controller.onClose = {
                     removeFile(at: path)
@@ -548,7 +560,7 @@ class UserInfoArguments : PeerInfoArguments {
             })
         }
     
-        let items = self.makeUpdatePhotoItems(custom)
+        let items = self.makeUpdatePhotoItems(custom, type: .set)
         
         if let control = control, let event = NSApp.currentEvent, !items.isEmpty {
             let menu = ContextMenu()
@@ -563,7 +575,9 @@ class UserInfoArguments : PeerInfoArguments {
                     updatePhoto(.single(image))
                 } else if let path = paths?.first {
                     selectVideoAvatar(context: context, path: path, localize: info, signal: { signal in
-                        updateVideo(signal)
+                        updateVideo(signal, .set)
+                    }, confirm: { f in
+                        showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, type: .set, confirm: f), for: context.window)
                     })
                 }
             })
@@ -571,12 +585,12 @@ class UserInfoArguments : PeerInfoArguments {
             
     }
     
-    func setPhotoItems() -> [ContextMenuItem] {
-        return makeUpdatePhotoItems(nil)
+    func setPhotoItems(_ type: SetPhotoType) -> [ContextMenuItem] {
+        return makeUpdatePhotoItems(nil, type: type)
     }
 
     
-    func updatePhoto(_ path:String) -> Void {
+    func updatePhoto(_ path:String, type: SetPhotoType) -> Void {
         
         let updateState:((UserInfoState)->UserInfoState)->Void = { [weak self] f in
             self?.updateState(f)
@@ -609,8 +623,7 @@ class UserInfoArguments : PeerInfoArguments {
                 })
         }
         
-        
-        updatePhotoDisposable.set((updateSignal |> deliverOnMainQueue).start(next: { status in
+        self.updatePhotoDisposable.set((updateSignal |> deliverOnMainQueue).start(next: { status in
             updateState { state in
                 switch status {
                 case .complete:
@@ -631,11 +644,9 @@ class UserInfoArguments : PeerInfoArguments {
             }
             showModalText(for: context.window, text: strings().userInfoSetPhotoTooltip(title))
         }))
-        
-        
     }
     
-    func updateVideo(_ signal:Signal<VideoAvatarGeneratorState, NoError>) -> Void {
+    func updateVideo(_ signal:Signal<VideoAvatarGeneratorState, NoError>, type: SetPhotoType) -> Void {
         
         let updateState:((UserInfoState)->UserInfoState)->Void = { [weak self] f in
             self?.updateState(f)
@@ -651,6 +662,7 @@ class UserInfoArguments : PeerInfoArguments {
         let context = self.context
         let peerId = self.peerId
         let title = self.peer?.compactDisplayTitle ?? ""
+        
         
         let updateSignal: Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> = signal
             |> castError(UploadPeerPhotoError.self)
@@ -683,30 +695,33 @@ class UserInfoArguments : PeerInfoArguments {
                     }
                 }
         }
-
-        updatePhotoDisposable.set((updateSignal |> deliverOnMainQueue).start(next: { status in
-            updateState { state in
-                switch status {
-                case .complete:
-                    return state.withoutUpdatingPhotoState()
-                case let .progress(progress):
-                    return state.withUpdatedUpdatingPhotoState { previous -> PeerInfoUpdatingPhotoState? in
-                        return previous?.withUpdatedProgress(progress)
+        
+        let invoke:()->Void = { [weak self] in
+            self?.updatePhotoDisposable.set((updateSignal |> deliverOnMainQueue).start(next: { status in
+                updateState { state in
+                    switch status {
+                    case .complete:
+                        return state.withoutUpdatingPhotoState()
+                    case let .progress(progress):
+                        return state.withUpdatedUpdatingPhotoState { previous -> PeerInfoUpdatingPhotoState? in
+                            return previous?.withUpdatedProgress(progress)
+                        }
                     }
                 }
-            }
-        }, error: { error in
-            updateState { state in
-                return state.withoutUpdatingPhotoState()
-            }
-        }, completed: {
-            updateState { state in
-                return state.withoutUpdatingPhotoState()
-            }
-            showModalText(for: context.window, text: strings().userInfoSetPhotoTooltip(title))
-        }))
+            }, error: { error in
+                updateState { state in
+                    return state.withoutUpdatingPhotoState()
+                }
+            }, completed: {
+                updateState { state in
+                    return state.withoutUpdatingPhotoState()
+                }
+                showModalText(for: context.window, text: strings().userInfoSetPhotoTooltip(title))
+            }))
+        }
 
-        
+        showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, type: type, confirm: invoke), for: context.window)
+
     }
     
     func resetPhoto() {
@@ -717,21 +732,7 @@ class UserInfoArguments : PeerInfoArguments {
         _ = showModalProgress(signal: signal, for: context.window).start()
     }
     
-    func setPhoto(type: SetPhotoType) {
-        
-        let context = self.context
-        let info = strings().userInfoSetPhotoInfo(peer?.compactDisplayTitle ?? "")
-                
-        filePanel(with: photoExts + videoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { [weak self] paths in
-            if let path = paths?.first, let _ = NSImage(contentsOfFile: path) {
-                self?.updatePhoto(path)
-            } else if let path = paths?.first {
-                selectVideoAvatar(context: context, path: path, localize: info, signal: { signal in
-                    self?.updateVideo(signal)
-                })
-            }
-        })
-    }
+   
     func groupInCommon(_ peerId: PeerId) -> Void {
     }
     
@@ -1377,9 +1378,7 @@ enum UserInfoEntry: PeerInfoEntry {
                 arguments.encryptionKey()
             })
         case let .setPhoto(_, string, type, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: string, icon: type == .set ? theme.icons.contact_set_photo : theme.icons.contact_suggest_photo, nameStyle: blueActionButton, type: .contextSelector("", arguments.setPhotoItems()), viewType: viewType, action: {
-                arguments.setPhoto(type: type)
-            })
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: string, icon: type == .set ? theme.icons.contact_set_photo : theme.icons.contact_suggest_photo, nameStyle: blueActionButton, type: .contextSelector("", arguments.setPhotoItems(type)), viewType: viewType)
         case let .resetPhoto(_, string, cachedData, user, viewType):
             return UserInfoResetPhotoItem(initialSize, stableId: stableId.hashValue, context: arguments.context, string: string, user: user, cachedData: cachedData, viewType: viewType, action: arguments.resetPhoto)
         case let .block(_, peer, isBlocked, isBot, viewType):
