@@ -15,14 +15,13 @@ import TGUIKit
 final class UserInfoSuggestPhotoItem : GeneralRowItem {
     fileprivate let context: AccountContext
     fileprivate let user: TelegramUser
-    fileprivate let cachedData: CachedUserData
+    fileprivate let thumb: URL
     fileprivate let textLayout: TextViewLayout
     
-    init(_ initialSize: NSSize, context: AccountContext, stableId: AnyHashable, user: TelegramUser, cachedData: CachedUserData, type: UserInfoArguments.SetPhotoType, viewType: GeneralViewType) {
+    init(_ initialSize: NSSize, context: AccountContext, stableId: AnyHashable, user: TelegramUser, thumb: URL, type: UserInfoArguments.SetPhotoType, viewType: GeneralViewType) {
         self.context = context
         self.user = user
-        self.cachedData = cachedData
-        
+        self.thumb = thumb
         let text: String
         switch type {
         case .set:
@@ -57,9 +56,29 @@ final class UserInfoSuggestPhotoItem : GeneralRowItem {
 
 private final class UserInfoSuggestPhotoView: GeneralContainableRowView {
     private let textView = TextView()
+    private let imageContainer = View()
+    private let imageView = ImageView()
+    private let newPhoto = ImageView()
+    private let currentPhoto = AvatarControl(font: .avatar(20))
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(textView)
+        addSubview(imageContainer)
+        imageContainer.addSubview(imageView)
+        imageContainer.addSubview(newPhoto)
+        imageContainer.addSubview(currentPhoto)
+        
+        currentPhoto.setFrameSize(NSMakeSize(50, 50))
+        newPhoto.setFrameSize(NSMakeSize(50, 50))
+
+        imageView.image = NSImage(named: "Icon_ContactPhoto_Chevron")?.precomposed(theme.colors.grayIcon)
+        imageView.sizeToFit()
+        
+        newPhoto.contentGravity = .resizeAspect
+        
+        newPhoto.layer?.cornerRadius = newPhoto.frame.height / 2
+        
+        imageContainer.setFrameSize(NSMakeSize(50 + 50 + 50, 50))
         textView.isSelectable = false
         textView.userInteractionEnabled = false
     }
@@ -75,6 +94,12 @@ private final class UserInfoSuggestPhotoView: GeneralContainableRowView {
             return
         }
         
+        imageContainer.centerX(y: item.viewType.innerInset.top)
+        imageView.center()
+        
+        currentPhoto.centerY(x: 0)
+        newPhoto.centerY(x: imageContainer.frame.width - newPhoto.frame.width)
+
         textView.centerX(y: containerView.frame.height - textView.frame.height - item.viewType.innerInset.top)
     }
     
@@ -84,6 +109,10 @@ private final class UserInfoSuggestPhotoView: GeneralContainableRowView {
         guard let item = item as? UserInfoSuggestPhotoItem else {
             return
         }
+        
+        currentPhoto.setPeer(account: item.context.account, peer: item.user)
+        
+        newPhoto.image = NSImage(contentsOf: item.thumb)?._cgImage
         
         textView.update(item.textLayout)
     }

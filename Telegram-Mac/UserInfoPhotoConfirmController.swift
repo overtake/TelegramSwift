@@ -25,12 +25,7 @@ private struct State : Equatable {
         if lhs.user != rhs.user {
             return false
         }
-        
-        if let lhsCached = lhs.cachedData, let rhsCached = rhs.cachedData {
-            if !lhsCached.isEqual(to: rhsCached){
-                return false
-            }
-        } else if (lhs.cachedData != nil) != (rhs.cachedData != nil) {
+        if lhs.thumb != rhs.thumb {
             return false
         }
         if lhs.type != rhs.type {
@@ -41,8 +36,8 @@ private struct State : Equatable {
     }
     
     var user: TelegramUser?
-    var cachedData: CachedUserData?
     var type: UserInfoArguments.SetPhotoType
+    var thumb: URL?
 }
 
 
@@ -55,9 +50,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    if let user = state.user, let cachedData = state.cachedData {
+    if let user = state.user, let thumb = state.thumb {
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: nil, comparable: nil, item: { initialSize, stableId in
-            return UserInfoSuggestPhotoItem(initialSize, context: arguments.context, stableId: stableId, user: user, cachedData: cachedData, type: state.type, viewType: .singleItem)
+            return UserInfoSuggestPhotoItem(initialSize, context: arguments.context, stableId: stableId, user: user, thumb: thumb, type: state.type, viewType: .singleItem)
         }))
         index += 1
     }
@@ -71,7 +66,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
 
 
 
-func UserInfoPhotoConfirmController(context: AccountContext, peerId: PeerId, type: UserInfoArguments.SetPhotoType, confirm:@escaping()->Void) -> InputDataModalController {
+func UserInfoPhotoConfirmController(context: AccountContext, peerId: PeerId, thumb: Signal<URL, NoError>, type: UserInfoArguments.SetPhotoType, confirm:@escaping()->Void) -> InputDataModalController {
 
     let actionsDisposable = DisposableSet()
 
@@ -86,13 +81,13 @@ func UserInfoPhotoConfirmController(context: AccountContext, peerId: PeerId, typ
     
     var close:(()->Void)? = nil
     
-    let dataSignal = combineLatest(getCachedDataView(peerId: peerId, postbox: context.account.postbox), getPeerView(peerId: peerId, postbox: context.account.postbox))
+    let dataSignal = combineLatest(getPeerView(peerId: peerId, postbox: context.account.postbox), thumb)
     
-    actionsDisposable.add(dataSignal.start(next: { cachedData, peer in
+    actionsDisposable.add(dataSignal.start(next: { peer, thumb in
         updateState { current in
             var current = current
             current.user = peer as? TelegramUser
-            current.cachedData = cachedData as? CachedUserData
+            current.thumb = thumb
             return current
         }
     }))
