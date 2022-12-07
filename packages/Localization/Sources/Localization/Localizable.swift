@@ -7669,6 +7669,8 @@ public final class L10n {
   public static var peerInfoActionAddMembers: String  { return L10n.tr("Localizable", "PeerInfo.Action.AddMembers") }
   /// Call
   public static var peerInfoActionCall: String  { return L10n.tr("Localizable", "PeerInfo.Action.Call") }
+  /// Delete
+  public static var peerInfoActionDeleteGroup: String  { return L10n.tr("Localizable", "PeerInfo.Action.DeleteGroup") }
   /// Discuss
   public static var peerInfoActionDiscussion: String  { return L10n.tr("Localizable", "PeerInfo.Action.Discussion") }
   /// Gift Premium
