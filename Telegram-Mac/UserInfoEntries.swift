@@ -445,8 +445,8 @@ class UserInfoArguments : PeerInfoArguments {
                 return putToTemp(image: image, compress: true)
             } |> deliverOnMainQueue
             _ = signal.start(next: { [weak self] path in
-                let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square), confirm: { f in
-                    showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, type: type, confirm: f), for: context.window)
+                let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square), confirm: { url, f in
+                    showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, thumb: url, type: type, confirm: f), for: context.window)
                 })
                 showModal(with: controller, for: context.window, animationType: .scaleCenter)
                 _ = controller.result.start(next: { [weak self] url, _ in
@@ -518,16 +518,16 @@ class UserInfoArguments : PeerInfoArguments {
                     } else if let path = paths?.first {
                         selectVideoAvatar(context: context, path: path, localize: info, signal: { signal in
                             updateVideo(signal, type)
-                        }, confirm: { f in
-                            showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, type: type, confirm: f), for: context.window)
+                        }, confirm: { url, f in
+                            showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, thumb: url, type: type, confirm: f), for: context.window)
                         })
                     }
                 })
             }, itemImage: MenuAnimation.menu_shared_media.value))
             
             items.append(.init(strings().editAvatarCustomize, handler: {
-                showModal(with: AvatarConstructorController(context, target: .avatar, videoSignal: makeVideo, confirm: { f in
-                    showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, type: type, confirm: f), for: context.window)
+                showModal(with: AvatarConstructorController(context, target: .avatar, videoSignal: makeVideo, confirm: { url, f in
+                    showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, thumb: url, type: type, confirm: f), for: context.window)
                 }), for: context.window)
             }, itemImage: MenuAnimation.menu_view_sticker_set.value))
             
@@ -576,8 +576,8 @@ class UserInfoArguments : PeerInfoArguments {
                 } else if let path = paths?.first {
                     selectVideoAvatar(context: context, path: path, localize: info, signal: { signal in
                         updateVideo(signal, .set)
-                    }, confirm: { f in
-                        showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, type: .set, confirm: f), for: context.window)
+                    }, confirm: { url, f in
+                        showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, thumb: url, type: .set, confirm: f), for: context.window)
                     })
                 }
             })
@@ -696,40 +696,39 @@ class UserInfoArguments : PeerInfoArguments {
                 }
         }
         
-        let invoke:()->Void = { [weak self] in
-            self?.updatePhotoDisposable.set((updateSignal |> deliverOnMainQueue).start(next: { status in
-                updateState { state in
-                    switch status {
-                    case .complete:
-                        return state.withoutUpdatingPhotoState()
-                    case let .progress(progress):
-                        return state.withUpdatedUpdatingPhotoState { previous -> PeerInfoUpdatingPhotoState? in
-                            return previous?.withUpdatedProgress(progress)
-                        }
+        self.updatePhotoDisposable.set((updateSignal |> deliverOnMainQueue).start(next: { status in
+            updateState { state in
+                switch status {
+                case .complete:
+                    return state.withoutUpdatingPhotoState()
+                case let .progress(progress):
+                    return state.withUpdatedUpdatingPhotoState { previous -> PeerInfoUpdatingPhotoState? in
+                        return previous?.withUpdatedProgress(progress)
                     }
                 }
-            }, error: { error in
-                updateState { state in
-                    return state.withoutUpdatingPhotoState()
-                }
-            }, completed: {
-                updateState { state in
-                    return state.withoutUpdatingPhotoState()
-                }
-                showModalText(for: context.window, text: strings().userInfoSetPhotoTooltip(title))
-            }))
-        }
-
-        showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, type: type, confirm: invoke), for: context.window)
+            }
+        }, error: { error in
+            updateState { state in
+                return state.withoutUpdatingPhotoState()
+            }
+        }, completed: {
+            updateState { state in
+                return state.withoutUpdatingPhotoState()
+            }
+            showModalText(for: context.window, text: strings().userInfoSetPhotoTooltip(title))
+        }))
 
     }
     
     func resetPhoto() {
-        let signal = context.engine.contacts.updateContactPhoto(peerId: peerId, resource: nil, videoResource: nil, videoStartTimestamp: nil, mapResourceToAvatarSizes: { _,_  in
-            return .complete()
+        let context = self.context
+        let peerId = self.peerId
+        confirm(for: context.window, information: strings().userInfoResetPhotoConfirm(peer?.compactDisplayTitle ?? ""), okTitle: strings().userInfoResetPhotoConfirmOK, successHandler: { _ in
+            let signal = context.engine.contacts.updateContactPhoto(peerId: peerId, resource: nil, videoResource: nil, videoStartTimestamp: nil, mode: .custom, mapResourceToAvatarSizes: { _,_  in
+                return .complete()
+            })
+            _ = showModalProgress(signal: signal, for: context.window).start()
         })
-        
-        _ = showModalProgress(signal: signal, for: context.window).start()
     }
     
    

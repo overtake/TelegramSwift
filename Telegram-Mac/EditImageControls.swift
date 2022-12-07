@@ -126,8 +126,6 @@ struct EditedImageData : Equatable {
                     if let image = self.makeImage(image, data: data).cropping(to: selectedRect) {
                         return putToTemp(image: NSImage(cgImage: image, size: image.size), compress: true).start(next: { url in
                             subscriber.putNext(URL(fileURLWithPath: url))
-                        }, error: { error in
-                            subscriber.putError(error)
                         }, completed: {
                             subscriber.putCompletion()
                         })

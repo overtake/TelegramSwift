@@ -78,16 +78,19 @@ private final class VideoAvatarModalView : View {
     private let descView: TextView = TextView()
     
     required init(frame frameRect: NSRect) {
-        selectionRectView = SelectionRectView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
-        avPlayer = AVPlayerView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
+        selectionRectView = SelectionRectView(frame: frameRect.size.bounds)
+        avPlayer = AVPlayerView(frame: frameRect.size.bounds)
         super.init(frame: frameRect)
         playerContainer.addSubview(avPlayer)
         avPlayer.controlsStyle = .none
-        
+        avPlayer.videoGravity = .resizeAspectFill
+        //avPlayer.videoBounds = frameRect.size
         playerContainer.addSubview(selectionRectView)
         controls.addSubview(scrubberView)
         selectionRectView.isCircleCap = true
         selectionRectView.dimensions = .square
+        
+        self.videoSize = frameRect.size
         
 
         addSubview(playerContainer)
@@ -255,7 +258,7 @@ private final class VideoAvatarModalView : View {
         let oldSize = self.frame.size
         super.setFrameSize(newSize)
         
-        let videoContainerSize = videoSize.aspectFitted(NSMakeSize(frame.width, frame.height - 200))
+        let videoContainerSize = videoSize.aspectFitted(NSMakeSize(newSize.width, newSize.height - 200))
         let oldVideoContainerSize = playerContainer.frame.size
         playerContainer.setFrameSize(videoContainerSize)
 
@@ -265,7 +268,9 @@ private final class VideoAvatarModalView : View {
             selectionRectView.applyRect(selectionRectView.selectedRect.apply(multiplier: multiplier))
         }
         
-        avPlayer.frame = playerContainer.bounds
+        avPlayer.frame = videoContainerSize.bounds
+        
+        
         selectionRectView.frame = playerContainer.bounds
         controls.setFrameSize(NSMakeSize(370, 44))
         scrubberView.setFrameSize(controls.frame.size)
@@ -346,8 +351,8 @@ class VideoAvatarModalController: ModalViewController {
     private let localize: String
     private let quality: String
     private let holder: AVAsset
-    private let confirm: ((@escaping()->Void)->Void)?
-    init(context: AccountContext, asset: AVComposition, track: AVAssetTrack, localize: String, quality: String, holder: AVAsset, confirm: ((@escaping()->Void)->Void)? = nil) {
+    private let confirm: ((Signal<URL, NoError>, @escaping()->Void)->Void)?
+    init(context: AccountContext, asset: AVComposition, track: AVAssetTrack, localize: String, quality: String, holder: AVAsset, confirm: ((Signal<URL, NoError>, @escaping()->Void)->Void)? = nil) {
         self.context = context
         self.asset = asset
         self.confirm = confirm
@@ -357,7 +362,6 @@ class VideoAvatarModalController: ModalViewController {
         let size = track.naturalSize.applying(track.preferredTransform)
         self.videoSize = NSMakeSize(abs(size.width), abs(size.height))
         self.item = AVPlayerItem(asset: asset)
-        
         self.player = AVPlayer(playerItem: item)
         
         let videoComposition = AVMutableVideoComposition()
@@ -428,16 +432,30 @@ class VideoAvatarModalController: ModalViewController {
     
     override func returnKeyAction() -> KeyHandlerResult {
         
+        let dataSignal = generateVideo(self.asset, composition: self.currentVideoComposition(), quality: self.quality, values: self.scrubberValues.with { $0 })
+        
+        let promise: Promise<VideoAvatarGeneratorState> = Promise()
+        promise.set(dataSignal)
+        
         let invoke = { [weak self] in
             guard let `self` = self else {
                 return
             }
-            self.state.set(generateVideo(self.asset, composition: self.currentVideoComposition(), quality: self.quality, values: self.scrubberValues.with { $0 }))
+            self.state.set(promise.get())
             self.close()
         }
         
         if let confirm = confirm {
-            confirm(invoke)
+            confirm(promise.get() |> mapToQueue { value in
+                switch value {
+                case let .start(thumb):
+                    return .single(URL(fileURLWithPath: thumb))
+                case let .complete(_, video, _):
+                    return .single(URL(fileURLWithPath: video))
+                default:
+                    return .never()
+                }
+            }, invoke)
         } else {
             invoke()
         }
@@ -750,7 +768,7 @@ class VideoAvatarModalController: ModalViewController {
 
 
 
-func selectVideoAvatar(context: AccountContext, path: String, localize: String, quality: String = AVAssetExportPresetMediumQuality, signal:@escaping(Signal<VideoAvatarGeneratorState, NoError>)->Void, confirm: ((@escaping()->Void)->Void)? = nil) {
+func selectVideoAvatar(context: AccountContext, path: String, localize: String, quality: String = AVAssetExportPresetMediumQuality, signal:@escaping(Signal<VideoAvatarGeneratorState, NoError>)->Void, confirm: ((Signal<URL, NoError>, @escaping()->Void)->Void)? = nil) {
     let asset = AVURLAsset(url: URL(fileURLWithPath: path))
     let track = asset.tracks(withMediaType: .video).first
     if let track = track {

@@ -3097,6 +3097,10 @@ public final class L10n {
   public static func chatServiceSearchAllMessages(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SearchAllMessages", p1)
   }
+  /// %@ suggests you profile photo
+  public static func chatServiceSuggestedPhoto(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.SuggestedPhoto", p1)
+  }
   /// %1$@ changed chat theme to %2$@
   public static func chatServiceUpdateTheme(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.UpdateTheme", p1, p2)
@@ -3141,6 +3145,8 @@ public final class L10n {
   }
   /// You
   public static var chatServiceYou: String  { return L10n.tr("Localizable", "Chat.Service.You") }
+  /// You suggested profile photo
+  public static var chatServiceYouSuggestedPhoto: String  { return L10n.tr("Localizable", "Chat.Service.YouSuggestedPhoto") }
   /// Cancelled
   public static var chatServiceCallCancelled: String  { return L10n.tr("Localizable", "Chat.Service.Call.Cancelled") }
   /// Missed
@@ -11589,6 +11595,12 @@ public final class L10n {
   public static func userInfoSuggestPhoto(_ p1: String) -> String {
     return L10n.tr("Localizable", "UserInfo.SuggestPhoto", p1)
   }
+  /// Are you sure you want to reset to %@ original photo?
+  public static func userInfoResetPhotoConfirm(_ p1: String) -> String {
+    return L10n.tr("Localizable", "UserInfo.ResetPhoto.Confirm", p1)
+  }
+  /// Reset
+  public static var userInfoResetPhotoConfirmOK: String  { return L10n.tr("Localizable", "UserInfo.ResetPhoto.Confirm.OK") }
   /// Do you want to set this photo for %@? Only you will see this photo and it will replace any photo %@ sets for themselves.
   public static func userInfoSetPhotoConfirm(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "UserInfo.SetPhoto.Confirm", p1, p2)

@@ -775,8 +775,12 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
                     entities.append(.init(range: range.lowerBound ..< range.upperBound, type: .CustomEmoji(stickerPack: nil, fileId: iconFileId)))
                 }
             }
-            
-            
+        case .suggestedProfilePhoto:
+            if authorId == account.peerId {
+                text = strings().chatServiceYouSuggestedPhoto
+            } else {
+                text = strings().chatServiceSuggestedPhoto(authorName)
+            }
         }
     }
     return (text, entities, media)

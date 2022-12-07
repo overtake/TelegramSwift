@@ -977,8 +977,8 @@ final class AvatarConstructorController : ModalViewController {
     
     private let stickersController: NStickersViewController
     private let emojisController: EmojiesController
-    private let confirm: ((@escaping()->Void)->Void)?
-    init(_ context: AccountContext, target: Target, videoSignal:@escaping(MediaObjectToAvatar)->Void, confirm: ((@escaping()->Void)->Void)? = nil) {
+    private let confirm: ((Signal<URL, NoError>, @escaping()->Void)->Void)?
+    init(_ context: AccountContext, target: Target, videoSignal:@escaping(MediaObjectToAvatar)->Void, confirm: ((Signal<URL, NoError>, @escaping()->Void)->Void)? = nil) {
         self.context = context
         self.target = target
         self.confirm = confirm
@@ -1238,7 +1238,8 @@ final class AvatarConstructorController : ModalViewController {
             }
             
             if let confirm = confirm {
-                confirm(invoke)
+                fatalError()
+                confirm(.complete(), invoke)
             } else {
                 invoke()
             }
