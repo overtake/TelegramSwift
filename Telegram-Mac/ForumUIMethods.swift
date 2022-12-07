@@ -60,7 +60,7 @@ struct ForumUI {
         let signal: Signal<Bool, NoError>
         
         if let threadId = threadId {
-            signal = openTopic(threadId, peerId: peerId, context: context)
+            signal = openTopic(threadId, peerId: peerId, context: context) |> map { _ in context.layout == .dual }
         } else {
             signal = .single(true)
         }
