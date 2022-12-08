@@ -524,12 +524,12 @@ class UserInfoArguments : PeerInfoArguments {
                     }
                 })
             }, itemImage: MenuAnimation.menu_shared_media.value))
-            
-            items.append(.init(strings().editAvatarCustomize, handler: {
-                showModal(with: AvatarConstructorController(context, target: .avatar, videoSignal: makeVideo, confirm: { url, f in
-                    showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, thumb: url, type: type, confirm: f), for: context.window)
-                }), for: context.window)
-            }, itemImage: MenuAnimation.menu_view_sticker_set.value))
+//            
+//            items.append(.init(strings().editAvatarCustomize, handler: {
+//                showModal(with: AvatarConstructorController(context, target: .avatar, videoSignal: makeVideo, confirm: { url, f in
+//                    showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, thumb: url, type: type, confirm: f), for: context.window)
+//                }), for: context.window)
+//            }, itemImage: MenuAnimation.menu_view_sticker_set.value))
             
             return items
         }
@@ -607,43 +607,62 @@ class UserInfoArguments : PeerInfoArguments {
         let peerId = self.peerId
         let title = self.peer?.compactDisplayTitle ?? ""
         
+        let suggestSignal = Signal<String, NoError>.single(path) |> map { path -> TelegramMediaResource in
+            return LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
+            } |> castError(UploadPeerPhotoError.self) |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
+                return context.engine.contacts.updateContactPhoto(peerId: peerId, resource: resource, videoResource: nil, videoStartTimestamp: nil, mode: .suggest, mapResourceToAvatarSizes: { resource, representations in
+                    return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
+                })
+        }
+        
         let updateSignal = Signal<String, NoError>.single(path) |> map { path -> TelegramMediaResource in
             return LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
             } |> beforeNext { resource in
-                
                 updateState { state in
                     return state.withUpdatedUpdatingPhotoState { previous -> PeerInfoUpdatingPhotoState? in
                         return PeerInfoUpdatingPhotoState(progress: 0, image: NSImage(contentsOfFile: path)?.cgImage(forProposedRect: nil, context: nil, hints: nil), cancel: cancel)
                     }
                 }
-                
             } |> castError(UploadPeerPhotoError.self) |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
-                return context.engine.peers.updatePeerPhoto(peerId: peerId, photo: context.engine.peers.uploadedPeerPhoto(resource: resource), mapResourceToAvatarSizes: { resource, representations in
+                return context.engine.contacts.updateContactPhoto(peerId: peerId, resource: resource, videoResource: nil, videoStartTimestamp: nil, mode: .custom, mapResourceToAvatarSizes: { resource, representations in
                     return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
                 })
         }
         
-        self.updatePhotoDisposable.set((updateSignal |> deliverOnMainQueue).start(next: { status in
-            updateState { state in
-                switch status {
-                case .complete:
-                    return state
-                case let .progress(progress):
-                    return state.withUpdatedUpdatingPhotoState { previous -> PeerInfoUpdatingPhotoState? in
-                        return previous?.withUpdatedProgress(progress)
+        switch type {
+        case .suggest:
+            var disposable: Disposable? = nil
+            self.updatePhotoDisposable.set((suggestSignal |> deliverOnMainQueue).start(next: { value in
+                if disposable == nil {
+                    disposable = showModalProgress(signal: Signal<Void, NoError>.never(), for: context.window).start()
+                }
+            }, completed: {
+                showModalText(for: context.window, text: strings().userInfoSuggestTooltip(title))
+                disposable?.dispose()
+            }))
+        case .set:
+            self.updatePhotoDisposable.set((updateSignal |> deliverOnMainQueue).start(next: { status in
+                updateState { state in
+                    switch status {
+                    case .complete:
+                        return state
+                    case let .progress(progress):
+                        return state.withUpdatedUpdatingPhotoState { previous -> PeerInfoUpdatingPhotoState? in
+                            return previous?.withUpdatedProgress(progress)
+                        }
                     }
                 }
-            }
-        }, error: { error in
-            updateState { state in
-                return state.withoutUpdatingPhotoState()
-            }
-        }, completed: {
-            updateState { state in
-                return state.withoutUpdatingPhotoState()
-            }
-            showModalText(for: context.window, text: strings().userInfoSetPhotoTooltip(title))
-        }))
+            }, error: { error in
+                updateState { state in
+                    return state.withoutUpdatingPhotoState()
+                }
+            }, completed: {
+                updateState { state in
+                    return state.withoutUpdatingPhotoState()
+                }
+                showModalText(for: context.window, text: strings().userInfoSetPhotoTooltip(title))
+            }))
+        }        
     }
     
     func updateVideo(_ signal:Signal<VideoAvatarGeneratorState, NoError>, type: SetPhotoType) -> Void {
@@ -663,6 +682,39 @@ class UserInfoArguments : PeerInfoArguments {
         let peerId = self.peerId
         let title = self.peer?.compactDisplayTitle ?? ""
         
+        let suggestSignal: Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> = signal
+        |> castError(UploadPeerPhotoError.self)
+        |> mapToSignal { state in
+            switch state {
+            case .error:
+                return .fail(.generic)
+            case .start:
+                return .next(.progress(0))
+            case let .progress(value):
+                return .next(.progress(value * 0.2))
+            case let .complete(thumb, video, keyFrame):
+                
+                let (thumbResource, videoResource) = (LocalFileReferenceMediaResource(localFilePath: thumb, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true),
+                                                      LocalFileReferenceMediaResource(localFilePath: video, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true))
+
+                
+                return context.engine.contacts.updateContactPhoto(peerId: peerId, resource: thumbResource, videoResource: videoResource, videoStartTimestamp: keyFrame, mode: .suggest, mapResourceToAvatarSizes: { resource, representations in
+                    return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
+                }) |> mapToSignal { result in
+                    switch result {
+                    case let .progress(current):
+                        if current == 1.0 {
+                            return .single(.complete([]))
+                        } else {
+                            return .next(.progress(0.2 + (current * 0.8)))
+                        }
+                    default:
+                        return .complete()
+                    }
+                }
+            }
+        }
+        
         
         let updateSignal: Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> = signal
             |> castError(UploadPeerPhotoError.self)
@@ -680,44 +732,67 @@ class UserInfoArguments : PeerInfoArguments {
                 case let .progress(value):
                     return .next(.progress(value * 0.2))
                 case let .complete(thumb, video, keyFrame):
+                    
+                    updateState { state in
+                        return state.withUpdatedUpdatingPhotoState { previous -> PeerInfoUpdatingPhotoState? in
+                            return PeerInfoUpdatingPhotoState(progress: 0.2, image: NSImage(contentsOfFile: thumb)?._cgImage, cancel: cancel)
+                        }
+                    }
+                    
                     let (thumbResource, videoResource) = (LocalFileReferenceMediaResource(localFilePath: thumb, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true),
                                                           LocalFileReferenceMediaResource(localFilePath: video, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true))
                                         
-                    return context.engine.peers.updatePeerPhoto(peerId: peerId, photo: context.engine.peers.uploadedPeerPhoto(resource: thumbResource), video: context.engine.peers.uploadedPeerVideo(resource: videoResource) |> map(Optional.init), videoStartTimestamp: keyFrame, mapResourceToAvatarSizes: { resource, representations in
+                    return context.engine.contacts.updateContactPhoto(peerId: peerId, resource: thumbResource, videoResource: videoResource, videoStartTimestamp: keyFrame, mode: .custom, mapResourceToAvatarSizes: { resource, representations in
                         return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
-                    }) |> map { result in
+                    }) |> mapToSignal { result in
                         switch result {
                         case let .progress(current):
-                            return .progress(0.2 + (current * 0.8))
+                            if current == 1.0 {
+                                return .single(.complete([]))
+                            } else {
+                                return .next(.progress(0.2 + (current * 0.8)))
+                            }
                         default:
-                            return result
+                            return .complete()
                         }
                     }
                 }
         }
         
-        self.updatePhotoDisposable.set((updateSignal |> deliverOnMainQueue).start(next: { status in
-            updateState { state in
-                switch status {
-                case .complete:
-                    return state.withoutUpdatingPhotoState()
-                case let .progress(progress):
-                    return state.withUpdatedUpdatingPhotoState { previous -> PeerInfoUpdatingPhotoState? in
-                        return previous?.withUpdatedProgress(progress)
+        switch type {
+        case .suggest:
+            var disposable: Disposable? = nil
+            self.updatePhotoDisposable.set((suggestSignal |> deliverOnMainQueue).start(next: { value in
+                if disposable == nil {
+                    disposable = showModalProgress(signal: Signal<Void, NoError>.never(), for: context.window).start()
+                } else if case .complete = value {
+                    showModalText(for: context.window, text: strings().userInfoSuggestTooltip(title))
+                    disposable?.dispose()
+                }
+            }))
+        case .set:
+            self.updatePhotoDisposable.set((updateSignal |> deliverOnMainQueue).start(next: { status in
+                updateState { state in
+                    switch status {
+                    case .complete:
+                        return state.withoutUpdatingPhotoState()
+                    case let .progress(progress):
+                        return state.withUpdatedUpdatingPhotoState { previous -> PeerInfoUpdatingPhotoState? in
+                            return previous?.withUpdatedProgress(progress)
+                        }
                     }
                 }
-            }
-        }, error: { error in
-            updateState { state in
-                return state.withoutUpdatingPhotoState()
-            }
-        }, completed: {
-            updateState { state in
-                return state.withoutUpdatingPhotoState()
-            }
-            showModalText(for: context.window, text: strings().userInfoSetPhotoTooltip(title))
-        }))
-
+            }, error: { error in
+                updateState { state in
+                    return state.withoutUpdatingPhotoState()
+                }
+            }, completed: {
+                updateState { state in
+                    return state.withoutUpdatingPhotoState()
+                }
+                showModalText(for: context.window, text: strings().userInfoSetPhotoTooltip(title))
+            }))
+        }
     }
     
     func resetPhoto() {

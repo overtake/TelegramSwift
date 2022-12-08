@@ -11623,6 +11623,10 @@ public final class L10n {
   }
   /// Suggest Photo
   public static var userInfoSuggestTitle: String  { return L10n.tr("Localizable", "UserInfo.Suggest.Title") }
+  /// You successfully suggested new photo for %@
+  public static func userInfoSuggestTooltip(_ p1: String) -> String {
+    return L10n.tr("Localizable", "UserInfo.Suggest.Tooltip", p1)
+  }
   /// SUGGEST
   public static var userInfoSuggestConfirmOK: String  { return L10n.tr("Localizable", "UserInfo.Suggest.Confirm.OK") }
   /// active

@@ -61,7 +61,7 @@ private final class VideoAvatarKeyFramePreviewView: Control {
 }
 
 private final class VideoAvatarModalView : View {
-    private var avPlayer: AVPlayerView
+    private let avPlayer: AVPlayerLayer
     private var videoSize: NSSize = .zero
     private let playerContainer: View = View()
     private var keyFramePreview: VideoAvatarKeyFramePreviewView?
@@ -78,13 +78,15 @@ private final class VideoAvatarModalView : View {
     private let descView: TextView = TextView()
     
     required init(frame frameRect: NSRect) {
+        
+        
         selectionRectView = SelectionRectView(frame: frameRect.size.bounds)
-        avPlayer = AVPlayerView(frame: frameRect.size.bounds)
+        avPlayer = AVPlayerLayer()
+        avPlayer.frame = frameRect.size.bounds
         super.init(frame: frameRect)
-        playerContainer.addSubview(avPlayer)
-        avPlayer.controlsStyle = .none
+        playerContainer.layer?.addSublayer(avPlayer)
+        
         avPlayer.videoGravity = .resizeAspectFill
-        //avPlayer.videoBounds = frameRect.size
         playerContainer.addSubview(selectionRectView)
         controls.addSubview(scrubberView)
         selectionRectView.isCircleCap = true
@@ -361,6 +363,7 @@ class VideoAvatarModalController: ModalViewController {
         self.quality = quality
         let size = track.naturalSize.applying(track.preferredTransform)
         self.videoSize = NSMakeSize(abs(size.width), abs(size.height))
+        
         self.item = AVPlayerItem(asset: asset)
         self.player = AVPlayer(playerItem: item)
         
@@ -776,6 +779,7 @@ func selectVideoAvatar(context: AccountContext, path: String, localize: String, 
         guard let compositionVideoTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid) else {
             return
         }
+                        
         do {
 
             try compositionVideoTrack.insertTimeRange(CMTimeRangeMake(start: .zero, duration: asset.duration), of: track, at: .zero)
