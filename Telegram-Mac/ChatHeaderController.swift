@@ -1380,7 +1380,7 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
     
     private var fromAbility: Bool {
         if let peer = chatInteraction.presentation.peer {
-            return (peer.isSupergroup || peer.isGroup) && (chatInteraction.mode == .history || chatInteraction.mode.isThreadMode)
+            return (peer.isSupergroup || peer.isGroup) && (chatInteraction.mode == .history || chatInteraction.mode.isThreadMode || chatInteraction.mode.isTopicMode)
         } else {
             return false
         }
