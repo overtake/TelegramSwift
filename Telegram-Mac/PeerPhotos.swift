@@ -30,6 +30,13 @@ private var peerAvatars:Atomic<[PeerId: PeerPhotos]> = Atomic(value: [:])
 func syncPeerPhotos(peerId: PeerId) -> [TelegramPeerPhotoHolder] {
     return peerAvatars.with { $0[peerId].map { $0.photos } ?? [] }
 }
+func resetPeerPhotos(peerId: PeerId) {
+    _ = peerAvatars.modify { current in
+        var current = current
+        current.removeValue(forKey: peerId)
+        return current
+    }
+}
 
 func peerPhotos(context: AccountContext, peerId: PeerId, force: Bool = false) -> Signal<[TelegramPeerPhotoHolder], NoError> {
     let photos = peerAvatars.with { $0[peerId] }
@@ -39,7 +46,8 @@ func peerPhotos(context: AccountContext, peerId: PeerId, force: Bool = false) ->
         if !force {
             
             return getCachedDataView(peerId: peerId, postbox: context.account.postbox) |> take(1) |> map { cachedData in
-                if let photo = cachedData?.photo, !force {
+                let photo = cachedData?.personalPhoto ?? cachedData?.photo
+                if let photo = photo, !force {
                     let photo = TelegramPeerPhoto(image: photo, reference: nil, date: 0, index: 0, totalCount: 0, messageId: nil)
                     return [.init(value: photo, caption: nil)]
                 } else {
@@ -53,18 +61,23 @@ func peerPhotos(context: AccountContext, peerId: PeerId, force: Bool = false) ->
                 var photos:[TelegramPeerPhotoHolder] = photos.map {
                     return .init(value: $0, caption: nil)
                 }
-                if let cachedData = cachedData, let value = cachedData.photo {
+                if let cachedData = cachedData, let value = cachedData.personalPhoto {
+                    if photos.firstIndex(where: { $0.value.image.id == value.id }) == nil {
+                        photos.insert(.init(value: TelegramPeerPhoto(image: value, reference: nil, date: 0, index: 0, totalCount: photos.first?.value.totalCount ?? 0, messageId: nil), caption: nil), at: 0)
+                    }
+                } else if let cachedData = cachedData, let value = cachedData.photo {
                     if photos.firstIndex(where: { $0.value.image.id == value.id }) == nil {
                         photos.insert(.init(value: TelegramPeerPhoto(image: value, reference: nil, date: 0, index: 0, totalCount: photos.first?.value.totalCount ?? 0, messageId: nil), caption: nil), at: 0)
                     }
                 }
-                if let peer = peer as? TelegramUser {
-                    if peer.photo.contains(where: { $0.isPersonal }) {
-                        let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: peer.photo, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: TelegramMediaImageFlags())
-                        
-                        photos.insert(.init(value: TelegramPeerPhoto(image: image, reference: nil, date: 0, index: 0, totalCount: photos.first?.value.totalCount ?? 0, messageId: nil), caption: strings().galleryContactPhotoByYou), at: 0)
-                    }
-                }
+                
+//                if let peer = peer as? TelegramUser {
+//                    if peer.photo.contains(where: { $0.isPersonal }) {
+//                        let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: peer.photo, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: TelegramMediaImageFlags())
+//
+//                        photos.insert(.init(value: TelegramPeerPhoto(image: image, reference: nil, date: 0, index: 0, totalCount: photos.first?.value.totalCount ?? 0, messageId: nil), caption: strings().galleryContactPhotoByYou), at: 0)
+//                    }
+//                }
                 
                 value[peerId] = PeerPhotos(photos: photos, time: Date().timeIntervalSince1970 + 5 * 60)
                 return value

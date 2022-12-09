@@ -505,7 +505,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                         attributes.removeAll()
                         attributes = attributes.map { attribute -> TelegramMediaFileAttribute in
                             switch attribute {
-                            case let .CustomEmoji(_, alt, packReference):
+                            case let .CustomEmoji(_, _, alt, packReference):
                                 return .Sticker(displayText: alt, packReference: packReference, maskData: nil)
                             default:
                                 return attribute

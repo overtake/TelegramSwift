@@ -449,12 +449,12 @@ class VideoAvatarModalController: ModalViewController {
         }
         
         if let confirm = confirm {
-            confirm(promise.get() |> mapToQueue { value in
+            confirm(promise.get() |> mapToSignal { value in
                 switch value {
                 case let .start(thumb):
                     return .single(URL(fileURLWithPath: thumb))
-                case let .complete(_, video, _):
-                    return .single(URL(fileURLWithPath: video))
+                case let .complete(thumb, _, _):
+                    return .single(URL(fileURLWithPath: thumb))
                 default:
                     return .never()
                 }

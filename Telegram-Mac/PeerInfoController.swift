@@ -49,7 +49,7 @@ class PeerInfoArguments {
         copyToClipboard(string)
         pullNavigation()?.controller.show(toaster: ControllerToaster(text: strings().shareLinkCopied))
     }
-
+    
     func updateEditable(_ editable:Bool, peerView:PeerView, controller: PeerInfoController) -> Bool {
         return true
     }
@@ -74,10 +74,14 @@ class PeerInfoArguments {
     }
     
     func delete() {
+        self.delete(force: false)
+    }
+    
+    func delete(force: Bool) {
         let context = self.context
         let peerId = self.peerId
         
-        let isEditing = (state as? GroupInfoState)?.editingState != nil || (state as? ChannelInfoState)?.editingState != nil
+        let isEditing = (state as? GroupInfoState)?.editingState != nil || (state as? ChannelInfoState)?.editingState != nil || force
         
         let signal = context.account.postbox.peerView(id: peerId) |> take(1) |> mapToSignal { view -> Signal<Bool, NoError> in
             return removeChatInteractively(context: context, peerId: peerId, userId: peerViewMainPeer(view)?.id, deleteGroup: isEditing && peerViewMainPeer(view)?.groupAccess.isCreator == true)

@@ -3341,6 +3341,16 @@ public final class L10n {
   public static func chatServiceSecureIdAccessGranted(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.SecureId.AccessGranted", p1, p2)
   }
+  /// %@ suggests you to use this photo for your Telegram account.
+  public static func chatServiceSuggestPhotoInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.SuggestPhoto.Info", p1)
+  }
+  /// Suggested Photo
+  public static var chatServiceSuggestPhotoTitle: String  { return L10n.tr("Localizable", "Chat.Service.SuggestPhoto.Title") }
+  /// You suggested %@ to use that photo for their Telegram Account.
+  public static func chatServiceSuggestPhotoInfoYou(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.SuggestPhoto.Info.You", p1)
+  }
   /// You changed chat theme to %@
   public static func chatServiceUpdateThemeYou(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.UpdateTheme.You", p1)
@@ -4201,6 +4211,8 @@ public final class L10n {
   public static func chatServiceUserJoinedGroupByRequest(_ p1: String) -> String {
     return L10n.tr("Localizable", "ChatService.UserJoinedGroupByRequest", p1)
   }
+  /// You successfully updated your profile photo
+  public static var chatServiceSuggestSuccess: String  { return L10n.tr("Localizable", "ChatService.Suggest.Success") }
   /// Colorful
   public static var chatThemeColorful: String  { return L10n.tr("Localizable", "ChatTheme.Colorful") }
   /// Chat Theme
@@ -7687,6 +7699,8 @@ public final class L10n {
   public static var peerInfoActionAddMembers: String  { return L10n.tr("Localizable", "PeerInfo.Action.AddMembers") }
   /// Call
   public static var peerInfoActionCall: String  { return L10n.tr("Localizable", "PeerInfo.Action.Call") }
+  /// Delete
+  public static var peerInfoActionDeleteGroup: String  { return L10n.tr("Localizable", "PeerInfo.Action.DeleteGroup") }
   /// Discuss
   public static var peerInfoActionDiscussion: String  { return L10n.tr("Localizable", "PeerInfo.Action.Discussion") }
   /// Gift Premium

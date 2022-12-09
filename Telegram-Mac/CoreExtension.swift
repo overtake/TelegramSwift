@@ -405,11 +405,20 @@ public extension TelegramMediaFile {
     }
     var customEmojiText:String? {
         for attr in attributes {
-            if case let .CustomEmoji(_, alt, _) = attr {
+            if case let .CustomEmoji(_, _, alt, _) = attr {
                 return alt
             }
         }
         return nil
+    }
+    
+    var paintToText:Bool {
+        for attr in attributes {
+            if case let .CustomEmoji(_, paintToText, _, _) = attr {
+                return paintToText
+            }
+        }
+        return false
     }
     
     var stickerReference:StickerPackReference? {
@@ -422,7 +431,7 @@ public extension TelegramMediaFile {
     }
     var emojiReference:StickerPackReference? {
         for attr in attributes {
-            if case let .CustomEmoji(_, _, reference) = attr {
+            if case let .CustomEmoji(_, _, _, reference) = attr {
                 return reference
             }
         }

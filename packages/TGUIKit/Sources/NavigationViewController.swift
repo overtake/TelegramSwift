@@ -1056,6 +1056,8 @@ open class NavigationViewController: ViewController, CALayerDelegate,CAAnimation
                 } else {
                     show(self.empty, .none)
                 }
+            } else {
+                controller.view.removeFromSuperview()
             }
             self.stack.remove(at: index)
             controller.didRemovedFromStack()

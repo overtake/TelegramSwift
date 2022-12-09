@@ -474,7 +474,7 @@ private final class TopicNameAndTextView : View {
                             view = current
                         } else {
                             self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                            view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size)
+                            view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, textColor: theme.colors.grayText)
                             self.inlineStickerItemViews[id] = view
                             view.superview = textView
                             textView.addEmbeddedLayer(view)
@@ -1249,12 +1249,14 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 
                 let rect = item.rect.insetBy(dx: -2, dy: -2)
                 
+                let textColor = self.highlighed ? theme.colors.underSelectedColor : theme.colors.grayText
+                
                 let view: InlineStickerItemLayer
-                if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
+                if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size, current.textColor == textColor {
                     view = current
                 } else {
                     self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size)
+                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, textColor: textColor)
                     self.inlineStickerItemViews[id] = view
                     view.superview = textView
                     textView.addEmbeddedLayer(view)

@@ -26,7 +26,7 @@ final class UserInfoResetPhotoItem : GeneralRowItem {
     }
     
     var user: TelegramUser {
-        return _user.withUpdatedPhoto(cachedData.photo.value?.representations ?? [])
+        return _user.withUpdatedPhoto(cachedData.photo?.representations ?? [])
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {

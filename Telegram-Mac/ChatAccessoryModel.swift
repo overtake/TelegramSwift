@@ -134,6 +134,15 @@ class ChatAccessoryView : Button {
     func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
         var validIds: [InlineStickerItemLayer.Key] = []
         var index: Int = textView.hashValue
+        
+        let textColor: NSColor
+        if textLayout.attributedString.length > 0 {
+            var range:NSRange = NSMakeRange(NSNotFound, 0)
+            let attrs = textLayout.attributedString.attributes(at: 0, effectiveRange: &range)
+            textColor = attrs[.foregroundColor] as? NSColor ?? theme.colors.text
+        } else {
+            textColor = theme.colors.text
+        }
 
         for item in textLayout.embeddedItems {
             if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
@@ -148,7 +157,7 @@ class ChatAccessoryView : Button {
                     view = current
                 } else {
                     self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size)
+                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, textColor: textColor)
                     self.inlineStickerItemViews[id] = view
                     view.superview = textView
                     textView.addEmbeddedLayer(view)
