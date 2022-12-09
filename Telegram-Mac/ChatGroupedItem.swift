@@ -443,6 +443,13 @@ class ChatGroupedItem: ChatRowItem {
                 break
             }
         }
+        if layoutType == .files {
+            let withText = layout.messages.filter { !$0.text.isEmpty }
+            if withText.count == 1 {
+                _message = withText[0]
+            }
+        }
+        
         _message = _message ?? self.message
         
         let caption = self.captionLayouts.first(where: { $0.id == _message?.stableId })?.layout
