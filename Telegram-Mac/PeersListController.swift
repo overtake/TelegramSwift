@@ -1638,14 +1638,8 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
         if previous?.forumPeer != state.forumPeer {
             if state.forumPeer == nil {
                 switch self.mode {
-                case let .forum(peerId, _):
-                    if state.splitState == .single {
-                        let controller = ChatController(context: context, chatLocation: .peer(peerId))
-                        self.navigationController?.push(controller)
-                        self.navigationController?.removeImmediately(self, depencyReady: controller)
-                    } else {
-                        self.navigationController?.back()
-                    }
+                case .forum:
+                    self.navigationController?.back()
                 default:
                     break
                 }

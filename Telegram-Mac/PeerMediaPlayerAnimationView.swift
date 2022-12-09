@@ -28,6 +28,7 @@ class PeerMediaPlayerAnimationView: View {
     
     override init() {
         
+        
         let baseSize = CGSize(width: 40, height: 40)
         let barSize = CGSize(width: 3.0, height: 3)
         let barSpacing: CGFloat = 2.0
@@ -54,6 +55,11 @@ class PeerMediaPlayerAnimationView: View {
         for barNode in self.barNodes {
             self.addSubview(barNode)
         }
+        
+        if #available(macOS 10.15, *) {
+            layer?.cornerCurve = .circular
+        }
+        
     }
     
     required init?(coder: NSCoder) {
