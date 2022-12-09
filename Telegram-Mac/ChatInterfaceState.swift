@@ -289,14 +289,17 @@ func chatTextAttributes(from attributed:NSAttributedString) -> [ChatTextInputAtt
                 let isItalic = traitSet.contains(.italicFontMask)
                 let isMonospace = font.fontName == "Menlo-Regular"
 
-                if isItalic {
-                    inputAttributes.append(.italic(range.location ..< range.location + range.length))
-                }
-                if isBold {
-                    inputAttributes.append(.bold(range.location ..< range.location + range.length))
-                }
-                if isMonospace {
-                    inputAttributes.append(.code(range.location ..< range.location + range.length))
+                let text = attributed.string.nsstring.substring(with: range)
+                if !text.containsOnlyEmoji {
+                    if isItalic {
+                        inputAttributes.append(.italic(range.location ..< range.location + range.length))
+                    }
+                    if isBold {
+                        inputAttributes.append(.bold(range.location ..< range.location + range.length))
+                    }
+                    if isMonospace {
+                        inputAttributes.append(.code(range.location ..< range.location + range.length))
+                    }
                 }
             } else if let tag = value as? TGInputTextTag {
                 if let uid = tag.attachment as? NSNumber {
