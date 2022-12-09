@@ -591,17 +591,15 @@ open class ViewController : NSObject {
         return true
     }
     
-    public private(set) var internalId:Int = 0;
+    public let internalId:Int = Int(arc4random());
     
     public override init() {
         _frameRect = NSZeroRect
-        self.internalId = Int(arc4random());
         super.init()
     }
     
     public init(frame frameRect:NSRect) {
         _frameRect = frameRect;
-        self.internalId = Int(arc4random());
     }
     
     open func readyOnce() -> Void {

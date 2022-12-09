@@ -51,7 +51,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     sectionId += 1
     
     if let user = state.user, let thumb = state.thumb {
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: nil, comparable: nil, item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: .init("header"), equatable: .init(state), comparable: nil, item: { initialSize, stableId in
             return UserInfoSuggestPhotoItem(initialSize, context: arguments.context, stableId: stableId, user: user, thumb: thumb, type: state.type, viewType: .singleItem)
         }))
         index += 1

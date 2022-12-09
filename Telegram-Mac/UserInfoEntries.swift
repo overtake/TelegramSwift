@@ -454,9 +454,6 @@ class UserInfoArguments : PeerInfoArguments {
                         self?.updatePhoto(url.path, type: type)
                     }
                 })
-                controller.onClose = {
-                    removeFile(at: path)
-                }
             })
         }
         if let image = custom {
@@ -536,31 +533,28 @@ class UserInfoArguments : PeerInfoArguments {
         return []
     }
     
-    func updateContactPhoto(_ custom: NSImage?, control: Control?) {
+    func updateContactPhoto(_ custom: NSImage?, control: Control?, type: SetPhotoType) {
         let context = self.context
         let peerId = self.peerId
         let info = strings().userInfoSetPhotoInfo(peer?.compactDisplayTitle ?? "")
         let updateVideo = self.updateVideo
-
-        let updatePhoto:(Signal<NSImage, NoError>) -> Void = { image in
+        let updatePhoto:(Signal<NSImage, NoError>) -> Void = { [weak self] image in
             let signal = image |> mapToSignal { image in
                 return putToTemp(image: image, compress: true)
             } |> deliverOnMainQueue
-            _ = signal.start(next: { path in
-                let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
+            _ = signal.start(next: { [weak self] path in
+                let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square), confirm: { url, f in
+                    showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, thumb: url, type: type, confirm: f), for: context.window)
+                })
                 showModal(with: controller, for: context.window, animationType: .scaleCenter)
                 _ = controller.result.start(next: { [weak self] url, _ in
                     DispatchQueue.main.async {
-                        self?.updatePhoto(url.path, type: .set)
+                        self?.updatePhoto(url.path, type: type)
                     }
                 })
-                controller.onClose = {
-                    removeFile(at: path)
-                }
             })
         }
-    
-        let items = self.makeUpdatePhotoItems(custom, type: .set)
+        let items = self.makeUpdatePhotoItems(custom, type: type)
         
         if let control = control, let event = NSApp.currentEvent, !items.isEmpty {
             let menu = ContextMenu()
@@ -575,9 +569,9 @@ class UserInfoArguments : PeerInfoArguments {
                     updatePhoto(.single(image))
                 } else if let path = paths?.first {
                     selectVideoAvatar(context: context, path: path, localize: info, signal: { signal in
-                        updateVideo(signal, .set)
+                        updateVideo(signal, type)
                     }, confirm: { url, f in
-                        showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, thumb: url, type: .set, confirm: f), for: context.window)
+                        showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, thumb: url, type: type, confirm: f), for: context.window)
                     })
                 }
             })
@@ -636,9 +630,10 @@ class UserInfoArguments : PeerInfoArguments {
                 if disposable == nil {
                     disposable = showModalProgress(signal: Signal<Void, NoError>.never(), for: context.window).start()
                 }
-            }, completed: {
+            }, completed: { [weak self] in
                 showModalText(for: context.window, text: strings().userInfoSuggestTooltip(title))
                 disposable?.dispose()
+                self?.pullNavigation()?.back()
             }))
         case .set:
             self.updatePhotoDisposable.set((updateSignal |> deliverOnMainQueue).start(next: { status in
@@ -660,6 +655,7 @@ class UserInfoArguments : PeerInfoArguments {
                 updateState { state in
                     return state.withoutUpdatingPhotoState()
                 }
+                resetPeerPhotos(peerId: peerId)
                 showModalText(for: context.window, text: strings().userInfoSetPhotoTooltip(title))
             }))
         }        
@@ -762,12 +758,13 @@ class UserInfoArguments : PeerInfoArguments {
         switch type {
         case .suggest:
             var disposable: Disposable? = nil
-            self.updatePhotoDisposable.set((suggestSignal |> deliverOnMainQueue).start(next: { value in
+            self.updatePhotoDisposable.set((suggestSignal |> deliverOnMainQueue).start(next: { [weak self] value in
                 if disposable == nil {
                     disposable = showModalProgress(signal: Signal<Void, NoError>.never(), for: context.window).start()
                 } else if case .complete = value {
                     showModalText(for: context.window, text: strings().userInfoSuggestTooltip(title))
                     disposable?.dispose()
+                    self?.pullNavigation()?.back()
                 }
             }))
         case .set:
@@ -790,6 +787,7 @@ class UserInfoArguments : PeerInfoArguments {
                 updateState { state in
                     return state.withoutUpdatingPhotoState()
                 }
+                resetPeerPhotos(peerId: peerId)
                 showModalText(for: context.window, text: strings().userInfoSetPhotoTooltip(title))
             }))
         }
@@ -1326,7 +1324,11 @@ enum UserInfoEntry: PeerInfoEntry {
         
         switch self {
         case let .info(_, peerView, editable, updatingPhotoState, viewType):
-            return PeerInfoHeadItem(initialSize, stableId:stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: nil, threadId: nil, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: arguments.updateContactPhoto)
+//            let peer = peerViewMainPeer(peerView)
+//            let noPhotoAndContact = peer?.profileImageRepresentations.isEmpty == true && peerView.peerIsContact && arguments.context.peerId != peer?.id
+            return PeerInfoHeadItem(initialSize, stableId:stableId.hashValue, context: arguments.context, arguments: arguments, peerView: peerView, threadData: nil, threadId: nil, viewType: viewType, editing: editable, updatingPhotoState: updatingPhotoState, updatePhoto: { image, control in
+                arguments.updateContactPhoto(image, control: control, type: .set)
+            })
         case let .setFirstName(_, text, viewType):
             return InputDataRowItem(initialSize, stableId: stableId.hashValue, mode: .plain, error: nil, viewType: viewType, currentText: text, placeholder: nil, inputPlaceholder: strings().peerInfoFirstNamePlaceholder, filter: { $0 }, updated: {
                 arguments.updateEditingNames(firstName: $0, lastName: state.editingState?.editingLastName)
@@ -1452,7 +1454,9 @@ enum UserInfoEntry: PeerInfoEntry {
                 arguments.encryptionKey()
             })
         case let .setPhoto(_, string, type, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: string, icon: type == .set ? theme.icons.contact_set_photo : theme.icons.contact_suggest_photo, nameStyle: blueActionButton, type: .contextSelector("", arguments.setPhotoItems(type)), viewType: viewType)
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: string, icon: type == .set ? theme.icons.contact_set_photo : theme.icons.contact_suggest_photo, nameStyle: blueActionButton, type: .none, viewType: viewType, action: {
+                arguments.updateContactPhoto(nil, control: nil, type: type)
+            })
         case let .resetPhoto(_, string, cachedData, user, viewType):
             return UserInfoResetPhotoItem(initialSize, stableId: stableId.hashValue, context: arguments.context, string: string, user: user, cachedData: cachedData, viewType: viewType, action: arguments.resetPhoto)
         case let .block(_, peer, isBlocked, isBot, viewType):

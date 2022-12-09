@@ -4193,7 +4193,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     })
                 }
                 if groupCall?.data?.info?.isStream == true {
-                    join(peerId, nil, false)
+                    join(context.account.peerId, nil, false)
                 } else if let callJoinPeerId = groupCall?.callJoinPeerId {
                     join(callJoinPeerId, nil, false)
                 } else {

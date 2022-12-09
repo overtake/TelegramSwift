@@ -60,6 +60,11 @@ private final class UserInfoSuggestPhotoView: GeneralContainableRowView {
     private let imageView = ImageView()
     private let newPhoto = ImageView()
     private let currentPhoto = AvatarControl(font: .avatar(20))
+    
+    private var photoVideoView: MediaPlayerView?
+    private var photoVideoPlayer: MediaPlayer?
+
+    
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         addSubview(textView)
@@ -99,6 +104,8 @@ private final class UserInfoSuggestPhotoView: GeneralContainableRowView {
         
         currentPhoto.centerY(x: 0)
         newPhoto.centerY(x: imageContainer.frame.width - newPhoto.frame.width)
+        
+        photoVideoView?.frame = newPhoto.frame
 
         textView.centerX(y: containerView.frame.height - textView.frame.height - item.viewType.innerInset.top)
     }

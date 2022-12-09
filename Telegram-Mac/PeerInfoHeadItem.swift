@@ -57,9 +57,11 @@ fileprivate final class ActionButton : Control {
         if let subItems = item.subItems, !subItems.isEmpty {
             self.contextMenu = {
                 let menu = ContextMenu()
+                var added = false
                 for sub in subItems {
                     let item = ContextMenuItem(sub.text, handler: sub.action, itemMode: sub.destruct ? .destruct : .normal, itemImage: sub.animation.value)
-                    if sub.destruct {
+                    if sub.destruct, !added {
+                        added = true
                         menu.addItem(ContextSeparatorItem())
                     }
                     menu.addItem(item)
@@ -303,8 +305,13 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
             }
         } else if let group = peer as? TelegramChannel {
             if case .member = group.participationStatus {
-                items.append(ActionItem(text: strings().peerInfoActionLeave, image: theme.icons.profile_leave, animation: .menu_delete, destruct: true, action: arguments.delete))
+                items.append(ActionItem(text: strings().peerInfoActionLeave, image: theme.icons.profile_leave, animation: .menu_leave, destruct: true, action: arguments.delete))
             }
+        }
+        if peer.isGroup || peer.isSupergroup || peer.isGigagroup, peer.groupAccess.isCreator {
+            items.append(ActionItem(text: strings().peerInfoActionDeleteGroup, image: theme.icons.profile_leave, animation: .menu_delete, destruct: true, action: {
+                arguments.delete(force: true)
+            }))
         }
         
         

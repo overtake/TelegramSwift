@@ -118,10 +118,8 @@ private final class EditImageView : View {
         if !imageView._mouseInside() && !controls!.mouseInside() && !selectionRectView.inDragging {
             if let data = self.currentData, selectionRectView.isWholeSelected && data.hasntData  {
                 (controls as? EditImageControlsView)?.cancel.send(event: .Click)
-            } else if let window = self.kitWindow {
-                confirm(for: window, information: strings().editImageControlConfirmDiscard, successHandler: { [weak self] _ in
-                     (self?.controls as? EditImageControlsView)?.cancel.send(event: .Click)
-                })
+            } else {
+                (self.controls as? EditImageControlsView)?.cancel.send(event: .Click)
             }
         }
     }
