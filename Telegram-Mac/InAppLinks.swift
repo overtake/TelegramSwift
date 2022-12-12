@@ -333,11 +333,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                     url = "http://" + url
                 }
             } else {
-                if isValidEmail(link) {
-                  //  url = "mailto:" + url
-                } else {
-                    url = "http://" + url
-                }
+                url = "http://" + url
             }
         }
         let urlValue = url
