@@ -120,7 +120,7 @@ func drawBg(_ backgroundMode: TableBackgroundMode, palette: ColorPalette, bubble
 private func cloudThemeData(context: AccountContext, theme: TelegramTheme, file: TelegramMediaFile) -> Signal<(ColorPalette, Wallpaper, TelegramWallpaper?), NoError> {
     return Signal { subscriber in
         
-        let fetchDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.theme(theme: ThemeReference.slug(theme.slug), resource: file.resource)).start()
+        let fetchDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .other, reference: MediaResourceReference.theme(theme: ThemeReference.slug(theme.slug), resource: file.resource)).start()
         let wallpaperDisposable = DisposableSet()
         
         let resourceData = context.account.postbox.mediaBox.resourceData(file.resource) |> filter { $0.complete } |> take(1)

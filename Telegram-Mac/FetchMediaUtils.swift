@@ -18,7 +18,7 @@ private func fetchCategoryForFile(_ file: TelegramMediaFile) -> FetchManagerCate
 
 
 func freeMediaFileInteractiveFetched(context: AccountContext, fileReference: FileMediaReference, range: Range<Int64>? = nil) -> Signal<FetchResourceSourceType, NoError> {
-    return fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: fileReference.resourceReference(fileReference.media.resource), range: range != nil ? (range!, .default) : nil, statsCategory: fileReference.media.isVideo ? .video : .file) |> `catch` { _ in return .complete() }
+    return fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: fileReference.userLocation, userContentType: fileReference.userContentType, reference: fileReference.resourceReference(fileReference.media.resource), range: range != nil ? (range!, .default) : nil, statsCategory: fileReference.media.isVideo ? .video : .file) |> `catch` { _ in return .complete() }
 }
 
 func cancelFreeMediaFileInteractiveFetch(context: AccountContext, resource: MediaResource) {

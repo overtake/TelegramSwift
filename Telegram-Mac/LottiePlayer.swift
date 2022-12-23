@@ -465,7 +465,7 @@ final class LottieSoundEffect {
     private(set) var isPlayable: Bool = false
     
     init(file: TelegramMediaFile, postbox: Postbox, triggerOn: Int32?) {
-        self.player = MediaPlayer(postbox: postbox, reference: MediaResourceReference.standalone(resource: file.resource), streamable: false, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: 1.0, fetchAutomatically: true)
+        self.player = MediaPlayer(postbox: postbox, userLocation: .other, userContentType: .other, reference: MediaResourceReference.standalone(resource: file.resource), streamable: false, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: 1.0, fetchAutomatically: true)
         self.triggerOn = triggerOn
     }
     func play() {

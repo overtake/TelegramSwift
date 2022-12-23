@@ -305,6 +305,9 @@ class GalleryThumbsControlView: View {
         
         if let selectedView = selectedView {
             scrollView.clipView.scroll(to: NSMakePoint(min(max(selectedView.frame.midX - frame.width / 2, 0), max(documentView.frame.width - frame.width, 0)), 0), animated: animated && documentView.subviews.count > 0)
+        } else if let selectedIndex = selectedIndex {
+            
+            scrollView.clipView.scroll(to: NSMakePoint(min(max(items[selectedIndex].frame.midX - frame.width / 2, 0), max(documentView.frame.width - frame.width, 0)), 0), animated: animated && documentView.subviews.count > 0)
         }
         previousRange = nil
         scrollDidUpdated()

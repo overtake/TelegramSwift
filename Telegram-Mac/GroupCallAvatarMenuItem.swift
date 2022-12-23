@@ -69,7 +69,7 @@ private final class PhotoOrVideoView: View, SlideViewProtocol {
             let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: first.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
             
             
-            let mediaPlayer = MediaPlayer(postbox: account.postbox, reference: MediaResourceReference.standalone(resource: file.resource), streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
+            let mediaPlayer = MediaPlayer(postbox: account.postbox, userLocation: .peer(peer.id), userContentType: .avatar, reference: MediaResourceReference.standalone(resource: file.resource), streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
             
             mediaPlayer.actionAtEnd = .loop(nil)
             
@@ -109,7 +109,7 @@ private final class PhotoOrVideoView: View, SlideViewProtocol {
                 self.imageView.set(arguments: arguments)
                 
                 if let reference = PeerReference(peer) {
-                    _ = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: .avatar(peer: reference, resource: media.representations.last!.resource)).start()
+                    _ = fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .image, reference: .avatar(peer: reference, resource: media.representations.last!.resource)).start()
                 }
             } else {
                 self.imageView.setSignal(signal: generateEmptyRoundAvatar(self.imageView.frame.size, font: .avatar(90.0), account: account, peer: peer) |> map { TransformImageResult($0, true) })

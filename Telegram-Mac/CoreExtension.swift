@@ -526,6 +526,15 @@ public extension Message {
         return nil
     }
     
+    var isMediaSpoilered: Bool {
+        for attr in attributes {
+            if attr is MediaSpoilerMessageAttribute {
+                return true
+            }
+        }
+        return false
+    }
+    
     var hasExtendedMedia: Bool {
         if let media = self.media.first as? TelegramMediaInvoice {
             return media.extendedMedia != nil
@@ -2643,7 +2652,7 @@ func moveWallpaperToCache(postbox: Postbox, resource: TelegramMediaResource, ref
     }
     
    
-    return combineLatest(fetchedMediaResource(mediaBox: postbox.mediaBox, reference: MediaResourceReference.wallpaper(wallpaper: reference, resource: resource), reportResultStatus: true) |> `catch` { _ in return .complete() }, resourceData) |> mapToSignal { _, data in
+    return combineLatest(fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: .other, userContentType: .other, reference: MediaResourceReference.wallpaper(wallpaper: reference, resource: resource), reportResultStatus: true) |> `catch` { _ in return .complete() }, resourceData) |> mapToSignal { _, data in
         if data.complete {
             return moveWallpaperToCache(postbox: postbox, path: data.path, resource: resource, settings: settings)
         } else {
@@ -3646,8 +3655,10 @@ extension SoftwareVideoSource {
 
 
 func installAttachMenuBot(context: AccountContext, peer: Peer, completion: @escaping(Bool)->Void) {
-    confirm(for: context.window, information: strings().webAppAttachConfirm(peer.displayTitle), okTitle: strings().webAppAttachConfirmOK, successHandler: { _ in
-        _ = showModalProgress(signal: context.engine.messages.addBotToAttachMenu(botId: peer.id), for: context.window).start(next: { value in
+    
+    
+    modernConfirm(for: context.window, information: strings().webAppAttachConfirm(peer.displayTitle), okTitle: strings().webAppAttachConfirmOK, thridTitle: strings().webAppAddToAttachmentAllowMessages(peer.displayTitle), successHandler: { result in
+        _ = showModalProgress(signal: context.engine.messages.addBotToAttachMenu(botId: peer.id, allowWrite: result == .thrid), for: context.window).start(next: { value in
             if value {
                 showModalText(for: context.window, text: strings().webAppAttachSuccess(peer.displayTitle))
                 completion(value)

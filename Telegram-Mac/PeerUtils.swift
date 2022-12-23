@@ -154,6 +154,17 @@ extension CachedPeerData {
         }
         return nil
     }
+    var fallbackPhoto: TelegramMediaImage? {
+        if let data = self as? CachedUserData {
+            switch data.fallbackPhoto {
+            case let .known(image):
+                return image
+            default:
+                return nil
+            }
+        }
+        return nil
+    }
 }
 
 extension Peer {

@@ -796,6 +796,9 @@ func initialize() -> [String] {
     
     array.append("contact_set_photo")
     array.append("contact_suggest_photo")
+    
+    array.append("send_media_spoiler")
+    array.append("general_delete")
 
     return array
 }

@@ -117,7 +117,7 @@ private final class GroupCallPeerAvatarRowView: GeneralContainableRowView {
             self.imageView.set(arguments: arguments)
             
             if let reference = PeerReference(item.peer) {
-                _ = fetchedMediaResource(mediaBox: item.account.postbox.mediaBox, reference: .avatar(peer: reference, resource: media.representations.last!.resource)).start()
+                _ = fetchedMediaResource(mediaBox: item.account.postbox.mediaBox, userLocation: .peer(item.peer.id), userContentType: .image, reference: .avatar(peer: reference, resource: media.representations.last!.resource)).start()
             }
         } else {
             self.imageView.setSignal(signal: generateEmptyRoundAvatar(self.imageView.frame.size, font: .avatar(90.0), account: item.account, peer: item.peer) |> map { TransformImageResult($0, true) })

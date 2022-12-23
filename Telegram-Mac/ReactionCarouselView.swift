@@ -40,8 +40,8 @@ private final class ReactionView : Control {
         }
         |> deliverOnMainQueue
         
-        _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .standalone(resource: reaction.selectAnimation.resource)).start()
-        _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .standalone(resource: reaction.appearAnimation.resource)).start()
+        _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .other, reference: .standalone(resource: reaction.selectAnimation.resource)).start()
+        _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .other, reference: .standalone(resource: reaction.appearAnimation.resource)).start()
         
         stateDisposable.set(player.state.start(next: { [weak self] state in
             switch state {

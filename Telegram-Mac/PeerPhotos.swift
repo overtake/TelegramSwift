@@ -70,15 +70,6 @@ func peerPhotos(context: AccountContext, peerId: PeerId, force: Bool = false) ->
                         photos.insert(.init(value: TelegramPeerPhoto(image: value, reference: nil, date: 0, index: 0, totalCount: photos.first?.value.totalCount ?? 0, messageId: nil), caption: nil), at: 0)
                     }
                 }
-                
-//                if let peer = peer as? TelegramUser {
-//                    if peer.photo.contains(where: { $0.isPersonal }) {
-//                        let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: peer.photo, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: TelegramMediaImageFlags())
-//
-//                        photos.insert(.init(value: TelegramPeerPhoto(image: image, reference: nil, date: 0, index: 0, totalCount: photos.first?.value.totalCount ?? 0, messageId: nil), caption: strings().galleryContactPhotoByYou), at: 0)
-//                    }
-//                }
-                
                 value[peerId] = PeerPhotos(photos: photos, time: Date().timeIntervalSince1970 + 5 * 60)
                 return value
             }[peerId]?.photos ?? []
@@ -87,13 +78,17 @@ func peerPhotos(context: AccountContext, peerId: PeerId, force: Bool = false) ->
 }
 
 
-func peerPhotosGalleryEntries(context: AccountContext, peerId: PeerId, firstStableId: AnyHashable) -> Signal<(entries: [GalleryEntry], selected:Int), NoError> {
-    return combineLatest(queue: prepareQueue, peerPhotos(context: context, peerId: peerId, force: true), context.account.postbox.loadedPeerWithId(peerId)) |> map { photos, peer in
+func peerPhotosGalleryEntries(context: AccountContext, peerId: PeerId, firstStableId: AnyHashable) -> Signal<(entries: [GalleryEntry], selected:Int, publicPhoto: TelegramMediaImage?), NoError> {
+    
+    var isLoading: Bool = peerAvatars.with { $0[peerId] == nil }
+    
+    return combineLatest(queue: prepareQueue, peerPhotos(context: context, peerId: peerId, force: true), context.account.postbox.loadedPeerWithId(peerId), getCachedDataView(peerId: peerId, postbox: context.account.postbox) |> take(1)) |> map { photos, peer, cachedData in
         
         var entries: [GalleryEntry] = []
         
-        
-        var representations:[TelegramMediaImageRepresentation] = []//peer.profileImageRepresentations
+        let publicPhoto = cachedData?.fallbackPhoto
+
+        var representations:[TelegramMediaImageRepresentation] = []
         if let representation = peer.smallProfileImage {
             representations.append(representation)
         }
@@ -124,7 +119,7 @@ func peerPhotosGalleryEntries(context: AccountContext, peerId: PeerId, firstStab
         let isPersonal = image!.representations.contains(where: { $0.isPersonal })
         
         
-        let firstEntry: GalleryEntry = .photo(index: 0, stableId: firstStableId, photo: image!, reference: nil, peer: peer, message: msg, date: 0, caption: isPersonal ? strings().galleryContactPhotoByYou : nil)
+        let firstEntry: GalleryEntry = .photo(index: 0, stableId: firstStableId, photo: image!, reference: nil, peer: peer, message: msg, date: 0, caption: isPersonal ? strings().galleryContactPhotoByYou : nil, publicPhoto: publicPhoto)
         
         var foundIndex: Bool = peerId.namespace == Namespaces.Peer.CloudUser && !photos.isEmpty
         var currentIndex: Int = 0
@@ -156,9 +151,9 @@ func peerPhotosGalleryEntries(context: AccountContext, peerId: PeerId, firstStab
             if currentIndex == i && foundIndex {
                 let image = TelegramMediaImage(imageId: photo.image.imageId, representations: image!.representations, videoRepresentations: photo.image.videoRepresentations, immediateThumbnailData: photo.image.immediateThumbnailData, reference: photo.image.reference, partialReference: photo.image.partialReference, flags: photo.image.flags)
                 
-                entries.append(.photo(index: photo.index, stableId: firstStableId, photo: image, reference: photo.reference, peer: peer, message: foundMessage, date: photosDate[i], caption: photos[i].caption))
+                entries.append(.photo(index: photo.index, stableId: firstStableId, photo: image, reference: photo.reference, peer: peer, message: foundMessage, date: photosDate[i], caption: photos[i].caption, publicPhoto: i == 0 ? publicPhoto : nil))
             } else {
-                entries.append(.photo(index: photo.index, stableId: photo.image.imageId, photo: photo.image, reference: photo.reference, peer: peer, message: nil, date: photosDate[i], caption: photos[i].caption))
+                entries.append(.photo(index: photo.index, stableId: photo.image.imageId, photo: photo.image, reference: photo.reference, peer: peer, message: nil, date: photosDate[i], caption: photos[i].caption, publicPhoto: nil))
             }
         }
         
@@ -166,7 +161,12 @@ func peerPhotosGalleryEntries(context: AccountContext, peerId: PeerId, firstStab
             entries.append(firstEntry)
         }
         
-        return (entries: entries, selected: currentIndex)
+        
+        if let publicPhoto = publicPhoto, !isLoading {
+            entries.append(.photo(index: .max, stableId: publicPhoto.imageId, photo: publicPhoto, reference: publicPhoto.reference, peer: peer, message: nil, date: Date().timeIntervalSince1970, caption: strings().galleryPublicPhoto, publicPhoto: nil))
+        }
+        isLoading = false
+        return (entries: entries, selected: currentIndex, publicPhoto: publicPhoto)
         
     }
 }

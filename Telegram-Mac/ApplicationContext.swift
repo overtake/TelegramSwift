@@ -520,20 +520,7 @@ final class AuthorizedApplicationContext: NSObject, SplitViewDelegate {
         
         #if DEBUG
         window.set(handler: { [weak self] _ -> KeyHandlerResult in
-            showInactiveChannels(context: context, source: .join)
-            
-//            context.bindings.rootNavigation().push(ForumTopicInfoController(context: context, purpose: .create))
-            
-//            let rect = self!.window.contentView!.frame.focus(NSMakeSize(160, 160))
-//            self!.window.contentView!.addSubview(CustomReactionEffectView(frame: rect, context: context, fileId: 5415816441561619011))
-            
-//            let layer = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: .init(fileId: 5415816441561619011, file: nil, emoji: ""), size: NSMakeSize(30, 30))
-//            testParabolla(layer, window: context.window)
-
-//            showModal(with: PremiumLimitController.init(context: context, type: .pin), for: context.window)
-//            showModal(with: PremiumBoardingController(context: context), for: context.window)
-//            showInactiveChannels(context: context, source: .create)
-//            showModal(with: AvatarConstructorController(context, target: .avatar), for: context.window)
+            showModal(with: PieChartTestController(context: context), for: context.window)
             return .invoked
         }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
         

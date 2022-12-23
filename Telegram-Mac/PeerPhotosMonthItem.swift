@@ -456,7 +456,7 @@ private final class MediaVideoCell : MediaCell {
             if context.autoplayMedia.preloadVideos {
                 if let media = layoutItem.message.effectiveMedia as? TelegramMediaFile {
                     let reference = FileMediaReference.message(message: MessageReference(layoutItem.message), media: media)
-                    let preload = preloadVideoResource(postbox: context.account.postbox, resourceReference: reference.resourceReference(media.resource), duration: 3.0)
+                    let preload = preloadVideoResource(postbox: context.account.postbox, userLocation: .peer(layoutItem.message.id.peerId), userContentType: .init(file: media), resourceReference: reference.resourceReference(media.resource), duration: 3.0)
                     partDisposable.set(preload.start())
                 }
             }

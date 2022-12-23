@@ -502,7 +502,7 @@ class Sender: NSObject {
         return enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: contact.firstName ?? "", lastName: contact.lastName ?? "", phoneNumber: contact.phone ?? "", peerId: contact.id, vCardData: nil)), replyToMessageId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])])
     }
     
-    public static func enqueue(media:[MediaSenderContainer], context: AccountContext, peerId:PeerId, replyId: MessageId?, silent: Bool = false, atDate:Date? = nil, sendAsPeerId:PeerId? = nil, query: String? = nil) ->Signal<[MessageId?], NoError> {
+    public static func enqueue(media:[MediaSenderContainer], context: AccountContext, peerId:PeerId, replyId: MessageId?, silent: Bool = false, atDate:Date? = nil, sendAsPeerId:PeerId? = nil, query: String? = nil, isSpoiler: Bool = false) ->Signal<[MessageId?], NoError> {
         var senders:[Signal<[MessageId?], NoError>] = []
         
         
@@ -518,6 +518,10 @@ class Sender: NSObject {
         }
         if let query = query, !query.isEmpty {
             attributes.append(EmojiSearchQueryMessageAttribute(query: query))
+        }
+        
+        if isSpoiler {
+            attributes.append(MediaSpoilerMessageAttribute())
         }
         
         
@@ -542,7 +546,7 @@ class Sender: NSObject {
         return enqueue(media: [media], caption: ChatTextInputState(), context: context, peerId: peerId, replyId: replyId, silent: silent, atDate: atDate, query: query, collectionId: collectionId)
     }
     
-    public static func enqueue(media:[Media], caption: ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:MessageId?, isCollage: Bool = false, additionText: ChatTextInputState? = nil, silent: Bool = false, atDate: Date? = nil, sendAsPeerId: PeerId? = nil, query: String? = nil, collectionId: ItemCollectionId? = nil) ->Signal<[MessageId?],NoError> {
+    public static func enqueue(media:[Media], caption: ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:MessageId?, isCollage: Bool = false, additionText: ChatTextInputState? = nil, silent: Bool = false, atDate: Date? = nil, sendAsPeerId: PeerId? = nil, query: String? = nil, collectionId: ItemCollectionId? = nil, isSpoiler: Bool = false) ->Signal<[MessageId?],NoError> {
         
         
         let parsingUrlType: ParsingType
@@ -565,6 +569,9 @@ class Sender: NSObject {
         }
         if let query = query, !query.isEmpty {
             attributes.append(EmojiSearchQueryMessageAttribute(query: query))
+        }
+        if isSpoiler {
+            attributes.append(MediaSpoilerMessageAttribute())
         }
                 
         let localGroupingKey = isCollage ? arc4random64() : nil

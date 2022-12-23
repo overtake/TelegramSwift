@@ -22,8 +22,14 @@ class MGalleryGIFItem: MGalleryItem {
         let view = self.view
         
         let fileReference = entry.fileReference(media)
-       
-        self.mediaPlayer = MediaPlayer(postbox: context.account.postbox, reference: fileReference.resourceReference(media.resource), streamable: media.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: false)
+        let id = self.entry.peer?.id ?? self.entry.message?.id.peerId
+        let userLocation: MediaResourceUserLocation
+        if let id = id {
+            userLocation = .peer(id)
+        } else {
+            userLocation = .other
+        }
+        self.mediaPlayer = MediaPlayer(postbox: context.account.postbox, userLocation: userLocation, userContentType: .video, reference: fileReference.resourceReference(media.resource), streamable: media.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: false)
         mediaPlayer.actionAtEnd = .loop(nil)
 
         
@@ -69,7 +75,7 @@ class MGalleryGIFItem: MGalleryItem {
             }
         case .instantMedia(let media, _):
             return media.media as! TelegramMediaFile
-        case let  .photo(_, _, photo, _, _, _, _, _):
+        case let  .photo(_, _, photo, _, _, _, _, _, _):
             let video = photo.videoRepresentations.last!
             let file = TelegramMediaFile(fileId: photo.imageId, partialReference: nil, resource: video.resource, previewRepresentations: photo.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [.Video(duration:0, size: PixelDimensions(640, 640), flags: [])])
             

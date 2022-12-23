@@ -8962,6 +8962,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var send_media_spoiler: CGImage {
+      if let image = cached.with({ $0["send_media_spoiler"] }) {
+          return image
+      } else {
+          let image = _send_media_spoiler()
+          _ = cached.modify { current in 
+              var current = current
+              current["send_media_spoiler"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var general_delete: CGImage {
+      if let image = cached.with({ $0["general_delete"] }) {
+          return image
+      } else {
+          let image = _general_delete()
+          _ = cached.modify { current in 
+              var current = current
+              current["general_delete"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -9652,6 +9678,8 @@ public final class TelegramIconsTheme {
   private let _dialog_auto_delete: ()->CGImage
   private let _contact_set_photo: ()->CGImage
   private let _contact_suggest_photo: ()->CGImage
+  private let _send_media_spoiler: ()->CGImage
+  private let _general_delete: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -10342,7 +10370,9 @@ public final class TelegramIconsTheme {
       chatlist_arrow_active: @escaping()->CGImage,
       dialog_auto_delete: @escaping()->CGImage,
       contact_set_photo: @escaping()->CGImage,
-      contact_suggest_photo: @escaping()->CGImage
+      contact_suggest_photo: @escaping()->CGImage,
+      send_media_spoiler: @escaping()->CGImage,
+      general_delete: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -11033,5 +11063,7 @@ public final class TelegramIconsTheme {
       self._dialog_auto_delete = dialog_auto_delete
       self._contact_set_photo = contact_set_photo
       self._contact_suggest_photo = contact_suggest_photo
+      self._send_media_spoiler = send_media_spoiler
+      self._general_delete = general_delete
   }
 }

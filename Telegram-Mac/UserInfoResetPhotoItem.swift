@@ -13,20 +13,20 @@ import Postbox
 import TelegramCore
 
 final class UserInfoResetPhotoItem : GeneralRowItem {
-    fileprivate let cachedData: CachedUserData
+    fileprivate let image: TelegramMediaImage?
     private let _user: TelegramUser
     let nameLayout: TextViewLayout
     let context: AccountContext
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, string: String, user: TelegramUser, cachedData: CachedUserData, viewType: GeneralViewType, action: @escaping()->Void) {
-        self.cachedData = cachedData
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, string: String, style: ControlStyle = blueActionButton, user: TelegramUser, image: TelegramMediaImage?, viewType: GeneralViewType, action: @escaping()->Void) {
+        self.image = image
         self._user = user
         self.context = context
-        self.nameLayout = TextViewLayout(.initialize(string: string, color: blueActionButton.foregroundColor, font: blueActionButton.font))
+        self.nameLayout = TextViewLayout(.initialize(string: string, color: style.foregroundColor, font: style.font))
         super.init(initialSize, height: 42, stableId: stableId, viewType: viewType, action: action)
     }
     
     var user: TelegramUser {
-        return _user.withUpdatedPhoto(cachedData.photo?.representations ?? [])
+        return _user.withUpdatedPhoto(image?.representations ?? [])
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {

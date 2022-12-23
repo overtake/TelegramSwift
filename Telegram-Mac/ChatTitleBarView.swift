@@ -95,9 +95,9 @@ private final class VideoAvatarContainer : View {
     func updateWith(file: TelegramMediaFile, seekTo: TimeInterval?, peer: Peer, reference: PeerReference?, context: AccountContext) {
        // player.update(FileMediaReference.standalone(media: file), context: context)
         if let reference = reference {
-            fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.avatar(peer: reference, resource: file.resource)).start())
+            fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .avatar, reference: MediaResourceReference.avatar(peer: reference, resource: file.resource)).start())
         } else {
-            fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: file.resource)).start())
+            fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .avatar, reference: MediaResourceReference.standalone(resource: file.resource)).start())
         }
         
         if peer.isForum {
@@ -113,7 +113,7 @@ private final class VideoAvatarContainer : View {
             mediaReference = MediaResourceReference.standalone(resource: file.resource)
         }
         
-        let mediaPlayer = MediaPlayer(postbox: context.account.postbox, reference: mediaReference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: false)
+        let mediaPlayer = MediaPlayer(postbox: context.account.postbox, userLocation: .peer(peer.id), userContentType: .avatar, reference: mediaReference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: false)
         
         
         let view = MediaPlayerView()
@@ -683,12 +683,15 @@ class ChatTitleBarView: TitledBarView, InteractionContentViewProtocol {
             if self.currentRepresentations != representations {
                 applyVideoAvatarIfNeeded(nil)                
                 
+                let mediaBox = chatInteraction.context.account.postbox.mediaBox
+                
+                //
                 if let peerReference = PeerReference(peer) {
                     if let largeProfileImage = peer.largeProfileImage {
-                        fetchPeerAvatar.add(fetchedMediaResource(mediaBox: chatInteraction.context.account.postbox.mediaBox, reference: .avatar(peer: peerReference, resource: largeProfileImage.resource)).start())
+                        fetchPeerAvatar.add(fetchedMediaResource(mediaBox: mediaBox, userLocation: .peer(peer.id), userContentType: .avatar, reference: .avatar(peer: peerReference, resource: largeProfileImage.resource)).start())
                     }
                     if let smallProfileImage = peer.smallProfileImage {
-                        fetchPeerAvatar.add(fetchedMediaResource(mediaBox: chatInteraction.context.account.postbox.mediaBox, reference: .avatar(peer: peerReference, resource: smallProfileImage.resource)).start())
+                        fetchPeerAvatar.add(fetchedMediaResource(mediaBox: mediaBox, userLocation: .peer(peer.id), userContentType: .avatar, reference: .avatar(peer: peerReference, resource: smallProfileImage.resource)).start())
                     }
                 }
             }

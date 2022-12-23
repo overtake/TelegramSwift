@@ -19,6 +19,10 @@ class ChatMediaLayoutParameters : Equatable {
     var showMedia:(Message)->Void = {_ in }
     var showMessage:(Message)->Void = {_ in }
     
+    let isRevealed: Bool
+    var forceSpoiler: Bool = false
+    
+    var revealMedia:(Message)->Void = { _ in }
     
     var chatLocationInput:(Message)->ChatLocationInput = { _ in fatalError() }
     var chatMode:ChatMode = .history
@@ -83,12 +87,13 @@ class ChatMediaLayoutParameters : Equatable {
     var automaticDownloadFunc:(Message)->Bool
     
     
-    init(presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool = true, autoplayMedia: AutoplayMediaPreferences = .defaultSettings) {
+    init(presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool = true, autoplayMedia: AutoplayMediaPreferences = .defaultSettings, isRevealed: Bool? = nil) {
         self.automaticDownloadFunc = { _ in
             return automaticDownload
         }
         self.presentation = presentation
         self.media = media
+        self.isRevealed = isRevealed ?? false
         self.autoplayMedia = autoplayMedia
         self._automaticDownload = automaticDownload
         if let media = media as? TelegramMediaFile {
@@ -103,7 +108,7 @@ class ChatMediaLayoutParameters : Equatable {
     }
     
     
-    static func layout(for media:TelegramMediaFile, isWebpage: Bool, chatInteraction:ChatInteraction, presentation: ChatMediaPresentation, automaticDownload: Bool, isIncoming: Bool, isFile: Bool = false, autoplayMedia: AutoplayMediaPreferences, isChatRelated: Bool = false, isCopyProtected: Bool = false) -> ChatMediaLayoutParameters {
+    static func layout(for media:TelegramMediaFile, isWebpage: Bool, chatInteraction:ChatInteraction, presentation: ChatMediaPresentation, automaticDownload: Bool, isIncoming: Bool, isFile: Bool = false, autoplayMedia: AutoplayMediaPreferences, isChatRelated: Bool = false, isCopyProtected: Bool = false, isRevealed: Bool? = nil) -> ChatMediaLayoutParameters {
         if media.isInstantVideo && !isFile {
             var duration:Int = 0
             for attr in media.attributes {
@@ -115,7 +120,7 @@ class ChatMediaLayoutParameters : Equatable {
                 }
             }
             
-            return ChatMediaVideoMessageLayoutParameters(showPlayer:chatInteraction.inlineAudioPlayer, duration: duration, isMarked: true, isWebpage: isWebpage || chatInteraction.isLogInteraction, resource: media.resource, presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: autoplayMedia)
+            return ChatMediaVideoMessageLayoutParameters(showPlayer:chatInteraction.inlineAudioPlayer, duration: duration, isMarked: true, isWebpage: isWebpage || chatInteraction.isLogInteraction, resource: media.resource, presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: autoplayMedia, isRevealed: isRevealed)
         } else if media.isVoice && !isFile {
             var waveform:AudioWaveform? = nil
             var duration:Int = 0
@@ -167,7 +172,7 @@ class ChatMediaLayoutParameters : Equatable {
             if let name = media.fileName {
                 fileName = name
             }
-            return  ChatFileLayoutParameters(fileName: fileName, hasThumb: !media.previewRepresentations.isEmpty, presentation: presentation, media: media, automaticDownload: automaticDownload, isIncoming: isIncoming, autoplayMedia: autoplayMedia, isChatRelated: isChatRelated, isCopyProtected: isCopyProtected)
+            return ChatFileLayoutParameters(fileName: fileName, hasThumb: !media.previewRepresentations.isEmpty, presentation: presentation, media: media, automaticDownload: automaticDownload, isIncoming: isIncoming, autoplayMedia: autoplayMedia, isChatRelated: isChatRelated, isCopyProtected: isCopyProtected)
         }
     }
     
@@ -180,9 +185,9 @@ class ChatMediaLayoutParameters : Equatable {
 class ChatMediaGalleryParameters : ChatMediaLayoutParameters {
     let isWebpage: Bool
 
-    init(showMedia:@escaping(Message)->Void = { _ in }, showMessage:@escaping(Message)->Void = { _ in }, isWebpage: Bool, presentation: ChatMediaPresentation = .Empty, media: Media, automaticDownload: Bool, autoplayMedia: AutoplayMediaPreferences = AutoplayMediaPreferences.defaultSettings) {
+    init(showMedia:@escaping(Message)->Void = { _ in }, showMessage:@escaping(Message)->Void = { _ in }, isWebpage: Bool, presentation: ChatMediaPresentation = .Empty, media: Media, automaticDownload: Bool, autoplayMedia: AutoplayMediaPreferences = AutoplayMediaPreferences.defaultSettings, isRevealed: Bool? = nil) {
         self.isWebpage = isWebpage
-        super.init(presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: autoplayMedia)
+        super.init(presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: autoplayMedia, isRevealed: isRevealed)
         self.showMedia = showMedia
         self.showMessage = showMessage
     }
@@ -233,6 +238,10 @@ class ChatMediaItem: ChatRowItem {
             } else if let media = media as? TelegramMediaImage {
                 chatMessagePhotoCancelInteractiveFetch(account: context.account, photo: media)
             }
+        }
+        
+        parameters?.revealMedia = { [weak self] message in
+            self?.chatInteraction.revealMedia(message.id)
         }
     }
     
@@ -370,7 +379,7 @@ class ChatMediaItem: ChatRowItem {
             
             }, showMessage: { [weak self] message in
                 self?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
-            }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: object.renderType, theme: theme), media: media, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: object.autoplayMedia)
+            }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: object.renderType, theme: theme), media: media, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: object.autoplayMedia, isRevealed: entry.additionalData.isRevealed)
         
         self.parameters = parameters
         

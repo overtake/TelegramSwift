@@ -64,18 +64,21 @@ class ChatServiceItem: ChatRowItem {
         let from: PeerId
         let to: PeerId
         let text: TextViewLayout
+        let header: TextViewLayout
         let image: TelegramMediaImage
         
-        init(from: PeerId, to: PeerId, text: TextViewLayout, image: TelegramMediaImage) {
+        init(from: PeerId, to: PeerId, text: TextViewLayout, header: TextViewLayout, image: TelegramMediaImage) {
             self.from = from
             self.to = to
             self.text = text
+            self.header = header
             self.image = image
-            self.text.measure(width: 180)
+            self.text.measure(width: 160)
+            self.header.measure(width: 160)
         }
         
         var height: CGFloat {
-            return 10 + 100 + text.layoutSize.height + 10 + 10
+            return 10 + 100 + 10 + header.layoutSize.height + 5 + text.layoutSize.height + 10 + 30 + 10
         }
     }
 
@@ -357,7 +360,7 @@ class ChatServiceItem: ChatRowItem {
                         _ = attributedString.append(string: " ")
                     }
                     _ = attributedString.append(string: strings().chatListServiceGameScored1Countable(Int(score), gameName), color: grayTextColor, font: NSFont.normal(theme.fontSize))
-                case let .paymentSent(currency, totalAmount, invoiceSlug, isRecurringInit, isRecurringUsed):
+                case let .paymentSent(currency, totalAmount, _, isRecurringInit, isRecurringUsed):
                     var paymentMessage:Message?
                     for attr in message.attributes {
                         if let attr = attr as? ReplyMessageAttribute {
@@ -619,18 +622,18 @@ class ChatServiceItem: ChatRowItem {
                     
                     
                     if let image = image {
+                        
+                        let header = NSMutableAttributedString()
+                        _ = header.append(string: strings().chatServiceSuggestPhotoTitle, color: grayTextColor, font: .medium(.title))
+                        
+                                                
                         let info = NSMutableAttributedString()
-                        
-                        _ = info.append(string: strings().chatServiceSuggestPhotoTitle, color: grayTextColor, font: .medium(.header))
-                        
-                        _ = info.append(string: "\n")
-                        
                         if authorId == context.peerId {
                             _ = info.append(string: strings().chatServiceSuggestPhotoInfoYou(message.peers[message.id.peerId]?.compactDisplayTitle ?? ""), color: grayTextColor, font: .normal(.text))
                         } else {
                             _ = info.append(string: strings().chatServiceSuggestPhotoInfo(authorName), color: grayTextColor, font: .normal(.text))
                         }
-                        self.suggestPhotoData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(info, alignment: .center), image: image)
+                        self.suggestPhotoData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(info, alignment: .center), header: TextViewLayout(header, alignment: .center), image: image)
                     } else {
                         let text: String
                         if authorId == context.peerId {
@@ -765,6 +768,8 @@ class ChatServiceItem: ChatRowItem {
                             InlineStickerItem.apply(to: attributedString, associatedMedia: [:], entities: [.init(range: range.lowerBound ..< range.upperBound, type: .CustomEmoji(stickerPack: nil, fileId: fileId))], isPremium: context.isPremium)
                         }
                     }
+                case .attachMenuBotAllowed:
+                    _ = attributedString.append(string: strings().chatServiceBotWriteAllowed, color: grayTextColor, font: NSFont.normal(theme.fontSize))
                 default:
                     break
                 }
@@ -859,7 +864,7 @@ class ChatServiceItem: ChatRowItem {
                 putToTemp(image: $0, compress: true)
             } |> deliverOnMainQueue
             _ = signal.start(next: { path in
-                let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
+                let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square), doneString: strings().modalSet)
                 showModal(with: controller, for: context.window, animationType: .scaleCenter)
                 
                 let updateSignal = controller.result |> map { path, _ -> TelegramMediaResource in
@@ -1040,6 +1045,8 @@ class ChatServiceRowView: TableRowView {
     
     private class SuggestView : Control {
         
+
+        
         private let disposable = MetaDisposable()
         private var photo: TransformImageView?
         
@@ -1049,13 +1056,22 @@ class ChatServiceRowView: TableRowView {
         private var visualEffect: VisualEffect?
         
         private let textView = TextView()
+        private let headerView = TextView()
+                
+        fileprivate let viewButton = TitleButton()
         
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
+            addSubview(headerView)
             addSubview(textView)
+            addSubview(viewButton)
             textView.userInteractionEnabled = false
             textView.isSelectable = false
+            headerView.userInteractionEnabled = false
+            headerView.isSelectable = false
             
+            viewButton.scaleOnClick = true
+            viewButton.autohighlight = false
             self.scaleOnClick = true
             layer?.cornerRadius = 10
         }
@@ -1065,7 +1081,6 @@ class ChatServiceRowView: TableRowView {
         
         func update(item: ChatServiceItem, data: ChatServiceItem.SuggestPhotoData, animated: Bool) {
             
-            let context = item.context
             let size = NSMakeSize(100, 100)
             
             if item.presentation.shouldBlurService {
@@ -1143,7 +1158,14 @@ class ChatServiceRowView: TableRowView {
                         reference = MediaResourceReference.standalone(resource: file.resource)
                     }
                     
-                    let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, reference: reference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
+                    let userLocation: MediaResourceUserLocation
+                    if let id = item.message?.id.peerId {
+                        userLocation = .peer(id)
+                    } else {
+                        userLocation = .other
+                    }
+                    
+                    let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, userLocation: userLocation, userContentType: .avatar, reference: reference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
                     
                     mediaPlayer.actionAtEnd = .loop(nil)
                     
@@ -1163,7 +1185,15 @@ class ChatServiceRowView: TableRowView {
             }
             
             textView.update(data.text)
+            headerView.update(data.header)
             
+            viewButton.set(font: .normal(.text), for: .Normal)
+            viewButton.set(color: item.presentation.shouldBlurService ? .white : theme.colors.underSelectedColor, for: .Normal)
+            viewButton.set(background: item.presentation.shouldBlurService ? item.presentation.chatServiceItemColor.withAlphaComponent(0.5) : item.presentation.colors.accent, for: .Normal)
+            viewButton.set(text: strings().chatServiceSuggestView, for: .Normal)
+            viewButton.sizeToFit(NSMakeSize(20, 12))
+            
+            viewButton.layer?.cornerRadius = viewButton.frame.height / 2
             needsLayout = true
         }
         
@@ -1184,7 +1214,9 @@ class ChatServiceRowView: TableRowView {
             visualEffect?.frame = bounds
             photo?.centerX(y: 10)
             photoVideoView?.centerX(y: 10)
-            textView.centerX(y: 110 + 10)
+            headerView.centerX(y: 110 + 10)
+            textView.centerX(y: headerView.frame.maxY + 5)
+            viewButton.centerX(y: textView.frame.maxY + 10)
         }
         
         deinit {
@@ -1375,7 +1407,14 @@ class ChatServiceRowView: TableRowView {
                     
                     let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
                     
-                    let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, reference: MediaResourceReference.standalone(resource: file.resource), streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
+                    let userLocation: MediaResourceUserLocation
+                    if let id = item.message?.id.peerId {
+                        userLocation = .peer(id)
+                    } else {
+                        userLocation = .other
+                    }
+                    
+                    let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, userLocation: userLocation, userContentType: .avatar, reference: MediaResourceReference.standalone(resource: file.resource), streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
                     
                     mediaPlayer.actionAtEnd = .loop(nil)
                     self.photoVideoPlayer = mediaPlayer
@@ -1423,7 +1462,6 @@ class ChatServiceRowView: TableRowView {
         }
         
         if let data = item.suggestPhotoData {
-            let context = item.context
             let current: SuggestView
             if let view = self.suggestView {
                 current = view
@@ -1433,6 +1471,12 @@ class ChatServiceRowView: TableRowView {
                 addSubview(current)
                 
                 current.set(handler: { [weak self] _ in
+                    if let item = self?.item as? ChatServiceItem {
+                        item.openPhotoEditor(data.image)
+                    }
+                }, for: .Click)
+                
+                current.viewButton.set(handler: { [weak self] _ in
                     if let item = self?.item as? ChatServiceItem {
                         item.openPhotoEditor(data.image)
                     }

@@ -262,8 +262,9 @@ private final class FeaturedHorizontalView : HorizontalRowView {
         }
         imageView.set(arguments:arguments)
         imageView.setFrameSize(arguments.imageSize)
+        let mediaBox = context.account.postbox.mediaBox
         if let resourceReference = resourceReference {
-            stickerFetchedDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: resourceReference, statsCategory: .file).start())
+            stickerFetchedDisposable.set(fetchedMediaResource(mediaBox: mediaBox, userLocation: .other, userContentType: .other, reference: resourceReference, statsCategory: .file).start())
         }
         self.needsLayout = true
         

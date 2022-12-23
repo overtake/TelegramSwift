@@ -401,10 +401,10 @@ class MediaAnimatedStickerView: ChatMediaContentView {
         
        
         
-        fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: mediaResource).start())
+        fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: reference.userLocation, userContentType: reference.userContentType, reference: mediaResource).start())
         
         if let premiumResource = premiumResource {
-            fetchPremiumDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: premiumResource).start())
+            fetchPremiumDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: reference.userLocation, userContentType: reference.userContentType, reference: premiumResource).start())
         }
         
         if updated {

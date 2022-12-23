@@ -1360,7 +1360,7 @@ class ChatRowItem: TableRowItem {
     var topicLinkLayout: TopicReplyItemLayout? {
         if let value = _topicLinkLayout {
             return value
-        } else if let message = self.message, let threadInfo = message.associatedThreadInfo, chatInteraction.mode == .history {
+        } else if let message = self.message, let threadInfo = message.associatedThreadInfo, chatInteraction.mode == .history, let peer = message.peers[message.id.peerId], peer.isForum {
             var ignore: Bool = false
             
             if renderType == .bubble {
