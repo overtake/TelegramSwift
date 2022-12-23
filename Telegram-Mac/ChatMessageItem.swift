@@ -265,11 +265,7 @@ class ChatMessageItem: ChatRowItem {
     }
     
     override var isEditMarkVisible: Bool {
-        if containsBigEmoji {
-            return false
-        } else {
-            return super.isEditMarkVisible
-        }
+        return super.isEditMarkVisible
     }
     
     func invokeAction() {

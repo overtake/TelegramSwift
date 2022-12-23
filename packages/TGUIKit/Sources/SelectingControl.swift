@@ -28,6 +28,12 @@ public class SelectingControl: Control {
         self.set(selected: selected, animated: false)
     }
     
+    public func update(unselectedImage:CGImage, selectedImage:CGImage, selected: Bool, animated: Bool) {
+        self.unselectedImage = unselectedImage
+        self.selectedImage = selectedImage
+        self.set(selected: selected, animated: animated)
+    }
+    
     public override func layout() {
         super.layout()
         unselectedView.center()
@@ -63,8 +69,9 @@ public class SelectingControl: Control {
                     }
                 }
             }
-            
         }
+        selectedView?.image = selectedImage
+        unselectedView.image = unselectedImage
     }
     
     required public init?(coder: NSCoder) {

@@ -27,7 +27,7 @@ class MediaPreviewRowItem: TableRowItem {
     fileprivate let paint:()->Void
     fileprivate let delete: (()->Void)?
     fileprivate let editedData: EditedImageData?
-    init(_ initialSize: NSSize, media: Media, context: AccountContext, editedData: EditedImageData? = nil, edit:@escaping()->Void = {}, paint:@escaping()->Void = {}, delete: (()->Void)? = nil) {
+    init(_ initialSize: NSSize, media: Media, context: AccountContext, editedData: EditedImageData? = nil, isSpoiler: Bool, edit:@escaping()->Void = {}, paint:@escaping()->Void = {}, delete: (()->Void)? = nil) {
         self.edit = edit
         self.paint = paint
         self.delete = delete
@@ -38,8 +38,11 @@ class MediaPreviewRowItem: TableRowItem {
         if let media = media as? TelegramMediaFile {
             parameters = ChatMediaLayoutParameters.layout(for: media, isWebpage: false, chatInteraction: chatInteraction, presentation: .Empty, automaticDownload: true, isIncoming: false, autoplayMedia: AutoplayMediaPreferences.defaultSettings)
         } else {
-            parameters = nil
+            parameters = ChatMediaLayoutParameters(presentation: .empty, media: media)
         }
+        
+        parameters?.forceSpoiler = isSpoiler
+        
         super.init(initialSize)
         _ = makeSize(initialSize.width, oldWidth: 0)
     }

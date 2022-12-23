@@ -798,9 +798,10 @@
             }
             if (view.cachedData as? CachedGroupData) != nil {
                 return (exist: true, loaded: true)
-            } else if (view.cachedData as? CachedChannelData) != nil {
-                if let peer = peerViewMainPeer(view), peer.isSupergroup {
-                    return (exist: true, loaded: true)
+            } else if let cachedData = view.cachedData as? CachedChannelData {
+                if let peer = peerViewMainPeer(view), peer.isSupergroup || peer.isGigagroup {
+                    let visible = !(cachedData.membersHidden.knownValue?.value ?? false)
+                    return (exist: visible, loaded: true)
                 } else {
                     return (exist: false, loaded: true)
                 }

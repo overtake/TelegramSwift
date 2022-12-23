@@ -292,9 +292,18 @@ class APSongItem : APItem {
             return wrapper.duration
         }
     }
+    
+    var userLocation: MediaResourceUserLocation {
+        switch entry {
+        case let .song(message):
+            return .peer(message.id.peerId)
+        default:
+            return .other
+        }
+    }
 
     private func fetch() {
-        fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: reference).start())
+        fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: userLocation, userContentType: .audio, reference: reference).start())
     }
 
     private func cancelFetching() {
@@ -939,7 +948,7 @@ class APController : NSResponder {
     fileprivate func play(with item:APSongItem) {
         self.mediaPlayer?.seek(timestamp: 0)
 
-        let player = MediaPlayer(postbox: account.postbox, reference: item.reference, streamable: streamable, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: baseRate, volume: self.volume, fetchAutomatically: false)
+        let player = MediaPlayer(postbox: account.postbox, userLocation: item.userLocation, userContentType: .audio, reference: item.reference, streamable: streamable, video: false, preferSoftwareDecoding: false, enableSound: true, baseRate: baseRate, volume: self.volume, fetchAutomatically: false)
         
         player.play()
         state.status = .playing
@@ -983,14 +992,15 @@ class APController : NSResponder {
                 if let strongSelf = self {
                     if resource.complete {
                         let items = strongSelf.items.modify({$0}).filter({$0 is APSongItem}).map{$0 as! APSongItem}
+                        let mediaBox = strongSelf.account.postbox.mediaBox
                         if let index = items.firstIndex(of: item) {
                             let previous = index - 1
                             let next = index + 1
                             if previous >= 0 {
-                                strongSelf.prevNextDisposable.add(fetchedMediaResource(mediaBox: strongSelf.account.postbox.mediaBox, reference: items[previous].reference, statsCategory: .audio).start())
+                                strongSelf.prevNextDisposable.add(fetchedMediaResource(mediaBox: mediaBox, userLocation: items[previous].userLocation, userContentType: .audio, reference: items[previous].reference, statsCategory: .audio).start())
                             }
                             if next < items.count {
-                                strongSelf.prevNextDisposable.add(fetchedMediaResource(mediaBox: strongSelf.account.postbox.mediaBox, reference: items[next].reference, statsCategory: .audio).start())
+                                strongSelf.prevNextDisposable.add(fetchedMediaResource(mediaBox: mediaBox, userLocation: items[next].userLocation, userContentType: .audio, reference: items[next].reference, statsCategory: .audio).start())
                             }
                         }
                         

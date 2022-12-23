@@ -195,13 +195,15 @@ class EditImageModalController: ModalViewController {
     private let settings: EditControllerSettings
     private let resultValue: Promise<(URL, EditedImageData?)> = Promise()
     private var canReset: Bool
+    private let doneString: String?
     
     var onClose: () -> Void = {}
     private let confirm: ((Signal<URL, NoError>, @escaping()->Void)->Void)?
     
-    init(_ path: URL, defaultData: EditedImageData? = nil, settings: EditControllerSettings = .plain, confirm: ((Signal<URL, NoError>, @escaping()->Void)->Void)? = nil) {
+    init(_ path: URL, defaultData: EditedImageData? = nil, settings: EditControllerSettings = .plain, doneString: String? = nil, confirm: ((Signal<URL, NoError>, @escaping()->Void)->Void)? = nil) {
         self.canReset = defaultData != nil
         self.confirm = confirm
+        self.doneString = doneString
         editState = Atomic(value: defaultData ?? EditedImageData(originalUrl: path))
         
         self.image = NSImage(contentsOf: path)!.cgImage(forProposedRect: nil, context: nil, hints: nil)!
@@ -428,6 +430,8 @@ class EditImageModalController: ModalViewController {
             self?.rotate()
         }, draw: { [weak self] in
             self?.loadCanvas()
+        }, getDoneString: { [weak self] in
+            return self?.doneString
         }), stateValue: editValue.get())
 
         

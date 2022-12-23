@@ -30,7 +30,7 @@ class ChatMediaMusicLayoutParameters : ChatMediaLayoutParameters {
         self.title = title
         self.performer = performer
         self.resource = resource
-        super.init(presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: AutoplayMediaPreferences.defaultSettings)
+        super.init(presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: AutoplayMediaPreferences.defaultSettings, isRevealed: nil)
     }
     
     var file: TelegramMediaFile {

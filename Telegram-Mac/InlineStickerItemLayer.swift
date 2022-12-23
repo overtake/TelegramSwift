@@ -635,7 +635,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                 self.resourceDisposable.set(nil)
             }
             
-            fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: mediaResource).start())
+            fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: reference.userLocation, userContentType: reference.userContentType, reference: mediaResource).start())
             let shimmerColor = self.shimmerColor
             let fillColor: NSColor? = getColors?(file).first?.color
             let emptyColor: TransformImageEmptyColor?

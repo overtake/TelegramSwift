@@ -456,7 +456,7 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
             progressView.set(progress: 0, animated: animated)
         case let .playing(_, _, progress), let .paused(_, _, progress):
             progressView.style = playProgressStyle
-            progressView.set(progress: CGFloat(progress == .nan ? 0 : progress), animated: animated, duration: 0.2)
+            progressView.set(progress: CGFloat(progress.isNaN ? 0 : progress), animated: animated, duration: 0.2)
         case let .fetching(progress):
             progressView.style = fetchProgressStyle
             progressView.set(progress: CGFloat(progress), animated:animated)

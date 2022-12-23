@@ -108,7 +108,7 @@ class GIFPlayerView: TransformImageView {
     }
     
     
-    private let maskLayer = CAShapeLayer()
+    private let maskLayer = SimpleShapeLayer()
     
     var positionFlags: LayoutPositionFlags? {
         didSet {

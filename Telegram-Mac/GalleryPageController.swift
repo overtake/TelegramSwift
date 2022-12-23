@@ -15,6 +15,48 @@ import TelegramCore
 import TextRecognizing
 import Postbox
 
+fileprivate class PublicPhotoView : Control {
+    private let avatar: AvatarControl = AvatarControl(font: .avatar(10))
+    private let textView = TextView()
+    override init() {
+        let layout = TextViewLayout(.initialize(string: strings().galleryPublicPhoto, color: .white, font: .normal(.text)))
+        layout.measure(width: .greatestFiniteMagnitude)
+
+        super.init(frame: NSMakeSize(layout.layoutSize.width + 30 + 10 + 10, 30).bounds)
+        avatar.setFrameSize(NSMakeSize(20, 20))
+        addSubview(avatar)
+        addSubview(textView)
+        textView.userInteractionEnabled = false
+        textView.isSelectable = false
+        textView.isEventLess = true
+        textView.update(layout)
+        self.backgroundColor = .blackTransparent
+        self.layer?.cornerRadius = frame.height / 2
+        self.scaleOnClick = true
+        avatar.userInteractionEnabled = false
+        
+    }
+    
+    override func layout() {
+        super.layout()
+        avatar.centerY(x: 5)
+        textView.centerY(x: avatar.frame.maxX + 10)
+    }
+    
+    func update(context: AccountContext, image: TelegramMediaImage, peer: TelegramUser) {
+        avatar.setPeer(account: context.account, peer: peer.withUpdatedPhoto(image.representations))
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
+
+
 fileprivate class GMagnifyView : MagnifyView  {
     private var progressView: RadialProgressView?
 
@@ -221,6 +263,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
     private var startIndex:Int = -1
     let view:GalleryPageView = GalleryPageView()
     private let textView: TextView = TextView()
+    private var publicPhotoView: PublicPhotoView?
     private let textContainer = View()
     private let textScrollView = ScrollView()
     private let window:Window
@@ -325,11 +368,13 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             let point = self.controller.view.convert(event.locationInWindow, from: nil)
             let hitTestView = self.window.contentView?.hitTest(event.locationInWindow)
 
-            if NSPointInRect(point, self.textScrollView.frame) {
+            if self.textScrollView.superview != nil, NSPointInRect(point, self.textScrollView.frame) {
                 self.textView.mouseUp(with: event)
                 return .invoked
             } else if self.textView.mouseInside() {
                 return .invoked
+            } else if let view = self.publicPhotoView, NSPointInRect(point, view.frame) {
+                return .invokeNext
             }
             if let window = view.window as? Window, self.controller.view._mouseInside() {
                 guard event.locationInWindow.x > 80 && event.locationInWindow.x < window.frame.width - 80 else {
@@ -483,6 +528,10 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         if textScrollView.superview != nil {
             textScrollView.removeFromSuperview()
             controller.view.addSubview(textScrollView)
+        }
+        if let view = publicPhotoView, view.superview != nil {
+            view.removeFromSuperview()
+            controller.view.addSubview(view)
         }
         autohideTextDisposable.set((Signal<Void, NoError>.single(Void()) |> delay(view?.mouseInContent == true ? 5.0 : 1.5, queue: Queue.mainQueue())).start(next: { [weak self] in
             guard let `self` = self else {
@@ -658,6 +707,19 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         }
     }
     
+    private func gotoLastItem() {
+        if !lockedTransition {
+            if let item = self.selectedItem as? MGalleryVideoItem, item.isFullscreen {
+                return
+            }
+            let item = self.item(at: controller.arrangedObjects.count - 1)
+            item.request()
+            if let index = self.items.firstIndex(of: item) {
+                self.set(index: index, animated: true)
+            }
+        }
+    }
+    
     
     
     func decreaseSpeed() {
@@ -704,13 +766,14 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
                     self.pageControllerDidEndLiveTransition(controller)
                 }
             } else {
+                let updated = controller.selectedIndex != index
                 if controller.selectedIndex != index {
                     controller.selectedIndex = index
                 } else if currentController == nil {
                     selectedIndex.set(index)
                 }
                 currentController = controller.selectedViewController
-                pageControllerDidEndLiveTransition(controller, force:true)                
+                pageControllerDidEndLiveTransition(controller, force: updated)
             }
             
             if items.count > 1, hasInited {
@@ -792,7 +855,7 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
             textView.disableBackgroundDrawing = true
             
             
-            view.addSubview(textScrollView)
+            controller.view.addSubview(textScrollView)
 //            textScrollView.change(opacity: 1.0)
             textScrollView.setFrameSize(textView.frame.size.width + 10, min(120, textView.frame.height))
             textScrollView.centerX(y: 100)
@@ -805,6 +868,28 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         } else {
             textView.update(nil)
             textScrollView.removeFromSuperview()
+        }
+        
+        if let photo = item.publicPhoto {
+            let current: PublicPhotoView
+            if let view = self.publicPhotoView {
+                current = view
+            } else {
+                current = PublicPhotoView()
+                self.publicPhotoView = current
+                controller.view.addSubview(current)
+                current.set(handler: { [weak self] _ in
+                    self?.gotoLastItem()
+                }, for: .Click)
+                
+                current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+            }
+            current.centerX(y: 100)
+            current.update(context: item.context, image: photo.image, peer: photo.peer)
+            
+        } else if let view = self.publicPhotoView {
+            performSubviewRemoval(view, animated: true)
+            self.publicPhotoView = nil
         }
         
         configureTextAutohide()
@@ -1116,6 +1201,12 @@ class GalleryPageController : NSObject, NSPageControllerDelegate {
         
         
         textScrollView.change(opacity: 0, animated: true)
+        
+        if let view = publicPhotoView {
+            performSubviewRemoval(view, animated: true)
+            self.publicPhotoView = nil
+        }
+        
         
         if let selectedView = controller.selectedViewController?.view as? MagnifyView, let item = selectedItem {
             selectedView.isHidden = true

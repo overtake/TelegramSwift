@@ -156,6 +156,12 @@ class GeneralInteractedRowItem: GeneralRowItem {
         
         if let menuItems = self.menuItems {
             return .single(menuItems())
+        } else if case let .contextSelector(_, items) = type {
+            if !items.isEmpty {
+                return .single(items)
+            } else {
+                return super.menuItems(in: location)
+            }
         } else {
             return super.menuItems(in: location)
         }

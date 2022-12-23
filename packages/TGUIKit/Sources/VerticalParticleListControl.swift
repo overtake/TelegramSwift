@@ -9,12 +9,6 @@
 import Cocoa
 import AppKit
 
-private func + (left: CGPoint, right: CGPoint) -> CGPoint {
-    return CGPoint(x: left.x + right.x, y: left.y + right.y)
-}
-private func - (left: CGPoint, right: CGPoint) -> CGPoint {
-    return CGPoint(x: left.x - right.x, y: left.y - right.y)
-}
 
 private func generateParticle(_ itemSize: NSSize, foregroundColor: NSColor) -> CGImage {
     return generateImage(itemSize, contextGenerator: { size, ctx in

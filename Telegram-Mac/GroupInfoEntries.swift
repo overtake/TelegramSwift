@@ -362,6 +362,9 @@ final class GroupInfoArguments : PeerInfoArguments {
     func admins() {
         pushViewController(ChannelAdminsViewController(context, peerId: peerId))
     }
+    func members() {
+        pushViewController(ChannelMembersViewController(context, peerId: peerId))
+    }
     
     func invation() {
         pushViewController(InviteLinksController(context: context, peerId: peerId, manager: linksManager))
@@ -1069,6 +1072,7 @@ enum GroupInfoEntry: PeerInfoEntry {
     case toggleForum(section:Int, enabled: Bool, convert: Bool, limit: TopicsLimitedReason?, viewType: GeneralViewType)
     case forumInfo(section:Int, text: String, viewType: GeneralViewType)
     case groupManagementInfoLabel(section:Int, text: String, viewType: GeneralViewType)
+    case members(section:Int, count: Int32, viewType: GeneralViewType)
     case administrators(section:Int, count: String, viewType: GeneralViewType)
     case permissions(section:Int, count: String, viewType: GeneralViewType)
     case blocked(section:Int, count:Int32?, viewType: GeneralViewType)
@@ -1102,6 +1106,7 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .toggleForum(section, enabled, convert, limit, _): return .toggleForum(section: section, enabled: enabled, convert: convert, limit: limit, viewType: viewType)
         case let .forumInfo(section, text, _): return .forumInfo(section: section, text: text, viewType: viewType)
         case let .groupManagementInfoLabel(section, text, _): return .groupManagementInfoLabel(section: section, text: text, viewType: viewType)
+        case let .members(section, count, _): return .members(section: section, count: count, viewType: viewType)
         case let .administrators(section, count, _): return .administrators(section: section, count: count, viewType: viewType)
         case let .permissions(section, count, _): return .permissions(section: section, count: count, viewType: viewType)
         case let .blocked(section, count, _): return .blocked(section: section, count: count, viewType: viewType)
@@ -1214,6 +1219,12 @@ enum GroupInfoEntry: PeerInfoEntry {
             }
         case let .forumInfo(sectionId, text, viewType):
             if case .forumInfo(sectionId, text, viewType) = entry {
+                return true
+            } else {
+                return false
+            }
+        case let .members(section, count, viewType):
+            if case .members(section, count, viewType) = entry {
                 return true
             } else {
                 return false
@@ -1428,36 +1439,38 @@ enum GroupInfoEntry: PeerInfoEntry {
             return 8
         case .groupTypeSetup:
             return 9
-        case .inviteLinks:
+        case .members:
             return 10
-        case .requests:
+        case .inviteLinks:
             return 11
-        case .reactions:
+        case .requests:
             return 12
-        case .linkedChannel:
+        case .reactions:
             return 13
-        case .preHistory:
+        case .linkedChannel:
             return 14
-        case .groupStickerset:
+        case .preHistory:
             return 15
-        case .autoDeleteMessages:
+        case .groupStickerset:
             return 16
-        case .groupManagementInfoLabel:
+        case .autoDeleteMessages:
             return 17
-        case .permissions:
+        case .groupManagementInfoLabel:
             return 18
-        case .blocked:
+        case .permissions:
             return 19
-        case .administrators:
+        case .blocked:
             return 20
-        case .toggleForum:
+        case .administrators:
             return 21
-        case .forumInfo:
+        case .toggleForum:
             return 22
-        case .usersHeader:
+        case .forumInfo:
             return 23
-        case .addMember:
+        case .usersHeader:
             return 24
+        case .addMember:
+            return 25
         case .member:
             fatalError("no stableIndex")
         case .showMore:
@@ -1510,6 +1523,8 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .groupStickerset(sectionId, _, _):
             return sectionId
         case let .administrators(sectionId, _, _):
+            return sectionId
+        case let .members(sectionId, _, _):
             return sectionId
         case let .permissions(sectionId, _, _):
             return sectionId
@@ -1573,6 +1588,8 @@ enum GroupInfoEntry: PeerInfoEntry {
         case let .forumInfo(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
         case let .groupStickerset(sectionId, _, _):
+            return (sectionId * 100000) + stableIndex
+        case let .members(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
         case let .administrators(sectionId, _, _):
             return (sectionId * 100000) + stableIndex
@@ -1710,6 +1727,8 @@ enum GroupInfoEntry: PeerInfoEntry {
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoPermissions, icon: theme.icons.peerInfoPermissions, type: .nextContext(count), viewType: viewType, action: arguments.blacklist)
         case let .blocked(section: _, count, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoBlackList, icon: theme.icons.peerInfoBanned, type: .nextContext(count != nil && count! > 0 ? "\(count!)" : ""), viewType: viewType, action: arguments.blocked)
+        case let .members(_, count, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoMembers, icon: theme.icons.peerInfoMembers, type: .nextContext("\(count)"), viewType: viewType, action: arguments.members)
         case let .administrators(section: _, count, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId.hashValue, name: strings().peerInfoAdministrators, icon: theme.icons.peerInfoAdmins, type: .nextContext(count), viewType: viewType, action: arguments.admins)
         case let .usersHeader(section: _, count, viewType):
@@ -1886,7 +1905,6 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                         actionBlock.append(.requests(section: GroupInfoSection.type.rawValue, count: joinRequestsCount, viewType: .singleItem))
                     }
 
-                    
                     actionBlock.append(.permissions(section: GroupInfoSection.type.rawValue, count: activePermissionCount.flatMap({ "\($0)/\(allGroupPermissionList.count)" }) ?? "", viewType: .innerItem))
                     actionBlock.append(.administrators(section: GroupInfoSection.type.rawValue, count: "", viewType: .lastItem))
                     
@@ -2001,6 +2019,12 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                             }
                         }
                         activePermissionCount = count
+                    }
+                    
+                    if !channel.flags.contains(.isGigagroup) {
+                        if access.canEditMembers {
+                            block.append(.members(section: GroupInfoSection.admin.rawValue, count: cachedChannelData.participantsSummary.memberCount ?? 0, viewType: .singleItem))
+                        }
                     }
                                         
                     if (access.isCreator || access.canCreateInviteLink) {

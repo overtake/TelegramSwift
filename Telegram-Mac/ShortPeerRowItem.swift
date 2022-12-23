@@ -231,7 +231,7 @@ class ShortPeerRowItem: GeneralRowItem {
             self.photo = generateEmptyPhoto(photoSize, type: emptyAvatar) |> map {($0, false)}
         }
         
-        let _ = tAttr.append(string: isLookSavedMessage && account.peerId == peer.id ? strings().peerSavedMessages : (compactText ? peer.compactDisplayTitle + (account.testingEnvironment ?? false ? " [🤖]" : "") : peer.displayTitle), color: enabled ? titleStyle.foregroundColor : customTheme?.grayTextColor ?? theme.colors.grayText, font: self.titleStyle.font)
+        let _ = tAttr.append(string: isLookSavedMessage && account.peerId == peer.id ? strings().peerSavedMessages : (compactText ? peer.compactDisplayTitle + (account.testingEnvironment ? " [🤖]" : "") : peer.displayTitle), color: enabled ? titleStyle.foregroundColor : customTheme?.grayTextColor ?? theme.colors.grayText, font: self.titleStyle.font)
         
         if let titleAddition = titleAddition {
             _ = tAttr.append(string: titleAddition, color: enabled ? titleStyle.foregroundColor : customTheme?.grayTextColor ?? theme.colors.grayText, font: self.titleStyle.font)

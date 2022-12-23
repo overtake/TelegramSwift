@@ -333,7 +333,7 @@ private class AccountInfoView : GeneralContainableRowView {
                         
                         let file = TelegramMediaFile(fileId: MediaId(namespace: 0, id: 0), partialReference: nil, resource: video.resource, previewRepresentations: first.image.representations, videoThumbnails: [], immediateThumbnailData: nil, mimeType: "video/mp4", size: video.resource.size, attributes: [])
                         
-                        let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, reference: MediaResourceReference.standalone(resource: file.resource), streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
+                        let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, userLocation: .peer(item.context.peerId), userContentType: .avatar, reference: MediaResourceReference.standalone(resource: file.resource), streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
                         
                         mediaPlayer.actionAtEnd = .loop(nil)
                         

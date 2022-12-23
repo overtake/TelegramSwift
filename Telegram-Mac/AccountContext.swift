@@ -998,7 +998,7 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
         |> deliverOnMainQueue
     } else if let file = cloudTheme.file {
         return Signal { subscriber in
-            let fetchDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: file.resource)).start()
+            let fetchDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .file, reference: MediaResourceReference.standalone(resource: file.resource)).start()
             let wallpaperDisposable = DisposableSet()
             
             let resourceData = context.account.postbox.mediaBox.resourceData(file.resource) |> filter { $0.complete } |> take(1)

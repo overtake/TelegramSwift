@@ -148,11 +148,13 @@ final class EditImageControlsArguments {
     let selectionDimensions: (SelectionRectDimensions) -> Void
     let rotate: () -> Void
     let draw: ()->Void
-    init(cancel:@escaping()->Void, success: @escaping()->Void, flip: @escaping()->Void, selectionDimensions: @escaping(SelectionRectDimensions)->Void, rotate: @escaping() -> Void, draw: @escaping()->Void) {
+    let getDoneString:()->String?
+    init(cancel:@escaping()->Void, success: @escaping()->Void, flip: @escaping()->Void, selectionDimensions: @escaping(SelectionRectDimensions)->Void, rotate: @escaping() -> Void, draw: @escaping()->Void, getDoneString:@escaping()->String?) {
         self.cancel = cancel
         self.success = success
         self.flip = flip
         self.rotate = rotate
+        self.getDoneString = getDoneString
         self.selectionDimensions = selectionDimensions
         self.draw = draw
     }
@@ -186,7 +188,7 @@ final class EditImageControlsView : View {
         layer?.cornerRadius = 6
     }
     
-    fileprivate func updateUserInterface(_ data: EditedImageData) {
+    fileprivate func updateUserInterface(_ data: EditedImageData, doneString: String?) {
         draw.set(image: NSImage(named: "Icon_EditImageDraw")!.precomposed(NSColor.white.withAlphaComponent(0.8)), for: .Normal)
         flipper.set(image: NSImage(named: "Icon_EditImageFlip")!.precomposed(NSColor.white.withAlphaComponent(0.8)), for: .Normal)
         rotate.set(image: NSImage(named: "Icon_EditImageRotate")!.precomposed(NSColor.white.withAlphaComponent(0.8)), for: .Normal)
@@ -212,7 +214,7 @@ final class EditImageControlsView : View {
         cancel.set(color: .white, for: .Normal)
         
         cancel.set(text: strings().modalCancel, for: .Normal)
-        success.set(text: strings().navigationDone, for: .Normal)
+        success.set(text: doneString ?? strings().navigationDone, for: .Normal)
         
         _ = cancel.sizeToFit(NSZeroSize, NSMakeSize(75, frame.height), thatFit: true)
         _ = success.sizeToFit(NSZeroSize, NSMakeSize(75, frame.height), thatFit: true)
@@ -313,8 +315,9 @@ class EditImageControls: GenericViewController<EditImageControlsView> {
         super.viewDidLoad()
         
         genericView.set(settings: settings, handlers: arguments)
+        let string = arguments.getDoneString()
         stateDisposable.set(stateValue.start(next: { [weak self] current in
-            self?.genericView.updateUserInterface(current)
+            self?.genericView.updateUserInterface(current, doneString: string)
         }))
     }
     

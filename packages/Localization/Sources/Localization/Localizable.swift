@@ -1551,6 +1551,14 @@ public final class L10n {
   public static var channelMembersMembersListDesc: String  { return L10n.tr("Localizable", "ChannelMembers.MembersListDesc") }
   /// OTHER SUBSCRIBERS
   public static var channelMembersOtherMembers: String  { return L10n.tr("Localizable", "ChannelMembers.OtherMembers") }
+  /// CONTACTS IN THIS GROUP
+  public static var channelMembersGroupContacts: String  { return L10n.tr("Localizable", "ChannelMembers.Group.Contacts") }
+  /// Hide Members
+  public static var channelMembersGroupHideMembers: String  { return L10n.tr("Localizable", "ChannelMembers.Group.HideMembers") }
+  /// OTHER MEMBERS
+  public static var channelMembersGroupOtherMembers: String  { return L10n.tr("Localizable", "ChannelMembers.Group.OtherMembers") }
+  /// Switch this on to hide the list of members in this group. Admins will remain visible.
+  public static var channelMembersGroupHideMembersInfo: String  { return L10n.tr("Localizable", "ChannelMembers.Group.HideMembers.Info") }
   /// Add Members
   public static var channelMembersSelectTitle: String  { return L10n.tr("Localizable", "ChannelMembers.Select.Title") }
   /// OVERVIEW
@@ -3059,6 +3067,8 @@ public final class L10n {
   public static func chatServiceBotPermissionAllowed(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.BotPermissionAllowed", p1)
   }
+  /// You allowed this bot to message you when you added it in the attachment menu.
+  public static var chatServiceBotWriteAllowed: String  { return L10n.tr("Localizable", "Chat.Service.BotWriteAllowed") }
   /// %1$@ disabled the chat theme
   public static func chatServiceDisabledTheme(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.DisabledTheme", p1)
@@ -4213,6 +4223,8 @@ public final class L10n {
   }
   /// You successfully updated your profile photo
   public static var chatServiceSuggestSuccess: String  { return L10n.tr("Localizable", "ChatService.Suggest.Success") }
+  /// View Photo
+  public static var chatServiceSuggestView: String  { return L10n.tr("Localizable", "ChatService.Suggest.View") }
   /// Colorful
   public static var chatThemeColorful: String  { return L10n.tr("Localizable", "ChatTheme.Colorful") }
   /// Chat Theme
@@ -5349,6 +5361,8 @@ public final class L10n {
   public static var forwardModalActionTitleZero: String  { return L10n.tr("Localizable", "ForwardModalAction.Title_zero") }
   /// Delete
   public static var galleryContextDeletePhoto: String  { return L10n.tr("Localizable", "Gallery.ContextDeletePhoto") }
+  /// public photo
+  public static var galleryPublicPhoto: String  { return L10n.tr("Localizable", "Gallery.PublicPhoto") }
   /// Remove GIF
   public static var galleryRemoveGif: String  { return L10n.tr("Localizable", "Gallery.RemoveGif") }
   /// Save GIF
@@ -6707,8 +6721,12 @@ public final class L10n {
   public static var modalNotNow: String  { return L10n.tr("Localizable", "Modal.NotNow") }
   /// OK
   public static var modalOK: String  { return L10n.tr("Localizable", "Modal.OK") }
+  /// Remove
+  public static var modalRemove: String  { return L10n.tr("Localizable", "Modal.Remove") }
   /// Report
   public static var modalReport: String  { return L10n.tr("Localizable", "Modal.Report") }
+  /// Reset
+  public static var modalReset: String  { return L10n.tr("Localizable", "Modal.Reset") }
   /// Save
   public static var modalSave: String  { return L10n.tr("Localizable", "Modal.Save") }
   /// Send
@@ -8511,6 +8529,8 @@ public final class L10n {
   public static var previewSenderFileTooltip: String  { return L10n.tr("Localizable", "PreviewSender.FileTooltip") }
   /// Send in a quick way
   public static var previewSenderMediaTooltip: String  { return L10n.tr("Localizable", "PreviewSender.MediaTooltip") }
+  /// Send With Spoiler
+  public static var previewSenderSendAsSpoiler: String  { return L10n.tr("Localizable", "PreviewSender.SendAsSpoiler") }
   /// %d
   public static func previewSenderSendAudioCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PreviewSender.SendAudio_countable", p1)
@@ -8667,6 +8687,10 @@ public final class L10n {
   public static func previewSenderSendVideoZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PreviewSender.SendVideo_zero", p1)
   }
+  /// Disable Spoiler
+  public static var previewSenderSpoilerTooltipDisable: String  { return L10n.tr("Localizable", "PreviewSender.SpoilerTooltip.Disable") }
+  /// Hide with Spoiler
+  public static var previewSenderSpoilerTooltipEnable: String  { return L10n.tr("Localizable", "PreviewSender.SpoilerTooltip.Enable") }
   /// Sorry, you cannot add %@ to channels because of %@'s privacy settings.
   public static func privacyGroupsAndChannelsInviteToChannelError(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Privacy.GroupsAndChannels.InviteToChannelError", p1, p2)
@@ -8677,6 +8701,8 @@ public final class L10n {
   public static func privacyGroupsAndChannelsInviteToGroupError(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "Privacy.GroupsAndChannels.InviteToGroupError", p1, p2)
   }
+  /// Are you sure you want to remove public photo?
+  public static var privacyResetPhotoConfirm: String  { return L10n.tr("Localizable", "Privacy.ResetPhoto.Confirm") }
   /// Automatically archive and mute new chats, groups and channels from non-contacts.
   public static var privacyAndSecurityAutoArchiveDesc: String  { return L10n.tr("Localizable", "PrivacyAndSecurity.AutoArchiveDesc") }
   /// NEW CHATS FROM UNKNOWN USERS
@@ -8851,6 +8877,12 @@ public final class L10n {
   public static var privacySettingsControllerPhoneCallDescription: String  { return L10n.tr("Localizable", "PrivacySettingsController.PhoneCallDescription") }
   /// WHO CAN CALL ME
   public static var privacySettingsControllerPhoneCallHeader: String  { return L10n.tr("Localizable", "PrivacySettingsController.PhoneCallHeader") }
+  /// Remove Public Photo
+  public static var privacySettingsControllerRemovePublicPhoto: String  { return L10n.tr("Localizable", "PrivacySettingsController.RemovePublicPhoto") }
+  /// Set Public Photo
+  public static var privacySettingsControllerSetPublicPhoto: String  { return L10n.tr("Localizable", "PrivacySettingsController.SetPublicPhoto") }
+  /// Update Public Photo
+  public static var privacySettingsControllerUpdatePublicPhoto: String  { return L10n.tr("Localizable", "PrivacySettingsController.UpdatePublicPhoto") }
   /// %d
   public static func privacySettingsControllerUserCountCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PrivacySettingsController.UserCount_countable", p1)
@@ -8917,6 +8949,8 @@ public final class L10n {
   public static var privacySettingsControllerProfilePhotoAlwaysShareWithTitle: String  { return L10n.tr("Localizable", "PrivacySettingsController.ProfilePhoto.AlwaysShareWith.Title") }
   /// Never Share With
   public static var privacySettingsControllerProfilePhotoNeverShareWithTitle: String  { return L10n.tr("Localizable", "PrivacySettingsController.ProfilePhoto.NeverShareWith.Title") }
+  /// You can upload a public photo for those who are restricted from viewing your real profile photo.
+  public static var privacySettingsControllerSetPublicPhotoInfo: String  { return L10n.tr("Localizable", "PrivacySettingsController.SetPublicPhoto.Info") }
   /// Cancel
   public static var privateChannelPeekCancel: String  { return L10n.tr("Localizable", "PrivateChannel.Peek.Cancel") }
   /// Join Channel
@@ -10565,26 +10599,148 @@ public final class L10n {
   public static var storageClearVideos: String  { return L10n.tr("Localizable", "Storage.Clear.Videos") }
   /// Are you sure you want to clear all cached data?
   public static var storageClearAllConfirmDescription: String  { return L10n.tr("Localizable", "Storage.ClearAll.Confirm.Description") }
+  /// %d
+  public static func storageExceptionsHeaderCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorageExceptions.Header_countable", p1)
+  }
+  /// %d EXCEPTIONS
+  public static func storageExceptionsHeaderFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorageExceptions.Header_few", p1)
+  }
+  /// %d EXCEPTIONS
+  public static func storageExceptionsHeaderMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorageExceptions.Header_many", p1)
+  }
+  /// %d EXCEPTION
+  public static func storageExceptionsHeaderOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorageExceptions.Header_one", p1)
+  }
+  /// %d EXCEPTIONS
+  public static func storageExceptionsHeaderOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorageExceptions.Header_other", p1)
+  }
+  /// %d EXCEPTIONS
+  public static func storageExceptionsHeaderTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorageExceptions.Header_two", p1)
+  }
+  /// %d EXCEPTION
+  public static func storageExceptionsHeaderZero(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorageExceptions.Header_zero", p1)
+  }
+  /// Remove
+  public static var storageExceptionsRemove: String  { return L10n.tr("Localizable", "StorageExceptions.Remove") }
+  /// Delete All Exceptions
+  public static var storageExceptionsRemoveAll: String  { return L10n.tr("Localizable", "StorageExceptions.RemoveAll") }
+  /// Add Channel
+  public static var storageExceptionsAddChannel: String  { return L10n.tr("Localizable", "StorageExceptions.Add.Channel") }
+  /// Add Group
+  public static var storageExceptionsAddGroup: String  { return L10n.tr("Localizable", "StorageExceptions.Add.Group") }
+  /// Add Private Chat
+  public static var storageExceptionsAddPrivate: String  { return L10n.tr("Localizable", "StorageExceptions.Add.Private") }
+  /// Are you sure you want to remove all exceptions?
+  public static var storageExceptionsRemoveAllConfirm: String  { return L10n.tr("Localizable", "StorageExceptions.RemoveAll.Confirm") }
+  /// Channels
+  public static var storageExceptionsTitleChannel: String  { return L10n.tr("Localizable", "StorageExceptions.Title.Channel") }
+  /// Group Chats
+  public static var storageExceptionsTitleGroup: String  { return L10n.tr("Localizable", "StorageExceptions.Title.Group") }
+  /// Private Chats
+  public static var storageExceptionsTitlePrivate: String  { return L10n.tr("Localizable", "StorageExceptions.Title.Private") }
   /// Telegram is calculating the current cache size.\nThis can take a few minutes.
   public static var storageUsageCalculating: String  { return L10n.tr("Localizable", "StorageUsage.Calculating") }
+  /// All media will stay in the Telegram cloud and can be re-downloaded if you need it again.
+  public static var storageUsageCategoryText: String  { return L10n.tr("Localizable", "StorageUsage.CategoryText") }
   /// CHATS
   public static var storageUsageChatsHeader: String  { return L10n.tr("Localizable", "StorageUsage.ChatsHeader") }
   /// Your local cache is being cleaned...
   public static var storageUsageCleaningProcess: String  { return L10n.tr("Localizable", "StorageUsage.CleaningProcess") }
   /// Clear
   public static var storageUsageClear: String  { return L10n.tr("Localizable", "StorageUsage.Clear") }
+  /// Clear
+  public static var storageUsageClearDisabled: String  { return L10n.tr("Localizable", "StorageUsage.ClearDisabled") }
+  /// Clear All Cache %@
+  public static func storageUsageClearFull(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StorageUsage.ClearFull", p1)
+  }
   /// Keep Media
   public static var storageUsageKeepMedia: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia") }
+  /// Avatars
+  public static var storageUsageCategoryAvatars: String  { return L10n.tr("Localizable", "StorageUsage.Category.Avatars") }
+  /// Files
+  public static var storageUsageCategoryFiles: String  { return L10n.tr("Localizable", "StorageUsage.Category.Files") }
+  /// Miscellaneous
+  public static var storageUsageCategoryMiscellaneous: String  { return L10n.tr("Localizable", "StorageUsage.Category.Miscellaneous") }
+  /// Music
+  public static var storageUsageCategoryMusic: String  { return L10n.tr("Localizable", "StorageUsage.Category.Music") }
+  /// Other
+  public static var storageUsageCategoryOther: String  { return L10n.tr("Localizable", "StorageUsage.Category.Other") }
+  /// Photos
+  public static var storageUsageCategoryPhotos: String  { return L10n.tr("Localizable", "StorageUsage.Category.Photos") }
+  /// Stickers
+  public static var storageUsageCategoryStickers: String  { return L10n.tr("Localizable", "StorageUsage.Category.Stickers") }
+  /// Videos
+  public static var storageUsageCategoryVideos: String  { return L10n.tr("Localizable", "StorageUsage.Category.Videos") }
+  /// Media files will be cleared from your disk, but will remain available for re-downloading if necessary.
+  public static var storageUsageClearChatInfo: String  { return L10n.tr("Localizable", "StorageUsage.ClearChat.Info") }
+  /// Channels
+  public static var storageUsageKeepMediaChannels: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Channels") }
   /// Photos, videos and other files from cloud chats that you have **not accessed** during this period will be removed from this device to save disk space.\n\nAll media will stay in the Telegram cloud and can be re-downloaded if you need it again.
   public static var storageUsageKeepMediaDescription: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Description") }
   /// Photos, videos and other files from cloud chats that you have **not accessed** during this period will be removed from this device to save disk space.
   public static var storageUsageKeepMediaDescription1: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Description1") }
+  /// %d
+  public static func storageUsageKeepMediaExceptionsCountable(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorageUsage.KeepMedia.Exceptions_countable", p1)
+  }
+  /// %d Exceptions
+  public static func storageUsageKeepMediaExceptionsFew(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorageUsage.KeepMedia.Exceptions_few", p1)
+  }
+  /// %d Exception
+  public static func storageUsageKeepMediaExceptionsMany(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorageUsage.KeepMedia.Exceptions_many", p1)
+  }
+  /// %d Exception
+  public static func storageUsageKeepMediaExceptionsOne(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorageUsage.KeepMedia.Exceptions_one", p1)
+  }
+  /// %d Exceptions
+  public static func storageUsageKeepMediaExceptionsOther(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorageUsage.KeepMedia.Exceptions_other", p1)
+  }
+  /// %d Exceptions
+  public static func storageUsageKeepMediaExceptionsTwo(_ p1: Int) -> String {
+    return L10n.tr("Localizable", "StorageUsage.KeepMedia.Exceptions_two", p1)
+  }
+  /// Add Exception
+  public static var storageUsageKeepMediaExceptionsZero: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Exceptions_zero") }
+  /// Group Chats
+  public static var storageUsageKeepMediaGroups: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Groups") }
+  /// AUTO-REMOVE CACHED MEDIA
+  public static var storageUsageKeepMediaHeader: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Header") }
+  /// Private Chats
+  public static var storageUsageKeepMediaPrivate: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Private") }
   /// If your cache size exceeds this limit, the oldest media will be deleted.\n\nAll media will stay in the Telegram cloud and can be re-downloaded if you need it again.
   public static var storageUsageLimitDesc: String  { return L10n.tr("Localizable", "StorageUsage.Limit.Desc") }
   /// MAXIMUM CACHE SIZE
   public static var storageUsageLimitHeader: String  { return L10n.tr("Localizable", "StorageUsage.Limit.Header") }
+  /// If your cache size exceeds this limit, the oldest media will be deleted.
+  public static var storageUsageLimitInfoUpdated: String  { return L10n.tr("Localizable", "StorageUsage.Limit.InfoUpdated") }
   /// No Limit
   public static var storageUsageLimitNoLimit: String  { return L10n.tr("Localizable", "StorageUsage.Limit.NoLimit") }
+  /// Empty
+  public static var storageUsageSelectedMediaEmpty: String  { return L10n.tr("Localizable", "StorageUsage.SelectedMedia.Empty") }
+  /// Telegram uses almost nothing of your free disk space.
+  public static var storageUsageTelegramUsageEmpty: String  { return L10n.tr("Localizable", "StorageUsage.TelegramUsage.Empty") }
+  /// Telegram uses **%@** of your free disk space.
+  public static func storageUsageTelegramUsageText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StorageUsage.TelegramUsage.Text", p1)
+  }
+  /// This chat uses almost nothing of your Telegram Cache.
+  public static var storageUsageTelegramUsageEmptyPeer: String  { return L10n.tr("Localizable", "StorageUsage.TelegramUsage.Empty.Peer") }
+  /// This chat uses **%2$@** of your Telegram Cache.
+  public static func storageUsageTelegramUsageTextPeer(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StorageUsage.TelegramUsage.Text.Peer", p1)
+  }
   /// Suggest Frequent Contacts
   public static var suggestFrequentContacts: String  { return L10n.tr("Localizable", "Suggest.Frequent.Contacts") }
   /// This will delete all data about the people you message frequently as well as the inline bots you are likely to use.
@@ -11615,6 +11771,10 @@ public final class L10n {
   }
   /// Reset
   public static var userInfoResetPhotoConfirmOK: String  { return L10n.tr("Localizable", "UserInfo.ResetPhoto.Confirm.OK") }
+  /// You can replace %@'s photo with another photo that only you will see.
+  public static func userInfoSetPhotoBlockInfo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "UserInfo.SetPhoto.BlockInfo", p1)
+  }
   /// Do you want to set this photo for %@? Only you will see this photo and it will replace any photo %@ sets for themselves.
   public static func userInfoSetPhotoConfirm(_ p1: String, _ p2: String) -> String {
     return L10n.tr("Localizable", "UserInfo.SetPhoto.Confirm", p1, p2)
@@ -12225,8 +12385,14 @@ public final class L10n {
   public static var wallpaperPreviewHeader: String  { return L10n.tr("Localizable", "WallpaperPreview.Header") }
   /// Paste and Match Style
   public static var weT3VZwkTitle: String  { return L10n.tr("Localizable", "WeT-3V-zwk.title") }
+  /// Allow %@ to send me messages
+  public static func webAppAddToAttachmentAllowMessages(_ p1: String) -> String {
+    return L10n.tr("Localizable", "WebApp.AddToAttachmentAllowMessages", p1)
+  }
   /// Install Bot
   public static var webAppInstallBot: String  { return L10n.tr("Localizable", "WebApp.InstallBot") }
+  /// QR Code is not supported on Desktop. Please use mobile app.
+  public static var webAppQrIsNotSupported: String  { return L10n.tr("Localizable", "WebApp.QrIsNotSupported") }
   /// Reload
   public static var webAppReload: String  { return L10n.tr("Localizable", "WebApp.Reload") }
   /// Remove Bot

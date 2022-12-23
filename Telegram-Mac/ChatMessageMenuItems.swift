@@ -348,17 +348,18 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         
         
     //    if !data.message.isCopyProtected() {
-            if let textLayout = data.textLayout?.0 {
-                
-                if !textLayout.selectedRange.hasSelectText {
-                    let text = message.text
-                    let language = Translate.detectLanguage(for: text)
-                    let toLang = appAppearance.language.baseLanguageCode
-                    if language != toLang {
-                        thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
-                            showModal(with: TranslateModalController(context: context, from: language, toLang: toLang, text: text), for: context.window)
-                        }, itemImage: MenuAnimation.menu_translate.value))
-                    }
+        if let textLayout = data.textLayout?.0 {
+            
+            if !textLayout.selectedRange.hasSelectText {
+                let text = message.text
+                let language = Translate.detectLanguage(for: text)
+                let toLang = appAppearance.language.baseLanguageCode
+                if language != toLang {
+                    thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
+                        showModal(with: TranslateModalController(context: context, from: language, toLang: toLang, text: text), for: context.window)
+                    }, itemImage: MenuAnimation.menu_translate.value))
+                }
+                if !data.message.isCopyProtected() {
                     thirdBlock.append(ContextMenuItem(strings().chatContextCopyText, handler: { [weak textLayout] in
                         if let textLayout = textLayout {
                             if !globalLinkExecutor.copyAttributedString(textLayout.attributedString) {
@@ -366,88 +367,99 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                             }
                         }
                     }, itemImage: MenuAnimation.menu_copy.value))
-                } else {
-                    let text: String
-                    if let linkType = data.textLayout?.1 {
-                        text = copyContextText(from: linkType)
-                        thirdBlock.append(ContextMenuItem(text, handler: { [weak textLayout] in
-                            if let textLayout = textLayout {
-                                let attr = textLayout.attributedString.mutableCopy() as! NSMutableAttributedString
-                                attr.enumerateAttributes(in: attr.range, options: [], using: { data, range, _ in
-                                    if let value = data[.init("Attribute__EmbeddedItem")] as? InlineStickerItem {
-                                        switch value.source {
-                                        case let .attribute(value):
-                                            attr.replaceCharacters(in: range, with: value.attachment.text)
-                                        default:
-                                            break
-                                        }
-                                    }
-                                })
-                                var effectiveRange = textLayout.selectedRange.range
-                                let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
-                                let pb = NSPasteboard.general
-                                pb.clearContents()
-                                pb.declareTypes([.string], owner: textLayout)
-                                let attribute = attr.attribute(NSAttributedString.Key.link, at: textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
-                                if let attribute = attribute as? inAppLink {
-                                    pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
-                                } else {
-                                    pb.setString(selectedText.string, forType: .string)
-                                }
-                            }
-                            
-                        }, itemImage: MenuAnimation.menu_copy.value))
-                    } else {
-                        let attr = textLayout.attributedString.mutableCopy() as! NSMutableAttributedString
-                        attr.enumerateAttributes(in: attr.range, options: [], using: { data, range, _ in
-                            if let value = data[.init("Attribute__EmbeddedItem")] as? InlineStickerItem {
-                                switch value.source {
-                                case let .attribute(value):
-                                    attr.replaceCharacters(in: range, with: value.attachment.text)
-                                default:
-                                    break
-                                }
-                            }
-                        })
-                        if let range = attr.range.intersection(textLayout.selectedRange.range) {
-                            let selectedText = attr.attributedSubstring(from: range)
-                            let text = selectedText.string
-                            let language = Translate.detectLanguage(for: text)
-                            let toLang = appAppearance.language.baseLanguageCode
-                            if language != toLang {
-                                thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
-                                    showModal(with: TranslateModalController(context: context, from: language, toLang: toLang, text: text), for: context.window)
-                                }, itemImage: MenuAnimation.menu_translate.value))
-                            }
-                            thirdBlock.append(ContextMenuItem(strings().chatCopySelectedText, handler: { [weak textLayout] in
-                                if let textLayout = textLayout {
-                                    let result = textLayout.interactions.copy?()
-                                    let attr = textLayout.attributedString
-                                    if let result = result, !result {
-                                        let pb = NSPasteboard.general
-                                        pb.clearContents()
-                                        pb.declareTypes([.string], owner: textLayout)
-                                        var effectiveRange = textLayout.selectedRange.range
-                                        let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
-                                        let isCopied = globalLinkExecutor.copyAttributedString(selectedText)
-                                        if !isCopied {
-                                            let attribute = attr.attribute(NSAttributedString.Key.link, at: textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
-                                            if let attribute = attribute as? inAppLink {
-                                                pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
-                                            } else {
-                                                pb.setString(selectedText.string, forType: .string)
-                                            }
-                                        }
+                }
+            } else {
+                let text: String
+                if let linkType = data.textLayout?.1, !data.message.isCopyProtected() {
+                    text = copyContextText(from: linkType)
+                    thirdBlock.append(ContextMenuItem(text, handler: { [weak textLayout] in
+                        if let textLayout = textLayout {
+                            let attr = textLayout.attributedString.mutableCopy() as! NSMutableAttributedString
+                            attr.enumerateAttributes(in: attr.range, options: [], using: { data, range, _ in
+                                if let value = data[.init("Attribute__EmbeddedItem")] as? InlineStickerItem {
+                                    switch value.source {
+                                    case let .attribute(value):
+                                        attr.replaceCharacters(in: range, with: value.attachment.text)
+                                    default:
+                                        break
                                     }
                                 }
-                            }, itemImage: MenuAnimation.menu_copy.value))
-
+                            })
+                            var effectiveRange = textLayout.selectedRange.range
+                            let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
+                            let pb = NSPasteboard.general
+                            pb.clearContents()
+                            pb.declareTypes([.string], owner: textLayout)
+                            let attribute = attr.attribute(NSAttributedString.Key.link, at: textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
+                            if let attribute = attribute as? inAppLink {
+                                pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
+                            } else {
+                                pb.setString(selectedText.string, forType: .string)
+                            }
                         }
+                        
+                    }, itemImage: MenuAnimation.menu_copy.value))
+                } else if !data.message.isCopyProtected() {
+                    let attr = textLayout.attributedString.mutableCopy() as! NSMutableAttributedString
+                    attr.enumerateAttributes(in: attr.range, options: [], using: { data, range, _ in
+                        if let value = data[.init("Attribute__EmbeddedItem")] as? InlineStickerItem {
+                            switch value.source {
+                            case let .attribute(value):
+                                attr.replaceCharacters(in: range, with: value.attachment.text)
+                            default:
+                                break
+                            }
+                        }
+                    })
+                    if let range = attr.range.intersection(textLayout.selectedRange.range) {
+                        let selectedText = attr.attributedSubstring(from: range)
+                        let text = selectedText.string
+                        let language = Translate.detectLanguage(for: text)
+                        let toLang = appAppearance.language.baseLanguageCode
+                        if language != toLang {
+                            thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
+                                showModal(with: TranslateModalController(context: context, from: language, toLang: toLang, text: text), for: context.window)
+                            }, itemImage: MenuAnimation.menu_translate.value))
+                        }
+                        thirdBlock.append(ContextMenuItem(strings().chatCopySelectedText, handler: { [weak textLayout] in
+                            if let textLayout = textLayout {
+                                let result = textLayout.interactions.copy?()
+                                let attr = textLayout.attributedString
+                                if let result = result, !result {
+                                    let pb = NSPasteboard.general
+                                    pb.clearContents()
+                                    pb.declareTypes([.string], owner: textLayout)
+                                    var effectiveRange = textLayout.selectedRange.range
+                                    let selectedText = attr.attributedSubstring(from: textLayout.selectedRange.range)
+                                    let isCopied = globalLinkExecutor.copyAttributedString(selectedText)
+                                    if !isCopied {
+                                        let attribute = attr.attribute(NSAttributedString.Key.link, at: textLayout.selectedRange.range.location, effectiveRange: &effectiveRange)
+                                        if let attribute = attribute as? inAppLink {
+                                            pb.setString(attribute.link.isEmpty ? selectedText.string : attribute.link, forType: .string)
+                                        } else {
+                                            pb.setString(selectedText.string, forType: .string)
+                                        }
+                                    }
+                                }
+                            }
+                        }, itemImage: MenuAnimation.menu_copy.value))
+
                     }
                 }
             }
-     //   }
-       
+        }
+        if let state = data.message.audioTranscription {
+            if !state.text.isEmpty && !state.isPending {
+                let text = state.text
+                let language = Translate.detectLanguage(for: text)
+                let toLang = appAppearance.language.baseLanguageCode
+                if language != toLang {
+                    thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
+                        showModal(with: TranslateModalController(context: context, from: language, toLang: toLang, text: text), for: context.window)
+                    }, itemImage: MenuAnimation.menu_translate.value))
+                }
+            }
+        }
         
         if let peer = peer as? TelegramChannel, !isService {
             if isNotFailed, !message.isScheduledMessage {

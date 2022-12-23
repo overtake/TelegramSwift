@@ -953,7 +953,7 @@ final class PremiumBoardingController : ModalViewController {
                     return current
                 }
                 for (_, video) in promoConfiguration.videos {
-                    actionsDisposable.add(preloadVideoResource(postbox: context.account.postbox, resourceReference: .standalone(resource: video.resource), duration: 3.0).start())
+                    actionsDisposable.add(preloadVideoResource(postbox: context.account.postbox, userLocation: .other, userContentType: .init(file: video), resourceReference: .standalone(resource: video.resource), duration: 3.0).start())
                 }
         }))
 

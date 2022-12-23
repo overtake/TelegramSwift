@@ -125,7 +125,7 @@ class DiceCache {
             return EmojiesSoundConfiguration.with(appConfiguration: value)
         } |> distinctUntilChanged |> mapToSignal { value -> Signal<Never, NoError> in
             //val
-            let list = value.sounds.map { fetchedMediaResource(mediaBox: postbox.mediaBox, reference: MediaResourceReference.standalone(resource: $0.value.resource )) }
+            let list = value.sounds.map { fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: .other, userContentType: .other, reference: MediaResourceReference.standalone(resource: $0.value.resource )) }
             let signals = combineLatest(list)
             
             return signals |> ignoreValues |> `catch` { _ -> Signal<Never, NoError> in return .complete() }
@@ -179,7 +179,7 @@ class DiceCache {
                 } else {
                     reference = FileMediaReference.standalone(media: value.file).resourceReference(value.file.resource)
                 }
-                return fetchedMediaResource(mediaBox: postbox.mediaBox, reference: reference)
+                return fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: .other, userContentType: .other, reference: reference)
             }
             return combineLatest(signals) |> map { _ in return } |> `catch` { _ in return .complete() }
         }

@@ -298,11 +298,11 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
     func item(_ arguments: DataAndStorageControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .storageUsage(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, icon: NSImage(named: "Icon_StorageUsage")?.precomposed(flipVertical: true), type: .next, viewType: viewType, action: {
                 arguments.openStorageUsage()
             })
         case let .networkUsage(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, type: .next, viewType: viewType, action: {
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, icon: NSImage(named: "Icon_NetworkUsage")?.precomposed(flipVertical: true), type: .next, viewType: viewType, action: {
                 arguments.openNetworkUsage()
             })
         case let .automaticMediaDownloadHeader(_, text, viewType):

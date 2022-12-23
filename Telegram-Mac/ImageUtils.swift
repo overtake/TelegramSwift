@@ -23,9 +23,9 @@ enum PeerPhoto {
 
 private let capHolder:Atomic<[String : CGImage]> = Atomic(value: [:])
 
-private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, representation: TelegramMediaImageRepresentation?, message: Message? = nil, displayLetters: [String], font: NSFont, scale: CGFloat, genCap: Bool, synchronousLoad: Bool) -> Signal<(CGImage?, Bool), NoError> {
+private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, representation: TelegramMediaImageRepresentation?, message: Message? = nil, displayLetters: [String], font: NSFont, scale: CGFloat, genCap: Bool, synchronousLoad: Bool, disableForum: Bool = false) -> Signal<(CGImage?, Bool), NoError> {
     
-    let isForum: Bool = peer.isForum
+    let isForum: Bool = peer.isForum && !disableForum
     
     if let representation = representation {
         return cachedPeerPhoto(peer.id, representation: representation, size: displayDimensions, scale: scale, isForum: isForum) |> mapToSignal { cached -> Signal<(CGImage?, Bool), NoError> in
@@ -62,11 +62,11 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
                                        
                                        let fetchedDataDisposable: Disposable
                                        if let message = message, message.author?.id == peer.id {
-                                            fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.messageAuthorAvatar(message: MessageReference(message), resource: representation.resource), statsCategory: .image).start()
+                                           fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .avatar, reference: MediaResourceReference.messageAuthorAvatar(message: MessageReference(message), resource: representation.resource), statsCategory: .image).start()
                                         } else if let reference = PeerReference(peer) {
-                                           fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.avatar(peer: reference, resource: representation.resource), statsCategory: .image).start()
+                                            fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .avatar, reference: MediaResourceReference.avatar(peer: reference, resource: representation.resource), statsCategory: .image).start()
                                        } else {
-                                           fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: representation.resource), statsCategory: .image).start()
+                                           fetchedDataDisposable = fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .avatar, reference: MediaResourceReference.standalone(resource: representation.resource), statsCategory: .image).start()
                                        }
                                        return ActionDisposable {
                                            resourceDataDisposable.dispose()
@@ -181,11 +181,11 @@ private func peerImage(account: Account, peer: Peer, displayDimensions: NSSize, 
     }
 }
 
-func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0, font:NSFont = .medium(17), genCap: Bool = true, synchronousLoad: Bool = false) -> Signal<(CGImage?, Bool), NoError> {
+func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSize = CGSize(width: 60.0, height: 60.0), scale:CGFloat = 1.0, font:NSFont = .medium(17), genCap: Bool = true, synchronousLoad: Bool = false, disableForum: Bool = false) -> Signal<(CGImage?, Bool), NoError> {
    
     switch photo {
     case let .peer(peer, representation, displayLetters, message):
-        return peerImage(account: account, peer: peer, displayDimensions: displayDimensions, representation: representation, message: message, displayLetters: displayLetters, font: font, scale: scale, genCap: genCap, synchronousLoad: synchronousLoad)
+        return peerImage(account: account, peer: peer, displayDimensions: displayDimensions, representation: representation, message: message, displayLetters: displayLetters, font: font, scale: scale, genCap: genCap, synchronousLoad: synchronousLoad, disableForum: disableForum)
     case let .topic(info, isGeneral):
         #if !SHARE
       

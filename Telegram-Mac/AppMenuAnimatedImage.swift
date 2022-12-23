@@ -116,7 +116,7 @@ final class AppMenuAnimatedRemoteImage : LottiePlayerView, AppMenuItemImageDrawa
         super.init(frame: NSMakeRect(0, 0, 18, 18))
         
         if let reference = PeerReference(sticker.bot) {
-            _ = fetchedMediaResource(mediaBox: sticker.context.account.postbox.mediaBox, reference: .media(media: .attachBot(peer: reference, media: sticker.file), resource: sticker.file.resource)).start()
+            _ = fetchedMediaResource(mediaBox: sticker.context.account.postbox.mediaBox, userLocation: .peer(sticker.bot.id), userContentType: .other, reference: .media(media: .attachBot(peer: reference, media: sticker.file), resource: sticker.file.resource)).start()
         }
         
         let signal = sticker.context.account.postbox.mediaBox.resourceData(sticker.file.resource, attemptSynchronously: true) |> deliverOnMainQueue

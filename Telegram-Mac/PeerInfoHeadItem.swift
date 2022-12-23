@@ -492,10 +492,10 @@ class PeerInfoHeadItem: GeneralRowItem {
         if let peer = peer, threadData == nil {
             if let peerReference = PeerReference(peer) {
                 if let largeProfileImage = peer.largeProfileImage {
-                    fetchPeerAvatar.add(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .avatar(peer: peerReference, resource: largeProfileImage.resource)).start())
+                    fetchPeerAvatar.add(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .avatar, reference: .avatar(peer: peerReference, resource: largeProfileImage.resource)).start())
                 }
                 if let smallProfileImage = peer.smallProfileImage {
-                    fetchPeerAvatar.add(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .avatar(peer: peerReference, resource: smallProfileImage.resource)).start())
+                    fetchPeerAvatar.add(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .avatar, reference: .avatar(peer: peerReference, resource: smallProfileImage.resource)).start())
                 }
             }
         }
@@ -1086,8 +1086,14 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                     } else {
                         reference = MediaResourceReference.standalone(resource: file.resource)
                     }
+                    let userLocation: MediaResourceUserLocation
+                    if let id = item.peer?.id {
+                        userLocation = .peer(id)
+                    } else {
+                        userLocation = .other
+                    }
                     
-                    let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, reference: reference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
+                    let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, userLocation: userLocation, userContentType: .avatar, reference: reference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
                     
                     mediaPlayer.actionAtEnd = .loop(nil)
                     

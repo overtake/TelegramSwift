@@ -785,6 +785,8 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             } else {
                 text = strings().chatServiceSuggestedPhoto(authorName)
             }
+        case .attachMenuBotAllowed:
+            text = strings().chatServiceBotWriteAllowed
         }
     }
     return (text, entities, media)

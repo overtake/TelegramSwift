@@ -83,7 +83,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
     init(postbox: Postbox, reference: FileMediaReference, fetchAutomatically: Bool = false) {
         self.reference = reference
         self.postbox = postbox
-        mediaPlayer = MediaPlayer(postbox: postbox, reference: reference.resourceReference(reference.media.resource), streamable: reference.media.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: true, baseRate: FastSettings.playingVideoRate, volume: FastSettings.volumeRate, fetchAutomatically: fetchAutomatically)
+        mediaPlayer = MediaPlayer(postbox: postbox, userLocation: reference.userLocation, userContentType: reference.userContentType, reference: reference.resourceReference(reference.media.resource), streamable: reference.media.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: true, baseRate: FastSettings.playingVideoRate, volume: FastSettings.volumeRate, fetchAutomatically: fetchAutomatically)
         super.init()
         bar = .init(height: 0)
     }
@@ -365,7 +365,7 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
                 guard let `self` = self else {
                     return
                 }
-                let live = (NSEvent.pressedMouseButtons & (1 << 0)) != 0
+            let live = (NSEvent.pressedMouseButtons & (1 << 0)) != 0 && self.genericView.mouseDownIncontrols
                 if let result = result {
                     self.genericView.showScrubblerPreviewIfNeeded(live: live)
                     self.genericView.setCurrentScrubblingState(result, live: live)

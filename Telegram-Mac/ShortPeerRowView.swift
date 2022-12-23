@@ -603,6 +603,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         }
         
         self.updateInteractionType(previousType, item.interactionType, item:item, animated:animated)
+        
         choiceControl?.removeFromSuperview()
         choiceControl = nil
         
@@ -617,7 +618,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             switchView?.stateChanged = item.action
             switchView?.setIsOn(stateback,animated:animated)
             switchView?.isEnabled = item.enabled
-        case let .context(stateback:stateback):
+        case let .context(stateback), let .nextContext(stateback):
             switchView?.removeFromSuperview()
             switchView = nil
             
@@ -633,19 +634,24 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 contextLabel?.removeFromSuperview()
                 contextLabel = nil
             }
-        case let .selectable(stateback: stateback):
+        case let .selectable(stateback):
+            switchView?.removeFromSuperview()
+            switchView = nil
+            contextLabel?.removeFromSuperview()
+            contextLabel = nil
             if stateback {
                 choiceControl = ImageView()
                 choiceControl?.image = #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(item.customTheme?.accentColor ?? theme.colors.accent)
                 choiceControl?.sizeToFit()
                 containerView.addSubview(choiceControl!)
             }
-            
         default:
             switchView?.removeFromSuperview()
             switchView = nil
             contextLabel?.removeFromSuperview()
             contextLabel = nil
+            choiceControl?.removeFromSuperview()
+            choiceControl = nil
             break
         }
         self.image._change(opacity: item.enabled ? 1 : 0.8, animated: animated)
@@ -663,7 +669,11 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             interaction.update({$0.withToggledSelected(item.peerId, peer: item.peer)})
         default:
             if clickCount <= 1 {
-                item.action()
+                if case .nextContext = item.type, let event = NSApp.currentEvent {
+                    showContextMenu(event)
+                } else {
+                    item.action()
+                }
              //   self.focusAnimation(nil)
             }
         }
