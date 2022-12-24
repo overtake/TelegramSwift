@@ -103,7 +103,7 @@ public class PieChartView : Control {
             self.color = color
             self.badge = badge
         }
-        public var stableId: some Hashable {
+        public var stableId: AnyHashable {
             return id
         }
         public static func <(lhs: Item, rhs: Item) -> Bool {
