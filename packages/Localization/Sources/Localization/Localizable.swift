@@ -10657,10 +10657,14 @@ public final class L10n {
   public static var storageUsageClear: String  { return L10n.tr("Localizable", "StorageUsage.Clear") }
   /// Clear
   public static var storageUsageClearDisabled: String  { return L10n.tr("Localizable", "StorageUsage.ClearDisabled") }
+  /// Storage Cleared
+  public static var storageUsageCleared: String  { return L10n.tr("Localizable", "StorageUsage.Cleared") }
   /// Clear All Cache %@
   public static func storageUsageClearFull(_ p1: String) -> String {
     return L10n.tr("Localizable", "StorageUsage.ClearFull", p1)
   }
+  /// Storage Usage
+  public static var storageUsageHeader: String  { return L10n.tr("Localizable", "StorageUsage.Header") }
   /// Keep Media
   public static var storageUsageKeepMedia: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia") }
   /// Avatars
@@ -10681,6 +10685,8 @@ public final class L10n {
   public static var storageUsageCategoryVideos: String  { return L10n.tr("Localizable", "StorageUsage.Category.Videos") }
   /// Media files will be cleared from your disk, but will remain available for re-downloading if necessary.
   public static var storageUsageClearChatInfo: String  { return L10n.tr("Localizable", "StorageUsage.ClearChat.Info") }
+  /// All media can be re-downloaded from the Telegram cloud if you need it again.
+  public static var storageUsageClearedInfo: String  { return L10n.tr("Localizable", "StorageUsage.Cleared.Info") }
   /// Channels
   public static var storageUsageKeepMediaChannels: String  { return L10n.tr("Localizable", "StorageUsage.KeepMedia.Channels") }
   /// Photos, videos and other files from cloud chats that you have **not accessed** during this period will be removed from this device to save disk space.\n\nAll media will stay in the Telegram cloud and can be re-downloaded if you need it again.
@@ -12391,7 +12397,7 @@ public final class L10n {
   }
   /// Install Bot
   public static var webAppInstallBot: String  { return L10n.tr("Localizable", "WebApp.InstallBot") }
-  /// QR Code is not supported on Desktop. Please use mobile app.
+  /// QR Codes for bots are not supported on Desktop. Please use one of Telegram’s mobile apps.
   public static var webAppQrIsNotSupported: String  { return L10n.tr("Localizable", "WebApp.QrIsNotSupported") }
   /// Reload
   public static var webAppReload: String  { return L10n.tr("Localizable", "WebApp.Reload") }

@@ -524,6 +524,7 @@
 		27D6043E2955D75B00588C21 /* StorageUsageBlockController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D6043D2955D75B00588C21 /* StorageUsageBlockController.swift */; };
 		27D604402955ED2C00588C21 /* StorageUsageBlockItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D6043F2955ED2C00588C21 /* StorageUsageBlockItem.swift */; };
 		27D604422955F5AF00588C21 /* StorageUsage_Block_Chats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D604412955F5AF00588C21 /* StorageUsage_Block_Chats.swift */; };
+		27D6044B295732BC00588C21 /* StorageUsageClearedItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D6044A295732BC00588C21 /* StorageUsageClearedItem.swift */; };
 		27D696F0274F8449008A723E /* KeyboardKey in Frameworks */ = {isa = PBXBuildFile; productRef = 27D696EF274F8449008A723E /* KeyboardKey */; };
 		27D696F2274F844D008A723E /* Strings in Frameworks */ = {isa = PBXBuildFile; productRef = 27D696F1274F844D008A723E /* Strings */; };
 		27D696F4274F8451008A723E /* Colors in Frameworks */ = {isa = PBXBuildFile; productRef = 27D696F3274F8451008A723E /* Colors */; };
@@ -1869,6 +1870,7 @@
 		27D6043D2955D75B00588C21 /* StorageUsageBlockController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageUsageBlockController.swift; sourceTree = "<group>"; };
 		27D6043F2955ED2C00588C21 /* StorageUsageBlockItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageUsageBlockItem.swift; sourceTree = "<group>"; };
 		27D604412955F5AF00588C21 /* StorageUsage_Block_Chats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageUsage_Block_Chats.swift; sourceTree = "<group>"; };
+		27D6044A295732BC00588C21 /* StorageUsageClearedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageUsageClearedItem.swift; sourceTree = "<group>"; };
 		27D696EC274F7A17008A723E /* Colors */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Colors; path = packages/Colors; sourceTree = "<group>"; };
 		27D696ED274F7AA2008A723E /* Strings */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Strings; path = packages/Strings; sourceTree = "<group>"; };
 		27D696EE274F8108008A723E /* KeyboardKey */ = {isa = PBXFileReference; lastKnownFileType = folder; name = KeyboardKey; path = packages/KeyboardKey; sourceTree = "<group>"; };
@@ -3393,6 +3395,7 @@
 				27D6043D2955D75B00588C21 /* StorageUsageBlockController.swift */,
 				27D6043F2955ED2C00588C21 /* StorageUsageBlockItem.swift */,
 				27D604412955F5AF00588C21 /* StorageUsage_Block_Chats.swift */,
+				27D6044A295732BC00588C21 /* StorageUsageClearedItem.swift */,
 			);
 			name = usage;
 			sourceTree = "<group>";
@@ -6945,6 +6948,7 @@
 				C2271DCA1DAED681001792B6 /* PresenceStrings.swift in Sources */,
 				D02BD7C5232D204F00D1814A /* ThemeListRowItem.swift in Sources */,
 				C224675D1FA884E300F03E27 /* ChatGroupedItem.swift in Sources */,
+				27D6044B295732BC00588C21 /* StorageUsageClearedItem.swift in Sources */,
 				C2271DD71DAF80D5001792B6 /* PeerMediaController.swift in Sources */,
 				2764A5AA25DFB5B300F9A20D /* ReportDetailsController.swift in Sources */,
 				A7F2830823954EF800742C20 /* CachedInstantPages.swift in Sources */,
