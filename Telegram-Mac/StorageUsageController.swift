@@ -275,6 +275,7 @@ private struct State : Equatable {
     var otherRevealed: Bool
     var unselected:Set<StorageUsageCategory>
     var peerId: PeerId?
+    var cleared: Bool = false
     
     var debug: Bool = false
     
@@ -336,11 +337,18 @@ private func storageUsageControllerEntries(state: State, arguments: Arguments) -
         var viewType: GeneralViewType
     }
     
+    struct TupleUsage : Equatable {
+        let string: String
+        let header: String
+        let progress: CGFloat
+        let viewType: GeneralViewType
+    }
+    
     var pieChart = TuplePieChart(items: [], dynamicString: "...", viewType: .legacy)
     
     var usedBytesCount: Int = 0
     
-    if let stats = state.stats {
+    if let stats = state.stats, !state.cleared && stats.totalCount > 0 {
         
         
         var chartOrder: [StorageUsageCategory] = [
@@ -445,12 +453,7 @@ private func storageUsageControllerEntries(state: State, arguments: Arguments) -
         index += 1
         
         
-        struct TupleUsage : Equatable {
-            let string: String
-            let progress: CGFloat
-            let viewType: GeneralViewType
-        }
-        
+
         
         let usageProgress: CGFloat
         if let _ = state.peerId, let allStats = state.allStats {
@@ -478,14 +481,19 @@ private func storageUsageControllerEntries(state: State, arguments: Arguments) -
                 usageText = strings().storageUsageTelegramUsageText(String(format: "%.02f%%", usageProgress))
             }
         }
-        if usageProgress > 0 {
-            let tupleUsage = TupleUsage(string: usageText, progress: max(0.03, usageProgress / 100.0), viewType: .legacy)
-            
-            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_usage, equatable: .init(tupleUsage), comparable: nil, item: { initialSize, stableId in
-                return StorageUsageHeaderItem(initialSize, stableId: stableId, string: tupleUsage.string, progress: tupleUsage.progress, viewType: tupleUsage.viewType)
-            }))
-            index += 1
+        let usageHeader: String
+        if let peer = state.peer {
+            usageHeader = peer.displayTitle
+        } else {
+            usageHeader = strings().storageUsageHeader
         }
+        
+        let tupleUsage = TupleUsage(string: usageText, header: usageHeader, progress: max(0.03, usageProgress / 100.0), viewType: .legacy)
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_usage, equatable: .init(tupleUsage), comparable: nil, item: { initialSize, stableId in
+            return StorageUsageHeaderItem(initialSize, stableId: stableId, header: tupleUsage.header, string: tupleUsage.string, progress: tupleUsage.progress, viewType: tupleUsage.viewType)
+        }))
+        index += 1
         
         
         entries.append(.sectionId(sectionId, type: .normal))
@@ -569,15 +577,15 @@ private func storageUsageControllerEntries(state: State, arguments: Arguments) -
                     
                     let subAttr: NSAttributedString = .initialize(string: String.prettySized(with: item.categoryData.size), color: theme.colors.grayText, font: .normal(.title))
                     
-                    let canToggle: Bool
-                    let selected = categoryItems.filter { $0.selected }
-                    if selected.count == 1, selected[0].category == item.category {
-                        canToggle = false
-                    } else if item.category == .other {
-                        canToggle = categoryItems.filter { $0.category.isOther }.count != selected.filter { $0.category != .other }.count
-                    } else {
-                        canToggle = true
-                    }
+                    let canToggle: Bool = true
+//                    let selected = categoryItems.filter { $0.selected }
+//                    if selected.count == 1, selected[0].category == item.category {
+//                        canToggle = false
+//                    } else if item.category == .other {
+//                        canToggle = categoryItems.filter { $0.category.isOther }.count != selected.filter { $0.category != .other }.count
+//                    } else {
+//                        canToggle = true
+//                    }
                     
                     return StorageUsageCategoryItem(initialSize, stableId: stableId, category: item.category, name: nameAttr, subString: subAttr, color: item.color, selected: item.selected, itemCategory: item.categoryItem, viewType: item.viewType, action: { action in
                         switch action {
@@ -631,6 +639,25 @@ private func storageUsageControllerEntries(state: State, arguments: Arguments) -
             sectionId += 1
         }
         
+    } else if state.cleared || state.stats == nil || state.stats?.totalCount == 0 {
+        
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_pie_chart, equatable: InputDataEquatable(state.cleared), comparable: nil, item: { initialSize, stableId in
+            return StorageUsageClearedItem(initialSize, stableId: stableId, viewType: .legacy)
+        }))
+        index += 1
+        
+        
+        let tupleUsage = TupleUsage(string: strings().storageUsageClearedInfo, header: strings().storageUsageCleared, progress: 0, viewType: .legacy)
+        
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_usage, equatable: .init(tupleUsage), comparable: nil, item: { initialSize, stableId in
+            return StorageUsageHeaderItem(initialSize, stableId: stableId, header: tupleUsage.header, string: tupleUsage.string, progress: tupleUsage.progress, viewType: tupleUsage.viewType)
+        }))
+        index += 1
+        
+        
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
     }
     
     if state.peerId == nil {
@@ -733,7 +760,7 @@ private func storageUsageControllerEntries(state: State, arguments: Arguments) -
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
         
-        if let allStats = state.allStats, !allStats.peers.isEmpty, let stats = state.stats, stats.totalCount > 0 {
+        if let allStats = state.allStats, !allStats.peers.isEmpty, let stats = state.stats, stats.totalCount > 0 && !state.cleared {
             let sorted = allStats.peers.map { $0.value }.sorted(by: { $0.stats.totalCount > $1.stats.totalCount })
             
             struct TuplePeer : Equatable {
@@ -856,6 +883,12 @@ class StorageUsageController: TableViewController {
             
             _ = context.engine.resources.clearStorage(peerId: stateValue.with { $0.peerId }, categories: categories).start(completed: updateStats)
             
+            let cleared = stateValue.with({ $0.unselected.filter({ $0 != .other }).isEmpty })
+            updateState { current in
+                var current = current
+                current.cleared = cleared
+                return current
+            }
             
         }, exceptions: { category in
             context.bindings.rootNavigation().push(DataStorageExceptions(context: context, category: category))
@@ -971,14 +1004,6 @@ class StorageUsageController: TableViewController {
         actionDisposables.add(transition.start(next: { [weak self] transition in
             self?.genericView.merge(with: transition)
             self?.readyOnce()
-            let peer: Peer? = stateValue.with { current in
-                return current.peer
-            }
-            if let peer = peer {
-                self?.setCenterTitle(peer.displayTitle)
-            } else {
-                self?.setCenterTitle(strings().telegramStorageUsageController)
-            }
         }))
         self.toggleDebug = {
             updateState { current in
@@ -994,7 +1019,9 @@ class StorageUsageController: TableViewController {
     }
     private var toggleDebug:(()->Void)?
     override func returnKeyAction() -> KeyHandlerResult {
+        #if DEBUG
         self.toggleDebug?()
+        #endif
         return super.returnKeyAction()
     }
 }

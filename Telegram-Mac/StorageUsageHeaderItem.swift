@@ -12,10 +12,14 @@ import TGUIKit
 final class StorageUsageHeaderItem : GeneralRowItem {
     let progress: CGFloat
     let textLayout: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, string: String, progress: CGFloat, viewType: GeneralViewType) {
+    let headerLayout: TextViewLayout
+    init(_ initialSize: NSSize, stableId: AnyHashable, header: String, string: String, progress: CGFloat, viewType: GeneralViewType) {
+        
+        self.headerLayout = .init(.initialize(string: header, color: theme.colors.text, font: .medium(.header)), alignment: .center)
+
         
         let attr = NSMutableAttributedString()
-        attr.append(string: string, color: theme.colors.listGrayText, font: .normal(.text))
+        _ = attr.append(string: string, color: theme.colors.listGrayText, font: .normal(.text))
         attr.detectBoldColorInString(with: .medium(.text))
         self.textLayout = .init(attr, alignment: .center)
         self.progress = progress
@@ -26,11 +30,12 @@ final class StorageUsageHeaderItem : GeneralRowItem {
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         self.textLayout.measure(width: width - 60)
+        self.headerLayout.measure(width: width - 60)
         return true
     }
     
     override var height: CGFloat {
-        return 10 + self.textLayout.layoutSize.height + 10
+        return 10 + self.headerLayout.layoutSize.height + 5 + self.textLayout.layoutSize.height + (progress > 0 ? 10 : 0)
     }
     
     override func viewClass() -> AnyClass {
@@ -41,9 +46,11 @@ final class StorageUsageHeaderItem : GeneralRowItem {
 
 private final class StorageUsageHeaderItemView: GeneralRowView {
     private let textView = TextView()
+    private let headerView = TextView()
     private let progressView = LinearProgressControl(progressHeight: 4)
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        addSubview(headerView)
         addSubview(textView)
         addSubview(progressView)
         progressView.roundCorners = true
@@ -53,6 +60,9 @@ private final class StorageUsageHeaderItemView: GeneralRowView {
         
         textView.userInteractionEnabled = false
         textView.isSelectable = false
+        
+        headerView.userInteractionEnabled = false
+        headerView.isSelectable = false
 
     }
     
@@ -62,7 +72,8 @@ private final class StorageUsageHeaderItemView: GeneralRowView {
     
     override func layout() {
         super.layout()
-        textView.centerX(y: 10)
+        headerView.centerX(y: 10)
+        textView.centerX(y: headerView.frame.maxY + 5)
         progressView.centerX(y: textView.frame.maxY + 5)
     }
     
@@ -76,6 +87,11 @@ private final class StorageUsageHeaderItemView: GeneralRowView {
         guard let item = item as? StorageUsageHeaderItem else {
             return
         }
+        
+        headerView.update(item.headerLayout)
+        
+        progressView.isHidden = item.progress == 0
+        
         textView.update(item.textLayout)
         progressView.style = ControlStyle(foregroundColor: theme.colors.accent.withAlphaComponent(0.8), backgroundColor: theme.colors.accent.withAlphaComponent(0.2), highlightColor: .clear)
         progressView.setFrameSize(NSMakeSize(min(textView.frame.width - 40, 260), 4))
