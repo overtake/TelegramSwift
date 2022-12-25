@@ -132,9 +132,9 @@ public func representationFetchRangeForDisplayAtSize(representation: TelegramMed
     return nil
 }
 
-func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference, fullRepresentationSize: CGSize = CGSize(width: 1280.0, height: 1280.0), autoFetchFullSize: Bool = false, tryAdditionalRepresentations: Bool = false, synchronousLoad: Bool = false, secureIdAccessContext: SecureIdAccessContext? = nil, peer: Peer? = nil, useMiniThumbnailIfAvailable: Bool = false) -> Signal<ImageRenderData, NoError> {
+func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference, fullRepresentationSize: CGSize = CGSize(width: 1280.0, height: 1280.0), autoFetchFullSize: Bool = false, tryAdditionalRepresentations: Bool = false, synchronousLoad: Bool = false, secureIdAccessContext: SecureIdAccessContext? = nil, peer: Peer? = nil, useMiniThumbnailIfAvailable: Bool = false, onlyThumbnail: Bool = false) -> Signal<ImageRenderData, NoError> {
     
-    if let progressiveRepresentation = progressiveImageRepresentation(imageReference.media.representations), progressiveRepresentation.progressiveSizes.count > 1 {
+    if let progressiveRepresentation = progressiveImageRepresentation(imageReference.media.representations), progressiveRepresentation.progressiveSizes.count > 1, !onlyThumbnail {
         enum SizeSource {
             case miniThumbnail(data: Data)
             case image(size: Int64)
@@ -246,7 +246,7 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
         let signal = maybeFullSize
             |> take(1)
             |> mapToSignal { maybeData -> Signal<ImageRenderData, NoError> in
-                if maybeData.complete {
+                if maybeData.complete && !onlyThumbnail {
                     let loadedData: Data?
                     if largestRepresentation.resource is EncryptedMediaResource, let secureIdAccessContext = secureIdAccessContext {
                         loadedData = decryptedResourceData(data: maybeData, resource: largestRepresentation.resource, params: secureIdAccessContext)
@@ -346,7 +346,7 @@ func chatMessagePhotoDatas(postbox: Postbox, imageReference: ImageMediaReference
                             if let _ = thumbnailData {
                                 return fullSizeData
                                     |> map { fullSizeData in
-                                        return ImageRenderData(fullSizeData.fullSizeComplete ? nil : thumbnailData, fullSizeData.fullSizeData, fullSizeData.fullSizeComplete)
+                                        return ImageRenderData(thumbnailData, fullSizeData.fullSizeData, fullSizeData.fullSizeComplete)
                                 }
                             } else {
                                 return .single(ImageRenderData(nil, nil, false))
@@ -2622,14 +2622,14 @@ public func filethumb(with url:URL, account:Account, scale:CGFloat) -> Signal<Im
 
 
 
-func chatSecretPhoto(account: Account, imageReference: ImageMediaReference, scale:CGFloat, synchronousLoad: Bool = false) -> Signal<ImageDataTransformation, NoError> {
-    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, synchronousLoad: synchronousLoad)
+func chatSecretPhoto(account: Account, imageReference: ImageMediaReference, scale:CGFloat, synchronousLoad: Bool = false, onlyThumbnail: Bool = true) -> Signal<ImageDataTransformation, NoError> {
+    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, synchronousLoad: synchronousLoad, useMiniThumbnailIfAvailable: true, onlyThumbnail: onlyThumbnail)
     
     return signal |> map { data in
         return ImageDataTransformation(data: data, execute: { arguments, data in
             let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
             
-            let fullSizeData = data.fullSizeData
+            let fullSizeData: Data? = data.fullSizeData
             let thumbnailData = data.thumbnailData
             let fullSizeComplete = data.fullSizeComplete
             
@@ -2646,7 +2646,7 @@ func chatSecretPhoto(account: Account, imageReference: ImageMediaReference, scal
             
             var blurredImage: CGImage?
             
-            if let fullSizeData = fullSizeData {
+            if let fullSizeData = fullSizeData, !onlyThumbnail || thumbnailData == nil {
                 if fullSizeComplete {
                     let options = NSMutableDictionary()
                     options[kCGImageSourceShouldCache as NSString] = false as NSNumber
