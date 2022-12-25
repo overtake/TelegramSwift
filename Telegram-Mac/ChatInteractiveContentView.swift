@@ -149,13 +149,13 @@ final class MediaInkView : Control {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func update(isRevealed: Bool, context: AccountContext, imageReference: ImageMediaReference, size: NSSize, positionFlags: LayoutPositionFlags?) {
+    func update(isRevealed: Bool, context: AccountContext, imageReference: ImageMediaReference, size: NSSize, positionFlags: LayoutPositionFlags?, synchronousLoad: Bool) {
         
         
-        let imageSize = imageReference.media.representationForDisplayAtSize(.init(640, 640))?.dimensions.size ?? size
+        //let imageSize = imageReference.media.representationForDisplayAtSize(.init(640, 640))?.dimensions.size ?? size
         
-        let signal = chatSecretPhoto(account: context.account, imageReference: imageReference, scale: System.backingScale)
-        let arguments = TransformImageArguments.init(corners: .init(), imageSize: size, boundingSize: size, intrinsicInsets: .init())
+        let signal = chatSecretPhoto(account: context.account, imageReference: imageReference, scale: System.backingScale, synchronousLoad: synchronousLoad)
+        let arguments = TransformImageArguments(corners: .init(), imageSize: size, boundingSize: size, intrinsicInsets: .init())
         
         
         self.preview.setSignal(signal: cachedMedia(media: imageReference.media, arguments: arguments, scale: System.backingScale))
@@ -761,7 +761,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                     }
                 }, for: .Click)
                 
-                self.image.layer?.opacity = 0
+               // self.image.layer?.opacity = 0
                 self.autoplayVideoView?.view.layer?.opacity = 0
                 
                 let image: TelegramMediaImage
@@ -776,7 +776,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 let imageReference = parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image)
 
                 
-                current.update(isRevealed: false, context: context, imageReference: imageReference, size: size, positionFlags: positionFlags)
+                current.update(isRevealed: false, context: context, imageReference: imageReference, size: size, positionFlags: positionFlags, synchronousLoad: approximateSynchronousValue)
                 current.frame = size.bounds
             } else if let view = self.inkView {
                 view.userInteractionEnabled = false
