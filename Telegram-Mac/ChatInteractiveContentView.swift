@@ -155,10 +155,19 @@ final class MediaInkView : Control {
         let imageSize = imageReference.media.representationForDisplayAtSize(.init(640, 640))?.dimensions.size ?? size
         
         let signal = chatSecretPhoto(account: context.account, imageReference: imageReference, scale: System.backingScale)
+        let arguments = TransformImageArguments.init(corners: .init(), imageSize: size, boundingSize: size, intrinsicInsets: .init())
         
-        self.preview.setSignal(signal)
         
-        self.preview.set(arguments: TransformImageArguments.init(corners: .init(), imageSize: size, boundingSize: size, intrinsicInsets: .init()))
+        self.preview.setSignal(signal: cachedMedia(media: imageReference.media, arguments: arguments, scale: System.backingScale))
+        
+        if !self.preview.isFullyLoaded {
+            self.preview.setSignal(signal, cacheImage: { result in
+                cacheMedia(result, media: imageReference.media, arguments: arguments, scale: System.backingScale)
+            })
+        }
+        
+        
+        self.preview.set(arguments: arguments)
         
 
         let inkRect = size.bounds.insetBy(dx: -20, dy: -20)

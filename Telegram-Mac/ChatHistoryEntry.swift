@@ -259,6 +259,16 @@ enum ChatHistoryEntry: Identifiable, Comparable {
             return MessageEntryAdditionalData()
         }
     }
+    var isRevealed: Bool {
+        switch self {
+        case let .MessageEntry(_,_,_,_,_,_,data):
+            return data.additionData.isRevealed ?? false
+        case let .groupedPhotos(entries,_):
+            return entries.contains(where: { $0.isRevealed == true })
+        default:
+            return true
+        }
+    }
     
     var stableId: ChatHistoryEntryId {
         switch self {

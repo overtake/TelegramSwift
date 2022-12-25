@@ -202,7 +202,7 @@ class ChatGroupedItem: ChatRowItem {
                     
                     }, showMessage: { [weak self] message in
                         self?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
-                    }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), media: message.effectiveMedia!, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: entry.autoplayMedia, isRevealed: entry.additionalData.isRevealed))
+                    }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), media: message.effectiveMedia!, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: entry.autoplayMedia, isRevealed: entry.isRevealed))
             }
             self.parameters[i].automaticDownloadFunc = { message in
                 return downloadSettings.isDownloable(message)
@@ -297,9 +297,9 @@ class ChatGroupedItem: ChatRowItem {
         }
         switch self.layoutType {
         case .files:
-            let file = self.messages[self.messages.count - 1].effectiveMedia as! TelegramMediaFile
+            let file = self.layout.messages[self.layout.messages.count - 1].effectiveMedia as! TelegramMediaFile
             if file.previewRepresentations.isEmpty {
-                if let parameters = self.parameters[messages.count - 1] as? ChatFileLayoutParameters {
+                if let parameters = self.parameters[layout.messages.count - 1] as? ChatFileLayoutParameters {
                     let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
                     let width = max(parameters.finderLayout.layoutSize.width, parameters.downloadLayout.layoutSize.width, progressMaxWidth) + 50
                     return ChatRowItem.LastLineData(width: width, single: true)
