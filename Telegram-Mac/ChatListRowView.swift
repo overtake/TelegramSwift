@@ -765,7 +765,7 @@ private final class ChatListMediaPreviewView: View {
             
             let imageReference = ImageMediaReference.message(message: MessageReference(message), media: image)
             
-            current.update(isRevealed: false, context: context, imageReference: imageReference, size: size, positionFlags: nil)
+            current.update(isRevealed: false, context: context, imageReference: imageReference, size: size, positionFlags: nil, synchronousLoad: false)
             current.frame = frame
         } else if let view = self.inkView {
             performSubviewRemoval(view, animated: false)

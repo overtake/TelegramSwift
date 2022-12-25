@@ -1871,6 +1871,7 @@
 		27D6043F2955ED2C00588C21 /* StorageUsageBlockItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageUsageBlockItem.swift; sourceTree = "<group>"; };
 		27D604412955F5AF00588C21 /* StorageUsage_Block_Chats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageUsage_Block_Chats.swift; sourceTree = "<group>"; };
 		27D6044A295732BC00588C21 /* StorageUsageClearedItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageUsageClearedItem.swift; sourceTree = "<group>"; };
+		27D6044C2958647000588C21 /* DarwinDirStat */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = DarwinDirStat; path = "submodules/telegram-ios/submodules/Utils/DarwinDirStat"; sourceTree = "<group>"; };
 		27D696EC274F7A17008A723E /* Colors */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Colors; path = packages/Colors; sourceTree = "<group>"; };
 		27D696ED274F7AA2008A723E /* Strings */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Strings; path = packages/Strings; sourceTree = "<group>"; };
 		27D696EE274F8108008A723E /* KeyboardKey */ = {isa = PBXFileReference; lastKnownFileType = folder; name = KeyboardKey; path = packages/KeyboardKey; sourceTree = "<group>"; };
@@ -3453,6 +3454,7 @@
 		27F3B7592739300C00B81F10 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
+				27D6044C2958647000588C21 /* DarwinDirStat */,
 				2738A2D2289C416D00EC1010 /* CurrencyFormat */,
 				27D913082833A1B0007CF40F /* InAppPurchaseManager */,
 				27D912FB28323A50007CF40F /* RangeSet */,

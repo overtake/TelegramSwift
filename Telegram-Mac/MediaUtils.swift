@@ -2623,7 +2623,7 @@ public func filethumb(with url:URL, account:Account, scale:CGFloat) -> Signal<Im
 
 
 func chatSecretPhoto(account: Account, imageReference: ImageMediaReference, scale:CGFloat, synchronousLoad: Bool = false, onlyThumbnail: Bool = true) -> Signal<ImageDataTransformation, NoError> {
-    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, synchronousLoad: synchronousLoad, useMiniThumbnailIfAvailable: true, onlyThumbnail: onlyThumbnail)
+    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, fullRepresentationSize: NSMakeSize(100, 100), synchronousLoad: synchronousLoad, useMiniThumbnailIfAvailable: true, onlyThumbnail: onlyThumbnail)
     
     return signal |> map { data in
         return ImageDataTransformation(data: data, execute: { arguments, data in
