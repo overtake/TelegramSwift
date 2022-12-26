@@ -619,7 +619,11 @@ private func storageUsageControllerEntries(state: State, arguments: Arguments) -
             }.reduce(0, +)
             
             if clearSize > 0 {
-                text = strings().storageUsageClearFull(String.prettySized(with: clearSize))
+                if state.unselected.isEmpty {
+                    text = strings().storageUsageClearFull(String.prettySized(with: clearSize))
+                } else {
+                    text = strings().storageUsageClearPart(String.prettySized(with: clearSize))
+                }
                 enabled = true
             } else {
                 text = strings().storageUsageClearDisabled
@@ -887,6 +891,8 @@ class StorageUsageController: TableViewController {
             updateState { current in
                 var current = current
                 current.cleared = cleared
+                
+                current.unselected = Set()
                 return current
             }
             
@@ -985,7 +991,7 @@ class StorageUsageController: TableViewController {
                 
                 current.ccTask = ccTask
                 current.appearance = appearance
-                current.systemSize = systemSizeGigabytes()
+                current.systemSize = freeSystemGigabytes()
                 return current
             }
         }))
