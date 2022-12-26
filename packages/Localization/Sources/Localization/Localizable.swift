@@ -10663,6 +10663,10 @@ public final class L10n {
   public static func storageUsageClearFull(_ p1: String) -> String {
     return L10n.tr("Localizable", "StorageUsage.ClearFull", p1)
   }
+  /// Clear Selected %@
+  public static func storageUsageClearPart(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StorageUsage.ClearPart", p1)
+  }
   /// Storage Usage
   public static var storageUsageHeader: String  { return L10n.tr("Localizable", "StorageUsage.Header") }
   /// Keep Media
@@ -10735,13 +10739,13 @@ public final class L10n {
   public static var storageUsageLimitNoLimit: String  { return L10n.tr("Localizable", "StorageUsage.Limit.NoLimit") }
   /// Empty
   public static var storageUsageSelectedMediaEmpty: String  { return L10n.tr("Localizable", "StorageUsage.SelectedMedia.Empty") }
-  /// Telegram uses almost nothing of your free disk space.
+  /// Telegram uses less than percent of your free disk space.
   public static var storageUsageTelegramUsageEmpty: String  { return L10n.tr("Localizable", "StorageUsage.TelegramUsage.Empty") }
   /// Telegram uses **%@** of your free disk space.
   public static func storageUsageTelegramUsageText(_ p1: String) -> String {
     return L10n.tr("Localizable", "StorageUsage.TelegramUsage.Text", p1)
   }
-  /// This chat uses almost nothing of your Telegram Cache.
+  /// This chat uses less than percent of your Telegram Cache.
   public static var storageUsageTelegramUsageEmptyPeer: String  { return L10n.tr("Localizable", "StorageUsage.TelegramUsage.Empty.Peer") }
   /// This chat uses **%2$@** of your Telegram Cache.
   public static func storageUsageTelegramUsageTextPeer(_ p1: String) -> String {

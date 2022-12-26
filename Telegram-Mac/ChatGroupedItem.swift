@@ -297,8 +297,7 @@ class ChatGroupedItem: ChatRowItem {
         }
         switch self.layoutType {
         case .files:
-            let file = self.layout.messages[self.layout.messages.count - 1].effectiveMedia as! TelegramMediaFile
-            if file.previewRepresentations.isEmpty {
+            if let file = self.layout.messages.last?.effectiveMedia as? TelegramMediaFile, file.previewRepresentations.isEmpty {
                 if let parameters = self.parameters[layout.messages.count - 1] as? ChatFileLayoutParameters {
                     let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
                     let width = max(parameters.finderLayout.layoutSize.width, parameters.downloadLayout.layoutSize.width, progressMaxWidth) + 50
