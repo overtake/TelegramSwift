@@ -693,6 +693,13 @@ final class MediaPlayerAudioRenderer {
     let audioTimebase: CMTimebase
     
     init(playAndRecord: Bool, forceAudioToSpeaker: Bool, baseRate: Double, volume: Float, updatedRate: @escaping () -> Void, audioPaused: @escaping () -> Void) {
+        
+        // Here we are probably running inside of playerQueue.
+        // For some reason deadlock may occure in case of intensive MediaPlayerAudioRenderer object creation.
+        // Let's wait until `audioPlayerRendererQueue` finish all scheduled jobs,
+        // including "garabage" collection of previous object.
+        audioPlayerRendererQueue.sync{}
+
         var audioClock: CMClock?
         
         var deviceId:AudioDeviceID = AudioDeviceID()
