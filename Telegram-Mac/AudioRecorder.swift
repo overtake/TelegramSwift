@@ -384,6 +384,21 @@ final class ManagedAudioRecorderContext : RecoderContextRenderer {
             buffer.mDataByteSize*=3
         }
         
+        if(sampleRate==24000){
+            let initialBuffer=malloc(Int(buffer.mDataByteSize+1));
+            memcpy(initialBuffer, buffer.mData, Int(buffer.mDataByteSize));
+            buffer.mData=realloc(buffer.mData, Int(buffer.mDataByteSize*2))
+            let values = initialBuffer!.assumingMemoryBound(to: Int16.self)
+            let resampled = buffer.mData!.assumingMemoryBound(to: Int16.self)
+            values[Int(buffer.mDataByteSize/2)]=values[Int(buffer.mDataByteSize/2)-1]
+            for i: Int in 0 ..< Int(buffer.mDataByteSize/2) {
+                resampled[i*2]=values[i]
+                resampled[i*2+1]=values[i]/2+values[i+1]/2
+            }
+            free(initialBuffer)
+            buffer.mDataByteSize*=2
+        }
+
         defer {
             free(buffer.mData)
         }
