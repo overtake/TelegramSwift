@@ -346,7 +346,7 @@ fileprivate func prepareEntries(from:[SelectPeerEntry]?, to:[SelectPeerEntry], c
                 if singleAction != nil {
                     interactionType = .plain
                 } else {
-                    interactionType = .selectable(interactions)
+                    interactionType = .selectable(interactions, side: .right)
                 }
                 
                 let (status, color) = peer.status(context.account)

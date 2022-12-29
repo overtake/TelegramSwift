@@ -1457,8 +1457,8 @@ func chatWebpageSnippetPhotoData(account: Account, imageRefence: ImageMediaRefer
     }
 }
 
-func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReference, scale:CGFloat, small:Bool, synchronousLoad: Bool = false, secureIdAccessContext: SecureIdAccessContext? = nil) -> Signal<ImageDataTransformation, NoError> {
-    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, autoFetchFullSize: true, synchronousLoad: synchronousLoad, secureIdAccessContext: secureIdAccessContext)
+func chatWebpageSnippetPhoto(account: Account, imageReference: ImageMediaReference, scale:CGFloat, small:Bool, synchronousLoad: Bool = false, secureIdAccessContext: SecureIdAccessContext? = nil, autoFetchFullSize: Bool = true) -> Signal<ImageDataTransformation, NoError> {
+    let signal = chatMessagePhotoDatas(postbox: account.postbox, imageReference: imageReference, autoFetchFullSize: autoFetchFullSize, synchronousLoad: synchronousLoad, secureIdAccessContext: secureIdAccessContext)
     return signal |> map { data in
         return ImageDataTransformation(data: data, execute: { arguments, data in
             let context = DrawingContext(size: arguments.drawingSize, scale:scale, clear: true)

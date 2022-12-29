@@ -13,7 +13,7 @@ import TelegramCore
 import ApiCredentials
 import SwiftSignalKit
 
-private final class Arguments {
+final class StorageUsageArguments {
     let context: AccountContext
     let updateKeepMedia: (CacheStorageSettings.PeerStorageCategory, Int32) -> Void
     let updateMediaLimit: (Int32) -> Void
@@ -23,7 +23,10 @@ private final class Arguments {
     let toggleOther:()->Void
     let toggleCategory:(StorageUsageCategory)->Void
     let segmentController:()->StorageUsageBlockController?
-    init(context: AccountContext, updateKeepMedia: @escaping (CacheStorageSettings.PeerStorageCategory, Int32) -> Void, updateMediaLimit: @escaping(Int32)->Void, openPeerMedia: @escaping (PeerId) -> Void, clearAll: @escaping () -> Void, exceptions:@escaping(CacheStorageSettings.PeerStorageCategory)->Void, toggleOther:@escaping()->Void, toggleCategory:@escaping(StorageUsageCategory)->Void, segmentController:@escaping()->StorageUsageBlockController?) {
+    let clearSelected:()->Void
+    let clearPeer:(PeerId)->Void
+    let clearMessage:(Message)->Void
+    init(context: AccountContext, updateKeepMedia: @escaping (CacheStorageSettings.PeerStorageCategory, Int32) -> Void, updateMediaLimit: @escaping(Int32)->Void, openPeerMedia: @escaping (PeerId) -> Void, clearAll: @escaping () -> Void, exceptions:@escaping(CacheStorageSettings.PeerStorageCategory)->Void, toggleOther:@escaping()->Void, toggleCategory:@escaping(StorageUsageCategory)->Void, segmentController:@escaping()->StorageUsageBlockController?, clearSelected:@escaping()->Void, clearPeer:@escaping(PeerId)->Void, clearMessage:@escaping(Message)->Void) {
         self.context = context
         self.updateKeepMedia = updateKeepMedia
         self.openPeerMedia = openPeerMedia
@@ -33,6 +36,9 @@ private final class Arguments {
         self.toggleOther = toggleOther
         self.toggleCategory = toggleCategory
         self.segmentController = segmentController
+        self.clearSelected = clearSelected
+        self.clearPeer = clearPeer
+        self.clearMessage = clearMessage
     }
 }
 
@@ -42,7 +48,9 @@ struct StorageCacheException : Equatable {
 }
 
 func stringForKeepMediaTimeout(_ timeout: Int32) -> String {
-    if timeout <= 7 * 24 * 60 * 60 {
+    if timeout <= 1 * 24 * 60 * 60 {
+        return strings().timerDaysCountable(1)
+    } else if timeout <= 7 * 24 * 60 * 60 {
         return strings().timerWeeksCountable(1)
     } else if timeout <= 1 * 31 * 24 * 60 * 60 {
         return strings().timerMonthsCountable(1)
@@ -123,18 +131,10 @@ enum StorageUsageCategory: Int32 {
             return .misc
         }
     }
-    var isOther: Bool {
-        switch self {
-        case .stickers, .avatars, .misc:
-            return true
-        default:
-            return false
-        }
-    }
 }
 
 extension StorageUsageStats.CategoryKey {
-    var mappedCategory: StorageUsageCategory {
+    var mapped: StorageUsageCategory {
         switch self {
         case .photos:
             return .photos
@@ -251,6 +251,23 @@ extension StorageUsageStats : Equatable {
     public static func ==(lhs: StorageUsageStats, rhs: StorageUsageStats) -> Bool {
         return lhs === rhs
     }
+    
+    var msgIds: Set<EngineMessage.Id> {
+        var ids: [EngineMessage.Id] = []
+        for (_, value) in categories {
+            ids.append(contentsOf: value.messages.map { $0.key })
+        }
+        return Set(ids)
+    }
+    var msgSizes: [EngineMessage.Id : Int64] {
+        var ids: [EngineMessage.Id : Int64] = [:]
+        for (_, value) in categories {
+            for (key, value) in value.messages {
+                ids[key] = value
+            }
+        }
+        return ids
+    }
 }
 extension StorageUsageStats.CategoryData : Equatable {
     public static func ==(lhs: StorageUsageStats.CategoryData, rhs: StorageUsageStats.CategoryData) -> Bool {
@@ -264,12 +281,12 @@ extension StorageUsageStats {
     }
 }
 
-private struct State : Equatable {
+struct StorageUsageUIState : Equatable {
     var cacheSettings: CacheStorageSettings
     var accountSpecificCacheSettings: [StorageCacheException]
     var allStats: AllStorageUsageStats?
     var stats: StorageUsageStats?
-    var ccTask: CCTaskData?
+    var msgSizes: [EngineMessage.Id : Int64] = [:]
     var appearance: Appearance
     var systemSize: UInt64?
     var otherRevealed: Bool
@@ -277,7 +294,38 @@ private struct State : Equatable {
     var peerId: PeerId?
     var cleared: Bool = false
     
-    var debug: Bool = false
+    var ignorePeerIds:Set<PeerId> = Set()
+    var ignoreMsgIds:Set<EngineMessage.Id> = Set()
+
+    var collection: StorageUsageCollection = .peers
+    
+    var effectiveCollection: StorageUsageCollection? {
+        let segments = self.segments
+        if segments.contains(collection) {
+            return collection
+        } else {
+            return segments.first
+        }
+    }
+    var _messages: [EngineMessage.Id: Message] = [:]
+    
+    var messages: [EngineMessage.Id: Message] {
+        get {
+            _messages.filter {
+                !ignoreMsgIds.contains($0.key)
+            }
+        }
+        set {
+            _messages = newValue
+        }
+    }
+    
+    var selectedMessages:Set<EngineMessage.Id> = Set()
+    var selectedPeers: SelectPeerPresentation = SelectPeerPresentation()
+    
+    var editing: Bool = false
+    
+    var debug: Bool = true
     
     var peer: Peer? {
         if let peerId = peerId {
@@ -285,6 +333,176 @@ private struct State : Equatable {
         } else {
             return nil
         }
+    }
+    
+    var peers: [PeerId: AllStorageUsageStats.PeerStats] {
+        if let allStats = allStats {
+            return allStats.peers.filter {
+                !ignorePeerIds.contains($0.key)
+            }
+        }
+        return [:]
+    }
+    
+    func messageList(for tag: StorageUsageCollection) -> [Message] {
+        var list:[Message] = []
+        
+        for (_, message) in messages {
+            if message.effectiveMedia is TelegramMediaImage {
+                switch tag {
+                case .media:
+                    list.append(message)
+                default:
+                    break
+                }
+            }
+            if let file = message.effectiveMedia as? TelegramMediaFile {
+                let type: MediaResourceUserContentType = .init(file: file)
+                switch type {
+                case .file:
+                    switch tag {
+                    case .files:
+                        list.append(message)
+                    default:
+                        break
+                    }
+                case .video:
+                    switch tag {
+                    case .media:
+                        list.append(message)
+                    default:
+                        break
+                    }
+                case .audio:
+                    switch tag {
+                    case .music:
+                        list.append(message)
+                    default:
+                        break
+                    }
+                default:
+                    break
+                }
+            }
+        }
+        return list
+    }
+    
+    var segments: [StorageUsageCollection] {
+        var segments:[StorageUsageCollection] = []
+        
+        if peerId == nil {
+            if !self.peers.isEmpty {
+                segments.append(.peers)
+            }
+        }
+        
+        var hasMedia: Bool = false
+        var hasFiles: Bool = false
+        var hasMusic: Bool = false
+
+        for (_, message) in messages {
+            if message.media.first is TelegramMediaImage {
+                hasMedia = true
+            }
+            if let file = message.media.first as? TelegramMediaFile {
+                let type: MediaResourceUserContentType = .init(file: file)
+                switch type {
+                case .file:
+                    hasFiles = true
+                case .video:
+                    hasMedia = true
+                case .audio:
+                    hasMusic = true
+                default:
+                    break
+                }
+            }
+        }
+        if hasMedia {
+            segments.append(.media)
+        }
+        if hasFiles {
+            segments.append(.files)
+        }
+        if hasMusic {
+            segments.append(.music)
+        }
+        return segments
+    }
+    struct SelectedData {
+        var text: String
+        var enabled: Bool
+        var size: Int64
+    }
+    var selectedData: SelectedData {
+        var data = SelectedData(text: "", enabled: false, size: 0)
+        
+        if let stats = allStats {
+            var size: Int64 = 0
+
+            for id in selectedPeers.selected {
+                if let peer = stats.peers[id] {
+                    size += peer.stats.totalCount
+                    
+                    let intersection = peer.stats.msgIds.subtracting(selectedMessages)
+                    for msgId in intersection {
+                        if let sz = peer.stats.msgSizes[msgId] {
+                            size -= sz
+                        }
+                    }
+                }
+            }
+            for selected in selectedMessages {
+                if let sz = stats.peers[selected.peerId]?.stats.msgSizes[selected] {
+                    size += sz
+                }
+            }
+            
+            if size > 0 {
+                data.text = strings().storageUsageSelectedClearPart(String.prettySized(with: size, round: true))
+                data.enabled = true
+            } else {
+                data.text = strings().storageUsageSelectedClearDisabled
+                data.enabled = false
+            }
+            data.size = size
+        }
+        return data
+    }
+    var hasOther: Bool {
+        if let stats = stats {
+            return stats.categories.count > 4
+        }
+        return false
+    }
+    func isOther(_ category: StorageUsageCategory) -> Bool {
+        if let stats = stats, hasOther {
+            let sorted = stats.categories.sorted(by: { lhs, rhs in
+                return lhs.value.size < rhs.value.size
+            })
+            for (i, sort) in sorted.enumerated() {
+                if sort.key.mapped == category {
+                    if i < 3 {
+                        return true
+                    }
+                }
+            }
+        }
+        
+        return false
+
+
+        /*
+         var isOther: Bool {
+             switch self {
+             case .stickers, .avatars, .misc:
+                 return true
+             default:
+                 return false
+             }
+         }
+         */
     }
 }
 
@@ -302,7 +520,7 @@ private func _id_category(_ hash: Int) -> InputDataIdentifier {
 private func _id_peer(_ id: PeerId) -> InputDataIdentifier {
     return InputDataIdentifier("_id_peer\(id.toInt64())")
 }
-private func storageUsageControllerEntries(state: State, arguments: Arguments) -> [InputDataEntry] {
+private func storageUsageControllerEntries(state: StorageUsageUIState, arguments: StorageUsageArguments) -> [InputDataEntry] {
     var entries: [InputDataEntry] = []
     
     var sectionId:Int32 = 1
@@ -363,12 +581,18 @@ private func storageUsageControllerEntries(state: State, arguments: Arguments) -
             stats.categories[$0.native] != nil
         }
         
-        let otherIndex = chartOrder.firstIndex(where: { $0.isOther })
+        chartOrder = chartOrder.sorted(by: { lhs, rhs in
+            let lhsSize = stats.categories[lhs.native]?.size ?? 0
+            let rhsSize = stats.categories[rhs.native]?.size ?? 0
+            return lhsSize > rhsSize
+        })
+        
+        let otherIndex = chartOrder.firstIndex(where: { state.isOther($0) })
         
         var pieOrder = chartOrder
         
         let otherSize: Int64 = stats.categories.reduce(0, { current, value in
-            if value.key.isOther {
+            if state.isOther(value.key.mapped) {
                 return current + value.value.size
             } else {
                 return current
@@ -378,7 +602,7 @@ private func storageUsageControllerEntries(state: State, arguments: Arguments) -
         if let index = otherIndex, otherSize > 0 {
             pieOrder.insert(.other, at: index)
             if !state.otherRevealed {
-                chartOrder.removeAll(where: { $0.isOther })
+                chartOrder.removeAll(where: { state.isOther($0) })
                 chartOrder.append(.other)
             } else {
                 chartOrder.insert(.other, at: index)
@@ -400,7 +624,7 @@ private func storageUsageControllerEntries(state: State, arguments: Arguments) -
             }
             if state.unselected.contains(key) {
                 size = 0
-            } else if !state.otherRevealed, key.isOther {
+            } else if !state.otherRevealed, state.isOther(key) {
                 size = 0
             } else if state.otherRevealed, key == .other {
                 size = 0
@@ -416,7 +640,7 @@ private func storageUsageControllerEntries(state: State, arguments: Arguments) -
 
         
         if usedBytesCount != 0 {
-            pieChart.dynamicString = String.prettySized(with: items.reduce(0, { $0 + $1.count}))
+            pieChart.dynamicString = String.prettySized(with: items.reduce(0, { $0 + $1.count}), round: true)
             items.append(.init(id: 1000, index: 1000, count: 0, color: theme.colors.listGrayText.withAlphaComponent(0.2), badge: nil))
         } else {
             pieChart.dynamicString = strings().storageUsageSelectedMediaEmpty
@@ -438,7 +662,7 @@ private func storageUsageControllerEntries(state: State, arguments: Arguments) -
                 _ = badge.append(string: "  ")
                 _ = badge.append(string: category.title, color: theme.colors.text, font: .normal(.text))
                 _ = badge.append(string: "  ")
-                _ = badge.append(string: String.prettySized(with: count), color: items[i].color, font: .bold(.text))
+                _ = badge.append(string: String.prettySized(with: count, round: true), color: items[i].color, font: .bold(.text))
                 
                 items[i].badge = badge
             }
@@ -504,7 +728,7 @@ private func storageUsageControllerEntries(state: State, arguments: Arguments) -
         var categoryItems:[TupleCategory] = []
         
         let totalSize: Int64 = stats.categories.filter {
-            !state.unselected.contains($0.key.mappedCategory)
+            !state.unselected.contains($0.key.mapped)
         }.reduce(0, {
             $0 + $1.value.size
         })
@@ -534,7 +758,7 @@ private func storageUsageControllerEntries(state: State, arguments: Arguments) -
                 categoryData = .init(size: total, messages: [:])
                 itemCategory = .basic(hasSub: otherIndex != nil, revealed: state.otherRevealed)
             default:
-                if key.isOther {
+                if state.isOther(key) {
                     itemCategory = .sub
                 } else {
                     itemCategory = .basic(hasSub: false, revealed: false)
@@ -575,18 +799,9 @@ private func storageUsageControllerEntries(state: State, arguments: Arguments) -
                     }
                     
                     
-                    let subAttr: NSAttributedString = .initialize(string: String.prettySized(with: item.categoryData.size), color: theme.colors.grayText, font: .normal(.title))
+                    let subAttr: NSAttributedString = .initialize(string: String.prettySized(with: item.categoryData.size, round: true), color: theme.colors.grayText, font: .normal(.title))
                     
                     let canToggle: Bool = true
-//                    let selected = categoryItems.filter { $0.selected }
-//                    if selected.count == 1, selected[0].category == item.category {
-//                        canToggle = false
-//                    } else if item.category == .other {
-//                        canToggle = categoryItems.filter { $0.category.isOther }.count != selected.filter { $0.category != .other }.count
-//                    } else {
-//                        canToggle = true
-//                    }
-                    
                     return StorageUsageCategoryItem(initialSize, stableId: stableId, category: item.category, name: nameAttr, subString: subAttr, color: item.color, selected: item.selected, itemCategory: item.categoryItem, viewType: item.viewType, action: { action in
                         switch action {
                         case .selection:
@@ -613,16 +828,16 @@ private func storageUsageControllerEntries(state: State, arguments: Arguments) -
             let enabled: Bool
             
             let clearSize = stats.categories.filter {
-                !state.unselected.contains($0.key.mappedCategory)
+                !state.unselected.contains($0.key.mapped)
             }.map {
                 $0.value.size
             }.reduce(0, +)
             
             if clearSize > 0 {
                 if state.unselected.isEmpty {
-                    text = strings().storageUsageClearFull(String.prettySized(with: clearSize))
+                    text = strings().storageUsageClearFull(String.prettySized(with: clearSize, round: true))
                 } else {
-                    text = strings().storageUsageClearPart(String.prettySized(with: clearSize))
+                    text = strings().storageUsageClearPart(String.prettySized(with: clearSize, round: true))
                 }
                 enabled = true
             } else {
@@ -747,68 +962,233 @@ private func storageUsageControllerEntries(state: State, arguments: Arguments) -
         entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().storageUsageKeepMediaDescription1), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
         index += 1
 
-       
-        if state.debug {
-            if let stats = state.stats {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_segments, equatable: .init(stats), comparable: nil, item: { initialSize, stableId in
-                    if let controller = arguments.segmentController() {
-                        return StorageUsageBlockItem(initialSize, stableId: stableId, controller: controller, isVisible: true, viewType: .singleItem)
-                    } else {
-                        return GeneralRowItem(initialSize, stableId: stableId)
-                    }
-                }))
+    }
+    
+    if !state.segments.isEmpty {
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_segments, equatable: nil, comparable: nil, item: { initialSize, stableId in
+            if let controller = arguments.segmentController() {
+                return StorageUsageBlockItem(initialSize, stableId: stableId, controller: controller, isVisible: true, viewType: .singleItem)
+            } else {
+                return GeneralRowItem(initialSize, stableId: stableId)
             }
+        }))
+    }
+    
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
+    if !state.peers.isEmpty, let stats = state.stats, stats.totalCount > 0 && !state.cleared, state.segments.isEmpty, state.peerId == nil {
+        let sorted = state.peers.map { $0.value }.sorted(by: { $0.stats.totalCount > $1.stats.totalCount })
+        
+        struct TuplePeer : Equatable {
+            let peer: PeerEquatable
+            let count: String
+            let viewType: GeneralViewType
+        }
+        var items:[TuplePeer] = []
+        
+        for (i, sort) in sorted.enumerated() {
+            items.append(.init(peer: .init(sort.peer._asPeer()), count: String.prettySized(with: sort.stats.totalCount, round: true), viewType: bestGeneralViewType(sorted, for: i)))
         }
         
+        entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().storageUsageChatsHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
+        index += 1
+        
+        
+        for item in items {
+            entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
+                return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 42, photoSize: NSMakeSize(30, 30), isLookSavedMessage: true, inset: NSEdgeInsets(left: 30, right: 30), generalType: .context(item.count), viewType: item.viewType, action: {
+                    arguments.openPeerMedia(item.peer.peer.id)
+                })
+            }))
+        }
         
         entries.append(.sectionId(sectionId, type: .normal))
         sectionId += 1
-        
-        if let allStats = state.allStats, !allStats.peers.isEmpty, let stats = state.stats, stats.totalCount > 0 && !state.cleared {
-            let sorted = allStats.peers.map { $0.value }.sorted(by: { $0.stats.totalCount > $1.stats.totalCount })
-            
-            struct TuplePeer : Equatable {
-                let peer: PeerEquatable
-                let count: String
-                let viewType: GeneralViewType
-            }
-            var items:[TuplePeer] = []
-            
-            for (i, sort) in sorted.enumerated() {
-                items.append(.init(peer: .init(sort.peer._asPeer()), count: String.prettySized(with: sort.stats.totalCount), viewType: bestGeneralViewType(sorted, for: i)))
-            }
-            
-            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().storageUsageChatsHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
-            index += 1
-            
-            
-            for item in items {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
-                    return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 42, photoSize: NSMakeSize(30, 30), isLookSavedMessage: true, inset: NSEdgeInsets(left: 30, right: 30), generalType: .context(item.count), viewType: item.viewType, action: {
-                        arguments.openPeerMedia(item.peer.peer.id)
-                    })
-                }))
-            }
-            
-            entries.append(.sectionId(sectionId, type: .normal))
-            sectionId += 1
-        }
     }
     
     return entries
 }
 
 
+final class StorageUsageView : View {
+    
+    private class SelectPanel: Control {
+        let button = TitleButton()
+        required init(frame frameRect: NSRect) {
+            super.init(frame: frameRect)
+            border = [.Top]
+            addSubview(button)
+            button.layer?.cornerRadius = 10
+            button.autohighlight = false
+            button.scaleOnClick = true
+            updateLocalizationAndTheme(theme: theme)
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func updateLocalizationAndTheme(theme: PresentationTheme) {
+            super.updateLocalizationAndTheme(theme: theme)
+            backgroundColor = theme.colors.background
+            button.set(background: theme.colors.accent, for: .Normal)
+            button.set(font: .medium(.title), for: .Normal)
+            button.set(color: theme.colors.underSelectedColor, for: .Normal)
+        }
+        
+        func updateText(_ text: String, enabled: Bool) {
+            button.set(text: text, for: .Normal)
+            button.isEnabled = enabled
+            button.sizeToFit(.zero, NSMakeSize(frame.width - 40, 40), thatFit: true)
+        }
+        
+        override func layout() {
+            super.layout()
+            button.frame = NSMakeRect(20, 10, frame.width - 40, 40)
+        }
+    }
+    
+    fileprivate let tableView: TableView
+    private var selectPanel: SelectPanel?
+    required init(frame frameRect: NSRect) {
+        self.tableView = .init(frame: frameRect.size.bounds)
+        super.init(frame: frameRect)
+        addSubview(tableView)
+        tableView.getBackgroundColor = {
+            .clear
+        }
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        self.backgroundColor = theme.colors.listBackground
+    }
+    
+    override func layout() {
+        super.layout()
+        self.updateLayout(size: self.frame.size, transition: .immediate)
+    }
+    
+    func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
+        transition.updateFrame(view: tableView, frame: bounds)
+        if let selectPanel = selectPanel {
+            transition.updateFrame(view: selectPanel, frame: NSMakeRect(0, size.height - selectPanel.frame.height, size.width, selectPanel.frame.height))
+        }
+    }
+    
+    fileprivate func update(_ state: StorageUsageUIState, arguments: StorageUsageArguments, animated: Bool) {
+        
+        
+        if state.editing {
+            let current: SelectPanel
+            if let view = self.selectPanel {
+                current = view
+            } else {
+                current = SelectPanel(frame: NSMakeRect(0, frame.height, frame.width, 60))
+                self.selectPanel = current
+                addSubview(current)
+                
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+                current.button.set(handler: { _ in
+                    arguments.clearSelected()
+                }, for: .Click)
+            }
+            let data = state.selectedData
+            current.updateText(data.text, enabled: data.enabled)
+        } else if let view = self.selectPanel {
+            performSubviewPosRemoval(view, pos: NSMakePoint(0, frame.height), animated: animated)
+            self.selectPanel = nil
+        }
+        
+        let transition: ContainedViewLayoutTransition
+        if animated {
+            transition = .animated(duration: 0.2, curve: .easeInOut)
+        } else {
+            transition = .immediate
+        }
+        updateLayout(size: frame.size, transition: transition)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
 
-
-class StorageUsageController: TableViewController {
+class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
 
     private let peerId: PeerId?
     private var segments: StorageUsageBlockController?
-    init(_ context: AccountContext, peerId: PeerId? = nil) {
+    private let updateMainState:(((StorageUsageUIState)->StorageUsageUIState)->StorageUsageUIState)?
+    init(_ context: AccountContext, peerId: PeerId? = nil, updateMainState:(((StorageUsageUIState)->StorageUsageUIState)->StorageUsageUIState)? = nil) {
+        self.updateMainState = updateMainState
         self.peerId = peerId
         super.init(context)
     }
+    
+    private var doneButton:TitleButton? = nil
+    
+    override func requestUpdateRightBar() {
+        super.requestUpdateRightBar()
+        doneButton?.set(color: theme.colors.accent, for: .Normal)
+        doneButton?.style = navigationButtonStyle
+    }
+    
+    
+    override func getRightBarViewOnce() -> BarView {
+        let back = BarView(70, controller: self)
+       
+//
+        let doneButton = TitleButton()
+        doneButton.set(font: .medium(.text), for: .Normal)
+        doneButton.set(text: strings().navigationEdit, for: .Normal)
+        
+        _ = doneButton.sizeToFit()
+        back.addSubview(doneButton)
+        doneButton.center()
+        
+        self.doneButton = doneButton
+
+        doneButton.set(handler: { [weak self] _ in
+            self?.toggleEditing?()
+        }, for: .Click)
+                       
+        return back
+    }
+    
+    override var enableBack: Bool {
+        return true
+    }
+    
+    private func updateState() {
+        doneButton?.set(font: .medium(.text), for: .Normal)
+        doneButton?.set(text: isSelecting ? strings().navigationDone : strings().navigationEdit, for: .Normal)
+        doneButton?.sizeToFit()
+        doneButton?.isHidden = !canEdit
+    }
+    var canEdit: Bool {
+        if let state = getState?() {
+            if state.peerId != nil {
+                return !state.messages.isEmpty
+            } else {
+                return !state.messages.isEmpty && !state.peers.isEmpty
+            }
+        } else {
+            return false
+        }
+    }
+    var isSelecting: Bool {
+        if let state = getState?() {
+            return state.editing
+        } else {
+            return false
+        }
+    }
+    
+    private var getState:(()->StorageUsageUIState)? = nil
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -821,12 +1201,18 @@ class StorageUsageController: TableViewController {
         actionDisposables.add(clearDisposable)
         
         
-        let initialState = State(cacheSettings: .defaultSettings, accountSpecificCacheSettings: [], appearance: appAppearance, otherRevealed: false, unselected: Set(), peerId: self.peerId)
+        let initialState = StorageUsageUIState(cacheSettings: .defaultSettings, accountSpecificCacheSettings: [], appearance: appAppearance, otherRevealed: false, unselected: Set(), peerId: self.peerId)
         
-        let statePromise = ValuePromise<State>(ignoreRepeated: true)
+        let statePromise = ValuePromise<StorageUsageUIState>(ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
-        let updateState: ((State) -> State) -> Void = { f in
-            statePromise.set(stateValue.modify (f))
+        let updateState: ((StorageUsageUIState) -> StorageUsageUIState) -> StorageUsageUIState = { f in
+            let updated = stateValue.modify (f)
+            statePromise.set(updated)
+            return updated
+        }
+        
+        self.getState = {
+            return stateValue.with { $0 }
         }
         
         
@@ -851,16 +1237,42 @@ class StorageUsageController: TableViewController {
             return cacheSettings
         })
         
+        let scrollup:()->Void = { [weak self] in
+            self?.genericView.tableView.scroll(to: .up(true))
+        }
+        
                 
         let statsPromise = Promise<AllStorageUsageStats?>()
         statsPromise.set(context.engine.resources.collectStorageUsageStats() |> map(Optional.init))
         
+        let updateMainState = self.updateMainState
         
         let updateStats:()->Void = {
-            statsPromise.set(context.engine.resources.collectStorageUsageStats() |> map(Optional.init))
+            DispatchQueue.main.async {
+                let peerId = stateValue.with { $0.peerId }
+                let cleared = stateValue.with { $0.cleared }
+                
+                if let updateMainState = updateMainState {
+                    _ = updateMainState { current in
+                        var current = current
+                        if let peerId = peerId, cleared {
+                            current.ignorePeerIds.insert(peerId)
+                        }
+                        return current
+                    }
+                }
+                
+                statsPromise.set(context.engine.resources.collectStorageUsageStats() |> map(Optional.init))
+                let shouldBack = cleared && peerId != nil
+                if shouldBack {
+                    context.bindings.rootNavigation().back()
+                } else if stateValue.with({ $0.cleared }) {
+                    scrollup()
+                }
+            }
         }
         
-        let arguments = Arguments(context: context, updateKeepMedia: { category, timeout in
+        let arguments = StorageUsageArguments(context: context, updateKeepMedia: { category, timeout in
             let _ = updateCacheStorageSettingsInteractively(accountManager: context.sharedContext.accountManager, { current in
                 var current = current
                 current.categoryStorageTimeout[category] = timeout
@@ -873,39 +1285,57 @@ class StorageUsageController: TableViewController {
                 return current
             }).start()
         }, openPeerMedia: { [weak self] peerId in
-            self?.navigationController?.push(StorageUsageController(context, peerId: peerId))
+            self?.navigationController?.push(StorageUsageController(context, peerId: peerId, updateMainState: updateState))
         }, clearAll: {
             
             let categories: [StorageUsageStats.CategoryKey] = stateValue.with { value in
                 if let stats = value.stats {
                     return stats.categories.map { $0.key }.filter {
-                        !value.unselected.contains($0.mappedCategory)
+                        !value.unselected.contains($0.mapped)
                     }
                 }
                 return []
             }
             
-            _ = context.engine.resources.clearStorage(peerId: stateValue.with { $0.peerId }, categories: categories).start(completed: updateStats)
-            
             let cleared = stateValue.with({ $0.unselected.filter({ $0 != .other }).isEmpty })
-            updateState { current in
-                var current = current
-                current.cleared = cleared
-                
-                current.unselected = Set()
-                return current
+            
+            let clearSize = stateValue.with { state in
+                return state.stats?.categories.filter {
+                    !state.unselected.contains($0.key.mapped)
+                }.map {
+                    $0.value.size
+                }.reduce(0, +) ?? 0
             }
             
+            
+            
+            confirm(for: context.window, information: strings().storageUsageClearConfirmInfo, okTitle: cleared ? strings().storageUsageClearConfirmOKAll : strings().storageUsageClearConfirmOKPart, successHandler: { _ in
+                _ = context.engine.resources.clearStorage(peerId: stateValue.with { $0.peerId }, categories: categories, includeMessages: [], excludeMessages: []).start(completed: updateStats)
+                
+                _ = updateState { current in
+                    var current = current
+                    current.cleared = cleared
+                    current.editing = false
+                    current.selectedPeers = .init()
+                    current.selectedMessages = Set()
+                    current.unselected = Set()
+                    return current
+                }
+                
+                if clearSize > 0 {
+                    showModalText(for: context.window, text: strings().storageUsageClearedText(String.prettySized(with: clearSize, round: true)))
+                }
+            })
         }, exceptions: { category in
             context.bindings.rootNavigation().push(DataStorageExceptions(context: context, category: category))
         }, toggleOther: {
-            updateState { current in
+            _ = updateState { current in
                 var current = current
                 current.otherRevealed = !current.otherRevealed
                 return current
             }
         }, toggleCategory: { category in
-            updateState { current in
+            _ = updateState { current in
                 var current = current
                 
                 if current.unselected.contains(category) {
@@ -926,11 +1356,11 @@ class StorageUsageController: TableViewController {
                         current.unselected.remove(.misc)
                     }
                 default:
-                    if category.isOther {
+                    if current.isOther(category) {
                         if current.unselected.contains(category) {
                             current.unselected.insert(.other)
                         } else {
-                            let contains = current.unselected.contains(where: { $0.isOther })
+                            let contains = current.unselected.contains(where: { current.isOther($0) })
                             if !contains {
                                 current.unselected.remove(.other)
                             }
@@ -941,17 +1371,127 @@ class StorageUsageController: TableViewController {
                 return current
             }
         }, segmentController: { [weak self] in
-            if let segments = self?.segments {
-                return segments
-            } else {
-                let state = stateValue.with { $0 }
-                if let stats = state.stats, let allStats = state.allStats {
-                    let segments = StorageUsageBlockController(context: context, peerId: state.peerId, allStats: allStats, stats: stats)
-                    self?.segments = segments
-                }
-            }
             return self?.segments
+        }, clearSelected: {
+            
+            let messages: [Message] = stateValue.with { state in
+                var messages:[Message] = []
+                for data in state.selectedMessages {
+                    if let message = state.messages[data] {
+                        messages.append(message)
+                    }
+                }
+                return messages
+            }
+            let peerIds: Set<PeerId> = stateValue.with { state in
+                return state.selectedPeers.selected
+            }
+                         
+            let _ = stateValue.with { state in
+                var all_p: Bool = true
+                var all_m: Bool = true
+                if let stats = state.allStats {
+                    if state.peerId == nil {
+                        for (peerId, _) in stats.peers {
+                            if !state.selectedPeers.selected.contains(peerId) {
+                                all_p = false
+                                break
+                            }
+                        }
+                    }
+                    for (key, _) in state.messages {
+                        if !state.selectedMessages.contains(key) {
+                            all_m = false
+                            break
+                        }
+                    }
+                }
+                return all_p && all_m
+            }
+            
+            let clearSize = stateValue.with { $0.selectedData.size }
+            
+            confirm(for: context.window, information: strings().storageUsageClearConfirmInfo, okTitle: strings().storageUsageClearConfirmOKPart, successHandler: { _ in
+                                
+                let includeMessages = messages
+                var excludeMessages:[Message] = []
+                
+                let state = stateValue.with { $0 }
+                for id in peerIds {
+                    if let stats = state.allStats?.peers[id]?.stats {
+                        let intersection = stats.msgIds.subtracting(state.selectedMessages)
+                        for msgId in intersection {
+                            if let message = state.messages[msgId] {
+                                excludeMessages.append(message)
+                            }
+                        }
+                    }
+                }
+                
+                let signal = context.engine.resources.clearStorage(peerIds: peerIds, includeMessages: includeMessages, excludeMessages: excludeMessages)
+                
+                _ = signal.start(completed: updateStats)
+                
+                _ = updateState { current in
+                    var current = current
+                    current.editing = false
+                    current.ignoreMsgIds = current.ignoreMsgIds.union(Set(messages.map { $0.id }))
+                    current.ignorePeerIds = current.ignorePeerIds.union(peerIds)
+                    current.selectedPeers = .init()
+                    current.selectedMessages = Set()
+                    return current
+                }
+                if clearSize > 0 {
+                    showModalText(for: context.window, text: strings().storageUsageClearedText(String.prettySized(with: clearSize, round: true)))
+                }
+            })
+            
+        }, clearPeer: { peerId in
+            confirm(for: context.window, information: strings().storageUsageClearConfirmInfo, okTitle: strings().storageUsageClearConfirmOKAll, successHandler: { _ in
+                
+               _ = context.engine.resources.clearStorage(peerIds: [peerId], includeMessages: [], excludeMessages: []).start(completed: updateStats)
+                
+                let clearSize = stateValue.with {
+                    $0.allStats?.peers[peerId]?.stats.totalCount
+                } ?? 0
+                
+                _ = updateState { current in
+                    var current = current
+                    current.ignorePeerIds.insert(peerId)
+                    return current
+                }
+                if clearSize > 0 {
+                    showModalText(for: context.window, text: strings().storageUsageClearedText(String.prettySized(with: clearSize, round: true)))
+                }
+            })
+
+        }, clearMessage: { message in
+            confirm(for: context.window, information: strings().storageUsageClearConfirmInfo, okTitle: strings().storageUsageClearConfirmOKPart, successHandler: { _ in
+                
+                let msgs = context.engine.resources.clearStorage(messages: [message])
+                
+                _ = msgs.start(completed: updateStats)
+                
+                let clearSize = stateValue.with {
+                    return $0.allStats?.peers[message.id.peerId]?.stats.msgSizes[message.id] ?? 0
+                }
+                
+                _ = updateState { current in
+                    var current = current
+                    current.ignoreMsgIds.insert(message.id)
+                    current.selectedPeers = .init()
+                    return current
+                }
+                if clearSize > 0 {
+                    showModalText(for: context.window, text: strings().storageUsageClearedText(String.prettySized(with: clearSize, round: true)))
+                }
+            })
+
         })
+        
+        let segments = StorageUsageBlockController(context: context, storageArguments: arguments, state: statePromise.get(), updateState: updateState)
+        self.segments = segments
+
         
         let previous:Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value: [])
         
@@ -969,27 +1509,27 @@ class StorageUsageController: TableViewController {
         }
         
         
-        let signal = combineLatest(queue: prepareQueue, cacheSettingsPromise.get(), accountSpecificCacheSettingsAndPeers, statsPromise.get(), context.cacheCleaner.task, appearanceSignal)
+        let signal = combineLatest(queue: prepareQueue, cacheSettingsPromise.get(), accountSpecificCacheSettingsAndPeers, statsPromise.get(), appearanceSignal)
         
         self.onDeinit = {
             actionDisposables.dispose()
         }
         
-        actionDisposables.add(signal.start(next: { cacheSettings, accountSpecificCacheSettings, allStats, ccTask, appearance in
-            updateState { current in
+        actionDisposables.add(signal.start(next: { cacheSettings, accountSpecificCacheSettings, allStats, appearance in
+            _ = updateState { current in
                 var current = current
                 current.cacheSettings = cacheSettings
                 current.accountSpecificCacheSettings = accountSpecificCacheSettings
                 current.allStats = allStats
                 if let allStats = allStats {
                     if let peerId = current.peerId {
-                        current.stats = allStats.peers[peerId]?.stats
+                        current.stats = current.peers[peerId]?.stats
                     } else {
                         current.stats = allStats.totalStats
                     }
+                    current.msgSizes = current.stats?.msgSizes ?? [:]
                 }
                 
-                current.ccTask = ccTask
                 current.appearance = appearance
                 current.systemSize = freeSystemGigabytes()
                 return current
@@ -1007,430 +1547,67 @@ class StorageUsageController: TableViewController {
             return prepareInputDataTransition(left: previous.swap(entries), right: entries, animated: true, searchState: nil, initialSize: initialSize.with { $0 }, arguments: inputArguments, onMainQueue: false)
         } |> deliverOnMainQueue
         
+        let first = Atomic(value: true)
         actionDisposables.add(transition.start(next: { [weak self] transition in
-            self?.genericView.merge(with: transition)
+            self?.genericView.tableView.merge(with: transition)
             self?.readyOnce()
+            self?.updateState()
+            self?.genericView.update(stateValue.with { $0 }, arguments: arguments, animated: transition.animated && !first.swap(false))
         }))
-        self.toggleDebug = {
-            updateState { current in
+        
+        let messages: Signal<[EngineMessage.Id: Message], NoError> = statePromise.get() |> mapToSignal { state in
+            if let stats = state.stats {
+                let selected = stats.categories.map { $0.key }
+                
+                return context.engine.resources.renderStorageUsageStatsMessages(stats: stats, categories: selected, existingMessages: state.messages)
+            } else {
+                return .single([:])
+            }
+        }
+        
+        actionDisposables.add(messages.start(next: { messages in
+            _ = updateState { current in
                 var current = current
-                current.debug = !current.debug
+                current.messages = messages
                 return current
+            }
+        }))
+        
+        self.toggleEditing = { [weak self] in
+            if self?.canEdit == true {
+                _ = updateState { current in
+                    var current = current
+                    current.editing = !current.editing
+                    if !current.editing {
+                        current.selectedMessages = Set()
+                        current.selectedPeers = SelectPeerPresentation()
+                    }
+                    return current
+                }
             }
         }
     }
     
-    override func getRightBarViewOnce() -> BarView {
-        return BarView(40, controller: self)
-    }
-    private var toggleDebug:(()->Void)?
+
+    private var toggleEditing:(()->Void)?
     override func returnKeyAction() -> KeyHandlerResult {
-        #if DEBUG
-        self.toggleDebug?()
-        #endif
+        self.toggleEditing?()
         return super.returnKeyAction()
     }
+    
+    override func escapeKeyAction() -> KeyHandlerResult {
+        if isSelecting {
+            self.toggleEditing?()
+            return .invoked
+        } else {
+            return super.escapeKeyAction()
+        }
+    }
+    
+    override func updateFrame(_ frame: NSRect, transition: ContainedViewLayoutTransition) {
+        super.updateFrame(frame, transition: transition)
+        genericView.updateLayout(size: frame.size, transition: transition)
+    }
+    
 }
 
-
-
-
-//
-//    entries.append(.section(sectionId))
-//    sectionId += 1
-//
-//
-//    //
-//    entries.append(.keepMediaLimitHeader(sectionId, strings().storageUsageLimitHeader, .textTopItem))
-//    entries.append(.keepMediaLimit(sectionId, state.cacheSettings.defaultCacheStorageLimitGigabytes, .singleItem))
-//    entries.append(.keepMediaLimitInfo(sectionId, strings().storageUsageLimitDesc, .textBottomItem))
-//
-//
-//    entries.append(.section(sectionId))
-//    sectionId += 1
-//
-//
-//    if let ccTask = state.ccTask {
-//        entries.append(.ccTaskValue(sectionId, ccTask, .singleItem))
-//        entries.append(.ccTaskValueDesc(sectionId, strings().storageUsageCleaningProcess, .textBottomItem))
-//    } else {
-//
-//        var exists:[PeerId:PeerId] = [:]
-//        if let cacheStats = state.cacheStats, case let .result(stats) = cacheStats {
-//
-//            entries.append(.clearAll(sectionId, !stats.peers.isEmpty, .singleItem))
-//
-//            entries.append(.section(sectionId))
-//            sectionId += 1
-//
-//            var statsByPeerId: [(PeerId, Int64)] = []
-//            for (peerId, categories) in stats.media {
-//                if exists[peerId] == nil {
-//                    var combinedSize: Int64 = 0
-//                    for (_, media) in categories {
-//                        for (_, size) in media {
-//                            combinedSize += size
-//                        }
-//                    }
-//                    statsByPeerId.append((peerId, combinedSize))
-//                    exists[peerId] = peerId
-//                }
-//
-//            }
-//            var index: Int32 = 0
-//
-//            let filtered = statsByPeerId.sorted(by: { $0.1 > $1.1 }).filter { peerId, size -> Bool in
-//                return size >= 32 * 1024 && stats.peers[peerId] != nil && !stats.peers[peerId]!.isSecretChat
-//            }
-//
-//            if !filtered.isEmpty {
-//                entries.append(.peersHeader(sectionId, strings().storageUsageChatsHeader, .textTopItem))
-//            }
-//
-//            for (i, value) in filtered.enumerated() {
-//                let peer = stats.peers[value.0]!
-//                entries.append(.peer(sectionId, index, peer, dataSizeString(Int(value.1), formatting: DataSizeStringFormatting.current), bestGeneralViewType(filtered, for: i)))
-//                index += 1
-//            }
-//        } else {
-//
-//            entries.append(.clearAll(sectionId, true, .singleItem))
-//
-//            entries.append(.section(sectionId))
-//            sectionId += 1
-//
-//            entries.append(.collecting(sectionId, strings().storageUsageCalculating, .singleItem))
-//        }
-//    }
-//
-//
-//    entries.append(.section(sectionId))
-//    sectionId += 1
-//
-//    return entries
-
-
-
-//            let stats = stateValue.with { $0.cacheStats }
-//            if let result = stats, case let .result(stats) = result {
-//                if let categories = stats.media[peerId] {
-//                    showModal(with: ChatStorageManagmentModalController(categories, clear: { sizeIndex in
-//                        let clearCategories = sizeIndex.keys.filter({ sizeIndex[$0]!.0 })
-//
-//                        var clearMediaIds = Set<MediaId>()
-//
-//                        var media = stats.media
-//                        if var categories = media[peerId] {
-//                            for category in clearCategories {
-//                                if let contents = categories[category] {
-//                                    for (mediaId, _) in contents {
-//                                        clearMediaIds.insert(mediaId)
-//                                    }
-//                                }
-//                                categories.removeValue(forKey: category)
-//                            }
-//
-//                            media[peerId] = categories
-//                        }
-//
-//                        var clearResourceIds = Set<MediaResourceId>()
-//                        for id in clearMediaIds {
-//                            if let ids = stats.mediaResourceIds[id] {
-//                                for resourceId in ids {
-//                                    clearResourceIds.insert(resourceId)
-//                                }
-//                            }
-//                        }
-//                        updateState { current in
-//                            var current = current
-//                            current.cacheStats = .result(CacheUsageStats(media: media, mediaResourceIds: stats.mediaResourceIds, peers: stats.peers, otherSize: stats.otherSize, otherPaths: stats.otherPaths, cacheSize: stats.cacheSize, tempPaths: stats.tempPaths, tempSize: stats.tempSize, immutableSize: stats.immutableSize))
-//                            return current
-//                        }
-//                        clearDisposable.set(context.engine.resources.clearCachedMediaResources(mediaResourceIds: clearResourceIds).start())
-//                    }), for: context.window)
-//                }
-//            }
-
-
-//            confirm(for: context.window, information: strings().storageClearAllConfirmDescription, okTitle: strings().storageClearAll, successHandler: { _ in
-//                context.cacheCleaner.run()
-//                updateState { current in
-//                    var current = current
-//                    current.cacheStats = CacheUsageStatsResult.result(.init(media: [:], mediaResourceIds: [:], peers: [:], otherSize: 0, otherPaths: [], cacheSize: 0, tempPaths: [], tempSize: 0, immutableSize: 0))
-//                    return current
-//                }
-//            })
-
-
-/*
- 
- private enum StorageUsageSection: Int32 {
-     case keepMedia
-     case peers
- }
-
- private enum StorageUsageEntry: TableItemListNodeEntry {
-     case keepMedia(Int32, Int32, CacheStorageSettings.PeerStorageCategory, [StorageCacheException], String, String, GeneralViewType)
-     case keepMediaInfo(Int32, String, GeneralViewType)
-     case keepMediaLimitHeader(Int32, String, GeneralViewType)
-     case keepMediaLimit(Int32, Int32, GeneralViewType)
-     case keepMediaLimitInfo(Int32, String, GeneralViewType)
-     case ccTaskValue(Int32, CCTaskData, GeneralViewType)
-     case ccTaskValueDesc(Int32, String, GeneralViewType)
-     case clearAll(Int32, Bool, GeneralViewType)
-     case collecting(Int32, String, GeneralViewType)
-     case peersHeader(Int32, String, GeneralViewType)
-     case peer(Int32, Int32, Peer, String, GeneralViewType)
-     case section(Int32)
-
-     var stableId: Int64 {
-         switch self {
-         case let .keepMedia(_, index, _, _, _, _, _):
-             return Int64(index)
-         case .keepMediaInfo:
-             return 6
-         case .keepMediaLimitHeader:
-             return 7
-         case .keepMediaLimit:
-             return 8
-         case .keepMediaLimitInfo:
-             return 9
-         case .ccTaskValue:
-             return 10
-         case .ccTaskValueDesc:
-             return 11
-         case .clearAll:
-             return 12
-         case .collecting:
-             return 13
-         case .peersHeader:
-             return 14
-         case let .peer(_, _, peer, _, _):
-             return peer.id.toInt64()
-         case .section(let sectionId):
-             return Int64((sectionId + 1) * 1000 - sectionId)
-         }
-     }
-     
-     var stableIndex: Int32 {
-         switch self {
-         case let .keepMedia(_, index, _, _, _, _, _):
-             return index
-         case .keepMediaInfo:
-             return 5
-         case .keepMediaLimitHeader:
-             return 6
-         case .keepMediaLimit:
-             return 7
-         case .keepMediaLimitInfo:
-             return 8
-         case .ccTaskValue:
-             return 9
-         case .ccTaskValueDesc:
-             return 10
-         case .clearAll:
-             return 11
-         case .collecting:
-             return 12
-         case .peersHeader:
-             return 13
-         case let .peer(_, index, _, _, _):
-             return 14 + index
-         case .section(let sectionId):
-             return (sectionId + 1) * 1000 - sectionId
-         }
-     }
-     
-     var index:Int32 {
-         switch self {
-         case .keepMedia(let sectionId, _, _, _, _, _, _):
-             return (sectionId * 1000) + stableIndex
-         case .keepMediaInfo(let sectionId, _, _):
-             return (sectionId * 1000) + stableIndex
-         case .keepMediaLimitHeader(let sectionId, _, _):
-             return (sectionId * 1000) + stableIndex
-         case .keepMediaLimit(let sectionId, _, _):
-             return (sectionId * 1000) + stableIndex
-         case .keepMediaLimitInfo(let sectionId, _, _):
-             return (sectionId * 1000) + stableIndex
-         case .clearAll(let sectionId, _, _):
-             return (sectionId * 1000) + stableIndex
-         case .ccTaskValue(let sectionId, _, _):
-             return (sectionId * 1000) + stableIndex
-         case .ccTaskValueDesc(let sectionId, _, _):
-             return (sectionId * 1000) + stableIndex
-         case .collecting(let sectionId, _, _):
-             return (sectionId * 1000) + stableIndex
-         case .peersHeader(let sectionId, _, _):
-             return (sectionId * 1000) + stableIndex
-         case let .peer(sectionId, _, _, _, _):
-             return (sectionId * 1000) + stableIndex
-         case .section(let sectionId):
-             return (sectionId + 1) * 1000 - sectionId
-         }
-     }
-     
-     static func ==(lhs: StorageUsageEntry, rhs: StorageUsageEntry) -> Bool {
-         switch lhs {
-         case let .keepMedia(sectionId, index, category, peerIds, text, value, viewType):
-             if case .keepMedia(sectionId, index, category, peerIds, text, value, viewType) = rhs {
-                 return true
-             } else {
-                 return false
-             }
-         case let .keepMediaInfo(sectionId, text, viewType):
-             if case .keepMediaInfo(sectionId, text, viewType) = rhs {
-                 return true
-             } else {
-                 return false
-             }
-         case let .keepMediaLimitHeader(sectionId, value, viewType):
-             if case .keepMediaLimitHeader(sectionId, value, viewType) = rhs {
-                 return true
-             } else {
-                 return false
-             }
-         case let .keepMediaLimit(sectionId, value, viewType):
-             if case .keepMediaLimit(sectionId, value, viewType) = rhs {
-                 return true
-             } else {
-                 return false
-             }
-         case let .keepMediaLimitInfo(sectionId, value, viewType):
-             if case .keepMediaLimitInfo(sectionId, value, viewType) = rhs {
-                 return true
-             } else {
-                 return false
-             }
-         case let .ccTaskValue(sectionId, task, viewType):
-             if case .ccTaskValue(sectionId, task, viewType) = rhs {
-                 return true
-             } else {
-                 return false
-             }
-         case let .ccTaskValueDesc(sectionId, value, viewType):
-             if case .ccTaskValueDesc(sectionId, value, viewType) = rhs {
-                 return true
-             } else {
-                 return false
-             }
-         case let .clearAll(sectionId, enabled, viewType):
-             if case .clearAll(sectionId, enabled, viewType) = rhs {
-                 return true
-             } else {
-                 return false
-             }
-         case let .collecting(sectionId, text, viewType):
-             if case .collecting(sectionId, text, viewType) = rhs {
-                 return true
-             } else {
-                 return false
-             }
-         case let .peersHeader(sectionId, text, viewType):
-             if case .peersHeader(sectionId, text, viewType) = rhs {
-                 return true
-             } else {
-                 return false
-             }
-         case let .section(sectionId):
-             if case .section(sectionId) = rhs {
-                 return true
-             } else {
-                 return false
-             }
-         case let .peer(lhsSectionId, lhsIndex, lhsPeer, lhsValue, lhsViewType):
-             if case let .peer(rhsSectionId, rhsIndex, rhsPeer, rhsValue, rhsViewType) = rhs {
-                 if lhsIndex != rhsIndex {
-                     return false
-                 }
-                 if lhsSectionId != rhsSectionId {
-                     return false
-                 }
-                 if !arePeersEqual(lhsPeer, rhsPeer) {
-                     return false
-                 }
-                 if lhsViewType != rhsViewType {
-                     return false
-                 }
-                 if lhsValue != rhsValue {
-                     return false
-                 }
-                 return true
-             } else {
-                 return false
-             }
-         }
-     }
-     
-     static func <(lhs: StorageUsageEntry, rhs: StorageUsageEntry) -> Bool {
-         return lhs.index < rhs.index
-     }
-     
-     func item(_ arguments: Arguments, initialSize: NSSize) -> TableRowItem {
-         
-         switch self {
-         case let .keepMedia(_, _, category, exceptions, text, value, viewType):
-             var items = [ContextMenuItem(strings().timerDaysCountable(1), handler: {
-                 arguments.updateKeepMedia(category, 1 * 24 * 60 * 60)
-               }), ContextMenuItem(strings().timerWeeksCountable(1), handler: {
-                   arguments.updateKeepMedia(category, 7 * 24 * 60 * 60)
-             }), ContextMenuItem(strings().timerMonthsCountable(1), handler: {
-                 arguments.updateKeepMedia(category, 1 * 31 * 24 * 60 * 60)
-             }), ContextMenuItem(strings().timerForever, handler: {
-                 arguments.updateKeepMedia(category, .max)
-             })]
-             
-             items.append(ContextSeparatorItem())
-             
-             items.append(ContextMenuItem(strings().storageUsageKeepMediaExceptionsCountable(exceptions.count), handler: {
-                 arguments.exceptions(category)
-             }))
-             
-             let icon: CGImage
-             switch category {
-             case .groups:
-                 icon = NSImage(named: "Icon_Colored_Group")!.precomposed(flipVertical: true)
-             case .channels:
-                 icon = NSImage(named: "Icon_Colored_Channel")!.precomposed(flipVertical: true)
-             case .privateChats:
-                 icon = NSImage(named: "Icon_Colored_Private")!.precomposed(flipVertical: true)
-             }
-             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, icon: icon, type: .contextSelector(value, items), viewType: viewType, action: {
-             })
-         case let .keepMediaInfo(_, text, viewType):
-             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
-         case let .keepMediaLimitHeader(_, text, viewType):
-             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
-         case let .keepMediaLimit(_, value, viewType):
-             let values = [5, 16, 32, Int32.max]
-             var value = value
-             if !values.contains(value) {
-                 value = Int32.max
-             }
-             return SelectSizeRowItem(initialSize, stableId: stableId, current: value, sizes: values, hasMarkers: false, titles: ["5GB", "16GB", "32GB", strings().storageUsageLimitNoLimit], viewType: viewType, selectAction: { selected in
-                 arguments.updateMediaLimit(values[selected])
-             })
-         case let .keepMediaLimitInfo(_, text, viewType):
-             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
-         case let .collecting(_, text, viewType):
-             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, alignment: .center, additionLoading: true, viewType: viewType)
-         case let .ccTaskValue(_, task, viewType):
-             return StorageUsageCleanProgressRowItem(initialSize, stableId: stableId, task: task, viewType: viewType)
-         case let .ccTaskValueDesc(_, text, viewType):
-             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
-         case let .clearAll(_, enabled, viewType):
-             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().storageClearAll, type: .next, viewType: viewType, action: {
-                 arguments.clearAll()
-             }, enabled: enabled)
-         case let .peersHeader(_, text, viewType):
-             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
-         case let .peer(_, _, peer, value, viewType):
-             return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, height: 44, photoSize: NSMakeSize(30, 30), isLookSavedMessage: true, inset: NSEdgeInsets(left: 30, right: 30), generalType: .context(value), viewType: viewType, action: {
-                 arguments.openPeerMedia(peer.id)
-             })
-         case .section:
-             return GeneralRowItem(initialSize, height: 30, stableId: stableId, viewType: .separator)
-         }
-     }
- }
- */

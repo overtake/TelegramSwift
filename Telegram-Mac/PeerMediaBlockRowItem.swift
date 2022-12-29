@@ -162,7 +162,9 @@ private final class PeerMediaBlockRowView : TableRowView {
 
                     if item.temporaryHeight != mediaTable.documentSize.height {
                         item.temporaryHeight = max(mediaTable.documentSize.height, table.frame.height)
-                        table.noteHeightOfRow(item.index, false)
+                        if item.index != -1 {
+                            table.noteHeightOfRow(item.index, false)
+                        }
                     }
                     
                     item.controller.view.frame = NSMakeRect(0, max(0, self.frame.minY - table.documentOffset.y), self.frame.width, table.frame.height)

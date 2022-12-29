@@ -437,7 +437,7 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
         let (deleted,inserted,updated) = proccessEntries(from, right: to, { entry -> TableRowItem in
             switch entry {
             case let .plain(peer, _):
-                return ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, height:40, photoSize:NSMakeSize(30,30), isLookSavedMessage: true, inset:NSEdgeInsets(left: 10, right:10), interactionType:.selectable(selectInteraction))
+                return ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, height:40, photoSize:NSMakeSize(30,30), isLookSavedMessage: true, inset:NSEdgeInsets(left: 10, right:10), interactionType:.selectable(selectInteraction, side: .right))
             case .emptySearch:
                 return SearchEmptyRowItem(initialSize, stableId: SelectablePeersEntryStableId.emptySearch)
             }

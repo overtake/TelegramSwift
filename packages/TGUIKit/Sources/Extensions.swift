@@ -1054,20 +1054,20 @@ public extension NSImage {
     }
     
     
-    func precomposed(_ color:NSColor? = nil, bottomColor: NSColor? = nil, flipVertical:Bool = false, flipHorizontal:Bool = false, scale: CGFloat = 2.0) -> CGImage {
+    func precomposed(_ color:NSColor? = nil, bottomColor: NSColor? = nil, flipVertical:Bool = false, flipHorizontal:Bool = false, scale: CGFloat = 2.0, zoom: CGFloat = 1) -> CGImage {
         
-        let drawContext:DrawingContext = DrawingContext(size: self.size, scale: scale, clear: true)
+        let drawContext:DrawingContext = DrawingContext(size: NSMakeSize(size.width * zoom, size.height * zoom), scale: scale, clear: true)
         
         
         let make:(CGContext) -> Void = { [weak self] ctx in
             
             guard let image = self else { return }
             
-            let rect = NSMakeRect(0, 0, drawContext.size.width, drawContext.size.height)
+            let rect = NSMakeRect(0, 0, drawContext.size.width * zoom, drawContext.size.height * zoom)
             ctx.interpolationQuality = .high
             ctx.clear(rect)
             
-            var imageRect:CGRect = NSMakeRect(0, 0, image.size.width, image.size.height)
+            var imageRect:CGRect = NSMakeRect(0, 0, image.size.width * zoom, image.size.height * zoom)
 
             let cimage = image.cgImage(forProposedRect: &imageRect, context: nil, hints: nil)
             

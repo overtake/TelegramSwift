@@ -329,6 +329,8 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
                     controller.add(listener: view)
                 } else if let view = view as? PeerMediaVoiceRowView {
                     controller.add(listener: view)
+                } else if let view = view as? StorageUsageMediaItemView {
+                    controller.add(listener: view)
                 }
                 return true
             })
@@ -540,7 +542,11 @@ class InlineAudioPlayerView: NavigationHeaderView, APDelegate {
         }
         
         if repeatControl.isHidden {
-            volumeControl.centerY(x: playingSpeed.frame.minX - 10 - volumeControl.frame.width)
+            if playingSpeed.isHidden {
+                volumeControl.centerY(x: dismiss.frame.minX - 10 - volumeControl.frame.width)
+            } else {
+                volumeControl.centerY(x: playingSpeed.frame.minX - 10 - volumeControl.frame.width)
+            }
         } else {
             volumeControl.centerY(x: repeatControl.frame.minX - 10 - volumeControl.frame.width)
         }

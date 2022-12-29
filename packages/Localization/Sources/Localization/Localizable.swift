@@ -10659,7 +10659,11 @@ public final class L10n {
   public static var storageUsageClearDisabled: String  { return L10n.tr("Localizable", "StorageUsage.ClearDisabled") }
   /// Storage Cleared
   public static var storageUsageCleared: String  { return L10n.tr("Localizable", "StorageUsage.Cleared") }
-  /// Clear All Cache %@
+  /// %@ freed on your Device!
+  public static func storageUsageClearedText(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StorageUsage.ClearedText", p1)
+  }
+  /// Clear Entire Cache %@
   public static func storageUsageClearFull(_ p1: String) -> String {
     return L10n.tr("Localizable", "StorageUsage.ClearFull", p1)
   }
@@ -10687,6 +10691,12 @@ public final class L10n {
   public static var storageUsageCategoryStickers: String  { return L10n.tr("Localizable", "StorageUsage.Category.Stickers") }
   /// Videos
   public static var storageUsageCategoryVideos: String  { return L10n.tr("Localizable", "StorageUsage.Category.Videos") }
+  /// Media and documents will stay in the cloud and can be re-downloaded if you need them again.
+  public static var storageUsageClearConfirmInfo: String  { return L10n.tr("Localizable", "StorageUsage.Clear.Confirm.Info") }
+  /// Clear Entire Cache
+  public static var storageUsageClearConfirmOKAll: String  { return L10n.tr("Localizable", "StorageUsage.Clear.Confirm.OK.All") }
+  /// Clear Selected
+  public static var storageUsageClearConfirmOKPart: String  { return L10n.tr("Localizable", "StorageUsage.Clear.Confirm.OK.Part") }
   /// Media files will be cleared from your disk, but will remain available for re-downloading if necessary.
   public static var storageUsageClearChatInfo: String  { return L10n.tr("Localizable", "StorageUsage.ClearChat.Info") }
   /// All media can be re-downloaded from the Telegram cloud if you need it again.
@@ -10737,6 +10747,28 @@ public final class L10n {
   public static var storageUsageLimitInfoUpdated: String  { return L10n.tr("Localizable", "StorageUsage.Limit.InfoUpdated") }
   /// No Limit
   public static var storageUsageLimitNoLimit: String  { return L10n.tr("Localizable", "StorageUsage.Limit.NoLimit") }
+  /// File
+  public static var storageUsageMediaFile: String  { return L10n.tr("Localizable", "StorageUsage.Media.File") }
+  /// Photo
+  public static var storageUsageMediaPhoto: String  { return L10n.tr("Localizable", "StorageUsage.Media.Photo") }
+  /// Video
+  public static var storageUsageMediaVideo: String  { return L10n.tr("Localizable", "StorageUsage.Media.Video") }
+  /// Voice Message
+  public static var storageUsageMediaVoice: String  { return L10n.tr("Localizable", "StorageUsage.Media.Voice") }
+  /// Delete
+  public static var storageUsageMessageContextDelete: String  { return L10n.tr("Localizable", "StorageUsage.Message.Context.Delete") }
+  /// Preview
+  public static var storageUsageMessageContextPreview: String  { return L10n.tr("Localizable", "StorageUsage.Message.Context.Preview") }
+  /// Select
+  public static var storageUsageMessageContextSelect: String  { return L10n.tr("Localizable", "StorageUsage.Message.Context.Select") }
+  /// Show Message
+  public static var storageUsageMessageContextShowInChat: String  { return L10n.tr("Localizable", "StorageUsage.Message.Context.ShowInChat") }
+  /// Clear Selected
+  public static var storageUsageSelectedClearDisabled: String  { return L10n.tr("Localizable", "StorageUsage.Selected.ClearDisabled") }
+  /// Clear Selected %@
+  public static func storageUsageSelectedClearPart(_ p1: String) -> String {
+    return L10n.tr("Localizable", "StorageUsage.Selected.ClearPart", p1)
+  }
   /// Empty
   public static var storageUsageSelectedMediaEmpty: String  { return L10n.tr("Localizable", "StorageUsage.SelectedMedia.Empty") }
   /// Telegram uses less than percent of your free disk space.
