@@ -69,15 +69,15 @@ final class SelectPeerPresentation : Equatable {
         return SelectPeerPresentation(selected, peers: peers, limit: limit, someFlagsAsNotice: someFlagsAsNotice, inputQueryResult: inputQueryResult, comment: comment, multipleSelection: multipleSelection)
     }
     
-    func withToggledSelected(_ peerId: PeerId, peer:Peer) -> SelectPeerPresentation {
+    func withToggledSelected(_ peerId: PeerId, peer:Peer, toggle: Bool? = nil) -> SelectPeerPresentation {
         var someFlagsAsNotice: Bool = self.someFlagsAsNotice
         var selectedIds:Set<PeerId> = Set<PeerId>()
         var peers:[PeerId: Peer] = self.peers
         selectedIds.formUnion(selected)
-        if selectedIds.contains(peerId) {
+        if selectedIds.contains(peerId), toggle == nil || toggle == false {
             let _ = selectedIds.remove(peerId)
             peers.removeValue(forKey: peerId)
-        } else {
+        } else if !selectedIds.contains(peerId), toggle == nil || toggle == true {
             if limit == 0 || selected.count < limit {
                 selectedIds.insert(peerId)
                 peers[peerId] = peer
@@ -129,9 +129,13 @@ enum ShortPeerDeletableState : Int {
 }
 
 enum ShortPeerItemInteractionType {
+    enum Side {
+        case left
+        case right
+    }
     case plain
     case deletable(onRemove:(PeerId)->Void, deletable:Bool)
-    case selectable(SelectPeerInteraction)
+    case selectable(SelectPeerInteraction, side: Side)
 }
 
 
@@ -277,7 +281,7 @@ class ShortPeerRowItem: GeneralRowItem {
         
         var addition:CGFloat = 0
         switch interactionType {
-        case .selectable(_):
+        case .selectable:
             addition += 30
         case .deletable:
             addition += 24 + 12

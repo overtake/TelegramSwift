@@ -263,7 +263,7 @@ private extension PeerMediaCollectionMode {
 }
 
 
-private enum StorageUsageCollectionMode : Int32 {
+enum StorageUsageCollection : Int32 {
     case peers
     case media
     case files
@@ -284,173 +284,76 @@ private enum StorageUsageCollectionMode : Int32 {
 }
 
 
-private struct State : Equatable {
-    var tabs: [StorageUsageCollectionMode]
-    var selected: StorageUsageCollectionMode?
-    var editing: Bool
-    var stats: StorageUsageStats
-    var allStats: AllStorageUsageStats
-}
 
-class StorageUsageBlockController: EditableViewController<StorageUsageMediaContainerView>, Notifable {
-   
-    private let peerId: PeerId?
-    private let disposable = MetaDisposable()
-    private let members: ViewController
-    private let tagsList:[StorageUsageCollectionMode] = [.peers, .media, .files, .music]
+class StorageUsageBlockController: TelegramGenericViewController<StorageUsageMediaContainerView> {
    
     
-    private var mode: StorageUsageCollectionMode?
+    private let members: ViewController
+    private let media: ViewController
+    private let files: ViewController
+    private let music: ViewController
+    
+    private var currentController: ViewController?
+
+    private var mode: StorageUsageCollection?
    
-   private var currentTagListIndex: Int {
+    private var currentTagListIndex: Int {
        if let mode = self.mode {
            return Int(mode.rawValue)
        } else {
            return 0
        }
-   }
-   private var interactions:ChatInteraction
-   private let toggleDisposable = MetaDisposable()
-   private var currentController: ViewController?
-    
+    }
+    private let toggleDisposable = MetaDisposable()
+    private let disposable = MetaDisposable()
 
     
-    private let stateValue: Atomic<State>
-    private let statePromise:ValuePromise<State>
-    private func updateState(_ f: (State) -> State) {
-        statePromise.set(stateValue.modify (f))
+    var currentMainTableView:((TableView?, Bool, Bool)->Void)? = nil {
+        didSet {
+            if isLoaded() {
+                currentMainTableView?(genericView.mainTable, false, false)
+            }
+        }
     }
-     
     
-   var currentMainTableView:((TableView?, Bool, Bool)->Void)? = nil {
-       didSet {
-           if isLoaded() {
-               currentMainTableView?(genericView.mainTable, false, false)
-           }
-       }
-   }
+    private let stateSignal:Signal<StorageUsageUIState, NoError>
+    private let updateState:((StorageUsageUIState)->StorageUsageUIState)->StorageUsageUIState
    
-   
-   private let editing: ValuePromise<Bool> = ValuePromise(false, ignoreRepeated: true)
-   override var state:ViewControllerState {
-       didSet {
-           let newValue = state
-           genericView.mainTable?.scroll(to: .up(true), completion: { [weak self] _ in
-               self?.editing.set(newValue == .Edit)
-           })
-       }
-   }
-   
-    init(context: AccountContext, peerId:PeerId?, allStats: AllStorageUsageStats, stats: StorageUsageStats) {
-        self.peerId = peerId
-        self.interactions = .init(chatLocation: .peer(peerId ?? context.peerId), context: context)
-        let initialValue = State(tabs: [.peers], selected: .peers, editing: false, stats: stats, allStats: allStats)
-        self.stateValue = Atomic(value: initialValue)
-        self.statePromise = ValuePromise(initialValue, ignoreRepeated: true)
-        self.members = StorageUsage_Block_Chats(context: context, stats: allStats)
+    init(context: AccountContext, storageArguments: StorageUsageArguments, state: Signal<StorageUsageUIState, NoError>, updateState:@escaping((StorageUsageUIState)->StorageUsageUIState)->StorageUsageUIState) {
+        self.updateState = updateState
+        self.stateSignal = state
+        
+        self.members = StorageUsage_Block_Chats(context: context, storageArguments: storageArguments, state: state, updateState: updateState)
+        self.files = StorageUsage_Block_MediaList(context: context, storageArguments: storageArguments, tag: .files, state: state, updateState: updateState)
+        self.media = StorageUsage_Block_MediaList(context: context, storageArguments: storageArguments, tag: .media, state: state, updateState: updateState)
+        self.music = StorageUsage_Block_MediaList(context: context, storageArguments: storageArguments, tag: .music, state: state, updateState: updateState)
+
         super.init(context)
+        
+        self.navigationController = context.bindings.rootNavigation()
    }
 
    var unableToHide: Bool {
-       return self.state != .Normal || !onTheTop
+       return !onTheTop
    }
    
    override func viewDidAppear(_ animated: Bool) {
        super.viewDidAppear(animated)
-       interactions.add(observer: self)
        
        if let mode = self.mode {
            self.controller(for: mode).viewDidAppear(animated)
        }
-       
-       guard let navigationController = self.navigationController else {
-           return
-       }
-       
-       navigationController.swapNavigationBar(leftView: nil, centerView: self.centerBarView, rightView: nil, animation: .crossfade)
-       navigationController.swapNavigationBar(leftView: nil, centerView: nil, rightView: self.rightBarView, animation: .none)
-
    }
     
-    private var editButton:ImageButton? = nil
-    private var doneButton:TitleButton? = nil
-    
-    override func requestUpdateRightBar() {
-        super.requestUpdateRightBar()
-        editButton?.style = navigationButtonStyle
-        editButton?.set(image: theme.icons.chatActions, for: .Normal)
-        editButton?.set(image: theme.icons.chatActionsActive, for: .Highlight)
-
-        
-        editButton?.setFrameSize(70, 50)
-        editButton?.center()
-        doneButton?.set(color: theme.colors.accent, for: .Normal)
-        doneButton?.style = navigationButtonStyle
-    }
-    
-    
-    override func getRightBarViewOnce() -> BarView {
-        let back = BarView(70, controller: self)
-        let editButton = ImageButton()
-        back.addSubview(editButton)
-        
-        self.editButton = editButton
-//
-        let doneButton = TitleButton()
-        doneButton.set(font: .medium(.text), for: .Normal)
-        doneButton.set(text: strings().navigationDone, for: .Normal)
-        
-        
-        _ = doneButton.sizeToFit()
-        back.addSubview(doneButton)
-        doneButton.center()
-        
-        self.doneButton = doneButton
-
-        
-        doneButton.set(handler: { [weak self] _ in
-            self?.changeState()
-        }, for: .Click)
-        
-        doneButton.isHidden = true
-        
-        
-        editButton.contextMenu = { [weak self] in
-            
-            let mode = self?.mode
-            
-            var items:[ContextMenuItem] = []
-            items.append(ContextMenuItem(strings().chatContextEdit1, handler: { [weak self] in
-                self?.changeState()
-            }, itemImage: MenuAnimation.menu_edit.value))
-            
-            let menu = ContextMenu(betterInside: true)
-            
-            for item in items {
-                menu.addItem(item)
-            }
-            
-            return menu
-        }
-
-        requestUpdateRightBar()
-        return back
-    }
-
    
    override func viewDidDisappear(_ animated: Bool) {
        super.viewDidDisappear(animated)
-       interactions.remove(observer: self)
        
        if let mode = mode {
            let controller = self.controller(for: mode)
            controller.viewDidDisappear(animated)
        }
        
-       if let navigationController = navigationController {
-           navigationController.swapNavigationBar(leftView: nil, centerView: navigationController.controller.centerBarView, rightView: nil, animation: .crossfade)
-           navigationController.swapNavigationBar(leftView: nil, centerView: nil, rightView: navigationController.controller.rightBarView, animation: .none)
-       }
    }
    
    override func viewWillAppear(_ animated: Bool) {
@@ -472,26 +375,6 @@ class StorageUsageBlockController: EditableViewController<StorageUsageMediaConta
        }
    }
    
-   func notify(with value: Any, oldValue: Any, animated: Bool) {
-       if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
-           
-           let context = self.context
-           if value.selectionState != oldValue.selectionState {
-               
-           }
-           
-           if (value.state == .selecting) != (oldValue.state == .selecting) {
-               self.state = value.state == .selecting ? .Edit : .Normal
-               
-               doneButton?.isHidden = value.state != .selecting
-               editButton?.isHidden = value.state == .selecting
-
-               genericView.changeState(selectState: value.state == .selecting, animated: animated)
-           }
-           
-       }
-   }
-   
    
    func isEqual(to other: Notifable) -> Bool {
        if let other = other as? PeerMediaController {
@@ -503,66 +386,62 @@ class StorageUsageBlockController: EditableViewController<StorageUsageMediaConta
    override func viewDidLoad() {
        super.viewDidLoad()
        
-
-       genericView.updateInteraction(interactions)
        
-       let tagsList = self.tagsList
        
        let context = self.context
-       let peerId = self.peerId
        
        
-       
-       let data: Signal<State, NoError> = statePromise.get() |> deliverOnMainQueue |> mapToSignal { [weak self] state in
+       let data: Signal<StorageUsageUIState, NoError> = stateSignal |> deliverOnMainQueue |> mapToSignal { [weak self] state in
            guard let `self` = self else {
                return .complete()
            }
-           if let selected = state.selected {
-               switch selected {
-               case .peers:
-                   if !self.members.isLoaded() {
-                       self.members.loadViewIfNeeded(self.genericView.view.bounds)
-                   }
-                   return self.members.ready.get() |> map { ready in
-                       return state
-                   }
-               default:
-                   return .single(state)
+           var list:[StorageUsageCollection : ViewController] = [:]
+           list[.peers] = self.members
+           list[.files] = self.files
+           list[.media] = self.media
+           list[.music] = self.music
+           
+           if let collection = state.effectiveCollection {
+               let controller = list[collection]!
+               if !controller.isLoaded() {
+                   controller.loadViewIfNeeded(self.genericView.view.bounds)
+               }
+               return controller.ready.get() |> map { ready in
+                   return state
                }
            } else {
-               return .single(state)
+               return .complete()
            }
-       } |> deliverOnMainQueue
+           
+       } |> distinctUntilChanged(isEqual: { lhs, rhs in
+           if lhs.messages != rhs.messages {
+               return false
+           } else if lhs.segments != rhs.segments {
+               return false
+           } else if lhs.collection != rhs.collection {
+               return false
+           } else {
+               return true
+           }
+       }) |> deliverOnMainQueue
        
        let ready = data |> map { _ in return true } |> take(1)
        
        self.ready.set(ready)
        
        genericView.segmentPanelView.segmentControl.didChangeSelectedItem = { [weak self] item in
-           let newMode = StorageUsageCollectionMode(rawValue: item.uniqueId)!
+           let newMode = StorageUsageCollection(rawValue: item.uniqueId)!
            
            if newMode == self?.mode, let mainTable = self?.genericView.mainTable {
                self?.currentMainTableView?(mainTable, true, true)
            }
-           self?.updateState { current in
+           _ = self?.updateState { current in
                var current = current
-               current.selected = newMode
+               current.collection = newMode
                return current
            }
        }
        
-       interactions.forwardMessages = { messageIds in
-       }
-       interactions.focusMessageId = { _, focusMessageId, _ in
-       }
-       interactions.inlineAudioPlayer = { controller in
-       }
-       interactions.openInfo = { (peerId, toChat, postId, action) in
-       }
-       interactions.deleteMessages = { messageIds in
-       }
-       
-
        var first = true
 
        disposable.set(data.start(next: { [weak self] state in
@@ -573,19 +452,18 @@ class StorageUsageBlockController: EditableViewController<StorageUsageMediaConta
            let insets = NSEdgeInsets(left: 10, right: 10, bottom: 2)
            let segmentTheme = ScrollableSegmentTheme(background: .clear, border: .clear, selector: theme.colors.accent, inactiveText: theme.colors.grayText, activeText: theme.colors.accent, textFont: .normal(.title))
            
-           for (i, tab) in state.tabs.enumerated() {
-               items.append(ScrollableSegmentItem(title: tab.title, index: i, uniqueId: tab.rawValue, selected: state.selected == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
+           for (i, tab) in state.segments.enumerated() {
+               items.append(ScrollableSegmentItem(title: tab.title, index: i, uniqueId: tab.rawValue, selected: state.effectiveCollection == tab, insets: insets, icon: nil, theme: segmentTheme, equatable: nil))
            }
            self.genericView.segmentPanelView.segmentControl.updateItems(items, animated: !first)
            
-           if let selected = state.selected {
-               self.toggle(with: selected, animated: !first)
-               
+           if let collection = state.effectiveCollection {
+               self.toggle(with: collection, animated: !first)
            }
            
            first = false
            
-           if state.tabs.isEmpty {
+           if state.segments.isEmpty {
                if self.genericView.superview != nil {
                    self.viewWillDisappear(true)
                    self.genericView.removeFromSuperview()
@@ -601,7 +479,7 @@ class StorageUsageBlockController: EditableViewController<StorageUsageMediaConta
        return nil
    }
    
-   private func applyReadyController(mode: StorageUsageCollectionMode, animated: Bool) {
+   private func applyReadyController(mode: StorageUsageCollection, animated: Bool) {
        genericView.mainTable?.updatedItems = nil
        let oldMode = self.mode
        
@@ -639,18 +517,22 @@ class StorageUsageBlockController: EditableViewController<StorageUsageMediaConta
        }
        self.currentMainTableView?(genericView.mainTable, animated, previous != controller && genericView.segmentPanelView.segmentControl.contains(oldMode?.rawValue ?? -3))
        
-       updateState { current in
-           var current = current
-           current.selected = mode
-           return current
+   }
+   
+   private func controller(for mode: StorageUsageCollection) -> ViewController {
+       switch mode {
+       case .media:
+           return self.media
+       case .music:
+           return self.music
+       case .files:
+           return self.files
+       case .peers:
+           return self.members
        }
    }
    
-   private func controller(for mode: StorageUsageCollectionMode) -> ViewController {
-       return self.members
-   }
-   
-   private func toggle(with mode:StorageUsageCollectionMode, animated:Bool = false) {
+   private func toggle(with mode:StorageUsageCollection, animated:Bool = false) {
        let isUpdated = self.mode != mode
        if isUpdated {
            let controller: ViewController = self.controller(for: mode)
@@ -661,7 +543,7 @@ class StorageUsageBlockController: EditableViewController<StorageUsageMediaConta
                self?.applyReadyController(mode: mode, animated: animated)
            }))
        } else {
-           self.currentMainTableView?(genericView.mainTable, animated, false)
+           self.currentMainTableView?(genericView.mainTable, animated, true)
        }
        self.mode = mode
    }
@@ -674,21 +556,10 @@ class StorageUsageBlockController: EditableViewController<StorageUsageMediaConta
    override func updateLocalizationAndTheme(theme: PresentationTheme) {
        super.updateLocalizationAndTheme(theme: theme)
        
-       
-   }
-   
-   override public func update(with state:ViewControllerState) -> Void {
-       super.update(with:state)
-       interactions.update({state == .Normal ? $0.withoutSelectionState() : $0.withSelectionState()})
    }
    
    override func escapeKeyAction() -> KeyHandlerResult {
-       if interactions.presentation.state == .selecting {
-           interactions.update { $0.withoutSelectionState() }
-           return .invoked
-       } else {
-           return super.escapeKeyAction()
-       }
+       return super.escapeKeyAction()
    }
     
     var onTheTop: Bool {

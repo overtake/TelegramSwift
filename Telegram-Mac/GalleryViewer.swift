@@ -1253,9 +1253,9 @@ class GalleryViewer: NSResponder {
     }
     
     func share(_ control: Control) -> Void {
+        let messages = pager.thumbsControl.items.compactMap { $0.entry.message }
         if let message = self.pager.selectedItem?.entry.message {
-            if message.groupInfo != nil {
-                let messages = pager.thumbsControl.items.compactMap({$0.entry.message})
+            if message.groupInfo != nil, !messages.isEmpty {
                 var items:[ContextMenuItem] = []
                 
                 let thisTitle: String

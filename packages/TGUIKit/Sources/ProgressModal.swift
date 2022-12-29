@@ -307,6 +307,7 @@ private final class TextAndLabelModalView : View {
         let attr = parseMarkdownIntoAttributedString(text, attributes: MarkdownAttributes(body: MarkdownAttributeSet(font: .normal(.text), textColor: .white), bold: MarkdownAttributeSet(font: .bold(.text), textColor: .white), link: MarkdownAttributeSet(font: .normal(.title), textColor: nightAccentPalette.link), linkAttribute: { contents in
             return (NSAttributedString.Key.link.rawValue, contents)
         }))
+        
         let textLayout = TextViewLayout(attr)
         textLayout.interactions = .init(processURL: { contents in
             if let string = contents as? String {
@@ -450,7 +451,7 @@ public func showModalText(for window: Window, text: String, title: String? = nil
 
     let msPerChar: TimeInterval = 60 / 180 / 6
 
-    let showTime = max(min(msPerChar * TimeInterval(words.length), 10), 3.5)
+    let showTime = max(min(msPerChar * TimeInterval(words.length), 10), 5)
 
 
     let signal = Signal<Void, NoError>({ _ -> Disposable in
