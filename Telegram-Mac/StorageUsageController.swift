@@ -1387,27 +1387,27 @@ class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
                 return state.selectedPeers.selected
             }
                          
-            let _ = stateValue.with { state in
-                var all_p: Bool = true
-                var all_m: Bool = true
-                if let stats = state.allStats {
-                    if state.peerId == nil {
-                        for (peerId, _) in stats.peers {
-                            if !state.selectedPeers.selected.contains(peerId) {
-                                all_p = false
-                                break
-                            }
-                        }
-                    }
-                    for (key, _) in state.messages {
-                        if !state.selectedMessages.contains(key) {
-                            all_m = false
-                            break
-                        }
-                    }
-                }
-                return all_p && all_m
-            }
+//            let _ = stateValue.with { state in
+//                var all_p: Bool = true
+//                var all_m: Bool = true
+//                if let stats = state.allStats {
+//                    if state.peerId == nil {
+//                        for (peerId, _) in stats.peers {
+//                            if !state.selectedPeers.selected.contains(peerId) {
+//                                all_p = false
+//                                break
+//                            }
+//                        }
+//                    }
+//                    for (key, _) in state.messages {
+//                        if !state.selectedMessages.contains(key) {
+//                            all_m = false
+//                            break
+//                        }
+//                    }
+//                }
+//                return all_p && all_m
+//            }
             
             let clearSize = stateValue.with { $0.selectedData.size }
             
