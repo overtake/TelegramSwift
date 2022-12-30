@@ -495,7 +495,7 @@ final class ManagedAudioRecorderContext : RecoderContextRenderer {
         
         if(sampleRate == 16000 || sampleRate == 24000) {
             let ratio = UInt32(48000.0 / Float(sampleRate))
-            let initialBuffer=malloc(Int(buffer.mDataByteSize+2));
+            let initialBuffer=malloc(Int(buffer.mDataByteSize+(ratio - 1)));
             memcpy(initialBuffer, buffer.mData, Int(buffer.mDataByteSize));
             buffer.mData=realloc(buffer.mData, Int(buffer.mDataByteSize*ratio))
             let values = initialBuffer!.assumingMemoryBound(to: Int16.self)
