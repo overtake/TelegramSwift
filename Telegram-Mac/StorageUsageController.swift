@@ -154,14 +154,6 @@ extension StorageUsageStats.CategoryKey {
             return .misc
         }
     }
-    var isOther: Bool {
-        switch self {
-        case .stickers, .avatars, .misc:
-            return true
-        default:
-            return false
-        }
-    }
 }
  
 
@@ -769,10 +761,9 @@ private func storageUsageControllerEntries(state: StorageUsageUIState, arguments
             switch key {
             case .other:
                 let total: Int64 = stats.categories.reduce(0, { current, value in
-                    switch value.key {
-                    case .misc, .avatars, .stickers:
+                    if state.isOther(value.key.mapped) {
                         return current + value.value.size
-                    default:
+                    } else {
                         return current
                     }
                 })
@@ -1367,14 +1358,21 @@ class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
                 
                 switch category {
                 case .other:
+                    let all = Set(current.stats?.categories.map {
+                        $0.key.mapped
+                    } ?? [])
                     if current.unselected.contains(.other) {
-                        current.unselected.insert(.stickers)
-                        current.unselected.insert(.avatars)
-                        current.unselected.insert(.misc)
+                        for cat in all {
+                            if current.isOther(cat) {
+                                current.unselected.insert(cat)
+                            }
+                        }
                     } else {
-                        current.unselected.remove(.stickers)
-                        current.unselected.remove(.avatars)
-                        current.unselected.remove(.misc)
+                        for cat in all {
+                            if current.isOther(cat) {
+                                current.unselected.remove(cat)
+                            }
+                        }
                     }
                 default:
                     if current.isOther(category) {
@@ -1518,10 +1516,20 @@ class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
                 if current.hasOther {
                     all.insert(.other)
                 }
-                if current.unselected == all.subtracting([category]) {
+                var others:Set<StorageUsageCategory> = all.filter {
+                    current.isOther($0)
+                }
+                let subtracting = category == .other ? others.union([category]) : [category]
+                
+                if current.unselected == all.subtracting(subtracting) {
                     all = Set()
                 } else if !current.unselected.contains(category) {
                     all.remove(category)
+                    if category == .other {
+                        for cat in others {
+                            all.remove(cat)
+                        }
+                    }
                 }
                 current.unselected = all
                 
