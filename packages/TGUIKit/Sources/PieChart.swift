@@ -183,6 +183,10 @@ public class PieChartView : Control {
         if let index = self.selectedItemIndex(at: point) {
             self.toggleSelected?(self.items[index])
         }
+        if let view = tooltipView {
+            performSubviewRemoval(view, animated: true)
+            self.tooltipView = nil
+        }
     }
         
     required public init?(coder: NSCoder) {
@@ -322,6 +326,7 @@ public class PieChartView : Control {
         
         
         self.animationValues = .init(values: updated, selection: selection, radius: radius, selected: self.animationValues.selected)
+        
         
     }
     
