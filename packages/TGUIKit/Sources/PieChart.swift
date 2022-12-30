@@ -362,6 +362,9 @@ public class PieChartView : Control {
     
     public override func draw(_ layer: CALayer, in ctx: CGContext) {
         
+        guard let window = self.window else {
+            return
+        }
        
         var startAngle: CGFloat = self.initialAngle
         let center = CGPoint(x: bounds.width / 2, y: bounds.height / 2)
@@ -382,12 +385,12 @@ public class PieChartView : Control {
         }
         let total = counts.reduce(0, +)
         
-       
+        let selected = selectedItemIndex(at: self.convert(window.mouseLocationOutsideOfEventStream, from: nil))
         
         for (i, item) in items.enumerated() {
             
             var selectionAnimationFraction: CGFloat = self.animationValues.selection[item.id] ?? 0
-            if items.count == 1 {
+            if items.count == 1, selected == nil  {
                 selectionAnimationFraction = 0
             }
             var radius = min(bounds.width, bounds.height) / 2 - presentation.strokeSize - 8
