@@ -16,7 +16,7 @@ final class SoundEffectPlay {
     private static var queue: [String: MediaPlayer] = [:]
     
     static func play(postbox: Postbox, resource: TelegramMediaResource, volume: Float = 1.0) {
-         let player = MediaPlayer(postbox: postbox, reference: MediaResourceReference.standalone(resource: resource), streamable: false, video: false, preferSoftwareDecoding: false, enableSound: true, volume: volume, fetchAutomatically: true)
+        let player = MediaPlayer(postbox: postbox, userLocation: .other, userContentType: .other, reference: MediaResourceReference.standalone(resource: resource), streamable: false, video: false, preferSoftwareDecoding: false, enableSound: true, volume: volume, fetchAutomatically: true)
         queue[resource.id.stringRepresentation] = player
          player.play()
          player.actionAtEnd = .action({

@@ -459,7 +459,7 @@ func EditThemeController(context: AccountContext, telegramTheme: TelegramTheme, 
 
 func showEditThemeModalController(context: AccountContext, theme telegramTheme: TelegramTheme) {
     if let file = telegramTheme.file, telegramTheme != theme.cloudTheme {
-       let fetchDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: file.resource)).start()
+        let fetchDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .other, reference: MediaResourceReference.standalone(resource: file.resource)).start()
         
         
         let signal = loadCloudPaletteAndWallpaper(context: context, file: file) |> afterDisposed {

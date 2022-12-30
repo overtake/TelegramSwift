@@ -24,14 +24,14 @@ class ChatMediaVideoMessageLayoutParameters : ChatMediaLayoutParameters {
     var transcribe:()->Void = {}
     fileprivate(set) var transcribeData: ChatMediaVoiceLayoutParameters.TranscribeData?
     
-    init(showPlayer:@escaping(APController) -> Void, duration:Int, isMarked:Bool, isWebpage: Bool, resource: TelegramMediaResource, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool, autoplayMedia: AutoplayMediaPreferences) {
+    init(showPlayer:@escaping(APController) -> Void, duration:Int, isMarked:Bool, isWebpage: Bool, resource: TelegramMediaResource, presentation: ChatMediaPresentation, media: Media, automaticDownload: Bool, autoplayMedia: AutoplayMediaPreferences, isRevealed: Bool?) {
         self.showPlayer = showPlayer
         self.duration = duration
         self.isMarked = isMarked
         self.isWebpage = isWebpage
         self.resource = resource
         self.durationLayout = TextViewLayout(NSAttributedString.initialize(string: String.durationTransformed(elapsed: duration), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1, truncationType:.end, alignment: .left)
-        super.init(presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: autoplayMedia)
+        super.init(presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: autoplayMedia, isRevealed: isRevealed)
     }
     
     func duration(for duration:TimeInterval) -> TextViewLayout {

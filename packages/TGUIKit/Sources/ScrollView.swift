@@ -43,7 +43,7 @@ open class ScrollView: NSScrollView{
     
     open override var translatesAutoresizingMaskIntoConstraints: Bool {
         get {
-            return true
+            return false
         }
         set {
 

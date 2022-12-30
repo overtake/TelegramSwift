@@ -95,7 +95,7 @@ class ChatMediaVoiceLayoutParameters : ChatMediaLayoutParameters {
         self.isWebpage = isWebpage
         self.resource = resource
         durationLayout = TextViewLayout(NSAttributedString.initialize(string: String.durationTransformed(elapsed: duration), color: presentation.grayText, font: .normal(.text)), maximumNumberOfLines: 1, truncationType:.end, alignment: .left)
-        super.init(presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: AutoplayMediaPreferences.defaultSettings)
+        super.init(presentation: presentation, media: media, automaticDownload: automaticDownload, autoplayMedia: AutoplayMediaPreferences.defaultSettings, isRevealed: nil)
     }
     
     func duration(for duration:TimeInterval) -> TextViewLayout {

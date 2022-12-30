@@ -122,7 +122,7 @@ class Sender: NSObject {
                     if CGImageDestinationFinalize(colorDestination) {
                         let resource = LocalFileMediaResource(fileId: arc4random64(), isSecretRelated: isSecretRelated)
                         account.postbox.mediaBox.storeResourceData(resource.id, data: mutableData as Data)
-                        preview.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                        preview.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                     }
                 }
             }
@@ -152,7 +152,7 @@ class Sender: NSObject {
                         if CGImageDestinationFinalize(colorDestination) {
                             let resource = LocalFileMediaResource(fileId: arc4random64(), isSecretRelated: isSecretRelated)
                             account.postbox.mediaBox.storeResourceData(resource.id, data: mutableData as Data)
-                            preview.append(TelegramMediaImageRepresentation(dimensions: image.size.pixel, resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                            preview.append(TelegramMediaImageRepresentation(dimensions: image.size.pixel, resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                         }
                     }
                 }
@@ -332,7 +332,7 @@ class Sender: NSObject {
                                 let scaledSize = size.fitted(CGSize(width: 1280.0, height: 1280.0))
                                 let resource = LocalFileReferenceMediaResource(localFilePath:path,randomId:randomId, isUniquelyReferencedTemporaryFile: true)
                                 
-                                media = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.LocalImage, id: randomId), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(scaledSize), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                                media = TelegramMediaImage(imageId: MediaId(namespace: Namespaces.Media.LocalImage, id: randomId), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(scaledSize), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
                             }
                             
                         } else {
@@ -502,7 +502,7 @@ class Sender: NSObject {
         return enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: contact.firstName ?? "", lastName: contact.lastName ?? "", phoneNumber: contact.phone ?? "", peerId: contact.id, vCardData: nil)), replyToMessageId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])])
     }
     
-    public static func enqueue(media:[MediaSenderContainer], context: AccountContext, peerId:PeerId, replyId: MessageId?, silent: Bool = false, atDate:Date? = nil, sendAsPeerId:PeerId? = nil, query: String? = nil) ->Signal<[MessageId?], NoError> {
+    public static func enqueue(media:[MediaSenderContainer], context: AccountContext, peerId:PeerId, replyId: MessageId?, silent: Bool = false, atDate:Date? = nil, sendAsPeerId:PeerId? = nil, query: String? = nil, isSpoiler: Bool = false) ->Signal<[MessageId?], NoError> {
         var senders:[Signal<[MessageId?], NoError>] = []
         
         
@@ -518,6 +518,10 @@ class Sender: NSObject {
         }
         if let query = query, !query.isEmpty {
             attributes.append(EmojiSearchQueryMessageAttribute(query: query))
+        }
+        
+        if isSpoiler {
+            attributes.append(MediaSpoilerMessageAttribute())
         }
         
         
@@ -542,7 +546,7 @@ class Sender: NSObject {
         return enqueue(media: [media], caption: ChatTextInputState(), context: context, peerId: peerId, replyId: replyId, silent: silent, atDate: atDate, query: query, collectionId: collectionId)
     }
     
-    public static func enqueue(media:[Media], caption: ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:MessageId?, isCollage: Bool = false, additionText: ChatTextInputState? = nil, silent: Bool = false, atDate: Date? = nil, sendAsPeerId: PeerId? = nil, query: String? = nil, collectionId: ItemCollectionId? = nil) ->Signal<[MessageId?],NoError> {
+    public static func enqueue(media:[Media], caption: ChatTextInputState, context: AccountContext, peerId:PeerId, replyId:MessageId?, isCollage: Bool = false, additionText: ChatTextInputState? = nil, silent: Bool = false, atDate: Date? = nil, sendAsPeerId: PeerId? = nil, query: String? = nil, collectionId: ItemCollectionId? = nil, isSpoiler: Bool = false) ->Signal<[MessageId?],NoError> {
         
         
         let parsingUrlType: ParsingType
@@ -565,6 +569,9 @@ class Sender: NSObject {
         }
         if let query = query, !query.isEmpty {
             attributes.append(EmojiSearchQueryMessageAttribute(query: query))
+        }
+        if isSpoiler {
+            attributes.append(MediaSpoilerMessageAttribute())
         }
                 
         let localGroupingKey = isCollage ? arc4random64() : nil

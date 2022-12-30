@@ -15,6 +15,128 @@ import AVFoundation
 import TelegramCore
 
 
+private final class CustomAudioConverter {
+    struct Format: Equatable {
+        let numChannels: Int
+        let sampleRate: Int
+    }
+
+    let format: Format
+
+    var asbd: AudioStreamBasicDescription
+    var currentBuffer: AudioBuffer?
+    var currentBufferOffset: UInt32 = 0
+
+    init(asbd: AudioStreamBasicDescription) {
+        self.asbd = asbd
+        self.format = Format(
+            numChannels: Int(asbd.mChannelsPerFrame),
+            sampleRate: Int(asbd.mSampleRate)
+        )
+    }
+
+    func convert(buffer: AudioBuffer) -> Data? {
+                
+        var bufferList = AudioBufferList(mNumberBuffers: 1, mBuffers: buffer)
+
+        
+
+        let size = bufferList.mBuffers.mDataByteSize
+        guard size != 0, let mData = bufferList.mBuffers.mData else {
+            return nil
+        }
+
+        var outputDescription = AudioStreamBasicDescription(
+            mSampleRate: 48000.0,
+            mFormatID: kAudioFormatLinearPCM,
+            mFormatFlags: kAudioFormatFlagIsSignedInteger | kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked,
+            mBytesPerPacket: 2,
+            mFramesPerPacket: 1,
+            mBytesPerFrame: 2,
+            mChannelsPerFrame: 1,
+            mBitsPerChannel: 16,
+            mReserved: 0
+        )
+        var maybeAudioConverter: AudioConverterRef?
+        let _ = AudioConverterNew(&asbd, &outputDescription, &maybeAudioConverter)
+        guard let audioConverter = maybeAudioConverter else {
+            return nil
+        }
+        
+        self.currentBuffer = AudioBuffer(
+            mNumberChannels: asbd.mChannelsPerFrame,
+            mDataByteSize: UInt32(size),
+            mData: mData
+        )
+        self.currentBufferOffset = 0
+
+        var numPackets: UInt32?
+        let outputSize = 32768 * 2
+        var outputBuffer = Data(count: outputSize)
+        outputBuffer.withUnsafeMutableBytes { (outputBytes: UnsafeMutableRawBufferPointer) -> Void in
+            var outputBufferList = AudioBufferList()
+            outputBufferList.mNumberBuffers = 1
+            outputBufferList.mBuffers.mNumberChannels = outputDescription.mChannelsPerFrame
+            outputBufferList.mBuffers.mDataByteSize = UInt32(outputSize)
+            outputBufferList.mBuffers.mData = outputBytes.baseAddress!
+
+            var outputDataPacketSize = UInt32(outputSize) / outputDescription.mBytesPerPacket
+
+            let result = AudioConverterFillComplexBuffer(
+                audioConverter,
+                converterComplexInputDataProc,
+                Unmanaged.passUnretained(self).toOpaque(),
+                &outputDataPacketSize,
+                &outputBufferList,
+                nil
+            )
+            if result == noErr {
+                numPackets = outputDataPacketSize
+            }
+        }
+
+        AudioConverterDispose(audioConverter)
+
+        if let numPackets = numPackets {
+            outputBuffer.count = Int(numPackets * outputDescription.mBytesPerPacket)
+            return outputBuffer
+        } else {
+            return nil
+        }
+    }
+}
+
+
+
+private func converterComplexInputDataProc(inAudioConverter: AudioConverterRef, ioNumberDataPackets: UnsafeMutablePointer<UInt32>, ioData: UnsafeMutablePointer<AudioBufferList>, ioDataPacketDescription: UnsafeMutablePointer<UnsafeMutablePointer<AudioStreamPacketDescription>?>?, inUserData: UnsafeMutableRawPointer?) -> Int32 {
+    guard let inUserData = inUserData else {
+        ioNumberDataPackets.pointee = 0
+        return 0
+    }
+    let instance = Unmanaged<CustomAudioConverter>.fromOpaque(inUserData).takeUnretainedValue()
+    guard let currentBuffer = instance.currentBuffer else {
+        ioNumberDataPackets.pointee = 0
+        return 0
+    }
+    let currentInputDescription = instance.asbd
+
+    let numPacketsInBuffer = currentBuffer.mDataByteSize / currentInputDescription.mBytesPerPacket
+    let numPacketsAvailable = numPacketsInBuffer - instance.currentBufferOffset / currentInputDescription.mBytesPerPacket
+
+    let numPacketsToRead = min(ioNumberDataPackets.pointee, numPacketsAvailable)
+    ioNumberDataPackets.pointee = numPacketsToRead
+
+    ioData.pointee.mNumberBuffers = 1
+    ioData.pointee.mBuffers.mData = currentBuffer.mData?.advanced(by: Int(instance.currentBufferOffset))
+    ioData.pointee.mBuffers.mDataByteSize = currentBuffer.mDataByteSize - instance.currentBufferOffset
+    ioData.pointee.mBuffers.mNumberChannels = currentBuffer.mNumberChannels
+
+    instance.currentBufferOffset += numPacketsToRead * currentInputDescription.mBytesPerPacket
+
+    return 0
+}
+
+
 private let kOutputBus: UInt32 = 0
 private let kInputBus: UInt32 = 1
 
@@ -184,6 +306,7 @@ final class ManagedAudioRecorderContext : RecoderContextRenderer {
     private var sampleRate: Int32 = 0
     
     fileprivate var isPaused = false
+    private var convertor: CustomAudioConverter!
     
     private var recordingStateUpdateTimestamp: Double?
     
@@ -286,12 +409,14 @@ final class ManagedAudioRecorderContext : RecoderContextRenderer {
             return
         }
         
-        var audioStreamDescription = audioRecorderNativeStreamDescription(inputSampleRate.mMinimum)
-        sampleRate = Int32(inputSampleRate.mMinimum)
+        var audioStreamDescription = audioRecorderNativeStreamDescription(inputSampleRate.mMaximum)
+        sampleRate = Int32(inputSampleRate.mMaximum)
         guard AudioUnitSetProperty(audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1, &audioStreamDescription, UInt32(MemoryLayout<AudioStreamBasicDescription>.size)) == noErr else {
             AudioComponentInstanceDispose(audioUnit)
             return
         }
+        
+//        self.convertor = CustomAudioConverter(asbd: audioStreamDescription)
         
         guard AudioUnitSetProperty(audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0, &audioStreamDescription, UInt32(MemoryLayout<AudioStreamBasicDescription>.size)) == noErr else {
             AudioComponentInstanceDispose(audioUnit)
@@ -368,20 +493,27 @@ final class ManagedAudioRecorderContext : RecoderContextRenderer {
         
         var buffer = buffer
         
-        if(sampleRate==16000){
-            let initialBuffer=malloc(Int(buffer.mDataByteSize+2));
+        if(sampleRate == 16000 || sampleRate == 24000) {
+            let ratio = UInt32(48000.0 / Float(sampleRate))
+            let initialBuffer=malloc(Int(buffer.mDataByteSize+(ratio - 1)));
             memcpy(initialBuffer, buffer.mData, Int(buffer.mDataByteSize));
-            buffer.mData=realloc(buffer.mData, Int(buffer.mDataByteSize*3))
+            buffer.mData=realloc(buffer.mData, Int(buffer.mDataByteSize*ratio))
             let values = initialBuffer!.assumingMemoryBound(to: Int16.self)
             let resampled = buffer.mData!.assumingMemoryBound(to: Int16.self)
             values[Int(buffer.mDataByteSize/2)]=values[Int(buffer.mDataByteSize/2)-1]
             for i: Int in 0 ..< Int(buffer.mDataByteSize/2) {
-                resampled[i*3]=values[i]
-                resampled[i*3+1]=values[i]/3+values[i+1]/3*2
-                resampled[i*3+2]=values[i]/3*2+values[i+1]/3
+                let intRatio = Int(ratio)
+                if sampleRate == 16000 {
+                    resampled[i*intRatio]=values[i]
+                    resampled[i*intRatio+1]=values[i]/3+values[i+1]/3*2
+                    resampled[i*intRatio+2]=values[i]/3*2+values[i+1]/3
+                } else {
+                    resampled[i*intRatio]=values[i]
+                    resampled[i*intRatio+1]=values[i]/2+values[i+1]/2
+                }
             }
             free(initialBuffer)
-            buffer.mDataByteSize*=3
+            buffer.mDataByteSize*=ratio
         }
         
         defer {

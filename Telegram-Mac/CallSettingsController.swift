@@ -64,10 +64,10 @@ private func callSettingsEntries(settings: VoiceCallSettings, devices: IODevices
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().callSettingsCameraTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_camera, data: .init(name: strings().callSettingsInputText, color: theme.colors.text, type: .contextSelector(cameraDevice?.localizedName ?? strings().callSettingsDeviceDefault, [SPopoverItem(strings().callSettingsDeviceDefault, {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_camera, data: .init(name: strings().callSettingsInputText, color: theme.colors.text, type: .contextSelector(cameraDevice?.localizedName ?? strings().callSettingsDeviceDefault, [ContextMenuItem(strings().callSettingsDeviceDefault, handler: {
         arguments.toggleInputVideoDevice(nil)
     })] + devices.camera.map { value in
-        return SPopoverItem(value.localizedName, {
+        return ContextMenuItem(value.localizedName, handler: {
             arguments.toggleInputVideoDevice(value.uniqueID)
         })
         }), viewType: activeCameraDevice == nil ? .singleItem : .firstItem)))
@@ -101,10 +101,10 @@ private func callSettingsEntries(settings: VoiceCallSettings, devices: IODevices
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().callSettingsInputTitle), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_audio, data: .init(name: strings().callSettingsInputText, color: theme.colors.text, type: .contextSelector(microDevice?.localizedName ?? strings().callSettingsDeviceDefault, [SPopoverItem(strings().callSettingsDeviceDefault, {
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_input_audio, data: .init(name: strings().callSettingsInputText, color: theme.colors.text, type: .contextSelector(microDevice?.localizedName ?? strings().callSettingsDeviceDefault, [ContextMenuItem(strings().callSettingsDeviceDefault, handler: {
         arguments.toggleInputAudioDevice(nil)
     })] + devices.audioInput.map { value in
-        return SPopoverItem(value.localizedName, {
+        return ContextMenuItem(value.localizedName, handler: {
             arguments.toggleInputAudioDevice(value.uniqueID)
         })
         }), viewType: activeMicroDevice == nil ? .singleItem : .firstItem)))

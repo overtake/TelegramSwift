@@ -312,7 +312,14 @@ class ChatListRowItem: TableRowItem {
                     return true
                 }
             }
-            
+            if isForum, let message = message {
+                for topic in forumTopicItems.prefix(1) {
+                    if topic.maxOutgoingReadMessageId <= message.id {
+                        return true
+                    }
+                }
+                
+            }
             if let readState = readState {
                 if let message = message {
                     return readState.isOutgoingMessageIndexRead(MessageIndex(message))
@@ -780,7 +787,7 @@ class ChatListRowItem: TableRowItem {
                 if draft == nil, !isSecret, forumTopicItems.isEmpty {
                     for message in messages {
                         inner: for media in message.media {
-                            if !message.containsSecretMedia {
+                            if !message.containsSecretMedia && !message.isMediaSpoilered {
                                 if let image = media as? TelegramMediaImage {
                                     if let _ = largestImageRepresentation(image.representations) {
                                         let fitSize = contentImageSize
@@ -915,9 +922,10 @@ class ChatListRowItem: TableRowItem {
         
         
         if let peer = peer, peer.isPremium, peer.id != context.peerId, peer.hasVideo {
-            self.photos = syncPeerPhotos(peerId: peer.id)
+            self.photos = syncPeerPhotos(peerId: peer.id).map { $0.value }
             let signal = peerPhotos(context: context, peerId: peer.id, force: false) |> deliverOnMainQueue
             peerPhotosDisposable.set(signal.start(next: { [weak self] photos in
+                let photos = photos.map { $0.value }
                 if self?.photos != photos {
                     self?.photos = photos
                     self?.noteHeightOfRow(animated: true)
@@ -1325,7 +1333,7 @@ class ChatListRowItem: TableRowItem {
             }
         }
         
-        if case let .topic(_, data) = self.mode, let peer = peer as? TelegramChannel {
+        if case let .topic(_, data) = self.mode, let peer = peer as? TelegramChannel, let threadId = threadId {
             
             var items:[ContextMenuItem] = []
             if peer.hasPermission(.pinMessages) {
@@ -1335,7 +1343,13 @@ class ChatListRowItem: TableRowItem {
             
             items.append(ContextMenuItem(isMuted ? strings().chatListContextUnmute : strings().chatListContextMute, handler: toggleMute, itemImage: isMuted ? MenuAnimation.menu_unmuted.value : MenuAnimation.menu_mute.value))
             
-            if threadId == 1, peer.hasPermission(.manageTopics), let peerId = peerId, let threadId = threadId {
+            if isUnread {
+                items.append(ContextMenuItem(strings().chatListContextMaskAsRead, handler: {
+                    _ = context.engine.messages.markForumThreadAsRead(peerId: peer.id, threadId: threadId).start()
+                }, itemImage: MenuAnimation.menu_read.value))
+            }
+            
+            if threadId == 1, peer.hasPermission(.manageTopics), let peerId = peerId {
                 items.append(ContextMenuItem(data.isHidden ? strings().chatListContextUnhideGeneral : strings().chatListContextHideGeneral, handler: {
                     
                     _ = context.engine.peers.setForumChannelTopicHidden(id: peerId, threadId: threadId, isHidden: !data.isHidden).start()

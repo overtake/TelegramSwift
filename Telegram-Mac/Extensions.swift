@@ -30,7 +30,7 @@ extension Message {
 
 func makeNewDateFormatter() -> DateFormatter {
     let formatter = DateFormatter()
-    formatter.locale = appAppearance.locale
+   // formatter.locale = appAppearance.locale
     return formatter
 }
 

@@ -1824,7 +1824,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             let spoilers = layout.spoilers
             let rects = layout.spoilerRects()
             while rects.count > self.inkViews.count {
-                let inkView = InvisibleInkDustView(textView: nil)
+                let inkView = InvisibleInkDustView()
                 self.inkViews.append(inkView)
                 self.addSubview(inkView)
             }

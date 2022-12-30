@@ -495,9 +495,9 @@ private final class AvatarLeftView: View {
                 case let .file(_, file, _, _):
                     var representations:[TelegramMediaImageRepresentation] = []
                     if let dimensions = file.dimensions {
-                        representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                        representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                     } else {
-                        representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(current.frame.size), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                        representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(current.frame.size), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                     }
                     
                     let updateImageSignal = chatWallpaper(account: context.account, representations: representations, file: file, mode: .thumbnail, isPattern: true, autoFetchFullSize: true, scale: backingScaleFactor, isBlurred: false, synchronousLoad: false, drawPatternOnly: false, palette: color.colors!)
@@ -977,10 +977,11 @@ final class AvatarConstructorController : ModalViewController {
     
     private let stickersController: NStickersViewController
     private let emojisController: EmojiesController
-
-    init(_ context: AccountContext, target: Target, videoSignal:@escaping(MediaObjectToAvatar)->Void) {
+    private let confirm: ((Signal<URL, NoError>, @escaping()->Void)->Void)?
+    init(_ context: AccountContext, target: Target, videoSignal:@escaping(MediaObjectToAvatar)->Void, confirm: ((Signal<URL, NoError>, @escaping()->Void)->Void)? = nil) {
         self.context = context
         self.target = target
+        self.confirm = confirm
         self.stickersController = .init(context)
         self.emojisController = .init(context, mode: .selectAvatar, selectedItems: [])
         self.videoSignal = videoSignal
@@ -1026,6 +1027,7 @@ final class AvatarConstructorController : ModalViewController {
         super.viewDidLoad()
         
         let context = self.context
+        let confirm = self.confirm
         
         let actionsDisposable = DisposableSet()
         
@@ -1205,32 +1207,43 @@ final class AvatarConstructorController : ModalViewController {
                 return current
             }
         }, set: {
-            let state = stateValue.with { $0 }
-            let background:MediaObjectToAvatar.Object.Background
-            let source: MediaObjectToAvatar.Object.Foreground.Source
-            switch state.selectedColor.content {
-            case let .gradient(colors):
-                background = .colors(colors)
-            case let .wallpaper(wallpaper, pattern):
-                background = .pattern(wallpaper, pattern)
-            }
-            if let file = state.selected.foreground {
-                if file.isAnimated && file.isVideo {
-                    source = .gif(file)
-                } else if file.isVideoSticker || file.isAnimatedSticker || file.isVideoEmoji {
-                    source = .animated(file)
-                } else {
-                    source = .sticker(file)
+            
+            let invoke = {
+                let state = stateValue.with { $0 }
+                let background:MediaObjectToAvatar.Object.Background
+                let source: MediaObjectToAvatar.Object.Foreground.Source
+                switch state.selectedColor.content {
+                case let .gradient(colors):
+                    background = .colors(colors)
+                case let .wallpaper(wallpaper, pattern):
+                    background = .pattern(wallpaper, pattern)
                 }
-            } else if let text = state.selected.text {
-                source = .emoji(text, NSColor(0xffffff))
-            } else {
-                alert(for: context.window, info: strings().unknownError)
-                return
+                if let file = state.selected.foreground {
+                    if file.isAnimated && file.isVideo {
+                        source = .gif(file)
+                    } else if file.isVideoSticker || file.isAnimatedSticker || file.isVideoEmoji {
+                        source = .animated(file)
+                    } else {
+                        source = .sticker(file)
+                    }
+                } else if let text = state.selected.text {
+                    source = .emoji(text, NSColor(0xffffff))
+                } else {
+                    alert(for: context.window, info: strings().unknownError)
+                    return
+                }
+                let zoom = mappingRange(state.preview.zoom, 0, 1, 0.5, 0.8)
+                let object = MediaObjectToAvatar(context: context, object: .init(foreground: .init(type: source, zoom: zoom, offset: state.preview.offset), background: background))
+                _video(object)
             }
-            let zoom = mappingRange(state.preview.zoom, 0, 1, 0.5, 0.8)
-            let object = MediaObjectToAvatar(context: context, object: .init(foreground: .init(type: source, zoom: zoom, offset: state.preview.offset), background: background))
-            _video(object)
+            
+            if let confirm = confirm {
+                fatalError()
+                confirm(.complete(), invoke)
+            } else {
+                invoke()
+            }
+            
         }, zoom: { value in
             updateState { current in
                 var current = current
@@ -1308,6 +1321,11 @@ final class AvatarConstructorController : ModalViewController {
         genericView.setView.set(handler: { _ in
             arguments.set()
         }, for: .Click)
+    }
+    
+    override func returnKeyAction() -> KeyHandlerResult {
+        genericView.setView.send(event: .Click)
+        return .invoked
     }
     
     override func escapeKeyAction() -> KeyHandlerResult {

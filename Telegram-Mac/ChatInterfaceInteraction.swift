@@ -100,7 +100,7 @@ final class ChatInteraction : InterfaceObserver  {
     var focusPinnedMessageId: (MessageId) -> Void = { _ in} // from, to, animated, position
     var sendMedia:([MediaSenderContainer]) -> Void = {_ in}
     var sendAppFile:(TelegramMediaFile, Bool, String?, Bool, ItemCollectionId?) -> Void = { _,_, _, _, _ in}
-    var sendMedias:([Media], ChatTextInputState, Bool, ChatTextInputState?, Bool, Date?) -> Void = {_,_,_,_,_,_ in}
+    var sendMedias:([Media], ChatTextInputState, Bool, ChatTextInputState?, Bool, Date?, Bool) -> Void = {_,_,_,_,_,_, _ in}
     var focusInputField:()->Void = {}
     var openInfo:(PeerId, Bool, MessageId?, ChatInitialAction?) -> Void = {_,_,_,_  in} // peerId, isNeedOpenChat, postId, initialAction
     var beginEditingMessage:(Message?) -> Void = {_ in}
@@ -182,6 +182,7 @@ final class ChatInteraction : InterfaceObserver  {
     
     var showEmojiUseTooltip:()->Void = { }
     var restartTopic: ()->Void = { }
+    var revealMedia:(MessageId)->Void = { _ in }
 
     var openPendingRequests:()->Void = { }
     var dismissPendingRequests:([PeerId])->Void = { _ in }
@@ -515,7 +516,7 @@ final class ChatInteraction : InterfaceObserver  {
                             } else {
                                 thumbFile = MenuAnimation.menu_folder_bot.file
                             }
-                            showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, hasSettings: attach.hasSettings, complete: self?.afterSentTransition), chatInteraction: self, thumbFile: thumbFile), for: context.window)
+                            showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: self?.afterSentTransition), chatInteraction: self, thumbFile: thumbFile), for: context.window)
                             
                         }, error: { _ in
                             showModal(with: WebpageModalController(context: context, url: "", title: peer.displayTitle, requestData: .normal(url: nil, peerId: peerId, threadId: threadId, bot: peer, replyTo: replyId, buttonText: "", payload: payload, fromMenu: false, hasSettings: false, complete: self?.afterSentTransition), chatInteraction: self, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
@@ -629,7 +630,7 @@ final class ChatInteraction : InterfaceObserver  {
                     } else {
                         thumbFile = MenuAnimation.menu_folder_bot.file
                     }
-                    showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: true, hasSettings: attach.hasSettings, complete: strongSelf?.afterSentTransition), chatInteraction: strongSelf, thumbFile: thumbFile), for: context.window)
+                    showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: true, hasSettings: attach.flags.contains(.hasSettings), complete: strongSelf?.afterSentTransition), chatInteraction: strongSelf, thumbFile: thumbFile), for: context.window)
 
                 }, error: { [weak strongSelf] _ in
                     showModal(with: WebpageModalController(context: context, url: url, title: bot.displayTitle, requestData: .normal(url: url, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: buttonText, payload: nil, fromMenu: true, hasSettings: false, complete: strongSelf?.afterSentTransition), chatInteraction: strongSelf, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)
@@ -745,7 +746,7 @@ final class ChatInteraction : InterfaceObserver  {
                                     } else {
                                         thumbFile = MenuAnimation.menu_folder_bot.file
                                     }
-                                    showModal(with: WebpageModalController(context: context, url: hashUrl, title: bot.displayTitle, requestData: .normal(url: hashUrl, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: button.title, payload: nil, fromMenu: false, hasSettings: attach.hasSettings, complete: strongSelf?.afterSentTransition), chatInteraction: strongSelf, thumbFile: thumbFile), for: context.window)
+                                    showModal(with: WebpageModalController(context: context, url: hashUrl, title: bot.displayTitle, requestData: .normal(url: hashUrl, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: button.title, payload: nil, fromMenu: false, hasSettings: attach.flags.contains(.hasSettings), complete: strongSelf?.afterSentTransition), chatInteraction: strongSelf, thumbFile: thumbFile), for: context.window)
 
                                 }, error: { [weak strongSelf] _ in
                                     showModal(with: WebpageModalController(context: context, url: hashUrl, title: bot.displayTitle, requestData: .normal(url: hashUrl, peerId: peerId, threadId: threadId, bot: bot, replyTo: replyTo, buttonText: button.title, payload: nil, fromMenu: false, hasSettings: false, complete: strongSelf?.afterSentTransition), chatInteraction: strongSelf, thumbFile: MenuAnimation.menu_folder_bot.file), for: context.window)

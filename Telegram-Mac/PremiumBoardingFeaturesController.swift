@@ -117,7 +117,7 @@ final class PremiumBoardingFeaturesView: View {
         slideView.addSlide(no_ads)
         
         let unique_reactions = PremiumFeatureSlideView(frame: slideView.bounds)
-        unique_reactions.setup(context: context, type: .infinite_reactions, decoration: .none, getView: { _ in
+        unique_reactions.setup(context: context, type: .infinite_reactions, decoration: .swirlStars, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
             view.setup(context: context, video: configuration.videos[PremiumValue.infinite_reactions.rawValue], position: .top)
             return view
@@ -125,7 +125,7 @@ final class PremiumBoardingFeaturesView: View {
         slideView.addSlide(unique_reactions)
         
         let statuses = PremiumFeatureSlideView(frame: slideView.bounds)
-        statuses.setup(context: context, type: .emoji_status, decoration: .none, getView: { _ in
+        statuses.setup(context: context, type: .emoji_status, decoration: .swirlStars, getView: { _ in
             let view = PremiumDemoLegacyPhoneView(frame: .zero)
             view.setup(context: context, video: configuration.videos[PremiumValue.emoji_status.rawValue], position: .top)
             return view

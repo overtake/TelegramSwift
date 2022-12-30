@@ -1601,6 +1601,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         var pollAnswers: [MessageId : ChatPollStateData] = [:]
         var topicCreatorId: PeerId?
         var threadLoading: MessageId?
+        var mediaRevealed: Set<MessageId> = Set()
     }
     private func updateState(_ f:(State)->State) -> Void {
         stateValue.set(uiState.modify(f))
@@ -2419,7 +2420,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         ads = (fixed: adMessages.fixed, opportunistic: adMessages.opportunistic)
                     }
                     
-                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, addTopThreadInset: addTopThreadInset, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
+                    let entries = messageEntries(msgEntries, maxReadIndex: maxReadIndex, dayGrouping: true, renderType: chatTheme.bubbled ? .bubble : .list, includeBottom: true, timeDifference: timeDifference, ranks: ranks, pollAnswersLoading: pollAnswersLoading, threadLoading: threadLoading, groupingPhotos: true, autoplayMedia: initialData.autoplayMedia, searchState: searchState, animatedEmojiStickers: bigEmojiEnabled ? animatedEmojiStickers : [:], topFixedMessages: topMessages, customChannelDiscussionReadState: customChannelDiscussionReadState, customThreadOutgoingReadState: customThreadOutgoingReadState, addRepliesHeader: peerId == repliesPeerId && view.earlierId == nil, addTopThreadInset: addTopThreadInset, updatingMedia: updatingMedia, adMessage: ads.fixed, dynamicAdMessages: ads.opportunistic, chatTheme: chatTheme, reactions: reactions, transribeState: uiState.transribe, topicCreatorId: uiState.topicCreatorId, mediaRevealed: uiState.mediaRevealed).map({ChatWrapperEntry(appearance: AppearanceWrapperEntry(entry: $0, appearance: appearance), automaticDownload: initialData.autodownloadSettings)})
                     proccesedView = ChatHistoryView(originalView: view, filteredEntries: entries, theme: chatTheme)
                 }
             } else {
@@ -3000,7 +3001,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         
         chatInteraction.sendLocation = { [weak self] coordinate, venue in
             let media = TelegramMediaMap(latitude: coordinate.latitude, longitude: coordinate.longitude, heading: nil, accuracyRadius: nil, geoPlace: nil, venue: venue, liveBroadcastingTimeout: nil, liveProximityNotificationRadius: nil)
-            self?.chatInteraction.sendMedias([media], ChatTextInputState(), false, nil, false, nil)
+            self?.chatInteraction.sendMedias([media], ChatTextInputState(), false, nil, false, nil, false)
         }
         
         chatInteraction.scrollToLatest = { [weak self] removeStack in
@@ -3797,6 +3798,13 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.selectMessagePollOptionDisposables.set(context.engine.messages.requestClosePoll(messageId: messageId).start(), forKey: messageId)
         }
         
+        chatInteraction.revealMedia = { [weak self] messageId in
+            self?.updateState { current in
+                var current = current
+                current.mediaRevealed.insert(messageId)
+                return current
+            }
+        }
         
         chatInteraction.sendMedia = { [weak self] media in
             if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
@@ -3934,11 +3942,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             }
         }
         
-        chatInteraction.sendMedias = { [weak self] medias, caption, isCollage, additionText, silent, atDate in
+        chatInteraction.sendMedias = { [weak self] medias, caption, isCollage, additionText, silent, atDate, isSpoiler in
             if let strongSelf = self, let peer = strongSelf.chatInteraction.peer, peer.canSendMessage(strongSelf.mode.isThreadMode, threadData: strongSelf.chatInteraction.presentation.threadInfo) {
                 func apply(_ controller: ChatController, atDate: Date?) {
                     
-                    let _ = (Sender.enqueue(media: medias, caption: caption, context: context, peerId: controller.chatInteraction.peerId, replyId: takeReplyId(), isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate) |> deliverOnMainQueue).start(completed: scrollAfterSend)
+                    let _ = (Sender.enqueue(media: medias, caption: caption, context: context, peerId: controller.chatInteraction.peerId, replyId: takeReplyId(), isCollage: isCollage, additionText: additionText, silent: silent, atDate: atDate, isSpoiler: isSpoiler) |> deliverOnMainQueue).start(completed: scrollAfterSend)
                     controller.nextTransaction.set(handler: afterSentTransition)
                 }
                 switch strongSelf.mode {
@@ -6088,6 +6096,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     }
                 })
             }
+            
             if let callJoinPeerId = callJoinPeerId {
                 join(callJoinPeerId, nil, false)
             } else {

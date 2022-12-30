@@ -173,9 +173,9 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }
     
     
-    var items:[SPopoverItem] = []
+    var items:[ContextMenuItem] = []
     for time in full {
-        items.append(SPopoverItem(timeIntervalString(Int(time)), {
+        items.append(ContextMenuItem(timeIntervalString(Int(time)), handler: {
             arguments.updateTime(time)
         }))
     }

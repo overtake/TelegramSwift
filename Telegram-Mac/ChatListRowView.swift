@@ -474,7 +474,7 @@ private final class TopicNameAndTextView : View {
                             view = current
                         } else {
                             self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                            view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size)
+                            view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, playPolicy: .playCount(2), textColor: theme.colors.grayText)
                             self.inlineStickerItemViews[id] = view
                             view.superview = textView
                             textView.addEmbeddedLayer(view)
@@ -646,6 +646,7 @@ private final class ChatListMediaPreviewView: View {
     private var requestedImage: Bool = false
     private var disposable: Disposable?
     private var shimmer: ShimmerLayer?
+    private var inkView: MediaInkView?
     
     init(context: AccountContext, message: Message, media: Media) {
         self.context = context
@@ -659,6 +660,7 @@ private final class ChatListMediaPreviewView: View {
         
         self.addSubview(self.imageView)
         self.addSubview(self.playIcon)
+        
     }
     
     required init?(coder: NSCoder) {
@@ -733,6 +735,44 @@ private final class ChatListMediaPreviewView: View {
         
         self.imageView.frame = frame
         self.imageView.set(arguments: arguments)
+        
+        let isSpoiler = message.isMediaSpoilered
+
+        if isSpoiler {
+            let current: MediaInkView
+            if let view = self.inkView {
+                current = view
+            } else {
+                current = MediaInkView(frame: frame)
+                self.inkView = current
+                
+                let aboveView = self.playIcon
+                self.addSubview(current, positioned: .below, relativeTo: aboveView)
+            }
+            current.userInteractionEnabled = false
+            
+            
+            self.imageView.layer?.opacity = 0
+            
+            let image: TelegramMediaImage
+            if let current = media as? TelegramMediaImage {
+                image = current
+            } else if let file = media as? TelegramMediaFile {
+                image = TelegramMediaImage.init(imageId: file.fileId, representations: file.previewRepresentations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: nil, flags: TelegramMediaImageFlags())
+            } else {
+                fatalError()
+            }
+            
+            let imageReference = ImageMediaReference.message(message: MessageReference(message), media: image)
+            
+            current.update(isRevealed: false, updated: true, context: context, imageReference: imageReference, size: size, positionFlags: nil, synchronousLoad: false)
+            current.frame = frame
+        } else if let view = self.inkView {
+            performSubviewRemoval(view, animated: false)
+            self.inkView = nil
+            self.imageView.layer?.opacity = 1
+        }
+        
     }
 }
 
@@ -1249,12 +1289,14 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                 
                 let rect = item.rect.insetBy(dx: -2, dy: -2)
                 
+                let textColor = self.highlighed ? theme.colors.underSelectedColor : theme.colors.grayText
+                
                 let view: InlineStickerItemLayer
-                if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size {
+                if let current = self.inlineStickerItemViews[id], current.frame.size == rect.size, current.textColor == textColor {
                     view = current
                 } else {
                     self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size)
+                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, textColor: textColor)
                     self.inlineStickerItemViews[id] = view
                     view.superview = textView
                     textView.addEmbeddedLayer(view)
@@ -1518,8 +1560,14 @@ class ChatListRowView: TableRowView, ViewDisplayDelegate, RevealTableView {
                          } else {
                              reference = MediaResourceReference.standalone(resource: file.resource)
                          }
+                         let userLocation: MediaResourceUserLocation
+                         if let id = item.peer?.id {
+                             userLocation = .peer(id)
+                         } else {
+                             userLocation = .other
+                         }
                          
-                         let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, reference: reference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
+                         let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, userLocation: userLocation, userContentType: .avatar, reference: reference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
                          
                          mediaPlayer.actionAtEnd = .loop(nil)
                          

@@ -405,11 +405,20 @@ public extension TelegramMediaFile {
     }
     var customEmojiText:String? {
         for attr in attributes {
-            if case let .CustomEmoji(_, alt, _) = attr {
+            if case let .CustomEmoji(_, _, alt, _) = attr {
                 return alt
             }
         }
         return nil
+    }
+    
+    var paintToText:Bool {
+        for attr in attributes {
+            if case let .CustomEmoji(_, paintToText, _, _) = attr {
+                return paintToText
+            }
+        }
+        return false
     }
     
     var stickerReference:StickerPackReference? {
@@ -422,7 +431,7 @@ public extension TelegramMediaFile {
     }
     var emojiReference:StickerPackReference? {
         for attr in attributes {
-            if case let .CustomEmoji(_, _, reference) = attr {
+            if case let .CustomEmoji(_, _, _, reference) = attr {
                 return reference
             }
         }
@@ -515,6 +524,15 @@ public extension Message {
             }
         }
         return nil
+    }
+    
+    var isMediaSpoilered: Bool {
+        for attr in attributes {
+            if attr is MediaSpoilerMessageAttribute {
+                return true
+            }
+        }
+        return false
     }
     
     var hasExtendedMedia: Bool {
@@ -641,6 +659,15 @@ public extension Message {
                 default:
                     break
                 }
+            }
+        } else if let media = self.media.first as? TelegramMediaAction {
+            switch media.action {
+            case let .suggestedProfilePhoto(image):
+                return image
+            case let .photoUpdated(image):
+                 return image
+            default:
+                break
             }
         }
         return media.first
@@ -2634,7 +2661,7 @@ func moveWallpaperToCache(postbox: Postbox, resource: TelegramMediaResource, ref
     }
     
    
-    return combineLatest(fetchedMediaResource(mediaBox: postbox.mediaBox, reference: MediaResourceReference.wallpaper(wallpaper: reference, resource: resource), reportResultStatus: true) |> `catch` { _ in return .complete() }, resourceData) |> mapToSignal { _, data in
+    return combineLatest(fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: .other, userContentType: .other, reference: MediaResourceReference.wallpaper(wallpaper: reference, resource: resource), reportResultStatus: true) |> `catch` { _ in return .complete() }, resourceData) |> mapToSignal { _, data in
         if data.complete {
             return moveWallpaperToCache(postbox: postbox, path: data.path, resource: resource, settings: settings)
         } else {
@@ -2954,7 +2981,7 @@ struct SecureIdDocumentValue {
         self.context = context
     }
     var image: TelegramMediaImage {
-        return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(100, 100), resource: document.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+        return TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: [TelegramMediaImageRepresentation(dimensions: PixelDimensions(100, 100), resource: document.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false)], immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
     }
 }
 
@@ -3637,8 +3664,10 @@ extension SoftwareVideoSource {
 
 
 func installAttachMenuBot(context: AccountContext, peer: Peer, completion: @escaping(Bool)->Void) {
-    confirm(for: context.window, information: strings().webAppAttachConfirm(peer.displayTitle), okTitle: strings().webAppAttachConfirmOK, successHandler: { _ in
-        _ = showModalProgress(signal: context.engine.messages.addBotToAttachMenu(botId: peer.id), for: context.window).start(next: { value in
+    
+    
+    modernConfirm(for: context.window, information: strings().webAppAttachConfirm(peer.displayTitle), okTitle: strings().webAppAttachConfirmOK, thridTitle: strings().webAppAddToAttachmentAllowMessages(peer.displayTitle), successHandler: { result in
+        _ = showModalProgress(signal: context.engine.messages.addBotToAttachMenu(botId: peer.id, allowWrite: result == .thrid), for: context.window).start(next: { value in
             if value {
                 showModalText(for: context.window, text: strings().webAppAttachSuccess(peer.displayTitle))
                 completion(value)

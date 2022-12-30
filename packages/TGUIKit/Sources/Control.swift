@@ -81,7 +81,13 @@ open class Control: View {
     open var hideAnimated:Bool = false
     
     
-    public var appTooltip: String?
+    public var appTooltip: String? {
+        didSet {
+            if let tp = appTooltip, controlState == .Hover {
+                tooltip(for: self, text: tp)
+            }
+        }
+    }
 
     open var isSelected:Bool {
         didSet {
@@ -179,7 +185,7 @@ open class Control: View {
     private var previousState: ControlState?
     open func stateDidUpdate(_ state: ControlState) {
         if self.scaleOnClick {
-            if state != previousState {
+            if state != previousState, isEnabled {
                 if state == .Highlight {
                     self.layer?.animateScaleSpring(from: 1, to: 0.96, duration: 0.3, removeOnCompletion: false)
                 } else if self.layer?.animation(forKey: "transform") != nil, previousState == ControlState.Highlight {

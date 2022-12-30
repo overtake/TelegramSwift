@@ -168,21 +168,20 @@ class ChatGroupedItem: ChatRowItem {
             switch layout.type {
             case .files:
                 
-               // self.parameters.append(ChatMediaLayoutParameters.layout(for: (message.effectiveMedia as! TelegramMediaFile), isWebpage: false, chatInteraction: chatInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType), automaticDownload: downloadSettings.isDownloable(message), isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), isFile: true, autoplayMedia: entry.autoplayMedia, isChatRelated: true))
-
-                let parameters = ChatMediaLayoutParameters.layout(for: (message.effectiveMedia as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(message), isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), autoplayMedia: entry.autoplayMedia)
+                let parameters = ChatMediaLayoutParameters.layout(for: (message.effectiveMedia as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(message), isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), autoplayMedia: entry.autoplayMedia, isRevealed: entry.additionalData.isRevealed)
                 
                 parameters.showMedia = { [weak self] message in
                     guard let `self` = self else {return}
                     
                     var type:GalleryAppearType = .history
-                    if let parameters = self.parameters[i] as? ChatMediaGalleryParameters, parameters.isWebpage {
+                    let parameters = self.parameters[i] as? ChatMediaGalleryParameters
+                    if let parameters = parameters, parameters.isWebpage {
                         type = .alone
                     } else if message.containsSecretMedia {
                         type = .secret
                     }
                                 
-                    showChatGallery(context: context, message: message, self.table, self.parameters as? ChatMediaGalleryParameters, type: type, chatMode: self.chatInteraction.mode, contextHolder: self.chatInteraction.contextHolder())
+                    showChatGallery(context: context, message: message, self.table, parameters, type: type, chatMode: self.chatInteraction.mode, contextHolder: self.chatInteraction.contextHolder())
                 }
                 
                 self.parameters.append(parameters)
@@ -203,11 +202,13 @@ class ChatGroupedItem: ChatRowItem {
                     
                     }, showMessage: { [weak self] message in
                         self?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
-                    }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), media: message.effectiveMedia!, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: entry.autoplayMedia))
-                
-                self.parameters[i].automaticDownloadFunc = { message in
-                    return downloadSettings.isDownloable(message)
-                }
+                    }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), media: message.effectiveMedia!, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: entry.autoplayMedia, isRevealed: entry.isRevealed))
+            }
+            self.parameters[i].automaticDownloadFunc = { message in
+                return downloadSettings.isDownloable(message)
+            }
+            self.parameters[i].revealMedia = { message in
+                chatInteraction.revealMedia(message.id)
             }
             self.parameters[i].chatLocationInput = chatInteraction.chatLocationInput
             self.parameters[i].chatMode = chatInteraction.mode
@@ -296,9 +297,8 @@ class ChatGroupedItem: ChatRowItem {
         }
         switch self.layoutType {
         case .files:
-            let file = self.messages[self.messages.count - 1].effectiveMedia as! TelegramMediaFile
-            if file.previewRepresentations.isEmpty {
-                if let parameters = self.parameters[messages.count - 1] as? ChatFileLayoutParameters {
+            if let file = self.layout.messages.last?.effectiveMedia as? TelegramMediaFile, file.previewRepresentations.isEmpty {
+                if let parameters = self.parameters[layout.messages.count - 1] as? ChatFileLayoutParameters {
                     let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
                     let width = max(parameters.finderLayout.layoutSize.width, parameters.downloadLayout.layoutSize.width, progressMaxWidth) + 50
                     return ChatRowItem.LastLineData(width: width, single: true)

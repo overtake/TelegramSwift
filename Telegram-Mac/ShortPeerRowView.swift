@@ -287,19 +287,37 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 switch item.interactionType {
                 case .plain:
                     container.frame = .init(x: innerInsets.left, y: 0, width: containerView.frame.width - innerInsets.left - innerInsets.right, height: containerView.frame.height)
-                case .selectable:
-                    container.frame = .init(x: innerInsets.left, y: 0, width: containerView.frame.width - innerInsets.left - innerInsets.right, height: containerView.frame.height)
+                case let .selectable(_, side):
+                    switch side {
+                    case .right:
+                        container.frame = .init(x: innerInsets.left, y: 0, width: containerView.frame.width - innerInsets.left - innerInsets.right, height: containerView.frame.height)
+                    case .left:
+                        let offset = innerInsets.left + 20 + innerInsets.left
+                        container.frame = .init(x: offset, y: 0, width: containerView.frame.width - offset - innerInsets.right, height: containerView.frame.height)
+                    }
                 case .deletable:
                     let offset = innerInsets.left + 24 + innerInsets.left
                     container.frame = .init(x: offset, y: 0, width: containerView.frame.width - offset - innerInsets.right, height: containerView.frame.height)
                 }
                 
-                if let deleteControl = deleteControl {
-                    deleteControl.centerY(x: item.deleteInset)
+                switch item.interactionType {
+                case .deletable:
+                    if let deleteControl = deleteControl {
+                        deleteControl.centerY(x: item.deleteInset)
+                    }
+                case let .selectable(_, side):
+                    if let selectControl = selectControl {
+                        switch side {
+                        case .right:
+                            selectControl.centerY(x: containerView.frame.width - selectControl.frame.width - innerInsets.right)
+                        case .left:
+                            selectControl.centerY(x: item.deleteInset)
+                        }
+                    }
+                default:
+                    break
                 }
-                if let selectControl = selectControl {
-                    selectControl.centerY(x: containerView.frame.width - selectControl.frame.width - innerInsets.right)
-                }
+                
                 image.frame = NSMakeRect((item.leftImage != nil ? item.leftImage!.backingSize.width + 5 : 0), NSMinY(focus(item.photoSize)), item.photoSize.width, item.photoSize.height)
                 if let switchView = switchView {
                     switchView.centerY(x: containerView.frame.width - switchView.frame.width - innerInsets.right)
@@ -339,7 +357,6 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             }
             #endif
 
-            
             if let photoOuter = photoOuter {
                 photoOuter.frame = self.image.frame.insetBy(dx: -3, dy: -3)
                 photoOuter.layer?.cornerRadius = photoOuter.frame.height / 2
@@ -368,8 +385,14 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             switch item.interactionType {
             case .plain:
                 containerRect = .init(x: innerInsets.left, y: 0, width: containerView.frame.width - innerInsets.left - innerInsets.right, height: containerView.frame.height)
-            case .selectable:
-                containerRect = .init(x: innerInsets.left, y: 0, width: containerView.frame.width - innerInsets.left - innerInsets.right, height: containerView.frame.height)
+            case let .selectable(_, side):
+                switch side {
+                case .right:
+                    containerRect = .init(x: innerInsets.left, y: 0, width: containerView.frame.width - innerInsets.left - innerInsets.right, height: containerView.frame.height)
+                case .left:
+                    let offset = innerInsets.left + 20 + innerInsets.left
+                    containerRect = .init(x: offset, y: 0, width: containerView.frame.width - offset - innerInsets.right, height: containerView.frame.height)
+                }
             case .deletable:
                 let offset = innerInsets.left + 24 + innerInsets.left
                 containerRect = .init(x: offset, y: 0, width: containerView.frame.width - offset - innerInsets.right, height: containerView.frame.height)
@@ -393,8 +416,6 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             }
         }
         
-       
-        
         self.separator.change(size: separatorRect.size, animated: animated)
         self.separator.change(pos: separatorRect.origin, animated: animated)
 
@@ -408,44 +429,45 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         switch interactionType {
         case .plain:
             
-            if let remove = deleteControl {
-                remove.change(pos: NSMakePoint(-remove.frame.width, remove.frame.minY), animated: animated, removeOnCompletion: false, completion: { [weak self] (completed) in
-                    if completed {
-                        self?.deleteControl?.removeFromSuperview()
-                        self?.deleteControl = nil
-                    }
-                })
-                remove.change(opacity: 0, animated: animated)
+            if let view = deleteControl {
+                performSubviewRemoval(view, animated: animated)
+                self.selectControl = nil
             }
             
-            if let select = selectControl {
-                select.change(pos: NSMakePoint(-select.frame.width, select.frame.minY), animated: animated, removeOnCompletion: false, completion: { [weak self] (completed) in
-                    if completed {
-                        self?.selectControl?.removeFromSuperview()
-                        self?.selectControl = nil
-                    }
-                })
-                select.change(opacity: 0, animated: animated)
+            if let view = selectControl {
+                performSubviewRemoval(view, animated: animated)
+                self.selectControl = nil
             }
             
-        case let .selectable(interaction):
+        case let .selectable(interaction, _):
            
-            if selectControl == nil {
+            let current: SelectingControl
+            if let view = self.selectControl {
+                current = view
+            } else {
                 let unselected: CGImage = item.customTheme?.unselectedImage ?? theme.icons.chatToggleUnselected
                 let selected: CGImage = item.customTheme?.selectedImage ?? theme.icons.chatToggleSelected
-
-                selectControl = SelectingControl(unselectedImage: unselected, selectedImage: selected)
+                current = SelectingControl(unselectedImage: unselected, selectedImage: selected)
+                self.selectControl = current
+                containerView.addSubview(current)
+                
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    current.layer?.animateScaleSpring(from: 0.1, to: 1, duration: 0.3)
+                }
             }
-            selectControl?.set(selected: interaction.presentation.selected.contains(item.peerId), animated: animated)
+            current.set(selected: interaction.presentation.selected.contains(item.peerId), animated: animated)
+                   
+            if let view = deleteControl {
+                performSubviewRemoval(view, animated: animated)
+                self.selectControl = nil
+            }
+        case let .deletable(onRemove, deletable):
+            if let view = selectControl {
+                performSubviewRemoval(view, animated: animated)
+                self.selectControl = nil
+            }
             
-            containerView.addSubview(selectControl!)
-            
-            deleteControl?.removeFromSuperview()
-            deleteControl = nil
-        case let .deletable(interaction):
-            selectControl?.removeFromSuperview()
-            selectControl = nil
-
             if deleteControl == nil {
                 deleteControl = ImageButton()
                 deleteControl?.autohighlight = false
@@ -470,11 +492,11 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             deleteControl?.removeAllHandlers()
             deleteControl?.set(handler: { [weak item] _ in
                 if let item = item, item.enabled {
-                    interaction.onRemove(item.peerId)
+                    onRemove(item.peerId)
                 }
             }, for: .Click)
             
-            deleteControl?.isHidden = !interaction.deletable
+            deleteControl?.isHidden = !deletable
             
         }
     }
@@ -503,7 +525,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         #endif
         
         switch previousType {
-        case let .selectable(interaction):
+        case let .selectable(interaction, _):
             interaction.remove(observer: self)
         case .deletable:
             break
@@ -578,7 +600,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         #endif
         
         switch previousType {
-        case let .selectable(interaction):
+        case let .selectable(interaction, _):
             interaction.add(observer: self)
         case .deletable:
             break
@@ -603,6 +625,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         }
         
         self.updateInteractionType(previousType, item.interactionType, item:item, animated:animated)
+        
         choiceControl?.removeFromSuperview()
         choiceControl = nil
         
@@ -617,7 +640,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
             switchView?.stateChanged = item.action
             switchView?.setIsOn(stateback,animated:animated)
             switchView?.isEnabled = item.enabled
-        case let .context(stateback:stateback):
+        case let .context(stateback), let .nextContext(stateback):
             switchView?.removeFromSuperview()
             switchView = nil
             
@@ -633,19 +656,24 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
                 contextLabel?.removeFromSuperview()
                 contextLabel = nil
             }
-        case let .selectable(stateback: stateback):
+        case let .selectable(stateback):
+            switchView?.removeFromSuperview()
+            switchView = nil
+            contextLabel?.removeFromSuperview()
+            contextLabel = nil
             if stateback {
                 choiceControl = ImageView()
                 choiceControl?.image = #imageLiteral(resourceName: "Icon_UsernameAvailability").precomposed(item.customTheme?.accentColor ?? theme.colors.accent)
                 choiceControl?.sizeToFit()
                 containerView.addSubview(choiceControl!)
             }
-            
         default:
             switchView?.removeFromSuperview()
             switchView = nil
             contextLabel?.removeFromSuperview()
             contextLabel = nil
+            choiceControl?.removeFromSuperview()
+            choiceControl = nil
             break
         }
         self.image._change(opacity: item.enabled ? 1 : 0.8, animated: animated)
@@ -654,16 +682,30 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         needsLayout = true
         self.container.setNeedsDisplayLayer()
         
+        if !animated {
+            var bp = 0
+            bp += 1
+        }
+        
         viewDidMoveToSuperview()
     }
     
     func invokeAction(_ item: ShortPeerRowItem, clickCount: Int) {
         switch item.interactionType {
-        case let .selectable(interaction):
-            interaction.update({$0.withToggledSelected(item.peerId, peer: item.peer)})
+        case let .selectable(interaction, side):
+            switch side {
+            case .left:
+                interaction.action(item.peerId, nil)
+            default:
+                interaction.update({$0.withToggledSelected(item.peerId, peer: item.peer)})
+            }
         default:
             if clickCount <= 1 {
-                item.action()
+                if case .nextContext = item.type, let event = NSApp.currentEvent {
+                    showContextMenu(event)
+                } else {
+                    item.action()
+                }
              //   self.focusAnimation(nil)
             }
         }
@@ -675,7 +717,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         
         if let item = item as? ShortPeerRowItem {
             switch item.interactionType {
-            case .selectable(_):
+            case .selectable:
                 if let value = value as? SelectPeerPresentation, let oldValue = oldValue as? SelectPeerPresentation {
                     let new = value.selected.contains(item.peerId)
                     let old = oldValue.selected.contains(item.peerId)
@@ -704,7 +746,7 @@ class ShortPeerRowView: TableRowView, Notifable, ViewDisplayDelegate {
         
         if let item = item as? ShortPeerRowItem {
             switch item.interactionType {
-            case let .selectable(interaction):
+            case let .selectable(interaction, _):
                 if superview == nil {
                     interaction.remove(observer: self)
                 } else {

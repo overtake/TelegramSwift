@@ -280,6 +280,9 @@ final class AccountContext {
     private let cloudThemeObserver = MetaDisposable()
     private let freeSpaceDisposable = MetaDisposable()
     private let prefDisposable = DisposableSet()
+    private let reindexCacheDisposable = MetaDisposable()
+    private let shouldReindexCacheDisposable = MetaDisposable()
+
     private let _limitConfiguration: Atomic<LimitsConfiguration> = Atomic(value: LimitsConfiguration.defaultValue)
     
     var limitConfiguration: LimitsConfiguration {
@@ -345,6 +348,7 @@ final class AccountContext {
         return giftStickersValues.get()
     }
 
+    
     
     init(sharedContext: SharedAccountContext, window: Window, account: Account, isSupport: Bool = false) {
         self.sharedContext = sharedContext
@@ -592,7 +596,28 @@ final class AccountContext {
         NotificationCenter.default.addObserver(self, selector: #selector(updateKeyWindow), name: NSWindow.didBecomeKeyNotification, object: window)
         NotificationCenter.default.addObserver(self, selector: #selector(updateKeyWindow), name: NSWindow.didResignKeyNotification, object: window)
         
-       
+        var shouldReindex: Signal<SomeAccountSettings, NoError> = someAccountSetings(postbox: account.postbox) |> filter { value -> Bool in
+            if value.appVersion != ApiEnvironment.version {
+                return true
+            } else if let time = value.lastChatReindexTime {
+                return Int32(Date().timeIntervalSince1970) > time
+            } else {
+                return true
+            }
+        } |> deliverOnMainQueue
+        
+        shouldReindex = (shouldReindex |> then(.complete() |> suspendAwareDelay(60 * 60, queue: Queue.mainQueue()))) |> restart
+        
+        shouldReindexCacheDisposable.set(shouldReindex.start(next: { [weak self] _ in
+            self?.reindexCacheDisposable.set(engine.resources.reindexCacheInBackground(lowImpact: true).start())
+            _ = updateSomeSettingsInteractively(postbox: account.postbox, { settings in
+                var settings = settings
+                settings.lastChatReindexTime = Int32(Date().timeIntervalSince1970) + 2 * 60 * 60 * 24
+                settings.appVersion = ApiEnvironment.version
+                return settings
+            }).start()
+        }))
+        
         
         #if !SHARE
         var freeSpaceSignal:Signal<UInt64?, NoError> = Signal { subscriber in
@@ -742,6 +767,8 @@ final class AccountContext {
         freeSpaceDisposable.dispose()
         premiumDisposable.dispose()
         globalLocationDisposable.dispose()
+        reindexCacheDisposable.dispose()
+        shouldReindexCacheDisposable.dispose()
         NotificationCenter.default.removeObserver(self)
         #if !SHARE
       //  self.walletPasscodeTimeoutContext.clear()
@@ -998,7 +1025,7 @@ func downloadAndApplyCloudTheme(context: AccountContext, theme cloudTheme: Teleg
         |> deliverOnMainQueue
     } else if let file = cloudTheme.file {
         return Signal { subscriber in
-            let fetchDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: MediaResourceReference.standalone(resource: file.resource)).start()
+            let fetchDisposable = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .file, reference: MediaResourceReference.standalone(resource: file.resource)).start()
             let wallpaperDisposable = DisposableSet()
             
             let resourceData = context.account.postbox.mediaBox.resourceData(file.resource) |> filter { $0.complete } |> take(1)

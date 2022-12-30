@@ -371,13 +371,15 @@ final class InlineStickerItemLayer : SimpleLayer {
         }
     }
     private let shimmerColor: Shimmer
+    let textColor: NSColor
     let size: NSSize
     
-    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, playPolicy: LottiePlayPolicy = .loop, checkStatus: Bool = false, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false)) {
+    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, playPolicy: LottiePlayPolicy = .loop, checkStatus: Bool = false, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.text) {
         self.aspectFilled = aspectFilled
         self.account = account
         self.playPolicy = playPolicy
         self.getColors = getColors
+        self.textColor = textColor
         self.shimmerColor = shimmerColor
         self.fileId = emoji.fileId
         self.size = size
@@ -405,11 +407,12 @@ final class InlineStickerItemLayer : SimpleLayer {
         })
     }
     
-    init(account: Account, file: TelegramMediaFile, size: NSSize, playPolicy: LottiePlayPolicy = .loop, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false)) {
+    init(account: Account, file: TelegramMediaFile, size: NSSize, playPolicy: LottiePlayPolicy = .loop, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.text) {
         self.aspectFilled = aspectFilled
         self.account = account
         self.playPolicy = playPolicy
         self.getColors = getColors
+        self.textColor = textColor
         self.shimmerColor = shimmerColor
         self.fileId = file.fileId.id
         self.size = size
@@ -426,11 +429,15 @@ final class InlineStickerItemLayer : SimpleLayer {
         if playPolicy != .loop {
             unique = Int(arc4random64())
         }
+        let textColor = self.textColor
         if self.getColors == nil {
             self.getColors = { file in
                 var colors: [LottieColor] = []
                 if isDefaultStatusesPackId(file.emojiReference) {
                     colors.append(.init(keyPath: "", color: theme.colors.accent))
+                }
+                if file.paintToText {
+                    colors.append(.init(keyPath: "", color: textColor))
                 }
                 return colors
             }
@@ -628,7 +635,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                 self.resourceDisposable.set(nil)
             }
             
-            fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, reference: mediaResource).start())
+            fetchDisposable.set(fetchedMediaResource(mediaBox: account.postbox.mediaBox, userLocation: reference.userLocation, userContentType: reference.userContentType, reference: mediaResource).start())
             let shimmerColor = self.shimmerColor
             let fillColor: NSColor? = getColors?(file).first?.color
             let emptyColor: TransformImageEmptyColor?

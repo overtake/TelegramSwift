@@ -387,7 +387,7 @@ final class CustomReactionEffectView: View {
             switch pack {
             case let .result(_, items, _):
                 for item in items {
-                    _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .standalone(resource: item.file.resource), ranges: nil).start()
+                    _ = fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .other, userContentType: .init(file: item.file), reference: .standalone(resource: item.file.resource), ranges: nil).start()
                 }
                 return items.randomElement()
             default:

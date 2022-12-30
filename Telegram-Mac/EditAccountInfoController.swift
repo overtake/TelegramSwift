@@ -316,10 +316,6 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
                     return state.withoutUpdatingPhotoState()
                 }
             }))
-            
-            controller.onClose = {
-                removeFile(at: path)
-            }
         })
     }
     

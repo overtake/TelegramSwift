@@ -110,7 +110,7 @@ func fileNameForNotificationSound(postbox: Postbox, sound: PeerMessageSound, def
     case let .cloud(fileId):
         if let list = list {
             if let file = list.sounds.first(where: { $0.file.fileId.id == fileId})?.file {
-                _ = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: .standalone(resource: file.resource), ranges: nil, statsCategory: .audio, reportResultStatus: true).start()
+                _ = fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: .other, userContentType: .other, reference: .standalone(resource: file.resource), ranges: nil, statsCategory: .audio, reportResultStatus: true).start()
                 return postbox.mediaBox.resourceData(id: file.resource.id) |> filter { $0.complete } |> take(1) |> map { _ in
                     return file.resource
                 }

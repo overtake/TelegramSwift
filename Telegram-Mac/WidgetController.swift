@@ -286,7 +286,7 @@ final class WidgetController : TelegramGenericViewController<WidgetListView> {
         
         controllers.append(WidgetAppearanceController(context))
         controllers.append(WidgetRecentPeersController(context))
-        controllers.append(WidgetStorageController(context))
+//        controllers.append(WidgetStorageController(context))
         controllers.append(WidgetStickersController(context))
 
         let current = controllers[selected]

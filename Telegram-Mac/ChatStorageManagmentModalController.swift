@@ -98,6 +98,8 @@ class ChatStorageManagmentModalController: ModalViewController {
             }
         }
         
+        _ = genericView.addItem(item: GeneralTextRowItem(initialSize, text: strings().storageUsageClearChatInfo, viewType: .textBottomItem))
+
         
         _ = genericView.addItem(item: GeneralRowItem(initialSize, height: 30, stableId: arc4random(), viewType: .separator))
     }
@@ -117,7 +119,9 @@ class ChatStorageManagmentModalController: ModalViewController {
     }
     
     override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
-        return (left: nil, center: ModalHeaderData.init(title: strings().telegramStorageUsageController), right: nil)
+        return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
+            self?.close()
+        }), center: ModalHeaderData(title: strings().telegramStorageUsageController), right: nil)
     }
     
     override var modalInteractions: ModalInteractions? {
@@ -139,7 +143,7 @@ class ChatStorageManagmentModalController: ModalViewController {
                 self?.clear(strongSelf.sizeIndex)
             }
             self?.close()
-        }, cancelTitle: strings().modalCancel, drawBorder: true, height: 50)
+        }, drawBorder: true, height: 50, singleButton: true)
     }
     
     private var genericView:TableView {

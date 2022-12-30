@@ -119,9 +119,7 @@ private final class EditImageView : View {
             if let data = self.currentData, selectionRectView.isWholeSelected && data.hasntData  {
                 (controls as? EditImageControlsView)?.cancel.send(event: .Click)
             } else {
-                confirm(for: mainWindow, information: strings().editImageControlConfirmDiscard, successHandler: { [weak self] _ in
-                     (self?.controls as? EditImageControlsView)?.cancel.send(event: .Click)
-                })
+                (self.controls as? EditImageControlsView)?.cancel.send(event: .Click)
             }
         }
     }
@@ -197,11 +195,15 @@ class EditImageModalController: ModalViewController {
     private let settings: EditControllerSettings
     private let resultValue: Promise<(URL, EditedImageData?)> = Promise()
     private var canReset: Bool
+    private let doneString: String?
     
     var onClose: () -> Void = {}
+    private let confirm: ((Signal<URL, NoError>, @escaping()->Void)->Void)?
     
-    init(_ path: URL, defaultData: EditedImageData? = nil, settings: EditControllerSettings = .plain) {
+    init(_ path: URL, defaultData: EditedImageData? = nil, settings: EditControllerSettings = .plain, doneString: String? = nil, confirm: ((Signal<URL, NoError>, @escaping()->Void)->Void)? = nil) {
         self.canReset = defaultData != nil
+        self.confirm = confirm
+        self.doneString = doneString
         editState = Atomic(value: defaultData ?? EditedImageData(originalUrl: path))
         
         self.image = NSImage(contentsOf: path)!.cgImage(forProposedRect: nil, context: nil, hints: nil)!
@@ -229,17 +231,30 @@ class EditImageModalController: ModalViewController {
         
         guard !markAsClosed else { return .invoked }
         
-        let currentData = editState.modify {$0}
-        resultValue.set(EditedImageData.generateNewUrl(data: currentData, selectedRect: genericView.selectedRect) |> map { ($0, $0 == currentData.originalUrl ? nil : currentData)})
+        let currentData = self.editState.modify {$0}
+        let dataSignal = EditedImageData.generateNewUrl(data: currentData, selectedRect: self.genericView.selectedRect) |> map { ($0, $0 == currentData.originalUrl ? nil : currentData)}
         
+        let promise: Promise<(URL, EditedImageData?)> = Promise()
+        promise.set(dataSignal)
         
+        let invoke = { [weak self] in
+            guard let `self` = self else {
+                return
+            }
+            self.resultValue.set(promise.get())
+            
+            let signal = self.resultValue.get() |> take(1) |> deliverOnMainQueue |> delay(0.1, queue: .mainQueue())
+            self.markAsClosed = true
+            _ = signal.start(next: { [weak self] _ in
+                self?.close()
+            })
+        }
         
-        let signal = resultValue.get() |> take(1) |> deliverOnMainQueue |> delay(0.1, queue: .mainQueue())
-        markAsClosed = true
-        _ = signal.start(next: { [weak self] _ in
-            self?.close()
-        })
-        
+        if let confirm = self.confirm {
+            confirm(promise.get() |> map { $0.0 }, invoke)
+        } else {
+            invoke()
+        }
         return .invoked
     }
     
@@ -415,6 +430,8 @@ class EditImageModalController: ModalViewController {
             self?.rotate()
         }, draw: { [weak self] in
             self?.loadCanvas()
+        }, getDoneString: { [weak self] in
+            return self?.doneString
         }), stateValue: editValue.get())
 
         

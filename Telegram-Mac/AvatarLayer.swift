@@ -74,6 +74,7 @@ class AvatarControl: NSView {
 
     private var state: AvatarNodeState = .Empty
     private var account:Account?
+    private var disableForum: Bool = false
     private var contentScale: CGFloat = 0
     
     var contentUpdated: ((Any?)->Void)?
@@ -138,11 +139,12 @@ class AvatarControl: NSView {
         }
     }
     
-    public func setPeer(account: Account, peer: Peer?, message: Message? = nil, size: NSSize? = nil) {
+    public func setPeer(account: Account, peer: Peer?, message: Message? = nil, size: NSSize? = nil, disableForum: Bool = false) {
         self.account = account
+        self.disableForum = disableForum
         let state: AvatarNodeState
         if let peer = peer {
-            state = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, message, size, peer.isForum)
+            state = .PeerAvatar(peer, peer.displayLetters, peer.smallProfileImage, message, size, peer.isForum && !disableForum)
         } else {
             state = .Empty
         }
@@ -238,7 +240,7 @@ class AvatarControl: NSView {
                     photo = nil
                 }
                 if let photo = photo {
-                    setSignal(peerAvatarImage(account: account, photo: photo, displayDimensions: updatedSize, scale:backingScaleFactor, font: self.font, synchronousLoad: attemptLoadNextSynchronous), force: false)
+                    setSignal(peerAvatarImage(account: account, photo: photo, displayDimensions: updatedSize, scale:backingScaleFactor, font: self.font, synchronousLoad: attemptLoadNextSynchronous, disableForum: disableForum), force: false)
                 } else {
                     let content = self.imageContents
                     self.displaySuspended = false

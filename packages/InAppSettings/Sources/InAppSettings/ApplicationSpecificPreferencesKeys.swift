@@ -31,6 +31,7 @@ private enum ApplicationSpecificPreferencesKeyValues: Int32 {
     case instantViewAppearance = 50
     case recentEmoji = 52
     case downloadedPaths = 53
+    case someSettings = 54
 }
 
 public struct ApplicationSpecificPreferencesKeys {
@@ -45,6 +46,7 @@ public struct ApplicationSpecificPreferencesKeys {
     public static let walletPasscodeTimeout = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.walletPasscodeTimeout.rawValue)
     public static let chatListSettings = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.chatListSettings.rawValue)
     public static let voipDerivedState = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.voipDerivedState.rawValue)
+    public static let someSettings = applicationSpecificPreferencesKey(ApplicationSpecificPreferencesKeyValues.someSettings.rawValue)
 }
 
 public struct ApplicationSharedPreferencesKeys {

@@ -75,7 +75,7 @@ open class TableRowView: NSTableRowView, CALayerDelegate {
 
     open override var translatesAutoresizingMaskIntoConstraints: Bool {
         get {
-            return true
+            return false
         }
         set {
 
