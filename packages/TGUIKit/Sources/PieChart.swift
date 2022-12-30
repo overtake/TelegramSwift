@@ -135,6 +135,10 @@ public class PieChartView : Control {
     private let totalTextView = DynamicCounterTextView()
     private var tooltipView: TooltipView?
     
+    
+    public var toggleSelected:((Item)->Void)? = nil
+    
+    
     private var displayAnimator: ConstantDisplayLinkAnimator?
     
     private struct AnimationValues {
@@ -165,6 +169,20 @@ public class PieChartView : Control {
         self.presentation = presentation
         super.init(frame: frameRect)
         addSubview(totalTextView)
+        
+        set(handler: { [weak self] control in
+            self?.invokeToggle()
+        }, for: .Click)
+    }
+    
+    private func invokeToggle() {
+        guard let window = self.window else {
+            return
+        }
+        let point = convert(window.mouseLocationOutsideOfEventStream, from: nil)
+        if let index = self.selectedItemIndex(at: point) {
+            self.toggleSelected?(self.items[index])
+        }
     }
         
     required public init?(coder: NSCoder) {
