@@ -210,7 +210,23 @@ open class AppMenuRowItem : AppMenuBasicItem {
     
     var hasDrawable: Bool {
         if let menu = item.menu {
-            return menu.items.compactMap { $0 as? ContextMenuItem }.contains(where: { $0.itemImage != nil })
+            
+            var range: NSRange = NSMakeRange(NSNotFound, 0)
+            for (i, item) in menu.items.enumerated() {
+                if item === self.item {
+                    range.location = i
+                    range.length = 1
+                } else if range.location != NSNotFound {
+                    if item is ContextSeparatorItem {
+                        break
+                    } else {
+                        range.length += 1
+                    }
+                }
+            }
+            let blockItems = menu.items[range.min ..< range.max]
+            
+            return blockItems.compactMap { $0 as? ContextMenuItem }.contains(where: { $0.itemImage != nil })
         }
         return false
     }

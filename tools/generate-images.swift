@@ -793,7 +793,18 @@ func initialize() -> [String] {
     array.append("chatlist_arrow_active")
     
     array.append("dialog_auto_delete")
+    
+    array.append("contact_set_photo")
+    array.append("contact_suggest_photo")
+    
+    array.append("send_media_spoiler")
+    array.append("general_delete")
+    
+    array.append("storage_music_play")
+    array.append("storage_music_pause")
+    array.append("storage_media_play")
 
+    
     return array
 }
 //swift ./tools/generate-images.swift

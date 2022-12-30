@@ -485,6 +485,15 @@ class ShareObject {
     var interactionOk: String {
         return strings().modalOK
     }
+    var mutableSelection: Bool {
+        return true
+    }
+    var hasInteraction: Bool {
+        return true
+    }
+    var selectTopics: Bool {
+        return true
+    }
     
     func attributes(_ peerId: PeerId) -> [MessageAttribute] {
         var attributes:[MessageAttribute] = []
@@ -1011,8 +1020,8 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
         
         switch entry {
         case let .plain(peer, _, presence, autoDeletion, drawSeparator, multiple):
-            return  ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), statusStyle: share.statusStyle(peer, presence: presence, autoDeletion: autoDeletion), status: share.statusString(peer, presence: presence, autoDeletion: autoDeletion), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction) : .plain, action: {
-                if peer.isForum {
+            return  ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), statusStyle: share.statusStyle(peer, presence: presence, autoDeletion: autoDeletion), status: share.statusString(peer, presence: presence, autoDeletion: autoDeletion), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction, side: .right) : .plain, action: {
+                if peer.isForum && share.selectTopics {
                     selectInteraction.openForum(peer.id)
                 } else {
                     selectInteraction.action(peer.id, nil)
@@ -1020,12 +1029,14 @@ fileprivate func prepareEntries(from:[SelectablePeersEntry]?, to:[SelectablePeer
             }, contextMenuItems: {
                 return .single([
                     .init(strings().shareModalSelect, handler: {
-                        selectInteraction.toggleSelection(peer)
+                        if share.mutableSelection {
+                            selectInteraction.toggleSelection(peer)
+                        }
                     }, itemImage: MenuAnimation.menu_select_messages.value)
                 ])
             }, highlightVerified: true)
         case let .secretChat(peer, peerId, _, _, drawSeparator, multiple):
-            return  ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, peerId: peerId, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.colors.accent, highlightColor: .white), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status: strings().composeSelectSecretChat.lowercased(), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction) : .plain, action: {
+            return  ShortPeerRowItem(initialSize, peer: peer, account: context.account, context: context, peerId: peerId, stableId: entry.stableId, height: 48, photoSize:NSMakeSize(36, 36), titleStyle: ControlStyle(font: .medium(.title), foregroundColor: theme.colors.accent, highlightColor: .white), statusStyle: ControlStyle(font: .normal(.text), foregroundColor: theme.colors.grayText, highlightColor:.white), status: strings().composeSelectSecretChat.lowercased(), drawCustomSeparator: drawSeparator, isLookSavedMessage : peer.id == context.peerId, inset:NSEdgeInsets(left: 10, right: 10), drawSeparatorIgnoringInset: true, interactionType: multiple ? .selectable(selectInteraction, side: .right) : .plain, action: {
                 selectInteraction.action(peerId, nil)
             })
         case let .separator(text, _):
@@ -2114,7 +2125,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
     }
     
     override var modalInteractions: ModalInteractions? {
-        if !share.hasCaptionView {
+        if !share.hasCaptionView, share.hasInteraction {
             return ModalInteractions(acceptTitle: share.interactionOk, accept: { [weak self] in
                 _ = self?.invoke()
             }, drawBorder: true, height: 50, singleButton: true)

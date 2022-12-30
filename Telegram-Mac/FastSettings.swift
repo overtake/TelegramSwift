@@ -760,7 +760,7 @@ func fileFinderPath(_ file: TelegramMediaFile, _ postbox: Postbox) -> Signal<Str
 func showInFinder(_ file:TelegramMediaFile, account:Account)  {
     let path = downloadFilePath(file, account.postbox) |> deliverOnMainQueue
     
-    _ = combineLatest(path, downloadedFilePaths(account.postbox)).start(next: { (expanded, paths) in
+    _ = combineLatest(queue: .mainQueue(), path, downloadedFilePaths(account.postbox)).start(next: { (expanded, paths) in
         
         guard let (boxPath, adopted) = expanded else {
             return

@@ -79,7 +79,7 @@ enum GeneralInteractedType : Equatable {
     case colorSelector(NSColor)
     case badge(String, NSColor)
     #if !SHARE
-    case contextSelector(String, [SPopoverItem])
+    case contextSelector(String, [ContextMenuItem])
     #endif
 }
 

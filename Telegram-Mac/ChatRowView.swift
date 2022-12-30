@@ -980,9 +980,15 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     
     func updateInlineStickers(context: AccountContext, view textView: TextView, textLayout: TextViewLayout) {
+        
+        guard let item = self.item as? ChatRowItem else {
+            return
+        }
+        let textColor = item.presentation.chat.textColor(item.isIncoming, item.renderType == .bubble)
+        
         var validIds: [InlineStickerItemLayer.Key] = []
         var index: Int = textView.hashValue
-
+        
         for item in textLayout.embeddedItems {
             if let stickerItem = item.value as? InlineStickerItem, case let .attribute(emoji) = stickerItem.source {
                 
@@ -1002,7 +1008,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                     view = current
                 } else {
                     self.inlineStickerItemViews[id]?.removeFromSuperlayer()
-                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size)
+                    view = InlineStickerItemLayer(account: context.account, inlinePacksContext: context.inlinePacksContext, emoji: emoji, size: rect.size, textColor: textColor)
                     self.inlineStickerItemViews[id] = view
                     view.superview = textView
                     textView.addEmbeddedLayer(view)

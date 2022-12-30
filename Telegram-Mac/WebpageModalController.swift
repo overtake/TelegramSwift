@@ -860,6 +860,17 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
         }
     }
 
+    fileprivate func sendClipboardTextEvent(requestId: String, fillData: Bool) {
+        var paramsString: String
+        if fillData {
+            let data = NSPasteboard.general.string(forType: .string) ?? ""
+            paramsString = "{req_id: \"\(requestId)\", data: \"\(data)\"}"
+        } else {
+            paramsString = "{req_id: \"\(requestId)\"}"
+        }
+        sendEvent(name: "clipboard_text_received", data: paramsString)
+    }
+
     
     private func handleScriptMessage(_ message: WKScriptMessage) {
         
@@ -891,6 +902,12 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
                     }
                 }
             }
+        case "web_app_read_text_from_clipboard":
+            if let json = json, let requestId = json["req_id"] as? String {
+                let currentTimestamp = CACurrentMediaTime()
+                self.sendClipboardTextEvent(requestId: requestId, fillData: clickCount > 0)
+            }
+
         case "web_app_ready":
             delay(0.1, closure: { [weak self] in
                 self?.webAppReady()
@@ -917,6 +934,8 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             break
         case "web_app_close":
             self.close()
+        case "web_app_open_scan_qr_popup":
+            alert(for: context.window, info: strings().webAppQrIsNotSupported)
         case "web_app_setup_closing_behavior":
             if let json = json, let need_confirmation = json["need_confirmation"] as? Bool {
                 self.needCloseConfirmation = need_confirmation
@@ -959,8 +978,27 @@ class WebpageModalController: ModalViewController, WKNavigationDelegate, WKUIDel
             if clickCount > 0 {
                 if let eventData = (body["eventData"] as? String)?.data(using: .utf8), let json = try? JSONSerialization.jsonObject(with: eventData, options: []) as? [String: Any] {
                     if let url = json["url"] as? String {
+                        
+                        let tryInstantView = json["try_instant_view"] as? Bool ?? false
                         let link = inApp(for: url.nsstring, context: context, openInfo: nil, hashtag: nil, command: nil, applyProxy: nil, confirm: false)
-                        execute(inapp: link)
+
+                        if tryInstantView {
+                            let signal = showModalProgress(signal: resolveInstantViewUrl(account: self.context.account, url: url), for: context.window)
+                            
+                            let _ = signal.start(next: { [weak self] result in
+                                guard let strongSelf = self else {
+                                    return
+                                }
+                                switch result {
+                                case let .instantView(_, webPage, _):
+                                    showInstantPage(InstantPageViewController(strongSelf.context, webPage: webPage, message: nil, saveToRecent: false))
+                                default:
+                                    execute(inapp: link)
+                                }
+                            })
+                        } else {
+                            execute(inapp: link)
+                        }
                     }
                 }
             }

@@ -81,6 +81,132 @@ final class ChatVideoAutoplayView {
 }
 
 
+final class CornerMaskLayer : SimpleShapeLayer {
+    var positionFlags: LayoutPositionFlags? {
+        didSet {
+            if let positionFlags = positionFlags {
+                let path = CGMutablePath()
+                
+                let minx:CGFloat = 0, midx = frame.width/2.0, maxx = frame.width
+                let miny:CGFloat = 0, midy = frame.height/2.0, maxy = frame.height
+                
+                path.move(to: NSMakePoint(minx, midy))
+                
+                var topLeftRadius: CGFloat = .cornerRadius
+                var bottomLeftRadius: CGFloat = .cornerRadius
+                var topRightRadius: CGFloat = .cornerRadius
+                var bottomRightRadius: CGFloat = .cornerRadius
+                
+                
+                if positionFlags.contains(.top) && positionFlags.contains(.left) {
+                    bottomLeftRadius = .cornerRadius * 3 + 2
+                }
+                if positionFlags.contains(.top) && positionFlags.contains(.right) {
+                    bottomRightRadius = .cornerRadius * 3 + 2
+                }
+                if positionFlags.contains(.bottom) && positionFlags.contains(.left) {
+                    topLeftRadius = .cornerRadius * 3 + 2
+                }
+                if positionFlags.contains(.bottom) && positionFlags.contains(.right) {
+                    topRightRadius = .cornerRadius * 3 + 2
+                }
+                
+                path.addArc(tangent1End: NSMakePoint(minx, miny), tangent2End: NSMakePoint(midx, miny), radius: bottomLeftRadius)
+                path.addArc(tangent1End: NSMakePoint(maxx, miny), tangent2End: NSMakePoint(maxx, midy), radius: bottomRightRadius)
+                path.addArc(tangent1End: NSMakePoint(maxx, maxy), tangent2End: NSMakePoint(midx, maxy), radius: topRightRadius)
+                path.addArc(tangent1End: NSMakePoint(minx, maxy), tangent2End: NSMakePoint(minx, midy), radius: topLeftRadius)
+                
+                self.path = path
+            }
+        }
+    }
+
+}
+
+final class MediaInkView : Control {
+    
+    private let inkView: MediaDustView = MediaDustView()
+    private var inkMaskView: CornerMaskLayer?
+
+    private let preview: TransformImageView = TransformImageView()
+    
+    required init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addSubview(preview)
+        addSubview(inkView)
+        
+        inkView.update(revealed: false)
+
+    }
+    
+    deinit {
+        var bp = 0
+        bp += 1
+    }
+    
+    override func removeFromSuperview() {
+        super.removeFromSuperview()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func update(isRevealed: Bool, updated: Bool, context: AccountContext, imageReference: ImageMediaReference, size: NSSize, positionFlags: LayoutPositionFlags?, synchronousLoad: Bool) {
+        
+        
+        //let imageSize = imageReference.media.representationForDisplayAtSize(.init(640, 640))?.dimensions.size ?? size
+        
+        let signal = chatSecretPhoto(account: context.account, imageReference: imageReference, scale: System.backingScale, synchronousLoad: synchronousLoad)
+        let arguments = TransformImageArguments(corners: .init(), imageSize: size, boundingSize: size, intrinsicInsets: .init())
+        
+        
+        self.preview.setSignal(signal: cachedMedia(media: imageReference.media, arguments: arguments, scale: System.backingScale), clearInstantly: updated)
+        
+        if !self.preview.isFullyLoaded {
+            self.preview.setSignal(signal, cacheImage: { result in
+                cacheMedia(result, media: imageReference.media, arguments: arguments, scale: System.backingScale)
+            })
+        }
+        
+        
+        self.preview.set(arguments: arguments)
+        
+
+        let inkRect = size.bounds.insetBy(dx: -20, dy: -20)
+        
+        let current = self.inkView
+        current.frame = inkRect
+        
+        current.update(size: inkRect.size, color: NSColor.white, textColor: .black)
+       
+        if let positionFlags = positionFlags {
+            let mask: CornerMaskLayer
+            if let layer = self.inkMaskView {
+                mask = layer
+            } else {
+                mask = CornerMaskLayer()
+                self.inkMaskView = mask
+            }
+            mask.frame = size.bounds
+            mask.positionFlags = positionFlags
+            self.layer?.mask = mask
+        } else {
+            inkMaskView = nil
+            layer?.mask = nil
+            layer?.cornerRadius = 4
+        }
+        preview.frame = size.bounds
+    }
+    
+    override func layout() {
+        super.layout()
+        preview.frame = bounds
+        inkMaskView?.frame = bounds
+        inkView.frame = bounds.insetBy(dx: -20, dy: -20)
+    }
+}
+
 class ChatInteractiveContentView: ChatMediaContentView {
 
     private let image:TransformImageView = TransformImageView()
@@ -98,6 +224,8 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
     private let mediaPlayerStatusDisposable = MetaDisposable()
     private var autoplayVideoView: ChatVideoAutoplayView?
+    
+    private var inkView: MediaInkView?
     
     override var backgroundColor: NSColor {
         get {
@@ -248,11 +376,13 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
     override func layout() {
         super.layout()
+        
         progressView?.center()
         timableProgressView?.center()
         videoAccessory?.setFrameOrigin(8, 8)
         self.image.setFrameSize(frame.size)
-        
+        inkView?.frame = self.image.frame
+
         if let file = media as? TelegramMediaFile {
             let dimensions = file.dimensions?.size ?? frame.size
             let size = blurBackground ? dimensions.aspectFitted(frame.size) : frame.size
@@ -425,6 +555,10 @@ class ChatInteractiveContentView: ChatMediaContentView {
         
         let versionUpdated = parent?.stableVersion != self.parent?.stableVersion
         
+        let forceSpoiler = parameters?.forceSpoiler == true
+        let messageSpoiler = parent?.isMediaSpoilered ?? false
+        let isSpoiler = (messageSpoiler || forceSpoiler) && (parameters?.isRevealed == false)
+
         
         let mediaUpdated = self.media == nil || !media.isSemanticallyEqual(to: self.media!) || (parent?.autoremoveAttribute != self.parent?.autoremoveAttribute) || positionFlags != self.positionFlags || animated || self.frame.size != size
 
@@ -433,6 +567,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 self.autoplayVideoView = nil
             }
         }
+        
         
         var clearInstantly: Bool = mediaUpdated
         if clearInstantly, parent?.stableId == self.parent?.stableId {
@@ -482,6 +617,8 @@ class ChatInteractiveContentView: ChatMediaContentView {
         if mediaUpdated /*mediaUpdated*/ {
             
             
+            
+            
             if let image = media as? TelegramMediaImage {
                 
                 autoplayVideoView = nil
@@ -489,7 +626,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 videoAccessory = nil
                 dimensions = image.representationForDisplayAtSize(PixelDimensions(size))?.dimensions.size ?? size
                 
-                if let parent = parent, parent.containsSecretMedia {
+                if let parent = parent, parent.containsSecretMedia || isSpoiler {
                     updateImageSignal = chatSecretPhoto(account: context.account, imageReference: ImageMediaReference.message(message: MessageReference(parent), media: image), scale: backingScaleFactor, synchronousLoad: approximateSynchronousValue)
                 } else {
                     updateImageSignal = chatMessagePhoto(account: context.account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image), scale: backingScaleFactor, synchronousLoad: approximateSynchronousValue)
@@ -525,7 +662,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                     videoAccessory = nil
                 }
                 
-                if let parent = parent, parent.containsSecretMedia {
+                if let parent = parent, parent.containsSecretMedia || isSpoiler {
                     updateImageSignal = chatSecretMessageVideo(account: context.account, fileReference: fileReference, scale: backingScaleFactor)
                 } else {
                     updateImageSignal = chatMessageVideo(postbox: context.account.postbox, fileReference: fileReference, scale: backingScaleFactor) //chatMessageVideo(account: account, video: file, scale: backingScaleFactor)
@@ -601,7 +738,58 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 autoplayVideoView?.view.layer?.cornerRadius = .cornerRadius
             }
             
-            
+            if isSpoiler {
+                let current: MediaInkView
+                if let view = self.inkView {
+                    current = view
+                } else {
+                    current = MediaInkView(frame: size.bounds)
+                    self.inkView = current
+                    
+                    let aboveView = self.progressView ?? videoAccessory
+                    if let view = aboveView {
+                        self.addSubview(current, positioned: .below, relativeTo: view)
+                    } else {
+                        self.addSubview(current)
+                    }
+                    if animated {
+                        current.layer?.animateAlpha(from: 0.3, to: 1, duration: 0.2)
+                    }
+                }
+                current.removeAllHandlers()
+                current.set(handler: { current in
+                    if let parent = parent {
+                        parameters?.revealMedia(parent)
+                    }
+                }, for: .Click)
+                
+               // self.image.layer?.opacity = 0
+                self.autoplayVideoView?.view.layer?.opacity = 0
+                
+                let image: TelegramMediaImage
+                if let current = media as? TelegramMediaImage {
+                    image = current
+                } else if let file = media as? TelegramMediaFile {
+                    image = TelegramMediaImage.init(imageId: file.fileId, representations: file.previewRepresentations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: nil, flags: TelegramMediaImageFlags())
+                } else {
+                    fatalError()
+                }
+                
+                let imageReference = parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: image) : ImageMediaReference.standalone(media: image)
+
+                
+                current.update(isRevealed: false, updated: mediaUpdated, context: context, imageReference: imageReference, size: size, positionFlags: positionFlags, synchronousLoad: approximateSynchronousValue)
+                current.frame = size.bounds
+            } else {
+                if let view = self.inkView {
+                    view.userInteractionEnabled = false
+                    performSubviewRemoval(view, animated: animated)
+                    self.inkView = nil
+                }
+                self.image.layer?.opacity = 1
+                self.autoplayVideoView?.view.layer?.opacity = 1
+            }
+
             var first: Bool = true
             
             if let updateStatusSignal = updatedStatusSignal {
@@ -627,12 +815,12 @@ class ChatInteractiveContentView: ChatMediaContentView {
                         
                         
                         if let file = strongSelf.media as? TelegramMediaFile, strongSelf.autoplayVideo {
-                            if strongSelf.autoplayVideoView == nil {
+                            if strongSelf.autoplayVideoView == nil, !isSpoiler {
                                 let autoplay: ChatVideoAutoplayView
                                 
                                 let fileReference = parent != nil ? FileMediaReference.message(message: MessageReference(parent!), media: file) : FileMediaReference.standalone(media: file)
                                 
-                                autoplay = ChatVideoAutoplayView(mediaPlayer: MediaPlayer(postbox: context.account.postbox, reference: fileReference.resourceReference(fileReference.media.resource), streamable: file.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: false, volume: 0.0, fetchAutomatically: true), view: MediaPlayerView(backgroundThread: true))
+                                autoplay = ChatVideoAutoplayView(mediaPlayer: MediaPlayer(postbox: context.account.postbox, userLocation: fileReference.userLocation, userContentType: fileReference.userContentType, reference: fileReference.resourceReference(fileReference.media.resource), streamable: file.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: false, volume: 0.0, fetchAutomatically: true), view: MediaPlayerView(backgroundThread: true))
                                 
                                 strongSelf.autoplayVideoView = autoplay
                                 if !strongSelf.blurBackground {
@@ -697,7 +885,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                                 self?.image.animatesAlphaOnFirstTransition = false
                             }
                             
-                            var removeProgress: Bool = strongSelf.autoplayVideo
+                            var removeProgress: Bool = strongSelf.autoplayVideo && !isSpoiler
                             if case .Local = status, media is TelegramMediaImage, !containsSecretMedia {
                                 removeProgress = true
                             }
@@ -713,12 +901,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                                         break
                                     }
                                     strongSelf.progressView = nil
-                                    progressView.layer?.animateAlpha(from: 1, to: 0, duration: 0.25, timingFunction: .linear, removeOnCompletion: false, completion: { [weak progressView] completed in
-                                        if completed {
-                                             progressView?.removeFromSuperview()
-                                        }
-                                    })
-                                   
+                                     performSubviewRemoval(progressView, animated: animated)
                                 }
                             } else {
                                 strongSelf.progressView?.layer?.removeAllAnimations()
@@ -726,7 +909,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
                                     let progressView = RadialProgressView(theme:RadialProgressTheme(backgroundColor: .blackTransparent, foregroundColor: .white, icon: playerPlayThumb))
                                     progressView.frame = CGRect(origin: CGPoint(), size: CGSize(width: parent?.groupingKey != nil ? 30 : 40.0, height: parent?.groupingKey != nil ? 30 : 40.0))
                                     strongSelf.progressView = progressView
-                                    strongSelf.addSubview(progressView)
+                                    strongSelf.addSubview(progressView, positioned: .above, relativeTo: strongSelf.inkView)
                                     strongSelf.progressView?.center()
                                     progressView.fetchControls = strongSelf.fetchControls
                                 }
@@ -783,7 +966,6 @@ class ChatInteractiveContentView: ChatMediaContentView {
                 }))
                
             }
-            
         }
         
         
@@ -832,7 +1014,7 @@ class ChatInteractiveContentView: ChatMediaContentView {
             if let media = media as? TelegramMediaFile, let parent = parent {
                 let reference = FileMediaReference.message(message: MessageReference(parent), media: media)
                 
-                let preload = preloadVideoResource(postbox: context.account.postbox, resourceReference: reference.resourceReference(media.resource), duration: 3.0)
+                let preload = preloadVideoResource(postbox: context.account.postbox, userLocation: .peer(parent.id.peerId), userContentType: .init(file: media), resourceReference: reference.resourceReference(media.resource), duration: 3.0)
                 partDisposable.set(preload.start())
 
             }

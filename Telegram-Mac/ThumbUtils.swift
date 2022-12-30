@@ -169,7 +169,7 @@ let playerPlayThumb = generateImage(NSMakeSize(40.0,40.0), contextGenerator: { s
     context.setFillColor(NSColor.white.cgColor)
     context.fillPath()
     
-})
+})!
 
 let playerPauseThumb = generateImage(CGSize(width: 40, height: 40), contextGenerator: { size, context in
     context.clear(CGRect(origin: CGPoint(), size: size))
@@ -178,7 +178,7 @@ let playerPauseThumb = generateImage(CGSize(width: 40, height: 40), contextGener
     //20 - 2
     context.fill(CGRect(x: 14, y: 12, width: 4.0, height: 16))
     context.fill(CGRect(x: 22, y: 12, width: 4.0, height: 16))
-})
+})!
 
 
 let stopFetchStreamableControl = generateImage(CGSize(width: 6, height: 6), contextGenerator: { size, context in

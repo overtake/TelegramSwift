@@ -89,7 +89,7 @@ class GIFContainerView: Control {
     
     func fetch() {
         if let context = context, let reference = fileReference {
-            fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: reference.resourceReference(reference.media.resource), statsCategory: .file).start())
+            fetchDisposable.set(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: reference.userLocation, userContentType: reference.userContentType, reference: reference.resourceReference(reference.media.resource), statsCategory: .file).start())
         }
     }
     

@@ -752,9 +752,9 @@ private final class WallpaperPreviewView: View {
             var representations:[TelegramMediaImageRepresentation] = []
             representations.append(contentsOf: file.previewRepresentations)
             if let dimensions = file.dimensions {
-                representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                representations.append(TelegramMediaImageRepresentation(dimensions: dimensions, resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
             } else {
-                representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(maximumSize), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                representations.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(maximumSize), resource: file.resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
             }
             
             if isPattern {
@@ -941,7 +941,7 @@ private func cropWallpaperIfNeeded(_ wallpaper: Wallpaper, account: Account, rec
                         if CGImageDestinationFinalize(colorDestination) {
                             let thumdResource = LocalFileMediaResource(fileId: arc4random64())
                             account.postbox.mediaBox.storeResourceData(thumdResource.id, data: mutableData as Data)
-                            result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedImage.backingSize.aspectFitted(NSMakeSize(90, 90))), resource: thumdResource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                            result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedImage.backingSize.aspectFitted(NSMakeSize(90, 90))), resource: thumdResource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                         }
                     }
                     
@@ -950,7 +950,7 @@ private func cropWallpaperIfNeeded(_ wallpaper: Wallpaper, account: Account, rec
                      disposable.set(putToTemp(image: NSImage(cgImage: fittedImage, size: fittedDimensions), compress: false).start(next: { path in
                         copyToClipboard(path)
                         let resource = LocalFileReferenceMediaResource(localFilePath: path, randomId: arc4random64())
-                        result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedDimensions), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                        result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedDimensions), resource: resource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                         
                         let wallpaper: Wallpaper = .image(result, settings: wallpaper.settings)
                         subscriber.putNext(wallpaper)
@@ -1079,7 +1079,7 @@ private func cropWallpaperIfNeeded(_ wallpaper: Wallpaper, account: Account, rec
                         if CGImageDestinationFinalize(colorDestination) {
                             let thumdResource = LocalFileMediaResource(fileId: arc4random64())
                             account.postbox.mediaBox.storeResourceData(thumdResource.id, data: mutableData as Data)
-                            result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedImage.backingSize.aspectFitted(NSMakeSize(90, 90))), resource: thumdResource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false))
+                            result.append(TelegramMediaImageRepresentation(dimensions: PixelDimensions(fittedImage.backingSize.aspectFitted(NSMakeSize(90, 90))), resource: thumdResource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false))
                         }
                     }
                     

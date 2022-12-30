@@ -35,19 +35,23 @@ fileprivate struct PreviewSendingState : Hashable {
     }
     let state:State
     let isCollage: Bool
+    let isSpoiler: Bool
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(state)
         hasher.combine(isCollage)
+        hasher.combine(isSpoiler)
     }
     
     func withUpdatedState(_ state: State) -> PreviewSendingState {
-        return .init(state: state, isCollage: self.isCollage)
+        return .init(state: state, isCollage: self.isCollage, isSpoiler: self.isSpoiler)
     }
     func withUpdatedIsCollage(_ isCollage: Bool) -> PreviewSendingState {
-        return .init(state: self.state, isCollage: isCollage)
+        return .init(state: self.state, isCollage: isCollage, isSpoiler: self.isSpoiler)
     }
-    
+    func withUpdatedIsSpoiler(_ isSpoiler: Bool) -> PreviewSendingState {
+        return .init(state: self.state, isCollage: self.isCollage, isSpoiler: isSpoiler)
+    }
 }
 
 
@@ -92,27 +96,36 @@ fileprivate class PreviewSenderView : Control {
     fileprivate let fileButton = ImageButton()
     fileprivate let collageButton = ImageButton()
     fileprivate let archiveButton = ImageButton()
+    fileprivate let spoilerButton = ImageButton()
     fileprivate let textContainerView: View = View()
     fileprivate let separator: View = View()
     fileprivate let forHelperView: View = View()
     fileprivate weak var controller: PreviewSenderController?
     fileprivate var stateValueInteractiveUpdate: ((PreviewSendingState)->Void)?
     
-    private var _state: PreviewSendingState = PreviewSendingState(state: .file, isCollage: true)
+    private var _state: PreviewSendingState = PreviewSendingState(state: .file, isCollage: true, isSpoiler: false)
     var state: PreviewSendingState {
         set {
+            let previous = _state
             _state = newValue
             self.fileButton.isSelected = newValue.state == .file
             self.photoButton.isSelected = newValue.state == .media
             self.collageButton.isSelected = newValue.isCollage
             self.archiveButton.isSelected = newValue.state == .archive
+            self.spoilerButton.isSelected = newValue.isSpoiler
+
+            spoilerButton.appTooltip = newValue.isSpoiler ? strings().previewSenderSpoilerTooltipDisable : strings().previewSenderSpoilerTooltipEnable
+
             
-            Queue.mainQueue().justDispatch {
-                removeAllTooltips(mainWindow)
+            DispatchQueue.main.async {
+                if newValue.state != previous.state || newValue.isCollage != previous.isCollage, let window = self.kitWindow {
+                    removeAllTooltips(window)
+                }
                 self.fileButton.controlState = .Normal
                 self.photoButton.controlState = .Normal
                 self.collageButton.controlState = .Normal
                 self.archiveButton.controlState = .Normal
+                self.spoilerButton.controlState = .Normal
             }
         }
         get {
@@ -153,6 +166,9 @@ fileprivate class PreviewSenderView : Control {
         collageButton.appTooltip = strings().previewSenderCollageTooltip
         archiveButton.appTooltip = strings().previewSenderArchiveTooltip
 
+
+        
+        
         photoButton.set(image: ControlStyle(highlightColor: theme.colors.grayIcon).highlight(image: theme.icons.previewSenderPhoto), for: .Normal)
         _ = photoButton.sizeToFit()
         
@@ -173,6 +189,12 @@ fileprivate class PreviewSenderView : Control {
         archiveButton.set(handler: {  _ in
             updateValue {
                 $0.withUpdatedState(.archive)
+            }
+        }, for: .Click)
+        
+        spoilerButton.set(handler: { _ in
+            updateValue {
+                $0.withUpdatedIsSpoiler(!$0.isSpoiler)
             }
         }, for: .Click)
         
@@ -202,13 +224,16 @@ fileprivate class PreviewSenderView : Control {
         _ = archiveButton.sizeToFit()
 
         
-        
+        spoilerButton.set(image: theme.icons.send_media_spoiler, for: .Normal)
+        _ = spoilerButton.sizeToFit()
+
         headerView.addSubview(closeButton)
         headerView.addSubview(fileButton)
         headerView.addSubview(photoButton)
         headerView.addSubview(collageButton)
         headerView.addSubview(archiveButton)
-        
+        headerView.addSubview(spoilerButton)
+
         sendButton.set(image: theme.icons.chatSendMessage, for: .Normal)
         sendButton.autohighlight = false
         _ = sendButton.sizeToFit()
@@ -260,11 +285,15 @@ fileprivate class PreviewSenderView : Control {
                 switch chatInteraction.mode {
                 case .history, .thread:
                     if !peer.isSecretChat {
-                        items.append(ContextMenuItem(peer.id == chatInteraction.context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage, handler: {
+                        items.append(ContextMenuItem(peer.id == chatInteraction.context.peerId ? strings().chatSendSetReminder : strings().chatSendScheduledMessage, handler: { [weak controller] in
                             showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak controller] date in
                                 controller?.send(false, atDate: date)
                             }), for: context.window)
                         }, itemImage: MenuAnimation.menu_schedule_message.value))
+                        
+                        items.append(ContextMenuItem(strings().previewSenderSendAsSpoiler, handler: { [weak controller] in
+                            controller?.send(false, asSpoiler: true)
+                        }, itemImage: MenuAnimation.menu_send_spoiler.value))
                     }
                 default:
                     break
@@ -362,10 +391,11 @@ fileprivate class PreviewSenderView : Control {
        // needsLayout = true
     }
     
-    func applyOptions(_ options:[PreviewOptions], count: Int, canCollage: Bool) {
-        fileButton.isHidden = false//!options.contains(.media)
-        photoButton.isHidden = !options.contains(.media)
-        archiveButton.isHidden = count < 2
+    func applyOptions(_ options:[PreviewOptions], count: Int, canCollage: Bool, canSpoiler: Bool) {
+        self.fileButton.isHidden = false//!options.contains(.media)
+        self.photoButton.isHidden = !options.contains(.media)
+        self.archiveButton.isHidden = count < 2
+        self.spoilerButton.isHidden = !canSpoiler
         self.collageButton.isHidden = !canCollage
         separator.isHidden = false
         needsLayout = true
@@ -387,6 +417,7 @@ fileprivate class PreviewSenderView : Control {
         
         
         closeButton.centerY(x: headerView.frame.width - closeButton.frame.width - 10)
+        
         collageButton.centerY(x: closeButton.frame.minX - 10 - collageButton.frame.width)
 
         var inset: CGFloat = 10
@@ -404,6 +435,14 @@ fileprivate class PreviewSenderView : Control {
         if !archiveButton.isHidden {
             archiveButton.centerY(x: inset)
             inset += archiveButton.frame.width + 10
+        }
+        
+        if !spoilerButton.isHidden {
+            if collageButton.isHidden {
+                spoilerButton.centerY(x: closeButton.frame.minX - 10 - spoilerButton.frame.width)
+            } else {
+                spoilerButton.centerY(x: collageButton.frame.minX - 10 - spoilerButton.frame.width)
+            }
         }
         
         textContainerView.setFrameSize(frame.width, textView.frame.height + 16)
@@ -526,14 +565,14 @@ private enum PreviewEntryId : Hashable {
 
 private enum PreviewEntry : Comparable, Identifiable {
     case section(Int)
-    case media(index: Int, sectionId: Int, url: URL, media: Media)
-    case mediaGroup(index: Int, sectionId: Int, urls: [URL], messages: [Message])
+    case media(index: Int, sectionId: Int, url: URL, media: Media, isSpoiler: Bool)
+    case mediaGroup(index: Int, sectionId: Int, urls: [URL], messages: [Message], isSpoiler: Bool)
     case archive(index: Int, sectionId: Int, urls: [URL], media: Media)
     var stableId: PreviewEntryId {
         switch self {
         case let .section(sectionId):
             return .section(sectionId)
-        case let .media(_, _, _, media):
+        case let .media(_, _, _, media, _):
             return .media(media)
         case .mediaGroup:
             return .mediaGroup
@@ -546,9 +585,9 @@ private enum PreviewEntry : Comparable, Identifiable {
         switch self {
         case let .section(sectionId):
             return (sectionId + 1) * 1000 - sectionId
-        case let .media(index, sectionId, _, _):
+        case let .media(index, sectionId, _, _, _):
             return (sectionId * 1000) + index
-        case let .mediaGroup(index, sectionId, _, _):
+        case let .mediaGroup(index, sectionId, _, _, _):
             return (sectionId * 1000) + index
         case let .archive(index, sectionId, _, _):
             return (sectionId * 1000) + index
@@ -559,8 +598,8 @@ private enum PreviewEntry : Comparable, Identifiable {
         switch self {
         case .section:
             return GeneralRowItem(initialSize, height: 20, stableId: stableId)
-        case let .media(_, _, url, media):
-            return MediaPreviewRowItem(initialSize, media: media, context: arguments.context, editedData: state.editedData[url], edit: {
+        case let .media(_, _, url, media, isSpoiler):
+            return MediaPreviewRowItem(initialSize, media: media, context: arguments.context, editedData: state.editedData[url], isSpoiler: isSpoiler, edit: {
                 arguments.edit(url)
             }, paint: {
                 arguments.paint(url)
@@ -568,13 +607,13 @@ private enum PreviewEntry : Comparable, Identifiable {
                 arguments.delete(url)
             })
         case let .archive(_, _, _, media):
-            return MediaPreviewRowItem(initialSize, media: media, context: arguments.context, editedData: nil, edit: {
+            return MediaPreviewRowItem(initialSize, media: media, context: arguments.context, editedData: nil, isSpoiler: false, edit: {
               //  arguments.edit(url)
             }, delete: {
               // arguments.delete(url)
             })
-        case let .mediaGroup(_, _, urls, messages):
-            return MediaGroupPreviewRowItem(initialSize, messages: messages, urls: urls, editedData: state.editedData, edit: { url in
+        case let .mediaGroup(_, _, urls, messages, isSpoiler):
+            return MediaGroupPreviewRowItem(initialSize, messages: messages, urls: urls, editedData: state.editedData, isSpoiler: isSpoiler, edit: { url in
                 arguments.edit(url)
             }, paint: { url in
                 arguments.paint(url)
@@ -589,8 +628,8 @@ private enum PreviewEntry : Comparable, Identifiable {
 }
 private func == (lhs: PreviewEntry, rhs: PreviewEntry) -> Bool {
     switch lhs {
-    case let .media(index, sectionId, url, lhsMedia):
-        if case .media(index, sectionId, url, let rhsMedia) = rhs {
+    case let .media(index, sectionId, url, lhsMedia, spoiler):
+        if case .media(index, sectionId, url, let rhsMedia, spoiler) = rhs {
             return lhsMedia.isEqual(to: rhsMedia)
         } else {
             return false
@@ -601,8 +640,8 @@ private func == (lhs: PreviewEntry, rhs: PreviewEntry) -> Bool {
         } else {
             return false
         }
-    case let .mediaGroup(index, sectionId, url, lhsMessages):
-        if case .mediaGroup(index, sectionId, url, let rhsMessages) = rhs {
+    case let .mediaGroup(index, sectionId, url, lhsMessages, spoiler):
+        if case .mediaGroup(index, sectionId, url, let rhsMessages, spoiler) = rhs {
             if lhsMessages.count != rhsMessages.count {
                 return false
             } else {
@@ -646,17 +685,17 @@ private func previewMediaEntries( _ state: PreviewState) -> [PreviewEntry] {
                 messages.append(Message(media, stableId: UInt32(i), messageId: MessageId(peerId: PeerId(0), namespace: 0, id: MessageId.Id(i))))
             }
             if !messages.isEmpty {
-                entries.append(.mediaGroup(index: index, sectionId: sectionId, urls: state.urls, messages: messages))
+                entries.append(.mediaGroup(index: index, sectionId: sectionId, urls: state.urls, messages: messages, isSpoiler: state.currentState.isSpoiler))
             }
         } else {
             for (i, media) in state.medias.enumerated() {
-                entries.append(.media(index: index, sectionId: sectionId, url: state.urls[i], media: media))
+                entries.append(.media(index: index, sectionId: sectionId, url: state.urls[i], media: media, isSpoiler: state.currentState.isSpoiler))
                 index += 1
             }
         }
     case .file:
         for (i, media) in state.medias.enumerated() {
-            entries.append(.media(index: index, sectionId: sectionId, url: state.urls[i], media: media))
+            entries.append(.media(index: index, sectionId: sectionId, url: state.urls[i], media: media, isSpoiler: false))
             index += 1
         }
     }
@@ -818,7 +857,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         return .high
     }
     
-    private var sendCurrentMedia:((Bool, Date?)->Void)? = nil
+    private var sendCurrentMedia:((Bool, Date?, Bool?)->Void)? = nil
     private var runEditor:((URL, Bool)->Void)? = nil
     private var insertAdditionUrls:(([URL]) -> Void)? = nil
     
@@ -892,18 +931,18 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         super.close()
     }
     
-    func send(_ silent: Bool, atDate: Date? = nil) {
+    func send(_ silent: Bool, atDate: Date? = nil, asSpoiler: Bool? = nil) {
         
         let text = self.genericView.textView.string().trimmed
         let context = self.context
-        if context.isPremium || context.premiumIsBlocked {
+        if context.isPremium {
             if text.length > context.premiumLimits.caption_length_limit_premium {
                 alert(for: chatInteraction.context.window, info: strings().chatInputErrorMessageTooLongCountable(text.length - Int(context.premiumLimits.caption_length_limit_premium)))
                 return
             }
         } else {
             if text.length > context.premiumLimits.caption_length_limit_default {
-                confirm(for: context.window, information: strings().chatInputErrorMessageTooLongCountable(text.length - Int(context.premiumLimits.caption_length_limit_premium)), okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().premiumGetPremiumDouble, successHandler: { result in
+                confirm(for: context.window, information: strings().chatInputErrorMessageTooLongCountable(text.length - Int(context.premiumLimits.caption_length_limit_default)), okTitle: strings().alertOK, cancelTitle: "", thridTitle: strings().premiumGetPremiumDouble, successHandler: { result in
                     switch result {
                     case .thrid:
                         showPremiumLimit(context: context, type: .caption(text.length))
@@ -920,11 +959,11 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         case .scheduled:
             if let peer = chatInteraction.peer {
                 showModal(with: DateSelectorModalController(context: context, mode: .schedule(peer.id), selectedAt: { [weak self] date in
-                    self?.sendCurrentMedia?(silent, date)
+                    self?.sendCurrentMedia?(silent, date, asSpoiler)
                 }), for: context.window)
             }
         case .history, .thread:
-            sendCurrentMedia?(silent, atDate)
+            sendCurrentMedia?(silent, atDate, asSpoiler)
         case .pinned:
             break
         }
@@ -1003,7 +1042,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         self.disposable.set(actionsDisposable)
         
         
-        let initialState = PreviewState(urls: [], medias: [], currentState: .init(state: .media, isCollage: true), editedData: [:])
+        let initialState = PreviewState(urls: [], medias: [], currentState: .init(state: .media, isCollage: true, isSpoiler: false), editedData: [:])
         
         let statePromise:ValuePromise<PreviewState> = ValuePromise(ignoreRepeated: true)
         let stateValue = Atomic(value: initialState)
@@ -1091,6 +1130,8 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         let first: Atomic<Bool> = Atomic(value: false)
         let scrollAfterTransition: Atomic<Bool> = Atomic(value: false)
         
+        let isSecretChat = chatInteraction.presentation.peer?.isSecretChat == true
+        
         actionsDisposable.add(itemsTransition.start(next: { [weak self] transition in
             guard let `self` = self else {return}
             
@@ -1126,11 +1167,20 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             default:
                 break
             }
-            self.genericView.applyOptions(options, count: self.urls.count, canCollage: canCollage)
             
+            let canSpoiler: Bool
+            canSpoiler = options.contains(.media) && state.state == .media && !isSecretChat
+
+            
+            self.genericView.applyOptions(options, count: self.urls.count, canCollage: canCollage, canSpoiler: canSpoiler)
+            
+            CATransaction.begin()
             self.genericView.tableView.merge(with: transition)
+            CATransaction.commit()
             
             self.genericView.textView.setPlaceholderAttributedString(.initialize(string: self.inputPlaceholder, color: theme.colors.grayText, font: .normal(.text)), update: false)
+            
+            
 
             if self.genericView.tableView.isEmpty {
                 self.closeModal()
@@ -1171,10 +1221,10 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         default:
             break
         }
-        var state: PreviewSendingState = .init(state: mediaState, isCollage: canCollage)
+        var state: PreviewSendingState = .init(state: mediaState, isCollage: canCollage, isSpoiler: false)
         if let _ = chatInteraction.presentation.slowMode {
             if state.state != .archive && self.urls.count > 1, !state.isCollage {
-                state = .init(state: .archive, isCollage: false)
+                state = .init(state: .archive, isCollage: false, isSpoiler: false)
             }
         }
         
@@ -1204,7 +1254,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
             self.urlsAndStateValue.set(UrlAndState(self.urls, state))
         }
         
-        self.sendCurrentMedia = { [weak self] silent, atDate in
+        self.sendCurrentMedia = { [weak self] silent, atDate, asSpoiler in
             guard let `self` = self else { return }
             
             let slowMode = self.chatInteraction.presentation.slowMode
@@ -1254,8 +1304,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                         input = ChatTextInputState()
                     }
                 }
-                
-                self.chatInteraction.sendMedias(medias, input, state.isCollage, additionalMessage, silent, atDate)
+                self.chatInteraction.sendMedias(medias, input, state.isCollage, additionalMessage, silent, atDate, asSpoiler ?? state.isSpoiler)
             }
             
             

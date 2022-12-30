@@ -8936,6 +8936,97 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var contact_set_photo: CGImage {
+      if let image = cached.with({ $0["contact_set_photo"] }) {
+          return image
+      } else {
+          let image = _contact_set_photo()
+          _ = cached.modify { current in 
+              var current = current
+              current["contact_set_photo"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var contact_suggest_photo: CGImage {
+      if let image = cached.with({ $0["contact_suggest_photo"] }) {
+          return image
+      } else {
+          let image = _contact_suggest_photo()
+          _ = cached.modify { current in 
+              var current = current
+              current["contact_suggest_photo"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var send_media_spoiler: CGImage {
+      if let image = cached.with({ $0["send_media_spoiler"] }) {
+          return image
+      } else {
+          let image = _send_media_spoiler()
+          _ = cached.modify { current in 
+              var current = current
+              current["send_media_spoiler"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var general_delete: CGImage {
+      if let image = cached.with({ $0["general_delete"] }) {
+          return image
+      } else {
+          let image = _general_delete()
+          _ = cached.modify { current in 
+              var current = current
+              current["general_delete"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var storage_music_play: CGImage {
+      if let image = cached.with({ $0["storage_music_play"] }) {
+          return image
+      } else {
+          let image = _storage_music_play()
+          _ = cached.modify { current in 
+              var current = current
+              current["storage_music_play"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var storage_music_pause: CGImage {
+      if let image = cached.with({ $0["storage_music_pause"] }) {
+          return image
+      } else {
+          let image = _storage_music_pause()
+          _ = cached.modify { current in 
+              var current = current
+              current["storage_music_pause"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var storage_media_play: CGImage {
+      if let image = cached.with({ $0["storage_media_play"] }) {
+          return image
+      } else {
+          let image = _storage_media_play()
+          _ = cached.modify { current in 
+              var current = current
+              current["storage_media_play"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -9624,6 +9715,13 @@ public final class TelegramIconsTheme {
   private let _chatlist_arrow: ()->CGImage
   private let _chatlist_arrow_active: ()->CGImage
   private let _dialog_auto_delete: ()->CGImage
+  private let _contact_set_photo: ()->CGImage
+  private let _contact_suggest_photo: ()->CGImage
+  private let _send_media_spoiler: ()->CGImage
+  private let _general_delete: ()->CGImage
+  private let _storage_music_play: ()->CGImage
+  private let _storage_music_pause: ()->CGImage
+  private let _storage_media_play: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -10312,7 +10410,14 @@ public final class TelegramIconsTheme {
       chatlist_forum_closed_topic_active: @escaping()->CGImage,
       chatlist_arrow: @escaping()->CGImage,
       chatlist_arrow_active: @escaping()->CGImage,
-      dialog_auto_delete: @escaping()->CGImage
+      dialog_auto_delete: @escaping()->CGImage,
+      contact_set_photo: @escaping()->CGImage,
+      contact_suggest_photo: @escaping()->CGImage,
+      send_media_spoiler: @escaping()->CGImage,
+      general_delete: @escaping()->CGImage,
+      storage_music_play: @escaping()->CGImage,
+      storage_music_pause: @escaping()->CGImage,
+      storage_media_play: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -11001,5 +11106,12 @@ public final class TelegramIconsTheme {
       self._chatlist_arrow = chatlist_arrow
       self._chatlist_arrow_active = chatlist_arrow_active
       self._dialog_auto_delete = dialog_auto_delete
+      self._contact_set_photo = contact_set_photo
+      self._contact_suggest_photo = contact_suggest_photo
+      self._send_media_spoiler = send_media_spoiler
+      self._general_delete = general_delete
+      self._storage_music_play = storage_music_play
+      self._storage_music_pause = storage_music_pause
+      self._storage_media_play = storage_media_play
   }
 }

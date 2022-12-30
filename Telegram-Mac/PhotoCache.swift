@@ -277,8 +277,8 @@ private class PhotoCache {
 }
 
 
-private let peerPhotoCache = PhotoCache(100)
-private let photosCache = PhotoCache(100)
+private let peerPhotoCache = PhotoCache(300)
+private let photosCache = PhotoCache(300)
 private let photoThumbsCache = PhotoCache(500)
 private let themeThums = PhotoCache(500)
 

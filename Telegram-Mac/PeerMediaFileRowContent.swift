@@ -23,10 +23,10 @@ class PeerMediaFileRowItem: PeerMediaRowItem {
     private(set) var actionLayoutLocal:TextViewLayout
     private(set) var iconArguments:TransformImageArguments?
     private(set) var icon:TelegramMediaImage?
-    
+    private(set) var docIcon:CGImage?
+
     private(set) var file:TelegramMediaFile?
     
-    private(set) var docIcon:CGImage?
     private(set) var docTitle:NSAttributedString?
     override init(_ initialSize:NSSize, _ interface:ChatInteraction, _ object: PeerMediaSharedEntry, galleryType: GalleryAppearType = .history, gallery: @escaping(Message, GalleryAppearType)->Void, viewType: GeneralViewType = .legacy) {
         

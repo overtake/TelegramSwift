@@ -693,6 +693,10 @@ final class MediaPlayerAudioRenderer {
     let audioTimebase: CMTimebase
     
     init(playAndRecord: Bool, forceAudioToSpeaker: Bool, baseRate: Double, volume: Float, updatedRate: @escaping () -> Void, audioPaused: @escaping () -> Void) {
+        
+        
+        audioPlayerRendererQueue.sync{}
+        
         var audioClock: CMClock?
         
         var deviceId:AudioDeviceID = AudioDeviceID()

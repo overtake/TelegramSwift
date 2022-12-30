@@ -502,9 +502,10 @@ class AuthController : GenericViewController<AuthView> {
             updateProxy()
         }))
         
-        let delaySignal = unauthorizedConfiguration(accountManager: self.sharedContext.accountManager) |> take(1) |> castError(Void.self) |> timeout(25.0, queue: .mainQueue(), alternate: .fail(Void())) |> deliverOnMainQueue
+
+        let delaySignal = engine.auth.test() |> take(1) |> timeout(10, queue: .mainQueue(), alternate: .fail("timeout")) |> deliverOnMainQueue
         
-        delayDisposable.set(delaySignal.start(error: {
+        delayDisposable.set(delaySignal.start(error: { _ in
             forceHide = false
             updateProxy()
         }))

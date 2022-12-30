@@ -249,6 +249,9 @@ enum LocalAnimatedSticker : String {
     case menu_show
     case menu_report_false_positive
     case menu_bio
+    case menu_send_spoiler
+    case menu_forever
+    case menu_add
 
     case forum_topic
     

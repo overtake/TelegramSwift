@@ -236,7 +236,27 @@ private final class FetchManagerCategoryContext {
                     }
                     activeContext.disposable?.dispose()
                     let postbox = self.postbox
-                    activeContext.disposable = (fetchedMediaResource(mediaBox: postbox.mediaBox, reference: entry.resourceReference, ranges: parsedRanges, statsCategory: entry.statsCategory, reportResultStatus: true, continueInBackground: entry.userInitiated)
+                    
+                    
+                    var userLocation: MediaResourceUserLocation = .other
+                    switch entry.id.location {
+                    case let .chat(peerId):
+                        userLocation = .peer(peerId)
+                    }
+                    var userContentType: MediaResourceUserContentType = .other
+                    switch entry.statsCategory {
+                    case .image:
+                        userContentType = .image
+                    case .video:
+                        userContentType = .video
+                    case .file:
+                        userContentType = .file
+                    default:
+                        userContentType = .other
+                    }
+
+                    
+                    activeContext.disposable = (fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: userLocation, userContentType: userContentType, reference: entry.resourceReference, ranges: parsedRanges, statsCategory: entry.statsCategory, reportResultStatus: true, continueInBackground: entry.userInitiated)
                     |> mapToSignal { type -> Signal<FetchResourceSourceType, FetchResourceError> in
                         if filterDownloadStatsEntry(entry: entry), case let .message(message, _) = entry.mediaReference, let messageId = message.id, case .remote = type {
                             let _ = addRecentDownloadItem(postbox: postbox, item: RecentDownloadItem(messageId: messageId, resourceId: entry.resourceReference.resource.id.stringRepresentation, timestamp: Int32(Date().timeIntervalSince1970), isSeen: false)).start()
@@ -346,21 +366,44 @@ private final class FetchManagerCategoryContext {
                 if restart {
                     activeContext.ranges = ranges
                     
+                    var userLocation: MediaResourceUserLocation = .other
+                    switch entry.id.location {
+                    case let .chat(peerId):
+                        userLocation = .peer(peerId)
+                    }
+                    var userContentType: MediaResourceUserContentType = .other
+                    switch entry.statsCategory {
+                    case .image:
+                        userContentType = .image
+                    case .video:
+                        userContentType = .video
+                    case .file:
+                        userContentType = .file
+                    default:
+                        userContentType = .other
+                    }
+
+                    
                     let entryCompleted = self.entryCompleted
                     let storeManager = self.storeManager
                     activeContext.disposable?.dispose()
                     if isVideoPreload {
-                        activeContext.disposable = (preloadVideoResource(postbox: self.postbox, resourceReference: entry.resourceReference, duration: 4.0)
-                        |> castError(FetchResourceError.self)
-                        |> map { _ -> FetchResourceSourceType in }
-                        |> then(.single(.local))
-                        |> deliverOnMainQueue).start(next: { _ in
+                        if let preloadVideoResource = FetchManagerImpl.preloadVideoResource {
+                            
+                            activeContext.disposable = (preloadVideoResource(self.postbox, userLocation, userContentType, entry.resourceReference, 4.0)
+                            |> castError(FetchResourceError.self)
+                            |> map { _ -> FetchResourceSourceType in }
+                            |> then(.single(.local))
+                            |> deliverOnMainQueue).start(next: { _ in
+                                entryCompleted(topEntryId)
+                            })
+                        } else {
                             entryCompleted(topEntryId)
-                        })
+                        }
                     } else if ranges.isEmpty {
                     } else {
                         let postbox = self.postbox
-                        activeContext.disposable = (fetchedMediaResource(mediaBox: postbox.mediaBox, reference: entry.resourceReference, ranges: parsedRanges, statsCategory: entry.statsCategory, reportResultStatus: true, continueInBackground: entry.userInitiated)
+                        activeContext.disposable = (fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: userLocation, userContentType: userContentType, reference: entry.resourceReference, ranges: parsedRanges, statsCategory: entry.statsCategory, reportResultStatus: true, continueInBackground: entry.userInitiated)
                         |> mapToSignal { type -> Signal<FetchResourceSourceType, FetchResourceError> in
                             if filterDownloadStatsEntry(entry: entry), case let .message(message, _) = entry.mediaReference, let messageId = message.id, case .remote = type {
                                 let _ = addRecentDownloadItem(postbox: postbox, item: RecentDownloadItem(messageId: messageId, resourceId: entry.resourceReference.resource.id.stringRepresentation, timestamp: Int32(Date().timeIntervalSince1970), isSeen: false)).start()
@@ -622,6 +665,8 @@ public final class FetchManagerImpl: FetchManager {
     private let storeManager: DownloadedMediaStoreManager?
     private var nextEpisodeId: Int32 = 0
     private var nextUserInitiatedIndex: Int32 = 0
+    
+    public static var preloadVideoResource:((Postbox, MediaResourceUserLocation, MediaResourceUserContentType, MediaResourceReference, Double)->Signal<Never, NoError>)? = nil
     
     private var categoryContexts: [FetchManagerCategory: FetchManagerCategoryContext] = [:]
     

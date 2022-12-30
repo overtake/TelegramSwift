@@ -23,7 +23,8 @@ class MediaGroupPreviewRowItem: TableRowItem {
     fileprivate let edit:(URL)->Void
     fileprivate let paint:(URL)->Void
     fileprivate let delete:(URL)->Void
-    init(_ initialSize: NSSize, messages: [Message], urls: [URL], editedData: [URL : EditedImageData], edit: @escaping(URL)->Void, paint: @escaping(URL)->Void, delete:@escaping(URL)->Void, context: AccountContext, reorder:@escaping(Int, Int)->Void) {
+    fileprivate let parameters:[ChatMediaLayoutParameters]
+    init(_ initialSize: NSSize, messages: [Message], urls: [URL], editedData: [URL : EditedImageData], isSpoiler: Bool, edit: @escaping(URL)->Void, paint: @escaping(URL)->Void, delete:@escaping(URL)->Void, context: AccountContext, reorder:@escaping(Int, Int)->Void) {
         layout = GroupedLayout(messages)
         self.editedData = editedData
         self.edit = edit
@@ -32,6 +33,11 @@ class MediaGroupPreviewRowItem: TableRowItem {
         self.urls = urls
         self.reorder = reorder
         self.context = context
+        self.parameters = messages.map {
+            let param = ChatMediaLayoutParameters(presentation: .empty, media: $0.media[0])
+            param.forceSpoiler = isSpoiler
+            return param
+        }
         super.init(initialSize)
         _ = makeSize(initialSize.width, oldWidth: 0)
     }
@@ -154,7 +160,7 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
         assert(contents.count == item.layout.count)
         
         for i in 0 ..< item.layout.count {
-            contents[i].update(with: item.layout.messages[i].media[0], size: item.layout.frame(at: i).size, context: item.context, parent: nil, table: item.table, positionFlags: item.layout.position(at: i))
+            contents[i].update(with: item.layout.messages[i].media[0], size: item.layout.frame(at: i).size, context: item.context, parent: nil, table: item.table, parameters: item.parameters[i], animated: animated, positionFlags: item.layout.position(at: i))
         }
         super.set(item: item, animated: animated)
         
@@ -292,7 +298,7 @@ class MediaGroupPreviewRowView : TableRowView, ModalPreviewRowViewProtocol {
             let layout = GroupedLayout(item.layout.messages)
             layout.measure(NSMakeSize(frame.width - 20, frame.width - 20))
             
-            if let new = layout.moveItemIfNeeded(at: index, point: point) {
+            if layout.moveItemIfNeeded(at: index, point: point) != nil {
                 
                 for i in 0 ..< layout.count {
                     let current = item.layout.frame(at: i).offsetBy(dx: offset.x, dy: offset.y).origin

@@ -17,7 +17,7 @@ public func transformOutgoingMessageMedia(postbox: Postbox, network: Network, re
     switch reference.media {
     case let file as TelegramMediaFile:
         let signal = Signal<(MediaResourceData, String?), NoError> { subscriber in
-            let fetch = fetchedMediaResource(mediaBox: postbox.mediaBox, reference: reference.resourceReference(file.resource), statsCategory: .file).start() //postbox.mediaBox.fetchedResource(file.resource, tag: TelegramMediaResourceFetchTag(statsCategory: .file)).start()
+            let fetch = fetchedMediaResource(mediaBox: postbox.mediaBox, userLocation: .other, userContentType: MediaResourceUserContentType(file: file), reference: reference.resourceReference(file.resource), statsCategory: .file).start() //postbox.mediaBox.fetchedResource(file.resource, tag: TelegramMediaResourceFetchTag(statsCategory: .file)).start()
             let dataSignal = resourceType(mimeType: file.mimeType) |> mapToSignal { ext in
                 return postbox.mediaBox.resourceData(file.resource, option: .complete(waitUntilFetchStatus: true)) |> map { result in
                     return (result, ext)
@@ -112,7 +112,7 @@ public func transformOutgoingMessageMedia(postbox: Postbox, network: Network, re
                                 if CGImageDestinationFinalize(colorDestination) {
                                     let thumbnailResource = LocalFileMediaResource(fileId: arc4random64(), isSecretRelated: false)
                                     postbox.mediaBox.storeResourceData(thumbnailResource.id, data: mutableData as Data)
-                                    subscriber.putNext(AnyMediaReference.standalone(media: file.withUpdatedSize(Int64(size ?? 0)).withUpdatedPreviewRepresentations([TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: thumbnailResource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false)])))
+                                    subscriber.putNext(AnyMediaReference.standalone(media: file.withUpdatedSize(Int64(size ?? 0)).withUpdatedPreviewRepresentations([TelegramMediaImageRepresentation(dimensions: PixelDimensions(image.size), resource: thumbnailResource, progressiveSizes: [], immediateThumbnailData: nil, hasVideo: false, isPersonal: false)])))
                                     
                                      return EmptyDisposable
                                 }

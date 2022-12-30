@@ -84,6 +84,16 @@ private func mediaForMessage(message: Message, postbox: Postbox) -> Media? {
                 return media
             }
         }
+        if let media = media as? TelegramMediaAction {
+            switch media.action {
+            case let .suggestedProfilePhoto(image):
+                return image
+            case let .photoUpdated(image):
+                return image
+            default:
+                return nil
+            }
+        }
         if let media = media as? TelegramMediaImage {
             return media
         } else if let file = media as? TelegramMediaFile {
@@ -436,10 +446,10 @@ class GalleryViewer: NSResponder {
         
         let previous: Atomic<[GalleryEntry]> = Atomic(value: [])
         
-        let transaction: Signal<(UpdateTransition<MGalleryItem>, Int), NoError> = peerPhotosGalleryEntries(context: context, peerId: peerId, firstStableId: firstStableId) |> map { (entries, selected) in
+        let transaction: Signal<(UpdateTransition<MGalleryItem>, Int), NoError> = peerPhotosGalleryEntries(context: context, peerId: peerId, firstStableId: firstStableId) |> map { (entries, selected, publicPhoto) in
             let (deleted, inserted, updated) = proccessEntriesWithoutReverse(previous.swap(entries), right: entries, { entry -> MGalleryItem in
                 switch entry {
-                case let .photo(_, _, photo, _, _, _, _):
+                case let .photo(_, _, photo, _, _, _, _, _, _):
                     if !photo.videoRepresentations.isEmpty {
                         return MGalleryGIFItem(context, entry, pagerSize)
                     } else {
@@ -1074,7 +1084,7 @@ class GalleryViewer: NSResponder {
     }
     
     private func deleteMessage(_ control: Control) {
-         if let message = self.pager.selectedItem?.entry.message {
+         if let _ = self.pager.selectedItem?.entry.message {
             let messages = pager.thumbsControl.items.compactMap({$0.entry.message})
              self.deleteMessages(messages)
          }
@@ -1083,7 +1093,7 @@ class GalleryViewer: NSResponder {
     private func updateMainPhoto() {
         if let item = self.pager.selectedItem {
             if let index = self.pager.index(for: item) {
-                if case let .photo(_, _, _, reference, _, _, _) = item.entry {
+                if case let .photo(_, _, _, reference, _, _, _, _, _) = item.entry {
                     if let reference = reference {
                         _ = context.engine.accountData.updatePeerPhotoExisting(reference: reference).start()
                         _ = pager.merge(with: UpdateTransition<MGalleryItem>(deleted: [index], inserted: [(0, item)], updated: []))
@@ -1106,7 +1116,7 @@ class GalleryViewer: NSResponder {
                 
                 pager.selectedIndex.set(index)
                 
-                if case let .photo(_, _, _, reference, _, _, _) = item.entry {
+                if case let .photo(_, _, _, reference, _, _, _, _, _) = item.entry {
                     _ = context.engine.accountData.removeAccountPhoto(reference: index == 0 ? nil : reference).start()
                 }
             }
@@ -1253,9 +1263,9 @@ class GalleryViewer: NSResponder {
     }
     
     func share(_ control: Control) -> Void {
+        let messages = pager.thumbsControl.items.compactMap { $0.entry.message }
         if let message = self.pager.selectedItem?.entry.message {
-            if message.groupInfo != nil {
-                let messages = pager.thumbsControl.items.compactMap({$0.entry.message})
+            if message.groupInfo != nil, !messages.isEmpty {
                 var items:[ContextMenuItem] = []
                 
                 let thisTitle: String

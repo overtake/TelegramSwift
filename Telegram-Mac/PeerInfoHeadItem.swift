@@ -471,8 +471,12 @@ class PeerInfoHeadItem: GeneralRowItem {
         
         
         let canEditPhoto: Bool
-        if let _ = peer as? TelegramUser {
-            canEditPhoto = false
+        if let peer = peer as? TelegramUser {
+            if peerView.peerIsContact {
+                canEditPhoto = peer.photo.isEmpty
+            } else {
+                canEditPhoto = false
+            }
         } else if let _ = peer as? TelegramSecretChat {
             canEditPhoto = false
         } else if let peer = peer as? TelegramGroup {
@@ -488,10 +492,10 @@ class PeerInfoHeadItem: GeneralRowItem {
         if let peer = peer, threadData == nil {
             if let peerReference = PeerReference(peer) {
                 if let largeProfileImage = peer.largeProfileImage {
-                    fetchPeerAvatar.add(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .avatar(peer: peerReference, resource: largeProfileImage.resource)).start())
+                    fetchPeerAvatar.add(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .avatar, reference: .avatar(peer: peerReference, resource: largeProfileImage.resource)).start())
                 }
                 if let smallProfileImage = peer.smallProfileImage {
-                    fetchPeerAvatar.add(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, reference: .avatar(peer: peerReference, resource: smallProfileImage.resource)).start())
+                    fetchPeerAvatar.add(fetchedMediaResource(mediaBox: context.account.postbox.mediaBox, userLocation: .peer(peer.id), userContentType: .avatar, reference: .avatar(peer: peerReference, resource: smallProfileImage.resource)).start())
                 }
             }
         }
@@ -501,6 +505,9 @@ class PeerInfoHeadItem: GeneralRowItem {
             result = result
                 .withUpdatedTitle(threadData.info.title)
                 .withUpdatedStatus(peer?.displayTitle ?? "")
+        }
+        if peerView.peerIsContact, let user = peer as? TelegramUser, user.photo.contains(where: { $0.isPersonal }) {
+            result = result.withUpdatedStatus(result.status.string + " \(strings().bullet) " + strings().userInfoSetByYou)
         }
         
         self.result = result
@@ -538,10 +545,11 @@ class PeerInfoHeadItem: GeneralRowItem {
         
         
         if let peer = peer, threadData == nil, peer.hasVideo {
-            self.photos = syncPeerPhotos(peerId: peer.id)
+            self.photos = syncPeerPhotos(peerId: peer.id).map { $0.value }
             let signal = peerPhotos(context: context, peerId: peer.id) |> deliverOnMainQueue
             var first: Bool = true
             peerPhotosDisposable.set(signal.start(next: { [weak self] photos in
+                let photos = photos.map { $0.value }
                 if self?.photos != photos {
                     self?.photos = photos
                     if !first {
@@ -1078,8 +1086,14 @@ private final class PeerInfoHeadView : GeneralContainableRowView {
                     } else {
                         reference = MediaResourceReference.standalone(resource: file.resource)
                     }
+                    let userLocation: MediaResourceUserLocation
+                    if let id = item.peer?.id {
+                        userLocation = .peer(id)
+                    } else {
+                        userLocation = .other
+                    }
                     
-                    let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, reference: reference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
+                    let mediaPlayer = MediaPlayer(postbox: item.context.account.postbox, userLocation: userLocation, userContentType: .avatar, reference: reference, streamable: true, video: true, preferSoftwareDecoding: false, enableSound: false, fetchAutomatically: true)
                     
                     mediaPlayer.actionAtEnd = .loop(nil)
                     

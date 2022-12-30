@@ -328,6 +328,7 @@ private final class SVideoControlsView : Control {
             layout()
         }
     }
+    private var downInside: Bool = false
     
     override func mouseUp(with event: NSEvent) {
         if progress.hasTemporaryState {
@@ -345,26 +346,41 @@ private final class SVideoControlsView : Control {
         }
     }
     
+    override func mouseDown(with event: NSEvent) {
+        super.mouseDown(with: event)
+        
+        let point = self.convert(event.locationInWindow, from: nil)
+
+        let rect = NSMakeRect(self.progress.frame.minX, self.progress.frame.minY - 5, self.progress.frame.width, self.progress.frame.height + 10)
+        
+        self.downInside = NSPointInRect(point, rect)
+
+    }
+    
     private func updateLivePreview() {
         guard let window = window else {
             return
         }
         
-        let live = (NSEvent.pressedMouseButtons & (1 << 0)) != 0
+        let live = (NSEvent.pressedMouseButtons & (1 << 0)) != 0 && self.progress.hasTemporaryState
         
         
         let point = self.convert(window.mouseLocationOutsideOfEventStream, from: nil)
         
         let rect = NSMakeRect(self.progress.frame.minX, self.progress.frame.minY - 5, self.progress.frame.width, self.progress.frame.height + 10)
         
-        if NSPointInRect(point, rect) || self.progress.hasTemporaryState {
-            let point = self.progress.convert(window.mouseLocationOutsideOfEventStream, from: nil)
-            let result = max(min(point.x, self.progress.frame.width), 0) / self.progress.frame.width
-            self.livePreview?(Float(result), live)
+        if !self.volumeSlider.hasTemporaryState {
+            if NSPointInRect(point, rect) || self.progress.hasTemporaryState {
+                let point = self.progress.convert(window.mouseLocationOutsideOfEventStream, from: nil)
+                let result = max(min(point.x, self.progress.frame.width), 0) / self.progress.frame.width
+                self.livePreview?(Float(result), live)
+            } else {
+                self.livePreview?(nil, live)
+            }
         } else {
-            self.livePreview?(nil, live)
+            var bp = 0
+            bp += 1
         }
-        
     }
     
     override func mouseMoved(with event: NSEvent) {
@@ -1008,12 +1024,15 @@ class SVideoView: NSView {
                 self.interactions?.scrobbling(value != nil ? status.duration * Double(value!) : nil)
                 self.setCurrentScrubblingState(self.currentPreviewState, live: live)
             }
-            if live {
-                self.interactions?.pause()
-                self.hideScrubblerPreviewIfNeeded(live: false)
-            } else {
-                self.interactions?.play()
+            if value != nil {
+                if live {
+                    self.interactions?.pause()
+                    self.hideScrubblerPreviewIfNeeded(live: false)
+                } else {
+                    self.interactions?.play()
+                }
             }
+            
         }
         
         controls.progress.onUserChanged = { [weak self] value in
@@ -1137,6 +1156,10 @@ class SVideoView: NSView {
                 self.previewView = nil
             }
         }
+    }
+    
+    var mouseDownIncontrols: Bool {
+        return self.controls.progress.hasTemporaryState
     }
     
     private var currentPreviewState: MediaPlayerFramePreviewResult?

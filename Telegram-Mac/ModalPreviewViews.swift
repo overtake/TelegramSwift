@@ -215,7 +215,7 @@ class VideoPreviewModalView : View, ModalPreviewControllerView {
                 currentView?.removeFromSuperview()
             }
                         
-            self.playerView = ChatVideoAutoplayView(mediaPlayer: MediaPlayer(postbox: context.account.postbox, reference: reference.resourceReference(reference.media.resource), streamable: reference.media.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: true, volume: 1.0, fetchAutomatically: true), view: MediaPlayerView(backgroundThread: true))
+            self.playerView = ChatVideoAutoplayView(mediaPlayer: MediaPlayer(postbox: context.account.postbox, userLocation: reference.userLocation, userContentType: reference.userContentType, reference: reference.resourceReference(reference.media.resource), streamable: reference.media.isStreamable, video: true, preferSoftwareDecoding: false, enableSound: true, volume: 1.0, fetchAutomatically: true), view: MediaPlayerView(backgroundThread: true))
 
             guard let playerView = self.playerView else {
                 return
