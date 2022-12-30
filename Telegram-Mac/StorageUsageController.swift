@@ -26,7 +26,8 @@ final class StorageUsageArguments {
     let clearSelected:()->Void
     let clearPeer:(PeerId)->Void
     let clearMessage:(Message)->Void
-    init(context: AccountContext, updateKeepMedia: @escaping (CacheStorageSettings.PeerStorageCategory, Int32) -> Void, updateMediaLimit: @escaping(Int32)->Void, openPeerMedia: @escaping (PeerId) -> Void, clearAll: @escaping () -> Void, exceptions:@escaping(CacheStorageSettings.PeerStorageCategory)->Void, toggleOther:@escaping()->Void, toggleCategory:@escaping(StorageUsageCategory)->Void, segmentController:@escaping()->StorageUsageBlockController?, clearSelected:@escaping()->Void, clearPeer:@escaping(PeerId)->Void, clearMessage:@escaping(Message)->Void) {
+    let selectCategory:(StorageUsageCategory)->Void
+    init(context: AccountContext, updateKeepMedia: @escaping (CacheStorageSettings.PeerStorageCategory, Int32) -> Void, updateMediaLimit: @escaping(Int32)->Void, openPeerMedia: @escaping (PeerId) -> Void, clearAll: @escaping () -> Void, exceptions:@escaping(CacheStorageSettings.PeerStorageCategory)->Void, toggleOther:@escaping()->Void, toggleCategory:@escaping(StorageUsageCategory)->Void, segmentController:@escaping()->StorageUsageBlockController?, clearSelected:@escaping()->Void, clearPeer:@escaping(PeerId)->Void, clearMessage:@escaping(Message)->Void, selectCategory:@escaping(StorageUsageCategory)->Void) {
         self.context = context
         self.updateKeepMedia = updateKeepMedia
         self.openPeerMedia = openPeerMedia
@@ -39,6 +40,7 @@ final class StorageUsageArguments {
         self.clearSelected = clearSelected
         self.clearPeer = clearPeer
         self.clearMessage = clearMessage
+        self.selectCategory = selectCategory
     }
 }
 
@@ -685,7 +687,13 @@ private func storageUsageControllerEntries(state: StorageUsageUIState, arguments
         pieChart.items = items
         
         entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_pie_chart, equatable: InputDataEquatable(pieChart), comparable: nil, item: { initialSize, stableId in
-            return StoragePieChartItem(initialSize, stableId: stableId, context: arguments.context, items: pieChart.items, dynamicText: pieChart.dynamicString, peer: state.peer, viewType: pieChart.viewType)
+            return StoragePieChartItem(initialSize, stableId: stableId, context: arguments.context, items: pieChart.items, dynamicText: pieChart.dynamicString, peer: state.peer, viewType: pieChart.viewType, toggleSelected: { item in
+                if let id = item.id.base as? Int32 {
+                    if let category = StorageUsageCategory(rawValue: id) {
+                        arguments.selectCategory(category)
+                    }
+                }
+            })
         }))
         index += 1
         
@@ -1500,6 +1508,25 @@ class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
                 }
             })
 
+        }, selectCategory: { category in
+            _ = updateState { current in
+                var current = current
+                var all = Set(current.stats?.categories.map {
+                    $0.key.mapped
+                } ?? [])
+                
+                if current.hasOther {
+                    all.insert(.other)
+                }
+                if current.unselected == all.subtracting([category]) {
+                    all = Set()
+                } else if !current.unselected.contains(category) {
+                    all.remove(category)
+                }
+                current.unselected = all
+                
+                return current
+            }
         })
         
         let segments = StorageUsageBlockController(context: context, storageArguments: arguments, state: statePromise.get(), updateState: updateState)

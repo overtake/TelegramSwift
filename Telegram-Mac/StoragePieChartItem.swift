@@ -17,11 +17,13 @@ class StoragePieChartItem : GeneralRowItem {
     let dynamicText: String
     let context: AccountContext
     let peer: Peer?
-    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, items: [PieChartView.Item], dynamicText: String, peer: Peer?, viewType: GeneralViewType) {
+    let toggleSelected:(PieChartView.Item)->Void
+    init(_ initialSize: NSSize, stableId: AnyHashable, context: AccountContext, items: [PieChartView.Item], dynamicText: String, peer: Peer?, viewType: GeneralViewType, toggleSelected:@escaping(PieChartView.Item)->Void) {
         self.items = items
         self.context = context
         self.peer = peer
         self.dynamicText = dynamicText
+        self.toggleSelected = toggleSelected
         super.init(initialSize, stableId: stableId, viewType: .singleItem)
     }
     
@@ -59,6 +61,8 @@ private class StoragePieChartItemView : GeneralRowView {
         self.pieChart.frame = self.focus(NSMakeSize(frame.width, item.height))
         self.pieChart.presentation = .init(strokeColor: theme.colors.listBackground, strokeSize: 1, bgColor: theme.colors.listBackground, totalTextColor: theme.colors.text, itemTextColor: .white)
         self.pieChart.update(items: item.items, dynamicText: item.dynamicText, animated: animated)
+        
+        self.pieChart.toggleSelected = item.toggleSelected
         
         if let peer = item.peer {
             let current: ChatAvatarView
