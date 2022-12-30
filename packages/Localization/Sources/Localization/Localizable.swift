@@ -10753,6 +10753,8 @@ public final class L10n {
   public static var storageUsageMediaPhoto: String  { return L10n.tr("Localizable", "StorageUsage.Media.Photo") }
   /// Video
   public static var storageUsageMediaVideo: String  { return L10n.tr("Localizable", "StorageUsage.Media.Video") }
+  /// Video Message
+  public static var storageUsageMediaVideoMessage: String  { return L10n.tr("Localizable", "StorageUsage.Media.VideoMessage") }
   /// Voice Message
   public static var storageUsageMediaVoice: String  { return L10n.tr("Localizable", "StorageUsage.Media.Voice") }
   /// Clear
@@ -10765,6 +10767,16 @@ public final class L10n {
   public static var storageUsageMessageContextSelect: String  { return L10n.tr("Localizable", "StorageUsage.Message.Context.Select") }
   /// Show Message
   public static var storageUsageMessageContextShowInChat: String  { return L10n.tr("Localizable", "StorageUsage.Message.Context.ShowInChat") }
+  /// Chats
+  public static var storageUsageSegmentChats: String  { return L10n.tr("Localizable", "StorageUsage.Segment.Chats") }
+  /// Files
+  public static var storageUsageSegmentFiles: String  { return L10n.tr("Localizable", "StorageUsage.Segment.Files") }
+  /// Media
+  public static var storageUsageSegmentMedia: String  { return L10n.tr("Localizable", "StorageUsage.Segment.Media") }
+  /// Music
+  public static var storageUsageSegmentMusic: String  { return L10n.tr("Localizable", "StorageUsage.Segment.Music") }
+  /// Voice
+  public static var storageUsageSegmentVoice: String  { return L10n.tr("Localizable", "StorageUsage.Segment.Voice") }
   /// Clear Selected
   public static var storageUsageSelectedClearDisabled: String  { return L10n.tr("Localizable", "StorageUsage.Selected.ClearDisabled") }
   /// Clear Selected %@

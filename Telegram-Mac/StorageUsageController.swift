@@ -380,6 +380,13 @@ struct StorageUsageUIState : Equatable {
                     default:
                         break
                     }
+                case .audioVideoMessage:
+                    switch tag {
+                    case .voice:
+                        list.append(message)
+                    default:
+                        break
+                    }
                 default:
                     break
                 }
@@ -400,7 +407,7 @@ struct StorageUsageUIState : Equatable {
         var hasMedia: Bool = false
         var hasFiles: Bool = false
         var hasMusic: Bool = false
-
+        var hasVoice: Bool = false
         for (_, message) in messages {
             if message.media.first is TelegramMediaImage {
                 hasMedia = true
@@ -414,6 +421,8 @@ struct StorageUsageUIState : Equatable {
                     hasMedia = true
                 case .audio:
                     hasMusic = true
+                case .audioVideoMessage:
+                    hasVoice = true
                 default:
                     break
                 }
@@ -427,6 +436,9 @@ struct StorageUsageUIState : Equatable {
         }
         if hasMusic {
             segments.append(.music)
+        }
+        if hasVoice {
+            segments.append(.voice)
         }
         return segments
     }
@@ -447,14 +459,14 @@ struct StorageUsageUIState : Equatable {
                     
                     let intersection = peer.stats.msgIds.subtracting(selectedMessages)
                     for msgId in intersection {
-                        if let sz = peer.stats.msgSizes[msgId] {
+                        if let sz = msgSizes[msgId] {
                             size -= sz
                         }
                     }
                 }
             }
             for selected in selectedMessages {
-                if let sz = stats.peers[selected.peerId]?.stats.msgSizes[selected] {
+                if let sz = msgSizes[selected] {
                     size += sz
                 }
             }

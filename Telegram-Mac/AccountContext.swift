@@ -597,7 +597,9 @@ final class AccountContext {
         NotificationCenter.default.addObserver(self, selector: #selector(updateKeyWindow), name: NSWindow.didResignKeyNotification, object: window)
         
         var shouldReindex: Signal<SomeAccountSettings, NoError> = someAccountSetings(postbox: account.postbox) |> filter { value -> Bool in
-            if let time = value.lastChatReindexTime {
+            if value.appVersion != ApiEnvironment.version {
+                return true
+            } else if let time = value.lastChatReindexTime {
                 return Int32(Date().timeIntervalSince1970) > time
             } else {
                 return true
@@ -611,6 +613,7 @@ final class AccountContext {
             _ = updateSomeSettingsInteractively(postbox: account.postbox, { settings in
                 var settings = settings
                 settings.lastChatReindexTime = Int32(Date().timeIntervalSince1970) + 2 * 60 * 60 * 24
+                settings.appVersion = ApiEnvironment.version
                 return settings
             }).start()
         }))

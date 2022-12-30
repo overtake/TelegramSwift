@@ -91,7 +91,9 @@ private func entries(_ state: StorageUsageUIState, arguments: Arguments) -> [Inp
     let messages = state.messageList(for: arguments.tag)
     
     
-    let sorted = messages.sorted(by: { lhs, rhs in
+    let sorted = messages.filter {
+        return sizes[$0.id] != nil
+    }.sorted(by: { lhs, rhs in
         let lhsSize = sizes[lhs.id] ?? 0
         let rhsSize = sizes[rhs.id] ?? 0
         if lhsSize != rhsSize {
@@ -198,12 +200,26 @@ func StorageUsage_Block_MediaList(context: AccountContext, storageArguments: Sto
                     QuickLookPreview.current.show(context: context, with: file, stableId: id, gallery)
                 }
             }
-        case .music:
+        case .music, .voice:
             if let file = message.effectiveMedia as? TelegramMediaFile {
                 if let controller = context.audioPlayer, let song = controller.currentSong, song.entry.isEqual(to: message) {
                     controller.playOrPause()
                 } else {
-                    let controller = APSingleResourceController(context: context, wrapper: .init(resource: file.resource, name: file.musicText.0, performer: file.musicText.1, duration: file.duration, id: id), streamable: true, volume: FastSettings.volumeRate)
+                    
+                    let name: String
+                    let performer: String
+                    if file.isVoice {
+                        name = strings().storageUsageMediaVoice
+                        performer = message.author?.displayTitle ?? ""
+                    } else if file.isInstantVideo {
+                        name = strings().storageUsageMediaVideoMessage
+                        performer = message.author?.displayTitle ?? ""
+                    } else {
+                        name = file.musicText.0
+                        performer = file.musicText.1
+                    }
+                    
+                    let controller = APSingleResourceController(context: context, wrapper: .init(resource: file.resource, name: name, performer: performer, duration: file.duration, id: id), streamable: true, volume: FastSettings.volumeRate)
                     
                     let object = InlineAudioPlayerView.ContextObject(controller: controller, context: context, tableView: getTableView?(), supportTableView: nil)
                     context.bindings.rootNavigation().header?.show(true, contextObject: object)

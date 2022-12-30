@@ -135,7 +135,7 @@ class StorageUsageMediaCells: GeneralRowItem {
             return text
         } else {
             let size = sizes[messageId] ?? 0
-            let text = TextViewLayout.init(.initialize(string: .prettySized(with: size), color: .white, font: .normal(10)))
+            let text = TextViewLayout.init(.initialize(string: .prettySized(with: size, round: true), color: .white, font: .normal(10)))
             text.measure(width: .greatestFiniteMagnitude)
             textSizes[messageId] = text
             return text
