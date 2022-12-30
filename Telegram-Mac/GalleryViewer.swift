@@ -84,6 +84,16 @@ private func mediaForMessage(message: Message, postbox: Postbox) -> Media? {
                 return media
             }
         }
+        if let media = media as? TelegramMediaAction {
+            switch media.action {
+            case let .suggestedProfilePhoto(image):
+                return image
+            case let .photoUpdated(image):
+                return image
+            default:
+                return nil
+            }
+        }
         if let media = media as? TelegramMediaImage {
             return media
         } else if let file = media as? TelegramMediaFile {

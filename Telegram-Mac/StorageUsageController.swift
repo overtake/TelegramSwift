@@ -472,7 +472,8 @@ struct StorageUsageUIState : Equatable {
     }
     var hasOther: Bool {
         if let stats = stats {
-            return stats.categories.count > 4
+            let suffix = stats.categories.suffix(min(4, stats.categories.count))
+            return (stats.categories.count - suffix.count) > 1
         }
         return false
     }
