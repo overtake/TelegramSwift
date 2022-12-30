@@ -251,6 +251,8 @@ private final class FetchManagerCategoryContext {
                         userContentType = .video
                     case .file:
                         userContentType = .file
+                    case .audio:
+                        userContentType = .audio
                     default:
                         userContentType = .other
                     }
@@ -379,6 +381,8 @@ private final class FetchManagerCategoryContext {
                         userContentType = .video
                     case .file:
                         userContentType = .file
+                    case .audio:
+                        userContentType = .audio
                     default:
                         userContentType = .other
                     }
