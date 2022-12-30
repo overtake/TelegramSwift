@@ -660,6 +660,15 @@ public extension Message {
                     break
                 }
             }
+        } else if let media = self.media.first as? TelegramMediaAction {
+            switch media.action {
+            case let .suggestedProfilePhoto(image):
+                return image
+            case let .photoUpdated(image):
+                 return image
+            default:
+                break
+            }
         }
         return media.first
     }

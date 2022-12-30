@@ -10755,6 +10755,8 @@ public final class L10n {
   public static var storageUsageMediaVideo: String  { return L10n.tr("Localizable", "StorageUsage.Media.Video") }
   /// Voice Message
   public static var storageUsageMediaVoice: String  { return L10n.tr("Localizable", "StorageUsage.Media.Voice") }
+  /// Clear
+  public static var storageUsageMessageContextClear: String  { return L10n.tr("Localizable", "StorageUsage.Message.Context.Clear") }
   /// Delete
   public static var storageUsageMessageContextDelete: String  { return L10n.tr("Localizable", "StorageUsage.Message.Context.Delete") }
   /// Preview

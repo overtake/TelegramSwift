@@ -1046,6 +1046,9 @@ class ChatServiceRowView: TableRowView {
     private class SuggestView : Control {
         
 
+        var interactive: NSView? {
+            return self.photo ?? self.photoVideoView
+        }
         
         private let disposable = MetaDisposable()
         private var photo: TransformImageView?
@@ -1104,14 +1107,13 @@ class ChatServiceRowView: TableRowView {
             
             if let represenstation = data.image.representationForDisplayAtSize(.init(640, 640)) {
                 
-                let arguments = TransformImageArguments(corners: .init(), imageSize: represenstation.dimensions.size, boundingSize: size, intrinsicInsets: .init())
+                let arguments = TransformImageArguments(corners: .init(radius: size.height / 2), imageSize: represenstation.dimensions.size, boundingSize: size, intrinsicInsets: .init())
                 
                 let photo: TransformImageView
                 if let view = self.photo {
                     photo = view
                 } else {
                     photo = TransformImageView(frame: size.bounds)
-                    photo.layer?.cornerRadius = size.height / 2
                     self.photo = photo
                     addSubview(photo)
                 }
@@ -1183,7 +1185,7 @@ class ChatServiceRowView: TableRowView {
                 self.photoVideoView = nil
                 self.videoRepresentation = nil
             }
-            
+                        
             textView.update(data.text)
             headerView.update(data.header)
             
@@ -1340,7 +1342,7 @@ class ChatServiceRowView: TableRowView {
     }
     
     override func interactionContentView(for innerId: AnyHashable, animateIn: Bool) -> NSView {
-        return imageView ?? self
+        return self.suggestView?.interactive ?? imageView ?? self
     }
     
     
@@ -1470,17 +1472,17 @@ class ChatServiceRowView: TableRowView {
                 self.suggestView = current
                 addSubview(current)
                 
-                current.set(handler: { [weak self] _ in
-                    if let item = self?.item as? ChatServiceItem {
-                        item.openPhotoEditor(data.image)
+                let open: (Control)->Void = { [weak self] _ in
+                    if let item = self?.item as? ChatServiceItem, let message = item.message {
+                        if !item.isIncoming {
+                            showChatGallery(context: item.context, message: message, item.table, type: .alone)
+                        } else {
+                            item.openPhotoEditor(data.image)
+                        }
                     }
-                }, for: .Click)
-                
-                current.viewButton.set(handler: { [weak self] _ in
-                    if let item = self?.item as? ChatServiceItem {
-                        item.openPhotoEditor(data.image)
-                    }
-                }, for: .Click)
+                }
+                current.set(handler: open, for: .Click)
+                current.viewButton.set(handler: open, for: .Click)
             }
             
             current.update(item: item, data: data, animated: animated)

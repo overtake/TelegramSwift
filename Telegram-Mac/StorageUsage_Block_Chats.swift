@@ -100,7 +100,7 @@ private func entries(_ state: StorageUsageUIState, arguments: Arguments) -> [Inp
                 }, itemImage: MenuAnimation.menu_select_messages.value))
                 items.append(ContextSeparatorItem())
                 
-                items.append(ContextMenuItem(strings().storageUsageClearConfirmOKAll, handler: {
+                items.append(ContextMenuItem(strings().storageUsageMessageContextClear, handler: {
                     arguments.clear(item.peer.peer.id)
                 }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
                 
