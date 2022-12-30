@@ -1887,6 +1887,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         let transition: ContainedViewLayoutTransition = animated ? .animated(duration: duration, curve: .easeOut) : .immediate
         if let view = item.view {
+            view.set(item: item, animated: animated)
             view.updateLayout(size: NSMakeSize(frame.width, height), transition: transition)
             transition.updateFrame(view: view, frame: CGRect(origin: view.frame.origin, size: NSMakeSize(frame.width, height)))
         }
