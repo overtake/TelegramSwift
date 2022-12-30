@@ -455,20 +455,23 @@ struct StorageUsageUIState : Equatable {
         if let stats = allStats {
             var size: Int64 = 0
 
+            var ignoreMsgs: Set<MessageId> = Set()
             for id in selectedPeers.selected {
                 if let peer = stats.peers[id] {
                     size += peer.stats.totalCount
                     
                     let intersection = peer.stats.msgIds.subtracting(selectedMessages)
                     for msgId in intersection {
-                        if let sz = msgSizes[msgId] {
+                        if let sz = peer.stats.msgSizes[msgId] {
                             size -= sz
                         }
                     }
+                    
+                    ignoreMsgs = ignoreMsgs.union(peer.stats.msgIds)
                 }
             }
             for selected in selectedMessages {
-                if let sz = msgSizes[selected] {
+                if let sz = msgSizes[selected], !ignoreMsgs.contains(selected) {
                     size += sz
                 }
             }
@@ -1101,7 +1104,7 @@ final class StorageUsageView : View {
     fileprivate func update(_ state: StorageUsageUIState, arguments: StorageUsageArguments, animated: Bool) {
         
         
-        if state.editing {
+        if state.editing, !state.selectedPeers.selected.isEmpty || !state.selectedMessages.isEmpty {
             let current: SelectPanel
             if let view = self.selectPanel {
                 current = view

@@ -65,7 +65,7 @@ private func entries(_ state: StorageUsageUIState, arguments: Arguments) -> [Inp
         } else {
             viewType = bestGeneralViewType(sorted, for: i)
         }
-        items.append(.init(peer: .init(sort.peer._asPeer()), count: String.prettySized(with: sort.stats.totalCount), selected: state.editing ? state.selectedPeers.selected.contains(sort.peer.id) : nil, viewType: viewType))
+        items.append(.init(peer: .init(sort.peer._asPeer()), count: String.prettySized(with: sort.stats.totalCount, round: true), selected: state.editing ? state.selectedPeers.selected.contains(sort.peer.id) : nil, viewType: viewType))
     }
     
     
