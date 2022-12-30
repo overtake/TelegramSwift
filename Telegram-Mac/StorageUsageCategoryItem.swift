@@ -179,7 +179,7 @@ private final class StorageUsageCategoryView : GeneralContainableRowView {
         nameTextView.update(item.nameLayout)
         subTextView.update(item.subLayout)
         
-        let selected = generateChatGroupToggleSelected(foregroundColor: item.color, backgroundColor: NSColor.black.withAlphaComponent(0.01))
+        let selected = generateChatGroupToggleSelected(foregroundColor: item.color, backgroundColor: NSColor.white)
         
         selectionView.update(unselectedImage: theme.icons.chatToggleUnselected, selectedImage: selected, selected: item.selected, animated: animated)
         

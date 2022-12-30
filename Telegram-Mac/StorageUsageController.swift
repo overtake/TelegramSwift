@@ -965,11 +965,11 @@ private func storageUsageControllerEntries(state: StorageUsageUIState, arguments
                 let icon: CGImage
                 switch keepMedia.category {
                 case .groups:
-                    icon = NSImage(named: "Icon_Colored_Group")!.precomposed(flipVertical: true)
+                    icon = generateSettingsIcon(NSImage(named: "Icon_Colored_Group")!.precomposed(flipVertical: true))
                 case .channels:
-                    icon = NSImage(named: "Icon_Colored_Channel")!.precomposed(flipVertical: true)
+                    icon = generateSettingsIcon(NSImage(named: "Icon_Colored_Channel")!.precomposed(flipVertical: true))
                 case .privateChats:
-                    icon = NSImage(named: "Icon_Colored_Private")!.precomposed(flipVertical: true)
+                    icon = generateSettingsIcon(NSImage(named: "Icon_Colored_Private")!.precomposed(flipVertical: true))
                 }
                 let desc: String?
                 if keepMedia.exceptions.isEmpty {

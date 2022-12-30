@@ -890,7 +890,7 @@ private func generateChatFailed(backgroundColor: NSColor, border: NSColor, foreg
 }
 
 
-private func generateSettingsIcon(_ icon: CGImage) -> CGImage {
+func generateSettingsIcon(_ icon: CGImage) -> CGImage {
     return generateImage(icon.backingSize, contextGenerator: { size, ctx in
         ctx.clear(CGRect(origin: CGPoint(), size: size))
         ctx.setFillColor(.white)
