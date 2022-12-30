@@ -13,13 +13,14 @@ import TelegramCore
 
 public struct SomeAccountSettings: Codable, Equatable {
     public var lastChatReindexTime: Int32?
-    
+    public var appVersion: String?
     public static var defaultSettings: SomeAccountSettings {
-        return SomeAccountSettings(lastChatReindexTime: nil)
+        return SomeAccountSettings(lastChatReindexTime: nil, appVersion: nil)
     }
     
-    public init(lastChatReindexTime: Int32?) {
+    public init(lastChatReindexTime: Int32?, appVersion: String?) {
         self.lastChatReindexTime = lastChatReindexTime
+        self.appVersion = appVersion
     }
 
 }

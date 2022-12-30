@@ -232,53 +232,26 @@ class StorageUsageBlockControllerView : View {
    
 }
 
-private extension PeerMediaCollectionMode {
-   var title: String {
-       if self == .members {
-           return strings().peerMediaMembers
-       }
-       if self == .photoOrVideo {
-           return strings().peerMediaMedia
-       }
-       if self == .file {
-           return strings().peerMediaFiles
-       }
-       if self == .webpage {
-           return strings().peerMediaLinks
-       }
-       if self.tagsValue == .music {
-           return strings().peerMediaMusic
-       }
-       if self == .voice {
-           return strings().peerMediaVoice
-       }
-       if self == .commonGroups {
-           return strings().peerMediaCommonGroups
-       }
-       if self == .gifs {
-           return strings().peerMediaGifs
-       }
-       return ""
-   }
-}
-
 
 enum StorageUsageCollection : Int32 {
     case peers
     case media
     case files
     case music
+    case voice
     
     var title: String {
         switch self {
         case .peers:
-            return "Chats"
+            return strings().storageUsageSegmentChats
         case .media:
-            return "Media"
+            return strings().storageUsageSegmentMedia
         case .files:
-            return "Files"
+            return strings().storageUsageSegmentFiles
         case .music:
-            return "Music"
+            return strings().storageUsageSegmentMusic
+        case .voice:
+            return strings().storageUsageSegmentVoice
         }
     }
 }
@@ -292,7 +265,8 @@ class StorageUsageBlockController: TelegramGenericViewController<StorageUsageMed
     private let media: ViewController
     private let files: ViewController
     private let music: ViewController
-    
+    private let voice: ViewController
+
     private var currentController: ViewController?
 
     private var mode: StorageUsageCollection?
@@ -327,7 +301,7 @@ class StorageUsageBlockController: TelegramGenericViewController<StorageUsageMed
         self.files = StorageUsage_Block_MediaList(context: context, storageArguments: storageArguments, tag: .files, state: state, updateState: updateState)
         self.media = StorageUsage_Block_MediaList(context: context, storageArguments: storageArguments, tag: .media, state: state, updateState: updateState)
         self.music = StorageUsage_Block_MediaList(context: context, storageArguments: storageArguments, tag: .music, state: state, updateState: updateState)
-
+        self.voice = StorageUsage_Block_MediaList(context: context, storageArguments: storageArguments, tag: .voice, state: state, updateState: updateState)
         super.init(context)
         
         self.navigationController = context.bindings.rootNavigation()
@@ -400,7 +374,8 @@ class StorageUsageBlockController: TelegramGenericViewController<StorageUsageMed
            list[.files] = self.files
            list[.media] = self.media
            list[.music] = self.music
-           
+           list[.voice] = self.voice
+
            if let collection = state.effectiveCollection {
                let controller = list[collection]!
                if !controller.isLoaded() {
@@ -529,6 +504,8 @@ class StorageUsageBlockController: TelegramGenericViewController<StorageUsageMed
            return self.files
        case .peers:
            return self.members
+       case .voice:
+           return self.voice
        }
    }
    

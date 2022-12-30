@@ -44,23 +44,25 @@ final class StorageUsageMediaItem : GeneralRowItem {
         self.preview = preview
         self._menuItems = menuItems
         
-        self.sizeLayout = .init(.initialize(string: String.prettySized(with: size), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
+        self.sizeLayout = .init(.initialize(string: String.prettySized(with: size, round: true), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
         
         let name: String
-        if let _ = message.media.first as? TelegramMediaImage {
+        if let _ = message.effectiveMedia as? TelegramMediaImage {
             name = strings().storageUsageMediaPhoto
             self.mode = .media
-        } else if let file = message.media.first as? TelegramMediaFile {
+        } else if let file = message.effectiveMedia as? TelegramMediaFile {
             if file.isMusic {
                 name = file.musicText.0
-            } else if file.isVideo {
-                name = strings().storageUsageMediaVideo
             } else if file.isVoice {
                 name = strings().storageUsageMediaVoice
+            } else if file.isInstantVideo {
+                name = strings().storageUsageMediaVideoMessage
+            } else if file.isVideo {
+                name = strings().storageUsageMediaVideo
             } else {
                 name = file.fileName ?? strings().storageUsageMediaFile
             }
-            if file.isVoice || file.isMusic {
+            if file.isVoice || file.isMusic || file.isInstantVideo {
                 self.mode = .audio
             } else {
                 self.mode = .media
@@ -84,9 +86,9 @@ final class StorageUsageMediaItem : GeneralRowItem {
         
         
         let iconImageRepresentation:TelegramMediaImageRepresentation?
-        if let image = message.media.first as? TelegramMediaImage {
+        if let image = message.effectiveMedia as? TelegramMediaImage {
             iconImageRepresentation = smallestImageRepresentation(image.representations)
-        } else if let file = message.media.first as? TelegramMediaFile {
+        } else if let file = message.effectiveMedia as? TelegramMediaFile {
             iconImageRepresentation = smallestImageRepresentation(file.previewRepresentations)
         } else {
             iconImageRepresentation = nil
@@ -103,7 +105,7 @@ final class StorageUsageMediaItem : GeneralRowItem {
         }
         docIcon = extensionImage(fileExtension: fileExtension)
         
-        if let iconImageRepresentation = iconImageRepresentation, let mediaId = message.media.first?.id {
+        if let iconImageRepresentation = iconImageRepresentation, let mediaId = message.effectiveMedia?.id {
             iconArguments = TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: iconImageRepresentation.dimensions.size.aspectFilled(PeerMediaIconSize), boundingSize: PeerMediaIconSize, intrinsicInsets: NSEdgeInsets())
             icon = TelegramMediaImage(imageId: mediaId, representations: [iconImageRepresentation], immediateThumbnailData: iconImageRepresentation.immediateThumbnailData, reference: nil, partialReference: nil, flags: [])
         }
@@ -142,6 +144,14 @@ final class StorageUsageMediaItemView : GeneralContainableRowView, APDelegate {
     private var preview: TransformImageView?
     private var audio:RadialProgressView?
     
+    private let resourceDataDisposable = MetaDisposable()
+    private var videoPlayer:GIFPlayerView?
+    private var videoData: AVGifData? {
+        didSet {
+            updateAnimatableContent()
+        }
+    }
+
     private let previewSize = NSMakeSize(30, 30)
 
     
@@ -234,6 +244,10 @@ final class StorageUsageMediaItemView : GeneralContainableRowView, APDelegate {
         }
         if let audio = audio {
             transition.updateFrame(view: audio, frame: audio.centerFrameY(x: item.viewType.innerInset.left))
+        }
+        
+        if let video = videoPlayer {
+            transition.updateFrame(view: video, frame: video.centerFrameY(x: item.viewType.innerInset.left))
         }
         
         transition.updateFrame(view: sizeView, frame: sizeView.centerFrameY(x: containerView.frame.width - sizeView.frame.width - item.viewType.innerInset.right))
@@ -362,12 +376,47 @@ final class StorageUsageMediaItemView : GeneralContainableRowView, APDelegate {
                 }, for: .Click)
             }
             audio.userInteractionEnabled = item.getSelected(item.message.id) == nil
+            
+            if let file = item.message.effectiveMedia as? TelegramMediaFile, file.isInstantVideo {
+                let current: GIFPlayerView
+                if let view = self.videoPlayer {
+                    current = view
+                } else {
+                    current = GIFPlayerView()
+                    var frame = content.focus(previewSize)
+                    frame.origin.x = item.viewType.innerInset.left
+                    current.frame = frame
+                    content.addSubview(current, positioned: .below, relativeTo: audio)
+                    self.videoPlayer = current
+                    current.layer?.cornerRadius = previewSize.height / 2
+                }
+                let image = TelegramMediaImage(imageId: MediaId(namespace: 0, id: 0), representations: file.previewRepresentations, immediateThumbnailData: nil, reference: nil, partialReference: nil, flags: [])
+                
+                current.setSignal( chatMessagePhoto(account: item.context.account, imageReference: ImageMediaReference.message(message: MessageReference(item.message), media: image), scale: backingScaleFactor))
+                let arguments = TransformImageArguments(corners: ImageCorners(radius: 20), imageSize: previewSize, boundingSize: previewSize, intrinsicInsets: NSEdgeInsets())
+                current.set(arguments: arguments)
+                
+                resourceDataDisposable.set((item.context.account.postbox.mediaBox.resourceData(file.resource) |> deliverOnResourceQueue |> map { data in return data.complete ?  AVGifData.dataFrom(data.path) : nil} |> deliverOnMainQueue).start(next: { [weak self] data in
+                    self?.videoData = data
+                }))
+            } else {
+                if let view = self.videoPlayer {
+                    performSubviewRemoval(view, animated: animated)
+                    self.videoPlayer = nil
+                }
+                self.videoData = nil
+                resourceDataDisposable.set(nil)
+            }
+            
             self.checkState(animated: animated)
         }
         
-        
         updateLayout(size: frame.size, transition: transition)
 
+    }
+    
+    override func updateAnimatableContent() {
+        videoPlayer?.set(data: window != nil && visibleRect != .zero ? videoData : nil)
     }
     
     func checkState(animated: Bool) {
@@ -376,8 +425,14 @@ final class StorageUsageMediaItemView : GeneralContainableRowView, APDelegate {
             return
         }
         
-        let activityBackground = theme.colors.accent
-        let activityForeground = theme.colors.underSelectedColor
+        var activityBackground = theme.colors.accent
+        var activityForeground = theme.colors.underSelectedColor
+        
+        if let media = item.message.effectiveMedia as? TelegramMediaFile, media.isInstantVideo {
+            activityBackground = .blackTransparent
+            activityForeground = .white
+        }
+        
         let play = theme.icons.storage_music_play
         let pause = theme.icons.storage_music_pause
         let inset = NSEdgeInsets(left: 3, top: 3)
@@ -419,6 +474,10 @@ final class StorageUsageMediaItemView : GeneralContainableRowView, APDelegate {
     
     func audioDidCompleteQueue(for controller:APController, animated: Bool) {
         checkState(animated: animated)
+    }
+    
+    deinit {
+        resourceDataDisposable.dispose()
     }
 
 }
