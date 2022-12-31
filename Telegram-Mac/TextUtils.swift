@@ -277,7 +277,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             
             attributedText.setSelected(color: theme.colors.underSelectedColor, range: attributedText.range)
            
-        } else if message.effectiveMedia is TelegramMediaAction {
+        } else if message.extendedMedia is TelegramMediaAction {
             let service = serviceMessageText(message, account:account, isReplied: isReplied)
             _ = attributedText.append(string: service.0, color: theme.chatList.grayTextColor, font: .normal(.text))
             attributedText.detectBoldColorInString(with: .normal(.text))
@@ -285,7 +285,7 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
             
             InlineStickerItem.apply(to: attributedText, associatedMedia: service.2, entities: service.1, isPremium: isPremium)
             
-        } else if let media = message.effectiveMedia as? TelegramMediaExpiredContent {
+        } else if let media = message.anyMedia as? TelegramMediaExpiredContent {
             let text:String
             switch media.data {
             case .image:
@@ -298,10 +298,10 @@ func chatListText(account:Account, for message:Message?, messagesCount: Int = 1,
         }
         
         var effective: Message = message
-        if !(message.effectiveMedia is TelegramMediaAction) {
+        if !(message.extendedMedia is TelegramMediaAction) {
             for attribute in message.attributes {
                 if let attribute = attribute as? ReplyMessageAttribute, let message = message.associatedMessages[attribute.messageId] {
-                    if let action = message.effectiveMedia as? TelegramMediaAction {
+                    if let action = message.extendedMedia as? TelegramMediaAction {
                         switch action.action {
                         case .pinnedMessageUpdated:
                             effective = message
@@ -438,7 +438,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
     var entities: [MessageTextEntity] = []
     var media: [MediaId : Media] = [:]
     
-    if let media = message.effectiveMedia as? TelegramMediaExpiredContent {
+    if let media = message.anyMedia as? TelegramMediaExpiredContent {
         switch media.data {
         case .image:
             text = strings().chatListPhoto
@@ -451,7 +451,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
     
     let authorId:PeerId? = message.author?.id
     
-    if let action = message.effectiveMedia as? TelegramMediaAction, let peer = coreMessageMainPeer(message) {
+    if let action = message.extendedMedia as? TelegramMediaAction, let peer = coreMessageMainPeer(message) {
         switch action.action {
         case let .addedMembers(peerIds: peerIds):
             if peerIds.first == authorId {
@@ -556,7 +556,7 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             var gameName:String = ""
             for attr in message.attributes {
                 if let attr = attr as? ReplyMessageAttribute {
-                    if let message = message.associatedMessages[attr.messageId], let gameMedia = message.effectiveMedia as? TelegramMediaGame {
+                    if let message = message.associatedMessages[attr.messageId], let gameMedia = message.anyMedia as? TelegramMediaGame {
                         gameName = gameMedia.name
                     }
                 }

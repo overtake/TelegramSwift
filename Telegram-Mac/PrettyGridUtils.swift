@@ -391,7 +391,7 @@ func makeChatGridMediaEnties(_ results:[Message], initialSize:NSSize) -> [InputM
         
         let result = results[i]
         
-        if let file = result.effectiveMedia as? TelegramMediaFile {
+        if let file = result.anyMedia as? TelegramMediaFile {
             let dimension:NSSize = file.videoSize
             
             let imageReference: ImageMediaReference?

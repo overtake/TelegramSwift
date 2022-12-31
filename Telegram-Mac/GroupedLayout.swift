@@ -52,9 +52,9 @@ class GroupedLayout {
     init(_ messages: [Message], type: GroupedMediaType = .photoOrVideo) {
         switch type {
         case .photoOrVideo:
-            self.messages = messages.filter { $0.effectiveMedia!.isInteractiveMedia }
+            self.messages = messages.filter { $0.anyMedia!.isInteractiveMedia }
         case .files:
-            self.messages = messages.filter { $0.effectiveMedia is TelegramMediaFile }
+            self.messages = messages.filter { $0.anyMedia is TelegramMediaFile }
         }
         self.type = type
     }
@@ -403,7 +403,7 @@ class GroupedLayout {
             for (i, message) in messages.enumerated() {
                 let info = MessagePhotoInfo(message)
                 var height:CGFloat = 40
-                if let file = message.effectiveMedia as? TelegramMediaFile {
+                if let file = message.anyMedia as? TelegramMediaFile {
                     if file.isMusicFile {
                         height = 40
                     } else if file.previewRepresentations.isEmpty {

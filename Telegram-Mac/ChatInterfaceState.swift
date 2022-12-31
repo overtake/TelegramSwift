@@ -1021,7 +1021,7 @@ final class ChatEditState : Equatable {
     init(message:Message, originalMedia: Media? = nil, state:ChatTextInputState? = nil, loadingState: EditStateLoading = .none, editMedia: RequestEditMessageMedia = .keep, editedData: EditedImageData? = nil) {
         self.message = message
         if originalMedia == nil {
-            self.originalMedia = message.effectiveMedia
+            self.originalMedia = message.anyMedia
         } else {
             self.originalMedia = originalMedia
         }
@@ -1056,7 +1056,7 @@ final class ChatEditState : Equatable {
     }
     func withUpdatedMedia(_ media: Media) -> ChatEditState {
 
-        return ChatEditState(message: self.message.withUpdatedMedia([media]), originalMedia: self.originalMedia ?? self.message.effectiveMedia, state: self.inputState, loadingState: loadingState, editMedia: .update(AnyMediaReference.standalone(media: media)), editedData: self.editedData)
+        return ChatEditState(message: self.message.withUpdatedMedia([media]), originalMedia: self.originalMedia ?? self.message.anyMedia, state: self.inputState, loadingState: loadingState, editMedia: .update(AnyMediaReference.standalone(media: media)), editedData: self.editedData)
     }
     func withUpdatedLoadingState(_ loadingState: EditStateLoading) -> ChatEditState {
         return ChatEditState(message: self.message, originalMedia: self.originalMedia, state: self.inputState, loadingState: loadingState, editMedia: self.editMedia, editedData: self.editedData)

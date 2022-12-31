@@ -260,7 +260,7 @@ class ReplyModel: ChatAccessoryModel {
             }
             let attr = NSMutableAttributedString()
             attr.append(text)
-            attr.addAttribute(.foregroundColor, value: message.media.isEmpty || message.effectiveMedia is TelegramMediaWebpage ? presentation.enabledText : presentation.disabledText, range: attr.range)
+            attr.addAttribute(.foregroundColor, value: message.media.isEmpty || message.anyMedia is TelegramMediaWebpage ? presentation.enabledText : presentation.disabledText, range: attr.range)
             attr.addAttribute(.font, value: NSFont.normal(.text), range: attr.range)
             
             attr.fixUndefinedEmojies()

@@ -21,7 +21,7 @@ class MGalleryPhotoItem: MGalleryItem {
     override init(_ context: AccountContext, _ entry: GalleryEntry, _ pagerSize: NSSize) {
         switch entry {
         case .message(let entry):
-            let media = entry.message!.effectiveMedia
+            let media = entry.message!.anyMedia
             if let webpage = media as? TelegramMediaWebpage {
                 if case let .Loaded(content) = webpage.content, let image = content.image {
                     self.media = image
@@ -193,7 +193,7 @@ class MGalleryPhotoItem: MGalleryItem {
     }
     
     override func fetch() -> Void {
-        if let message = entry.message, let file = entry.message?.effectiveMedia as? TelegramMediaFile {
+        if let message = entry.message, let file = entry.message?.anyMedia as? TelegramMediaFile {
             fetching.set(messageMediaFileInteractiveFetched(context: context, messageId: message.id, messageReference: .init(message), file: file, userInitiated: true).start())
         } else {
             fetching.set(chatMessagePhotoInteractiveFetched(account: context.account, imageReference: entry.imageReference(media)).start())

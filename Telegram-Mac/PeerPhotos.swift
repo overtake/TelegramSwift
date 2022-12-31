@@ -102,7 +102,7 @@ func peerPhotosGalleryEntries(context: AccountContext, peerId: PeerId, firstStab
         var image:TelegramMediaImage? = nil
         var msg: Message? = nil
         if let base = firstStableId.base as? ChatHistoryEntryId, case let .message(message) = base {
-            let action = message.effectiveMedia as! TelegramMediaAction
+            let action = message.anyMedia as! TelegramMediaAction
             switch action.action {
             case let .photoUpdated(updated):
                 image = updated
@@ -129,7 +129,7 @@ func peerPhotosGalleryEntries(context: AccountContext, peerId: PeerId, firstStab
             let photo = photos[i].value
             photosDate.append(TimeInterval(photo.date))
             if let base = firstStableId.base as? ChatHistoryEntryId, case let .message(message) = base {
-                let action = message.effectiveMedia as! TelegramMediaAction
+                let action = message.anyMedia as! TelegramMediaAction
                 switch action.action {
                 case let .photoUpdated(updated):
                     if photo.image.id == updated?.id {

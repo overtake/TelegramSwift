@@ -108,16 +108,17 @@ final class InlineStickerItem : Hashable {
                 return r.intersection(range) != nil
             })
             if intersection == nil {
-                let currentDict = copy.attributes(at: range.lowerBound, effectiveRange: nil)
-                var updatedAttributes: [NSAttributedString.Key: Any] = currentDict
-                
-                let text = copy.string.nsstring.substring(with: range).fixed
-                
-                
-                updatedAttributes[NSAttributedString.Key("Attribute__EmbeddedItem")] = InlineStickerItem(source: .attribute(.init(fileId: fileId, file: associatedMedia[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] as? TelegramMediaFile, emoji: text)))
-                
-                let insertString = NSAttributedString(string: "🤡", attributes: updatedAttributes)
-                copy.replaceCharacters(in: range, with: insertString)
+                let textRange = NSMakeRange(0, copy.string.length)
+                if let range = textRange.intersection(range) {
+                    let currentDict = copy.attributes(at: range.lowerBound, effectiveRange: nil)
+                    var updatedAttributes: [NSAttributedString.Key: Any] = currentDict
+                    let text = copy.string.nsstring.substring(with: range).fixed
+                    updatedAttributes[NSAttributedString.Key("Attribute__EmbeddedItem")] = InlineStickerItem(source: .attribute(.init(fileId: fileId, file: associatedMedia[MediaId(namespace: Namespaces.Media.CloudFile, id: fileId)] as? TelegramMediaFile, emoji: text)))
+                    
+                    let insertString = NSAttributedString(string: "🤡", attributes: updatedAttributes)
+                    copy.replaceCharacters(in: range, with: insertString)
+
+                } 
             }
         }
     }
@@ -309,7 +310,7 @@ class ChatMessageItem: ChatRowItem {
             var openSpecificTimecodeFromReply:((Double?)->Void)? = nil
             
             let messageAttr:NSMutableAttributedString
-            if message.inlinePeer == nil, message.text.isEmpty && (message.media.isEmpty || message.effectiveMedia is TelegramMediaUnsupported) {
+            if message.inlinePeer == nil, message.text.isEmpty && (message.media.isEmpty || message.anyMedia is TelegramMediaUnsupported) {
                 let attr = NSMutableAttributedString()
                 _ = attr.append(string: strings().chatMessageUnsupportedNew, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: .code(theme.fontSize))
                 messageAttr = attr
@@ -320,7 +321,7 @@ class ChatMessageItem: ChatRowItem {
                 
                 var canAssignToReply: Bool = true
                 
-                if let media = message.effectiveMedia as? TelegramMediaWebpage {
+                if let media = message.anyMedia as? TelegramMediaWebpage {
                     switch media.content {
                     case let .Loaded(content):
                         canAssignToReply = !ExternalVideoLoader.isPlayable(content)
@@ -335,9 +336,9 @@ class ChatMessageItem: ChatRowItem {
                     mediaDurationMessage = message
                 }
                 if let message = mediaDurationMessage {
-                    if let file = message.effectiveMedia as? TelegramMediaFile, file.isVideo && !file.isAnimated, let duration = file.duration {
+                    if let file = message.anyMedia as? TelegramMediaFile, file.isVideo && !file.isAnimated, let duration = file.duration {
                         mediaDuration = Double(duration)
-                    } else if let media = message.effectiveMedia as? TelegramMediaWebpage {
+                    } else if let media = message.anyMedia as? TelegramMediaWebpage {
                         switch media.content {
                         case let .Loaded(content):
                             if ExternalVideoLoader.isPlayable(content) {
@@ -416,7 +417,7 @@ class ChatMessageItem: ChatRowItem {
             }
 
             let containsBigEmoji: Bool
-            if message.effectiveMedia == nil, bigEmojiMessage(context.sharedContext, message: message) {
+            if message.anyMedia == nil, bigEmojiMessage(context.sharedContext, message: message) {
                 containsBigEmoji = true
                 switch copy.string.count {
                 case 1:
@@ -526,7 +527,7 @@ class ChatMessageItem: ChatRowItem {
             }
             
             
-            var media = message.effectiveMedia
+            var media = message.anyMedia
             if let game = media as? TelegramMediaGame {
                 media = TelegramMediaWebpage(webpageId: MediaId(namespace: 0, id: 0), content: TelegramMediaWebpageContent.Loaded(TelegramMediaWebpageLoadedContent(url: "", displayUrl: "", hash: 0, type: "photo", websiteName: game.name, title: game.name, text: game.description, embedUrl: nil, embedType: nil, embedSize: nil, duration: nil, author: nil, image: game.image, file: game.file, attributes: [], instantPage: nil)))
             }
@@ -565,7 +566,7 @@ class ChatMessageItem: ChatRowItem {
             
             
             (webpageLayout as? WPMediaLayout)?.parameters?.showMedia = { [weak self] message in
-                if let webpage = message.effectiveMedia as? TelegramMediaWebpage {
+                if let webpage = message.anyMedia as? TelegramMediaWebpage {
                     switch webpage.content {
                     case let .Loaded(content):
                         if content.embedType == "iframe" && content.type != kBotInlineTypeGif, let url = content.embedUrl {
@@ -592,7 +593,7 @@ class ChatMessageItem: ChatRowItem {
             openSpecificTimecodeFromReply = { [weak self] timecode in
                 if let timecode = timecode {
                     var canAssignToReply: Bool = true
-                    if let media = message.effectiveMedia as? TelegramMediaWebpage {
+                    if let media = message.anyMedia as? TelegramMediaWebpage {
                         switch media.content {
                         case let .Loaded(content):
                             canAssignToReply = !ExternalVideoLoader.isPlayable(content)

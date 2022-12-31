@@ -373,7 +373,7 @@ class ChatControllerView : View, ChatInputDelegate {
             case let .thread(data):
                 location = .peer(peerId: data.messageId.peerId, fromId: fromId, tags: nil, topMsgId: data.messageId, minDate: nil, maxDate: nil)
             }
-            return context.engine.messages.searchMessages(location: location, query: query, state: state) |> map {($0.0.messages.filter({ !($0.effectiveMedia is TelegramMediaAction) }), $0.1)}
+            return context.engine.messages.searchMessages(location: location, query: query, state: state) |> map {($0.0.messages.filter({ !($0.extendedMedia is TelegramMediaAction) }), $0.1)}
         })
         
         
@@ -1972,7 +1972,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             
             let filtred = items.filter { item in
                 if let item = item as? ChatRowItem, let message = item.message {
-                    if let action = message.effectiveMedia as? TelegramMediaAction {
+                    if let action = message.extendedMedia as? TelegramMediaAction {
                         switch action.action {
                         case .groupCreated:
                             return coreMessageMainPeer(message)?.groupAccess.isCreator == false
@@ -2796,7 +2796,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                         }
                                     }
                                     
-                                    if let media = message.effectiveMedia {
+                                    if let media = message.anyMedia {
                                         switch media {
                                         case _ as TelegramMediaPoll:
                                             return permissionText(from: peer, for: .banSendPolls)
@@ -2871,7 +2871,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                     
                 } else {
                     if let editState = presentation.interfaceState.editState, editState.inputState.inputText.isEmpty {
-                        if editState.message.media.isEmpty || editState.message.effectiveMedia is TelegramMediaWebpage {
+                        if editState.message.media.isEmpty || editState.message.anyMedia is TelegramMediaWebpage {
                             strongSelf.chatInteraction.deleteMessages([editState.message.id])
                             return
                         }
@@ -5361,7 +5361,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     break inner
                                 }
                             }
-                            if message.effectiveMedia is TelegramMediaUnsupported {
+                            if message.anyMedia is TelegramMediaUnsupported {
                                 unsupportedMessagesIds.append(message.id)
                             }
                             if message.id.peerId.namespace == Namespaces.Peer.CloudChannel || message.id.peerId.namespace == Namespaces.Peer.CloudGroup {
@@ -5752,7 +5752,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             self.genericView.tableView.enumerateVisibleItems(with: { item in
                 if let item = item as? ChatRowItem, let view = item.view {
                     if view.visibleRect == view.bounds {
-                        if let file = item.message?.effectiveMedia as? TelegramMediaFile {
+                        if let file = item.message?.anyMedia as? TelegramMediaFile {
                             if !file.noPremium, !context.premiumIsBlocked, file.isPremiumSticker {
                                 items.append(item)
                             } else if file.isEmojiAnimatedSticker, file.isPremiumEmoji, let message = item.message {

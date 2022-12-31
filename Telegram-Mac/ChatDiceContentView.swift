@@ -75,7 +75,7 @@ private struct DiceState : Equatable {
     init(message: Message) {
         self.message = message
         self.messageId = message.id
-        if let dice = message.effectiveMedia as? TelegramMediaDice, dice.value == 0 {
+        if let dice = message.anyMedia as? TelegramMediaDice, dice.value == 0 {
             play = .idle
         } else if message.forwardInfo != nil {
             play = .end(animated: false)

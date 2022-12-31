@@ -193,7 +193,7 @@ func StorageUsage_Block_MediaList(context: AccountContext, storageArguments: Sto
         case .media:
             showChatGallery(context: context, message: message, gallery, nil, type: .alone)
         case .files:
-            if let file = message.effectiveMedia as? TelegramMediaFile {
+            if let file = message.anyMedia as? TelegramMediaFile {
                 if file.isGraphicFile {
                     showChatGallery(context: context, message: message, gallery, nil, type: .alone)
                 } else {
@@ -201,7 +201,7 @@ func StorageUsage_Block_MediaList(context: AccountContext, storageArguments: Sto
                 }
             }
         case .music, .voice:
-            if let file = message.effectiveMedia as? TelegramMediaFile {
+            if let file = message.anyMedia as? TelegramMediaFile {
                 if let controller = context.audioPlayer, let song = controller.currentSong, song.entry.isEqual(to: message) {
                     controller.playOrPause()
                 } else {

@@ -184,7 +184,7 @@ final class EmojiScreenEffect {
             let animationSize = NSMakeSize(item.contentSize.width * 1.5, item.contentSize.height * 1.5)
             let signal: Signal<(LottieAnimation, String)?, NoError> = context.account.postbox.messageAtId(messageId)
             |> mapToSignal { message in
-                if let message = message, let file = message.effectiveMedia as? TelegramMediaFile {
+                if let message = message, let file = message.anyMedia as? TelegramMediaFile {
                     if let effect = file.premiumEffect {
                         return context.account.postbox.mediaBox.resourceData(effect.resource) |> filter { $0.complete } |> take(1) |> map { data in
                             if data.complete, let data = try? Data(contentsOf: URL(fileURLWithPath: data.path)) {
