@@ -35,7 +35,7 @@ class ChatGroupedItem: ChatRowItem {
         if case let .groupedPhotos(messages, _) = entry {
             
             let messages = messages.map{$0.message!}.filter({!$0.media.isEmpty})
-            let prettyCount = messages.filter { $0.effectiveMedia!.isInteractiveMedia }.count
+            let prettyCount = messages.filter { $0.anyMedia!.isInteractiveMedia }.count
             self.layout = GroupedLayout(messages, type: prettyCount != messages.count ? .files : .photoOrVideo)
             
             var captionMessages: [Message] = []
@@ -168,7 +168,7 @@ class ChatGroupedItem: ChatRowItem {
             switch layout.type {
             case .files:
                 
-                let parameters = ChatMediaLayoutParameters.layout(for: (message.effectiveMedia as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(message), isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), autoplayMedia: entry.autoplayMedia, isRevealed: entry.additionalData.isRevealed)
+                let parameters = ChatMediaLayoutParameters.layout(for: (message.anyMedia as! TelegramMediaFile), isWebpage: chatInteraction.isLogInteraction, chatInteraction: chatInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), automaticDownload: downloadSettings.isDownloable(message), isIncoming: message.isIncoming(context.account, entry.renderType == .bubble), autoplayMedia: entry.autoplayMedia, isRevealed: entry.additionalData.isRevealed)
                 
                 parameters.showMedia = { [weak self] message in
                     guard let `self` = self else {return}
@@ -202,7 +202,7 @@ class ChatGroupedItem: ChatRowItem {
                     
                     }, showMessage: { [weak self] message in
                         self?.chatInteraction.focusMessageId(nil, message.id, .CenterEmpty)
-                    }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), media: message.effectiveMedia!, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: entry.autoplayMedia, isRevealed: entry.isRevealed))
+                    }, isWebpage: chatInteraction.isLogInteraction, presentation: .make(for: message, account: context.account, renderType: entry.renderType, theme: theme), media: message.anyMedia!, automaticDownload: downloadSettings.isDownloable(message), autoplayMedia: entry.autoplayMedia, isRevealed: entry.isRevealed))
             }
             self.parameters[i].automaticDownloadFunc = { message in
                 return downloadSettings.isDownloable(message)
@@ -297,7 +297,7 @@ class ChatGroupedItem: ChatRowItem {
         }
         switch self.layoutType {
         case .files:
-            if let file = self.layout.messages.last?.effectiveMedia as? TelegramMediaFile, file.previewRepresentations.isEmpty {
+            if let file = self.layout.messages.last?.anyMedia as? TelegramMediaFile, file.previewRepresentations.isEmpty {
                 if let parameters = self.parameters[layout.messages.count - 1] as? ChatFileLayoutParameters {
                     let progressMaxWidth = max(parameters.uploadingLayout.layoutSize.width, parameters.downloadingLayout.layoutSize.width)
                     let width = max(parameters.finderLayout.layoutSize.width, parameters.downloadLayout.layoutSize.width, progressMaxWidth) + 50

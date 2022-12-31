@@ -691,7 +691,7 @@ final class ChatInteraction : InterfaceObserver  {
                             
                         }
                     case .payment:
-                        if let invoice = keyboardMessage.effectiveMedia as? TelegramMediaInvoice {
+                        if let invoice = keyboardMessage.anyMedia as? TelegramMediaInvoice {
                             let receiptMessageId = invoice.receiptMessageId
                             if let receiptMessageId = receiptMessageId {
                                 showModal(with: PaymentsReceiptController(context: strongSelf.context, messageId: receiptMessageId, invoice: invoice), for: strongSelf.context.window)

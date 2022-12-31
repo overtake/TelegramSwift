@@ -346,7 +346,7 @@ struct StorageUsageUIState : Equatable {
         }
         
         for (_, message) in messages {
-            if message.effectiveMedia is TelegramMediaImage {
+            if message.anyMedia is TelegramMediaImage {
                 switch tag {
                 case .media:
                     list.append(message)
@@ -354,7 +354,7 @@ struct StorageUsageUIState : Equatable {
                     break
                 }
             }
-            if let file = message.effectiveMedia as? TelegramMediaFile {
+            if let file = message.anyMedia as? TelegramMediaFile {
                 let type: MediaResourceUserContentType = .init(file: file)
                 switch type {
                 case .file:

@@ -64,21 +64,19 @@ class ChatServiceItem: ChatRowItem {
         let from: PeerId
         let to: PeerId
         let text: TextViewLayout
-        let header: TextViewLayout
         let image: TelegramMediaImage
-        
-        init(from: PeerId, to: PeerId, text: TextViewLayout, header: TextViewLayout, image: TelegramMediaImage) {
+        let isIncoming: Bool
+        init(from: PeerId, to: PeerId, text: TextViewLayout, isIncoming: Bool, image: TelegramMediaImage) {
             self.from = from
             self.to = to
             self.text = text
-            self.header = header
+            self.isIncoming = isIncoming
             self.image = image
             self.text.measure(width: 160)
-            self.header.measure(width: 160)
         }
         
         var height: CGFloat {
-            return 10 + 100 + 10 + header.layoutSize.height + 5 + text.layoutSize.height + 10 + 30 + 10
+            return 10 + 100 + 10 + text.layoutSize.height + 10 + 30 + 10
         }
     }
 
@@ -348,7 +346,7 @@ class ChatServiceItem: ChatRowItem {
                     var gameName:String = ""
                     for attr in message.attributes {
                         if let attr = attr as? ReplyMessageAttribute {
-                            if let message = message.associatedMessages[attr.messageId], let gameMedia = message.effectiveMedia as? TelegramMediaGame {
+                            if let message = message.associatedMessages[attr.messageId], let gameMedia = message.anyMedia as? TelegramMediaGame {
                                 gameName = gameMedia.name
                             }
                         }
@@ -369,7 +367,7 @@ class ChatServiceItem: ChatRowItem {
                             }
                         }
                     }
-                    let media = paymentMessage?.effectiveMedia as? TelegramMediaInvoice
+                    let media = paymentMessage?.anyMedia as? TelegramMediaInvoice
                     
                     if let paymentMessage = paymentMessage, let media = media, let peer = paymentMessage.peers[paymentMessage.id.peerId] {
                         if isRecurringInit {
@@ -622,10 +620,6 @@ class ChatServiceItem: ChatRowItem {
                     
                     
                     if let image = image {
-                        
-                        let header = NSMutableAttributedString()
-                        _ = header.append(string: strings().chatServiceSuggestPhotoTitle, color: grayTextColor, font: .medium(.title))
-                        
                                                 
                         let info = NSMutableAttributedString()
                         if authorId == context.peerId {
@@ -633,7 +627,7 @@ class ChatServiceItem: ChatRowItem {
                         } else {
                             _ = info.append(string: strings().chatServiceSuggestPhotoInfo(authorName), color: grayTextColor, font: .normal(.text))
                         }
-                        self.suggestPhotoData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(info, alignment: .center), header: TextViewLayout(header, alignment: .center), image: image)
+                        self.suggestPhotoData = .init(from: authorId ?? message.id.peerId, to: message.id.peerId, text: TextViewLayout(info, alignment: .center), isIncoming: authorId != context.peerId, image: image)
                     } else {
                         let text: String
                         if authorId == context.peerId {
@@ -642,12 +636,12 @@ class ChatServiceItem: ChatRowItem {
                             text = strings().chatServiceSuggestedPhoto(authorName)
                         }
                         let _ = attributedString.append(string: text, color: grayTextColor, font: NSFont.normal(theme.fontSize))
-                    }
-                    
-                    if let authorId = authorId {
-                        let range = attributedString.string.nsstring.range(of: authorName)
-                        attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
-                        attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                        
+                        if let authorId = authorId {
+                            let range = attributedString.string.nsstring.range(of: authorName)
+                            attributedString.add(link:inAppLink.peerInfo(link: "", peerId:authorId, action:nil, openChat: false, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(authorId))
+                            attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                        }
                     }
                 case let .topicCreated(title, _, iconFileId):
                     let text: String
@@ -788,7 +782,7 @@ class ChatServiceItem: ChatRowItem {
             }
             _ = attributedString.append(string: text, color: grayTextColor, font: .normal(theme.fontSize))
         } else if message.id.peerId.namespace == Namespaces.Peer.CloudUser, let _ = message.autoremoveAttribute {
-            let isPhoto: Bool = message.effectiveMedia is TelegramMediaImage
+            let isPhoto: Bool = message.anyMedia is TelegramMediaImage
             if authorId == context.peerId {
                 _ = attributedString.append(string: isPhoto ? strings().serviceMessageDesturctingPhotoYou(authorName) : strings().serviceMessageDesturctingVideoYou(authorName), color: grayTextColor, font: .normal(theme.fontSize))
             } else if let _ = authorId {
@@ -1059,19 +1053,15 @@ class ChatServiceRowView: TableRowView {
         private var visualEffect: VisualEffect?
         
         private let textView = TextView()
-        private let headerView = TextView()
                 
         fileprivate let viewButton = TitleButton()
         
         required init(frame frameRect: NSRect) {
             super.init(frame: frameRect)
-            addSubview(headerView)
             addSubview(textView)
             addSubview(viewButton)
             textView.userInteractionEnabled = false
             textView.isSelectable = false
-            headerView.userInteractionEnabled = false
-            headerView.isSelectable = false
             
             viewButton.scaleOnClick = true
             viewButton.autohighlight = false
@@ -1187,7 +1177,6 @@ class ChatServiceRowView: TableRowView {
             }
                         
             textView.update(data.text)
-            headerView.update(data.header)
             
             viewButton.set(font: .normal(.text), for: .Normal)
             viewButton.set(color: item.presentation.shouldBlurService ? .white : theme.colors.underSelectedColor, for: .Normal)
@@ -1216,8 +1205,7 @@ class ChatServiceRowView: TableRowView {
             visualEffect?.frame = bounds
             photo?.centerX(y: 10)
             photoVideoView?.centerX(y: 10)
-            headerView.centerX(y: 110 + 10)
-            textView.centerX(y: headerView.frame.maxY + 5)
+            textView.centerX(y: 110 + 10)
             viewButton.centerX(y: textView.frame.maxY + 10)
         }
         
@@ -1255,7 +1243,7 @@ class ChatServiceRowView: TableRowView {
 
         textView.set(handler: { [weak self] control in
             if let item = self?.item as? ChatServiceItem {
-                if let message = item.message, let action = message.effectiveMedia as? TelegramMediaAction {
+                if let message = item.message, let action = message.extendedMedia as? TelegramMediaAction {
                     switch action.action {
                     case let .messageAutoremoveTimeoutUpdated(timeout, _):
                         if let peer = item.chatInteraction.peer {
@@ -1366,7 +1354,7 @@ class ChatServiceRowView: TableRowView {
 
         var interactiveTextView: Bool = false
 
-        if let message = item.message, let action = message.effectiveMedia as? TelegramMediaAction {
+        if let message = item.message, let action = message.extendedMedia as? TelegramMediaAction {
             switch action.action {
             case let .messageAutoremoveTimeoutUpdated(timeout, _):
                 if let peer = item.chatInteraction.peer {
@@ -1474,7 +1462,7 @@ class ChatServiceRowView: TableRowView {
                 
                 let open: (Control)->Void = { [weak self] _ in
                     if let item = self?.item as? ChatServiceItem, let message = item.message {
-                        if !item.isIncoming {
+                        if !data.isIncoming {
                             showChatGallery(context: item.context, message: message, item.table, type: .alone)
                         } else {
                             item.openPhotoEditor(data.image)

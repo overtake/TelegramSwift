@@ -742,7 +742,7 @@ class ChatListRowItem: TableRowItem {
                     author = message.author
                 }
                 if let author = author, let peer = peer, peer as? TelegramUser == nil, !peer.isChannel, draft == nil {
-                    if !(message.effectiveMedia is TelegramMediaAction) {
+                    if !(message.extendedMedia is TelegramMediaAction) {
                         var peerText: String = (author.id == context.account.peerId ? "\(strings().chatListYou)" : author.displayTitle)
                         
                         let topicNameAttributed = NSMutableAttributedString()
@@ -1282,6 +1282,7 @@ class ChatListRowItem: TableRowItem {
     
     override func menuItems(in location: NSPoint) -> Signal<[ContextMenuItem], NoError> {
 
+        let message = self.message
         let context = self.context
         let peerId = self.peerId
         let peer = self.peer

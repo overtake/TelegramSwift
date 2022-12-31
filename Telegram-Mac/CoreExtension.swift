@@ -611,9 +611,9 @@ public extension Message {
     }
     
     var file: TelegramMediaFile? {
-        if let file = self.effectiveMedia as? TelegramMediaFile {
+        if let file = self.anyMedia as? TelegramMediaFile {
             return file
-        } else if let webpage = self.effectiveMedia as? TelegramMediaWebpage {
+        } else if let webpage = self.anyMedia as? TelegramMediaWebpage {
             switch webpage.content {
             case let .Loaded(content):
                 return content.file
@@ -650,7 +650,23 @@ public extension Message {
         return nil
     }
     
-    var effectiveMedia: Media? {
+    var extendedMedia: Media? {
+        if let media = self.media.first as? TelegramMediaInvoice {
+            if let extended = media.extendedMedia {
+                switch extended {
+                case let .full(media):
+                    return media
+                default:
+                    break
+                }
+            }
+        }
+        return media.first
+    }
+
+    
+    
+    var anyMedia: Media? {
         if let media = self.media.first as? TelegramMediaInvoice {
             if let extended = media.extendedMedia {
                 switch extended {
@@ -750,7 +766,7 @@ public extension Message {
     }
     
     var isPublicPoll: Bool {
-        if let media = self.effectiveMedia as? TelegramMediaPoll {
+        if let media = self.anyMedia as? TelegramMediaPoll {
             return media.publicity == .public
         }
         return false
@@ -987,8 +1003,11 @@ func canForwardMessage(_ message:Message, chatInteraction: ChatInteraction) -> B
     if message.adAttribute != nil {
         return false
     }
+    if message.isCopyProtected() {
+        return false
+    }
     
-    if message.effectiveMedia is TelegramMediaAction {
+    if message.extendedMedia is TelegramMediaAction {
         return false
     }
     
@@ -1043,7 +1062,7 @@ func canDeleteForEveryoneMessage(_ message:Message, context: AccountContext) -> 
         }
         if context.limitConfiguration.canRemoveIncomingMessagesInPrivateChats && message.peers[message.id.peerId] is TelegramUser {
             
-            if message.effectiveMedia is TelegramMediaDice, message.peers[message.id.peerId] is TelegramUser {
+            if message.anyMedia is TelegramMediaDice, message.peers[message.id.peerId] is TelegramUser {
                 if Int(message.timestamp) + 24 * 60 * 60 > context.timestamp {
                     return false
                 }
@@ -1058,7 +1077,7 @@ func canDeleteForEveryoneMessage(_ message:Message, context: AccountContext) -> 
             default:
                 if Int(context.limitConfiguration.maxMessageEditingInterval) + Int(message.timestamp) > Int(Date().timeIntervalSince1970) {
                     if context.account.peerId == message.effectiveAuthor?.id {
-                        return !(message.effectiveMedia is TelegramMediaAction)
+                        return !(message.extendedMedia is TelegramMediaAction)
                     }
                 }
                 return false
@@ -1066,7 +1085,7 @@ func canDeleteForEveryoneMessage(_ message:Message, context: AccountContext) -> 
             
         } else if Int(context.limitConfiguration.maxMessageEditingInterval) + Int(message.timestamp) > Int(Date().timeIntervalSince1970) {
             if context.account.peerId == message.author?.id {
-                return !(message.effectiveMedia is TelegramMediaAction)
+                return !(message.extendedMedia is TelegramMediaAction)
             }
         }
     }
@@ -1125,7 +1144,7 @@ func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context
         return false
     }
     
-    if let media = message.effectiveMedia {
+    if let media = message.anyMedia {
         if let file = media as? TelegramMediaFile {
             if file.isStaticSticker || (file.isAnimatedSticker && !file.isEmojiAnimatedSticker) {
                 return false
@@ -2835,11 +2854,11 @@ extension AutomaticMediaDownloadSettings {
         }
         
         if let peer = coreMessageMainPeer(message) {
-            if let _ = message.effectiveMedia as? TelegramMediaImage {
+            if let _ = message.anyMedia as? TelegramMediaImage {
                 return ability(categories.photo, peer)
-            } else if let media = message.effectiveMedia as? TelegramMediaFile {
+            } else if let media = message.anyMedia as? TelegramMediaFile {
                 return checkFile(media, peer, categories)
-            } else if let media = message.effectiveMedia as? TelegramMediaWebpage {
+            } else if let media = message.anyMedia as? TelegramMediaWebpage {
                 switch media.content {
                 case let .Loaded(content):
                     if content.type == "telegram_background" {
@@ -2853,7 +2872,7 @@ extension AutomaticMediaDownloadSettings {
                 default:
                     break
                 }
-            } else if let media = message.effectiveMedia as? TelegramMediaGame {
+            } else if let media = message.anyMedia as? TelegramMediaGame {
                 if let file = media.file {
                     return checkFile(file, peer, categories)
                 } else if let _ = media.image {

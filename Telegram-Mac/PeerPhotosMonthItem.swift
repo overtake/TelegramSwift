@@ -98,7 +98,7 @@ class PeerPhotosMonthItem: GeneralRowItem {
         var point: CGPoint = CGPoint(x: self.viewType.innerInset.left, y: self.viewType.innerInset.top + itemSize.height)
         for (i, message) in self.items.enumerated() {
             let viewType: MediaCell.Type
-            if let file = message.effectiveMedia as? TelegramMediaFile {
+            if let file = message.anyMedia as? TelegramMediaFile {
                 if file.isAnimated && file.isVideo {
                     viewType = MediaGifCell.self
                 } else {
@@ -252,12 +252,12 @@ class MediaCell : Control {
             let imageSize: NSSize
             let cacheArguments: TransformImageArguments
             let signal: Signal<ImageDataTransformation, NoError>
-            if let image = layout.message.effectiveMedia as? TelegramMediaImage, let largestSize = largestImageRepresentation(image.representations)?.dimensions.size {
+            if let image = layout.message.anyMedia as? TelegramMediaImage, let largestSize = largestImageRepresentation(image.representations)?.dimensions.size {
                 media = image
                 imageSize = largestSize.aspectFilled(NSMakeSize(150, 150))
                 cacheArguments = TransformImageArguments(corners: layout.corners, imageSize: imageSize, boundingSize: NSMakeSize(150, 150), intrinsicInsets: NSEdgeInsets())
                 signal = mediaGridMessagePhoto(account: context.account, imageReference: ImageMediaReference.message(message: MessageReference(layout.message), media: image), scale: backingScaleFactor)
-            } else if let file = layout.message.effectiveMedia as? TelegramMediaFile {
+            } else if let file = layout.message.anyMedia as? TelegramMediaFile {
                 media = file
                 let largestSize = file.previewRepresentations.last?.dimensions.size ?? file.imageSize
                 imageSize = largestSize.aspectFilled(NSMakeSize(150, 150))
@@ -379,20 +379,20 @@ class MediaVideoCell : MediaCell {
     
     private func fetch() {
         if let context = context, let layoutItem = self.layoutItem {
-            let file = layoutItem.message.effectiveMedia as! TelegramMediaFile
+            let file = layoutItem.message.anyMedia as! TelegramMediaFile
             fetchingDisposable.set(messageMediaFileInteractiveFetched(context: context, messageId: layoutItem.message.id, messageReference: .init(layoutItem.message), file: file, userInitiated: true).start())
         }
     }
       
     private func cancelFetching() {
         if let context = context, let layoutItem = self.layoutItem {
-            let file = layoutItem.message.effectiveMedia as! TelegramMediaFile
+            let file = layoutItem.message.anyMedia as! TelegramMediaFile
             messageMediaFileCancelInteractiveFetch(context: context, messageId: layoutItem.message.id, file: file)
         }
     }
       
     override func innerAction() -> MediaCellInvokeActionResult {
-        if let file = layoutItem?.message.effectiveMedia as? TelegramMediaFile, let window = self.window {
+        if let file = layoutItem?.message.anyMedia as? TelegramMediaFile, let window = self.window {
             switch progressView.state {
             case .Fetching:
                 if NSPointInRect(self.convert(window.mouseLocationOutsideOfEventStream, from: nil), progressView.frame) {
@@ -413,7 +413,7 @@ class MediaVideoCell : MediaCell {
         if let layoutItem = self.layoutItem {
             let context = layoutItem.context
             if context.autoplayMedia.preloadVideos {
-                if let media = layoutItem.message.effectiveMedia as? TelegramMediaFile {
+                if let media = layoutItem.message.anyMedia as? TelegramMediaFile {
                     let reference = FileMediaReference.message(message: MessageReference(layoutItem.message), media: media)
                     let preload = preloadVideoResource(postbox: context.account.postbox, userLocation: .peer(layoutItem.message.id.peerId), userContentType: .init(file: media), resourceReference: reference.resourceReference(media.resource), duration: 3.0)
                     partDisposable.set(preload.start())
@@ -461,7 +461,7 @@ class MediaVideoCell : MediaCell {
     
     override func update(layout: MediaCellLayoutItem, selected: Bool?, context: AccountContext, table: TableView?, animated: Bool) {
         super.update(layout: layout, selected: selected, context: context, table: table, animated: animated)
-        let file = layout.message.effectiveMedia as! TelegramMediaFile
+        let file = layout.message.anyMedia as! TelegramMediaFile
         
         let updatedStatusSignal = chatMessageFileStatus(context: context, message: layout.message, file: file) |> deliverOnMainQueue |> map { status -> (MediaResourceStatus, MediaResourceStatus) in
            if file.isStreamable && layout.message.id.peerId.namespace != Namespaces.Peer.SecretChat {
@@ -566,7 +566,7 @@ class MediaGifCell : MediaCell {
         let previousLayout = self.layoutItem
         super.update(layout: layout, selected: selected, context: context, table: table, animated: animated)
         if layout != previousLayout {
-            let file = layout.message.effectiveMedia as! TelegramMediaFile
+            let file = layout.message.anyMedia as! TelegramMediaFile
             
             let messageRefence = MessageReference(layout.message)
             

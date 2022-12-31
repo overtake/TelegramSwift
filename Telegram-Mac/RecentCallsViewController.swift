@@ -159,7 +159,7 @@ private enum RecentCallEntry : TableItemListNodeEntry {
             } else {
                 let text = outgoing ? strings().callRecentOutgoing : strings().callRecentIncoming
                 if messages.count == 1 {
-                    if let action = messages[0].effectiveMedia as? TelegramMediaAction, case .phoneCall(_, _, let duration, _) = action.action, let value = duration, value > 0 {
+                    if let action = messages[0].extendedMedia as? TelegramMediaAction, case .phoneCall(_, _, let duration, _) = action.action, let value = duration, value > 0 {
                         statusText = text + " (\(String.stringForShortCallDurationSeconds(for: value)))"
                     } else {
                         statusText = text

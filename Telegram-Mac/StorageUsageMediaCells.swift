@@ -142,7 +142,7 @@ class StorageUsageMediaCells: GeneralRowItem {
         }
     }
     func isPlayable(_ message: Message) -> Bool {
-        if let file = message.effectiveMedia as? TelegramMediaFile {
+        if let file = message.anyMedia as? TelegramMediaFile {
             return file.isVideo || file.isInstantVideo
         }
         return false
@@ -190,7 +190,7 @@ class StorageUsageMediaCells: GeneralRowItem {
         var point: CGPoint = CGPoint(x: 0, y: itemSize.height)
         for (i, message) in self.items.enumerated() {
             let viewType: MediaCell.Type
-            if let file = message.effectiveMedia as? TelegramMediaFile {
+            if let file = message.anyMedia as? TelegramMediaFile {
                 if file.isAnimated && file.isVideo {
                     viewType = MediaGifCell.self
                 } else {

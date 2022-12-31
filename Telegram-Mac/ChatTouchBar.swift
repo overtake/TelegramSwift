@@ -75,7 +75,7 @@ func touchBarChatItems(presentation: ChatPresentationInterfaceState, layout: Spl
         var items: [NSTouchBarItem.Identifier] = []
         items.append(.chatEditMessageDone)
  
-        if let editState = presentation.interfaceState.editState, let media = editState.message.effectiveMedia, media is TelegramMediaFile || media is TelegramMediaImage {
+        if let editState = presentation.interfaceState.editState, let media = editState.message.anyMedia, media is TelegramMediaFile || media is TelegramMediaImage {
             items.append(.flexibleSpace)
             items.append(.chatEditMessageUpdateMedia)
             if editState.message.groupingKey == nil {

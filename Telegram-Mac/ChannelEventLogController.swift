@@ -255,7 +255,7 @@ private func eventLogItems(_ entries:[ChannelAdminEventLogEntry], isGroup: Bool,
         case let .editMessage(prev, new):
             let item = ChatRowItem.item(initialSize, from: .MessageEntry(new.withUpdatedStableId(arc4random()), MessageIndex(new), true, .list, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(eventLog: entry.event), AutoplayMediaPreferences.defaultSettings)), interaction: chatInteraction, theme: theme) as? ChatRowItem
             if let item = item {
-                if !(new.effectiveMedia is TelegramMediaAction) {
+                if !(new.extendedMedia is TelegramMediaAction) {
                     items.append(ChannelEventLogEditedPanelItem(initialSize, previous: prev, item: item))
                     items.append(item)
                 }

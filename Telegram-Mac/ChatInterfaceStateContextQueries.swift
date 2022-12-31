@@ -238,7 +238,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
             let participants = combineLatest(inlineSignal, members |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
                 return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: global.id, threadId: location.threadId), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                     let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
-                        if entry.message.effectiveMedia is TelegramMediaAction {
+                        if entry.message.extendedMedia is TelegramMediaAction {
                             return nil
                         }
                         return entry.message.author?.id
@@ -404,7 +404,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                             return searchPeerMembers(context: context, peerId: global.id, chatLocation: chatPresentationInterfaceState.chatLocation, query: normalizedQuery) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
                                 return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: global.id, threadId: location.threadId), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                                     let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
-                                        if entry.message.effectiveMedia is TelegramMediaAction {
+                                        if entry.message.extendedMedia is TelegramMediaAction {
                                             return nil
                                         }
                                         return entry.message.author?.id
@@ -483,7 +483,7 @@ func chatContextQueryForSearchMention(chatLocations: [ChatLocation], _ inputQuer
             searchPeerMembers(context: context, peerId: chatLocation.peerId, chatLocation: chatLocation, query: normalizedQuery) |> take(1) |> mapToSignal { participants -> Signal<[Peer], NoError> in
                 return context.account.viewTracker.aroundMessageOfInterestHistoryViewForLocation(.peer(peerId: chatLocation.peerId, threadId: chatLocation.threadId), count: 100, tagMask: nil, orderStatistics: [], additionalData: []) |> take(1) |> map { view in
                     let latestIds:[PeerId] = view.0.entries.reversed().compactMap({ entry in
-                        if entry.message.effectiveMedia is TelegramMediaAction {
+                        if entry.message.extendedMedia is TelegramMediaAction {
                             return nil
                         }
                         return entry.message.author?.id
@@ -706,7 +706,7 @@ private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.Check
         var detector = dataDetector
 
         
-        if chatPresentationInterfaceState.state == .editing, let media = chatPresentationInterfaceState.interfaceState.editState?.message.effectiveMedia {
+        if chatPresentationInterfaceState.state == .editing, let media = chatPresentationInterfaceState.interfaceState.editState?.message.anyMedia {
             if media is TelegramMediaFile || media is TelegramMediaImage {
                 subscriber.putNext((nil, .single({ _ in return nil })))
                 subscriber.putCompletion()
@@ -720,7 +720,7 @@ private let dataDetector = try? NSDataDetector(types: NSTextCheckingResult.Check
             detector = nil
         }
         
-        if chatPresentationInterfaceState.state == .editing, let media = chatPresentationInterfaceState.interfaceState.editState?.message.effectiveMedia {
+        if chatPresentationInterfaceState.state == .editing, let media = chatPresentationInterfaceState.interfaceState.editState?.message.anyMedia {
             if let media = media as? TelegramMediaWebpage {
                 let url: String?
                 switch media.content {

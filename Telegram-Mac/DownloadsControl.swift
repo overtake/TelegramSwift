@@ -134,7 +134,7 @@ final class DownloadsControl : Control {
         case let .hasUnseen(msgs):
             let attr = NSMutableAttributedString()
             let size: Int64 = msgs.reduce(0, { current, value in
-                if let file = value.effectiveMedia as? TelegramMediaFile {
+                if let file = value.anyMedia as? TelegramMediaFile {
                     return current + (file.size ?? 0)
                 } else {
                     return current

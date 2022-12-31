@@ -511,13 +511,13 @@ class ServiceEventLogItem: TableRowItem {
             case .deleteMessage:
                 serviceInfo = ServiceTextInfo(text: strings().eventLogServiceDeletedMessage(peer.displayTitle), firstLink: peerLink, secondLink: nil)
             case let .editMessage(prev, new):
-                if new.effectiveMedia is TelegramMediaImage || new.effectiveMedia is TelegramMediaFile {
+                if new.anyMedia is TelegramMediaImage || new.anyMedia is TelegramMediaFile {
                     if !new.media[0].isSemanticallyEqual(to: prev.media[0]) {
                         serviceInfo = ServiceTextInfo(text: strings().eventLogServiceEditedMedia(peer.displayTitle), firstLink: peerLink, secondLink: nil)
                     } else {
                         serviceInfo = ServiceTextInfo(text: strings().eventLogServiceEditedCaption(peer.displayTitle), firstLink: peerLink, secondLink: nil)
                     }
-                } else if let media = new.effectiveMedia as? TelegramMediaAction {
+                } else if let media = new.anyMedia as? TelegramMediaAction {
                     switch media.action {
                     case let .groupPhoneCall(_, _, _, duration):
                         if let duration = duration {
@@ -536,7 +536,7 @@ class ServiceEventLogItem: TableRowItem {
                     serviceInfo = ServiceTextInfo(text: strings().eventLogServiceEditedMessage(peer.displayTitle), firstLink: peerLink, secondLink: nil)
                 }
             case let .sendMessage(new):
-                if let media = new.effectiveMedia as? TelegramMediaAction {
+                if let media = new.extendedMedia as? TelegramMediaAction {
                     switch media.action {
                     case let .groupPhoneCall(_, _, _, duration):
                         if let duration = duration {

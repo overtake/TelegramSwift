@@ -615,7 +615,7 @@ class GalleryViewer: NSResponder {
                     
                     inserted.insert((0, itemFor(entry: entries[0], context: context, pagerSize: pagerSize)), at: 0)
 
-                    if let webpage = message.effectiveMedia as? TelegramMediaWebpage {
+                    if let webpage = message.anyMedia as? TelegramMediaWebpage {
                         let instantMedias = instantPageMedias(for: webpage)
                         if instantMedias.count > 1 {
                             for i in 1 ..< instantMedias.count {
@@ -678,7 +678,7 @@ class GalleryViewer: NSResponder {
                 case .secret:
                     return context.account.postbox.messageView(index.id) |> mapToSignal { view -> Signal<(UpdateTransition<MGalleryItem>, [ChatHistoryEntry], [ChatHistoryEntry]), NoError> in
                         var entries:[ChatHistoryEntry] = []
-                        if let message = view.message, !(message.effectiveMedia is TelegramMediaExpiredContent) {
+                        if let message = view.message, !(message.anyMedia is TelegramMediaExpiredContent) {
                             entries.append(.MessageEntry(message, MessageIndex(message), false, .list, .Full(rank: nil, header: .normal), nil, ChatHistoryEntryData(nil, MessageEntryAdditionalData(), AutoplayMediaPreferences.defaultSettings)))
                         }
                         let previous = previous.with {$0}
@@ -883,7 +883,7 @@ class GalleryViewer: NSResponder {
 
                     
                     if let peer = message.peers[message.id.peerId], peer.canSendMessage(), let controller = controller as? ChatController {
-                        if let _ = message.effectiveMedia as? TelegramMediaImage {
+                        if let _ = message.anyMedia as? TelegramMediaImage {
                             items.append(ContextMenuItem(strings().gallerySendHere, handler: { [weak self, weak controller] in
                                 
                                 self?.close(false)
@@ -925,7 +925,7 @@ class GalleryViewer: NSResponder {
                         var items:[ContextMenuItem] = []
                         
                         let thisTitle: String
-                        if message.effectiveMedia is TelegramMediaImage {
+                        if message.anyMedia is TelegramMediaImage {
                             thisTitle = strings().galleryContextShareThisPhoto
                         } else {
                             thisTitle = strings().galleryContextShareThisVideo
@@ -935,9 +935,9 @@ class GalleryViewer: NSResponder {
                         }, itemImage: MenuAnimation.menu_select_messages.value))
                        
                         let allTitle: String
-                        if messages.filter({$0.effectiveMedia is TelegramMediaImage}).count == messages.count {
+                        if messages.filter({$0.anyMedia is TelegramMediaImage}).count == messages.count {
                             allTitle = strings().galleryContextShareAllPhotosCountable(messages.count)
-                        } else if messages.filter({$0.effectiveMedia is TelegramMediaFile}).count == messages.count {
+                        } else if messages.filter({$0.anyMedia is TelegramMediaFile}).count == messages.count {
                             allTitle = strings().galleryContextShareAllVideosCountable(messages.count)
                         } else {
                             allTitle = strings().galleryContextShareAllItemsCountable(messages.count)
@@ -1269,11 +1269,11 @@ class GalleryViewer: NSResponder {
                 var items:[ContextMenuItem] = []
                 
                 let thisTitle: String
-                if message.effectiveMedia is TelegramMediaImage {
+                if message.anyMedia is TelegramMediaImage {
                     thisTitle = strings().galleryContextShareThisPhoto
-                } else if message.effectiveMedia!.isVideoFile {
+                } else if message.anyMedia!.isVideoFile {
                     thisTitle = strings().galleryContextShareThisVideo
-                } else if message.effectiveMedia!.isGraphicFile {
+                } else if message.anyMedia!.isGraphicFile {
                     thisTitle = strings().galleryContextShareThisPhoto
                 } else {
                     thisTitle = strings().galleryContextShareThisFile
@@ -1285,11 +1285,11 @@ class GalleryViewer: NSResponder {
                 }, itemImage: MenuAnimation.menu_share.value))
                 
                 let allTitle: String
-                if messages.filter({$0.effectiveMedia is TelegramMediaImage}).count == messages.count {
+                if messages.filter({$0.anyMedia is TelegramMediaImage}).count == messages.count {
                     allTitle = strings().galleryContextShareAllPhotosCountable(messages.count)
-                } else if messages.filter({ $0.effectiveMedia!.isVideoFile }).count == messages.count {
+                } else if messages.filter({ $0.anyMedia!.isVideoFile }).count == messages.count {
                     allTitle = strings().galleryContextShareAllVideosCountable(messages.count)
-                } else if messages.filter({ $0.effectiveMedia!.isGraphicFile }).count == messages.count {
+                } else if messages.filter({ $0.anyMedia!.isGraphicFile }).count == messages.count {
                     allTitle = strings().galleryContextShareAllPhotosCountable(messages.count)
                 } else {
                     allTitle = strings().galleryContextShareAllItemsCountable(messages.count)

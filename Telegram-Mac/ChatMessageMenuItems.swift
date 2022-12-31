@@ -93,11 +93,11 @@ func chatMenuItemsData(for message: Message, textLayout: (TextViewLayout?, LinkT
     
     var file: TelegramMediaFile? = nil
     var image: TelegramMediaImage? = nil
-    if let media = message.effectiveMedia as? TelegramMediaFile {
+    if let media = message.anyMedia as? TelegramMediaFile {
         file = media
-    } else if let media = message.effectiveMedia as? TelegramMediaImage {
+    } else if let media = message.anyMedia as? TelegramMediaImage {
         image = media
-    } else if let media = message.effectiveMedia as? TelegramMediaWebpage {
+    } else if let media = message.anyMedia as? TelegramMediaWebpage {
         switch media.content {
         case let .Loaded(content):
             file = content.file
@@ -225,7 +225,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         let appConfiguration = data.chatInteraction.context.appConfiguration
         let context = data.chatInteraction.context
         let account = context.account
-        let isService = data.message.effectiveMedia is TelegramMediaAction
+        let isService = data.message.extendedMedia is TelegramMediaAction
         
         var items:[ContextMenuItem] = []
         
@@ -303,7 +303,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         }
         
         
-        if let poll = data.message.effectiveMedia as? TelegramMediaPoll {
+        if let poll = data.message.anyMedia as? TelegramMediaPoll {
             if !poll.isClosed && isNotFailed {
                 if let _ = poll.results.voters?.first(where: {$0.selected}), poll.kind != .quiz {
                     let isLoading = data.additionalData.pollStateData.isLoading

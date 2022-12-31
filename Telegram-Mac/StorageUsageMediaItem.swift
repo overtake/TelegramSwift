@@ -47,10 +47,10 @@ final class StorageUsageMediaItem : GeneralRowItem {
         self.sizeLayout = .init(.initialize(string: String.prettySized(with: size, round: true), color: theme.colors.grayText, font: .normal(.text)), maximumNumberOfLines: 1)
         
         let name: String
-        if let _ = message.effectiveMedia as? TelegramMediaImage {
+        if let _ = message.anyMedia as? TelegramMediaImage {
             name = strings().storageUsageMediaPhoto
             self.mode = .media
-        } else if let file = message.effectiveMedia as? TelegramMediaFile {
+        } else if let file = message.anyMedia as? TelegramMediaFile {
             if file.isMusic {
                 name = file.musicText.0
             } else if file.isVoice {
@@ -86,9 +86,9 @@ final class StorageUsageMediaItem : GeneralRowItem {
         
         
         let iconImageRepresentation:TelegramMediaImageRepresentation?
-        if let image = message.effectiveMedia as? TelegramMediaImage {
+        if let image = message.anyMedia as? TelegramMediaImage {
             iconImageRepresentation = smallestImageRepresentation(image.representations)
-        } else if let file = message.effectiveMedia as? TelegramMediaFile {
+        } else if let file = message.anyMedia as? TelegramMediaFile {
             iconImageRepresentation = smallestImageRepresentation(file.previewRepresentations)
         } else {
             iconImageRepresentation = nil
@@ -105,7 +105,7 @@ final class StorageUsageMediaItem : GeneralRowItem {
         }
         docIcon = extensionImage(fileExtension: fileExtension)
         
-        if let iconImageRepresentation = iconImageRepresentation, let mediaId = message.effectiveMedia?.id {
+        if let iconImageRepresentation = iconImageRepresentation, let mediaId = message.anyMedia?.id {
             iconArguments = TransformImageArguments(corners: ImageCorners(radius: .cornerRadius), imageSize: iconImageRepresentation.dimensions.size.aspectFilled(PeerMediaIconSize), boundingSize: PeerMediaIconSize, intrinsicInsets: NSEdgeInsets())
             icon = TelegramMediaImage(imageId: mediaId, representations: [iconImageRepresentation], immediateThumbnailData: iconImageRepresentation.immediateThumbnailData, reference: nil, partialReference: nil, flags: [])
         }
@@ -377,7 +377,7 @@ final class StorageUsageMediaItemView : GeneralContainableRowView, APDelegate {
             }
             audio.userInteractionEnabled = item.getSelected(item.message.id) == nil
             
-            if let file = item.message.effectiveMedia as? TelegramMediaFile, file.isInstantVideo {
+            if let file = item.message.anyMedia as? TelegramMediaFile, file.isInstantVideo {
                 let current: GIFPlayerView
                 if let view = self.videoPlayer {
                     current = view
@@ -428,7 +428,7 @@ final class StorageUsageMediaItemView : GeneralContainableRowView, APDelegate {
         var activityBackground = theme.colors.accent
         var activityForeground = theme.colors.underSelectedColor
         
-        if let media = item.message.effectiveMedia as? TelegramMediaFile, media.isInstantVideo {
+        if let media = item.message.anyMedia as? TelegramMediaFile, media.isInstantVideo {
             activityBackground = .blackTransparent
             activityForeground = .white
         }
