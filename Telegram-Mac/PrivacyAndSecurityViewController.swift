@@ -102,6 +102,8 @@ private final class PrivacyAndSecurityControllerArguments {
 
 private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
     case privacyHeader(sectionId:Int)
+    case twoStepVerification(sectionId:Int, configuration: TwoStepVeriticationAccessConfiguration?, viewType: GeneralViewType)
+    case passcode(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
     case blockedPeers(sectionId:Int, Int?, viewType: GeneralViewType)
     case phoneNumberPrivacy(sectionId: Int, String, viewType: GeneralViewType)
     case lastSeenPrivacy(sectionId: Int, String, viewType: GeneralViewType)
@@ -111,8 +113,6 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
     case voiceCallPrivacy(sectionId: Int, String, viewType: GeneralViewType)
     case voiceMessagesPrivacy(sectionId: Int, String, Bool, viewType: GeneralViewType)
     case securityHeader(sectionId:Int)
-    case passcode(sectionId:Int, enabled: Bool, viewType: GeneralViewType)
-    case twoStepVerification(sectionId:Int, configuration: TwoStepVeriticationAccessConfiguration?, viewType: GeneralViewType)
     case globalTimer(sectionId: Int, String, viewType: GeneralViewType)
     case globalTimerInfo(sectionId:Int)
     case activeSessions(sectionId:Int, [RecentAccountSession]?, viewType: GeneralViewType)
@@ -220,13 +220,13 @@ private enum PrivacyAndSecurityEntry: Comparable, Identifiable {
 
     var stableId:Int {
         switch self {
-        case .blockedPeers:
-            return 0
-        case .activeSessions:
-            return 1
-        case .passcode:
-            return 2
         case .twoStepVerification:
+            return 0
+        case .passcode:
+            return 1
+        case .blockedPeers:
+            return 2
+        case .activeSessions:
             return 3
         case .globalTimer:
             return 4
@@ -511,9 +511,6 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
     var sectionId:Int = 1
     entries.append(.section(sectionId: sectionId))
     sectionId += 1
-
-    entries.append(.blockedPeers(sectionId: sectionId, blockedState.totalCount, viewType: .firstItem))
-   // entries.append(.activeSessions(sectionId: sectionId, activeSessions, viewType: .innerItem))
     
     let hasPasscode: Bool
     switch passcodeData {
@@ -522,9 +519,13 @@ private func privacyAndSecurityControllerEntries(state: PrivacyAndSecurityContro
     default:
         hasPasscode = context.sharedContext.appEncryptionValue.hasPasscode()
     }
-    
+    entries.append(.twoStepVerification(sectionId: sectionId, configuration: configuration, viewType: .firstItem))
     entries.append(.passcode(sectionId: sectionId, enabled: hasPasscode, viewType: .innerItem))
-    entries.append(.twoStepVerification(sectionId: sectionId, configuration: configuration, viewType: .innerItem))
+
+
+    entries.append(.blockedPeers(sectionId: sectionId, blockedState.totalCount, viewType: .innerItem))
+   // entries.append(.activeSessions(sectionId: sectionId, activeSessions, viewType: .innerItem))
+    
     
     if let privacySettings = privacySettings {
         let value: Int32

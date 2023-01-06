@@ -458,7 +458,7 @@ class UserInfoArguments : PeerInfoArguments {
                 return putToTemp(image: image, compress: true)
             } |> deliverOnMainQueue
             _ = signal.start(next: { [weak self] path in
-                let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square), confirm: { url, f in
+                let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square), confirm: { url, f in
                     showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, thumb: url, type: type, confirm: f), for: context.window)
                 })
                 showModal(with: controller, for: context.window, animationType: .scaleCenter)
@@ -556,7 +556,7 @@ class UserInfoArguments : PeerInfoArguments {
                 return putToTemp(image: image, compress: true)
             } |> deliverOnMainQueue
             _ = signal.start(next: { [weak self] path in
-                let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square), confirm: { url, f in
+                let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square), confirm: { url, f in
                     showModal(with: UserInfoPhotoConfirmController(context: context, peerId: peerId, thumb: url, type: type, confirm: f), for: context.window)
                 })
                 showModal(with: controller, for: context.window, animationType: .scaleCenter)
@@ -1402,7 +1402,8 @@ enum UserInfoEntry: PeerInfoEntry {
                 arguments.copy("+\(value.number)")
             }, contextItems: items)
         case let .userName(_, value, viewType):
-            let link = "https://t.me/\(value[0])"
+            
+            let link = "@\(value[0])"
             
             let text: String
             if value.count > 1 {

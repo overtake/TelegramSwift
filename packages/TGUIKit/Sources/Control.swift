@@ -114,6 +114,9 @@ open class Control: View {
     private var stateHandlers:[ControlStateHandler] = []
     
     private(set) internal var backgroundState:[ControlState:NSColor] = [:]
+    
+    private(set) internal var cursorState:[ControlState:NSCursor] = [:]
+    
     private var mouseMovedInside: Bool = true
     private var longInvoked: Bool = false
     public var handleLongEvent: Bool = true
@@ -152,7 +155,6 @@ open class Control: View {
         didSet {
             stateDidUpdate(controlState)
             if oldValue != controlState {
-                apply(state: isSelected ? .Highlight : controlState)
                 
                 for value in stateHandlers {
                     if value.state == controlState {
@@ -164,6 +166,8 @@ open class Control: View {
                     tooltip(for: self, text: tp)
                 }
             }
+            apply(state: isSelected ? .Highlight : controlState)
+
         }
     }
     
@@ -180,6 +184,13 @@ open class Control: View {
         }
         if animates {
             self.layer?.animateBackground()
+        }
+        
+        let cursor: NSCursor? = cursorState[state]
+        if let cursor = cursor {
+            cursor.set()
+        } else if !cursorState.isEmpty {
+            NSCursor.arrow.set()
         }
     }
     private var previousState: ControlState?
@@ -297,8 +308,19 @@ open class Control: View {
         return new.identifier
     }
     
+    open override func cursorUpdate(with event: NSEvent) {
+      //  super.cursorUpdate(with: event)
+        apply(state: self.controlState)
+    }
+    
     public func set(background:NSColor, for state:ControlState) -> Void {
         backgroundState[state] = background
+        apply(state: self.controlState)
+        self.setNeedsDisplayLayer()
+    }
+    
+    public func set(cursor:NSCursor, for state:ControlState) -> Void {
+        cursorState[state] = cursor
         apply(state: self.controlState)
         self.setNeedsDisplayLayer()
     }

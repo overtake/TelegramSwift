@@ -9027,6 +9027,32 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var general_chevron_up: CGImage {
+      if let image = cached.with({ $0["general_chevron_up"] }) {
+          return image
+      } else {
+          let image = _general_chevron_up()
+          _ = cached.modify { current in 
+              var current = current
+              current["general_chevron_up"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var general_chevron_down: CGImage {
+      if let image = cached.with({ $0["general_chevron_down"] }) {
+          return image
+      } else {
+          let image = _general_chevron_down()
+          _ = cached.modify { current in 
+              var current = current
+              current["general_chevron_down"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -9722,6 +9748,8 @@ public final class TelegramIconsTheme {
   private let _storage_music_play: ()->CGImage
   private let _storage_music_pause: ()->CGImage
   private let _storage_media_play: ()->CGImage
+  private let _general_chevron_up: ()->CGImage
+  private let _general_chevron_down: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -10417,7 +10445,9 @@ public final class TelegramIconsTheme {
       general_delete: @escaping()->CGImage,
       storage_music_play: @escaping()->CGImage,
       storage_music_pause: @escaping()->CGImage,
-      storage_media_play: @escaping()->CGImage
+      storage_media_play: @escaping()->CGImage,
+      general_chevron_up: @escaping()->CGImage,
+      general_chevron_down: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -11113,5 +11143,7 @@ public final class TelegramIconsTheme {
       self._storage_music_play = storage_music_play
       self._storage_music_pause = storage_music_pause
       self._storage_media_play = storage_media_play
+      self._general_chevron_up = general_chevron_up
+      self._general_chevron_down = general_chevron_down
   }
 }

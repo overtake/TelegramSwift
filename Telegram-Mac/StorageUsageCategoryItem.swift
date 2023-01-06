@@ -183,9 +183,8 @@ private final class StorageUsageCategoryView : GeneralContainableRowView {
         
         selectionView.update(unselectedImage: theme.icons.chatToggleUnselected, selectedImage: selected, selected: item.selected, animated: animated)
         
-        let concealed_img: CGImage? = NSImage(named: "Icon_HorizontalChevron")?.precomposed(theme.colors.grayIcon)
-        
-        let revealed_img: CGImage? = NSImage(named: "Icon_HorizontalChevron")?.precomposed(theme.colors.grayIcon, flipVertical: true)
+        let concealed_img: CGImage = theme.icons.general_chevron_down
+        let revealed_img: CGImage = theme.icons.general_chevron_up
 
         
         switch item.itemCategory {

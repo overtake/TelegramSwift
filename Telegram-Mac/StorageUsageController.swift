@@ -57,7 +57,7 @@ func stringForKeepMediaTimeout(_ timeout: Int32) -> String {
     } else if timeout <= 1 * 31 * 24 * 60 * 60 {
         return strings().timerMonthsCountable(1)
     } else {
-        return strings().timerForever
+        return strings().timerNever
     }
 }
 
@@ -525,6 +525,7 @@ struct StorageUsageUIState : Equatable {
 }
 
 private let _id_pie_chart = InputDataIdentifier("_id_pie_chart")
+private let _id_cleared = InputDataIdentifier("_id_pie_chart")
 private let _id_keep_media_private = InputDataIdentifier("_id_keep_media_private")
 private let _id_keep_media_group = InputDataIdentifier("_id_keep_media_group")
 private let _id_keep_media_channels = InputDataIdentifier("_id_keep_media_channels")
@@ -648,7 +649,7 @@ private func storageUsageControllerEntries(state: StorageUsageUIState, arguments
                 size = 0
             }
             
-            items.append(.init(id: key.rawValue, index: Int(key.rawValue), count: Int(size), color: key.color, badge: nil))
+            items.append(.init(id: key.rawValue, index: Int(key.rawValue), count: Int(size), color: key.color, badge: nil, particle: nil))
             i += 1
         }
         
@@ -659,10 +660,10 @@ private func storageUsageControllerEntries(state: StorageUsageUIState, arguments
         
         if usedBytesCount != 0 {
             pieChart.dynamicString = String.prettySized(with: items.reduce(0, { $0 + $1.count}), round: true)
-            items.append(.init(id: 1000, index: 1000, count: 0, color: theme.colors.listGrayText.withAlphaComponent(0.2), badge: nil))
+            items.append(.init(id: 1000, index: 1000, count: 0, color: theme.colors.listGrayText.withAlphaComponent(0.2), badge: nil, particle: nil))
         } else {
             pieChart.dynamicString = strings().storageUsageSelectedMediaEmpty
-            items.append(.init(id: 1000, index: 1000, count: stats.totalCount == 0 ? Int(1000) : Int(stats.totalCount), color: theme.colors.listGrayText.withAlphaComponent(0.2), badge: nil))
+            items.append(.init(id: 1000, index: 1000, count: stats.totalCount == 0 ? Int(1000) : Int(stats.totalCount), color: theme.colors.listGrayText.withAlphaComponent(0.2), badge: nil, particle: nil))
         }
         if state.peerId != nil {
             pieChart.dynamicString = ""
@@ -884,7 +885,7 @@ private func storageUsageControllerEntries(state: StorageUsageUIState, arguments
     } else if state.cleared || state.stats == nil || state.stats?.totalCount == 0 {
         
         
-        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_pie_chart, equatable: InputDataEquatable(state.cleared), comparable: nil, item: { initialSize, stableId in
+        entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_cleared, equatable: InputDataEquatable(state.cleared), comparable: nil, item: { initialSize, stableId in
             return StorageUsageClearedItem(initialSize, stableId: stableId, viewType: .legacy)
         }))
         index += 1
@@ -1289,7 +1290,7 @@ class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
                 let shouldBack = cleared && peerId != nil
                 if shouldBack {
                     context.bindings.rootNavigation().back()
-                } else if stateValue.with({ $0.cleared }) {
+                } else if cleared {
                     scrollup()
                 }
             }
@@ -1527,7 +1528,7 @@ class StorageUsageController: TelegramGenericViewController<StorageUsageView> {
                 if current.hasOther {
                     all.insert(.other)
                 }
-                var others:Set<StorageUsageCategory> = all.filter {
+                let others:Set<StorageUsageCategory> = all.filter {
                     current.isOther($0)
                 }
                 let subtracting = category == .other ? others.union([category]) : [category]

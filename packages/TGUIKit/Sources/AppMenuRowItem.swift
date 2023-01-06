@@ -224,6 +224,17 @@ open class AppMenuRowItem : AppMenuBasicItem {
                     }
                 }
             }
+            if range.location != NSNotFound, range.location > 0 {
+                for i in stride(from: range.location - 1, to: -1, by: -1) {
+                    let item = menu.items[i]
+                    if item is ContextSeparatorItem {
+                        break
+                    } else {
+                        range.location -= 1
+                        range.length += 1
+                    }
+                }
+            }
             let blockItems = menu.items[range.min ..< range.max]
             
             return blockItems.compactMap { $0 as? ContextMenuItem }.contains(where: { $0.itemImage != nil })

@@ -12,28 +12,15 @@ import TelegramCore
 
 
 private final class LocalizationPreviewView : Control {
-    private let titleView: TextView = TextView()
-    private let titleContainer: View = View()
     
     private let textView: TextView = TextView()
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        
-        titleView.isSelectable = false
-        titleView.userInteractionEnabled = false
-        
         textView.isSelectable = false
-        
-        titleContainer.addSubview(titleView)
-        addSubview(titleContainer)
         addSubview(textView)
-        titleContainer.border = [.Bottom]
     }
     
     func update(with info: LocalizationInfo, width: CGFloat) -> CGFloat {
-        let titleLayout = TextViewLayout(.initialize(string: strings().applyLanguageChangeLanguageTitle, color: theme.colors.text, font: .medium(.title)), alwaysStaticItems: true)
-        titleLayout.measure(width: width)
-        titleView.update(titleLayout)
         
         
         let text: String
@@ -57,15 +44,12 @@ private final class LocalizationPreviewView : Control {
         
         textView.update(textLayout)
         
-        return 50 + 40 + textLayout.layoutSize.height
+        return 40 + textLayout.layoutSize.height
     }
     
     override func layout() {
         super.layout()
-        titleContainer.frame = NSMakeRect(0, 0, frame.width, 50)
-        titleView.center()
-        
-        textView.centerX(y: titleContainer.frame.maxY + 20)
+        textView.centerX(y: 20)
     }
     
     required init?(coder: NSCoder) {
@@ -94,7 +78,13 @@ class LocalizationPreviewModalController: ModalViewController {
     override var modalInteractions: ModalInteractions? {
         return ModalInteractions(acceptTitle: strings().applyLanguageApplyLanguageAction, accept: { [weak self] in
             self?.applyLocalization()
-        }, cancelTitle: strings().modalCancel, height: 50)
+        }, drawBorder: true, height: 50, singleButton: true)
+    }
+    
+    override var modalHeader: (left: ModalHeaderData?, center: ModalHeaderData?, right: ModalHeaderData?)? {
+        return (left: ModalHeaderData(image: theme.icons.modalClose, handler: { [weak self] in
+            self?.close()
+        }), center: ModalHeaderData(title: strings().applyLanguageChangeLanguageTitle), right: nil)
     }
     
     override func viewClass() -> AnyClass {

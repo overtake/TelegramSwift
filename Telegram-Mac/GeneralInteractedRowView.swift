@@ -83,7 +83,7 @@ class GeneralInteractedRowView: GeneralRowView {
             }
             
             switch item.type {
-            case let .context(value), let .nextContext(value), let .contextSelector(value, _):
+            case let .context(value), let .nextContext(value), let .contextSelector(value, _), let .imageContext(_, value):
                 if textView == nil {
                     textView = TextView()
                     textView?.animates = false
@@ -97,6 +97,8 @@ class GeneralInteractedRowView: GeneralRowView {
                 var nextVisible: Bool = true
                 if case let .contextSelector(value, items) = item.type {
                     nextVisible = !items.isEmpty && !value.isEmpty
+                } else if case .imageContext = item.type {
+                    nextVisible = true
                 }
                 nextView.isHidden = !nextVisible
             default:
@@ -108,6 +110,11 @@ class GeneralInteractedRowView: GeneralRowView {
             if case let .selectable(value) = item.type {
                 nextView.isHidden = !value
                 nextView.image = #imageLiteral(resourceName: "Icon_Check").precomposed(item.customTheme?.accentColor ?? theme.colors.accent)
+                nextView.sizeToFit()
+            }
+            if case let .imageContext(image, _) = item.type {
+                nextView.isHidden = false
+                nextView.image = image
                 nextView.sizeToFit()
             }
             

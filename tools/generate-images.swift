@@ -804,7 +804,9 @@ func initialize() -> [String] {
     array.append("storage_music_pause")
     array.append("storage_media_play")
 
-    
+    array.append("general_chevron_up")
+    array.append("general_chevron_down")
+
     return array
 }
 //swift ./tools/generate-images.swift

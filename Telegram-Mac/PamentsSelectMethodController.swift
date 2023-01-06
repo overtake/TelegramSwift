@@ -19,16 +19,19 @@ private final class Arguments {
     let context: AccountContext
     let select:(BotPaymentSavedCredentials)->Void
     let addNew:()->Void
-    init(context: AccountContext, select: @escaping(BotPaymentSavedCredentials)->Void, addNew:@escaping()->Void) {
+    let addPaymentMethod:(String)->Void
+    init(context: AccountContext, select: @escaping(BotPaymentSavedCredentials)->Void, addNew:@escaping()->Void, addPaymentMethod:@escaping(String)->Void) {
         self.context = context
         self.select = select
         self.addNew = addNew
+        self.addPaymentMethod = addPaymentMethod
     }
 }
 
 private struct State : Equatable {
     var cards:[BotPaymentSavedCredentials]
     var form: BotPaymentForm
+    var methods: [BotCheckoutPaymentMethod]
 }
 
 private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
@@ -40,18 +43,27 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    for option in state.cards {
-        switch option {
-        case let .card(id: id, title: title):
-            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier(id), data: .init(name: title, color: theme.colors.text, type: .context(""), viewType: bestGeneralViewType(state.cards, for: option), action: {
-                arguments.select(option)
-            })))
-            index += 1
-        }
+   
+    
+    for (i, method) in state.methods.enumerated() {
+        let viewType = bestGeneralViewType(state.methods, for: i)
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("\(arc4random())"), data: .init(name: method.title, color: theme.colors.text, type: .none, viewType: viewType, action: {
+            switch method {
+            case let .other(method):
+                arguments.addPaymentMethod(method.url)
+            case let .savedCredentials(credeitials):
+                arguments.select(credeitials)
+            default:
+                break
+            }
+        })))
+        index += 1
     }
-  
-    entries.append(.sectionId(sectionId, type: .normal))
-    sectionId += 1
+    
+    if !state.methods.isEmpty {
+        entries.append(.sectionId(sectionId, type: .normal))
+        sectionId += 1
+    }
     
     entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: InputDataIdentifier("add_new"), data: .init(name: strings().checkoutPaymentMethodNew, color: theme.colors.accent, type: .context(""), viewType: .singleItem, action: {
         arguments.addNew()
@@ -66,13 +78,13 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     return entries
 }
 
-func PamentsSelectMethodController(context: AccountContext, cards:[BotPaymentSavedCredentials], form: BotPaymentForm, select:@escaping(BotPaymentSavedCredentials)->Void, addNew: @escaping()->Void) -> InputDataModalController {
+func PamentsSelectMethodController(context: AccountContext, cards:[BotPaymentSavedCredentials], form: BotPaymentForm, methods: [BotCheckoutPaymentMethod], select:@escaping(BotPaymentSavedCredentials)->Void, addNew: @escaping()->Void, addPaymentMethod:@escaping(String, BotPaymentForm)->Void) -> InputDataModalController {
 
     var close:(()->Void)? = nil
     
     let actionsDisposable = DisposableSet()
 
-    let initialState = State(cards: cards, form: form)
+    let initialState = State(cards: cards, form: form, methods: methods)
     
     let statePromise = ValuePromise(initialState, ignoreRepeated: true)
     let stateValue = Atomic(value: initialState)
@@ -86,6 +98,8 @@ func PamentsSelectMethodController(context: AccountContext, cards:[BotPaymentSav
     }, addNew: {
         close?()
         addNew()
+    }, addPaymentMethod: { url in
+        addPaymentMethod(url, form)
     })
     
     let signal = statePromise.get() |> deliverOnPrepareQueue |> map { state in

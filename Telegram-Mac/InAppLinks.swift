@@ -1384,7 +1384,7 @@ func inApp(for url:NSString, context: AccountContext? = nil, peerId:PeerId? = ni
                         }
                     case actions_me[6]:
                         if let context = context, !value.isEmpty {
-                            return .applyLocalization(link: urlString, context: context, value: String(value[value.index(after: value.startIndex) ..< value.endIndex]))
+                            return .applyLocalization(link: urlString, context: context, value: value)
                         } else {
                             
                         }

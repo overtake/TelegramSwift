@@ -254,6 +254,7 @@ final class EmojiesSectionRowItem : GeneralRowItem {
         let context = self.context
         
         var copyItem: ContextMenuItem?
+        var setStatus: ContextMenuItem?
         if let view = self.view as? EmojiesSectionRowView, let file = view.itemUnderMouse?.0.file {
             let input: ChatTextInputState
             if let bundle = file.stickerText {
@@ -265,6 +266,17 @@ final class EmojiesSectionRowItem : GeneralRowItem {
             copyItem = ContextMenuItem(strings().contextCopy, handler: {
                 copyToClipboard(input)
             }, itemImage: MenuAnimation.menu_copy.value)
+            
+            
+        }
+        
+        if context.isPremium {
+            if let view = self.view as? EmojiesSectionRowView, let file = view.itemUnderMouse?.0.file {
+                setStatus = .init(strings().emojiContextSetStatus, handler: {
+                    _ = context.engine.accountData.setEmojiStatus(file: file, expirationDate: nil).start()
+                    showModalText(for: context.window, text: strings().emojiContextSetStatusSuccess)
+                }, itemImage: MenuAnimation.menu_smile.value)
+            }
         }
         
         switch mode {
@@ -283,6 +295,9 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                 
                 if let copyItem = copyItem {
                     items.append(copyItem)
+                }
+                if let setStatus = setStatus {
+                    items.append(setStatus)
                 }
             }
             return .single(items)
@@ -309,14 +324,23 @@ final class EmojiesSectionRowItem : GeneralRowItem {
                     }
                 }
             }
+            
             return .single(items)
         case .preview:
             if let copyItem = copyItem {
                 items.append(copyItem)
             }
+            if let setStatus = setStatus {
+                items.append(setStatus)
+            }
             return .single(items)
         default:
             break
+        }
+        
+        
+        if let setStatus = setStatus {
+            items.append(setStatus)
         }
         
         if stableId == AnyHashable(0) || self.viewSet == nil {
@@ -371,17 +395,19 @@ private final class EmojiesSectionRowView : TableRowView, ModalPreviewRowViewPro
 
     
     func fileAtPoint(_ point: NSPoint) -> (QuickPreviewMedia, NSView?)? {
-        
-//        if let item = itemUnderMouse?.1, let file = item.item?.file, let emojiReference = file.emojiReference {
-//            let reference = FileMediaReference.stickerPack(stickerPack: emojiReference, media: file)
-//            if file.isVideoSticker && !file.isWebm {
-//                return (.file(reference, GifPreviewModalView.self), nil)
-//            } else if file.isAnimatedSticker || file.isWebm {
-//                return (.file(reference, AnimatedStickerPreviewModalView.self), nil)
-//            } else if file.isStaticSticker {
-//                return (.file(reference, StickerPreviewModalView.self), nil)
-//            }
-//        }
+        if let item = itemUnderMouse?.1, let file = item.item?.file {
+            let emojiReference = file.emojiReference ?? file.stickerReference
+            if let emojiReference = emojiReference {
+                let reference = FileMediaReference.stickerPack(stickerPack: emojiReference, media: file)
+                if file.isVideoSticker && !file.isWebm {
+                    return (.file(reference, GifPreviewModalView.self), nil)
+                } else if file.isAnimatedSticker || file.isWebm || file.isCustomEmoji {
+                    return (.file(reference, AnimatedStickerPreviewModalView.self), nil)
+                } else if file.isStaticSticker  {
+                    return (.file(reference, StickerPreviewModalView.self), nil)
+                }
+            }
+        }
         return nil
     }
     

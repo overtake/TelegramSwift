@@ -416,7 +416,7 @@ final class ManagedAudioRecorderContext : RecoderContextRenderer {
             return
         }
         
-//        self.convertor = CustomAudioConverter(asbd: audioStreamDescription)
+        self.convertor = CustomAudioConverter(asbd: audioStreamDescription)
         
         guard AudioUnitSetProperty(audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0, &audioStreamDescription, UInt32(MemoryLayout<AudioStreamBasicDescription>.size)) == noErr else {
             AudioComponentInstanceDispose(audioUnit)
@@ -490,30 +490,9 @@ final class ManagedAudioRecorderContext : RecoderContextRenderer {
     
     func processAndDisposeAudioBuffer(_ buffer: AudioBuffer) {
         assert(self.queue.isCurrent())
-        
-        var buffer = buffer
-        
-        if(sampleRate == 16000 || sampleRate == 24000) {
-            let ratio = UInt32(48000.0 / Float(sampleRate))
-            let initialBuffer=malloc(Int(buffer.mDataByteSize+(ratio - 1)));
-            memcpy(initialBuffer, buffer.mData, Int(buffer.mDataByteSize));
-            buffer.mData=realloc(buffer.mData, Int(buffer.mDataByteSize*ratio))
-            let values = initialBuffer!.assumingMemoryBound(to: Int16.self)
-            let resampled = buffer.mData!.assumingMemoryBound(to: Int16.self)
-            values[Int(buffer.mDataByteSize/2)]=values[Int(buffer.mDataByteSize/2)-1]
-            for i: Int in 0 ..< Int(buffer.mDataByteSize/2) {
-                let intRatio = Int(ratio)
-                if sampleRate == 16000 {
-                    resampled[i*intRatio]=values[i]
-                    resampled[i*intRatio+1]=values[i]/3+values[i+1]/3*2
-                    resampled[i*intRatio+2]=values[i]/3*2+values[i+1]/3
-                } else {
-                    resampled[i*intRatio]=values[i]
-                    resampled[i*intRatio+1]=values[i]/2+values[i+1]/2
-                }
-            }
-            free(initialBuffer)
-            buffer.mDataByteSize*=ratio
+                
+        guard let data = convertor.convert(buffer: buffer) else {
+            return
         }
         
         defer {
@@ -530,6 +509,8 @@ final class ManagedAudioRecorderContext : RecoderContextRenderer {
         
         var bufferOffset = 0
         
+//        NSLog("byteSize: \(buffer.mDataByteSize), \(data.count), encder: \(encoderPacketSizeInBytes)")
+        
         while true {
             var currentEncoderPacketSize = 0
             
@@ -543,11 +524,13 @@ final class ManagedAudioRecorderContext : RecoderContextRenderer {
                         self.audioBuffer.replaceSubrange(0 ..< takenBytes, with: Data())
                         currentEncoderPacketSize += takenBytes
                     }
-                } else if bufferOffset < Int(buffer.mDataByteSize) {
-                    let takenBytes = min(Int(buffer.mDataByteSize) - bufferOffset, encoderPacketSizeInBytes - currentEncoderPacketSize)
+                } else if bufferOffset < data.count {
+                    let takenBytes = min(data.count - bufferOffset, encoderPacketSizeInBytes - currentEncoderPacketSize)
                     if takenBytes != 0 {
                         self.audioBuffer.withUnsafeBytes { (bytes: UnsafePointer<Int8>) -> Void in
-                            memcpy(currentEncoderPacket.advanced(by: currentEncoderPacketSize), buffer.mData?.advanced(by: bufferOffset), takenBytes)
+                            memcpy(currentEncoderPacket.advanced(by: currentEncoderPacketSize), data.withUnsafeBytes {
+                                $0.advanced(by: bufferOffset)
+                            }, takenBytes)
                         }
                         bufferOffset += takenBytes
                         currentEncoderPacketSize += takenBytes
@@ -556,11 +539,12 @@ final class ManagedAudioRecorderContext : RecoderContextRenderer {
                     break
                 }
             }
-            
+                        
             if currentEncoderPacketSize < encoderPacketSizeInBytes {
                 self.audioBuffer.append(currentEncoderPacket.assumingMemoryBound(to: UInt8.self), count: currentEncoderPacketSize)
                 break
             } else {
+                
                 
                 self.processWaveformPreview(samples: currentEncoderPacket.assumingMemoryBound(to: Int16.self), count: currentEncoderPacketSize / 2)
                 
@@ -744,6 +728,13 @@ final class ManagedAudioRecorder {
                 }
             }
             return EmptyDisposable
+        }
+    }
+    
+    deinit {
+        let contextRef = self.contextRef
+        self.queue.async {
+            contextRef?.release()
         }
     }
 }

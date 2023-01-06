@@ -478,7 +478,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 data.chatInteraction.beginEditingMessage(data.message)
             }, itemImage: MenuAnimation.menu_edit.value, keyEquivalent: .cmde)
             
-            if let groupped = data.groupped, let media = message.media.first as? TelegramMediaFile {
+            if let groupped = data.groupped, groupped.count > 1, let media = message.media.first as? TelegramMediaFile {
                 if !media.isVideo {
                     let menu = ContextMenu()
                     for message in groupped {

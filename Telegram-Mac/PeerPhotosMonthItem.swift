@@ -227,6 +227,9 @@ class MediaCell : Control {
     fileprivate let imageView: TransformImageView
     private(set) var layoutItem: MediaCellLayoutItem?
     fileprivate var context: AccountContext?
+    
+    private var inkView: MediaInkView?
+
     required init(frame frameRect: NSRect) {
         imageView = TransformImageView(frame: NSMakeRect(0, 0, frameRect.width, frameRect.height))
         super.init(frame: frameRect)
@@ -254,15 +257,27 @@ class MediaCell : Control {
             let signal: Signal<ImageDataTransformation, NoError>
             if let image = layout.message.anyMedia as? TelegramMediaImage, let largestSize = largestImageRepresentation(image.representations)?.dimensions.size {
                 media = image
+                let imageReference = ImageMediaReference.message(message: MessageReference(layout.message), media: image)
                 imageSize = largestSize.aspectFilled(NSMakeSize(150, 150))
                 cacheArguments = TransformImageArguments(corners: layout.corners, imageSize: imageSize, boundingSize: NSMakeSize(150, 150), intrinsicInsets: NSEdgeInsets())
-                signal = mediaGridMessagePhoto(account: context.account, imageReference: ImageMediaReference.message(message: MessageReference(layout.message), media: image), scale: backingScaleFactor)
+                
+                if layout.message.isMediaSpoilered || layout.message.containsSecretMedia {
+                    signal = chatSecretPhoto(account: context.account, imageReference: imageReference, scale: backingScaleFactor, synchronousLoad: false)
+                } else {
+                    signal = mediaGridMessagePhoto(account: context.account, imageReference: ImageMediaReference.message(message: MessageReference(layout.message), media: image), scale: backingScaleFactor)
+                }
+
             } else if let file = layout.message.anyMedia as? TelegramMediaFile {
                 media = file
+                let fileReference = FileMediaReference.message(message: MessageReference(layout.message), media: file)
                 let largestSize = file.previewRepresentations.last?.dimensions.size ?? file.imageSize
                 imageSize = largestSize.aspectFilled(NSMakeSize(150, 150))
                 cacheArguments = TransformImageArguments(corners: layout.corners, imageSize: imageSize, boundingSize: NSMakeSize(150, 150), intrinsicInsets: NSEdgeInsets())
-                signal = chatMessageVideo(postbox: context.account.postbox, fileReference: FileMediaReference.message(message: MessageReference(layout.message), media: file), scale: backingScaleFactor) 
+                if layout.message.isMediaSpoilered || layout.message.containsSecretMedia {
+                    signal = chatSecretMessageVideo(account: context.account, fileReference: fileReference, scale: backingScaleFactor)
+                } else {
+                    signal = chatMessageVideo(postbox: context.account.postbox, fileReference: fileReference, scale: backingScaleFactor)
+                }
             } else {
                 return
             }
@@ -277,6 +292,40 @@ class MediaCell : Control {
             }
             self.imageView.set(arguments: cacheArguments)
         }
+        if layout.message.isMediaSpoilered {
+            let current: MediaInkView
+            if let view = self.inkView {
+                current = view
+            } else {
+                current = MediaInkView(frame: layout.frame.size.bounds)
+                current.userInteractionEnabled = false
+                self.inkView = current
+                
+                self.addSubview(current)
+            }
+            
+            let image: TelegramMediaImage
+            if let current = layout.message.anyMedia as? TelegramMediaImage {
+                image = current
+            } else if let file = layout.message.anyMedia as? TelegramMediaFile {
+                image = TelegramMediaImage.init(imageId: file.fileId, representations: file.previewRepresentations, immediateThumbnailData: file.immediateThumbnailData, reference: nil, partialReference: nil, flags: TelegramMediaImageFlags())
+            } else {
+                fatalError()
+            }
+            
+            let imageReference = ImageMediaReference.message(message: MessageReference(layout.message), media: image)
+            
+            current.update(isRevealed: false, updated: previousLayout != layout, context: layout.context, imageReference: imageReference, size: layout.frame.size, positionFlags: nil, synchronousLoad: false)
+            current.frame = layout.frame.size.bounds
+        } else {
+            if let view = self.inkView {
+                view.userInteractionEnabled = false
+                performSubviewRemoval(view, animated: animated)
+                self.inkView = nil
+            }
+        }
+        
+        
         updateSelectionState(animated: animated, selected: selected)
     }
     
@@ -335,6 +384,7 @@ class MediaCell : Control {
         if let selectionView = selectionView {
             selectionView.setFrameOrigin(frame.width - selectionView.frame.width - 5, 5)
         }
+        inkView?.frame = imageView.frame
     }
 }
 

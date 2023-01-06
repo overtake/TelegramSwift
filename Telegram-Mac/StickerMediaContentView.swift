@@ -183,8 +183,10 @@ class StickerMediaContentView: ChatMediaContentView {
                 return
             }
             
-            if !media.isEmojiAnimatedSticker, let reference = media.stickerReference {
+            if let reference = media.stickerReference {
                 showModal(with:StickerPackPreviewModalController(context, peerId: peerId, references: [.stickers(reference)]), for:window)
+            } else if let reference = media.emojiReference {
+                showModal(with:StickerPackPreviewModalController(context, peerId: peerId, references: [.emoji(reference)]), for:window)
             } else if let sticker = media.stickerText, !sticker.isEmpty {
                 self.playIfNeeded(true)
                 parameters?.runEmojiScreenEffect(sticker)

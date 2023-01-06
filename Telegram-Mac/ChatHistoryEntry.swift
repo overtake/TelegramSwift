@@ -514,15 +514,15 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
                     if let file = message.associatedMedia[mediaId] as? TelegramMediaFile {
                         var file = file
                         var attributes = file.attributes
-                        attributes.removeAll()
-                        attributes = attributes.map { attribute -> TelegramMediaFileAttribute in
-                            switch attribute {
-                            case let .CustomEmoji(_, _, alt, packReference):
-                                return .Sticker(displayText: alt, packReference: packReference, maskData: nil)
-                            default:
-                                return attribute
-                            }
-                        }
+//                        attributes.removeAll()
+//                        attributes = attributes.map { attribute -> TelegramMediaFileAttribute in
+//                            switch attribute {
+//                            case let .CustomEmoji(_, _, alt, packReference):
+//                                return .Sticker(displayText: alt, packReference: packReference, maskData: nil)
+//                            default:
+//                                return attribute
+//                            }
+//                        }
                         attributes.append(.FileName(fileName: "telegram-animoji.tgs"))
                         attributes.append(.Sticker(displayText: original, packReference: nil, maskData: nil))
                         

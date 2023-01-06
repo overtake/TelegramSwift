@@ -276,6 +276,8 @@ open class Window: NSWindow {
     private var saver:WindowSaver?
     public  var initFromSaver:Bool = false
     public  var copyhandler:(()->Void)? = nil
+    public  var pastehandler:(()->Void)? = nil
+
     public  var masterCopyhandler:(()->Void)? = nil
 
     public var closeInterceptor:(()->Bool)? = nil
@@ -702,11 +704,16 @@ open class Window: NSWindow {
     
     @objc public func pasteToFirstResponder(_ sender: Any) {
         
-        applyResponderIfNeeded()
-        
-        if let firstResponder = firstResponder, firstResponder.responds(to: NSSelectorFromString("paste:")) {
-            firstResponder.performSelector(onMainThread: NSSelectorFromString("paste:"), with: sender, waitUntilDone: false)
+        if let pastehandler = pastehandler {
+            pastehandler()
+        } else {
+            applyResponderIfNeeded()
+            if let firstResponder = firstResponder, firstResponder.responds(to: NSSelectorFromString("paste:")) {
+                firstResponder.performSelector(onMainThread: NSSelectorFromString("paste:"), with: sender, waitUntilDone: false)
+            }
         }
+        
+        
     }
     
     @objc public func copyFromFirstResponder(_ sender: Any) {
