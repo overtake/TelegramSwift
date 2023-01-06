@@ -858,7 +858,7 @@ class ChatServiceItem: ChatRowItem {
                 putToTemp(image: $0, compress: true)
             } |> deliverOnMainQueue
             _ = signal.start(next: { path in
-                let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square), doneString: strings().modalSet)
+                let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square), doneString: strings().modalSet)
                 showModal(with: controller, for: context.window, animationType: .scaleCenter)
                 
                 let updateSignal = controller.result |> map { path, _ -> TelegramMediaResource in

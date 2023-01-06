@@ -1324,7 +1324,8 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                     paintings = updated
                 }, closeHandler: { [weak self] in
                     guard let `self` = self else {return}
-                    let editedData = data.withUpdatedPaintings(paintings)
+                    var editedData = data
+                    editedData.paintings = paintings
                     let new = EditedImageData.generateNewUrl(data: editedData, selectedRect: CGRect(origin: .zero, size: image.size)) |> deliverOnMainQueue
                     self.editorDisposable.set(new.start(next: { [weak self] new in
                         if let index = self?.urls.firstIndex(where: { ($0 as NSURL) === (url as NSURL) }) {
@@ -1344,7 +1345,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                 showModal(with: editor, for: context.window, animationType: .scaleCenter)
 
             } else {
-                let editor = EditImageModalController(data.originalUrl, defaultData: data)
+                let editor = EditImageModalController(data.originalUrl, context: context, defaultData: data)
                 showModal(with: editor, for: context.window, animationType: .scaleCenter)
                 self.editorDisposable.set((editor.result |> deliverOnMainQueue).start(next: { [weak self] new, editedData in
                     guard let `self` = self else {return}

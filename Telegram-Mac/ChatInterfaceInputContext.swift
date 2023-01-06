@@ -134,6 +134,11 @@ func textInputStateContextQueryRangeAndType(_ inputState: ChatTextInputState, in
                 default:
                     break
                 }
+            } else if maxIndex < inputText.endIndex {
+                let char = inputText[maxIndex]
+                if !char.isWhitespace {
+                    possibleTypes = []
+                }
             }
         }
         

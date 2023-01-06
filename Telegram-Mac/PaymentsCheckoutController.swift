@@ -499,42 +499,25 @@ func PaymentsCheckoutController(context: AccountContext, source: BotPaymentInvoi
         }
     }, openPaymentMethod: {
         if let form = stateValue.with({ $0.form }), let value = parseRequestedPaymentMethod(paymentForm: form) {
-            let addPayment:()->Void = {
-                
-                
-                let openNewCard:()->Void = {
-                    showModal(with: PaymentsPaymentMethodController(context: context, fields: value.1, publishableKey: value.0, passwordMissing: form.passwordMissing, isTesting: form.invoice.isTest, provider: value.2, completion: { method in
-                        updateState { current in
-                            var current = current
-                            current.paymentMethod = method
-                            return current
-                        }
-                    }), for: context.window)
-                }
-                
-                let methods = availablePaymentMethods(form: form, current: nil)
-                if methods.isEmpty {
-                    openNewCard()
-                } else {
-                    showModal(with: PaymentMethodController(context: context, methods: methods, newCard: openNewCard, newByUrl: { url in
-                        if let paymentForm = stateValue.with({ $0.form }) {
-                            addPaymentMethod(url, paymentForm)
-                        }
-                    }), for: context.window)
-                }
-            }
             
-            if !form.savedCredentials.isEmpty {
-                showModal(with: PamentsSelectMethodController(context: context, cards: form.savedCredentials, form: form, select: { selected in
+            let openNewCard:()->Void = {
+                showModal(with: PaymentsPaymentMethodController(context: context, fields: value.1, publishableKey: value.0, passwordMissing: form.passwordMissing, isTesting: form.invoice.isTest, provider: value.2, completion: { method in
                     updateState { current in
                         var current = current
-                        current.paymentMethod = .savedCredentials(selected)
+                        current.paymentMethod = method
                         return current
                     }
-                }, addNew: addPayment), for: context.window)
-            } else {
-                addPayment()
+                }), for: context.window)
             }
+            
+            let methods = availablePaymentMethods(form: form, current: nil)
+            showModal(with: PamentsSelectMethodController(context: context, cards: form.savedCredentials, form: form, methods: methods, select: { selected in
+                updateState { current in
+                    var current = current
+                    current.paymentMethod = .savedCredentials(selected)
+                    return current
+                }
+            }, addNew: openNewCard, addPaymentMethod: addPaymentMethod), for: context.window)
             
         } else if let paymentForm = stateValue.with({ $0.form }) {
             addPaymentMethod(paymentForm.url, paymentForm)

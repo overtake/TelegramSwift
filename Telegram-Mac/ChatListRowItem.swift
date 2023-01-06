@@ -1337,12 +1337,6 @@ class ChatListRowItem: TableRowItem {
         if case let .topic(_, data) = self.mode, let peer = peer as? TelegramChannel, let threadId = threadId {
             
             var items:[ContextMenuItem] = []
-            if peer.hasPermission(.pinMessages) {
-                items.append(ContextMenuItem(!isPinned ? strings().chatListContextPin : strings().chatListContextUnpin, handler: togglePin, itemImage: !isPinned ? MenuAnimation.menu_pin.value : MenuAnimation.menu_unpin.value))
-            }
-
-            
-            items.append(ContextMenuItem(isMuted ? strings().chatListContextUnmute : strings().chatListContextMute, handler: toggleMute, itemImage: isMuted ? MenuAnimation.menu_unmuted.value : MenuAnimation.menu_mute.value))
             
             if isUnread {
                 items.append(ContextMenuItem(strings().chatListContextMaskAsRead, handler: {
@@ -1350,6 +1344,13 @@ class ChatListRowItem: TableRowItem {
                 }, itemImage: MenuAnimation.menu_read.value))
             }
             
+            if peer.hasPermission(.pinMessages) {
+                items.append(ContextMenuItem(!isPinned ? strings().chatListContextPin : strings().chatListContextUnpin, handler: togglePin, itemImage: !isPinned ? MenuAnimation.menu_pin.value : MenuAnimation.menu_unpin.value))
+            }
+
+            
+            items.append(ContextMenuItem(isMuted ? strings().chatListContextUnmute : strings().chatListContextMute, handler: toggleMute, itemImage: isMuted ? MenuAnimation.menu_unmuted.value : MenuAnimation.menu_mute.value))
+                        
             if threadId == 1, peer.hasPermission(.manageTopics), let peerId = peerId {
                 items.append(ContextMenuItem(data.isHidden ? strings().chatListContextUnhideGeneral : strings().chatListContextHideGeneral, handler: {
                     

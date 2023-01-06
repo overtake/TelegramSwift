@@ -514,7 +514,6 @@
 		27D4F6DF261B776200CCAE03 /* Notices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D4F6DE261B776200CCAE03 /* Notices.swift */; };
 		27D604292948A2DD00588C21 /* menu_send_spoiler.tgs in Resources */ = {isa = PBXBuildFile; fileRef = 27D604282948A2DD00588C21 /* menu_send_spoiler.tgs */; };
 		27D6042B294B756700588C21 /* DataStorageExceptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D6042A294B756700588C21 /* DataStorageExceptions.swift */; };
-		27D6042D2951C2B800588C21 /* PieChartTestController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D6042C2951C2B800588C21 /* PieChartTestController.swift */; };
 		27D6042F29530E8B00588C21 /* StoragePieChartItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D6042E29530E8B00588C21 /* StoragePieChartItem.swift */; };
 		27D604312953164300588C21 /* StorageUsageHeaderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D604302953164300588C21 /* StorageUsageHeaderItem.swift */; };
 		27D6043329532EB700588C21 /* StorageUsageCategoryItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D6043229532EB700588C21 /* StorageUsageCategoryItem.swift */; };
@@ -1863,7 +1862,6 @@
 		27D4F6DE261B776200CCAE03 /* Notices.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Notices.swift; sourceTree = "<group>"; };
 		27D604282948A2DD00588C21 /* menu_send_spoiler.tgs */ = {isa = PBXFileReference; lastKnownFileType = file; path = menu_send_spoiler.tgs; sourceTree = "<group>"; };
 		27D6042A294B756700588C21 /* DataStorageExceptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataStorageExceptions.swift; sourceTree = "<group>"; };
-		27D6042C2951C2B800588C21 /* PieChartTestController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PieChartTestController.swift; sourceTree = "<group>"; };
 		27D6042E29530E8B00588C21 /* StoragePieChartItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoragePieChartItem.swift; sourceTree = "<group>"; };
 		27D604302953164300588C21 /* StorageUsageHeaderItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageUsageHeaderItem.swift; sourceTree = "<group>"; };
 		27D6043229532EB700588C21 /* StorageUsageCategoryItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageUsageCategoryItem.swift; sourceTree = "<group>"; };
@@ -4061,7 +4059,6 @@
 				D0E3684524D80A0D009896D4 /* ClearCache.swift */,
 				D0E3684724D842F7009896D4 /* StorageUsageCleanProgressRowItem.swift */,
 				27D6042A294B756700588C21 /* DataStorageExceptions.swift */,
-				27D6042C2951C2B800588C21 /* PieChartTestController.swift */,
 			);
 			name = "data-and-storage";
 			sourceTree = "<group>";
@@ -6504,7 +6501,6 @@
 				9F7943B020854E2F00FEDB81 /* ProxyListRowItem.swift in Sources */,
 				C2271DB91DAE2125001792B6 /* GroupInfoEntries.swift in Sources */,
 				C2EA177F1E2FD50000887153 /* TransformImageView.swift in Sources */,
-				27D6042D2951C2B800588C21 /* PieChartTestController.swift in Sources */,
 				C29C3E6F1E4352C100193A7E /* ContextStickerRowItem.swift in Sources */,
 				D0D087E2243DF4F100E05317 /* ChatlistFilterVisibilityItem.swift in Sources */,
 				9F7B5FCB22003DC70087D020 /* WallpaperColorPicker.swift in Sources */,
@@ -7411,7 +7407,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 9.3;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -7458,7 +7454,7 @@
 					"$(PROJECT_DIR)/core-xprojects/Mozjpeg/build",
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 9.3;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -7503,7 +7499,7 @@
 					"$(PROJECT_DIR)/core-xprojects/Mozjpeg/build",
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 9.3;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_CODE_SIGN_FLAGS = "";
@@ -7619,7 +7615,7 @@
 					"$(PROJECT_DIR)/core-xprojects/openssl/build/openssl/lib",
 					"$(PROJECT_DIR)/core-xprojects/webrtc/build/webrtc",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 9.3;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_CODE_SIGN_FLAGS = "";

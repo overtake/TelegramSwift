@@ -729,11 +729,13 @@ class ChatRowItem: TableRowItem {
     
 
     override func copyAndUpdate(animated: Bool) {
-        if let table = self.table {
-            let item = ChatRowItem.item(table.frame.size, from: self.entry, interaction: self.chatInteraction, downloadSettings: self.downloadSettings, theme: self.presentation)
-            _ = item.makeSize(table.frame.width, oldWidth: 0)
-            let transaction = TableUpdateTransition(deleted: [], inserted: [], updated: [(self.index, item)], animated: animated)
-            table.merge(with: transaction)
+        DispatchQueue.main.async {
+            if let table = self.table {
+                let item = ChatRowItem.item(table.frame.size, from: self.entry, interaction: self.chatInteraction, downloadSettings: self.downloadSettings, theme: self.presentation)
+                _ = item.makeSize(table.frame.width, oldWidth: 0)
+                let transaction = TableUpdateTransition(deleted: [], inserted: [], updated: [(self.index, item)], animated: animated)
+                table.merge(with: transaction)
+            }
         }
     }
     
@@ -778,7 +780,7 @@ class ChatRowItem: TableRowItem {
             if message.containsSecretMedia {
                 return false
             }
-            if let media = message.anyMedia, media is TelegramMediaAction {
+            if let media = message.extendedMedia, media is TelegramMediaAction {
                 return false
             }
             return true

@@ -850,11 +850,10 @@ class InputContextHelper: NSObject {
                 if let view = view {
                     controller.markAsNeedShown = true
                     controller.viewWillAppear(animated)
-                    if controller.view.superview == nil {
-                        view.addSubview(controller.view, positioned: .below, relativeTo: relativeView)
-                        controller.view.layer?.opacity = 0
-                        controller.view.setFrameOrigin(0, relativeView.frame.minY)
-                    }
+                    view.addSubview(controller.view, positioned: .below, relativeTo: relativeView)
+                    controller.view.layer?.opacity = 0
+                    controller.view.setFrameOrigin(0, relativeView.frame.minY)
+                    
                     controller.viewDidAppear(animated)
                     controller.genericView.isHidden = false
                     controller.genericView.change(opacity: 1, animated: animated)

@@ -77,6 +77,8 @@ class PeerMediaRowItem: GeneralRowItem {
             var secondBlock: [ContextMenuItem] = []
             var thirdBlock: [ContextMenuItem] = []
             
+            
+            
 
             if let resourceData = resourceData, resourceData.1.complete {
                 firstBlock.append(ContextMenuItem(strings().contextSaveMedia, handler: {
@@ -88,6 +90,10 @@ class PeerMediaRowItem: GeneralRowItem {
             }
             
        
+            secondBlock.append(ContextMenuItem(strings().messageContextSelect, handler: {
+                interface.update({$0.withToggledSelectedMessage(message.id)})
+            }, itemImage: MenuAnimation.menu_select_messages.value))
+            
             if canForwardMessage(message, chatInteraction: interface) {
                 secondBlock.append(ContextMenuItem(strings().messageContextForward, handler: {
                     interface.forwardMessages([messageId])

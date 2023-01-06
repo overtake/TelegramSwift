@@ -899,6 +899,12 @@ func generateSettingsIcon(_ icon: CGImage) -> CGImage {
     })!
 }
 
+func generateEmptySettingsIcon() -> CGImage {
+    return generateImage(NSMakeSize(24, 24), contextGenerator: { size, ctx in
+        ctx.clear(CGRect(origin: CGPoint(), size: size))
+    })!
+}
+
 
 private func generateSettingsActiveIcon(_ icon: CGImage, background: NSColor) -> CGImage {
     return generateImage(icon.backingSize, contextGenerator: { size, ctx in
@@ -2552,7 +2558,9 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 general_delete: { NSImage(named: "Icon_MessageActionPanelDelete")!.precomposed(palette.redUI, flipVertical: true) },
                                                 storage_music_play: { NSImage(named: "Icon_Pip_Play")!.precomposed(palette.underSelectedColor, zoom: 0.8) },
                                                 storage_music_pause: { NSImage(named: "Icon_Pip_Pause")!.precomposed(palette.underSelectedColor, zoom: 0.8) },
-                                                storage_media_play: { NSImage(named: "Icon_Pip_Play")!.precomposed(palette.underSelectedColor, zoom: 0.6) }
+                                                storage_media_play: { NSImage(named: "Icon_Pip_Play")!.precomposed(palette.underSelectedColor, zoom: 0.6) },
+                                                general_chevron_up: { NSImage(named: "Icon_HorizontalChevron")!.precomposed(palette.grayIcon, flipVertical: true) },
+                                                general_chevron_down: { NSImage(named: "Icon_HorizontalChevron")!.precomposed(palette.grayIcon) }
     )
 
 }

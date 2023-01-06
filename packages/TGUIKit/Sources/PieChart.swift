@@ -10,6 +10,118 @@ import MergeLists
 import AppKit
 import ColorPalette
 
+
+private struct Particle {
+    var trackIndex: Int
+    var position: CGPoint
+    var scale: CGFloat
+    var alpha: CGFloat
+    var direction: CGPoint
+    var velocity: CGFloat
+    
+    init(
+        trackIndex: Int,
+        position: CGPoint,
+        scale: CGFloat,
+        alpha: CGFloat,
+        direction: CGPoint,
+        velocity: CGFloat
+    ) {
+        self.trackIndex = trackIndex
+        self.position = position
+        self.scale = scale
+        self.alpha = alpha
+        self.direction = direction
+        self.velocity = velocity
+    }
+    
+    mutating func update(deltaTime: CGFloat) {
+        var position = self.position
+        position.x += self.direction.x * self.velocity * deltaTime
+        position.y += self.direction.y * self.velocity * deltaTime
+        self.position = position
+    }
+}
+
+private final class ParticleSet {
+    private(set) var particles: [Particle] = []
+    
+    init() {
+        self.generateParticles(preAdvance: true)
+    }
+    
+    private func generateParticles(preAdvance: Bool) {
+        let maxDirections = 24
+        
+        if self.particles.count < maxDirections {
+            var allTrackIndices: [Int] = Array(repeating: 0, count: maxDirections)
+            for i in 0 ..< maxDirections {
+                allTrackIndices[i] = i
+            }
+            var takenIndexCount = 0
+            for particle in self.particles {
+                allTrackIndices[particle.trackIndex] = -1
+                takenIndexCount += 1
+            }
+            var availableTrackIndices: [Int] = []
+            availableTrackIndices.reserveCapacity(maxDirections - takenIndexCount)
+            for index in allTrackIndices {
+                if index != -1 {
+                    availableTrackIndices.append(index)
+                }
+            }
+            
+            if !availableTrackIndices.isEmpty {
+                availableTrackIndices.shuffle()
+                
+                for takeIndex in availableTrackIndices {
+                    let directionIndex = takeIndex
+                    let angle = (CGFloat(directionIndex % maxDirections) / CGFloat(maxDirections)) * CGFloat.pi * 2.0
+                    
+                    let direction = CGPoint(x: cos(angle), y: sin(angle))
+                    let velocity = CGFloat.random(in: 20.0 ..< 40.0)
+                    let alpha = CGFloat.random(in: 0.1 ..< 0.4)
+                    let scale = CGFloat.random(in: 0.5 ... 1.0) * 0.22
+                    
+                    var position = CGPoint(x: 100.0, y: 100.0)
+                    var initialOffset: CGFloat = 0.4
+                    if preAdvance {
+                        initialOffset = CGFloat.random(in: initialOffset ... 1.0)
+                    }
+                    position.x += direction.x * initialOffset * 105.0
+                    position.y += direction.y * initialOffset * 105.0
+                    
+                    let particle = Particle(
+                        trackIndex: directionIndex,
+                        position: position,
+                        scale: scale,
+                        alpha: alpha,
+                        direction: direction,
+                        velocity: velocity
+                    )
+                    self.particles.append(particle)
+                }
+            }
+        }
+    }
+    
+    func update(deltaTime: CGFloat) {
+        let size = CGSize(width: 200.0, height: 200.0)
+        let radius2 = pow(size.width * 0.5 + 10.0, 2.0)
+        for i in (0 ..< self.particles.count).reversed() {
+            self.particles[i].update(deltaTime: deltaTime)
+            let position = self.particles[i].position
+            
+            if pow(position.x - size.width * 0.5, 2.0) + pow(position.y - size.height * 0.5, 2.0) > radius2 {
+                self.particles.remove(at: i)
+            }
+        }
+        
+        self.generateParticles(preAdvance: false)
+    }
+}
+
+
 public func optimizeArray(array: [Int], minPercent: Double) -> [Int] {
     let total = array.reduce(0, +)
 
@@ -55,13 +167,6 @@ private class TooltipView : View {
                 
         layer?.cornerRadius = 10
         
-        
-//
-//        let shadow = NSShadow()
-//        shadow.shadowBlurRadius = 5
-//        shadow.shadowColor = NSColor.black.withAlphaComponent(0.1)
-//        shadow.shadowOffset = NSMakeSize(0, 2)
-//        self.shadow = shadow
     }
     
     func update(attr: NSAttributedString, animated: Bool) -> NSSize {
@@ -87,7 +192,111 @@ private class TooltipView : View {
     }
 }
 
+
+private final class SectionLayer: SimpleLayer {
+    private let maskLayer: SimpleShapeLayer
+    private let gradientLayer: SimpleGradientLayer
+        
+    private var particleImage: CGImage?
+    private var particleLayers: [SimpleLayer] = []
+    
+    private let item: PieChartView.Item
+    init(_ item: PieChartView.Item) {
+        self.item = item
+        self.maskLayer = SimpleShapeLayer()
+        self.maskLayer.fillColor = NSColor.white.cgColor
+        
+        self.gradientLayer = SimpleGradientLayer()
+        self.gradientLayer.type = .radial
+        self.gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.5)
+        self.gradientLayer.endPoint = CGPoint(x: 1.0, y: 1.0)
+                
+        super.init()
+        
+        self.mask = self.maskLayer
+        self.addSublayer(self.gradientLayer)
+        
+        self.particleImage = item.particle
+    }
+    
+    
+    required init(coder: NSCoder) {
+        preconditionFailure()
+    }
+    
+    func isPointOnGraph(point: CGPoint) -> Bool {
+        if let path = self.maskLayer.path {
+            return path.contains(point)
+        }
+        return false
+    }
+    
+    func update(size: CGSize, path: CGPath) {
+        self.maskLayer.frame = CGRect(origin: CGPoint(), size: size)
+        self.gradientLayer.frame = CGRect(origin: CGPoint(), size: size)
+        
+        let normalColor = item.color.cgColor
+        let darkerColor = item.color.withMultipliedBrightnessBy(0.96).cgColor
+        let colors: [CGColor] = [
+            darkerColor,
+            normalColor,
+            normalColor,
+            normalColor,
+            darkerColor
+        ]
+        self.gradientLayer.colors = colors
+        
+        let locations: [CGFloat] = [
+            0.0,
+            0.3,
+            0.5,
+            0.7,
+            1.0
+        ]
+        self.gradientLayer.locations = locations.map { location in
+            let location = location * 0.5 + 0.5
+            return location as NSNumber
+        }
+        
+        let path = CGMutablePath()
+        self.maskLayer.path = path
+        
+    }
+    
+    func updateParticles(particleSet: ParticleSet) {
+        guard let particleImage = self.particleImage else {
+            return
+        }
+        for i in 0 ..< particleSet.particles.count {
+            let particle = particleSet.particles[i]
+            
+            let particleLayer: SimpleLayer
+            if i < self.particleLayers.count {
+                particleLayer = self.particleLayers[i]
+                particleLayer.isHidden = false
+            } else {
+                particleLayer = SimpleLayer()
+                particleLayer.contents = particleImage
+                particleLayer.bounds = CGRect(origin: CGPoint(), size: particleImage.size)
+                self.particleLayers.append(particleLayer)
+                self.insertSublayer(particleLayer, above: self.gradientLayer)
+            }
+            
+            particleLayer.position = particle.position
+            particleLayer.transform = CATransform3DMakeScale(particle.scale, particle.scale, 1.0)
+            particleLayer.opacity = Float(particle.alpha)
+        }
+        if particleSet.particles.count < self.particleLayers.count {
+            for i in particleSet.particles.count ..< self.particleLayers.count {
+                self.particleLayers[i].isHidden = true
+            }
+        }
+    }
+}
+
+
 public class PieChartView : Control {
+    
     
     
     public struct Item : Comparable, Identifiable {
@@ -96,12 +305,14 @@ public class PieChartView : Control {
         public var count: Int
         public var color: NSColor
         public var badge: NSAttributedString?
-        public init(id: AnyHashable, index: Int, count: Int, color: NSColor, badge: NSAttributedString?) {
+        public var particle: CGImage?
+        public init(id: AnyHashable, index: Int, count: Int, color: NSColor, badge: NSAttributedString?, particle: CGImage?) {
             self.id = id
             self.index = index
             self.count = count
             self.color = color
             self.badge = badge
+            self.particle = particle
         }
         public var stableId: AnyHashable {
             return id
@@ -164,6 +375,9 @@ public class PieChartView : Control {
             self.needsDisplay = true
         }
     }
+    private var sectionLayers: [AnyHashable: SectionLayer] = [:]
+    private let particleSet: ParticleSet = ParticleSet()
+
     
     public init(frame frameRect: NSRect, presentation: Presentation) {
         self.presentation = presentation
@@ -392,6 +606,9 @@ public class PieChartView : Control {
         
         let selected = selectedItemIndex(at: self.convert(window.mouseLocationOutsideOfEventStream, from: nil))
         
+        var validIds: [AnyHashable] = []
+
+        
         for (i, item) in items.enumerated() {
             
             var selectionAnimationFraction: CGFloat = self.animationValues.selection[item.id] ?? 0
@@ -420,9 +637,8 @@ public class PieChartView : Control {
             let labelVector = CGPoint(x: cos(centerAngle),
                                       y: sin(centerAngle))
             
-            let updatedCenter = CGPoint(x: center.x + labelVector.x * selectionAnimationFraction * animationSelectionOffset,
-                                        y: center.y + labelVector.y * selectionAnimationFraction * animationSelectionOffset)
-
+            let updatedCenter = CGPoint(x: center.x ,
+                                        y: center.y )
             
             ctx.saveGState()
             let path = CGMutablePath()
@@ -477,6 +693,7 @@ public class PieChartView : Control {
         let clearRadius = min(bounds.width, bounds.height) / 2.5
         ctx.fillEllipse(in: focus(NSMakeSize(clearRadius, clearRadius)))
         ctx.restoreGState()
+        
     }
     
     private func middleTextPoint(_ point: NSPoint, item: Item) -> NSPoint {

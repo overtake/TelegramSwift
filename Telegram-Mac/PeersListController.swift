@@ -1362,16 +1362,17 @@ class PeersListController: TelegramGenericViewController<PeerListContainerView>,
                     } else {
                         info = nil
                     }
-                    let membersCount = cachedData.participantsSummary.memberCount ?? 0
-                    let online: Signal<Int32, NoError>
-                    if membersCount < 200 {
-                        online = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(peerId: peerId)
-                    } else {
-                        online = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: peerId)
-                    }
-                    return online |> map {
-                        return .init(peer: peer, peerView: view, online: $0, call: info, invitationState: invitationState)
-                    }
+//                    let membersCount = cachedData.participantsSummary.memberCount ?? 0
+//                    let online: Signal<Int32, NoError>
+//                    if membersCount < 200 {
+//                        online = context.peerChannelMemberCategoriesContextsManager.recentOnlineSmall(peerId: peerId)
+//                    } else {
+//                        online = context.peerChannelMemberCategoriesContextsManager.recentOnline(peerId: peerId)
+//                    }
+//                    return online |> map {
+//                        return .init(peer: peer, peerView: view, online: 0, call: info, invitationState: invitationState)
+//                    }
+                    return .single(.init(peer: peer, peerView: view, online: 0, call: info, invitationState: invitationState))
 
                 } else {
                     return .single(nil)

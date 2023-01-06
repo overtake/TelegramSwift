@@ -44,7 +44,7 @@ class CreateChannelViewController: ComposeViewController<(PeerId?, Bool), Void, 
                 filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
                     if let path = paths?.first, let image = NSImage(contentsOfFile: path) {
                         _ = (putToTemp(image: image, compress: true) |> deliverOnMainQueue).start(next: { path in
-                            let controller = EditImageModalController(URL(fileURLWithPath: path), settings: .disableSizes(dimensions: .square))
+                            let controller = EditImageModalController(URL(fileURLWithPath: path), context: context, settings: .disableSizes(dimensions: .square))
                             showModal(with: controller, for: context.window, animationType: .scaleCenter)
                             _ = (controller.result |> deliverOnMainQueue).start(next: { url, _ in
                                 self?.picture = url.path

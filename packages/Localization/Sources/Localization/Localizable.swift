@@ -4857,6 +4857,10 @@ public final class L10n {
   public static var emojiTravelAndPlaces: String  { return L10n.tr("Localizable", "Emoji.TravelAndPlaces") }
   /// Remove
   public static var emojiContextRemove: String  { return L10n.tr("Localizable", "Emoji.Context.Remove") }
+  /// Set Status
+  public static var emojiContextSetStatus: String  { return L10n.tr("Localizable", "Emoji.Context.SetStatus") }
+  /// Status successfully updated.
+  public static var emojiContextSetStatusSuccess: String  { return L10n.tr("Localizable", "Emoji.Context.SetStatus.Success") }
   /// ANIMATED EMOJI
   public static var emojiSearchAnimatedEmoji: String  { return L10n.tr("Localizable", "Emoji.Search.AnimatedEmoji") }
   /// EMOJI
@@ -6757,10 +6761,12 @@ public final class L10n {
   public static var networkUsageBytesSent: String  { return L10n.tr("Localizable", "NetworkUsage.BytesSent") }
   /// Network Usage
   public static var networkUsageNetworkUsage: String  { return L10n.tr("Localizable", "NetworkUsage.NetworkUsage") }
-  /// Network usage since %@
+  /// Network usage since %@.
   public static func networkUsageNetworkUsageSince(_ p1: String) -> String {
     return L10n.tr("Localizable", "NetworkUsage.NetworkUsageSince", p1)
   }
+  /// Network usage since login on this device.
+  public static var networkUsageNetworkUsageSinceNever: String  { return L10n.tr("Localizable", "NetworkUsage.NetworkUsageSinceNever") }
   /// Reset Statistics
   public static var networkUsageReset: String  { return L10n.tr("Localizable", "NetworkUsage.Reset") }
   /// AUDIO
@@ -6773,6 +6779,14 @@ public final class L10n {
   public static var networkUsageHeaderImages: String  { return L10n.tr("Localizable", "NetworkUsage.Header.Images") }
   /// VIDEOS
   public static var networkUsageHeaderVideos: String  { return L10n.tr("Localizable", "NetworkUsage.Header.Videos") }
+  /// Network Usage Reset
+  public static var networkUsageNetworkUsageReset: String  { return L10n.tr("Localizable", "NetworkUsage.NetworkUsage.Reset") }
+  /// Are you sure you want to reset statistics?
+  public static var networkUsageResetConfirmInfo: String  { return L10n.tr("Localizable", "NetworkUsage.ResetConfirm.Info") }
+  /// Reset
+  public static var networkUsageResetConfirmOk: String  { return L10n.tr("Localizable", "NetworkUsage.ResetConfirm.Ok") }
+  /// Click on each section for detailed view.
+  public static var networkUsageSectionInfo: String  { return L10n.tr("Localizable", "NetworkUsage.Section.Info") }
   /// phone number
   public static var newContactPhone: String  { return L10n.tr("Localizable", "NewContact.Phone") }
   /// New Contact
@@ -11275,6 +11289,8 @@ public final class L10n {
   public static func timerMonthsZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Timer.Months_zero", p1)
   }
+  /// Never
+  public static var timerNever: String  { return L10n.tr("Localizable", "Timer.Never") }
   /// %d
   public static func timerSecondsCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Timer.Seconds_countable", p1)

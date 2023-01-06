@@ -1803,6 +1803,11 @@ func copyToClipboard(_ string:String) {
     NSPasteboard.general.declareTypes([.string], owner: nil)
     NSPasteboard.general.setString(string, forType: .string)
 }
+func copyToClipboard(_ url: URL, _ image: NSImage) {
+    let pb = NSPasteboard.general
+    pb.clearContents()
+    pb.writeObjects([url as NSURL, image])
+}
 func copyToClipboard(_ input: ChatTextInputState) -> Void {
     let pb = NSPasteboard.general
     pb.clearContents()
