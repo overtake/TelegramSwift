@@ -224,6 +224,12 @@ func peerAvatarImage(account: Account, photo: PeerPhoto, displayDimensions: CGSi
                 } else {
                     signal = .complete()
                 }
+            case "bundle/jpeg":
+                if let resource = file.resource as? LocalBundleResource {
+                    signal = makeGeneralTopicIcon(resource)
+                } else {
+                    signal = .complete()
+                }
             default:
                 signal = chatMessageAnimatedSticker(postbox: account.postbox, file: reference, small: false, scale: System.backingScale, size: aspectSize, fetched: true, thumbAtFrame: 0, isVideo: file.fileName == "webm-preview" || file.isVideoSticker)
             }
