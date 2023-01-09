@@ -971,7 +971,7 @@ class AuthController : GenericViewController<AuthView> {
             return current
         }
 
-        let signal = sendAuthorizationCode(accountManager: sharedContext.accountManager, account: self.account, phoneNumber: phoneNumber, apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, syncContacts: false)
+        let signal = sendAuthorizationCode(accountManager: sharedContext.accountManager, account: self.account, phoneNumber: phoneNumber, apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, syncContacts: false, forcedPasswordSetupNotice: { _ in return nil })
                                        |> map(Optional.init)
                                        |> mapError(Optional.init)
                                        |> timeout(20, queue: Queue.mainQueue(), alternate: .fail(nil))
@@ -980,14 +980,19 @@ class AuthController : GenericViewController<AuthView> {
                                        |> deliverOnMainQueue
         
 
-        self.actionDisposable.set(signal.start(next: { [weak self] account in
+        self.actionDisposable.set(signal.start(next: { [weak self] result in
             updateState { current in
                 var current = current
                 current.error = nil
                 current.locked = false
                 return current
             }
-            self?.account = account
+            switch result {
+            case let .sentCode(account):
+                self?.account = account
+            default:
+                break
+            }
         }, error: { [weak self] error in
             if let error = error {
                 updateState { current in
