@@ -15,7 +15,7 @@ import Postbox
 import TelegramCore
 
 
-private final class ChannelPermissionsControllerArguments {
+private final class Arguments {
     let context: AccountContext
     
     let updatePermission: (TelegramChatBannedRightsFlags, Bool) -> Void
@@ -138,7 +138,7 @@ private enum ChannelPermissionsEntry: TableItemListNodeEntry {
     
 
     
-    func item(_ arguments: ChannelPermissionsControllerArguments, initialSize: NSSize) -> TableRowItem {
+    func item(_ arguments: Arguments, initialSize: NSSize) -> TableRowItem {
         switch self {
         case let .permissionsHeader(_, _, text, viewType):
             return GeneralTextRowItem(initialSize, stableId: stableId, text: text, viewType: viewType)
@@ -223,11 +223,12 @@ private enum ChannelPermissionsEntry: TableItemListNodeEntry {
     }
 }
 
-private struct ChannelPermissionsControllerState: Equatable {
+private struct State: Equatable {
     var peerIdWithRevealedOptions: PeerId?
     var removingPeerId: PeerId?
     var searchingMembers: Bool = false
     var modifiedRightsFlags: TelegramChatBannedRightsFlags?
+    var participants: [RenderedChannelParticipant]?
 }
 
 func stringForGroupPermission(right: TelegramChatBannedRightsFlags, channel: TelegramChannel?) -> String {
@@ -332,8 +333,10 @@ private func completeRights(_ flags: TelegramChatBannedRightsFlags) -> TelegramC
     return result
 }
 
-private func channelPermissionsControllerEntries(view: PeerView, state: ChannelPermissionsControllerState, participants: [RenderedChannelParticipant]?, limits: LimitsConfiguration) -> [ChannelPermissionsEntry] {
+private func entries(view: PeerView, state: State, arguments: Arguments) -> [ChannelPermissionsEntry] {
     var entries: [ChannelPermissionsEntry] = []
+    
+    let limits: LimitsConfiguration = arguments.context.limitConfiguration
     
     var sectionId: Int32 = 0
     var index: Int32 = 0
@@ -342,7 +345,7 @@ private func channelPermissionsControllerEntries(view: PeerView, state: ChannelP
     sectionId += 1
     
     
-    if let channel = view.peers[view.peerId] as? TelegramChannel, let participants = participants, let cachedData = view.cachedData as? CachedChannelData, let defaultBannedRights = channel.defaultBannedRights {
+    if let channel = view.peers[view.peerId] as? TelegramChannel, let participants = state.participants, let cachedData = view.cachedData as? CachedChannelData, let defaultBannedRights = channel.defaultBannedRights {
         
         
         let effectiveRightsFlags: TelegramChatBannedRightsFlags
@@ -459,7 +462,7 @@ private func channelPermissionsControllerEntries(view: PeerView, state: ChannelP
     
     return entries
 }
-fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelPermissionsEntry>], right: [AppearanceWrapperEntry<ChannelPermissionsEntry>], initialSize:NSSize, arguments:ChannelPermissionsControllerArguments) -> TableUpdateTransition {
+fileprivate func prepareTransition(left:[AppearanceWrapperEntry<ChannelPermissionsEntry>], right: [AppearanceWrapperEntry<ChannelPermissionsEntry>], initialSize:NSSize, arguments:Arguments) -> TableUpdateTransition {
     
     let (removed, inserted, updated) = proccessEntriesWithoutReverse(left, right: right) { entry -> TableRowItem in
         return entry.entry.item(arguments, initialSize: initialSize)
@@ -490,9 +493,9 @@ final class ChannelPermissionsController : TableViewController {
         let peerId = self.peerId
         let context = self.context
         
-        let statePromise = ValuePromise(ChannelPermissionsControllerState(), ignoreRepeated: true)
-        let stateValue = Atomic(value: ChannelPermissionsControllerState())
-        let updateState: ((ChannelPermissionsControllerState) -> ChannelPermissionsControllerState) -> Void = { f in
+        let statePromise = ValuePromise(State(), ignoreRepeated: true)
+        let stateValue = Atomic(value: State())
+        let updateState: ((State) -> State) -> Void = { f in
             statePromise.set(stateValue.modify { f($0) })
         }
         
@@ -579,7 +582,7 @@ final class ChannelPermissionsController : TableViewController {
         let peerView = Promise<PeerView>()
         peerView.set(context.account.viewTracker.peerView(peerId))
         
-        let arguments = ChannelPermissionsControllerArguments(context: context, updatePermission: { rights, value in
+        let arguments = Arguments(context: context, updatePermission: { rights, value in
             let _ = (peerView.get()
                 |> take(1)
                 |> deliverOnMainQueue).start(next: { view in
@@ -698,13 +701,7 @@ final class ChannelPermissionsController : TableViewController {
             }
             
             removePeerDisposable.set((context.peerChannelMemberCategoriesContextsManager.updateMemberBannedRights(peerId: peerId, memberId: memberId, bannedRights: nil)
-                |> deliverOnMainQueue).start(error: { _ in
-                    updateState { state in
-                        var state = state
-                        state.removingPeerId = nil
-                        return state
-                    }
-                }, completed: {
+                |> deliverOnMainQueue).start(completed: {
                     updateState { state in
                         var state = state
                         state.removingPeerId = nil
@@ -768,7 +765,7 @@ final class ChannelPermissionsController : TableViewController {
         let signal = combineLatest(queue: .mainQueue(), appearanceSignal, statePromise.get(), peerView.get(), peersPromise.get())
         |> deliverOnMainQueue
         |> map { appearance, state, view, participants -> (TableUpdateTransition, Peer?) in
-            let entries = channelPermissionsControllerEntries(view: view, state: state, participants: participants, limits: context.limitConfiguration).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
+            let entries = entries(view: view, state: state, participants: participants, limits: context.limitConfiguration).map { AppearanceWrapperEntry(entry: $0, appearance: appearance) }
             return (prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.with { $0 }, arguments: arguments), peerViewMainPeer(view))
         } |> afterDisposed {
             actionsDisposable.dispose()
