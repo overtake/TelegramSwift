@@ -191,7 +191,7 @@ class ChatMessageAccessoryView: Control {
                 self.visualEffect = current
                 addSubview(current, positioned: .below, relativeTo: self.subviews.first)
             }
-            current.layer?.cornerRadius = newSize.height / 2
+            current.layer?.cornerRadius = isStreamable ? 8 : newSize.height / 2
             current.bgColor = theme.blurServiceColor
             backgroundView.backgroundColor = .clear
         } else if let view = visualEffect {
