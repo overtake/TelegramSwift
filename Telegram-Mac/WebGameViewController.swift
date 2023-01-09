@@ -47,6 +47,7 @@ class WebGameViewController: TelegramGenericViewController<WKWebView>, WKUIDeleg
     
     private var media:TelegramMediaGame!
     private var peer:Peer!
+    private var threadId: Int64?
     
     private let messageId:MessageId
     fileprivate let uniqueId:String = "_\(arc4random())"
@@ -88,14 +89,15 @@ class WebGameViewController: TelegramGenericViewController<WKWebView>, WKUIDeleg
         genericView.wantsLayer = true
         loadMessageDisposable.set((context.account.postbox.messageAtId(messageId) |> deliverOnMainQueue).start(next: { [weak self] message in
             if let message = message, let game = message.anyMedia as? TelegramMediaGame, let peer = message.inlinePeer {
-               self?.start(with: game, peer: peer)
+                self?.start(with: game, peer: peer, threadId: message.threadId)
             }
         }))
     }
     
-    func start(with game: TelegramMediaGame, peer: Peer) {
+    func start(with game: TelegramMediaGame, peer: Peer, threadId: Int64?) {
         self.media = game
         self.peer = peer
+        self.threadId = threadId
         self.centerBarView.text = .initialize(string: media.name, color: theme.colors.text, font: .medium(.title))
         self.centerBarView.status = .initialize(string: "@\(peer.addressName ?? "gamebot")", color: theme.colors.grayText, font: .normal(.text))
         
@@ -175,9 +177,9 @@ class WebGameViewController: TelegramGenericViewController<WKWebView>, WKUIDeleg
         
         let context = self.context
         let messageId = self.messageId
-        
+        let threadId = self.threadId
         showModal(with: ShareModalController(ShareCallbackObject(context, callback: { peerIds in
-            let signals = peerIds.map { context.engine.messages.forwardGameWithScore(messageId: messageId, to: $0, as: nil) }
+            let signals = peerIds.map { context.engine.messages.forwardGameWithScore(messageId: messageId, to: $0, threadId: threadId, as: nil) }
             return combineLatest(signals) |> map { _ in return } |> ignoreValues
         })), for: context.window)
     }

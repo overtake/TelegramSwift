@@ -21,6 +21,7 @@ class ChatMessageAccessoryView: Control {
     private var maxWidth: CGFloat = 0
     private let unread = View()
     private var stringValue: String = ""
+    
     private let progress: RadialProgressView = RadialProgressView(theme: RadialProgressTheme(backgroundColor: .clear, foregroundColor: .white, cancelFetchingIcon: stopFetchStreamableControl), twist: true, size: NSMakeSize(24, 24))
     private let bufferingIndicator: ProgressIndicator = ProgressIndicator(frame: NSMakeRect(0, 0, 10, 10))
     private let download: ImageButton = ImageButton(frame: NSMakeRect(0, 0, 24, 24))
@@ -30,6 +31,8 @@ class ChatMessageAccessoryView: Control {
     private var isCompact: Bool = false
     
     private var imageView: ImageView?
+    
+    private var visualEffect: VisualEffect?
     
     var soundOffOnImage: CGImage? {
         didSet {
@@ -57,6 +60,7 @@ class ChatMessageAccessoryView: Control {
     
     override func layout() {
         super.layout()
+        visualEffect?.frame = bounds
         download.centerY(x: 6)
         progress.centerY(x: 6)
         backgroundView.frame = bounds
@@ -178,6 +182,23 @@ class ChatMessageAccessoryView: Control {
             layer.add(cornerAnimation, forKey: "cornerRadius")
         }
         
+        if theme.shouldBlurService {
+            let current: VisualEffect
+            if let view = self.visualEffect {
+                current = view
+            } else {
+                current = VisualEffect(frame: bounds)
+                self.visualEffect = current
+                addSubview(current, positioned: .below, relativeTo: self.subviews.first)
+            }
+            current.layer?.cornerRadius = newSize.height / 2
+            current.bgColor = theme.blurServiceColor
+            backgroundView.backgroundColor = .clear
+        } else if let view = visualEffect {
+            performSubviewRemoval(view, animated: false)
+            self.visualEffect = nil
+        }
+        
         needsLayout = true
     }
     
@@ -189,7 +210,6 @@ class ChatMessageAccessoryView: Control {
     
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        
         
         unread.setFrameSize(NSMakeSize(6, 6))
         unread.layer?.cornerRadius = 3

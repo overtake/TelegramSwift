@@ -3846,3 +3846,54 @@ func makeTopicIcon(_ title: String, bgColors: [NSColor], strokeColors: [NSColor]
         }
     } |> runOn(.concurrentBackgroundQueue())
 }
+
+func makeGeneralTopicIcon(_ resource: LocalBundleResource, scale: CGFloat = System.backingScale) -> Signal<ImageDataTransformation, NoError> {
+    return Signal { subscriber in
+        let data = NSImage(named: resource.name)?.tiffRepresentation
+        if let data = data {
+            let data: ImageRenderData = .init(nil, data, true)
+            subscriber.putNext(ImageDataTransformation(data: data, execute: { arguments, data in
+                let context = DrawingContext(size: arguments.drawingSize, scale: scale, clear: true)
+                
+                let drawingRect = arguments.drawingRect
+                let fittedSize = arguments.imageSize.aspectFilled(arguments.boundingSize).fitted(arguments.imageSize)
+                let fittedRect = CGRect(origin: CGPoint(x: drawingRect.origin.x + (drawingRect.size.width - fittedSize.width) / 2.0, y: drawingRect.origin.y + (drawingRect.size.height - fittedSize.height) / 2.0), size: fittedSize)
+                
+                var fullSizeImage: CGImage?
+                if let fullSizeData = data.fullSizeData {
+                    let options = NSMutableDictionary()
+                    options.setValue(max(fittedSize.width * context.scale, fittedSize.height * context.scale) as NSNumber, forKey: kCGImageSourceThumbnailMaxPixelSize as String)
+                    options.setValue(true as NSNumber, forKey: kCGImageSourceCreateThumbnailFromImageAlways as String)
+                    options[kCGImageSourceShouldCache as NSString] = false as NSNumber
+                    
+                    if let imageSource = CGImageSourceCreateWithData(fullSizeData as CFData, options), let image = CGImageSourceCreateThumbnailAtIndex(imageSource, 0, options as CFDictionary) {
+                        fullSizeImage = image
+                    }
+                }
+                
+                context.withContext(isHighQuality: fullSizeImage != nil, { c in
+
+                    c.setBlendMode(.copy)
+                    if let fullSizeImage = fullSizeImage {
+                        c.interpolationQuality = .medium
+                        if let color = resource.color {
+                            c.clip(to: fittedRect, mask: fullSizeImage)
+                            c.setFillColor(color.cgColor)
+                            c.fill(fittedRect)
+                        } else {
+                            c.draw(fullSizeImage, in: fittedRect)
+                        }
+                    }
+                    
+                })
+                                
+                return context
+            }))
+        }
+        
+        subscriber.putCompletion()
+        return ActionDisposable {
+            
+        }
+    } |> runOn(.concurrentBackgroundQueue())
+}
