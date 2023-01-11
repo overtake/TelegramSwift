@@ -2546,7 +2546,14 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 return
             }
             if let peer = chatInteraction.presentation.peer {
-                if let permissionText = permissionText(from: peer, for: .banSendMedia) {
+                let flags: TelegramChatBannedRightsFlags
+                switch FastSettings.recordingState {
+                case .video:
+                    flags = .banSendInstantVideos
+                case .voice:
+                    flags = .banSendVoice
+                }
+                if let permissionText = permissionText(from: peer, for: flags) {
                     alert(for: context.window, info: permissionText)
                     return
                 }
@@ -2797,24 +2804,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                                     }
                                     
                                     if let media = message.anyMedia {
-                                        switch media {
-                                        case _ as TelegramMediaPoll:
-                                            return permissionText(from: peer, for: .banSendPolls)
-                                        case _ as TelegramMediaImage:
-                                            return permissionText(from: peer, for: .banSendMedia)
-                                        case let file as TelegramMediaFile:
-                                            if file.isAnimated && file.isVideo {
-                                                return permissionText(from: peer, for: .banSendGifs)
-                                            } else if file.isStaticSticker {
-                                                return permissionText(from: peer, for: .banSendStickers)
-                                            } else {
-                                                return permissionText(from: peer, for: .banSendMedia)
-                                            }
-                                        case _ as TelegramMediaGame:
-                                            return permissionText(from: peer, for: .banSendGames)
-                                        default:
-                                            return nil
-                                        }
+                                        return checkMediaPermission(media, for: peer)
                                     }
                                     
                                     return nil
@@ -5755,7 +5745,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                         if let file = item.message?.anyMedia as? TelegramMediaFile {
                             if !file.noPremium, !context.premiumIsBlocked, file.isPremiumSticker {
                                 items.append(item)
-                            } else if file.isEmojiAnimatedSticker, file.isPremiumEmoji, let message = item.message {
+                            } else if file.isEmojiAnimatedSticker || file.isCustomEmoji, file.isPremiumEmoji, let message = item.message {
                                 if message.globallyUniqueId != nil || message.flags.contains(.Incoming) {
                                     animatedEmojiItems.append(item)
                                 }
@@ -6050,7 +6040,7 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
     }
 
     private func createGroup() {
-        context.composeCreateGroup(selectedPeers: [self.chatLocation.peerId])
+        createGroupDirectly(with: context, selectedPeers: Set([self.chatLocation.peerId]))
     }
     
     private func startSecretChat() {

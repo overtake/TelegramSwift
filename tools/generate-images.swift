@@ -806,6 +806,8 @@ func initialize() -> [String] {
 
     array.append("general_chevron_up")
     array.append("general_chevron_down")
+    
+    array.append("account_settings_set_password")
 
     return array
 }

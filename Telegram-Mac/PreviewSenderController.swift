@@ -1266,10 +1266,10 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                 tooltip(for: self.genericView.sendButton, text: strings().slowModeMultipleError)
                 self.genericView.textView.setSelectedRange(NSMakeRange(0, attributed.length))
                 self.genericView.textView.shake()
-            } else {
+            } else if let peer = self.chatInteraction.peer {
                 let state = stateValue.with { $0.currentState }
                 let medias = stateValue.with { $0.medias }
-                
+                var permissions:[(String, Int)] = []
                 for i in 0 ..< medias.count {
                     if let media = medias[i] as? TelegramMediaFile, let resource = media.resource as? LocalFileArchiveMediaResource {
                         if let status = self.archiveStatuses[.resource(resource)] {
@@ -1285,6 +1285,17 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                             return
                         }
                     }
+                    if let string = checkMediaPermission(medias[i], for: peer) {
+                        permissions.append((string, i))
+                    }
+                }
+                
+                for (_, i) in permissions {
+                    self.genericView.tableView.item(at: i).view?.shakeView()
+                }
+                if let first = permissions.first {
+                    alert(for: context.window, info: first.0)
+                    return
                 }
                 
                 self.sent = true

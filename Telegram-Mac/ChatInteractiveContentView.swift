@@ -261,8 +261,15 @@ class ChatInteractiveContentView: ChatMediaContentView {
     
     override func open() {
         if let parent = parent {
-            parameters?.showMedia(parent)
-            autoplayVideoView?.toggleVolume(false, animated: false)
+            let forceSpoiler = parameters?.forceSpoiler == true
+            let messageSpoiler = parent.isMediaSpoilered
+            let isSpoiler = (messageSpoiler || forceSpoiler) && (parameters?.isRevealed == false)
+            if isSpoiler {
+                parameters?.revealMedia(parent)
+            } else {
+                parameters?.showMedia(parent)
+                autoplayVideoView?.toggleVolume(false, animated: false)
+            }
         }
     }
     

@@ -14,100 +14,21 @@ import SwiftSignalKit
 import TGUIKit
 
 
-fileprivate final class CreateGroupArguments {
+fileprivate final class Arguments {
     let context: AccountContext
     let choicePicture:(Bool)->Void
     let updatedText:(String)->Void
-    let setupGlobalAutoremove:(AccountPrivacySettings?)->Void
-    init(context: AccountContext, choicePicture:@escaping(Bool)->Void, updatedText:@escaping(String)->Void, setupGlobalAutoremove:@escaping(AccountPrivacySettings?)->Void) {
+    let setupGlobalAutoremove:(Int32)->Void
+    let deletePeer:(PeerId)->Void
+    let addMembers:()->Void
+    init(context: AccountContext, choicePicture:@escaping(Bool)->Void, updatedText:@escaping(String)->Void, setupGlobalAutoremove:@escaping(Int32)->Void, deletePeer:@escaping(PeerId)->Void, addMembers:@escaping()->Void) {
         self.context = context
         self.updatedText = updatedText
         self.choicePicture = choicePicture
         self.setupGlobalAutoremove = setupGlobalAutoremove
+        self.deletePeer = deletePeer
+        self.addMembers = addMembers
     }
-}
-
-fileprivate enum CreateGroupEntry : Comparable, Identifiable {
-    case info(Int32, String?, String, GeneralViewType)
-    case timer(Int32, Int32, AccountPrivacySettings?, GeneralViewType)
-    case timerInfo(Int32, GeneralViewType)
-    case peer(Int32, Peer, Int32, PeerPresence?, GeneralViewType)
-    case section(Int32)
-    fileprivate var stableId:AnyHashable {
-        switch self {
-        case .info:
-            return -3
-        case .timer:
-            return -2
-        case .timerInfo:
-            return -1
-        case let .peer(_, peer, _, _, _):
-            return peer.id
-        case let .section(sectionId):
-            return sectionId
-        }
-    }
-    
-    var index:Int32 {
-        switch self {
-        case let .info(sectionId, _, _, _):
-            return (sectionId * 1000) + 0
-        case let .timer(sectionId, _, _, _):
-            return (sectionId * 1000) + 1
-        case let .timerInfo(sectionId, _):
-            return (sectionId * 1000) + 2
-        case let .peer(sectionId, _, index, _, _):
-            return (sectionId * 1000) + index
-        case let .section(sectionId):
-             return (sectionId + 1) * 1000 - sectionId
-        }
-    }
-}
-
-fileprivate func ==(lhs:CreateGroupEntry, rhs:CreateGroupEntry) -> Bool {
-    switch lhs {
-    case let .info(section, photo, text, viewType):
-        if case .info(section, photo, text, viewType) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .timer(section, timer, privacy, viewType):
-        if case .timer(section, timer, privacy, viewType) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .timerInfo(section, viewType):
-        if case .timerInfo(section, viewType) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .section(sectionId):
-        if case .section(sectionId) = rhs {
-            return true
-        } else {
-            return false
-        }
-    case let .peer(sectionId, lhsPeer, index, lhsPresence, viewType):
-        if case .peer(sectionId, let rhsPeer, index, let rhsPresence, viewType) = rhs {
-            if let lhsPresence = lhsPresence, let rhsPresence = rhsPresence {
-                if !lhsPresence.isEqual(to: rhsPresence) {
-                    return false
-                }
-            } else if (lhsPresence != nil) != (rhsPresence != nil) {
-                return false
-            }
-            return lhsPeer.isEqual(rhsPeer)
-        } else {
-            return false
-        }
-    }
-}
-
-fileprivate func <(lhs:CreateGroupEntry, rhs:CreateGroupEntry) -> Bool {
-    return lhs.index < rhs.index
 }
 
 struct CreateGroupResult {
@@ -117,98 +38,173 @@ struct CreateGroupResult {
     let autoremoveTimeout: Int32?
 }
 
-fileprivate func prepareEntries(from:[AppearanceWrapperEntry<CreateGroupEntry>], to:[AppearanceWrapperEntry<CreateGroupEntry>], arguments: CreateGroupArguments, initialSize:NSSize, animated:Bool) -> Signal<TableUpdateTransition, NoError> {
-    
-    return Signal { subscriber in
-        let (deleted,inserted,updated) = proccessEntriesWithoutReverse(from, right: to, { entry -> TableRowItem in
-            
-            switch entry.entry {
-            case let .info(_, photo, currentText, viewType):
-                return GroupNameRowItem(initialSize, stableId:entry.stableId, account: arguments.context.account, placeholder: strings().createGroupNameHolder, photo: photo, viewType: viewType, text: currentText, limit:140, textChangeHandler: arguments.updatedText, pickPicture: arguments.choicePicture)
-            case let .timer(_, time, privacy, viewType):
-                let text = time == 0 ? strings().privacySettingsGlobalTimerNever : timeIntervalString(Int(time))
-                return GeneralInteractedRowItem(initialSize, stableId: entry.stableId, name: strings().privacySettingsGlobalTimer, type: .context(text), viewType: viewType, action: {
-                    arguments.setupGlobalAutoremove(privacy)
-                })
-            case let .timerInfo(_, viewType):
-                return GeneralTextRowItem(initialSize, stableId: entry.stableId, text: strings().privacySettingsGlobalTimerGroup, viewType: viewType)
-            case let .peer(_, peer, _, presence, viewType):
-                
-                var color:NSColor = theme.colors.grayText
-                var string:String = strings().peerStatusRecently
-                if let presence = presence as? TelegramUserPresence {
-                    let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
-                    (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.context.timeDifference, relativeTo: Int32(timestamp))
-                }
-                return  ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, height:50, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(foregroundColor: color), status: string, inset:NSEdgeInsets(left: 30, right:30), viewType: viewType)
-            case .section:
-                return GeneralRowItem(initialSize, height: 30, stableId: entry.stableId, viewType: .separator)
-            }
-        })
-        
-        let transition = TableUpdateTransition(deleted: deleted, inserted: inserted, updated:updated, animated:animated, state:.none(nil))
-        
-        subscriber.putNext(transition)
-        subscriber.putCompletion()
-        return EmptyDisposable
-        
-    }
-    
-}
-
-
 private struct State : Equatable {
     var picture: String?
     var text: String = ""
     var autoremoveTimeout: Int32?
+    var privacy: AccountPrivacySettings?
+    var editable: Bool = true
+    var peerIds:[PeerId] = []
+    var errors:[InputDataIdentifier : InputDataValueError] = [:]
 }
 
-private func createGroupEntries(_ view: MultiplePeersView, privacy: AccountPrivacySettings?, state: State, appearance: Appearance) -> [AppearanceWrapperEntry<CreateGroupEntry>] {
-    
-    
-    var entries:[CreateGroupEntry] = []
-    var sectionId:Int32 = 0
-    
-    entries.append(.section(sectionId))
-    sectionId += 1
-    
-    
-    entries.append(.info(sectionId, state.picture, state.text, .singleItem))
+private let _id_info = InputDataIdentifier("_id_info")
+private let _id_timer = InputDataIdentifier("_id_timer")
+private func _id_peer(_ id: PeerId) -> InputDataIdentifier {
+    return .init("_id_peer_\(id.toInt64())")
+}
+private let _id_add = InputDataIdentifier("_id_add")
 
-    entries.append(.section(sectionId))
+private func entries(_ view: MultiplePeersView, state: State, arguments: Arguments) -> [InputDataEntry] {
+        
+    var entries:[InputDataEntry] = []
+    var sectionId: Int32 = 0
+    var index: Int32 = 0
+    
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    if let privacy = privacy, let _ = privacy.messageAutoremoveTimeout {
+    entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_info, equatable: .init(state), comparable: nil, item: { initialSize, stableId in
+        return GroupNameRowItem(initialSize, stableId:stableId, account: arguments.context.account, placeholder: strings().createGroupNameHolder, photo: state.picture, viewType: .singleItem, text: state.text, limit: 140, textChangeHandler: arguments.updatedText, pickPicture: arguments.choicePicture)
+    }))
+    index += 1
+    
+    entries.append(.sectionId(sectionId, type: .normal))
+    sectionId += 1
+    
+    if let privacy = state.privacy, let _ = privacy.messageAutoremoveTimeout {
         let timeout = state.autoremoveTimeout ?? privacy.messageAutoremoveTimeout
         if let timeout = timeout {
-            entries.append(.timer(sectionId, timeout, privacy, .singleItem))
-            entries.append(.timerInfo(sectionId, .textBottomItem))
+            let text = timeout == 0 ? strings().privacySettingsGlobalTimerNever : timeIntervalString(Int(timeout))
+            
+            
+            let timeoutAction:(Int32)->Void = { value in
+                arguments.setupGlobalAutoremove(value)
+            }
+            
+            let timeoutValues: [Int32] = [
+                1 * 24 * 60 * 60,
+                2 * 24 * 60 * 60,
+                3 * 24 * 60 * 60,
+                4 * 24 * 60 * 60,
+                5 * 24 * 60 * 60,
+                6 * 24 * 60 * 60,
+                7 * 24 * 60 * 60,
+                14 * 24 * 60 * 60,
+                21 * 24 * 60 * 60,
+                1 * 30 * 24 * 60 * 60,
+                3 * 30 * 24 * 60 * 60,
+                180 * 24 * 60 * 60,
+                365 * 24 * 60 * 60
+            ]
+            var items: [ContextMenuItem] = []
+
+                        
+            if timeout > 0 {
+                items.append(ContextMenuItem(strings().privacySettingsGlobalTimerDisable, handler: {
+                    timeoutAction(0)
+                }))
+            }
+            
+            for timeoutValue in timeoutValues {
+                items.append(ContextMenuItem(timeIntervalString(Int(timeoutValue)), handler: {
+                    timeoutAction(timeoutValue)
+                }))
+            }
+            entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_timer, data: .init(name: strings().privacySettingsGlobalTimer, color: theme.colors.text, type: .contextSelector(text, items), viewType: .singleItem)))
+            index += 1
+            
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().privacySettingsGlobalTimerGroup), data: .init(color: theme.colors.listGrayText, viewType: .textBottomItem)))
+            index += 1
+            
+            entries.append(.sectionId(sectionId, type: .normal))
+            sectionId += 1
+            
         }
     }
     
-
-    entries.append(.section(sectionId))
-    sectionId += 1
-    
-    var index:Int32 = 0
-    let peers = view.peers.map({$1})
-    for (i, peer) in peers.enumerated() {
-        entries.append(.peer(sectionId, peer, index, view.presences[peer.id], bestGeneralViewType(peers, for: i)))
-        index += 1
+    let peers = state.peerIds.compactMap {
+        view.peers[$0]
     }
     
-    entries.append(.section(sectionId))
+    struct TuplePeer: Equatable {
+        let peer: PeerEquatable
+        let viewType: GeneralViewType
+        let editable: Bool
+        let deletable: Bool
+        let status: String
+        let color: NSColor
+    }
+    let stableIndex:(PeerId)->Int32 = { peerId in
+        var index: Int32 = 100
+        for peer in peers {
+            if peer.id == peerId {
+                return index
+            }
+            index += 1
+        }
+        return index
+    }
+    
+    if peers.count < 200 {
+        entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_add, data: .init(name: strings().peerInfoAddMember, color: theme.colors.accent, icon: theme.icons.peerInfoAddMember, viewType: peers.isEmpty ? .singleItem : .firstItem, action: arguments.addMembers)))
+        index += 1
+        
+        if let error = state.errors[_id_add] {
+            entries.append(.desc(sectionId: sectionId, index: index, text: .plain(error.description), data: .init(color: theme.colors.redUI, viewType: .textBottomItem)))
+            index += 1
+        }
+    }
+    
+    var items: [TuplePeer] = []
+    for (i, peer) in peers.enumerated() {
+        var color:NSColor = theme.colors.grayText
+        var string:String = strings().peerStatusRecently
+        if let presence = view.presences[peer.id] as? TelegramUserPresence {
+            let timestamp = CFAbsoluteTimeGetCurrent() + NSTimeIntervalSince1970
+            (string, _, color) = stringAndActivityForUserPresence(presence, timeDifference: arguments.context.timeDifference, relativeTo: Int32(timestamp))
+        }
+        let viewType: GeneralViewType
+        if i == 0 {
+            if peers.count == 1 {
+                viewType = .lastItem
+            } else {
+                viewType = .innerItem
+            }
+        } else {
+            viewType = bestGeneralViewType(items, for: i)
+        }
+        items.append(.init(peer: .init(peer), viewType: viewType, editable: peers.count > 1, deletable: peers.count > 1, status: string, color: color))
+    }
+    for item in items {
+        entries.append(.custom(sectionId: sectionId, index: stableIndex(item.peer.peer.id), value: .none, identifier: _id_peer(item.peer.peer.id), equatable: InputDataEquatable(item), comparable: nil, item: { initialSize, stableId in
+            
+            let interactionType: ShortPeerItemInteractionType = .plain
+            
+            return ShortPeerRowItem(initialSize, peer: item.peer.peer, account: arguments.context.account, context: arguments.context, height: 50, photoSize:NSMakeSize(36, 36), statusStyle: ControlStyle(foregroundColor: item.color), status: item.status, inset:NSEdgeInsets(left: 30, right:30), interactionType: interactionType, generalType: .nextContext(""), viewType: item.viewType, contextMenuItems: {
+                
+                var items: [ContextMenuItem] = []
+                
+                items.append(.init(strings().contextRemove, handler: {
+                    arguments.deletePeer(item.peer.peer.id)
+                }, itemMode: .destruct, itemImage: MenuAnimation.menu_delete.value))
+                
+                return .single(items)
+            })
+        }))
+        index += 1
+    }
+
+    entries.append(.sectionId(sectionId, type: .normal))
     sectionId += 1
     
-    return entries.map{AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+    return entries
 }
 
 
-class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerId], TableView> { // Title, photo path
-    private let entries:Atomic<[AppearanceWrapperEntry<CreateGroupEntry>]> = Atomic(value:[])
+class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerId], TableView> {
     private let disposable:MetaDisposable = MetaDisposable()
-   
-    
+    private let actionsDisposable = DisposableSet()
     private let statePromise: ValuePromise<State>
     private let stateValue: Atomic<State>
     private func updateState(_ f: (State) -> State) {
@@ -232,10 +228,16 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
         super.restart(with: result)
         assert(isLoaded())
         let initialSize = self.atomicSize
-        let table = self.genericView
         let stateValue = self.stateValue
         let context = self.context
         let updateState = self.updateState
+        let actionsDisposable = self.actionsDisposable
+        
+        updateState { current in
+            var current = current
+            current.peerIds = result.result
+            return current
+        }
         
         if self.defaultText == "" && result.result.count < 5 {
             let peers: Signal<String, NoError> = context.account.postbox.transaction { transaction in
@@ -276,9 +278,9 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
                 
             })
         }
+        let previous:Atomic<[AppearanceWrapperEntry<InputDataEntry>]> = Atomic(value:[])
 
-        let entries = self.entries
-        let arguments = CreateGroupArguments(context: context, choicePicture: { select in
+        let arguments = Arguments(context: context, choicePicture: { select in
             if select {
                 
                 filePanel(with: photoExts, allowMultiple: false, canChooseDirectories: false, for: context.window, completion: { paths in
@@ -320,78 +322,64 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
                 current.text = text
                 return current
             }
-        }, setupGlobalAutoremove: { [weak self] privacy in
-            
-            let timeoutAction:(Int32)->Void = { value in
+        }, setupGlobalAutoremove: { timeout in
+            updateState { current in
+                var current = current
+                current.autoremoveTimeout = timeout
+                return current
+            }
+        }, deletePeer: { peerId in
+            updateState { current in
+                var current = current
+                current.peerIds.removeAll(where: {
+                    $0 == peerId
+                })
+                return current
+            }
+        }, addMembers: {
+            actionsDisposable.add(selectModalPeers(window: context.window, context: context, title: strings().composeSelectUsers, settings: [.contacts, .remote], excludePeerIds: stateValue.with { $0.peerIds }).start(next: { peerIds in
                 updateState { current in
                     var current = current
-                    current.autoremoveTimeout = value
+                    current.peerIds.append(contentsOf: peerIds)
+                    current.errors.removeValue(forKey: _id_add)
                     return current
                 }
-            }
-            
-            let timeoutValues: [Int32] = [
-                1 * 24 * 60 * 60,
-                2 * 24 * 60 * 60,
-                3 * 24 * 60 * 60,
-                4 * 24 * 60 * 60,
-                5 * 24 * 60 * 60,
-                6 * 24 * 60 * 60,
-                7 * 24 * 60 * 60,
-                14 * 24 * 60 * 60,
-                21 * 24 * 60 * 60,
-                1 * 30 * 24 * 60 * 60,
-                3 * 30 * 24 * 60 * 60,
-                180 * 24 * 60 * 60,
-                365 * 24 * 60 * 60
-            ]
-            var items: [ContextMenuItem] = []
-
-            
-            let value = stateValue.with { $0.autoremoveTimeout } ?? privacy?.messageAutoremoveTimeout
-            
-            if let value = value, value > 0 {
-                items.append(ContextMenuItem(strings().privacySettingsGlobalTimerDisable, handler: {
-                    timeoutAction(0)
-                }))
-            }
-            
-            for timeoutValue in timeoutValues {
-                items.append(ContextMenuItem(timeIntervalString(Int(timeoutValue)), handler: {
-                    timeoutAction(timeoutValue)
-                }))
-            }
-
-            let stableId = CreateGroupEntry.timer(0, 0, nil, .singleItem).stableId
-            
-            if let index = self?.genericView.index(hash: stableId) {
-                if let view = (self?.genericView.viewNecessary(at: index) as? GeneralInteractedRowView)?.textView {
-                    if let event = NSApp.currentEvent {
-                        let menu = ContextMenu()
-                        for item in items {
-                            menu.addItem(item)
-                        }
-                        let value = AppMenu(menu: menu)
-                        value.show(event: event, view: view)
-                    }
-                }
-            }
+            }))
         })
         
         let privacy:Signal<AccountPrivacySettings?, NoError> = .single(nil) |> then(context.engine.privacy.requestAccountPrivacySettings() |> map(Optional.init))
 
+        actionsDisposable.add(privacy.start(next: { privacy in
+            updateState { current in
+                var current = current
+                current.privacy = privacy
+                return current
+            }
+        }))
         
-        let signal:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, context.account.postbox.multiplePeersView(result.result), appearanceSignal, self.statePromise.get(), privacy) |> mapToQueue { view, appearance, state, privacy in
-            let list = createGroupEntries(view, privacy: privacy, state: state, appearance: appearance)
-           
-            return prepareEntries(from: entries.swap(list), to: list, arguments: arguments, initialSize: initialSize.modify({$0}), animated: true)
+        let inputDataArguments = InputDataArguments(select: { _, _ in
+            
+        }, dataUpdated: {
+            
+        })
+        
+        let multiplePeerView = statePromise.get() |> mapToSignal { state in
+            return context.account.postbox.multiplePeersView(state.peerIds)
+        }
+        
+        let signal:Signal<TableUpdateTransition, NoError> = combineLatest(queue: prepareQueue, multiplePeerView, appearanceSignal, self.statePromise.get()) |> mapToQueue { view, appearance, state in
+            let list = entries(view, state: state, arguments: arguments).map {
+                AppearanceWrapperEntry(entry: $0, appearance: appearance)
+            }
+            let previous = previous.swap(list)
+            return prepareInputDataTransition(left: previous, right: list, animated: true, searchState: nil, initialSize: initialSize.with { $0 }, arguments: inputDataArguments, onMainQueue: false, animateEverything: true, grouping: false)
             
         } |> deliverOnMainQueue
         
         
-        disposable.set(signal.start(next: { (transition) in
-            table.merge(with: transition)
-            //table.reloadData()
+        disposable.set(signal.start(next: { [weak self] transition in
+            self?.genericView.merge(with: transition)
+            self?.readyOnce()
         }))
     }
     
@@ -416,7 +404,7 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
     
     deinit {
         disposable.dispose()
-        _ = entries.swap([])
+        actionsDisposable.dispose()
     }
     
     override func viewDidLoad() {
@@ -424,19 +412,22 @@ class CreateGroupViewController: ComposeViewController<CreateGroupResult, [PeerI
         genericView.getBackgroundColor = {
             theme.colors.listBackground
         }
-        readyOnce()
     }
     
     override func executeNext() -> Void {
-        if let previousResult = previousResult {
-            let result = statePromise.get()
-            |> take(1)
-            |> map {
-                return CreateGroupResult(title: $0.text, picture: $0.picture, peerIds: previousResult.result, autoremoveTimeout: $0.autoremoveTimeout)
+        let state = stateValue.with { $0 }
+        let result = CreateGroupResult(title: state.text, picture: state.picture, peerIds: state.peerIds, autoremoveTimeout: state.autoremoveTimeout)
+        if result.title.isEmpty {
+            genericView.item(stableId: InputDataEntryId.custom(_id_info))?.view?.shakeView()
+        } else if result.peerIds.isEmpty {
+            genericView.item(stableId: InputDataEntryId.general(_id_add))?.view?.shakeView()
+            updateState { current in
+                var current = current
+                current.errors[_id_add] = .init(description: strings().createGroupAddMemberError, target: .data)
+                return current
             }
-            onComplete.set(result |> filter {
-                !$0.title.isEmpty
-            })
+        } else {
+            onComplete.set(.single(result))
         }
     }
     

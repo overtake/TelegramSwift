@@ -225,7 +225,7 @@ private func notificationEntries(settings:InAppNotificationSettings, soundList: 
     case .denied:
         
         entries.append(InputDataEntry.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_turnon_notifications_title, equatable: nil, comparable: nil, item: { initialSize, stableId in
-            return TurnOnNotificationsRowItem(initialSize, stableId: stableId, viewType: .firstItem)
+            return TitleAndInfoAlertItem(initialSize, stableId: stableId, title: strings().notificationSettingsTurnOnTextTitle, info: strings().notificationSettingsTurnOnTextText, viewType: .firstItem)
         }))
         index += 1
         

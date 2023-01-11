@@ -969,7 +969,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
         case .folders:
             controller = ChatListFiltersListController(context: context)
         case .privacy:
-            controller = PrivacyAndSecurityViewController(context, initialSettings: nil, focusOnItemTag: .autoArchive)
+            controller = PrivacyAndSecurityViewController(context, initialSettings: nil, focusOnItemTag: .autoArchive, twoStepVerificationConfiguration: nil)
         }
         context.bindings.rootNavigation().push(controller)
         afterComplete(true)

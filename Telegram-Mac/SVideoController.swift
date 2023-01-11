@@ -168,6 +168,9 @@ class SVideoController: GenericViewController<SVideoView>, PictureInPictureContr
                     NSCursor.hide()
                 }
             }
+            if contextMenuOnScreen() {
+                hide = false
+            }
             hideControls.set(hide || forceHiddenControls)
         } else {
             hideControls.set(forceHiddenControls)

@@ -674,7 +674,6 @@ class PrivacyAndSecurityViewController: TableViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        twoStepAccessConfiguration.set(context.engine.auth.twoStepVerificationConfiguration() |> map { TwoStepVeriticationAccessConfiguration(configuration: $0, password: nil)})
     }
 
     private let twoStepAccessConfiguration: Promise<TwoStepVeriticationAccessConfiguration?> = Promise(nil)
@@ -682,7 +681,7 @@ class PrivacyAndSecurityViewController: TableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        
+        twoStepAccessConfiguration.set(context.engine.auth.twoStepVerificationConfiguration() |> map { .init(configuration: $0, password: nil) })
         
         let statePromise = ValuePromise(PrivacyAndSecurityControllerState(), ignoreRepeated: true)
         let stateValue = Atomic(value: PrivacyAndSecurityControllerState())
@@ -1072,8 +1071,9 @@ class PrivacyAndSecurityViewController: TableViewController {
     
     private var focusOnItemTag: PrivacyAndSecurityEntryTag?
     private let disposable = MetaDisposable()
-    init(_ context: AccountContext, initialSettings: AccountPrivacySettings?, focusOnItemTag: PrivacyAndSecurityEntryTag? = nil) {
+    init(_ context: AccountContext, initialSettings: AccountPrivacySettings?, focusOnItemTag: PrivacyAndSecurityEntryTag? = nil, twoStepVerificationConfiguration: TwoStepVeriticationAccessConfiguration?) {
         self.focusOnItemTag = focusOnItemTag
+        self.twoStepAccessConfiguration.set(.single(twoStepVerificationConfiguration))
         super.init(context)
         
         let thenSignal:Signal<AccountPrivacySettings?, NoError> = context.engine.privacy.requestAccountPrivacySettings() |> map(Optional.init)

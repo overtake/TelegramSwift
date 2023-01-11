@@ -14,6 +14,7 @@ class GeneralInteractedRowView: GeneralRowView {
         
     let containerView: GeneralRowContainerView = GeneralRowContainerView(frame: NSZeroRect)
     private(set) var switchView:SwitchView?
+    private(set) var selectLeftControl: SelectingControl?
     private(set) var progressView: ProgressIndicator?
     private(set) var textView:TextView?
     private(set) var descriptionView: TextView?
@@ -55,12 +56,26 @@ class GeneralInteractedRowView: GeneralRowView {
                 switchView?.presentation = item.switchAppearance
                 switchView?.setIsOn(stateback,animated:animated)
                 
-                switchView?.stateChanged = item.action
+                switchView?.stateChanged = item.switchAction ?? item.action
                 switchView?.userInteractionEnabled = item.enabled
                 switchView?.isEnabled = item.enabled
             } else {
                 switchView?.removeFromSuperview()
                 switchView = nil
+            }
+            if case let .selectableLeft(value) = item.type {
+                let current: SelectingControl
+                if let view = self.selectLeftControl {
+                    current = view
+                } else {
+                    current = SelectingControl(unselectedImage: theme.icons.chatToggleUnselected, selectedImage: theme.icons.chatToggleSelected)
+                    containerView.addSubview(current)
+                    self.selectLeftControl = current
+                }
+                current.update(unselectedImage: theme.icons.chatToggleUnselected, selectedImage: theme.icons.chatToggleSelected, selected: value, animated: animated)
+            } else if let view = self.selectLeftControl {
+                performSubviewRemoval(view, animated: animated)
+                self.selectLeftControl = nil
             }
             
             if let badgeNode = item.badgeNode {
@@ -243,6 +258,9 @@ class GeneralInteractedRowView: GeneralRowView {
             } else {
                 textXAdditional = thumb.thumb.backingSize.width + 10
             }
+        }
+        if let _ = self.selectLeftControl {
+            textXAdditional += 24 + item.viewType.innerInset.left
         }
         return textXAdditional
     }
@@ -467,6 +485,11 @@ class GeneralInteractedRowView: GeneralRowView {
                 
                 
                 self.containerView.setCorners(self.isResorting ? GeneralViewItemCorners.all : item.viewType.corners)
+                
+                if let current = self.selectLeftControl {
+                    current.centerY(x: innerInsets.left)
+                }
+                
                 if let descriptionView = self.descriptionView {
                     descriptionView.setFrameOrigin(innerInsets.left + textXAdditional, containerView.frame.height - descriptionView.frame.height - innerInsets.bottom)
                 }
@@ -487,6 +510,7 @@ class GeneralInteractedRowView: GeneralRowView {
                         textView.setFrameOrigin(textView.frame.minX, textView.frame.minY - 1)
                     }
                 }
+                
                 if let textView = textView {
                     nextInset += textView.frame.width + 10
                 }
