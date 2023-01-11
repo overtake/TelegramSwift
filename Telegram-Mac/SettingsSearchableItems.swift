@@ -392,7 +392,7 @@ private func privacySearchableItems(context: AccountContext, privacySettings: Ac
     let icon: SettingsSearchableItemIcon = .privacy
     
     let presentPrivacySettings: (AccountContext, (SettingsSearchableItemPresentation, ViewController?) -> Void, PrivacyAndSecurityEntryTag?) -> Void = { context, present, itemTag in
-        present(.push, PrivacyAndSecurityViewController(context, initialSettings: nil, focusOnItemTag: itemTag))
+        present(.push, PrivacyAndSecurityViewController(context, initialSettings: nil, focusOnItemTag: itemTag, twoStepVerificationConfiguration: nil))
     }
     
     let presentSelectivePrivacySettings: (AccountContext, SelectivePrivacySettingsKind, @escaping (SettingsSearchableItemPresentation, ViewController?) -> Void) -> Void = { context, kind, present in

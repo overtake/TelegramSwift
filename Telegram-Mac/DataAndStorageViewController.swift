@@ -179,8 +179,8 @@ private enum DataAndStorageSection: Int32 {
 
 private enum DataAndStorageEntry: TableItemListNodeEntry {
 
-    case storageUsage(Int32, String, viewType: GeneralViewType)
-    case networkUsage(Int32, String, viewType: GeneralViewType)
+    case storageUsage(Int32, String, Int64?, viewType: GeneralViewType)
+    case networkUsage(Int32, String, Int64?, viewType: GeneralViewType)
     case automaticMediaDownloadHeader(Int32, String, viewType: GeneralViewType)
     case automaticDownloadMedia(Int32, Bool, viewType: GeneralViewType)
     case photos(Int32, AutomaticMediaDownloadCategoryPeers, Bool, viewType: GeneralViewType)
@@ -248,9 +248,9 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
     
     var index:Int32 {
         switch self {
-        case .storageUsage(let sectionId, _, _):
+        case .storageUsage(let sectionId, _, _, _):
             return (sectionId * 1000) + stableId
-        case .networkUsage(let sectionId, _, _):
+        case .networkUsage(let sectionId, _, _, _):
             return (sectionId * 1000) + stableId
         case .automaticMediaDownloadHeader(let sectionId, _, _):
             return (sectionId * 1000) + stableId
@@ -297,12 +297,24 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
     
     func item(_ arguments: DataAndStorageControllerArguments, initialSize: NSSize) -> TableRowItem {
         switch self {
-        case let .storageUsage(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, icon: NSImage(named: "Icon_StorageUsage")?.precomposed(flipVertical: true), type: .next, viewType: viewType, action: {
+        case let .storageUsage(_, text, totalCount, viewType):
+            let next: GeneralInteractedType
+            if let totalCount = totalCount, totalCount > 1 * 1024 * 1024 {
+                next = .nextContext(String.prettySized(with: totalCount, round: true))
+            } else {
+                next = .next
+            }
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, icon: NSImage(named: "Icon_StorageUsage")?.precomposed(flipVertical: true), type: next, viewType: viewType, action: {
                 arguments.openStorageUsage()
             })
-        case let .networkUsage(_, text, viewType):
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, icon: NSImage(named: "Icon_NetworkUsage")?.precomposed(flipVertical: true), type: .next, viewType: viewType, action: {
+        case let .networkUsage(_, text, totalCount, viewType):
+            let next: GeneralInteractedType
+            if let totalCount = totalCount, totalCount > 1 * 1024 * 1024 {
+                next = .nextContext(String.prettySized(with: totalCount, round: true))
+            } else {
+                next = .next
+            }
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: text, icon: NSImage(named: "Icon_NetworkUsage")?.precomposed(flipVertical: true), type: next, viewType: viewType, action: {
                 arguments.openNetworkUsage()
             })
         case let .automaticMediaDownloadHeader(_, text, viewType):
@@ -372,10 +384,10 @@ private enum DataAndStorageEntry: TableItemListNodeEntry {
     }
 }
 
-private struct DataAndStorageControllerState: Equatable {
-    static func ==(lhs: DataAndStorageControllerState, rhs: DataAndStorageControllerState) -> Bool {
-        return true
-    }
+private struct State: Equatable {
+    var storageUsage: AllStorageUsageStats?
+    var networkUsage: NetworkUsageStats?
+    
 }
 
 private struct DataAndStorageData: Equatable {
@@ -393,15 +405,15 @@ private struct DataAndStorageData: Equatable {
 }
 
 
-private func dataAndStorageControllerEntries(state: DataAndStorageControllerState, data: DataAndStorageData, proxy: ProxySettings, autoplayMedia: AutoplayMediaPreferences) -> [DataAndStorageEntry] {
+private func entries(state: State, data: DataAndStorageData, proxy: ProxySettings, autoplayMedia: AutoplayMediaPreferences) -> [DataAndStorageEntry] {
     var entries: [DataAndStorageEntry] = []
     
     var sectionId:Int32 = 1
     entries.append(.sectionId(sectionId))
     sectionId += 1
     
-    entries.append(.storageUsage(sectionId, strings().dataAndStorageStorageUsage, viewType: .firstItem))
-    entries.append(.networkUsage(sectionId, strings().dataAndStorageNetworkUsage, viewType: .lastItem))
+    entries.append(.storageUsage(sectionId, strings().dataAndStorageStorageUsage, state.storageUsage?.totalStats.totalCount, viewType: .firstItem))
+    entries.append(.networkUsage(sectionId, strings().dataAndStorageNetworkUsage, state.networkUsage?.totalCount, viewType: .lastItem))
     
     entries.append(.sectionId(sectionId))
     sectionId += 1
@@ -465,9 +477,31 @@ private func prepareTransition(left:[AppearanceWrapperEntry<DataAndStorageEntry>
 class DataAndStorageViewController: TableViewController {
     private let disposable = MetaDisposable()
     private var focusOnItemTag: DataAndStorageEntryTag?
+    private let actionsDisposable = DisposableSet()
     init(_ context: AccountContext, focusOnItemTag: DataAndStorageEntryTag? = nil) {
         self.focusOnItemTag = focusOnItemTag
         super.init(context)
+    }
+    
+    private let statePromise = ValuePromise(State(), ignoreRepeated: true)
+    private let stateValue = Atomic(value: State())
+    private func updateState(_ f:(State) -> State) {
+        statePromise.set(stateValue.modify(f))
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        let signal = combineLatest(context.engine.resources.collectStorageUsageStats(), accountNetworkUsageStats(account: context.account, reset: [])) |> deliverOnMainQueue
+        
+        actionsDisposable.add(signal.start(next: { [weak self] storageUsage, networkUsage in
+            self?.updateState { current in
+                var current = current
+                current.networkUsage = networkUsage
+                current.storageUsage = storageUsage
+                return current
+            }
+        }))
+
     }
     
     override func viewDidLoad() {
@@ -475,20 +509,16 @@ class DataAndStorageViewController: TableViewController {
         
         
         let context = self.context
-        let initialState = DataAndStorageControllerState()
         let initialSize = self.atomicSize
-        let statePromise = ValuePromise(initialState, ignoreRepeated: true)
-        let stateValue = Atomic(value: initialState)
-        let updateState: ((DataAndStorageControllerState) -> DataAndStorageControllerState) -> Void = { f in
-            statePromise.set(stateValue.modify { f($0) })
-        }
+        
         
         let pushControllerImpl:(ViewController)->Void = { [weak self] controller in
             self?.navigationController?.push(controller)
         }
         
         let previous:Atomic<[AppearanceWrapperEntry<DataAndStorageEntry>]> = Atomic(value: [])
-        let actionsDisposable = DisposableSet()
+        let actionsDisposable = self.actionsDisposable
+        
         
         let dataAndStorageDataPromise = Promise<DataAndStorageData>()
         dataAndStorageDataPromise.set(combineLatest(context.account.postbox.preferencesView(keys: [ApplicationSpecificPreferencesKeys.automaticMediaDownloadSettings]), voiceCallSettings(context.sharedContext.accountManager))
@@ -573,7 +603,7 @@ class DataAndStorageViewController: TableViewController {
         
         let signal = combineLatest(queue: .mainQueue(), statePromise.get(), dataAndStorageDataPromise.get(), appearanceSignal, proxy, autoplayMediaSettings(postbox: context.account.postbox))
         |> map { state, dataAndStorageData, appearance, proxy, autoplayMediaSettings -> TableUpdateTransition in
-            let entries = dataAndStorageControllerEntries(state: state, data: dataAndStorageData, proxy: proxy, autoplayMedia: autoplayMediaSettings).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
+            let entries = entries(state: state, data: dataAndStorageData, proxy: proxy, autoplayMedia: autoplayMediaSettings).map {AppearanceWrapperEntry(entry: $0, appearance: appearance)}
             return prepareTransition(left: previous.swap(entries), right: entries, initialSize: initialSize.modify({$0}), arguments: arguments)
         } |> beforeNext { [weak self] _ in
             self?.readyOnce()

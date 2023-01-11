@@ -24,6 +24,12 @@ private final class Arguments {
     }
 }
 
+extension NetworkUsageStats {
+    var totalCount: Int64 {
+        return Int64(NetworkItem.totalCount(self))
+    }
+}
+
 private enum NetworkItem : Int32 {
     case messages = 1
     case photos = 2

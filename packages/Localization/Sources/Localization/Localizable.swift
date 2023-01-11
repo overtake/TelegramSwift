@@ -145,6 +145,12 @@ public final class L10n {
   public static var accountSettingsUsername: String  { return L10n.tr("Localizable", "AccountSettings.Username") }
   /// Gram Wallet
   public static var accountSettingsWallet: String  { return L10n.tr("Localizable", "AccountSettings.Wallet") }
+  /// Set a password that will be required each time you log in with this phone number.
+  public static var accountSettingsProtectAccountInfo: String  { return L10n.tr("Localizable", "AccountSettings.ProtectAccount.Info") }
+  /// Set Additional Password
+  public static var accountSettingsProtectAccountSet: String  { return L10n.tr("Localizable", "AccountSettings.ProtectAccount.Set") }
+  /// Protect Your Account
+  public static var accountSettingsProtectAccountTitle: String  { return L10n.tr("Localizable", "AccountSettings.ProtectAccount.Title") }
   /// Connected
   public static var accountSettingsProxyConnected: String  { return L10n.tr("Localizable", "AccountSettings.Proxy.Connected") }
   /// Connecting
@@ -1239,6 +1245,18 @@ public final class L10n {
   public static var channelEditAdminPermissionPinMessages: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.PinMessages") }
   /// Post Messages
   public static var channelEditAdminPermissionPostMessages: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.PostMessages") }
+  /// Send Files
+  public static var channelEditAdminPermissionSendFiles: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.SendFiles") }
+  /// Send Video Messages
+  public static var channelEditAdminPermissionSendInstantVideo: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.SendInstantVideo") }
+  /// Send Music
+  public static var channelEditAdminPermissionSendMusic: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.SendMusic") }
+  /// Send Photos
+  public static var channelEditAdminPermissionSendPhotos: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.SendPhotos") }
+  /// Send Videos
+  public static var channelEditAdminPermissionSendVideos: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.SendVideos") }
+  /// Send Voice Messages
+  public static var channelEditAdminPermissionSendVoice: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.SendVoice") }
   /// Sorry, you don't have the necessary permissions for this action.
   public static var channelErrorDontHavePermissions: String  { return L10n.tr("Localizable", "Channel.Error.DontHavePermissions") }
   /// ADMINS
@@ -1387,6 +1405,14 @@ public final class L10n {
   public static var channelPermissionsSlowModeTimeout5m: String  { return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Timeout.5m") }
   /// Off
   public static var channelPermissionsSlowModeTimeoutOff: String  { return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Timeout.Off") }
+  /// Sending files isn't allowed in this group.
+  public static var channelPersmissionDeniedSendFileDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendFile.DefaultRestrictedText") }
+  /// The admins of this group have restricted you from sending files here.
+  public static var channelPersmissionDeniedSendFileForever: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendFile.Forever") }
+  /// The admins of this group have restricted you from sending files here until %@.
+  public static func channelPersmissionDeniedSendFileUntil(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.Persmission.Denied.SendFile.Until", p1)
+  }
   /// Sending GIFs isn't allowed in this group.
   public static var channelPersmissionDeniedSendGifsDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendGifs.DefaultRestrictedText") }
   /// The admins of this group have restricted you from sending GIFs here.
@@ -1402,6 +1428,14 @@ public final class L10n {
   /// The admins of this group have restricted you from posting inline content here until %@.
   public static func channelPersmissionDeniedSendInlineUntil(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.Persmission.Denied.SendInline.Until", p1)
+  }
+  /// Sending video messages isn't allowed in this group.
+  public static var channelPersmissionDeniedSendInstantVideoDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendInstantVideo.DefaultRestrictedText") }
+  /// The admins of this group have restricted you from sending video messages here.
+  public static var channelPersmissionDeniedSendInstantVideoForever: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendInstantVideo.Forever") }
+  /// The admins of this group have restricted you from sending video messages here until %@.
+  public static func channelPersmissionDeniedSendInstantVideoUntil(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.Persmission.Denied.SendInstantVideo.Until", p1)
   }
   /// Sending media isn't allowed in this group.
   public static var channelPersmissionDeniedSendMediaDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendMedia.DefaultRestrictedText") }
@@ -1419,6 +1453,22 @@ public final class L10n {
   public static func channelPersmissionDeniedSendMessagesUntil(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.Persmission.Denied.SendMessages.Until", p1)
   }
+  /// Sending music isn't allowed in this group.
+  public static var channelPersmissionDeniedSendMusicDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendMusic.DefaultRestrictedText") }
+  /// The admins of this group have restricted you from sending music here.
+  public static var channelPersmissionDeniedSendMusicForever: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendMusic.Forever") }
+  /// The admins of this group have restricted you from sending music here until %@.
+  public static func channelPersmissionDeniedSendMusicUntil(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.Persmission.Denied.SendMusic.Until", p1)
+  }
+  /// Sending photos isn't allowed in this group.
+  public static var channelPersmissionDeniedSendPhotoDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendPhoto.DefaultRestrictedText") }
+  /// The admins of this group have restricted you from sending photos here.
+  public static var channelPersmissionDeniedSendPhotoForever: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendPhoto.Forever") }
+  /// The admins of this group have restricted you from sending photos here until %@.
+  public static func channelPersmissionDeniedSendPhotoUntil(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.Persmission.Denied.SendPhoto.Until", p1)
+  }
   /// Posting polls isn't allowed in this group.
   public static var channelPersmissionDeniedSendPollDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendPoll.DefaultRestrictedText") }
   /// The admins of this group have restricted you from posting polls here.
@@ -1434,6 +1484,22 @@ public final class L10n {
   /// The admins of this group have restricted you from sending stickers here until %@.
   public static func channelPersmissionDeniedSendStickersUntil(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.Persmission.Denied.SendStickers.Until", p1)
+  }
+  /// Sending video isn't allowed in this group.
+  public static var channelPersmissionDeniedSendVideoDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendVideo.DefaultRestrictedText") }
+  /// The admins of this group have restricted you from sending video here.
+  public static var channelPersmissionDeniedSendVideoForever: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendVideo.Forever") }
+  /// The admins of this group have restricted you from sending video here until %@.
+  public static func channelPersmissionDeniedSendVideoUntil(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.Persmission.Denied.SendVideo.Until", p1)
+  }
+  /// Sending voice messages isn't allowed in this group.
+  public static var channelPersmissionDeniedSendVoiceDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendVoice.DefaultRestrictedText") }
+  /// The admins of this group have restricted you from sending voice messages here.
+  public static var channelPersmissionDeniedSendVoiceForever: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendVoice.Forever") }
+  /// The admins of this group have restricted you from sending voice messages here until %@.
+  public static func channelPersmissionDeniedSendVoiceUntil(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.Persmission.Denied.SendVoice.Until", p1)
   }
   /// Revoke Link
   public static var channelRevokeLinkConfirmHeader: String  { return L10n.tr("Localizable", "Channel.RevokeLink.Confirm.Header") }
@@ -4523,6 +4589,8 @@ public final class L10n {
   public static var createChannelsTooMuch: String  { return L10n.tr("Localizable", "Create.ChannelsTooMuch") }
   /// Group Name
   public static var createGroupNameHolder: String  { return L10n.tr("Localizable", "CreateGroup.NameHolder") }
+  /// You can't create group without members.
+  public static var createGroupAddMemberError: String  { return L10n.tr("Localizable", "CreateGroup.AddMember.Error") }
   /// Artists are welcome to add their own emoji sets using our [@stickers]() bot.
   public static var customEmojiInfo: String  { return L10n.tr("Localizable", "CustomEmoji.Info") }
   /// Subscribe to Telegram Premium to unlock this emoji. [Read More]()
@@ -4857,9 +4925,9 @@ public final class L10n {
   public static var emojiTravelAndPlaces: String  { return L10n.tr("Localizable", "Emoji.TravelAndPlaces") }
   /// Remove
   public static var emojiContextRemove: String  { return L10n.tr("Localizable", "Emoji.Context.Remove") }
-  /// Set Status
+  /// Set a Status
   public static var emojiContextSetStatus: String  { return L10n.tr("Localizable", "Emoji.Context.SetStatus") }
-  /// Status successfully updated.
+  /// Your emoji status has been updated.
   public static var emojiContextSetStatusSuccess: String  { return L10n.tr("Localizable", "Emoji.Context.SetStatus.Success") }
   /// ANIMATED EMOJI
   public static var emojiSearchAnimatedEmoji: String  { return L10n.tr("Localizable", "Emoji.Search.AnimatedEmoji") }

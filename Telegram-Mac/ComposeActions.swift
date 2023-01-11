@@ -66,6 +66,47 @@ func createGroup(with context: AccountContext, selectedPeers:Set<PeerId> = Set()
 }
 
 
+func createGroupDirectly(with context: AccountContext, selectedPeers:Set<PeerId> = Set())  {
+    let chooseName = CreateGroupViewController(titles: ComposeTitles(strings().groupNewGroup, strings().composeCreate), context: context)
+    let signal = chooseName.onComplete.get() |> mapToSignal { result -> Signal<(PeerId?, Bool), NoError> in
+        
+        let createSignal = showModalProgress(signal: context.engine.peers.createGroup(title: result.title, peerIds: result.peerIds, ttlPeriod: result.autoremoveTimeout) |> map { return ($0, result.picture)}, for: context.window, disposeAfterComplete: false)
+
+        return createSignal
+         |> `catch` { _ in
+            return .single((nil, nil))
+         }
+         |> mapToSignal { peerId, picture -> Signal<(PeerId?, Bool), NoError> in
+            if let peerId = peerId {
+                var additionalSignals:[Signal<Void, NoError>] = []
+                
+                if let picture = picture {
+                    let resource = LocalFileReferenceMediaResource(localFilePath: picture, randomId: arc4random64())
+                    let signal:Signal<Void, NoError> = context.engine.peers.updatePeerPhoto(peerId: peerId, photo: context.engine.peers.uploadedPeerPhoto(resource: resource), mapResourceToAvatarSizes: { resource, representations in
+                        return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
+                    }) |> `catch` { _ in .complete() } |> map { _ in }
+                    additionalSignals.append(signal)
+                }
+                
+                let combined:Signal<(PeerId?, Bool), NoError> = combineLatest(additionalSignals) |> map { _ in (nil, false) }
+                
+                
+                
+                return .single((peerId, true)) |> then(combined)
+            }
+            return .single((peerId, true))
+        } |> deliverOnMainQueue
+    }
+    
+    context.bindings.rootNavigation().push(chooseName)
+    chooseName.restart(with: ComposeState(Array(selectedPeers)))
+    _ = signal.start(next: { peerId, complete in
+        if let peerId = peerId, complete {
+            context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+        }
+    })
+}
+
 func createSupergroup(with context: AccountContext, defaultText: String = "") -> Signal<PeerId?, NoError> {
     let chooseName = CreateGroupViewController(titles: ComposeTitles(strings().groupNewGroup, strings().composeCreate), context: context, defaultText: defaultText)
     context.bindings.rootNavigation().push(chooseName)

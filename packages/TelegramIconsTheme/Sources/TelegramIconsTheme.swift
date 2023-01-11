@@ -9053,6 +9053,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var account_settings_set_password: CGImage {
+      if let image = cached.with({ $0["account_settings_set_password"] }) {
+          return image
+      } else {
+          let image = _account_settings_set_password()
+          _ = cached.modify { current in 
+              var current = current
+              current["account_settings_set_password"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -9750,6 +9763,7 @@ public final class TelegramIconsTheme {
   private let _storage_media_play: ()->CGImage
   private let _general_chevron_up: ()->CGImage
   private let _general_chevron_down: ()->CGImage
+  private let _account_settings_set_password: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -10447,7 +10461,8 @@ public final class TelegramIconsTheme {
       storage_music_pause: @escaping()->CGImage,
       storage_media_play: @escaping()->CGImage,
       general_chevron_up: @escaping()->CGImage,
-      general_chevron_down: @escaping()->CGImage
+      general_chevron_down: @escaping()->CGImage,
+      account_settings_set_password: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -11145,5 +11160,6 @@ public final class TelegramIconsTheme {
       self._storage_media_play = storage_media_play
       self._general_chevron_up = general_chevron_up
       self._general_chevron_down = general_chevron_down
+      self._account_settings_set_password = account_settings_set_password
   }
 }
