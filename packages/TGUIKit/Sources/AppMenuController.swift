@@ -598,7 +598,7 @@ final class AppMenuController : NSObject  {
         let panel = Window(contentRect: .zero, styleMask: [.fullSizeContentView], backing: .buffered, defer: false)
         panel._canBecomeMain = false
         panel._canBecomeKey = false
-        panel.level = .popUpMenu
+        panel.level = .screenSaver
         panel.backgroundColor = .clear
         panel.isOpaque = false
         panel.hasShadow = false
@@ -950,7 +950,7 @@ final class AppMenuController : NSObject  {
 }
 
 
-func contextMenuOnScreen()->Bool {
+public func contextMenuOnScreen()->Bool {
     for window in NSApp.windows {
         if let window = window as? Window, let _ = window.weakView {
             return true
