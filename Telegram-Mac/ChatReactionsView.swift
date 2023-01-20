@@ -429,7 +429,7 @@ final class ChatReactionsLayout {
     init(context: AccountContext, message: Message, available: AvailableReactions?, peerAllowed: PeerAllowedReactions?, engine:Reactions, theme: TelegramPresentationTheme, renderType: ChatItemRenderType, isIncoming: Bool, isOutOfBounds: Bool, hasWallpaper: Bool, stateOverlayTextColor: NSColor, openInfo:@escaping(PeerId)->Void, runEffect: @escaping(MessageReaction.Reaction)->Void) {
         
         var mode: Mode = message.id.peerId.namespace == Namespaces.Peer.CloudUser ? .short : .full
-        if context.isPremium || message.peers[message.id.peerId]?.isPremium == true, mode == .short {
+        if mode == .short {
             mode = .full
         }
         self.message = message

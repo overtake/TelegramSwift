@@ -66,11 +66,31 @@ func createGroup(with context: AccountContext, selectedPeers:Set<PeerId> = Set()
 }
 
 
-func createGroupDirectly(with context: AccountContext, selectedPeers:Set<PeerId> = Set())  {
-    let chooseName = CreateGroupViewController(titles: ComposeTitles(strings().groupNewGroup, strings().composeCreate), context: context)
+func createGroupDirectly(with context: AccountContext, selectedPeers: [PeerId] = [], requires: CreateGroupRequires = [], onCreate:@escaping(PeerId)->Void = { _ in })  {
+    let chooseName = CreateGroupViewController(titles: ComposeTitles(strings().groupNewGroup, strings().composeCreate), context: context, requires: requires)
     let signal = chooseName.onComplete.get() |> mapToSignal { result -> Signal<(PeerId?, Bool), NoError> in
         
-        let createSignal = showModalProgress(signal: context.engine.peers.createGroup(title: result.title, peerIds: result.peerIds, ttlPeriod: result.autoremoveTimeout) |> map { return ($0, result.picture)}, for: context.window, disposeAfterComplete: false)
+        let signal: Signal<PeerId?, CreateGroupError>
+        if requires.isEmpty {
+            signal = context.engine.peers.createGroup(title: result.title, peerIds: result.peerIds, ttlPeriod: result.autoremoveTimeout)
+        } else {
+            signal = context.engine.peers.createSupergroup(title: result.title, description: nil, username: result.username, isForum: result.isForum) |> map(Optional.init) |> mapError { error -> CreateGroupError in
+                switch error {
+                case .generic:
+                    return .generic
+                case .restricted:
+                    return .restricted
+                case .tooMuchJoined:
+                    return .tooMuchJoined
+                case .tooMuchLocationBasedGroups:
+                    return .tooMuchLocationBasedGroups
+                case let .serverProvided(value):
+                    return .serverProvided(value)
+                }
+            }
+        }
+        
+        let createSignal = showModalProgress(signal: signal |> map { return ($0, result.picture ) }, for: context.window, disposeAfterComplete: false)
 
         return createSignal
          |> `catch` { _ in
@@ -88,9 +108,14 @@ func createGroupDirectly(with context: AccountContext, selectedPeers:Set<PeerId>
                     additionalSignals.append(signal)
                 }
                 
+                if !requires.isEmpty {
+                    if let username = result.username {
+                        additionalSignals.append(context.engine.peers.updateAddressName(domain: .peer(peerId), name: username) |> `catch` { _ in .complete() })
+                    }
+                    additionalSignals.append(context.peerChannelMemberCategoriesContextsManager.addMembers(peerId: peerId, memberIds: result.peerIds) |> `catch` { _ in .complete() } |> map { _ in })
+                }
+                
                 let combined:Signal<(PeerId?, Bool), NoError> = combineLatest(additionalSignals) |> map { _ in (nil, false) }
-                
-                
                 
                 return .single((peerId, true)) |> then(combined)
             }
@@ -99,10 +124,11 @@ func createGroupDirectly(with context: AccountContext, selectedPeers:Set<PeerId>
     }
     
     context.bindings.rootNavigation().push(chooseName)
-    chooseName.restart(with: ComposeState(Array(selectedPeers)))
+    chooseName.restart(with: ComposeState(selectedPeers))
     _ = signal.start(next: { peerId, complete in
         if let peerId = peerId, complete {
             context.bindings.rootNavigation().push(ChatController(context: context, chatLocation: .peer(peerId)))
+            onCreate(peerId)
         }
     })
 }
@@ -153,40 +179,39 @@ func createChannel(with context: AccountContext) {
     
     let introCompletion: Signal<Void, NoError> = FastSettings.needShowChannelIntro ? intro.onComplete.get() : Signal<Void, NoError>.single(Void())
     
+    let promise: Promise<PeerId?> = Promise()
+    
     let create = introCompletion |> mapToSignal { () -> Signal<PeerId?, NoError> in
-        let create = CreateChannelViewController(titles: ComposeTitles(strings().channelNewChannel, strings().composeNext), context: context)
+        let create = CreateChannelController(context: context, onComplete: { peerId, completed in
+            FastSettings.markChannelIntroHasSeen()
+            context.bindings.rootNavigation().removeAll()
+            
+            var chat: ChatController? = ChatController(context: context, chatLocation: .peer(peerId))
+            var visibility: ChannelVisibilityController? = ChannelVisibilityController(context, peerId: peerId, isChannel: true, isNew: true)
+
+            chat!.navigationController = context.bindings.rootNavigation()
+            visibility!.navigationController = context.bindings.rootNavigation()
+            
+            chat!.loadViewIfNeeded(context.bindings.rootNavigation().bounds)
+            visibility!.loadViewIfNeeded(context.bindings.rootNavigation().bounds)
+            
+            
+            
+            let chatSignal = chat!.ready.get() |> filter { $0 } |> take(1) |> ignoreValues
+            let visibilitySignal = visibility!.ready.get() |> filter { $0 } |> take(1) |> ignoreValues
+
+            _ = combineLatest(queue: .mainQueue(), chatSignal, visibilitySignal).start(completed: {
+                context.bindings.rootNavigation().push(chat!)
+                context.bindings.rootNavigation().push(visibility!)
+
+                chat = nil
+                visibility = nil
+            })
+           
+            promise.set(visibility!.onComplete.get() |> map { _ in return peerId })
+        })
         context.bindings.rootNavigation().push(create)
-        return create.onComplete.get() |> deliverOnMainQueue |> filter {$0.1} |> mapToSignal { peerId, _ -> Signal<PeerId?, NoError> in
-            if let peerId = peerId {
-                FastSettings.markChannelIntroHasSeen()
-                context.bindings.rootNavigation().removeAll()
-                
-                var chat: ChatController? = ChatController(context: context, chatLocation: .peer(peerId))
-                var visibility: ChannelVisibilityController? = ChannelVisibilityController(context, peerId: peerId, isChannel: true, isNew: true)
-
-                chat!.navigationController = context.bindings.rootNavigation()
-                visibility!.navigationController = context.bindings.rootNavigation()
-                
-                chat!.loadViewIfNeeded(context.bindings.rootNavigation().bounds)
-                visibility!.loadViewIfNeeded(context.bindings.rootNavigation().bounds)
-                
-                
-                
-                let chatSignal = chat!.ready.get() |> filter { $0 } |> take(1) |> ignoreValues
-                let visibilitySignal = visibility!.ready.get() |> filter { $0 } |> take(1) |> ignoreValues
-
-                _ = combineLatest(queue: .mainQueue(), chatSignal, visibilitySignal).start(completed: {
-                    context.bindings.rootNavigation().push(chat!)
-                    context.bindings.rootNavigation().push(visibility!)
-
-                    chat = nil
-                    visibility = nil
-                })
-               
-                return visibility!.onComplete.get() |> map {_ in return peerId}
-            }
-            return .single(nil)
-        }
+        return promise.get()
     }
     
     _ = create.start(next: { peerId in

@@ -1294,7 +1294,7 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                     self.genericView.tableView.item(at: i).view?.shakeView()
                 }
                 if let first = permissions.first {
-                    alert(for: context.window, info: first.0)
+                    showModalText(for: context.window, text: first.0)
                     return
                 }
                 

@@ -16,6 +16,19 @@ import SwiftSignalKit
 let normalAccountsLimit: Int = 3
 
 
+struct SetupPasswordConfiguration {
+    
+    let setup2Fa: Bool
+    
+    static func with(appConfiguration: AppConfiguration) -> SetupPasswordConfiguration {
+        if let data = appConfiguration.data {
+            return .init(setup2Fa: data["SETUP_PASSWORD"] != nil)
+        } else {
+            return .init(setup2Fa: false)
+        }
+    }
+}
+
 private final class AccountSearchBarView: View {
     fileprivate let searchView = SearchView(frame: NSMakeRect(0, 0, 100, 30))
     
@@ -314,7 +327,7 @@ private enum AccountInfoEntry : TableItemListNodeEntry {
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .language(_, viewType, current):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsLanguage, icon: theme.icons.settingsLanguage, activeIcon: theme.icons.settingsLanguageActive, type: .nextContext(current), viewType: viewType, action: {
-                arguments.presentController(LanguageViewController(arguments.context), true)
+                arguments.presentController(LanguageController(arguments.context), true)
             }, border:[BorderType.Right], inset:NSEdgeInsets(left: 12, right: 12))
         case let .appearance(_, viewType):
             return GeneralInteractedRowItem(initialSize, stableId: stableId, name: strings().accountSettingsTheme, icon: theme.icons.settingsAppearance, activeIcon: theme.icons.settingsAppearanceActive, type: .next, viewType: viewType, action: {
@@ -417,6 +430,24 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
         index += 1
     }
     
+    var twoFaAnyway: Bool = false
+    #if DEBUG
+    twoFaAnyway = true
+    #endif
+    
+    let has2fa = !has2fa && SetupPasswordConfiguration.with(appConfiguration: context.appConfiguration).setup2Fa
+    
+    if !has2fa || twoFaAnyway {
+        entries.append(.whiteSpace(index: index, height: 10))
+        index += 1
+        entries.append(.set2FaAlert(index: index, viewType: .firstItem))
+        index += 1
+        entries.append(.set2Fa(index: index, settings: twoStepConfiguration, viewType: .lastItem))
+        index += 1
+        entries.append(.whiteSpace(index: index, height: 10))
+        index += 1
+    }
+    
    
 //    entries.append(.whiteSpace(index: index, height: 20))
 //    index += 1
@@ -449,20 +480,7 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
     entries.append(.whiteSpace(index: index, height: 10))
     index += 1
     
-    var twoFaAnyway: Bool = false
-    #if DEBUG
-    twoFaAnyway = true
-    #endif
-    
-    if !has2fa || twoFaAnyway {
-        entries.append(.set2FaAlert(index: index, viewType: .firstItem))
-        index += 1
-        entries.append(.set2Fa(index: index, settings: twoStepConfiguration, viewType: .lastItem))
-        index += 1
-        
-        entries.append(.whiteSpace(index: index, height: 20))
-        index += 1
-    }
+   
     
     if !proxySettings.0.servers.isEmpty {
         let status: String
@@ -839,10 +857,6 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                 if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(10))) {
                     _ = tableView.select(item: item)
                 }
-            } else if navigation.controller is LanguageViewController {
-                if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(11))) {
-                    _ = tableView.select(item: item)
-                }
             } else if navigation.controller is InstalledStickerPacksController {
                 if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(12))) {
                     _ = tableView.select(item: item)
@@ -864,6 +878,10 @@ class AccountViewController : TelegramGenericViewController<AccountControllerVie
                 switch true {
                 case controller.identifier == "proxy":
                     if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(6))) {
+                        _ = tableView.select(item: item)
+                    }
+                case controller.identifier == "language":
+                    if let item = tableView.item(stableId: AnyHashable(AccountInfoEntryId.index(11))) {
                         _ = tableView.select(item: item)
                     }
                 case controller.identifier == "account":

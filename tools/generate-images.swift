@@ -522,7 +522,7 @@ func initialize() -> [String] {
     array.append("profile_share")
     array.append("profile_stats")
     array.append("profile_unblock")
-
+    array.append("profile_translate")
     
     array.append("chat_quiz_explanation")
     array.append("chat_quiz_explanation_bubble_incoming")
@@ -808,6 +808,11 @@ func initialize() -> [String] {
     array.append("general_chevron_down")
     
     array.append("account_settings_set_password")
+    
+    array.append("select_peer_create_channel")
+    array.append("select_peer_create_group")
+    array.append("chat_translate")
+    
 
     return array
 }

@@ -115,7 +115,7 @@ struct EditInfoState : Equatable {
         self.peer = peer
         self.firstName = peer?.firstName ?? ""
         self.lastName = peer?.lastName ?? ""
-        self.username = peer?.username
+        self.username = peer?.usernames.first(where: { $0.isActive })?.username
         self.phone = peer?.phone
         self.about = (peerView.cachedData as? CachedUserData)?.about ?? ""
         self.representation = peer?.smallProfileImage
@@ -143,8 +143,9 @@ struct EditInfoState : Equatable {
     func withUpdatedPeerView(_ peerView: PeerView) -> EditInfoState {
         let peer = peerView.peers[peerView.peerId] as? TelegramUser
         let about = stateInited ? self.about : (peerView.cachedData as? CachedUserData)?.about ?? self.about
+        let username = peer?.usernames.first(where: { $0.isActive })?.username
         let peerStatusSettings = (peerView.cachedData as? CachedUserData)?.peerStatusSettings
-        return EditInfoState(stateInited: true, firstName: stateInited ? self.firstName : peer?.firstName ?? self.firstName, lastName: stateInited ? self.lastName : peer?.lastName ?? self.lastName, about: about, username: peer?.username, phone: peer?.phone, representation: peer?.smallProfileImage, updatingPhotoState: self.updatingPhotoState, peer: peer, peerStatusSettings: peerStatusSettings, addToException: self.addToException)
+        return EditInfoState(stateInited: true, firstName: stateInited ? self.firstName : peer?.firstName ?? self.firstName, lastName: stateInited ? self.lastName : peer?.lastName ?? self.lastName, about: about, username: username, phone: peer?.phone, representation: peer?.smallProfileImage, updatingPhotoState: self.updatingPhotoState, peer: peer, peerStatusSettings: peerStatusSettings, addToException: self.addToException)
     }
     func withUpdatedUpdatingPhotoState(_ f: (PeerInfoUpdatingPhotoState?) -> PeerInfoUpdatingPhotoState?) -> EditInfoState {
         return EditInfoState(stateInited: self.stateInited, firstName: self.firstName, lastName: self.lastName, about: self.about, username: self.username, phone: self.phone, representation: self.representation, updatingPhotoState: f(self.updatingPhotoState), peer: self.peer, peerStatusSettings: self.peerStatusSettings, addToException: self.addToException)
@@ -291,7 +292,7 @@ func EditAccountInfoController(context: AccountContext, focusOnItemTag: EditSett
                         }
                     }
                 } |> castError(UploadPeerPhotoError.self) |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
-                    return context.engine.accountData.updateAccountPhoto(resource: resource, videoResource: nil, videoStartTimestamp: nil, mapResourceToAvatarSizes: { resource, representations in
+                    return context.engine.accountData.updateAccountPhoto(resource: resource, videoResource: nil, videoStartTimestamp: nil, fileId: nil, backgroundColors: nil, mapResourceToAvatarSizes: { resource, representations in
                         return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
                     })
                 } |> deliverOnMainQueue

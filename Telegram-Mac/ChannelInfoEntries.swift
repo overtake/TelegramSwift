@@ -12,7 +12,7 @@ import TelegramCore
 
 import TGUIKit
 import SwiftSignalKit
-
+import InAppSettings
 
 struct ChannelInfoEditingState: Equatable {
     let editingName: String?
@@ -242,6 +242,17 @@ class ChannelInfoArguments : PeerInfoArguments {
     }
     func openReactions(allowedReactions: PeerAllowedReactions?, availableReactions: AvailableReactions?) {
         pushViewController(ReactionsSettingsController(context: context, peerId: peerId, allowedReactions: allowedReactions, availableReactions: availableReactions, mode: .chat(isGroup: false)))
+    }
+    
+    func enableTranslate() {
+        let peerId = self.peerId
+        _ = context.engine.messages.togglePeerMessagesTranslationHidden(peerId: peerId, hidden: false).start()
+        
+        let chat = self.pullNavigation()?.first({ $0 is ChatController }) as? ChatController
+        chat?.chatInteraction.toggleTranslate()
+        
+        self.pullNavigation()?.back()
+
     }
 
     

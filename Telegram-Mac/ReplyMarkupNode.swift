@@ -185,13 +185,14 @@ class ReplyMarkupNode: Node {
     override func measureSize(_ width: CGFloat) {
         for row in markup {
             let count = row.count
-            let single:CGFloat = floorToScreenPixels(System.backingScale, (width - CGFloat(6 * (count - 1))) / CGFloat(count))
+            
+            let single:CGFloat = floorToScreenPixels(System.backingScale, (width - CGFloat(ReplyMarkupNode.buttonPadding * CGFloat(count - 1))) / CGFloat(count))
             for button in row {
                 button.measure(single)
             }
         }
         self.width = width
-        self.height = CGFloat(markup.count * 34) + CGFloat((markup.count - 1) * 6)
+        self.height = CGFloat(CGFloat(markup.count) * ReplyMarkupNode.buttonHeight) + CGFloat(CGFloat(markup.count - 1) * ReplyMarkupNode.buttonPadding)
     }
     
     override var size: NSSize {

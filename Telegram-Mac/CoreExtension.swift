@@ -106,7 +106,7 @@ extension TelegramChatBannedRightsFlags {
             return strings().eventLogServiceDemoteSendInline
         case TelegramChatBannedRightsFlags.banSendMedia:
             return strings().eventLogServiceDemoteSendMedia
-        case TelegramChatBannedRightsFlags.banSendMessages:
+        case TelegramChatBannedRightsFlags.banSendText:
             return strings().eventLogServiceDemoteSendMessages
         case TelegramChatBannedRightsFlags.banSendStickers:
             return strings().eventLogServiceDemoteSendStickers
@@ -206,7 +206,7 @@ func permissionText(from peer: Peer, for flags: TelegramChatBannedRightsFlags) -
     if let (untilDate, personal) = bannedPermission {
         
         switch flags {
-        case .banSendMessages:
+        case .banSendText:
             if personal && untilDate != 0 && untilDate != Int32.max {
                 return strings().channelPersmissionDeniedSendMessagesUntil(stringForFullDate(timestamp: untilDate))
             } else if personal {
@@ -604,6 +604,15 @@ public extension Message {
     var replyMarkup:ReplyMarkupMessageAttribute? {
         for attr in attributes {
             if let attr = attr as? ReplyMarkupMessageAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
+    var translationAttribute: TranslationMessageAttribute? {
+        for attr in attributes {
+            if let attr = attr as? TranslationMessageAttribute {
                 return attr
             }
         }
@@ -1048,7 +1057,7 @@ func canDeleteMessage(_ message:Message, account:Account, mode: ChatMode) -> Boo
     if let channel = message.peers[message.id.peerId] as? TelegramChannel {
         if case .broadcast = channel.info {
             if !message.flags.contains(.Incoming) {
-                return channel.hasPermission(.sendMessages)
+                return channel.hasPermission(.sendText)
             }
             return channel.hasPermission(.deleteAllMessages)
         }
@@ -1273,14 +1282,14 @@ func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context
     if let peer = coreMessageMainPeer(message) as? TelegramChannel {
         if case .broadcast = peer.info {
             if message.isScheduledMessage {
-                return peer.hasPermission(.sendMessages) || peer.hasPermission(.editAllMessages)
+                return peer.hasPermission(.sendText) || peer.hasPermission(.editAllMessages)
             }
             if peer.hasPermission(.pinMessages) {
                 timeInCondition = true
             }
             if peer.hasPermission(.editAllMessages) {
                 return timeInCondition
-            } else if peer.hasPermission(.sendMessages) {
+            } else if peer.hasPermission(.sendText) {
                 return timeInCondition && message.author?.id == chatInteraction.context.peerId
             }
             return false

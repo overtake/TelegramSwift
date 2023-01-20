@@ -139,7 +139,8 @@ struct MessageEntryAdditionalData : Equatable {
     let transribeState:TranscribeAudioState?
     let eventLog: AdminLogEvent?
     let isRevealed: Bool?
-    init(pollStateData: ChatPollStateData = ChatPollStateData(), highlightFoundText: HighlightFoundText? = nil, isThreadLoading: Bool = false, updatingMedia: ChatUpdatingMessageMedia? = nil, chatTheme: TelegramPresentationTheme? = nil, reactions: AvailableReactions? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], transribeState:TranscribeAudioState? = nil, eventLog: AdminLogEvent? = nil, isRevealed: Bool? = nil) {
+    let translate: ChatLiveTranslateContext.State.Result?
+    init(pollStateData: ChatPollStateData = ChatPollStateData(), highlightFoundText: HighlightFoundText? = nil, isThreadLoading: Bool = false, updatingMedia: ChatUpdatingMessageMedia? = nil, chatTheme: TelegramPresentationTheme? = nil, reactions: AvailableReactions? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], transribeState:TranscribeAudioState? = nil, eventLog: AdminLogEvent? = nil, isRevealed: Bool? = nil, translate: ChatLiveTranslateContext.State.Result? = nil) {
         self.pollStateData = pollStateData
         self.highlightFoundText = highlightFoundText
         self.isThreadLoading = isThreadLoading
@@ -150,6 +151,7 @@ struct MessageEntryAdditionalData : Equatable {
         self.transribeState = transribeState
         self.eventLog = eventLog
         self.isRevealed = isRevealed
+        self.translate = translate
     }
 }
 
@@ -460,7 +462,7 @@ func <(lhs: ChatHistoryEntry, rhs: ChatHistoryEntry) -> Bool {
 }
 
 
-func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil, addRepliesHeader: Bool = false, addTopThreadInset: CGFloat? = nil, updatingMedia: [MessageId: ChatUpdatingMessageMedia] = [:], adMessage:Message? = nil, dynamicAdMessages: [Message] = [], chatTheme: TelegramPresentationTheme = theme, reactions: AvailableReactions? = nil, transribeState: [MessageId : TranscribeAudioState] = [:], topicCreatorId: PeerId? = nil, mediaRevealed: Set<MessageId> = Set()) -> [ChatHistoryEntry] {
+func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:MessageIndex? = nil, includeHoles: Bool = true, dayGrouping: Bool = false, renderType: ChatItemRenderType = .list, includeBottom:Bool = false, timeDifference: TimeInterval = 0, ranks:CachedChannelAdminRanks? = nil, pollAnswersLoading: [MessageId : ChatPollStateData] = [:], threadLoading: MessageId? = nil, groupingPhotos: Bool = false, autoplayMedia: AutoplayMediaPreferences? = nil, searchState: SearchMessagesResultState? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], topFixedMessages: [Message]? = nil, customChannelDiscussionReadState: MessageId? = nil, customThreadOutgoingReadState: MessageId? = nil, addRepliesHeader: Bool = false, addTopThreadInset: CGFloat? = nil, updatingMedia: [MessageId: ChatUpdatingMessageMedia] = [:], adMessage:Message? = nil, dynamicAdMessages: [Message] = [], chatTheme: TelegramPresentationTheme = theme, reactions: AvailableReactions? = nil, transribeState: [MessageId : TranscribeAudioState] = [:], topicCreatorId: PeerId? = nil, mediaRevealed: Set<MessageId> = Set(), translate: ChatLiveTranslateContext.State? = nil) -> [ChatHistoryEntry] {
     var entries: [ChatHistoryEntry] = []
     
     var groupedPhotos:[ChatHistoryEntry] = []
@@ -807,7 +809,7 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         }
         
         let pollData = pollAnswersLoading[message.id] ?? ChatPollStateData()
-        additionalData = MessageEntryAdditionalData(pollStateData: pollData, highlightFoundText: highlightFoundText, isThreadLoading: threadLoading == message.id, updatingMedia: updatingMedia[message.id], chatTheme: chatTheme, reactions: reactions, animatedEmojiStickers: animatedEmojiStickers, transribeState: transribeState[message.id], isRevealed: mediaRevealed.contains(message.id))
+        additionalData = MessageEntryAdditionalData(pollStateData: pollData, highlightFoundText: highlightFoundText, isThreadLoading: threadLoading == message.id, updatingMedia: updatingMedia[message.id], chatTheme: chatTheme, reactions: reactions, animatedEmojiStickers: animatedEmojiStickers, transribeState: transribeState[message.id], isRevealed: mediaRevealed.contains(message.id), translate: translate?.result[message.id])
         let data = ChatHistoryEntryData(entry.location, additionalData, autoplayMedia)
         
        

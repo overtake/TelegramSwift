@@ -3047,6 +3047,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             return item
         }
         
+        
+        
         var item:TableRowItem?
         var animate:Bool = false
         var focus: TableScrollFocus = .init(focus: false)
@@ -3100,6 +3102,12 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         let bottomInset = self.bottomInset != 0 ? (self.bottomInset) : 0
         let height:CGFloat = self is HorizontalTableView ? frame.width : frame.height
 
+        let documentHeight = self is HorizontalTableView ? documentSize.width : documentSize.height
+        
+        if documentHeight <= height {
+            return
+        }
+        
         if let item = item {
             rowRect = self.rectOf(item: item)
             var state = state

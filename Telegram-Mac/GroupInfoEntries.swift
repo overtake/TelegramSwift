@@ -2013,7 +2013,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
                     var block: [GroupInfoEntry] = []
                     var activePermissionCount: Int?
                     
-                    let permissionList = allGroupPermissionList(peer: group)
+                    let permissionList = internal_allPossibleGroupPermissionList
                     if let defaultBannedRights = channel.defaultBannedRights {
                         var count = 0
                         for (right, _) in permissionList {
@@ -2040,7 +2040,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
 
                     if !channel.flags.contains(.isGigagroup) {
                         if access.canEditMembers {
-                            block.append(.permissions(section: GroupInfoSection.admin.rawValue, count: activePermissionCount.flatMap({ "\($0)/\(permissionList.count)" }) ?? "", viewType: .singleItem))
+                            block.append(.permissions(section: GroupInfoSection.admin.rawValue, count: activePermissionCount.flatMap({ "\(max(0, $0 - 1))/\(permissionList.count - 1)" }) ?? "", viewType: .singleItem))
                         }
                     } else {
                         block.append(.blocked(section: GroupInfoSection.admin.rawValue, count: cachedChannelData.participantsSummary.kickedCount, viewType: .singleItem))

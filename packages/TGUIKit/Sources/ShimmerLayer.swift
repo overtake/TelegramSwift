@@ -107,6 +107,11 @@ private final class ShimmerEffectForegroundLayer: SimpleLayer {
         }
     }
     
+    func reloadAnimation() {
+        self.imageView.removeAnimation(forKey: "shimmer")
+        self.addImageAnimation()
+    }
+    
     private func updateAnimation() {
         let shouldBeAnimating = self.absoluteLocation != nil
         if shouldBeAnimating != self.shouldBeAnimating {
@@ -273,6 +278,144 @@ public class ShimmerLayer: SimpleLayer {
             })
             if let _ = self.maskView {
                 self.mask = nil
+                self.maskView = nil
+            }
+        }
+        
+        
+        self.backgroundView.frame = CGRect(origin: CGPoint(), size: size)
+        self.foregroundView.frame = CGRect(origin: CGPoint(), size: size)
+        self.effectView.frame = CGRect(origin: CGPoint(), size: size)
+    }
+}
+
+
+public class ShimmerView: View {
+    private let backgroundView: SimpleLayer
+    private let effectView: ShimmerEffectForegroundLayer
+    private let foregroundView: SimpleLayer
+    
+    private var maskView: SimpleLayer?
+    
+    private var currentData: Data?
+    private var currentBackgroundColor: NSColor?
+    private var currentForegroundColor: NSColor?
+    private var currentShimmeringColor: NSColor?
+    private var currentSize = CGSize()
+    
+    public override init() {
+        self.backgroundView = SimpleLayer()
+        self.effectView = ShimmerEffectForegroundLayer()
+        self.foregroundView = SimpleLayer()
+        
+        super.init()
+        
+        self.layer?.addSublayer(self.backgroundView)
+        self.layer?.addSublayer(self.effectView)
+        self.layer?.addSublayer(self.foregroundView)
+        
+        
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+    
+    public func updateAbsoluteRect(_ rect: CGRect, within containerSize: CGSize) {
+        self.effectView.updateAbsoluteRect(rect, within: containerSize)
+    }
+    
+    public func reloadAnimation() {
+        self.effectView.reloadAnimation()
+    }
+    
+    public func update(backgroundColor: NSColor?, foregroundColor: NSColor = NSColor(rgb: 0x748391, alpha: 0.2), shimmeringColor: NSColor = NSColor(rgb: 0x748391, alpha: 0.35), data: Data?, size: CGSize, imageSize: NSSize, cornerRadius: CGFloat? = nil) {
+        if self.currentData == data, let currentBackgroundColor = self.currentBackgroundColor, currentBackgroundColor.isEqual(backgroundColor), let currentForegroundColor = self.currentForegroundColor, currentForegroundColor.isEqual(foregroundColor), let currentShimmeringColor = self.currentShimmeringColor, currentShimmeringColor.isEqual(shimmeringColor), self.currentSize == size {
+            return
+        }
+        
+        self.currentBackgroundColor = backgroundColor
+        self.currentForegroundColor = foregroundColor
+        self.currentShimmeringColor = shimmeringColor
+        self.currentData = data
+        self.currentSize = size
+        
+        self.backgroundView.backgroundColor = foregroundColor.cgColor
+        
+        self.effectView.update(backgroundColor: backgroundColor == nil ? .clear : foregroundColor, foregroundColor: shimmeringColor)
+        
+        
+        let signal: Signal<CGImage?, NoError> = Signal { subscriber in
+            
+            let image = generateImage(size, rotatedContext: { size, context in
+                if let backgroundColor = backgroundColor {
+                    context.setFillColor(backgroundColor.cgColor)
+                    context.setBlendMode(.copy)
+                    context.fill(CGRect(origin: CGPoint(), size: size))
+                    context.setFillColor(NSColor.clear.cgColor)
+                } else {
+                    context.clear(CGRect(origin: CGPoint(), size: size))
+                    context.setFillColor(NSColor.black.cgColor)
+                }
+                
+                if let data = data {
+                    var path = decodeStickerThumbnailData(data)
+                    if !path.hasPrefix("z") {
+                        path = "\(path)z"
+                    }
+                    let reader = PathDataReader(input: path)
+                    let segments = reader.read()
+
+                    let scale = max(size.width, size.height) / max(imageSize.width, imageSize.height)
+                    context.scaleBy(x: scale, y: scale)
+                    renderPath(segments, context: context)
+                } else {
+                    let path = CGMutablePath()
+                    if let cornerRadius = cornerRadius {
+                        path.addRoundedRect(in: CGRect(origin: CGPoint(), size: size), cornerWidth: cornerRadius, cornerHeight: cornerRadius)
+                    } else {
+                        path.addRoundedRect(in: CGRect(origin: CGPoint(), size: size), cornerWidth: min(min(4, size.height / 2), size.width / 2), cornerHeight: min(min(size.height / 2, 4), size.height / 2))
+                    }
+                    context.addPath(path)
+                    context.fillPath()
+                }
+            })
+            
+            subscriber.putNext(image)
+            subscriber.putCompletion()
+            
+            return EmptyDisposable
+        }
+        |> runOn(Queue.concurrentDefaultQueue())
+        |> deliverOnMainQueue
+        
+                
+        if backgroundColor == nil {
+            self.foregroundView.contents = nil
+            
+            let maskView: SimpleLayer
+            if let current = self.maskView {
+                maskView = current
+            } else {
+                maskView = SimpleLayer()
+                maskView.frame = CGRect(origin: CGPoint(), size: size)
+                self.maskView = maskView
+                self.layer?.mask = maskView
+            }
+            _ = signal.start(next: { [weak self] image in
+                self?.maskView?.contents = image
+            })
+        } else {
+            _ = signal.start(next: { [weak self] image in
+                self?.foregroundView.contents = image
+                self?.maskView?.contents = image
+            })
+            if let _ = self.maskView {
+                self.layer?.mask = nil
                 self.maskView = nil
             }
         }

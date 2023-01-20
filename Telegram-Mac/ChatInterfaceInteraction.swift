@@ -183,7 +183,9 @@ final class ChatInteraction : InterfaceObserver  {
     var showEmojiUseTooltip:()->Void = { }
     var restartTopic: ()->Void = { }
     var revealMedia:(MessageId)->Void = { _ in }
-
+    var toggleTranslate:()->Void = { }
+    var hideTranslation:()->Void = { }
+    var doNotTranslate:(String?)->Void = { _ in }
     var openPendingRequests:()->Void = { }
     var dismissPendingRequests:([PeerId])->Void = { _ in }
     var setupChatThemes:()->Void = { }
@@ -754,6 +756,8 @@ final class ChatInteraction : InterfaceObserver  {
                             }
 
                         }
+                    case let .requestPeer(peerType, buttonId):
+                        selectSpecificPeer(context: context, peerType: peerType, messageId: keyboardMessage.id, buttonId: buttonId)
                     default:
                         break
                     }
@@ -830,4 +834,5 @@ final class ChatInteraction : InterfaceObserver  {
     }
     
 }
+
 

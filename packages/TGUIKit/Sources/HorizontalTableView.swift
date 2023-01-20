@@ -128,4 +128,24 @@ open class HorizontalScrollView : ScrollView {
             superview?.scrollWheel(with: event)
         }
     }
+    
+    public func makeScrollPoint(_ event: NSEvent) -> NSPoint {
+        var scrollPoint = contentView.bounds.origin
+        let isInverted: Bool = System.isScrollInverted
+        if event.scrollingDeltaY != 0 {
+            if isInverted {
+                scrollPoint.x += -event.scrollingDeltaY
+            } else {
+                scrollPoint.x -= event.scrollingDeltaY
+            }
+        }
+        if event.scrollingDeltaX != 0 {
+            if !isInverted {
+                scrollPoint.x += -event.scrollingDeltaX
+            } else {
+                scrollPoint.x -= event.scrollingDeltaX
+            }
+        }
+        return scrollPoint
+    }
 }

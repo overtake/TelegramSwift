@@ -57,7 +57,7 @@ private struct State: Equatable {
 }
 
 func stringForGroupPermission(right: TelegramChatBannedRightsFlags, channel: TelegramChannel?) -> String {
-    if right.contains(.banSendMessages) {
+    if right.contains(.banSendText) {
         return strings().channelBanUserPermissionSendMessages
     } else if right.contains(.banSendMedia) {
         return strings().channelBanUserPermissionSendMedia
@@ -96,7 +96,7 @@ func stringForGroupPermission(right: TelegramChatBannedRightsFlags, channel: Tel
 }
 
 func compactStringForGroupPermission(right: TelegramChatBannedRightsFlags, channel: TelegramChannel?) -> String {
-    if right.contains(.banSendMessages) {
+    if right.contains(.banSendText) {
         return strings().groupPermissionNoSendMessages
     } else if right.contains(.banSendMedia) {
         return strings().groupPermissionNoSendMedia
@@ -119,8 +119,8 @@ func compactStringForGroupPermission(right: TelegramChatBannedRightsFlags, chann
     }
 }
 
-private let internal_allPossibleGroupPermissionList: [(TelegramChatBannedRightsFlags, TelegramChannelPermission)] = [
-    (.banSendMessages, .banMembers),
+let internal_allPossibleGroupPermissionList: [(TelegramChatBannedRightsFlags, TelegramChannelPermission)] = [
+    (.banSendText, .banMembers),
     (.banSendMedia, .banMembers),
     (.banSendPhotos, .banMembers),
     (.banSendVideos, .banMembers),
@@ -142,9 +142,8 @@ private let internal_allPossibleGroupPermissionList: [(TelegramChatBannedRightsF
 public func allGroupPermissionList(peer: Peer) -> [(TelegramChatBannedRightsFlags, TelegramChannelPermission)] {
     if let channel = peer as? TelegramChannel, channel.flags.contains(.isForum) {
         return [
-            (.banSendMessages, .banMembers),
+            (.banSendText, .banMembers),
             (.banSendMedia, .banMembers),
-            (.banSendPolls, .banMembers),
             (.banAddMembers, .banMembers),
             (.banPinMessages, .pinMessages),
             (.banManageTopics, .manageTopics),
@@ -152,9 +151,8 @@ public func allGroupPermissionList(peer: Peer) -> [(TelegramChatBannedRightsFlag
         ]
     } else {
         return [
-            (.banSendMessages, .banMembers),
+            (.banSendText, .banMembers),
             (.banSendMedia, .banMembers),
-            (.banSendPolls, .banMembers),
             (.banAddMembers, .banMembers),
             (.banPinMessages, .pinMessages),
             (.banChangeInfo, .changeInfo)
@@ -172,6 +170,7 @@ func banSendMediaSubList() -> [(TelegramChatBannedRightsFlags, TelegramChannelPe
         (.banSendVoice, .banMembers),
         (.banSendInstantVideos, .banMembers),
         (.banEmbedLinks, .banMembers),
+        (.banSendPolls, .banMembers),
     ]
 }
 
@@ -186,13 +185,13 @@ let publicGroupRestrictedPermissions: TelegramChatBannedRightsFlags = [
 
 func groupPermissionDependencies(_ right: TelegramChatBannedRightsFlags) -> TelegramChatBannedRightsFlags {
     if right.contains(.banSendMedia) || banSendMediaSubList().contains(where: { $0.0 == right }) {
-        return [.banSendMessages]
+        return [.banSendText]
     } else if right.contains(.banSendGifs) {
-        return [.banSendMessages]
+        return [.banSendText]
     } else if right.contains(.banEmbedLinks) {
-        return [.banSendMessages]
+        return [.banSendText]
     } else if right.contains(.banSendPolls) {
-        return [.banSendMessages]
+        return [.banSendText]
     } else if right.contains(.banChangeInfo) {
         return []
     } else if right.contains(.banAddMembers) {
@@ -457,7 +456,7 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
                 
             }
             for item in items {
-                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.peer.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
+                entries.append(.custom(sectionId: sectionId, index: index, value: .none, identifier: _id_peer(item.participant.peer.id), equatable: .init(item), comparable: nil, item: { initialSize, stableId in
                     var text: String?
                     switch item.participant.participant {
                     case let .member(_, _, _, banInfo, _):

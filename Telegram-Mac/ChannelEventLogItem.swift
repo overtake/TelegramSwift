@@ -14,7 +14,7 @@ import DateUtils
 
 private var banHelp:[TelegramChatBannedRightsFlags] {
     var order:[TelegramChatBannedRightsFlags] = []
-    order.append(.banSendMessages)
+    order.append(.banSendText)
     order.append(.banReadMessages)
     order.append(.banChangeInfo)
     order.append(.banSendMedia)

@@ -665,7 +665,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                                         settings.insert(.channels)
                                     }
                                     
-                                    _ = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectChat, limit: 1, behavior: SelectChatsBehavior(settings: settings, checkInvite: false, excludePeerIds: [], limit: 1)).start(next: { peerIds in
+                                    _ = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectChat, limit: 1, behavior: SelectChatsBehavior(settings: settings, excludePeerIds: [], limit: 1)).start(next: { peerIds in
                                         if let peerId = peerIds.first {
                                             let signal = context.account.postbox.loadedPeerWithId(peerId) |> deliverOnMainQueue
                                             _ = signal.start(next: { peer in
@@ -706,7 +706,7 @@ func execute(inapp:inAppLink, afterComplete: @escaping(Bool)->Void = { _ in }) {
                 }
             }
             
-            let result = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectGroupOrChannel, behavior: SelectChatsBehavior(settings: payload.isEmpty ? [.groups, .channels] : [.groups], checkInvite: true, limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
+            let result = selectModalPeers(window: context.window, context: context, title: strings().selectPeersTitleSelectGroupOrChannel, behavior: SelectChatsBehavior(settings: payload.isEmpty ? [.groups, .channels, .checkInvite] : [.groups, .checkInvite], limit: 1), confirmation: { peerIds -> Signal<Bool, NoError> in
                 return .single(true)
             })
             |> filter { $0.first != nil }
