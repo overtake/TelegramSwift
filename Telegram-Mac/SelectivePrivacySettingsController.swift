@@ -536,7 +536,7 @@ class SelectivePrivacySettingsController: TableViewController {
                         return current
                     }
                 } |> castError(UploadPeerPhotoError.self) |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
-                    return context.engine.accountData.updateFallbackPhoto(resource: resource, videoResource: nil, videoStartTimestamp: nil, mapResourceToAvatarSizes: { resource, representations in
+                    return context.engine.accountData.updateFallbackPhoto(resource: resource, videoResource: nil, videoStartTimestamp: nil, fileId: nil, backgroundColors: nil, mapResourceToAvatarSizes: { resource, representations in
                         return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
                     })
             }
@@ -605,7 +605,7 @@ class SelectivePrivacySettingsController: TableViewController {
                         let (thumbResource, videoResource) = (LocalFileReferenceMediaResource(localFilePath: thumb, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true),
                                                               LocalFileReferenceMediaResource(localFilePath: video, randomId: arc4random64(), isUniquelyReferencedTemporaryFile: true))
                                             
-                        return context.engine.accountData.updateFallbackPhoto(resource: thumbResource, videoResource: videoResource, videoStartTimestamp: keyFrame, mapResourceToAvatarSizes: { resource, representations in
+                        return context.engine.accountData.updateFallbackPhoto(resource: thumbResource, videoResource: videoResource, videoStartTimestamp: keyFrame, fileId: nil, backgroundColors: nil, mapResourceToAvatarSizes: { resource, representations in
                             return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
                         }) |> mapToSignal { result in
                             switch result {

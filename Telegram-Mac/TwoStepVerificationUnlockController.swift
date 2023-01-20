@@ -517,9 +517,7 @@ func twoStepVerificationUnlockController(context: AccountContext, mode: TwoStepV
                 checkDisposable.set((context.engine.auth.requestTwoStepVerifiationSettings(password: password)
                     |> mapToSignal { settings -> Signal<(TwoStepVerificationSettings, TwoStepVerificationPendingEmail?), AuthorizationPasswordVerificationError> in
                         return context.engine.auth.twoStepVerificationConfiguration()
-                            |> mapError { _ -> AuthorizationPasswordVerificationError in
-                                return .generic
-                            }
+                    |> castError(AuthorizationPasswordVerificationError.self)
                             |> map { configuration in
                                 var pendingEmail: TwoStepVerificationPendingEmail?
                                 if case let .set(configuration) = configuration {
@@ -975,8 +973,7 @@ private func twoStepVerificationResetPasswordController(context: AccountContext,
                 return $0.withUpdatedChecking(true)
             }
             
-            
-            resetDisposable.set((context.engine.auth.checkPasswordRecoveryCode(code: code) |> deliverOnMainQueue).start(error: { error in
+            resetDisposable.set((context.engine.auth.performPasswordRecovery(code: code, updatedPassword: .none) |> deliverOnMainQueue).start(error: { error in
                 
                 let errorText: String
                 switch error {

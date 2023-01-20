@@ -2362,6 +2362,7 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                profile_share: { generateProfileIcon(NSImage(named: "Icon_Profile_Share")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
                                                profile_stats: { generateProfileIcon(NSImage(named: "Icon_Profile_Stats")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
                                                profile_unblock: { generateProfileIcon(NSImage(named: "Icon_Profile_Unblock")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
+                                               profile_translate: { generateProfileIcon(NSImage(named: "Icon_Profile_Translate")!.precomposed(palette.accentIcon), backgroundColor: palette.accent) },
                                                chat_quiz_explanation: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIcon) },
                                                chat_quiz_explanation_bubble_incoming: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_incoming) },
                                                chat_quiz_explanation_bubble_outgoing: { NSImage(named: "Icon_QuizExplanation")!.precomposed(palette.accentIconBubble_outgoing) },
@@ -2560,7 +2561,12 @@ private func generateIcons(from palette: ColorPalette, bubbled: Bool) -> Telegra
                                                 storage_music_pause: { NSImage(named: "Icon_Pip_Pause")!.precomposed(palette.underSelectedColor, zoom: 0.8) },
                                                 storage_media_play: { NSImage(named: "Icon_Pip_Play")!.precomposed(palette.underSelectedColor, zoom: 0.6) },
                                                 general_chevron_up: { NSImage(named: "Icon_HorizontalChevron")!.precomposed(palette.grayIcon, flipVertical: true) },
-                                                general_chevron_down: { NSImage(named: "Icon_HorizontalChevron")!.precomposed(palette.grayIcon) }
+                                                general_chevron_down: { NSImage(named: "Icon_HorizontalChevron")!.precomposed(palette.grayIcon) },
+                                                account_settings_set_password: { NSImage(named: "Icon_Settings_AddPassword")!.precomposed(palette.accent, flipVertical: true) },
+                                                select_peer_create_channel: { NSImage(named: "Icon_CreateChannel")!.precomposed(palette.accent, flipVertical: true) },
+                                                select_peer_create_group: { NSImage(named: "Icon_CreateGroup")!.precomposed(palette.accent, flipVertical: true) },
+                                                chat_translate: { NSImage(named: "Icon_Chat_Translate")!.precomposed(palette.accent) }
+
     )
 
 }

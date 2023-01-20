@@ -1633,7 +1633,7 @@ class ShareModalController: ModalViewController, Notifable, TGModernGrowingDeleg
                         
                         return prepareEntries(from: previous.swap(entries), to: entries, context: context, initialSize: initialSize, animated: true, multipleSelection: multipleSelection, selectInteraction:selectInteraction, share: share)
                         
-                    }
+                    } |> take(1)
                 } else {
                     var signal:Signal<(ChatListView,ViewUpdateType), NoError>
                     

@@ -421,7 +421,6 @@ final class Avatar_BgListView : View {
     
     func set(colors: [AvatarColor], context: AccountContext, select: @escaping(AvatarColor)->Void, animated: Bool) {
         
-        NSLog("\(tableView.frame)")
         tableView.beginTableUpdates()
         
         

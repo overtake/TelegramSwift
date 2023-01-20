@@ -183,13 +183,21 @@ class StickerMediaContentView: ChatMediaContentView {
                 return
             }
             
+            
             if let reference = media.stickerReference {
-                showModal(with:StickerPackPreviewModalController(context, peerId: peerId, references: [.stickers(reference)]), for:window)
-            } else if let reference = media.emojiReference {
-                showModal(with:StickerPackPreviewModalController(context, peerId: peerId, references: [.emoji(reference)]), for:window)
+                showModal(with:StickerPackPreviewModalController(context, peerId: peerId, references: [.stickers(reference)]), for: context.window)
             } else if let sticker = media.stickerText, !sticker.isEmpty {
-                self.playIfNeeded(true)
-                parameters?.runEmojiScreenEffect(sticker)
+                let signal = context.diceCache.animationEffect(for: sticker.emojiUnmodified) |> deliverOnMainQueue
+                _ = signal.start(next: { [weak self] files in
+                    if files.isEmpty {
+                        if let reference = media.emojiReference {
+                            showModal(with:StickerPackPreviewModalController(context, peerId: peerId, references: [.emoji(reference)]), for: context.window)
+                        }
+                    } else {
+                        self?.parameters?.runEmojiScreenEffect(sticker)
+                    }
+                    self?.playIfNeeded(true)
+                })
             }
         }
     }

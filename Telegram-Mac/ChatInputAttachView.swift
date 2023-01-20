@@ -89,10 +89,6 @@ class ChatInputAttachView: ImageButton, Notifable {
                     }
                     
                     items.append(ContextMenuItem(strings().inputAttachPopoverPhotoOrVideo, handler: { [weak self] in
-                        if let permissionText = permissionText(from: peer, for: .banSendMedia) {
-                            alert(for: context.window, info: permissionText)
-                            return
-                        }
                         self?.chatInteraction.attachPhotoOrVideo()
                     }, itemImage: MenuAnimation.menu_shared_media.value))
                     
@@ -141,19 +137,11 @@ class ChatInputAttachView: ImageButton, Notifable {
                     }
                     
                     items.append(ContextMenuItem(strings().inputAttachPopoverFile, handler: { [weak self] in
-                        if let permissionText = permissionText(from: peer, for: .banSendMedia) {
-                            alert(for: context.window, info: permissionText)
-                            return
-                        }
                         self?.chatInteraction.attachFile(false)
                     }, itemImage: MenuAnimation.menu_file.value))
                     
                     items.append(ContextMenuItem(strings().inputAttachPopoverPicture, handler: { [weak self] in
                         guard let `self` = self else {return}
-                        if let permissionText = permissionText(from: peer, for: .banSendMedia) {
-                            alert(for: self.chatInteraction.context.window, info: permissionText)
-                            return
-                        }
                         self.chatInteraction.attachPicture()
                     }, itemImage: MenuAnimation.menu_camera.value))
                     
@@ -166,7 +154,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                     }
                     
                     if let peer = chatInteraction.presentation.peer as? TelegramChannel {
-                        if peer.hasPermission(.sendMessages) {
+                        if peer.hasPermission(.sendText) {
                             canAttachPoll = true
                         }
                     }
@@ -178,7 +166,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                         items.append(ContextMenuItem(strings().inputAttachPopoverPoll, handler: { [weak self] in
                             guard let `self` = self else {return}
                             if let permissionText = permissionText(from: peer, for: .banSendPolls) {
-                                alert(for: context.window, info: permissionText)
+                                showModalText(for: context.window, text: permissionText)
                                 return
                             }
                             showModal(with: NewPollController(chatInteraction: self.chatInteraction), for: self.chatInteraction.context.window)
@@ -188,6 +176,10 @@ class ChatInputAttachView: ImageButton, Notifable {
                     
                     
                     items.append(ContextMenuItem(strings().inputAttachPopoverLocation, handler: { [weak self] in
+                        if let permissionText = permissionText(from: peer, for: .banSendText) {
+                            showModalText(for: context.window, text: permissionText)
+                            return
+                        }
                         self?.chatInteraction.attachLocation()
                     }, itemImage: MenuAnimation.menu_location.value))
                 }

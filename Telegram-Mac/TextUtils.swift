@@ -787,6 +787,10 @@ func serviceMessageText(_ message:Message, account:Account, isReplied: Bool = fa
             }
         case .attachMenuBotAllowed:
             text = strings().chatServiceBotWriteAllowed
+        case let .requestedPeer(_, peerId):
+            if let peer = message.peers[peerId], let botPeer = message.peers[message.id.peerId] {
+                text = strings().chatServicePeerRequested(peer.displayTitle, botPeer.displayTitle)
+            }
         }
     }
     return (text, entities, media)

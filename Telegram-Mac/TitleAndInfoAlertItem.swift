@@ -9,23 +9,23 @@
 import Foundation
 import TGUIKit
 
-final class TurnOnNotificationsRowItem : GeneralRowItem {
+final class TitleAndInfoAlertItem : GeneralRowItem {
     fileprivate let header: TextViewLayout
     fileprivate let text: TextViewLayout
-    init(_ initialSize: NSSize, stableId: AnyHashable, viewType: GeneralViewType) {
-        let hAttr: NSAttributedString = .initialize(string: strings().notificationSettingsTurnOnTextTitle, color: theme.colors.text, font: .medium(.text))
-        let tAttr: NSAttributedString = .initialize(string: strings().notificationSettingsTurnOnTextText, color: theme.colors.text, font: .normal(.text))
+    init(_ initialSize: NSSize, stableId: AnyHashable, title: String, info: String, viewType: GeneralViewType, inset: NSEdgeInsets = NSEdgeInsets(left: 30, right: 30)) {
+        let hAttr: NSAttributedString = .initialize(string: title, color: theme.colors.text, font: .medium(.text))
+        let tAttr: NSAttributedString = .initialize(string: info, color: theme.colors.text, font: .normal(.text))
         header = .init(hAttr)
         text = .init(tAttr)
 
-        super.init(initialSize, stableId: stableId, viewType: viewType)
+        super.init(initialSize, stableId: stableId, viewType: viewType, inset: inset)
     }
     
     override func makeSize(_ width: CGFloat, oldWidth: CGFloat = 0) -> Bool {
         _ = super.makeSize(width, oldWidth: oldWidth)
         
-        header.measure(width: width - viewType.innerInset.left - viewType.innerInset.right - 30)
-        text.measure(width: width - viewType.innerInset.left - viewType.innerInset.right)
+        header.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right - 30)
+        text.measure(width: blockWidth - viewType.innerInset.left - viewType.innerInset.right)
 
         return true
     }
@@ -34,13 +34,13 @@ final class TurnOnNotificationsRowItem : GeneralRowItem {
         return viewType.innerInset.bottom + viewType.innerInset.top + 6 + header.layoutSize.height + text.layoutSize.height
     }
     override func viewClass() -> AnyClass {
-        return TurnOnNotificationsRowView.self
+        return TitleAndInfoAlertItemView.self
     }
     
 }
 
 
-private final class TurnOnNotificationsRowView: GeneralContainableRowView {
+private final class TitleAndInfoAlertItemView: GeneralContainableRowView {
     private let imageView: ImageView = ImageView()
     private let textView = TextView()
     private let headerView = TextView()
@@ -65,7 +65,7 @@ private final class TurnOnNotificationsRowView: GeneralContainableRowView {
     override func layout() {
         super.layout()
         
-        guard let item = item as? TurnOnNotificationsRowItem else {
+        guard let item = item as? TitleAndInfoAlertItem else {
             return
         }
         
@@ -77,7 +77,7 @@ private final class TurnOnNotificationsRowView: GeneralContainableRowView {
     
     override func set(item: TableRowItem, animated: Bool = false) {
         super.set(item: item, animated: animated)
-        guard let item = item as? TurnOnNotificationsRowItem else {
+        guard let item = item as? TitleAndInfoAlertItem else {
             return
         }
         

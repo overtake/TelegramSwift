@@ -392,7 +392,7 @@ private func privacySearchableItems(context: AccountContext, privacySettings: Ac
     let icon: SettingsSearchableItemIcon = .privacy
     
     let presentPrivacySettings: (AccountContext, (SettingsSearchableItemPresentation, ViewController?) -> Void, PrivacyAndSecurityEntryTag?) -> Void = { context, present, itemTag in
-        present(.push, PrivacyAndSecurityViewController(context, initialSettings: nil, focusOnItemTag: itemTag))
+        present(.push, PrivacyAndSecurityViewController(context, initialSettings: nil, focusOnItemTag: itemTag, twoStepVerificationConfiguration: nil))
     }
     
     let presentSelectivePrivacySettings: (AccountContext, SelectivePrivacySettingsKind, @escaping (SettingsSearchableItemPresentation, ViewController?) -> Void) -> Void = { context, kind, present in
@@ -611,7 +611,7 @@ private func languageSearchableItems(context: AccountContext, localizations: [Lo
     
     var items: [SettingsSearchableItem] = []
     items.append(SettingsSearchableItem(id: .language(0), title: strings().accountSettingsLanguage, alternate: synonyms(strings().settingsSearchSynonymsAppLanguage), icon: icon, breadcrumbs: [], present: { context, _, present in
-        present(.push, LanguageViewController(context))
+        present(.push, LanguageController(context))
     }))
     var index: Int32 = 1
     for localization in localizations {

@@ -354,8 +354,21 @@ class ChatMessageItem: ChatRowItem {
                     chatInteraction?.openInfo(peerId, toChat, postId, initialAction ?? .source(message.id))
                 }
                 
+                var text: String = message.text
+                var attributes: [MessageAttribute] = message.attributes
+                if let translate = entry.additionalData.translate {
+                    switch translate {
+                    case .loading:
+                        self.isTranslateLoading = true
+                    case .complete:
+                        if let attribute = message.translationAttribute {
+                            text = attribute.text
+                            attributes = [TextEntitiesMessageAttribute(entities: attribute.entities)]
+                        }
+                    }
+                }
                 
-                messageAttr = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, message: message, context: context, fontSize: theme.fontSize, openInfo:openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.context.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in
+                messageAttr = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.context.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { timecode in
                     openSpecificTimecodeFromReply?(timecode)
                 }).mutableCopy() as! NSMutableAttributedString
 
@@ -704,7 +717,8 @@ class ChatMessageItem: ChatRowItem {
             return super.isForceRightLine
         }
     }
-    
+    private(set) var isTranslateLoading: Bool = false
+    private(set) var block: (NSPoint, CGImage?) = (.zero, nil)
     override func makeContentSize(_ width: CGFloat) -> NSSize {
         let size:NSSize = super.makeContentSize(width)
      
@@ -713,7 +727,11 @@ class ChatMessageItem: ChatRowItem {
         let textBlockWidth: CGFloat = isBubbled ? max((webpageLayout?.size.width ?? width), min(240, width)) : width
         
         textLayout.measure(width: textBlockWidth, isBigEmoji: containsBigEmoji)
-
+        if isTranslateLoading {
+            self.block = textLayout.generateBlock(backgroundColor: .blackTransparent)
+        } else {
+            self.block = (.zero, nil)
+        }
         
         var contentSize = NSMakeSize(max(webpageLayout?.contentRect.width ?? 0, textLayout.layoutSize.width), size.height + textLayout.layoutSize.height)
         

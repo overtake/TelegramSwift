@@ -817,6 +817,38 @@ public final class TextViewLayout : Equatable {
         self.layoutSize = layoutSize
     }
     
+    public func generateBlock(backgroundColor: NSColor) -> (CGPoint, CGImage?) {
+        var rects = self.lines.map({$0.frame})
+        if !rects.isEmpty {
+            let sortedIndices = (0 ..< rects.count).sorted(by: { rects[$0].width > rects[$1].width })
+            for i in 0 ..< sortedIndices.count {
+                let index = sortedIndices[i]
+                for j in -1 ... 1 {
+                    if j != 0 && index + j >= 0 && index + j < sortedIndices.count {
+                        if abs(rects[index + j].width - rects[index].width) < 10 {
+                            rects[index + j].size.width = max(rects[index + j].width, rects[index].width)
+                        }
+                    }
+                }
+            }
+            
+            for i in 0 ..< rects.count {
+                let height = rects[i].size.height + 5
+                rects[i] = rects[i].insetBy(dx: 0, dy: floor((rects[i].height - height) / 2.0))
+                rects[i].size.height = height
+                rects[i].size.width += 10
+                rects[i].origin.x -= 5
+            }
+            
+            var image = generateRectsImage(color: backgroundColor, rects: rects, inset: 0, outerRadius: lines.count == 1 ? rects[0].height / 2 : 10, innerRadius: .cornerRadius)
+            image.0 = NSMakePoint(0, 0)
+            
+            return image
+        } else {
+            return (.zero, nil)
+        }
+    }
+    
     public func generateAutoBlock(backgroundColor: NSColor, minusHeight: CGFloat = 0, yInset: CGFloat = 0) {
         
         var rects = self.lines.map({$0.frame})
@@ -827,7 +859,7 @@ public final class TextViewLayout : Equatable {
                 let index = sortedIndices[i]
                 for j in -1 ... 1 {
                     if j != 0 && index + j >= 0 && index + j < sortedIndices.count {
-                        let dif = minusHeight != 0 ? 10.0 : 40.0
+                        let dif = minusHeight != 0 ? 10 : 40.0
                         if abs(rects[index + j].width - rects[index].width) < dif {
                             rects[index + j].size.width = max(rects[index + j].width, rects[index].width)
                         }
@@ -864,6 +896,8 @@ public final class TextViewLayout : Equatable {
                 lines[i] = TextViewLine(line: line.line, frame: line.frame.offsetBy(dx: offset.x, dy: offset.y), range: line.range, penFlush: self.penFlush, strikethrough: line.strikethrough, embeddedItems: line.embeddedItems)
             }
             layoutSize.height = rects.last!.maxY - minusHeight
+        } else {
+            self.blockImage = (.zero, nil)
         }
         
     }
@@ -1445,17 +1479,22 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     }
     
     private var visualEffect: VisualEffect? = nil
+
     private var textView: View? = nil
-    private var blockMask: CALayer?
+    private var blockMask: SimpleLayer?
+    
+    var hasBackground: Bool {
+        return blurBackground != nil
+    }
+    
     public var blurBackground: NSColor? = nil {
         didSet {
             updateBackgroundBlur()
-            if blurBackground != nil {
+            if hasBackground {
                 self.backgroundColor = .clear
             }
         }
     }
-    
     
     private let menuDisposable = MetaDisposable()
     
@@ -1507,7 +1546,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             _disableBackgroundDrawing = newValue
         }
         get {
-            return _disableBackgroundDrawing || blurBackground != nil
+            return _disableBackgroundDrawing || hasBackground
         }
     }
 
@@ -1515,7 +1554,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         //backgroundColor = .random
         super.draw(layer, in: ctx)
 
-        if blurBackground != nil, layer != textView?.layer {
+        if hasBackground, layer != textView?.layer {
             return
         }
         
@@ -1558,7 +1597,7 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
            
             
             
-            if let image = layout.blockImage.1, blurBackground == nil {
+            if let image = layout.blockImage.1, !hasBackground {
                 ctx.draw(image, in: NSMakeRect(layout.blockImage.0.x, layout.blockImage.0.y, image.backingSize.width, image.backingSize.height))
             }
             
@@ -1861,9 +1900,10 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         self.checkEmbeddedUnderSpoiler()
     }
     
-    public func update(_ layout:TextViewLayout?, origin:NSPoint? = nil) -> Void {
+    public func update(_ layout:TextViewLayout?, origin:NSPoint? = nil, transition: ContainedViewLayoutTransition = .immediate) -> Void {
         self.textLayout = layout
         
+        let transition = ContainedViewLayoutTransition.immediate
         
         self.updateInks(layout)
         
@@ -1876,7 +1916,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             } else {
                 point = frame.origin
             }
-            self.frame = NSMakeRect(point.x, point.y, layout.layoutSize.width + layout.insets.width, layout.layoutSize.height + layout.insets.height)
+            let rect = NSMakeRect(point.x, point.y, layout.layoutSize.width + layout.insets.width, layout.layoutSize.height + layout.insets.height)
+            transition.updateFrame(view: self, frame: rect)
             
             removeAllToolTips()
             for rect in layout.toolTipRects {
@@ -1885,7 +1926,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             
         } else {
             self.set(selectedRange: NSMakeRange(NSNotFound, 0), display: false)
-            self.frame = NSZeroRect
+            transition.updateFrame(view: self, frame: NSZeroRect)
+
         }
         
        
@@ -2129,12 +2171,14 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
     
     private func updateBackgroundBlur() {
         if let blurBackground = blurBackground {
+
             if self.visualEffect == nil {
                 self.visualEffect = VisualEffect(frame: self.bounds)
                 addSubview(self.visualEffect!, positioned: .below, relativeTo: self.embeddedContainer)
-                
-                self.textView = View(frame: self.bounds)
-                addSubview(self.textView!)
+                if self.textView == nil {
+                    self.textView = View(frame: self.bounds)
+                    addSubview(self.textView!)
+                }
             }
             self.visualEffect?.bgColor = blurBackground
             self.textView?.displayDelegate = self
@@ -2142,11 +2186,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             
             if let textlayout = self.textLayout, let blockImage = textlayout.blockImage.1 {
                 if blockMask == nil {
-                    blockMask = CALayer()
+                    blockMask = SimpleLayer()
                 }
-                CATransaction.begin()
-                CATransaction.setDisableActions(true)
-                
                 var fr = CATransform3DIdentity
                 fr = CATransform3DTranslate(fr, blockImage.backingSize.width / 2, 0, 0)
                 fr = CATransform3DScale(fr, 1, -1, 1)
@@ -2157,12 +2198,11 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
                 blockMask?.contents = blockImage
                 blockMask?.frame = CGRect(origin: .zero, size: blockImage.backingSize)
                 self.layer?.mask = blockMask
-                CATransaction.commit()
             } else {
                 self.blockMask = nil
                 self.layer?.mask = nil
             }
-        } else {
+        }  else {
             self.textView?.removeFromSuperview()
             self.textView = nil
             self.visualEffect?.removeFromSuperview()
@@ -2172,6 +2212,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
             self.blockMask = nil
             self.layer?.mask = nil
         }
+        
+
         needsLayout = true
     }
     
@@ -2193,8 +2235,8 @@ public class TextView: Control, NSViewToolTipOwner, ViewDisplayDelegate {
         super.layout()
         self.visualEffect?.frame = bounds
         self.textView?.frame = bounds
-        embeddedContainer.frame = bounds
-        inkContainer.frame = bounds
+        self.embeddedContainer.frame = bounds
+        self.inkContainer.frame = bounds
         self.updateInks(self.textLayout)
     }
     

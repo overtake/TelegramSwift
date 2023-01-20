@@ -19,7 +19,13 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     
     struct CaptionView {
         let id: UInt32
+        let shim: Bool
         let view: TextView
+    }
+    struct CaptionShimmerView {
+        let id: UInt32
+        let view: ShimmerView
+        let mask: SimpleLayer
     }
    
     
@@ -38,7 +44,10 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     private var replyView:ChatAccessoryView?
     private var replyMarkupView:View?
     private(set) var forwardName:TextView?
+    
     private(set) var captionViews: [CaptionView] = []
+    private(set) var captionShimmerViews: [CaptionShimmerView] = []
+    
     private var shareView:ImageButton?
     private var reactionsView:ChatReactionsView?
     private var channelCommentsBubbleControl: ChannelCommentsBubbleControl?
@@ -335,7 +344,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
         
-        if let item = item as? ChatRowItem, !item.chatInteraction.isLogInteraction && !item.chatInteraction.disableSelectAbility, !item.sending, mouseInside(), !mouseDragged {
+        if let item = item as? ChatRowItem, !item.chatInteraction.isLogInteraction && !item.chatInteraction.disableSelectAbility, !item.sending {
             if item.chatInteraction.presentation.state != .selecting {
                 let location = self.convert(event.locationInWindow, from: nil)
                 if NSPointInRect(location, rightView.frame) {
@@ -791,7 +800,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         if item.isBubbled {
             let bubbleFrame = self.bubbleFrame(item)
             let rightFrame = self.rightFrame(item)
-            point = NSMakePoint(item.isIncoming ? max(bubbleFrame.maxX + 10, rightFrame.maxX + 10) : bubbleFrame.minX - size.width - 10, bubbleFrame.maxY - (size.height))
+            point = NSMakePoint(item.isIncoming ? max(bubbleFrame.maxX + 10, rightFrame.maxX + 10) : bubbleFrame.minX - size.width - 10, bubbleFrame.maxY - (size.height) + 3)
         } else {
             let rightFrame = self.rightFrame(item)
             point = NSMakePoint(frame.width - 20.0 - size.width, rightFrame.maxY)
@@ -922,28 +931,36 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     func fillCaption(_ item:ChatRowItem, animated: Bool) -> Void {
         
         var removeIndexes:[Int] = []
+        var removeShimmer:[UInt32] = []
         for (i, view) in captionViews.enumerated() {
-            if !item.captionLayouts.contains(where: { $0.id == view.id}) {
+            if !item.captionLayouts.contains(where: { $0.id == view.id }) {
                 let captionView = view.view
-                if animated {
-                    captionView.layer?.animateAlpha(from: 1, to: 0, duration: 0.2, removeOnCompletion: false, completion: { [weak captionView] _ in
-                        captionView?.removeFromSuperview()
-                    })
-                } else {
-                    captionView.removeFromSuperview()
+                performSubviewRemoval(captionView, animated: animated)
+                if let shimmer = captionShimmerViews.first(where: { $0.id == view.id }) {
+                    performSubviewRemoval(shimmer.view, animated: animated)
                 }
                 removeIndexes.append(i)
+            } else if !view.shim {
+                removeShimmer.append(view.id)
             }
         }
         
         for index in removeIndexes.reversed() {
-            captionViews.remove(at: index)
+            let value = captionViews.remove(at: index)
+            captionShimmerViews.removeAll(where: { $0.id == value.id })
+        }
+        for id in removeShimmer {
+            let index = captionShimmerViews.firstIndex(where: { $0.id == id })
+            if let index {
+                let view = captionShimmerViews.remove(at: index)
+                performSubviewRemoval(view.view, animated: animated)
+            }
         }
         
         for (i, layout) in item.captionLayouts.enumerated() {
             var view = captionViews.first(where: { $0.id == layout.id })
             if view == nil {
-                view = CaptionView(id: layout.id, view: TextView())
+                view = CaptionView(id: layout.id, shim: layout.isLoading, view: TextView())
                 rowView.addSubview(view!.view, positioned: .below, relativeTo: rightView)
                 view?.view.frame = captionFrame(item, caption: layout)
                 captionViews.append(view!)
@@ -951,8 +968,52 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
             if let index = captionViews.firstIndex(where: { $0.id == layout.id }), index != i {
                 captionViews.move(at: index, to: i)
             }
-            view?.view.update(layout.layout)
+            if let blockImage = layout.block.1 {
+                var view = captionShimmerViews.first(where: { $0.id == layout.id })
+                let size = blockImage.size
+                let current: ShimmerView
+                if let view = view?.view {
+                    current = view
+                } else {
+                    current = ShimmerView()
+                    
+                    let mask = SimpleLayer()
+                    var fr = CATransform3DIdentity
+                    fr = CATransform3DTranslate(fr, blockImage.backingSize.width / 2, 0, 0)
+                    fr = CATransform3DScale(fr, 1, -1, 1)
+                    fr = CATransform3DTranslate(fr, -(blockImage.backingSize.width / 2), 0, 0)
+                    
+                    mask.transform = fr
+                    mask.contentsScale = 2.0
+                    mask.contents = blockImage
+                    mask.frame = CGRect(origin: .zero, size: blockImage.backingSize)
+                    current.layer?.mask = mask
+                    
+                    view = .init(id: layout.id, view: current, mask: mask)
+                    self.rowView.addSubview(current, positioned: .below, relativeTo: contentView)
+                    
+                    if animated {
+                        current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                    }
+                    captionShimmerViews.append(view!)
+                }
+                current.update(backgroundColor: .blackTransparent, data: nil, size: size, imageSize: size)
+                current.updateAbsoluteRect(size.bounds, within: size)
+                let frame = captionFrame(item, caption: layout)
+                current.frame = blockImage.backingSize.bounds.offsetBy(dx: frame.minX - 5, dy: frame.minY - 1)
+                
+            }
             
+            let transition: ContainedViewLayoutTransition
+            if animated {
+                transition = .animated(duration: 0.2, curve: .easeInOut)
+            } else {
+                transition = .immediate
+            }
+            
+            view?.view.update(layout.layout, transition: transition)
+            
+
             if let view = view {
                 updateInlineStickers(context: item.context, view: view.view, textLayout: layout.layout)
             }
@@ -974,6 +1035,9 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 }
                 value.isPlayable = NSIntersectsRect(value.frame, superview.visibleRect) && isKeyWindow
             }
+        }
+        for view in captionShimmerViews {
+            view.view.reloadAnimation()
         }
         topicLinkView?.updateAnimatableContent()
     }
@@ -1222,7 +1286,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     func fillShareView(_ item:ChatRowItem, animated: Bool) -> Void {
         if item.shareVisible || item.hasSource {
             if shareView == nil {
-                shareView = ImageButton(frame: CGRect(origin: shareViewPoint(item), size: NSMakeSize(29, 29)))
+                shareView = ImageButton(frame: CGRect(origin: shareViewPoint(item), size: NSMakeSize(26, 26)))
                 shareView?.disableActions()
                 shareView?.scaleOnClick = true
                 shareView?.change(opacity: 0, animated: false)
@@ -1252,7 +1316,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
                 
 
             }
-            let size = NSMakeSize(29, 29)
+            let size = NSMakeSize(26, 26)
             control.setFrameSize(NSMakeSize(floorToScreenPixels(backingScaleFactor, (size.width + 4) * 1.05), floorToScreenPixels(backingScaleFactor, (size.height + 4) * 1.05)))
             control.set(cornerRadius: .half, for: .Normal)
 
@@ -1756,30 +1820,23 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     override func forceClick(in location: NSPoint) {
             
         if let item = self.item as? ChatRowItem, item.chatInteraction.presentation.state != .editing {
-            if self.hitTest(location) == nil || self.hitTest(location) == self || !clickInContent(point: location) || self.hitTest(location) == rowView || self.hitTest(location) == bubbleView || self.hitTest(location) == replyView {
-                if let avatar = avatar {
-                    if NSPointInRect(location, avatar.frame) {
-                        return
-                    }
-                }
-                let result: Bool
-                switch FastSettings.forceTouchAction {
-                case .edit:
-                    result = item.editAction()
-                case .reply:
-                    result = item.replyAction()
-                case .forward:
-                    result = item.forwardAction()
-                case .previewMedia:
-                    result = false
-                case .react:
-                    result = item.reactAction()
-                }
-                if result {
-                    focusAnimation(nil)
-                } else {
-                 //   NSSound.beep()
-                }
+            let result: Bool
+            switch FastSettings.forceTouchAction {
+            case .edit:
+                result = item.editAction()
+            case .reply:
+                result = item.replyAction()
+            case .forward:
+                result = item.forwardAction()
+            case .previewMedia:
+                result = false
+            case .react:
+                result = item.reactAction()
+            }
+            if result {
+                focusAnimation(nil)
+            } else {
+             //   NSSound.beep()
             }
         }
         

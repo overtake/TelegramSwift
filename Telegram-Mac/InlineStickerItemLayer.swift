@@ -373,8 +373,9 @@ final class InlineStickerItemLayer : SimpleLayer {
     private let shimmerColor: Shimmer
     let textColor: NSColor
     let size: NSSize
+    let synchronyous: Bool
     
-    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, playPolicy: LottiePlayPolicy = .loop, checkStatus: Bool = false, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.text) {
+    init(account: Account, inlinePacksContext: InlineStickersContext?, emoji: ChatTextCustomEmojiAttribute, size: NSSize, playPolicy: LottiePlayPolicy = .loop, checkStatus: Bool = false, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.text, ignorePreview: Bool = false, synchronyous: Bool = false) {
         self.aspectFilled = aspectFilled
         self.account = account
         self.playPolicy = playPolicy
@@ -383,6 +384,8 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.shimmerColor = shimmerColor
         self.fileId = emoji.fileId
         self.size = size
+        self.ignorePreview = ignorePreview
+        self.synchronyous = synchronyous
         super.init()
         self.frame = size.bounds
         self.initialize()
@@ -403,11 +406,11 @@ final class InlineStickerItemLayer : SimpleLayer {
         
         self.infoDisposable = signal.start(next: { [weak self] file in
             self?.file = file
-            self?.updateSize(size: size, sync: emoji.file != nil)
+            self?.updateSize(size: size, sync: emoji.file != nil || self?.synchronyous == true)
         })
     }
     
-    init(account: Account, file: TelegramMediaFile, size: NSSize, playPolicy: LottiePlayPolicy = .loop, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.text) {
+    init(account: Account, file: TelegramMediaFile, size: NSSize, playPolicy: LottiePlayPolicy = .loop, aspectFilled: Bool = false, getColors:((TelegramMediaFile)->[LottieColor])? = nil, shimmerColor: Shimmer = Shimmer(circle: false), textColor: NSColor = theme.colors.text, ignorePreview: Bool = false, synchronyous: Bool = false) {
         self.aspectFilled = aspectFilled
         self.account = account
         self.playPolicy = playPolicy
@@ -416,6 +419,8 @@ final class InlineStickerItemLayer : SimpleLayer {
         self.shimmerColor = shimmerColor
         self.fileId = file.fileId.id
         self.size = size
+        self.ignorePreview = ignorePreview
+        self.synchronyous = synchronyous
         super.init()
         self.frame = size.bounds
         self.initialize()
@@ -465,6 +470,7 @@ final class InlineStickerItemLayer : SimpleLayer {
     
     private var unique: Int = 0
     var stopped: Bool = false
+    var ignorePreview: Bool = false
     
     func reset() -> Void {
         if let contextToken = contextToken {
@@ -524,7 +530,7 @@ final class InlineStickerItemLayer : SimpleLayer {
     private func updateState(_ state: LottiePlayerState) {
         self.playerState = state
         
-        if state != .playing, let preview = self.preview {
+        if state != .playing, let preview = self.preview, !ignorePreview {
             self.contents = preview
         }
         if state == .playing {
@@ -560,8 +566,7 @@ final class InlineStickerItemLayer : SimpleLayer {
         shimmerDataDisposable.set(nil)
         
         if let file = self.file {
-            
-           
+            let synchronyous = self.synchronyous
             let playPolicy = self.playPolicy
 
             let aspectSize: NSSize
@@ -625,7 +630,7 @@ final class InlineStickerItemLayer : SimpleLayer {
                         } else {
                             type = .lottie
                         }
-                        self?.set(LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: aspectSize, colors: colors), type: type, cachePurpose: cache, playPolicy: playPolicy, maximumFps: maximumFps, colors: colors, metalSupport: false))
+                        self?.set(LottieAnimation(compressed: data, key: LottieAnimationEntryKey(key: .media(file.id), size: aspectSize, colors: colors), type: type, cachePurpose: cache, playPolicy: playPolicy, maximumFps: maximumFps, colors: colors, runOnQueue: synchronyous ? .mainQueue() : lottieStateQueue, metalSupport: false))
                         
                     } else {
                         self?.set(nil)
@@ -644,6 +649,7 @@ final class InlineStickerItemLayer : SimpleLayer {
             } else {
                 emptyColor = nil
             }
+            
             if file.mimeType == "bundle/jpeg", let resource = file.resource as? LocalBundleResource {
                 let image = NSImage(named: resource.name)?.precomposed(resource.color ?? theme.colors.accentIcon)
                 self.contents = image
