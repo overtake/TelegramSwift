@@ -81,6 +81,10 @@ final class PremiumStatusController : TelegramViewController {
             delay += itemDelay
         }
     }
+    
+    override func escapeKeyAction() -> KeyHandlerResult {
+        return emojis.escapeKeyAction()
+    }
 }
 
 
@@ -146,5 +150,9 @@ final class SetupQuickReactionController : TelegramViewController {
             section.animateAppearance(delay: delay, duration: duration, initialPlayers: [:])
             delay += itemDelay
         }
+    }
+    
+    override func escapeKeyAction() -> KeyHandlerResult {
+        return emojis.escapeKeyAction()
     }
 }

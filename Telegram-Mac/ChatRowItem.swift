@@ -73,13 +73,21 @@ enum ChatItemRenderType {
 
 class ChatRowItem: TableRowItem {
     
-    struct RowCaption {
-        let id: UInt32
-        let offset: NSPoint
-        let layout: TextViewLayout
-        
+    class RowCaption {
+        var id: UInt32
+        var offset: NSPoint
+        var layout: TextViewLayout
+        var isLoading: Bool
+        var block: (NSPoint, CGImage?)
+        init(id: UInt32, offset: NSPoint, layout: TextViewLayout, isLoading: Bool, block: (NSPoint, CGImage?) = (.zero, nil)) {
+            self.id = id
+            self.offset = offset
+            self.layout = layout
+            self.isLoading = isLoading
+            self.block = block
+        }
         func withUpdatedOffset(_ offset: CGFloat) -> RowCaption {
-            return RowCaption(id: self.id, offset: .init(x: 0, y: offset), layout: self.layout)
+            return RowCaption(id: self.id, offset: .init(x: 0, y: offset), layout: self.layout, isLoading: self.isLoading, block: block)
         }
     }
     
@@ -217,9 +225,9 @@ class ChatRowItem: TableRowItem {
         } else {
             if case .Full = itemType {
                 let additionWidth:CGFloat = date?.layoutSize.width ?? 20
-                widthForContent = width - self.contentOffset.x - 44 - additionWidth
+                widthForContent = min(800, width) - self.contentOffset.x - 44 - additionWidth
             } else {
-                widthForContent = width - self.contentOffset.x - rightSize.width - 44
+                widthForContent = min(800, width) - self.contentOffset.x - rightSize.width - 44
             }
         }
         
@@ -2281,6 +2289,9 @@ class ChatRowItem: TableRowItem {
             for layout in captionLayouts {
                 if layout.layout.layoutSize == .zero {
                     layout.layout.measure(width: maxContentWidth)
+                    if layout.isLoading {
+                        layout.block = layout.layout.generateBlock(backgroundColor: .blackTransparent)
+                    }
                 }
             }
         }

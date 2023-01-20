@@ -764,6 +764,14 @@ class ChatServiceItem: ChatRowItem {
                     }
                 case .attachMenuBotAllowed:
                     _ = attributedString.append(string: strings().chatServiceBotWriteAllowed, color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                case let .requestedPeer(_, peerId):
+                    if let peer = message.peers[peerId], let botPeer = message.peers[message.id.peerId] {
+                        let name = peer.displayTitle
+                        _ = attributedString.append(string: strings().chatServicePeerRequested(name, botPeer.displayTitle), color: grayTextColor, font: NSFont.normal(theme.fontSize))
+                        let range = attributedString.string.nsstring.range(of: name)
+                        attributedString.add(link:inAppLink.peerInfo(link: "", peerId: peerId, action:nil, openChat: true, postId: nil, callback: chatInteraction.openInfo), for: range, color: nameColor(peerId))
+                        attributedString.addAttribute(.font, value: NSFont.medium(theme.fontSize), range: range)
+                    }
                 default:
                     break
                 }
@@ -864,7 +872,7 @@ class ChatServiceItem: ChatRowItem {
                 let updateSignal = controller.result |> map { path, _ -> TelegramMediaResource in
                     return LocalFileReferenceMediaResource(localFilePath: path.path, randomId: arc4random64())
                     } |> castError(UploadPeerPhotoError.self) |> mapToSignal { resource -> Signal<UpdatePeerPhotoStatus, UploadPeerPhotoError> in
-                        return context.engine.accountData.updateAccountPhoto(resource: resource, videoResource: nil, videoStartTimestamp: nil, mapResourceToAvatarSizes: { resource, representations in
+                        return context.engine.accountData.updateAccountPhoto(resource: resource, videoResource: nil, videoStartTimestamp: nil, fileId: nil, backgroundColors: nil, mapResourceToAvatarSizes: { resource, representations in
                             return mapResourceToAvatarSizes(postbox: context.account.postbox, resource: resource, representations: representations)
                         })
                     } |> deliverOnMainQueue

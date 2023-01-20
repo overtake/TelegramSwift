@@ -678,10 +678,14 @@ class PrivacyAndSecurityViewController: TableViewController {
 
     private let twoStepAccessConfiguration: Promise<TwoStepVeriticationAccessConfiguration?> = Promise(nil)
 
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        twoStepAccessConfiguration.set(context.engine.auth.twoStepVerificationConfiguration() |> map { .init(configuration: $0, password: nil) })
+    }
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        twoStepAccessConfiguration.set(context.engine.auth.twoStepVerificationConfiguration() |> map { .init(configuration: $0, password: nil) })
         
         let statePromise = ValuePromise(PrivacyAndSecurityControllerState(), ignoreRepeated: true)
         let stateValue = Atomic(value: PrivacyAndSecurityControllerState())

@@ -10,6 +10,7 @@ import Cocoa
 
 open class OverlayControl: Control {
 
+    public var externalScroll: ((NSEvent)->Void)? = nil
     
     open override func updateTrackingAreas() {
         super.updateTrackingAreas();
@@ -57,6 +58,10 @@ open class OverlayControl: Control {
     }
     
     open override func scrollWheel(with event: NSEvent) {
+        if let externalScroll = externalScroll {
+            externalScroll(event)
+            return
+        }
         if userInteractionEnabled {
             updateState()
         } else {

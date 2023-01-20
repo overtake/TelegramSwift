@@ -419,9 +419,22 @@ class ChatMediaItem: ChatRowItem {
                 mediaDuration = Double(duration)
             }
             
-          
+            var text: String = message.text
+            var attributes: [MessageAttribute] = message.attributes
+            var isLoading: Bool = false
+            if let translate = entry.additionalData.translate {
+                switch translate {
+                case .loading:
+                    isLoading = true
+                case .complete:
+                    if let attribute = message.translationAttribute {
+                        text = attribute.text
+                        attributes = [TextEntitiesMessageAttribute(entities: attribute.entities)]
+                    }
+                }
+            }
             
-            caption = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.modalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, object.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { [weak self] timecode in
+            caption = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: chatInteraction.modalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, object.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, object.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), mediaDuration: mediaDuration, timecode: { [weak self] timecode in
                 self?.parameters?.set_timeCodeInitializer(timecode)
                 self?.parameters?.showMedia(message)
             }, openBank: chatInteraction.openBank).mutableCopy() as! NSMutableAttributedString
@@ -468,7 +481,7 @@ class ChatMediaItem: ChatRowItem {
                             $0.withRevealedSpoiler(message.id)
                         })
                     })
-                })))
+                }), isLoading: isLoading))
             }
             
             let interactions = globalLinkExecutor

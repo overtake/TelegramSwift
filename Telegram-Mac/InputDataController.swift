@@ -379,13 +379,16 @@ class InputDataController: GenericViewController<InputDataView> {
     var getTitle:(()->String)? = nil
     var getStatus:(()->String?)? = nil
     
+    var doneString: ()->String
+    
     var autoInputAction: Bool = false
     
-    init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping(InputDataController, [InputDataIdentifier : InputDataValue]) -> Void = { _, _ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, beforeTransaction: @escaping(InputDataController)->Void = { _ in }, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.listBackground }) {
+    init(dataSignal:Signal<InputDataSignalValue, NoError>, title: String, validateData:@escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, updateDatas: @escaping([InputDataIdentifier : InputDataValue]) -> InputDataValidation = {_ in return .fail(.none)}, afterDisappear: @escaping() -> Void = {}, didLoaded: @escaping(InputDataController, [InputDataIdentifier : InputDataValue]) -> Void = { _, _ in}, updateDoneValue:@escaping([InputDataIdentifier : InputDataValue])->((InputDoneValue)->Void)->Void  = { _ in return {_ in}}, removeAfterDisappear: Bool = true, hasDone: Bool = true, identifier: String = "", customRightButton: ((ViewController)->BarView?)? = nil, beforeTransaction: @escaping(InputDataController)->Void = { _ in }, afterTransaction: @escaping(InputDataController)->Void = { _ in }, backInvocation: @escaping([InputDataIdentifier : InputDataValue], @escaping(Bool)->Void)->Void = { $1(true) }, returnKeyInvocation: @escaping(InputDataIdentifier?, NSEvent) -> InputDataReturnResult = {_, _ in return .default }, deleteKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, tabKeyInvocation: @escaping(InputDataIdentifier?) -> InputDataDeleteResult = {_ in return .default }, searchKeyInvocation: @escaping() -> InputDataDeleteResult = { return .default }, getBackgroundColor: @escaping()->NSColor = { theme.colors.listBackground }, doneString: @escaping()->String = { strings().navigationDone }) {
         self.title = title
         self.validateData = validateData
         self.afterDisappear = afterDisappear
         self.updateDatas = updateDatas
+        self.doneString = doneString
         self.didLoaded = didLoaded
         self.identifier = identifier
         self._removeAfterDisappear = removeAfterDisappear
@@ -427,7 +430,7 @@ class InputDataController: GenericViewController<InputDataView> {
     }
     
     override func getRightBarViewOnce() -> BarView {
-        return customRightButton?(self) ?? (hasDone ? TextButtonBarView(controller: self, text: strings().navigationDone, style: navigationButtonStyle, alignment:.Right) : super.getRightBarViewOnce())
+        return customRightButton?(self) ?? (hasDone ? TextButtonBarView(controller: self, text: doneString(), style: navigationButtonStyle, alignment:.Right) : super.getRightBarViewOnce())
     }
     
     private var doneView: TextButtonBarView {

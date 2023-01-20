@@ -970,8 +970,7 @@ class AuthController : GenericViewController<AuthView> {
             current.locked = true
             return current
         }
-
-        let signal = sendAuthorizationCode(accountManager: sharedContext.accountManager, account: self.account, phoneNumber: phoneNumber, apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, syncContacts: false, forcedPasswordSetupNotice: { _ in return nil })
+        let signal = sendAuthorizationCode(accountManager: sharedContext.accountManager, account: self.account, phoneNumber: phoneNumber, apiId: ApiEnvironment.apiId, apiHash: ApiEnvironment.apiHash, pushNotificationConfiguration: nil, firebaseSecretStream: .never(), syncContacts: false, forcedPasswordSetupNotice: { _ in return nil })
                                        |> map(Optional.init)
                                        |> mapError(Optional.init)
                                        |> timeout(20, queue: Queue.mainQueue(), alternate: .fail(nil))

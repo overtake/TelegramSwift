@@ -59,9 +59,23 @@ class ChatGroupedItem: ChatRowItem {
                 
                 let isIncoming: Bool = message.isIncoming(context.account, entry.renderType == .bubble)
 
+                var text: String = message.text
+                var attributes: [MessageAttribute] = message.attributes
+                var isLoading: Bool = false
+                if let translate = entry.additionalData.translate {
+                    switch translate {
+                    case .loading:
+                        isLoading = true
+                    case .complete:
+                        if let attribute = message.translationAttribute {
+                            text = attribute.text
+                            attributes = [TextEntitiesMessageAttribute(entities: attribute.entities)]
+                        }
+                    }
+                }
                 var caption:NSMutableAttributedString = NSMutableAttributedString()
                 NSAttributedString.initialize()
-                _ = caption.append(string: message.text, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: NSFont.normal(theme.fontSize))
+                _ = caption.append(string: text, color: theme.chat.textColor(isIncoming, entry.renderType == .bubble), font: NSFont.normal(theme.fontSize))
                 var types:ParsingType = [.Links, .Mentions, .Hashtags]
                 
                 if let peer = coreMessageMainPeer(message) as? TelegramUser {
@@ -87,7 +101,8 @@ class ChatGroupedItem: ChatRowItem {
                     }
                 }
                 if hasEntities {
-                    caption = ChatMessageItem.applyMessageEntities(with: message.attributes, for: message.text.fixed, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: context.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), openBank: chatInteraction.openBank).mutableCopy() as! NSMutableAttributedString
+                    
+                    caption = ChatMessageItem.applyMessageEntities(with: attributes, for: text, message: message, context: context, fontSize: theme.fontSize, openInfo:chatInteraction.openInfo, botCommand:chatInteraction.sendPlainText, hashtag: context.bindings.globalSearch, applyProxy: chatInteraction.applyProxy, textColor: theme.chat.textColor(isIncoming, entry.renderType == .bubble), linkColor: theme.chat.linkColor(isIncoming, entry.renderType == .bubble), monospacedPre: theme.chat.monospacedPreColor(isIncoming, entry.renderType == .bubble), monospacedCode: theme.chat.monospacedCodeColor(isIncoming, entry.renderType == .bubble), openBank: chatInteraction.openBank).mutableCopy() as! NSMutableAttributedString
                 }
                 
                 if !hasEntities || message.flags.contains(.Failed) || message.flags.contains(.Unsent) || message.flags.contains(.Sending) {
@@ -139,7 +154,7 @@ class ChatGroupedItem: ChatRowItem {
                             $0.withRevealedSpoiler(message.id)
                         })
                     })
-                }))
+                }), isLoading: isLoading)
                 layout.layout.interactions = globalLinkExecutor
                 
                 captionLayouts.append(layout)
@@ -415,6 +430,9 @@ class ChatGroupedItem: ChatRowItem {
         }
         for layout in captionLayouts {
             layout.layout.measure(width: maxContentWidth)
+            if layout.isLoading {
+                layout.block = layout.layout.generateBlock(backgroundColor: .blackTransparent)
+            }
         }
         self.captionLayouts = layout.applyCaptions(captionLayouts)
         return layout.dimensions

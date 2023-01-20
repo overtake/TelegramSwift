@@ -51,7 +51,8 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     private var additionBlockedActionView: ImageButton?
     private var chatDiscussionView: ChannelDiscussionInputView?
     private var restrictedView:RestrictionWrappedView?
-    
+    private var disallowText:Control?
+
     
     //views
     private(set) var textView:TGModernGrowingTextView!
@@ -173,6 +174,12 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 return strings().messagesPlaceholderSentMessage
             }
         }
+        
+        
+        if let peer = chatInteraction.presentation.peer, let _ = permissionText(from: peer, for: .banSendText) {
+            return strings().channelPersmissionMessageBlock
+        }
+        
         if chatInteraction.presentation.interfaceState.editState != nil {
             return strings().messagePlaceholderEdit
         }
@@ -234,6 +241,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         } else {
             transition = .immediate
         }
+            
         
         updateLayout(size: frame.size, transition: transition)
 
@@ -421,17 +429,49 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             self.accessory.change(opacity: 0.0, animated: animated)
         }
         
+        if let peer = chatInteraction.presentation.peer, let text = permissionText(from: peer, for: .banSendText) {
+            let context = chatInteraction.context
+            let current: Control
+            if let view = self.disallowText {
+                current = view
+            } else {
+                current = Control(frame: textView.frame)
+                self.contentView.addSubview(current)
+                self.disallowText = current
+            }
+            current.removeAllHandlers()
+            current.set(handler: { _ in
+                showModalText(for: context.window, text: text)
+            }, for: .Click)
+            current.set(cursor: .arrow, for: .Normal)
+            current.set(cursor: .arrow, for: .Highlight)
+            current.set(cursor: .arrow, for: .Hover)
+
+        } else if let view = self.disallowText {
+            performSubviewRemoval(view, animated: animated)
+            self.disallowText = nil
+        }
+        
         CATransaction.commit()
     }
     
     func updateInput(_ state:ChatPresentationInterfaceState, prevState: ChatPresentationInterfaceState, animated:Bool = true, initial: Bool = false) -> Void {
+        
+        if let peer = state.peer, let _ = permissionText(from: peer, for: .banSendText) {
+            textView.inputView.isEditable = false
+        } else {
+            switch state.state {
+            case .normal, .editing:
+                textView.inputView.isEditable = true
+            default:
+                textView.inputView.isEditable = false
+            }
+        }
+        
         if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes {
             let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
 
-            if !state.effectiveInput.attributes.isEmpty {
-                var bp = 0
-                bp += 1
-            }
+           
             
             let current = textView.attributedString().copy() as! NSAttributedString
             let currentRange = textView.selectedRange()
@@ -569,6 +609,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
         
         let textSize = textViewSize(textView)
         transition.updateFrame(view: textView, frame: NSMakeRect(leftInset, yInset, textSize.width, textSize.height))
+        
+        if let view = disallowText {
+            transition.updateFrame(view: view, frame: textView.frame)
+        }
                 
         if let view = additionBlockedActionView {
             transition.updateFrame(view: view, frame: view.centerFrameY(x: size.width - view.frame.width - 22))

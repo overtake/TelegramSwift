@@ -667,15 +667,20 @@ class ChatListController : PeersListController {
             }))
         }
         
-        let downloadArguments: DownloadsControlArguments = DownloadsControlArguments(open: { [weak self] in
-            self?.showDownloads(animated: true)
-        }, navigate: { [weak self] messageId in
-            self?.open(with: .chatId(.chatList(messageId.peerId), messageId.peerId, -1), messageId: messageId, initialAction: nil, close: false, forceAnimated: true)
-        })
-        
-        downloadsDisposable.set(self.downloadsSummary.state.start(next: { [weak self] state in
-            self?.genericView.updateDownloads(state, context: context, arguments: downloadArguments, animated: true)
-        }))
+        switch mode {
+        case .folder, .plain, .filter:
+            let downloadArguments: DownloadsControlArguments = DownloadsControlArguments(open: { [weak self] in
+                self?.showDownloads(animated: true)
+            }, navigate: { [weak self] messageId in
+                self?.open(with: .chatId(.chatList(messageId.peerId), messageId.peerId, -1), messageId: messageId, initialAction: nil, close: false, forceAnimated: true)
+            })
+            
+            downloadsDisposable.set(self.downloadsSummary.state.start(next: { [weak self] state in
+                self?.genericView.updateDownloads(state, context: context, arguments: downloadArguments, animated: true)
+            }))
+        default:
+            break
+        }
         
     }
     

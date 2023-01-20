@@ -6479,6 +6479,19 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var profile_translate: CGImage {
+      if let image = cached.with({ $0["profile_translate"] }) {
+          return image
+      } else {
+          let image = _profile_translate()
+          _ = cached.modify { current in 
+              var current = current
+              current["profile_translate"] = image
+              return current
+          }
+          return image
+      }
+  }
   public var chat_quiz_explanation: CGImage {
       if let image = cached.with({ $0["chat_quiz_explanation"] }) {
           return image
@@ -9066,6 +9079,45 @@ public final class TelegramIconsTheme {
           return image
       }
   }
+  public var select_peer_create_channel: CGImage {
+      if let image = cached.with({ $0["select_peer_create_channel"] }) {
+          return image
+      } else {
+          let image = _select_peer_create_channel()
+          _ = cached.modify { current in 
+              var current = current
+              current["select_peer_create_channel"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var select_peer_create_group: CGImage {
+      if let image = cached.with({ $0["select_peer_create_group"] }) {
+          return image
+      } else {
+          let image = _select_peer_create_group()
+          _ = cached.modify { current in 
+              var current = current
+              current["select_peer_create_group"] = image
+              return current
+          }
+          return image
+      }
+  }
+  public var chat_translate: CGImage {
+      if let image = cached.with({ $0["chat_translate"] }) {
+          return image
+      } else {
+          let image = _chat_translate()
+          _ = cached.modify { current in 
+              var current = current
+              current["chat_translate"] = image
+              return current
+          }
+          return image
+      }
+  }
 
   private let _dialogMuteImage: ()->CGImage
   private let _dialogMuteImageSelected: ()->CGImage
@@ -9565,6 +9617,7 @@ public final class TelegramIconsTheme {
   private let _profile_share: ()->CGImage
   private let _profile_stats: ()->CGImage
   private let _profile_unblock: ()->CGImage
+  private let _profile_translate: ()->CGImage
   private let _chat_quiz_explanation: ()->CGImage
   private let _chat_quiz_explanation_bubble_incoming: ()->CGImage
   private let _chat_quiz_explanation_bubble_outgoing: ()->CGImage
@@ -9764,6 +9817,9 @@ public final class TelegramIconsTheme {
   private let _general_chevron_up: ()->CGImage
   private let _general_chevron_down: ()->CGImage
   private let _account_settings_set_password: ()->CGImage
+  private let _select_peer_create_channel: ()->CGImage
+  private let _select_peer_create_group: ()->CGImage
+  private let _chat_translate: ()->CGImage
 
   public init(
       dialogMuteImage: @escaping()->CGImage,
@@ -10264,6 +10320,7 @@ public final class TelegramIconsTheme {
       profile_share: @escaping()->CGImage,
       profile_stats: @escaping()->CGImage,
       profile_unblock: @escaping()->CGImage,
+      profile_translate: @escaping()->CGImage,
       chat_quiz_explanation: @escaping()->CGImage,
       chat_quiz_explanation_bubble_incoming: @escaping()->CGImage,
       chat_quiz_explanation_bubble_outgoing: @escaping()->CGImage,
@@ -10462,7 +10519,10 @@ public final class TelegramIconsTheme {
       storage_media_play: @escaping()->CGImage,
       general_chevron_up: @escaping()->CGImage,
       general_chevron_down: @escaping()->CGImage,
-      account_settings_set_password: @escaping()->CGImage
+      account_settings_set_password: @escaping()->CGImage,
+      select_peer_create_channel: @escaping()->CGImage,
+      select_peer_create_group: @escaping()->CGImage,
+      chat_translate: @escaping()->CGImage
   ) {
       self._dialogMuteImage = dialogMuteImage
       self._dialogMuteImageSelected = dialogMuteImageSelected
@@ -10962,6 +11022,7 @@ public final class TelegramIconsTheme {
       self._profile_share = profile_share
       self._profile_stats = profile_stats
       self._profile_unblock = profile_unblock
+      self._profile_translate = profile_translate
       self._chat_quiz_explanation = chat_quiz_explanation
       self._chat_quiz_explanation_bubble_incoming = chat_quiz_explanation_bubble_incoming
       self._chat_quiz_explanation_bubble_outgoing = chat_quiz_explanation_bubble_outgoing
@@ -11161,5 +11222,8 @@ public final class TelegramIconsTheme {
       self._general_chevron_up = general_chevron_up
       self._general_chevron_down = general_chevron_down
       self._account_settings_set_password = account_settings_set_password
+      self._select_peer_create_channel = select_peer_create_channel
+      self._select_peer_create_group = select_peer_create_group
+      self._chat_translate = chat_translate
   }
 }

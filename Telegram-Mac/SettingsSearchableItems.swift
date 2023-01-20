@@ -611,7 +611,7 @@ private func languageSearchableItems(context: AccountContext, localizations: [Lo
     
     var items: [SettingsSearchableItem] = []
     items.append(SettingsSearchableItem(id: .language(0), title: strings().accountSettingsLanguage, alternate: synonyms(strings().settingsSearchSynonymsAppLanguage), icon: icon, breadcrumbs: [], present: { context, _, present in
-        present(.push, LanguageViewController(context))
+        present(.push, LanguageController(context))
     }))
     var index: Int32 = 1
     for localization in localizations {

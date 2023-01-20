@@ -528,6 +528,9 @@ final class MessageReadMenuItem : ContextMenuItem {
             return false
         }
         
+        if chatInteraction.mode == .scheduled {
+            return false
+        }
         
         if let attr = message.reactionsAttribute, !attr.reactions.isEmpty {
             if !attr.canViewList {
