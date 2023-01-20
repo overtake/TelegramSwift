@@ -326,7 +326,7 @@ public struct ParsingType: OptionSet {
 
 public extension NSMutableAttributedString {
     
-    func append(string:String?, color:NSColor? = nil, font:NSFont? = nil, coreText:Bool = true) -> NSRange {
+    @discardableResult func append(string:String?, color:NSColor? = nil, font:NSFont? = nil, coreText:Bool = true) -> NSRange {
         
         if(string == nil) {
             return NSMakeRange(0, 0)

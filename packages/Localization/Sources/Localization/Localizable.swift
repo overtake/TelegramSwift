@@ -145,6 +145,12 @@ public final class L10n {
   public static var accountSettingsUsername: String  { return L10n.tr("Localizable", "AccountSettings.Username") }
   /// Gram Wallet
   public static var accountSettingsWallet: String  { return L10n.tr("Localizable", "AccountSettings.Wallet") }
+  /// Set a password that will be required each time you log in with this phone number.
+  public static var accountSettingsProtectAccountInfo: String  { return L10n.tr("Localizable", "AccountSettings.ProtectAccount.Info") }
+  /// Set Additional Password
+  public static var accountSettingsProtectAccountSet: String  { return L10n.tr("Localizable", "AccountSettings.ProtectAccount.Set") }
+  /// Protect Your Account
+  public static var accountSettingsProtectAccountTitle: String  { return L10n.tr("Localizable", "AccountSettings.ProtectAccount.Title") }
   /// Connected
   public static var accountSettingsProxyConnected: String  { return L10n.tr("Localizable", "AccountSettings.Proxy.Connected") }
   /// Connecting
@@ -1239,6 +1245,18 @@ public final class L10n {
   public static var channelEditAdminPermissionPinMessages: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.PinMessages") }
   /// Post Messages
   public static var channelEditAdminPermissionPostMessages: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.PostMessages") }
+  /// Send Files
+  public static var channelEditAdminPermissionSendFiles: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.SendFiles") }
+  /// Send Video Messages
+  public static var channelEditAdminPermissionSendInstantVideo: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.SendInstantVideo") }
+  /// Send Music
+  public static var channelEditAdminPermissionSendMusic: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.SendMusic") }
+  /// Send Photos
+  public static var channelEditAdminPermissionSendPhotos: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.SendPhotos") }
+  /// Send Videos
+  public static var channelEditAdminPermissionSendVideos: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.SendVideos") }
+  /// Send Voice Messages
+  public static var channelEditAdminPermissionSendVoice: String  { return L10n.tr("Localizable", "Channel.EditAdmin.Permission.SendVoice") }
   /// Sorry, you don't have the necessary permissions for this action.
   public static var channelErrorDontHavePermissions: String  { return L10n.tr("Localizable", "Channel.Error.DontHavePermissions") }
   /// ADMINS
@@ -1387,6 +1405,16 @@ public final class L10n {
   public static var channelPermissionsSlowModeTimeout5m: String  { return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Timeout.5m") }
   /// Off
   public static var channelPermissionsSlowModeTimeoutOff: String  { return L10n.tr("Localizable", "Channel.Permissions.SlowMode.Timeout.Off") }
+  /// Text is not Allowed
+  public static var channelPersmissionMessageBlock: String  { return L10n.tr("Localizable", "Channel.Persmission.MessageBlock") }
+  /// Sending files isn't allowed in this group.
+  public static var channelPersmissionDeniedSendFileDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendFile.DefaultRestrictedText") }
+  /// The admins of this group have restricted you from sending files here.
+  public static var channelPersmissionDeniedSendFileForever: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendFile.Forever") }
+  /// The admins of this group have restricted you from sending files here until %@.
+  public static func channelPersmissionDeniedSendFileUntil(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.Persmission.Denied.SendFile.Until", p1)
+  }
   /// Sending GIFs isn't allowed in this group.
   public static var channelPersmissionDeniedSendGifsDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendGifs.DefaultRestrictedText") }
   /// The admins of this group have restricted you from sending GIFs here.
@@ -1402,6 +1430,14 @@ public final class L10n {
   /// The admins of this group have restricted you from posting inline content here until %@.
   public static func channelPersmissionDeniedSendInlineUntil(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.Persmission.Denied.SendInline.Until", p1)
+  }
+  /// Sending video messages isn't allowed in this group.
+  public static var channelPersmissionDeniedSendInstantVideoDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendInstantVideo.DefaultRestrictedText") }
+  /// The admins of this group have restricted you from sending video messages here.
+  public static var channelPersmissionDeniedSendInstantVideoForever: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendInstantVideo.Forever") }
+  /// The admins of this group have restricted you from sending video messages here until %@.
+  public static func channelPersmissionDeniedSendInstantVideoUntil(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.Persmission.Denied.SendInstantVideo.Until", p1)
   }
   /// Sending media isn't allowed in this group.
   public static var channelPersmissionDeniedSendMediaDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendMedia.DefaultRestrictedText") }
@@ -1419,6 +1455,22 @@ public final class L10n {
   public static func channelPersmissionDeniedSendMessagesUntil(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.Persmission.Denied.SendMessages.Until", p1)
   }
+  /// Sending music isn't allowed in this group.
+  public static var channelPersmissionDeniedSendMusicDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendMusic.DefaultRestrictedText") }
+  /// The admins of this group have restricted you from sending music here.
+  public static var channelPersmissionDeniedSendMusicForever: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendMusic.Forever") }
+  /// The admins of this group have restricted you from sending music here until %@.
+  public static func channelPersmissionDeniedSendMusicUntil(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.Persmission.Denied.SendMusic.Until", p1)
+  }
+  /// Sending photos isn't allowed in this group.
+  public static var channelPersmissionDeniedSendPhotoDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendPhoto.DefaultRestrictedText") }
+  /// The admins of this group have restricted you from sending photos here.
+  public static var channelPersmissionDeniedSendPhotoForever: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendPhoto.Forever") }
+  /// The admins of this group have restricted you from sending photos here until %@.
+  public static func channelPersmissionDeniedSendPhotoUntil(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.Persmission.Denied.SendPhoto.Until", p1)
+  }
   /// Posting polls isn't allowed in this group.
   public static var channelPersmissionDeniedSendPollDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendPoll.DefaultRestrictedText") }
   /// The admins of this group have restricted you from posting polls here.
@@ -1434,6 +1486,22 @@ public final class L10n {
   /// The admins of this group have restricted you from sending stickers here until %@.
   public static func channelPersmissionDeniedSendStickersUntil(_ p1: String) -> String {
     return L10n.tr("Localizable", "Channel.Persmission.Denied.SendStickers.Until", p1)
+  }
+  /// Sending video isn't allowed in this group.
+  public static var channelPersmissionDeniedSendVideoDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendVideo.DefaultRestrictedText") }
+  /// The admins of this group have restricted you from sending video here.
+  public static var channelPersmissionDeniedSendVideoForever: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendVideo.Forever") }
+  /// The admins of this group have restricted you from sending video here until %@.
+  public static func channelPersmissionDeniedSendVideoUntil(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.Persmission.Denied.SendVideo.Until", p1)
+  }
+  /// Sending voice messages isn't allowed in this group.
+  public static var channelPersmissionDeniedSendVoiceDefaultRestrictedText: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendVoice.DefaultRestrictedText") }
+  /// The admins of this group have restricted you from sending voice messages here.
+  public static var channelPersmissionDeniedSendVoiceForever: String  { return L10n.tr("Localizable", "Channel.Persmission.Denied.SendVoice.Forever") }
+  /// The admins of this group have restricted you from sending voice messages here until %@.
+  public static func channelPersmissionDeniedSendVoiceUntil(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Channel.Persmission.Denied.SendVoice.Until", p1)
   }
   /// Revoke Link
   public static var channelRevokeLinkConfirmHeader: String  { return L10n.tr("Localizable", "Channel.RevokeLink.Confirm.Header") }
@@ -3101,6 +3169,10 @@ public final class L10n {
   public static func chatServicePeerJoinedTelegram(_ p1: String) -> String {
     return L10n.tr("Localizable", "Chat.Service.PeerJoinedTelegram", p1)
   }
+  /// You shared %1$@ with %2$@.
+  public static func chatServicePeerRequested(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PeerRequested", p1, p2)
+  }
   /// pinned message
   public static var chatServicePinnedMessage: String  { return L10n.tr("Localizable", "Chat.Service.PinnedMessage") }
   /// Search messages by %@
@@ -3297,6 +3369,16 @@ public final class L10n {
   public static var chatServiceGroupTopicEditedYouUnhided: String  { return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Unhided") }
   /// You removed icon
   public static var chatServiceGroupTopicEditedYouIconRemoved: String  { return L10n.tr("Localizable", "Chat.Service.Group.TopicEdited.You.Icon.Removed") }
+  /// Send
+  public static var chatServicePeerRequestConfirmOk: String  { return L10n.tr("Localizable", "Chat.Service.PeerRequest.Confirm.Ok") }
+  /// Are you sure you want to send %1$@ to %2$@? This will also add %3$@ to %4$@ with the following rights: %5$@
+  public static func chatServicePeerRequestConfirmPermission(_ p1: String, _ p2: String, _ p3: String, _ p4: String, _ p5: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PeerRequest.Confirm.Permission", p1, p2, p3, p4, p5)
+  }
+  /// Are you sure you want to send %1$@ to %2$@?
+  public static func chatServicePeerRequestConfirmPlain(_ p1: String, _ p2: String) -> String {
+    return L10n.tr("Localizable", "Chat.Service.PeerRequest.Confirm.Plain", p1, p2)
+  }
   /// %d
   public static func chatServicePremiumGiftInfoCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.Service.PremiumGift.Info_countable", p1)
@@ -3497,6 +3579,20 @@ public final class L10n {
   public static var chatTopicHeaderEmpty: String  { return L10n.tr("Localizable", "Chat.TopicHeader.Empty") }
   /// Topic started
   public static var chatTopicHeaderFull: String  { return L10n.tr("Localizable", "Chat.TopicHeader.Full") }
+  /// Show Original
+  public static var chatTranslateShowOriginal: String  { return L10n.tr("Localizable", "Chat.Translate.ShowOriginal") }
+  /// Translate to %1$@
+  public static func chatTranslateTo(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Translate.To", p1)
+  }
+  /// Do Not Translate %@
+  public static func chatTranslateMenuDoNotTranslate(_ p1: String) -> String {
+    return L10n.tr("Localizable", "Chat.Translate.Menu.DoNotTranslate", p1)
+  }
+  /// Hide
+  public static var chatTranslateMenuHide: String  { return L10n.tr("Localizable", "Chat.Translate.Menu.Hide") }
+  /// Translation bar is now hidden for this channel. You can enable it in profile.
+  public static var chatTranslateMenuHideTooltip: String  { return L10n.tr("Localizable", "Chat.Translate.Menu.Hide.Tooltip") }
   /// %d
   public static func chatUndoManagerChannelDeletedCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "Chat.UndoManager.ChannelDeleted_countable", p1)
@@ -4377,6 +4473,56 @@ public final class L10n {
   public static var checkoutInfoShippingInfoTitle: String  { return L10n.tr("Localizable", "CheckoutInfo.ShippingInfoTitle") }
   /// Shipping Information
   public static var checkoutInfoTitle: String  { return L10n.tr("Localizable", "CheckoutInfo.Title") }
+  /// Requirements:
+  public static var choosePeerRequirementsTitle: String  { return L10n.tr("Localizable", "ChoosePeer.Requirements.Title") }
+  /// • You have the admin rights to %1$@
+  public static func choosePeerRequirementsChannelAdminRights(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChoosePeer.Requirements.Channel.AdminRights", p1)
+  }
+  /// Create a New Channel for This
+  public static var choosePeerRequirementsChannelCreate: String  { return L10n.tr("Localizable", "ChoosePeer.Requirements.Channel.Create") }
+  /// You don't have channel that meet the following requirements:
+  public static var choosePeerRequirementsChannelEmpty: String  { return L10n.tr("Localizable", "ChoosePeer.Requirements.Channel.Empty") }
+  /// • You shouldn't be the owner of the channel.
+  public static var choosePeerRequirementsChannelNonOwner: String  { return L10n.tr("Localizable", "ChoosePeer.Requirements.Channel.NonOwner") }
+  /// • You should be the owner of the channel.
+  public static var choosePeerRequirementsChannelOwner: String  { return L10n.tr("Localizable", "ChoosePeer.Requirements.Channel.Owner") }
+  /// • The channel should be private.
+  public static var choosePeerRequirementsChannelPrivate: String  { return L10n.tr("Localizable", "ChoosePeer.Requirements.Channel.Private") }
+  /// • The channel should be public.
+  public static var choosePeerRequirementsChannelPublic: String  { return L10n.tr("Localizable", "ChoosePeer.Requirements.Channel.Public") }
+  /// • You have the admin rights to %1$@
+  public static func choosePeerRequirementsGroupAdminRights(_ p1: String) -> String {
+    return L10n.tr("Localizable", "ChoosePeer.Requirements.Group.AdminRights", p1)
+  }
+  /// Create a New Group for This
+  public static var choosePeerRequirementsGroupCreate: String  { return L10n.tr("Localizable", "ChoosePeer.Requirements.Group.Create") }
+  /// You don't have groups that meet the following requirements:
+  public static var choosePeerRequirementsGroupEmpty: String  { return L10n.tr("Localizable", "ChoosePeer.Requirements.Group.Empty") }
+  /// • The group should have topics turned on.
+  public static var choosePeerRequirementsGroupForum: String  { return L10n.tr("Localizable", "ChoosePeer.Requirements.Group.Forum") }
+  /// • The group should have topics turned off.
+  public static var choosePeerRequirementsGroupNonForum: String  { return L10n.tr("Localizable", "ChoosePeer.Requirements.Group.NonForum") }
+  /// • You shouldn't be the owner of the group.
+  public static var choosePeerRequirementsGroupNonOwner: String  { return L10n.tr("Localizable", "ChoosePeer.Requirements.Group.NonOwner") }
+  /// • You should be the owner of the group.
+  public static var choosePeerRequirementsGroupOwner: String  { return L10n.tr("Localizable", "ChoosePeer.Requirements.Group.Owner") }
+  /// • The group should be private.
+  public static var choosePeerRequirementsGroupPrivate: String  { return L10n.tr("Localizable", "ChoosePeer.Requirements.Group.Private") }
+  /// • The group should be public.
+  public static var choosePeerRequirementsGroupPublic: String  { return L10n.tr("Localizable", "ChoosePeer.Requirements.Group.Public") }
+  /// • User shouldn't have a Premium subscription.
+  public static var choosePeerRequirementsUserNonPremium: String  { return L10n.tr("Localizable", "ChoosePeer.Requirements.User.NonPremium") }
+  /// • User should have a Premium subscription.
+  public static var choosePeerRequirementsUserPremium: String  { return L10n.tr("Localizable", "ChoosePeer.Requirements.User.Premium") }
+  /// Choose Bot
+  public static var choosePeerTitleBot: String  { return L10n.tr("Localizable", "ChoosePeer.Title.Bot") }
+  /// Choose Channel
+  public static var choosePeerTitleChannel: String  { return L10n.tr("Localizable", "ChoosePeer.Title.Channel") }
+  /// Choose Group
+  public static var choosePeerTitleGroup: String  { return L10n.tr("Localizable", "ChoosePeer.Title.Group") }
+  /// Choose User
+  public static var choosePeerTitleUser: String  { return L10n.tr("Localizable", "ChoosePeer.Title.User") }
   /// Create
   public static var composeCreate: String  { return L10n.tr("Localizable", "Compose.Create") }
   /// Next
@@ -4521,8 +4667,24 @@ public final class L10n {
   public static var crashOnLaunchOK: String  { return L10n.tr("Localizable", "CrashOnLaunch.OK") }
   /// Sorry, you are a member of too many groups and channels. Please leave some before creating a new one.
   public static var createChannelsTooMuch: String  { return L10n.tr("Localizable", "Create.ChannelsTooMuch") }
+  /// Topics must be enabled.
+  public static var createChannelForumError: String  { return L10n.tr("Localizable", "CreateChannel.Forum.Error") }
+  /// Sorry, you have reserved too many public usernames. You can revoke the link from one of your older groups or channels.
+  public static var createChannelTooManyErrorTitle: String  { return L10n.tr("Localizable", "CreateChannel.TooManyError.Title") }
+  /// Channel must be a public. Please choose username.
+  public static var createChannelUsernameError: String  { return L10n.tr("Localizable", "CreateChannel.Username.Error") }
   /// Group Name
   public static var createGroupNameHolder: String  { return L10n.tr("Localizable", "CreateGroup.NameHolder") }
+  /// You can't create group without members.
+  public static var createGroupAddMemberError: String  { return L10n.tr("Localizable", "CreateGroup.AddMember.Error") }
+  /// SET A PUBLIC LINK
+  public static var createGroupRequiresUsernameHeader: String  { return L10n.tr("Localizable", "CreateGroup.Requires.Username.Header") }
+  /// You can use a-z, 0-9 and underscores. Minimum length is 5 characters.
+  public static var createGroupRequiresUsernameInfo: String  { return L10n.tr("Localizable", "CreateGroup.Requires.Username.Info") }
+  /// link
+  public static var createGroupRequiresUsernamePlaceholder: String  { return L10n.tr("Localizable", "CreateGroup.Requires.Username.Placeholder") }
+  /// Group must be a public. Please choose username.
+  public static var createGroupUsernameError: String  { return L10n.tr("Localizable", "CreateGroup.Username.Error") }
   /// Artists are welcome to add their own emoji sets using our [@stickers]() bot.
   public static var customEmojiInfo: String  { return L10n.tr("Localizable", "CustomEmoji.Info") }
   /// Subscribe to Telegram Premium to unlock this emoji. [Read More]()
@@ -4857,9 +5019,9 @@ public final class L10n {
   public static var emojiTravelAndPlaces: String  { return L10n.tr("Localizable", "Emoji.TravelAndPlaces") }
   /// Remove
   public static var emojiContextRemove: String  { return L10n.tr("Localizable", "Emoji.Context.Remove") }
-  /// Set Status
+  /// Set as Status
   public static var emojiContextSetStatus: String  { return L10n.tr("Localizable", "Emoji.Context.SetStatus") }
-  /// Status successfully updated.
+  /// Your emoji status has been updated.
   public static var emojiContextSetStatusSuccess: String  { return L10n.tr("Localizable", "Emoji.Context.SetStatus.Success") }
   /// ANIMATED EMOJI
   public static var emojiSearchAnimatedEmoji: String  { return L10n.tr("Localizable", "Emoji.Search.AnimatedEmoji") }
@@ -6123,6 +6285,16 @@ public final class L10n {
   public static var languageOfficialTransationsHeader: String  { return L10n.tr("Localizable", "Language.OfficialTransationsHeader") }
   /// Are you sure you want to remove this lang-pack?
   public static var languageRemovePack: String  { return L10n.tr("Localizable", "Language.RemovePack") }
+  /// Translate Channels
+  public static var languageTranslateMessagesChannel: String  { return L10n.tr("Localizable", "Language.TranslateMessages.Channel") }
+  /// Do Not Translate
+  public static var languageTranslateMessagesDoNotTranslate: String  { return L10n.tr("Localizable", "Language.TranslateMessages.DoNotTranslate") }
+  /// TRANSLATE MESSAGES
+  public static var languageTranslateMessagesHeader: String  { return L10n.tr("Localizable", "Language.TranslateMessages.Header") }
+  /// Suggest to translate channel messages if app language is different. This is available only for [Premium Users]().
+  public static var languageTranslateMessagesChannelInfo: String  { return L10n.tr("Localizable", "Language.TranslateMessages.Channel.Info") }
+  /// This is available only for [Telegram Premium](premium)
+  public static var languageTranslateMessagesChannelPremium: String  { return L10n.tr("Localizable", "Language.TranslateMessages.Channel.Premium") }
   /// %d
   public static func lastSeenHoursAgoCountable(_ p1: Int) -> String {
     return L10n.tr("Localizable", "LastSeen.HoursAgo_countable", p1)
@@ -7719,6 +7891,8 @@ public final class L10n {
   public static func peerInfoTopicsLimitedParticipantCountTextZero(_ p1: Int) -> String {
     return L10n.tr("Localizable", "PeerInfo.TopicsLimitedParticipantCountText_zero", p1)
   }
+  /// Translate
+  public static var peerInfoTranslate: String  { return L10n.tr("Localizable", "PeerInfo.Translate") }
   /// Unarchive
   public static var peerInfoUnarchive: String  { return L10n.tr("Localizable", "PeerInfo.Unarchive") }
   /// Unblock User

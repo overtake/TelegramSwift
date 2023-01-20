@@ -49,14 +49,14 @@ class GroupNameRowView : InputDataRowView {
     private let imageView:ImageView = ImageView()
     private let photoView: TransformImageView = TransformImageView()
     private let tranparentView: View = View()
-    private let circleView = View(frame: NSMakeRect(0, 0, 50, 50))
+    private let circleView = View(frame: NSMakeRect(0, 0, 52, 52))
     required init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         containerView.addSubview(photoView)
         containerView.addSubview(tranparentView)
         containerView.addSubview(imageView)
         containerView.addSubview(circleView)
-        photoView.setFrameSize(50, 50)
+        photoView.setFrameSize(52, 52)
         tranparentView.setFrameSize(50, 50)
         photoView.animatesAlphaOnFirstTransition = true
         tranparentView.layer?.cornerRadius = 25

@@ -324,7 +324,10 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         }
         
         
+        
         if let cachedData = item.peerView.cachedData as? CachedChannelData {
+            
+           
             
             switch cachedData.linkedDiscussionPeerId {
             case let .known(peerId):
@@ -357,6 +360,17 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         if peer.groupAccess.canReport {
             items.append(ActionItem(text: strings().peerInfoActionReport, image: theme.icons.profile_report, animation: .menu_report, action: arguments.report))
         }
+        if let cachedData = item.peerView.cachedData as? CachedChannelData {
+            let disabledTranslation = cachedData.flags.contains(.translationHidden)
+            let canTranslate = arguments.context.sharedContext.baseSettings.translateChannels
+            
+            if canTranslate && disabledTranslation {
+                items.append(ActionItem(text: strings().peerInfoTranslate, image: theme.icons.profile_translate, animation: .menu_translate, action: { [weak arguments] in
+                    arguments?.enableTranslate()
+                }))
+            }
+        }
+        
         
         
         switch peer.participationStatus {

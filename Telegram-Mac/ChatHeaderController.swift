@@ -11,10 +11,10 @@ import Cocoa
 import TGUIKit
 import SwiftSignalKit
 import TelegramCore
-
+import Translate
 import Postbox
 import TGModernGrowingTextView
-
+import Localization
 
 
 
@@ -36,6 +36,7 @@ enum ChatHeaderState : Identifiable, Equatable {
     case pinned(ChatActiveGroupCallInfo?, ChatPinnedMessage, doNotChangeTable: Bool)
     case report(ChatActiveGroupCallInfo?, autoArchived: Bool, status: PeerEmojiStatus?)
     case promo(ChatActiveGroupCallInfo?, EngineChatList.AdditionalItem.PromoInfo.Content)
+    case translate(ChatActiveGroupCallInfo?, ChatPresentationInterfaceState.TranslateState)
     case pendingRequests(ChatActiveGroupCallInfo?, Int, [PeerInvitationImportersState.Importer])
     case restartTopic(ChatActiveGroupCallInfo?)
     var stableId:Int {
@@ -60,6 +61,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             return 8
         case .restartTopic:
             return 9
+        case .translate:
+            return 10
         }
     }
 
@@ -85,6 +88,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             return voiceChat
         case let .restartTopic(voiceChat):
             return voiceChat
+        case let .translate(voiceChat, _):
+            return voiceChat
         }
     }
     
@@ -108,6 +113,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             return ChatRequestChat.self
         case .restartTopic:
             return ChatRestartTopic.self
+        case .translate:
+            return ChatTranslateHeader.self
         case .none:
             return nil
         }
@@ -149,6 +156,8 @@ enum ChatHeaderState : Identifiable, Equatable {
             height += 44
         case .restartTopic:
             height += 44
+        case .translate:
+            height += 44
         }
         return height
     }
@@ -180,6 +189,12 @@ enum ChatHeaderState : Identifiable, Equatable {
             }
         case let .addContact(call, block, autoArchive):
             if case .addContact(call, block, autoArchive) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .translate(call, translate):
+            if case .translate(call, translate) = rhs {
                 return true
             } else {
                 return false
@@ -334,6 +349,8 @@ class ChatHeaderController {
                 primary = ChatRequestChat(chatInteraction, state: _headerState, frame: primaryRect)
             case .restartTopic:
                 primary = ChatRestartTopic(chatInteraction, state: _headerState, frame: primaryRect)
+            case .translate:
+                primary = ChatTranslateHeader(chatInteraction, state: _headerState, frame: primaryRect)
             case .none:
                 primary = nil
             }
@@ -2568,3 +2585,136 @@ private final class ChatRestartTopic : Control, ChatHeaderProtocol {
         fatalError("init(frame:) has not been implemented")
     }
 }
+
+
+private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
+    private let chatInteraction:ChatInteraction
+    private let textView = TitleButton()
+    
+    private let action = ImageButton()
+    
+    private var _state: ChatHeaderState?
+    
+    required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
+        self.chatInteraction = chatInteraction
+        self._state = state
+        super.init(frame: frame)
+        
+        self.set(handler: { [weak self] control in
+            self?.chatInteraction.toggleTranslate()
+        }, for: .SingleClick)
+        
+        self.set(handler: { [weak self] _ in
+            self?.textView.alphaValue = 0.8
+        }, for: .Highlight)
+        
+        self.set(handler: { [weak self] _ in
+            self?.textView.alphaValue = 1
+        }, for: .Normal)
+        
+        self.set(handler: { [weak self] _ in
+            self?.textView.alphaValue = 1
+        }, for: .Hover)
+        
+        textView.userInteractionEnabled = false
+        textView.autohighlight = false
+        textView.disableActions()
+        textView.animates = false
+        
+        addSubview(textView)
+        addSubview(action)
+        self.style = ControlStyle(backgroundColor: theme.colors.background)
+
+        self.border = [.Bottom]
+        
+        update(with: state, animated: false)
+        
+        action.contextMenu = { [weak self] in
+            return self?.makeContextMenu()
+        }
+
+    }
+    
+    private func makeContextMenu() -> ContextMenu? {
+        guard let state = self._state, case let .translate(_, translate) = state else {
+            return nil
+        }
+        let menu = ContextMenu()
+        var items: [ContextMenuItem] = []
+        
+        if let from = translate.from, let language = Translate.find(from) {
+            items.append(ContextMenuItem(strings().chatTranslateMenuDoNotTranslate(_NSLocalizedString("Translate.Language.\(language.language)")), handler: { [weak self] in
+                self?.chatInteraction.doNotTranslate(from)
+            }, itemImage: MenuAnimation.menu_restrict.value))
+        }
+        
+        if !translate.translate {
+            items.append(ContextSeparatorItem())
+            items.append(ContextMenuItem(strings().chatTranslateMenuHide, handler: { [weak self] in
+                self?.chatInteraction.hideTranslation()
+            }, itemImage: MenuAnimation.menu_clear_history.value))
+        }
+        menu.items = items
+        
+        return menu
+        
+    }
+    
+    func remove(animated: Bool) {
+        
+    }
+
+    func update(with state: ChatHeaderState, animated: Bool) {
+        _state = state
+        textView.set(font: .normal(.text), for: .Normal)
+        textView.set(color: theme.colors.accent, for: .Normal)
+        textView.set(image: theme.icons.chat_translate, for: .Normal)
+        
+        action.set(image: theme.icons.chatActions, for: .Normal)
+        action.sizeToFit(NSZeroSize, NSMakeSize(40, 40), thatFit: true)
+        action.autohighlight = false
+        action.scaleOnClick = true
+        
+        switch state {
+        case let .translate(_, translate):
+            let language = Translate.find(translate.to)
+            if let language = language {
+                if translate.translate {
+                    textView.set(text: strings().chatTranslateShowOriginal, for: .Normal)
+                } else {
+                    let toString = _NSLocalizedString("Translate.Language.\(language.language)")
+                    textView.set(text: strings().chatTranslateTo(toString), for: .Normal)
+                }
+                textView.sizeToFit()
+            }
+        default:
+            break
+        }
+        updateLocalizationAndTheme(theme: theme)
+        needsLayout = true
+
+    }
+    
+    override func updateLocalizationAndTheme(theme: PresentationTheme) {
+        super.updateLocalizationAndTheme(theme: theme)
+        let theme = (theme as! TelegramPresentationTheme)
+        self.backgroundColor = theme.colors.background
+    }
+    
+    override func layout() {
+        super.layout()
+//        textView.resize(frame.width - 40)
+        textView.center()
+        action.centerY(x: frame.width - action.frame.width - 14)
+    }
+    
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(frame frameRect: NSRect) {
+        fatalError("init(frame:) has not been implemented")
+    }
+}
+

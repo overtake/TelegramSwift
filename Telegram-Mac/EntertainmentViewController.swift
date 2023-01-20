@@ -852,7 +852,11 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             genericView.closePremium()
             return .invoked
         }
-        return super.escapeKeyAction()
+        let result = self.section.selectedSection.controller.escapeKeyAction()
+        if result == .rejected {
+            return super.escapeKeyAction()
+        }
+        return result
     }
     
     override func viewDidLoad() {

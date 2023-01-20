@@ -106,7 +106,7 @@ extension TelegramChatBannedRightsFlags {
             return strings().eventLogServiceDemoteSendInline
         case TelegramChatBannedRightsFlags.banSendMedia:
             return strings().eventLogServiceDemoteSendMedia
-        case TelegramChatBannedRightsFlags.banSendMessages:
+        case TelegramChatBannedRightsFlags.banSendText:
             return strings().eventLogServiceDemoteSendMessages
         case TelegramChatBannedRightsFlags.banSendStickers:
             return strings().eventLogServiceDemoteSendStickers
@@ -153,24 +153,60 @@ extension TelegramChatBannedRights {
 }
 
 
-func permissionText(from peer: Peer, for flags: TelegramChatBannedRightsFlags) -> String? {
-    let bannedPermission: (Int32, Bool)?
-    if let channel = peer as? TelegramChannel {
-        bannedPermission = channel.hasBannedPermission(flags)
-    } else if let group = peer as? TelegramGroup {
-        if group.hasBannedPermission(flags) {
-            bannedPermission = (Int32.max, false)
+func checkMediaPermission(_ media: Media, for peer: Peer) -> String? {
+    switch media {
+    case _ as TelegramMediaPoll:
+        return permissionText(from: peer, for: .banSendPolls)
+    case _ as TelegramMediaImage:
+        return permissionText(from: peer, for: .banSendPhotos)
+    case let file as TelegramMediaFile:
+        if file.isAnimated && file.isVideo {
+            return permissionText(from: peer, for: .banSendGifs)
+        } else if file.isStaticSticker {
+            return permissionText(from: peer, for: .banSendStickers)
+        } else if file.isMusic {
+            return permissionText(from: peer, for: .banSendMusic)
+        } else if file.isVoice {
+            return permissionText(from: peer, for: .banSendVoice)
+        } else if file.isInstantVideo {
+            return permissionText(from: peer, for: .banSendInstantVideos)
+        } else if file.isVideo {
+            return permissionText(from: peer, for: .banSendVideos)
         } else {
-            bannedPermission = nil
+            return permissionText(from: peer, for: .banSendFiles)
         }
-    } else {
-        bannedPermission = nil
+    case _ as TelegramMediaGame:
+        return permissionText(from: peer, for: .banSendGames)
+    default:
+        return nil
+    }
+}
+
+func permissionText(from peer: Peer, for flags: TelegramChatBannedRightsFlags) -> String? {
+    var bannedPermission: (Int32, Bool)?
+    
+    let get:(TelegramChatBannedRightsFlags) -> (Int32, Bool)? = { flags in
+        if let channel = peer as? TelegramChannel {
+            return channel.hasBannedPermission(flags)
+        } else if let group = peer as? TelegramGroup {
+            if group.hasBannedPermission(flags) {
+                return (Int32.max, false)
+            } else {
+                return nil
+            }
+        } else {
+            return nil
+        }
+    }
+    bannedPermission = get(flags)
+    if bannedPermission == nil, banSendMediaSubList().contains(where: { $0.0 == flags }) {
+        bannedPermission = get(.banSendMedia)
     }
     
     if let (untilDate, personal) = bannedPermission {
         
         switch flags {
-        case .banSendMessages:
+        case .banSendText:
             if personal && untilDate != 0 && untilDate != Int32.max {
                 return strings().channelPersmissionDeniedSendMessagesUntil(stringForFullDate(timestamp: untilDate))
             } else if personal {
@@ -217,6 +253,54 @@ func permissionText(from peer: Peer, for flags: TelegramChatBannedRightsFlags) -
                 return strings().channelPersmissionDeniedSendInlineForever
             } else {
                 return strings().channelPersmissionDeniedSendInlineDefaultRestrictedText
+            }
+        case .banSendVoice:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return strings().channelPersmissionDeniedSendVoiceUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return strings().channelPersmissionDeniedSendVoiceForever
+            } else {
+                return strings().channelPersmissionDeniedSendVoiceDefaultRestrictedText
+            }
+        case .banSendInstantVideos:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return strings().channelPersmissionDeniedSendInstantVideoUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return strings().channelPersmissionDeniedSendInstantVideoForever
+            } else {
+                return strings().channelPersmissionDeniedSendInstantVideoDefaultRestrictedText
+            }
+        case .banSendVideos:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return strings().channelPersmissionDeniedSendVideoUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return strings().channelPersmissionDeniedSendVideoForever
+            } else {
+                return strings().channelPersmissionDeniedSendVideoDefaultRestrictedText
+            }
+        case .banSendPhotos:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return strings().channelPersmissionDeniedSendPhotoUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return strings().channelPersmissionDeniedSendPhotoForever
+            } else {
+                return strings().channelPersmissionDeniedSendPhotoDefaultRestrictedText
+            }
+        case .banSendFiles:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return strings().channelPersmissionDeniedSendFileUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return strings().channelPersmissionDeniedSendFileForever
+            } else {
+                return strings().channelPersmissionDeniedSendFileDefaultRestrictedText
+            }
+        case .banSendMusic:
+            if personal && untilDate != 0 && untilDate != Int32.max {
+                return strings().channelPersmissionDeniedSendMusicUntil(stringForFullDate(timestamp: untilDate))
+            } else if personal {
+                return strings().channelPersmissionDeniedSendMusicForever
+            } else {
+                return strings().channelPersmissionDeniedSendMusicDefaultRestrictedText
             }
         default:
             return nil
@@ -520,6 +604,15 @@ public extension Message {
     var replyMarkup:ReplyMarkupMessageAttribute? {
         for attr in attributes {
             if let attr = attr as? ReplyMarkupMessageAttribute {
+                return attr
+            }
+        }
+        return nil
+    }
+    
+    var translationAttribute: TranslationMessageAttribute? {
+        for attr in attributes {
+            if let attr = attr as? TranslationMessageAttribute {
                 return attr
             }
         }
@@ -964,7 +1057,7 @@ func canDeleteMessage(_ message:Message, account:Account, mode: ChatMode) -> Boo
     if let channel = message.peers[message.id.peerId] as? TelegramChannel {
         if case .broadcast = channel.info {
             if !message.flags.contains(.Incoming) {
-                return channel.hasPermission(.sendMessages)
+                return channel.hasPermission(.sendText)
             }
             return channel.hasPermission(.deleteAllMessages)
         }
@@ -1189,14 +1282,14 @@ func canEditMessage(_ message:Message, chatInteraction: ChatInteraction, context
     if let peer = coreMessageMainPeer(message) as? TelegramChannel {
         if case .broadcast = peer.info {
             if message.isScheduledMessage {
-                return peer.hasPermission(.sendMessages) || peer.hasPermission(.editAllMessages)
+                return peer.hasPermission(.sendText) || peer.hasPermission(.editAllMessages)
             }
             if peer.hasPermission(.pinMessages) {
                 timeInCondition = true
             }
             if peer.hasPermission(.editAllMessages) {
                 return timeInCondition
-            } else if peer.hasPermission(.sendMessages) {
+            } else if peer.hasPermission(.sendText) {
                 return timeInCondition && message.author?.id == chatInteraction.context.peerId
             }
             return false

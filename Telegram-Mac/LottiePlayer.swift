@@ -52,7 +52,7 @@ final class RenderAtomic<T> {
 
 
 let lottieThreadPool: ThreadPool = ThreadPool(threadCount: 5, threadPriority: 1.0)
-private let stateQueue = Queue()
+let lottieStateQueue = Queue()
 
 
 
@@ -1321,7 +1321,7 @@ final class LottieAnimation : Equatable {
     }
 
     
-    init(compressed: Data, key: LottieAnimationEntryKey, type: LottieAnimationType = .lottie, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], soundEffect: LottieSoundEffect? = nil, postbox: Postbox? = nil, runOnQueue: Queue = stateQueue, metalSupport: Bool = false) {
+    init(compressed: Data, key: LottieAnimationEntryKey, type: LottieAnimationType = .lottie, cachePurpose: ASCachePurpose = .temporaryLZ4(.thumb), playPolicy: LottiePlayPolicy = .loop, maximumFps: Int = 60, colors: [LottieColor] = [], soundEffect: LottieSoundEffect? = nil, postbox: Postbox? = nil, runOnQueue: Queue = lottieStateQueue, metalSupport: Bool = false) {
         self.compressed = compressed
         self.key = key.withUpdatedColors(colors)
         self.cache = cachePurpose
@@ -1504,7 +1504,7 @@ private final class Loop {
         self.commandQueue = commandQueue
         self.timer = SwiftSignalKit.Timer(timeout: 1 / TimeInterval(runLoop.fps), repeat: true, completion: { [weak self] in
             self?.renderItems()
-        }, queue: stateQueue)
+        }, queue: lottieStateQueue)
         
         self.timer?.start()
     }
@@ -1557,7 +1557,7 @@ final class MetalContext {
     private var loops: QueueLocalObject<Loops>
     
     init?() {
-        self.loops = QueueLocalObject(queue: stateQueue, generate: {
+        self.loops = QueueLocalObject(queue: lottieStateQueue, generate: {
             return Loops()
         })
         self.displayId = CGMainDisplayID()

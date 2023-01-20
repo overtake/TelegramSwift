@@ -198,7 +198,7 @@ extension Peer {
         }
         if let channel = self as? TelegramChannel {
             if case .broadcast(_) = channel.info {
-                return channel.hasPermission(.sendMessages)
+                return channel.hasPermission(.sendText)
             } else if case .group = channel.info {
                 
                 if let data = threadData {
@@ -209,10 +209,10 @@ extension Peer {
                 
                 switch channel.participationStatus {
                 case .member:
-                    return !channel.hasBannedRights(.banSendMessages)
+                    return !channel.hasBannedRights(.banSendText)
                 case .left:
                     if isThreadMode {
-                        return !channel.hasBannedRights(.banSendMessages)
+                        return !channel.hasBannedRights(.banSendText)
                     }
                     return false
                 case .kicked:
@@ -220,7 +220,7 @@ extension Peer {
                 }
             }
         } else if let group = self as? TelegramGroup {
-            return group.membership == .Member && !group.hasBannedPermission(.banSendMessages)
+            return group.membership == .Member && !group.hasBannedPermission(.banSendText)
         } else if let secret = self as? TelegramSecretChat {
             switch secret.embeddedState {
             case .terminated:

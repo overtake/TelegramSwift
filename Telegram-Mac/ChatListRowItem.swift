@@ -105,7 +105,7 @@ class ChatListRowItem: TableRowItem {
         
     private var messages:[Message]
     var message: Message? {
-        return messages.first
+        return messages.first(where: { !$0.text.isEmpty }) ?? messages.first
     }
     
     let context: AccountContext
@@ -592,7 +592,7 @@ class ChatListRowItem: TableRowItem {
         var draft = draft
         
         if let peer = renderedPeer.chatMainPeer?._asPeer() as? TelegramChannel {
-            if !peer.hasPermission(.sendMessages) {
+            if !peer.hasPermission(.sendSomething) {
                 draft = nil
             }
         }

@@ -265,10 +265,10 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
             currentTimeoutString = timeIntervalString(Int(remainingTimeout))
         }
         
-        
-        for right in allGroupPermissionList {
+        let list = allGroupPermissionList(peer: peer)
+        for (i, (right, _)) in list.enumerated() {
             let defaultEnabled = !defaultBannedRights.flags.contains(right)
-            entries.append(.rightItem(sectionId, index, stringForGroupPermission(right: right, channel: peer), right, defaultEnabled && !currentRightsFlags.contains(right), defaultEnabled && !state.updating, bestGeneralViewType(allGroupPermissionList, for: right)))
+            entries.append(.rightItem(sectionId, index, stringForGroupPermission(right: right, channel: peer), right, defaultEnabled && !currentRightsFlags.contains(right), defaultEnabled && !state.updating, bestGeneralViewType(list, for: i)))
             index += 1
         }
         
@@ -325,10 +325,10 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
             currentTimeoutString = timeIntervalString(Int(remainingTimeout))
         }
                 
-        
-        for right in allGroupPermissionList {
+        let list = allGroupPermissionList(peer: group)
+        for (i, (right, _)) in list.enumerated() {
             let defaultEnabled = !defaultBannedRights.flags.contains(right)
-            entries.append(.rightItem(sectionId, index, stringForGroupPermission(right: right, channel: nil), right, defaultEnabled && !currentRightsFlags.contains(right), defaultEnabled && !state.updating, bestGeneralViewType(allGroupPermissionList, for: right)))
+            entries.append(.rightItem(sectionId, index, stringForGroupPermission(right: right, channel: nil), right, defaultEnabled && !currentRightsFlags.contains(right), defaultEnabled && !state.updating, bestGeneralViewType(list, for: i)))
             index += 1
         }
         
@@ -452,7 +452,7 @@ class RestrictedModalViewController: TableModalViewController {
                             effectiveRightsFlags = effectiveRightsFlags.subtracting(groupPermissionDependencies(rights))
                         } else {
                             effectiveRightsFlags.insert(rights)
-                            for right in allGroupPermissionList {
+                            for (right, _) in allGroupPermissionList(peer: peer) {
                                 if groupPermissionDependencies(right).contains(rights) {
                                     effectiveRightsFlags.insert(right)
                                 }

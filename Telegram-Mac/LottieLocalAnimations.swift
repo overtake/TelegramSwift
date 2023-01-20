@@ -41,6 +41,7 @@ enum LocalAnimatedSticker : String {
     case global_autoremove
     case gigagroup
     case police
+    case duck_empty
     
     case voice_chat_raise_hand_1
     case voice_chat_raise_hand_2
@@ -252,7 +253,35 @@ enum LocalAnimatedSticker : String {
     case menu_send_spoiler
     case menu_forever
     case menu_add
-
+    
+    case emoji_category_activities
+    case emoji_category_angry
+    case emoji_category_arrow_to_search
+    case emoji_category_away
+    case emoji_category_bath
+    case emoji_category_busy
+    case emoji_category_dislike
+    case emoji_category_food
+    case emoji_category_happy
+    case emoji_category_heart
+    case emoji_category_hi
+    case emoji_category_home
+    case emoji_category_like
+    case emoji_category_neutral
+    case emoji_category_omg
+    case emoji_category_party
+    case emoji_category_recent
+    case emoji_category_sad
+    case emoji_category_search_to_arrow
+    case emoji_category_sleep
+    case emoji_category_study
+    case emoji_category_tongue
+    case emoji_category_vacation
+    case emoji_category_what
+    case emoji_category_work
+    
+    
+    
     case forum_topic
     
     case custom_reaction
