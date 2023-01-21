@@ -951,7 +951,7 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
         }
         for id in removeShimmer {
             let index = captionShimmerViews.firstIndex(where: { $0.id == id })
-            if let index {
+            if let index = index {
                 let view = captionShimmerViews.remove(at: index)
                 performSubviewRemoval(view.view, animated: animated)
             }
