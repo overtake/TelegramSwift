@@ -78,7 +78,7 @@ private func makeInlineResult(_ inputQuery: ChatPresentationInputQuery, chatPres
                 case .installed:
                     scope = [.installed]
                 }
-                return context.engine.stickers.searchStickers(query: query, scope: scope)
+                return context.engine.stickers.searchStickers(query: query, scope: scope) |> map { $0.items }
         }
         |> map { stickers -> (ChatPresentationInputQueryResult?) -> ChatPresentationInputQueryResult? in
             return { _ in

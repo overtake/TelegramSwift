@@ -24,13 +24,15 @@ class ReplyModel: ChatAccessoryModel {
     private let autodownload: Bool
     private let headerAsName: Bool
     private let customHeader: String?
-    init(replyMessageId:MessageId, context: AccountContext, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, customHeader: String? = nil, drawLine: Bool = true, makesizeCallback: (()->Void)? = nil, dismissReply: (()->Void)? = nil) {
+    private let translate: ChatLiveTranslateContext.State.Result?
+    init(replyMessageId:MessageId, context: AccountContext, replyMessage:Message? = nil, isPinned: Bool = false, autodownload: Bool = false, presentation: ChatAccessoryPresentation? = nil, headerAsName: Bool = false, customHeader: String? = nil, drawLine: Bool = true, makesizeCallback: (()->Void)? = nil, dismissReply: (()->Void)? = nil, translate: ChatLiveTranslateContext.State.Result? = nil) {
         self.isPinned = isPinned
         self.makesizeCallback = makesizeCallback
         self.autodownload = autodownload
         self.replyMessage = replyMessage
         self.headerAsName = headerAsName
         self.customHeader = customHeader
+        self.translate = translate
         super.init(context: context, presentation: presentation, drawLine: drawLine)
         
       
@@ -235,6 +237,8 @@ class ReplyModel: ChatAccessoryModel {
 
         if let message = message {
             
+            
+            
             var title: String? = message.effectiveAuthor?.displayTitle
             if let info = message.forwardInfo {
                 title = info.authorTitle
@@ -251,8 +255,15 @@ class ReplyModel: ChatAccessoryModel {
                 title = strings().chatHeaderPinnedMessage
             }
             
+            let text: NSAttributedString
+            if let _ = self.translate, let translateText = message.translationAttribute?.text  {
+                text = .initialize(string: translateText, color: theme.colors.text, font: .normal(.text))
+            } else {
+                text = chatListText(account: context.account, for: message, isPremium: context.isPremium, isReplied: true)
+            }
             
-            let text = chatListText(account: context.account, for: message, isPremium: context.isPremium, isReplied: true)
+            
+            
             if let header = customHeader {
                 self.header = .init(.initialize(string: header, color: presentation.title, font: .medium(.text)), maximumNumberOfLines: 1)
             } else {
@@ -271,6 +282,8 @@ class ReplyModel: ChatAccessoryModel {
             display = true
         }
         
+       
+        
         if !isLoading {
             measureSize(width, sizeToFit: sizeToFit)
             display = true
@@ -279,6 +292,26 @@ class ReplyModel: ChatAccessoryModel {
             self.view?.setFrameSize(self.size)
             self.setNeedDisplay()
         }
+    }
+    
+    override func measureSize(_ width: CGFloat = 0, sizeToFit: Bool = false) {
+        super.measureSize(width, sizeToFit: sizeToFit)
+        
+//        if let translate = translate, let message = self.message {
+//            switch translate {
+//            case .loading:
+//                _shimm = message.generateBlock(backgroundColor: .blackTransparent)
+//            case .complete:
+//                _shimm = (.zero, nil)
+//            }
+//        } else {
+//            _shimm = (.zero, nil)
+//        }
+    }
+    
+    private var _shimm: (NSPoint, CGImage?) = (.zero, nil)
+    override var shimm: (NSPoint, CGImage?) {
+        return _shimm
     }
 
     

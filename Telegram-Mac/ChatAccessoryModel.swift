@@ -15,6 +15,10 @@ class ChatAccessoryView : Button {
     let headerView = TextView()
     let textView = TextView()
     
+    private var shimmerEffect: ShimmerView?
+    private var shimmerMask: SimpleLayer?
+
+    
     private var inlineStickerItemViews: [InlineStickerItemLayer.Key: InlineStickerItemLayer] = [:]
 
     
@@ -67,6 +71,10 @@ class ChatAccessoryView : Button {
         
         transition.updateFrame(view: textView, frame: textRect)
                 
+        if let view = shimmerEffect {
+            let rect = CGRect(origin: textRect.origin, size: view.frame.size)
+            transition.updateFrame(view: view, frame: rect.offsetBy(dx: -5, dy: -1))
+        }
     }
     
     func updateModel(_ model: ChatAccessoryModel, animated: Bool) {
@@ -88,6 +96,50 @@ class ChatAccessoryView : Button {
         if let message = model.message {
             updateInlineStickers(context: model.context, view: self.textView, textLayout: message)
         }
+        
+        if let blockImage = model.shimm.1 {
+            let size = blockImage.size
+            let current: ShimmerView
+            if let view = self.shimmerEffect {
+                current = view
+            } else {
+                current = ShimmerView()
+                self.shimmerEffect = current
+                self.addSubview(current, positioned: .above, relativeTo: textView)
+                
+                if animated {
+                    current.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
+                }
+            }
+            current.update(backgroundColor: .blackTransparent, data: nil, size: size, imageSize: size)
+            current.updateAbsoluteRect(size.bounds, within: size)
+            
+            current.frame = blockImage.backingSize.bounds
+            
+            if shimmerMask == nil {
+                shimmerMask = SimpleLayer()
+            }
+            var fr = CATransform3DIdentity
+            fr = CATransform3DTranslate(fr, blockImage.backingSize.width / 2, 0, 0)
+            fr = CATransform3DScale(fr, 1, -1, 1)
+            fr = CATransform3DTranslate(fr, -(blockImage.backingSize.width / 2), 0, 0)
+            
+            shimmerMask?.transform = fr
+            shimmerMask?.contentsScale = 2.0
+            shimmerMask?.contents = blockImage
+            shimmerMask?.frame = CGRect(origin: .zero, size: blockImage.backingSize)
+            current.layer?.mask = shimmerMask
+        } else {
+            if let view = self.shimmerEffect {
+                let shimmerMask = self.shimmerMask
+                performSubviewRemoval(view, animated: animated, completed: { [weak shimmerMask] _ in
+                    shimmerMask?.removeFromSuperlayer()
+                })
+                self.shimmerEffect = nil
+                self.shimmerMask = nil
+            }
+        }
+        
         
         let transition: ContainedViewLayoutTransition
         if animated {
@@ -221,6 +273,10 @@ class ChatAccessoryModel: NSObject {
     
     public let nodeReady = Promise<Bool>()
     
+    public var shimm: (NSPoint, CGImage?) {
+        return (.zero, nil)
+    }
+    
     var updateImageSignal: Signal<ImageDataTransformation, NoError>?
 
     
@@ -308,7 +364,7 @@ class ChatAccessoryModel: NSObject {
     
     let yInset:CGFloat = 2
     var leftInset:CGFloat {
-        return drawLine ? 6 : 8
+        return drawLine ? 8 : 8
     }
     
     var header:TextViewLayout?
@@ -322,6 +378,7 @@ class ChatAccessoryModel: NSObject {
         
         header?.measure(width: width - leftInset)
         message?.measure(width: width - leftInset)
+        
         
         
         if let header = header, let message = message {            

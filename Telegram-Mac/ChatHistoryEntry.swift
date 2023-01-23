@@ -140,7 +140,9 @@ struct MessageEntryAdditionalData : Equatable {
     let eventLog: AdminLogEvent?
     let isRevealed: Bool?
     let translate: ChatLiveTranslateContext.State.Result?
-    init(pollStateData: ChatPollStateData = ChatPollStateData(), highlightFoundText: HighlightFoundText? = nil, isThreadLoading: Bool = false, updatingMedia: ChatUpdatingMessageMedia? = nil, chatTheme: TelegramPresentationTheme? = nil, reactions: AvailableReactions? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], transribeState:TranscribeAudioState? = nil, eventLog: AdminLogEvent? = nil, isRevealed: Bool? = nil, translate: ChatLiveTranslateContext.State.Result? = nil) {
+    var replyTranslate: ChatLiveTranslateContext.State.Result?
+
+    init(pollStateData: ChatPollStateData = ChatPollStateData(), highlightFoundText: HighlightFoundText? = nil, isThreadLoading: Bool = false, updatingMedia: ChatUpdatingMessageMedia? = nil, chatTheme: TelegramPresentationTheme? = nil, reactions: AvailableReactions? = nil, animatedEmojiStickers: [String: StickerPackItem] = [:], transribeState:TranscribeAudioState? = nil, eventLog: AdminLogEvent? = nil, isRevealed: Bool? = nil, translate: ChatLiveTranslateContext.State.Result? = nil, replyTranslate: ChatLiveTranslateContext.State.Result? = nil) {
         self.pollStateData = pollStateData
         self.highlightFoundText = highlightFoundText
         self.isThreadLoading = isThreadLoading
@@ -152,6 +154,7 @@ struct MessageEntryAdditionalData : Equatable {
         self.eventLog = eventLog
         self.isRevealed = isRevealed
         self.translate = translate
+        self.replyTranslate = replyTranslate
     }
 }
 
@@ -809,7 +812,15 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         }
         
         let pollData = pollAnswersLoading[message.id] ?? ChatPollStateData()
-        additionalData = MessageEntryAdditionalData(pollStateData: pollData, highlightFoundText: highlightFoundText, isThreadLoading: threadLoading == message.id, updatingMedia: updatingMedia[message.id], chatTheme: chatTheme, reactions: reactions, animatedEmojiStickers: animatedEmojiStickers, transribeState: transribeState[message.id], isRevealed: mediaRevealed.contains(message.id), translate: translate?.result[message.id])
+        
+        let messageTransalte = translate?.result[message.id]
+        let replyTranslate: ChatLiveTranslateContext.State.Result?
+        if let reply = message.replyAttribute, let replyMessage = message.associatedMessages[reply.messageId] {
+            replyTranslate = translate?.result[replyMessage.id]
+        } else {
+            replyTranslate = nil
+        }
+        additionalData = MessageEntryAdditionalData(pollStateData: pollData, highlightFoundText: highlightFoundText, isThreadLoading: threadLoading == message.id, updatingMedia: updatingMedia[message.id], chatTheme: chatTheme, reactions: reactions, animatedEmojiStickers: animatedEmojiStickers, transribeState: transribeState[message.id], isRevealed: mediaRevealed.contains(message.id), translate: messageTransalte, replyTranslate: replyTranslate)
         let data = ChatHistoryEntryData(entry.location, additionalData, autoplayMedia)
         
        

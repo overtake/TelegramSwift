@@ -20,12 +20,12 @@ public class BaseApplicationSettings: Codable, Equatable {
     public let bigEmoji: Bool
     public let statusBar: Bool
     public let translateChannels: Bool
-    public let doNotTranslate: String?
+    public let doNotTranslate: Set<String>
     public static var defaultSettings: BaseApplicationSettings {
-        return BaseApplicationSettings(handleInAppKeys: false, sidebar: true, showCallsTab: true, latestArticles: true, predictEmoji: true, bigEmoji: true, statusBar: true, translateChannels: true, doNotTranslate: nil)
+        return BaseApplicationSettings(handleInAppKeys: false, sidebar: true, showCallsTab: true, latestArticles: true, predictEmoji: true, bigEmoji: true, statusBar: true, translateChannels: true, doNotTranslate: Set())
     }
     
-    init(handleInAppKeys: Bool, sidebar: Bool, showCallsTab: Bool, latestArticles: Bool, predictEmoji: Bool, bigEmoji: Bool, statusBar: Bool, translateChannels: Bool, doNotTranslate: String?) {
+    init(handleInAppKeys: Bool, sidebar: Bool, showCallsTab: Bool, latestArticles: Bool, predictEmoji: Bool, bigEmoji: Bool, statusBar: Bool, translateChannels: Bool, doNotTranslate: Set<String>) {
         self.handleInAppKeys = handleInAppKeys
         self.sidebar = sidebar
         self.showCallsTab = showCallsTab
@@ -48,7 +48,7 @@ public class BaseApplicationSettings: Codable, Equatable {
         self.bigEmoji = try container.decode(Int32.self, forKey: "bi") != 0
         self.statusBar = try container.decode(Int32.self, forKey: "sb") != 0
         self.translateChannels = try container.decodeIfPresent(Int32.self, forKey: "tc") ?? 1 != 0
-        self.doNotTranslate = try container.decodeIfPresent(String.self, forKey: "dnt")
+        self.doNotTranslate = try container.decodeIfPresent(Set<String>.self, forKey: "dnt2") ?? Set()
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -63,7 +63,7 @@ public class BaseApplicationSettings: Codable, Equatable {
         try container.encode(Int32(self.bigEmoji ? 1 : 0), forKey: "bi")
         try container.encode(Int32(self.statusBar ? 1 : 0), forKey: "sb")
         try container.encode(Int32(self.translateChannels ? 1 : 0), forKey: "tc")
-        try container.encodeIfPresent(self.doNotTranslate, forKey: "dnt")
+        try container.encode(self.doNotTranslate, forKey: "dnt2")
 
     }
     
@@ -97,7 +97,7 @@ public class BaseApplicationSettings: Codable, Equatable {
     public func withUpdatedStatusBar(_ statusBar: Bool) -> BaseApplicationSettings {
         return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: statusBar, translateChannels: self.translateChannels, doNotTranslate: self.doNotTranslate)
     }
-    public func withUpdatedDoNotTranslate(_ doNotTranslate: String?) -> BaseApplicationSettings {
+    public func withUpdatedDoNotTranslate(_ doNotTranslate: Set<String>) -> BaseApplicationSettings {
         return BaseApplicationSettings(handleInAppKeys: self.handleInAppKeys, sidebar: self.sidebar, showCallsTab: self.showCallsTab, latestArticles: self.latestArticles, predictEmoji: self.predictEmoji, bigEmoji: self.bigEmoji, statusBar: self.statusBar, translateChannels: self.translateChannels, doNotTranslate: doNotTranslate)
     }
     public static func ==(lhs: BaseApplicationSettings, rhs: BaseApplicationSettings) -> Bool {

@@ -364,10 +364,11 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             if !textLayout.selectedRange.hasSelectText {
                 let text = message.text
                 let language = Translate.detectLanguage(for: text)
-                let toLang = context.sharedContext.baseSettings.doNotTranslate ?? appAppearance.language.baseLanguageCode
-                if language != toLang, !muteTranslate {
+                
+                let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.language.baseLanguageCode])
+                if language == nil || !toLang.contains(language!), !muteTranslate {
                     thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
-                        showModal(with: TranslateModalController(context: context, from: language, toLang: toLang, text: text), for: context.window)
+                        showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.language.baseLanguageCode, text: text), for: context.window)
                     }, itemImage: MenuAnimation.menu_translate.value))
                 }
                 if !data.message.isCopyProtected() {
@@ -426,10 +427,10 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                         let selectedText = attr.attributedSubstring(from: range)
                         let text = selectedText.string
                         let language = Translate.detectLanguage(for: text)
-                        let toLang = context.sharedContext.baseSettings.doNotTranslate ?? appAppearance.language.baseLanguageCode
-                        if language != toLang, !muteTranslate {
+                        let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.language.baseLanguageCode])
+                        if language == nil || !toLang.contains(language!), !muteTranslate {
                             thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
-                                showModal(with: TranslateModalController(context: context, from: language, toLang: toLang, text: text), for: context.window)
+                                showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.language.baseLanguageCode, text: text), for: context.window)
                             }, itemImage: MenuAnimation.menu_translate.value))
                         }
                         thirdBlock.append(ContextMenuItem(strings().chatCopySelectedText, handler: { [weak textLayout] in
@@ -463,10 +464,10 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             if !state.text.isEmpty && !state.isPending {
                 let text = state.text
                 let language = Translate.detectLanguage(for: text)
-                let toLang = context.sharedContext.baseSettings.doNotTranslate ?? appAppearance.language.baseLanguageCode
-                if language != toLang {
+                let toLang = context.sharedContext.baseSettings.doNotTranslate.union([appAppearance.language.baseLanguageCode])
+                if language == nil || !toLang.contains(language!) {
                     thirdBlock.append(ContextMenuItem(strings().chatContextTranslate, handler: {
-                        showModal(with: TranslateModalController(context: context, from: language, toLang: toLang, text: text), for: context.window)
+                        showModal(with: TranslateModalController(context: context, from: language, toLang: appAppearance.language.baseLanguageCode, text: text), for: context.window)
                     }, itemImage: MenuAnimation.menu_translate.value))
                 }
             }

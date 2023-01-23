@@ -1009,7 +1009,11 @@ class ChatInteractiveContentView: ChatMediaContentView {
                     fetchDisposable.set(freeMediaFileInteractiveFetched(context: context, fileReference: FileMediaReference.standalone(media: media)).start())
                 }
             } else if let media = media as? TelegramMediaImage, !media.isLocalResource {
-                fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: context.account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: media) : ImageMediaReference.standalone(media: media)).start())
+                if let parent = parent {
+                    fetchDisposable.set(messageMediaPhotoInteractiveFetched(context: context, messageId: parent.id, messageReference: .init(parent), image: media, userInitiated: userInitiated).start())
+                } else {
+                    fetchDisposable.set(chatMessagePhotoInteractiveFetched(account: context.account, imageReference: parent != nil ? ImageMediaReference.message(message: MessageReference(parent!), media: media) : ImageMediaReference.standalone(media: media)).start())
+                }
             }
         }
     }

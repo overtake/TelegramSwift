@@ -185,7 +185,7 @@ final class ChatInteraction : InterfaceObserver  {
     var revealMedia:(MessageId)->Void = { _ in }
     var toggleTranslate:()->Void = { }
     var hideTranslation:()->Void = { }
-    var doNotTranslate:(String?)->Void = { _ in }
+    var doNotTranslate:(String)->Void = { _ in }
     var openPendingRequests:()->Void = { }
     var dismissPendingRequests:([PeerId])->Void = { _ in }
     var setupChatThemes:()->Void = { }
