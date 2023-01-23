@@ -645,7 +645,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     }
     
     public var holderSize: NSSize {
-        return NSMakeSize(placeholderTextInset + placeholder.frame.width + 5, frame.height)
+        return NSMakeSize(leftInset + placeholder.frame.width + 20 + 5, frame.height)
     }
     
     public func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {

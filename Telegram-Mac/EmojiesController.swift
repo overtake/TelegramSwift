@@ -958,7 +958,7 @@ private final class AnimatedEmojiesCategories : Control {
             guard self.visibleRect != .zero else {
                 return
             }
-            self.apply(key: "appear_\(arc4random64())", policy: .toEnd(from: 1))
+            self.apply(key: "appear", policy: .toEnd(from: 1))
         }
         
         func update(isSelected: Bool, animated: Bool) {
@@ -1045,8 +1045,10 @@ private final class AnimatedEmojiesCategories : Control {
         func update(context: AccountContext, isVisible: Bool, animated: Bool, callback:@escaping()->Void) {
             close.removeAllHandlers()
             
-            self.change(opacity: isVisible ? 1 : 0, animated: animated)
+//            self.change(opacity: isVisible ? 1 : 0, animated: animated)
                         
+            self.isHidden = !isVisible
+            
             close.set(handler: { _ in
                 callback()
             }, for: .Click)
@@ -1400,10 +1402,10 @@ final class AnimatedEmojiesView : Control {
                     
                     if rect.origin.x < minX {
                         accept = false
-                    } else if rect.origin.x > searchContainer.frame.width - categoryRect.width - minX {
+                    } else if rect.origin.x > searchContainer.frame.width - categoryRect.width - searchView.frame.minX {
                         accept = false
                     }
-                    rect.size.width = min(searchView.frame.width, max(categoryRect.width, rect.width))
+                    rect.size.width = min(searchView.frame.width - searchView.holderSize.width, max(categoryRect.width, rect.width))
                     rect.origin.x = max(minX, searchContainer.frame.width - rect.width - searchView.frame.minX)
                     transition.updateFrame(view: view, frame: rect)
                 }
@@ -1423,8 +1425,7 @@ final class AnimatedEmojiesView : Control {
     }
     
     var categoryRect: NSRect {
-        let minX = searchView.frame.minX + searchView.holderSize.width
-        return NSMakeRect(searchContainer.frame.width - (135 + searchView.frame.minX + minX), searchView.frame.minY, 135, 30)
+        return NSMakeRect(searchContainer.frame.width - (135 + searchView.frame.minX), searchView.frame.minY, 135, 30)
     }
     var revealedCategoryRect: NSRect {
         return searchView.frame
@@ -1445,7 +1446,7 @@ final class AnimatedEmojiesView : Control {
                 current = view
             } else {
                 current = AnimatedEmojiesCategories(frame: categoryRect)
-//                current.backgroundColor = theme.search.backgroundColor
+                current.backgroundColor = theme.search.backgroundColor
                 current.layer?.cornerRadius = current.frame.height / 2
                 self.categories = current
                 searchContainer.addSubview(current)
@@ -1454,6 +1455,8 @@ final class AnimatedEmojiesView : Control {
                     self?.arguments?.selectEmojiCategory(category)
                 }
             }
+            
+            current.userInteractionEnabled = current.selected != nil
             
             if current.selected != state?.selectedEmojiCategory, current.selected == nil || state?.selectedEmojiCategory == nil {
                 self.moveCategories(nil)
