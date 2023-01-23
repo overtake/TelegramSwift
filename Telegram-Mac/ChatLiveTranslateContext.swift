@@ -102,10 +102,10 @@ final class ChatLiveTranslateContext {
                     let rhsCount = counts[rhs] ?? 0
                     return lhsCount > rhsCount
                 })
-                let ignore = settings.doNotTranslate ?? appAppearance.language.baseLanguageCode
+                let ignore = settings.doNotTranslate.union([appAppearance.language.baseLanguageCode])
                 
-                if peer.isPremium, mainPeer.isChannel, !languages.isEmpty, settings.translateChannels, cachedData?.flags.contains(.translationHidden) == false {
-                    if languages[0] != ignore {
+                if peer.isPremium, mainPeer.isChannel || mainPeer.isGroup || mainPeer.isSupergroup || mainPeer.isSupergroup, !languages.isEmpty, settings.translateChannels, cachedData?.flags.contains(.translationHidden) == false {
+                    if !ignore.contains(languages[0]) {
                         return (true, languages[0], appearance.language.baseLanguageCode)
                     }
                 }

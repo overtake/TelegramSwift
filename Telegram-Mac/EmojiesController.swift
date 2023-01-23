@@ -1395,13 +1395,16 @@ final class AnimatedEmojiesView : Control {
                 var accept: Bool = previous.x == 0
 
                 if accept {
-                    if rect.origin.x < searchView.frame.minX {
+                    
+                    let minX = searchView.frame.minX + searchView.holderSize.width
+                    
+                    if rect.origin.x < minX {
                         accept = false
-                    } else if rect.origin.x > searchContainer.frame.width - categoryRect.width - searchView.frame.minX {
+                    } else if rect.origin.x > searchContainer.frame.width - categoryRect.width - minX {
                         accept = false
                     }
                     rect.size.width = min(searchView.frame.width, max(categoryRect.width, rect.width))
-                    rect.origin.x = max(searchView.frame.minX, searchContainer.frame.width - rect.width - searchView.frame.minX)
+                    rect.origin.x = max(minX, searchContainer.frame.width - rect.width - searchView.frame.minX)
                     transition.updateFrame(view: view, frame: rect)
                 }
                 view.updateScroll()
@@ -1420,7 +1423,8 @@ final class AnimatedEmojiesView : Control {
     }
     
     var categoryRect: NSRect {
-        return NSMakeRect(searchContainer.frame.width - (135 + searchView.frame.minX * 2), searchView.frame.minY, 135, 30)
+        let minX = searchView.frame.minX + searchView.holderSize.width
+        return NSMakeRect(searchContainer.frame.width - (135 + searchView.frame.minX + minX), searchView.frame.minY, 135, 30)
     }
     var revealedCategoryRect: NSRect {
         return searchView.frame

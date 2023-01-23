@@ -22,8 +22,8 @@ private final class Arguments {
     let toggleTranslateChannels:()->Void
     let premiumAlert:()->Void
     let openPremium:()->Void
-    let doNotTranslate:(String?)->Void
-    init(context: AccountContext, change:@escaping(LocalizationInfo)->Void, delete:@escaping(LocalizationInfo)->Void, toggleTranslateChannels: @escaping()->Void, premiumAlert:@escaping()->Void, openPremium: @escaping()->Void, doNotTranslate:@escaping(String?)->Void) {
+    let doNotTranslate:(String)->Void
+    init(context: AccountContext, change:@escaping(LocalizationInfo)->Void, delete:@escaping(LocalizationInfo)->Void, toggleTranslateChannels: @escaping()->Void, premiumAlert:@escaping()->Void, openPremium: @escaping()->Void, doNotTranslate:@escaping(String)->Void) {
         self.context = context
         self.change = change
         self.delete = delete
@@ -65,11 +65,15 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     entries.append(.desc(sectionId: sectionId, index: index, text: .plain(strings().languageTranslateMessagesHeader), data: .init(color: theme.colors.listGrayText, viewType: .textTopItem)))
     index += 1
     
-    let code = Translate.find(state.settings.doNotTranslate ?? state.language.baseLanguageCode) ?? Translate.find("en")!
-
-    var codes = Translate.codes.filter {
-        $0.code != code.code
+    var ignoreCodes = state.settings.doNotTranslate.compactMap {
+        Translate.find($0)
+    }.sorted(by: { $0.language < $1.language })
+    
+    if ignoreCodes.isEmpty, let code = Translate.find(state.language.baseLanguageCode) {
+        ignoreCodes.append(code)
     }
+
+    var codes = Translate.codes
     
     let codeIndex = codes.firstIndex(where: {
         $0.code.contains(state.language.baseLanguageCode)
@@ -77,11 +81,17 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     if let codeIndex = codeIndex {
         codes.move(at: codeIndex, to: 0)
     }
-  
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_do_not_translate, data: .init(name: strings().languageTranslateMessagesDoNotTranslate, color: theme.colors.text, type: .contextSelector(_NSLocalizedString("Translate.Language.\(code.language)"), codes.map { code in
+    
+    let title = ignoreCodes.isEmpty ? "" : ignoreCodes.map {
+        return _NSLocalizedString("Translate.Language.\($0.language)")
+    }.joined(separator: ", ")
+    
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_do_not_translate, data: .init(name: strings().languageTranslateMessagesDoNotTranslate, color: theme.colors.text, type: .contextSelector(title, codes.map { code in
         ContextMenuItem(code.language, handler: {
-            arguments.doNotTranslate(code.code.first)
-        })
+            if let first = code.code.first {
+                arguments.doNotTranslate(first)
+            }
+        }, itemImage: ignoreCodes.contains(where: { $0.language == code.language}) ? MenuAnimation.menu_check_selected.value : nil)
     }), viewType: .firstItem)))
     index += 1
     
@@ -245,7 +255,13 @@ func LanguageController(_ context: AccountContext) -> InputDataController {
         showModal(with: PremiumBoardingController(context: context, source: .settings), for: context.window)
     }, doNotTranslate: { code in
         actionsDisposable.add(updateBaseAppSettingsInteractively(accountManager: context.sharedContext.accountManager, { settings in
-            return settings.withUpdatedDoNotTranslate(code)
+            var current = settings.doNotTranslate
+            if current.contains(code) {
+                current.remove(code)
+            } else {
+                current.insert(code)
+            }
+            return settings.withUpdatedDoNotTranslate(current)
         }).start())
     })
     

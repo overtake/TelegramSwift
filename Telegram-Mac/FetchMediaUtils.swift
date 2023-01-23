@@ -29,6 +29,16 @@ func messageMediaFileInteractiveFetched(context: AccountContext, messageId: Mess
     return context.fetchManager.interactivelyFetched(category: fetchCategoryForFile(file), location: .chat(messageId.peerId), locationKey: .messageId(messageId), mediaReference: mediaReference, resourceReference: mediaReference.resourceReference(file.resource), ranges: ranges, statsCategory: statsCategoryForFileWithAttributes(file.attributes), elevatedPriority: false, userInitiated: userInitiated, priority: priority, storeToDownloadsPeerType: nil)
 }
 
+func messageMediaPhotoInteractiveFetched(context: AccountContext, messageId: MessageId, messageReference: MessageReference, image: TelegramMediaImage, ranges: IndexSet = IndexSet(integersIn: 0 ..< Int(Int32.max) as Range<Int>), userInitiated: Bool, priority: FetchManagerPriority = .userInitiated) -> Signal<Void, NoError> {
+    
+    if let large = image.representationForDisplayAtSize(.init(NSMakeSize(1280, 1280))) {
+        let mediaReference = AnyMediaReference.message(message: messageReference, media: image)
+        return context.fetchManager.interactivelyFetched(category: .image, location: .chat(messageId.peerId), locationKey: .messageId(messageId), mediaReference: mediaReference, resourceReference: mediaReference.resourceReference(large.resource), ranges: ranges, statsCategory: .image, elevatedPriority: false, userInitiated: userInitiated, priority: priority, storeToDownloadsPeerType: nil)
+    } else {
+        return .never()
+    }
+}
+
 func messageMediaFileCancelInteractiveFetch(context: AccountContext, messageId: MessageId, file: TelegramMediaFile) {
     context.fetchManager.cancelInteractiveFetches(category: fetchCategoryForFile(file), location: .chat(messageId.peerId), locationKey: .messageId(messageId), resource: file.resource)
 }

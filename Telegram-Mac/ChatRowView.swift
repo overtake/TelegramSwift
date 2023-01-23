@@ -931,30 +931,28 @@ class ChatRowView: TableRowView, Notifable, MultipleSelectable, ViewDisplayDeleg
     func fillCaption(_ item:ChatRowItem, animated: Bool) -> Void {
         
         var removeIndexes:[Int] = []
-        var removeShimmer:[UInt32] = []
+        var removeShimmer:[Int] = []
         for (i, view) in captionViews.enumerated() {
             if !item.captionLayouts.contains(where: { $0.id == view.id }) {
                 let captionView = view.view
                 performSubviewRemoval(captionView, animated: animated)
-                if let shimmer = captionShimmerViews.first(where: { $0.id == view.id }) {
-                    performSubviewRemoval(shimmer.view, animated: animated)
-                }
                 removeIndexes.append(i)
-            } else if !view.shim {
-                removeShimmer.append(view.id)
+            }
+        }
+        for (i, view) in captionShimmerViews.enumerated() {
+            let layout = item.captionLayouts.first(where: { $0.id == view.id })
+            if layout == nil || !layout!.isLoading {
+                let shimmerView = view.view
+                performSubviewRemoval(shimmerView, animated: animated)
+                removeShimmer.append(i)
             }
         }
         
         for index in removeIndexes.reversed() {
-            let value = captionViews.remove(at: index)
-            captionShimmerViews.removeAll(where: { $0.id == value.id })
+            _ = captionViews.remove(at: index)
         }
-        for id in removeShimmer {
-            let index = captionShimmerViews.firstIndex(where: { $0.id == id })
-            if let index = index {
-                let view = captionShimmerViews.remove(at: index)
-                performSubviewRemoval(view.view, animated: animated)
-            }
+        for index in removeShimmer {
+            _ = captionShimmerViews.remove(at: index)
         }
         
         for (i, layout) in item.captionLayouts.enumerated() {

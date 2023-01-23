@@ -164,6 +164,10 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     private var textPlaceholder: String {
         
+        if let peer = chatInteraction.presentation.peer, let _ = permissionText(from: peer, for: .banSendText) {
+            return strings().channelPersmissionMessageBlock
+        }
+        
         if case let .thread(_, mode) = chatInteraction.mode {
             switch mode {
             case .comments:
@@ -173,11 +177,6 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             case .topic:
                 return strings().messagesPlaceholderSentMessage
             }
-        }
-        
-        
-        if let peer = chatInteraction.presentation.peer, let _ = permissionText(from: peer, for: .banSendText) {
-            return strings().channelPersmissionMessageBlock
         }
         
         if chatInteraction.presentation.interfaceState.editState != nil {

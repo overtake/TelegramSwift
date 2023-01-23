@@ -644,14 +644,18 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         self.updateLayout(size: frame.size, transition: .immediate)
     }
     
+    public var holderSize: NSSize {
+        return NSMakeSize(placeholderTextInset + placeholder.frame.width + 5, frame.height)
+    }
+    
     public func updateLayout(size: NSSize, transition: ContainedViewLayoutTransition) {
         
-        switch state {
-        case .None:
-            transition.updateFrame(view: self.animateContainer, frame: animateContainer.centerFrame())
-        case .Focus:
+//        switch state {
+//        case .None:
+//            transition.updateFrame(view: self.animateContainer, frame: animateContainer.centerFrame())
+//        case .Focus:
             transition.updateFrame(view: self.animateContainer, frame: animateContainer.centerFrameY(x: leftInset))
-        }
+//        }
         
         transition.updateFrame(view: placeholder, frame: placeholder.centerFrameY(addition: -1))
         transition.updateFrame(view: clear, frame: clear.centerFrameY(x: size.width - inset - clear.frame.width))

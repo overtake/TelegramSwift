@@ -3809,7 +3809,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
         }
         chatInteraction.doNotTranslate = { code in
             _ = updateBaseAppSettingsInteractively(accountManager: context.sharedContext.accountManager, { settings in
-                return settings.withUpdatedDoNotTranslate(code)
+                var current = settings.doNotTranslate
+                if !current.contains(code) {
+                    current.insert(code)
+                }
+                return settings.withUpdatedDoNotTranslate(current)
             }).start()
         }
         
@@ -5388,6 +5392,11 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                             }
                             if message.id.namespace == Namespaces.Message.Cloud, !message.text.isEmpty {
                                 messagesToTranslate.append(message)
+                                if let reply = message.replyAttribute, let replyMessage = message.associatedMessages[reply.messageId] {
+                                    if replyMessage.text.isEmpty {
+                                        messagesToTranslate.append(message)
+                                    }
+                                }
                             }
                         }
                     }
