@@ -430,14 +430,18 @@ private func accountInfoEntries(peerView:PeerView, context: AccountContext, acco
         index += 1
     }
     
-    var twoFaAnyway: Bool = false
-    #if DEBUG
-    twoFaAnyway = true
-    #endif
     
-    let has2fa = !has2fa && SetupPasswordConfiguration.with(appConfiguration: context.appConfiguration).setup2Fa
+    var has2fa = has2fa && SetupPasswordConfiguration.with(appConfiguration: context.appConfiguration).setup2Fa
+    if let twoStepConfiguration = twoStepConfiguration {
+        switch twoStepConfiguration {
+        case .set:
+            has2fa = true
+        default:
+            has2fa = false
+        }
+    }
     
-    if !has2fa || twoFaAnyway {
+    if !has2fa {
         entries.append(.whiteSpace(index: index, height: 10))
         index += 1
         entries.append(.set2FaAlert(index: index, viewType: .firstItem))
