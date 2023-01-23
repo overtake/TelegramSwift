@@ -23,9 +23,12 @@ public class SearchTextField: NSTextView {
         self.translatesAutoresizingMaskIntoConstraints = false
         self.autoresizingMask = []
         self.autoresizesSubviews = false
+        textContainer?.maximumNumberOfLines = 1
+        
     }
     public override init(frame frameRect: NSRect, textContainer container: NSTextContainer?) {
         super.init(frame: frameRect, textContainer: container)
+        textContainer?.maximumNumberOfLines = 1
     }
     
     
@@ -203,7 +206,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     public var shouldUpdateTouchBarItemIdentifiers: (()->[Any])?
     
     
-    private let inputContainer = View()
+    private let inputContainer = HorizontalScrollView(frame:.zero)
     
     public var isLoading:Bool = false {
         didSet {
@@ -217,9 +220,11 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     override open func updateLocalizationAndTheme(theme: PresentationTheme) {
         super.updateLocalizationAndTheme(theme: theme)
         
+        inputContainer.background = .clear
         inputContainer.backgroundColor = .clear
         input.textColor = presentation.search.textColor
-        input.backgroundColor = .random
+        input.backgroundColor = .clear
+        
         placeholder.attributedString = .initialize(string: presentation.search.placeholder(), color: presentation.search.placeholderColor, font: .normal(.text))
         placeholder.backgroundColor = presentation.search.backgroundColor
         self.backgroundColor = presentation.search.backgroundColor
@@ -294,8 +299,9 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         input.font = .normal(.text)
         input.textColor = .text
         input.isHidden = true
+        inputContainer.isHidden = true
         input.drawsBackground = false
-        
+        inputContainer.documentView = input
         animateContainer.backgroundColor = .clear
         
         placeholder.sizeToFit()
@@ -311,7 +317,6 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
         search.animates = false
         search.isEventLess = true
         search.userInteractionEnabled = false
-        inputContainer.addSubview(input)
         addSubview(animateContainer)
         addSubview(inputContainer)
         inputContainer.backgroundColor = .clear
@@ -392,13 +397,13 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             placeholder.isHidden = pHidden
         }
         
-        needsLayout = true
         
         let iHidden = !(state == .Focus && !input.string.isEmpty)
+        
         if input.isHidden != iHidden {
             window?.makeFirstResponder(input)
         }
-        
+                
         for tag in tags {
             tag.isSelected = false
         }
@@ -438,40 +443,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
     }
     
     public func textViewDidChangeSelection(_ notification: Notification) {
-        if let storage = input.textStorage {
-            let size = storage.size()
-            
-            let inputInset = placeholderTextInset + 8
-            
-            let defWidth = frame.width - inputInset - inset - clear.frame.width - 10
-          //  input.sizeToFit()
-            input.setFrameSize(max(size.width + 10, defWidth), input.frame.height)
-           // inputContainer.setFrameSize(inputContainer.frame.width, input.frame.height)
-            if let layout = input.layoutManager, !input.string.isEmpty {
-                let index = max(0, input.selectedRange().max - 1)
-                let point = layout.location(forGlyphAt: layout.glyphIndexForCharacter(at: index))
-                
-                let additionalInset: CGFloat
-                if index + 2 < input.string.length {
-                    let nextPoint = layout.location(forGlyphAt: layout.glyphIndexForCharacter(at: index + 2))
-                    additionalInset = nextPoint.x - point.x
-                } else {
-                    additionalInset = 8
-                }
-                
-                if defWidth < size.width && point.x > defWidth {
-                    input.setFrameOrigin(floorToScreenPixels(backingScaleFactor, defWidth - point.x - additionalInset), input.frame.minY)
-                    if input.frame.maxX < inputContainer.frame.width {
-                        input.setFrameOrigin(inputContainer.frame.width - input.frame.width + 4, input.frame.minY)
-                    }
-                } else {
-                    input.setFrameOrigin(0, input.frame.minY)
-                }
-            } else {
-                input.setFrameOrigin(0, input.frame.minY)
-            }
-            needsLayout = true
-        }
+        needsLayout = true
     }
     
     open func textDidEndEditing(_ notification: Notification) {
@@ -559,6 +531,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             if state == .Focus {
                 
                 self.input.isHidden = false
+                self.inputContainer.isHidden = false
                 self.window?.makeFirstResponder(self.input)
                 self.lock = false
                
@@ -577,6 +550,7 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
                 self.kitWindow?.removeObserver(for: self)
                
                 self.input.isHidden = true
+                inputContainer.isHidden = true
                 self.input.string = ""
                 self.window?.makeFirstResponder(nil)
                 self.placeholder.isHidden = false
@@ -665,11 +639,19 @@ open class SearchView: OverlayControl, NSTextViewDelegate {
             return current + value.frame.width + 10
         })
         
-        let inputRect = CGRect(origin: CGPoint(x: placeholderTextInset + 8, y: animateContainer.frame.minY + 2), size: NSMakeSize(size.width - (inset * 3) - (clear.frame.width * 2) - tagsWidth, animateContainer.frame.height))
         
-        transition.updateFrame(view: inputContainer, frame: inputRect)
-        transition.updateFrame(view: input, frame: inputRect.size.bounds)
+        let inputRect = CGRect(origin: CGPoint(x: placeholderTextInset + 8, y: animateContainer.frame.minY + 2), size: NSMakeSize(size.width - (inset * 3) - (clear.frame.width * 2) - tagsWidth - 5, animateContainer.frame.height))
+        
+        
+        var inputSize = NSZeroSize
+        let inputPoint = NSZeroPoint
 
+        if let storage = input.textStorage {
+            let size = storage.size()
+            inputSize = NSMakeSize(size.width + 10, size.height)
+        }
+        transition.updateFrame(view: inputContainer, frame: inputRect)
+        transition.updateFrame(view: input, frame: CGRect(origin: inputPoint, size: inputSize))
         transition.updateFrame(view: search, frame: search.centerFrameY(addition: -1))
         
         
