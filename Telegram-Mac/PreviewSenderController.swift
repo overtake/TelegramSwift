@@ -980,10 +980,6 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     
     private var inputPlaceholder: String {
         
-        if let peer = self.chatInteraction.peer, let _ = permissionText(from: peer, for: .banSendText) {
-            return strings().channelPersmissionMessageBlock
-        }
-        
         var placeholder: String = strings().previewSenderCommentPlaceholder
         if self.genericView.tableView.count == 1 {
             if let item = self.genericView.tableView.firstItem {
@@ -1007,10 +1003,10 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         let initialSize = self.atomicSize
 
         
-        if let peer = self.chatInteraction.peer {
-            genericView.textView.inputView.isEditable = permissionText(from: peer, for: .banSendText) == nil
-            genericView.emojiButton.isHidden = !genericView.textView.inputView.isEditable
-        }
+        genericView.textView.inputView.isEditable = true
+        genericView.emojiButton.isHidden = false
+
+        
         
         genericView.textView.installGetAttach({ attachment, size in
             let rect = size.bounds.insetBy(dx: -1.5, dy: -1.5)
@@ -1300,18 +1296,6 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                     }
                 }
                 
-                for (_, i) in permissions {
-                    self.genericView.tableView.item(at: i).view?.shakeView()
-                }
-                if let first = permissions.first {
-                    showModalText(for: context.window, text: first.0)
-                    return
-                }
-                
-                self.sent = true
-                self.emoji.popover?.hide()
-                self.closeModal()
-                
                 var input:ChatTextInputState = ChatTextInputState(inputText: attributed.string, selectionRange: 0 ..< 0, attributes: chatTextAttributes(from: attributed)).subInputState(from: NSMakeRange(0, attributed.length))
                 
                 if input.attributes.isEmpty {
@@ -1325,6 +1309,27 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
                         input = ChatTextInputState()
                     }
                 }
+                if additionalMessage != nil, let text = permissionText(from: peer, for: .banSendText) {
+                    permissions.insert((text, -1), at: 0)
+                }
+                
+                for (_, i) in permissions {
+                    if i != -1 {
+                        self.genericView.tableView.item(at: i).view?.shakeView()
+                    } else {
+                        self.genericView.textView.shake(beep: true)
+                    }
+                }
+                if let first = permissions.first {
+                    showModalText(for: context.window, text: first.0)
+                    return
+                }
+                
+                self.sent = true
+                self.emoji.popover?.hide()
+                self.closeModal()
+                
+                
                 self.chatInteraction.sendMedias(medias, input, state.isCollage, additionalMessage, silent, atDate, asSpoiler ?? state.isSpoiler)
             }
             

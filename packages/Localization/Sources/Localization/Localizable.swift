@@ -5222,6 +5222,12 @@ public final class L10n {
   /// STICKERS
   public static var entertainmentStickers: String  { return L10n.tr("Localizable", "Entertainment.Stickers") }
   /// Emoji
+  public static var entertainmentEmojiNew: String  { return L10n.tr("Localizable", "Entertainment.Emoji.New") }
+  /// GIFs
+  public static var entertainmentGIFNew: String  { return L10n.tr("Localizable", "Entertainment.GIF.New") }
+  /// Stickers
+  public static var entertainmentStickersNew: String  { return L10n.tr("Localizable", "Entertainment.Stickers.New") }
+  /// Emoji
   public static var entertainmentSwitchEmoji: String  { return L10n.tr("Localizable", "Entertainment.Switch.Emoji") }
   /// Stickers & GIFs
   public static var entertainmentSwitchGifAndStickers: String  { return L10n.tr("Localizable", "Entertainment.Switch.GifAndStickers") }

@@ -813,14 +813,27 @@ func messageEntries(_ messagesEntries: [MessageHistoryEntry], maxReadIndex:Messa
         
         let pollData = pollAnswersLoading[message.id] ?? ChatPollStateData()
         
-        let messageTransalte = translate?.result[message.id]
-        let replyTranslate: ChatLiveTranslateContext.State.Result?
+        var messageTranslate = translate?.result[message.id]
+        var replyTranslate: ChatLiveTranslateContext.State.Result?
         if let reply = message.replyAttribute, let replyMessage = message.associatedMessages[reply.messageId] {
             replyTranslate = translate?.result[replyMessage.id]
         } else {
             replyTranslate = nil
         }
-        additionalData = MessageEntryAdditionalData(pollStateData: pollData, highlightFoundText: highlightFoundText, isThreadLoading: threadLoading == message.id, updatingMedia: updatingMedia[message.id], chatTheme: chatTheme, reactions: reactions, animatedEmojiStickers: animatedEmojiStickers, transribeState: transribeState[message.id], isRevealed: mediaRevealed.contains(message.id), translate: messageTransalte, replyTranslate: replyTranslate)
+        if let translate = translate, translate.canTranslate, translate.translate {
+            if let _ = message.translationAttribute {
+                messageTranslate = .complete
+            }
+            if let reply = message.replyAttribute, let replyMessage = message.associatedMessages[reply.messageId] {
+                if let _ = replyMessage.translationAttribute {
+                    replyTranslate = .complete
+                }
+            }
+        } else {
+            var bp = 0
+            bp == 1
+        }
+        additionalData = MessageEntryAdditionalData(pollStateData: pollData, highlightFoundText: highlightFoundText, isThreadLoading: threadLoading == message.id, updatingMedia: updatingMedia[message.id], chatTheme: chatTheme, reactions: reactions, animatedEmojiStickers: animatedEmojiStickers, transribeState: transribeState[message.id], isRevealed: mediaRevealed.contains(message.id), translate: messageTranslate, replyTranslate: replyTranslate)
         let data = ChatHistoryEntryData(entry.location, additionalData, autoplayMedia)
         
        

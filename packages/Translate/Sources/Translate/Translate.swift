@@ -212,7 +212,7 @@ public struct Translate {
     private static let languageRecognizer = NLLanguageRecognizer()
 
     public static func detectLanguage(for text: String) -> String? {
-        let text = String(text.prefix(64))
+        let text = String(text.prefix(100))
         if #available(macOS 10.14, *) {
             languageRecognizer.processString(text)
             let hypotheses = languageRecognizer.languageHypotheses(withMaximum: 3)

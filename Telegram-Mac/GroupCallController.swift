@@ -567,7 +567,6 @@ private func peerEntries(state: GroupCallUIState, account: Account, arguments: G
 
     let canInvite: Bool = !members.contains(where: { $0.isVertical })
     
-    
     if canInvite {
         
         struct Tuple : Equatable {
