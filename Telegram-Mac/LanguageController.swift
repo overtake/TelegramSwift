@@ -73,7 +73,17 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
         ignoreCodes.append(code)
     }
 
-    var codes = Translate.codes
+    var codes = Translate.codes.sorted(by: { lhs, rhs in
+        let lhsSelected = ignoreCodes.contains(where: { $0.code == lhs.code })
+        let rhsSelected = ignoreCodes.contains(where: { $0.code == rhs.code })
+        if lhsSelected && !rhsSelected {
+            return true
+        } else if !lhsSelected && rhsSelected {
+            return false
+        } else {
+            return lhs.language < rhs.language
+        }
+    })
     
     let codeIndex = codes.firstIndex(where: {
         $0.code.contains(state.language.baseLanguageCode)
@@ -95,7 +105,7 @@ private func entries(_ state: State, arguments: Arguments) -> [InputDataEntry] {
     }), viewType: .firstItem)))
     index += 1
     
-    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_translate_channels, data: .init(name: strings().languageTranslateMessagesChannel, color: theme.colors.text, type: .switchable(state.settings.translateChannels), viewType: .lastItem, enabled: state.isPremium, action: arguments.toggleTranslateChannels, disabledAction: arguments.premiumAlert)))
+    entries.append(.general(sectionId: sectionId, index: index, value: .none, error: nil, identifier: _id_translate_channels, data: .init(name: strings().languageTranslateMessagesChannel, color: theme.colors.text, type: .switchable(state.settings.translateChats), viewType: .lastItem, enabled: state.isPremium, action: arguments.toggleTranslateChannels, disabledAction: arguments.premiumAlert)))
     index += 1
     
     entries.append(.desc(sectionId: sectionId, index: index, text: .markdown(strings().languageTranslateMessagesChannelInfo, linkHandler: { _ in
@@ -245,7 +255,7 @@ func LanguageController(_ context: AccountContext) -> InputDataController {
         })
     }, toggleTranslateChannels: {
         actionsDisposable.add(updateBaseAppSettingsInteractively(accountManager: context.sharedContext.accountManager, { settings in
-            return settings.withUpdatedTranslateChannels(!settings.translateChannels)
+            return settings.withUpdatedTranslateChannels(!settings.translateChats)
         }).start())
     }, premiumAlert: {
         showModalText(for: context.window, text: strings().languageTranslateMessagesChannelPremium, callback: { _ in

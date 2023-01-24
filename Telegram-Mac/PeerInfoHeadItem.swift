@@ -362,7 +362,7 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         }
         if let cachedData = item.peerView.cachedData as? CachedChannelData {
             let disabledTranslation = cachedData.flags.contains(.translationHidden)
-            let canTranslate = arguments.context.sharedContext.baseSettings.translateChannels
+            let canTranslate = arguments.context.sharedContext.baseSettings.translateChats
             
             if canTranslate && disabledTranslation {
                 items.append(ActionItem(text: strings().peerInfoTranslate, image: theme.icons.profile_translate, animation: .menu_translate, action: { [weak arguments] in

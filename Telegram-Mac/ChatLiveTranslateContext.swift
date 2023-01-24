@@ -13,6 +13,113 @@ import TelegramCore
 import Translate
 import InAppSettings
 
+
+public struct ChatTranslationState: Codable {
+    enum CodingKeys: String, CodingKey {
+        case baseLang
+        case fromLang
+        case toLang
+        case isEnabled
+    }
+    
+    public let baseLang: String
+    public let fromLang: String
+    public let toLang: String?
+    public let isEnabled: Bool
+    
+    public init(
+        baseLang: String,
+        fromLang: String,
+        toLang: String?,
+        isEnabled: Bool
+    ) {
+        self.baseLang = baseLang
+        self.fromLang = fromLang
+        self.toLang = toLang
+        self.isEnabled = isEnabled
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        self.baseLang = try container.decode(String.self, forKey: .baseLang)
+        self.fromLang = try container.decode(String.self, forKey: .fromLang)
+        self.toLang = try container.decodeIfPresent(String.self, forKey: .toLang)
+        self.isEnabled = try container.decode(Bool.self, forKey: .isEnabled)
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+
+        try container.encode(self.baseLang, forKey: .baseLang)
+        try container.encode(self.fromLang, forKey: .fromLang)
+        try container.encodeIfPresent(self.toLang, forKey: .toLang)
+        try container.encode(self.isEnabled, forKey: .isEnabled)
+    }
+
+    public func withToLang(_ toLang: String?) -> ChatTranslationState {
+        return ChatTranslationState(
+            baseLang: self.baseLang,
+            fromLang: self.fromLang,
+            toLang: toLang,
+            isEnabled: self.isEnabled
+        )
+    }
+    
+    public func withIsEnabled(_ isEnabled: Bool) -> ChatTranslationState {
+        return ChatTranslationState(
+            baseLang: self.baseLang,
+            fromLang: self.fromLang,
+            toLang: self.toLang,
+            isEnabled: isEnabled
+        )
+    }
+}
+
+
+private func cachedChatTranslationState(engine: TelegramEngine, peerId: EnginePeer.Id) -> Signal<ChatTranslationState?, NoError> {
+    let key = ValueBoxKey(length: 8)
+    key.setInt64(0, value: peerId.id._internalGetInt64Value())
+    
+    return engine.data.subscribe(TelegramEngine.EngineData.Item.ItemCache.Item(collectionId: ApplicationSpecificItemCacheCollectionId.translationState, id: key))
+    |> map { entry -> ChatTranslationState? in
+        return entry?.get(ChatTranslationState.self)
+    }
+}
+
+private func updateChatTranslationState(engine: TelegramEngine, peerId: EnginePeer.Id, state: ChatTranslationState?) -> Signal<Never, NoError> {
+    let key = ValueBoxKey(length: 8)
+    key.setInt64(0, value: peerId.id._internalGetInt64Value())
+    
+    if let state {
+        return engine.itemCache.put(collectionId: ApplicationSpecificItemCacheCollectionId.translationState, id: key, item: state)
+    } else {
+        return engine.itemCache.remove(collectionId: ApplicationSpecificItemCacheCollectionId.translationState, id: key)
+    }
+}
+
+public func updateChatTranslationStateInteractively(engine: TelegramEngine, peerId: EnginePeer.Id, _ f: @escaping (ChatTranslationState) -> ChatTranslationState) -> Signal<Never, NoError> {
+    let key = ValueBoxKey(length: 8)
+    key.setInt64(0, value: peerId.id._internalGetInt64Value())
+    
+    return engine.data.get(TelegramEngine.EngineData.Item.ItemCache.Item(collectionId: ApplicationSpecificItemCacheCollectionId.translationState, id: key))
+    |> map { entry -> ChatTranslationState? in
+        return entry?.get(ChatTranslationState.self)
+    }
+    |> mapToSignal { current -> Signal<Never, NoError> in
+        if let current {
+            return updateChatTranslationState(engine: engine, peerId: peerId, state: f(current))
+        } else {
+            return .never()
+        }
+    }
+}
+
+
+
+
+
+
 private func translateTexts(context: AccountContext, from: String?, to: String, blocks: [String]) -> Signal<[(detect: String?, result: String)?], NoError> {
     var signals:[Signal<(detect: String?, result: String)?, NoError>] = []
     for block in blocks {
@@ -82,55 +189,42 @@ final class ChatLiveTranslateContext {
             $0
         }
         
-        let should: Signal<(Bool, String, String), NoError> = combineLatest(queue:  prepareQueue,preloadedChatHistoryViewForLocation(.Initial(count: 30), context: context, chatLocation: .peer(peerId), chatLocationContextHolder: Atomic(value: nil), tagMask: nil, additionalData: []), appearanceSignal, context.account.postbox.loadedPeerWithId(context.peerId), context.account.postbox.loadedPeerWithId(peerId), baseAppSettings(accountManager: context.sharedContext.accountManager), cachedData) |> map { update, appearance, peer, mainPeer, settings, cachedData in
-            switch update {
-            case let.HistoryView(view, _, _, _):
-                let messages = view.entries.compactMap {
-                    $0.message
-                }.filter { !$0.text.isEmpty }
-                var languages = messages.compactMap {
-                    Translate.detectLanguage(for: $0.text)
-                }
-                var counts: [String : Int] = [:]
-                for language in languages {
-                    var count = counts[language] ?? 0
-                    count += 1
-                    counts[language] = count
-                }
-                languages = languages.sorted(by: { lhs, rhs in
-                    let lhsCount = counts[lhs] ?? 0
-                    let rhsCount = counts[rhs] ?? 0
-                    return lhsCount > rhsCount
-                })
-                let ignore = settings.doNotTranslate.union([appAppearance.language.baseLanguageCode])
-                
-                let isHidden: Bool
-                if let cachedData = cachedData as? CachedChannelData {
-                    isHidden = cachedData.flags.contains(.translationHidden)
-                } else {
-                    isHidden = true
-                }
-                
-                if peer.isPremium, mainPeer.isChannel || mainPeer.isSupergroup || mainPeer.isGigagroup, !languages.isEmpty, settings.translateChannels, !isHidden {
-                    if !ignore.contains(languages[0]) {
-                        return (true, languages[0], appearance.language.baseLanguageCode)
-                    }
-                }
-            default:
-                break
+        let translationState = chatTranslationState(context: context, peerId: peerId)
+        
+        let should: Signal<(ChatTranslationState?, Appearance), NoError> = combineLatest(queue: prepareQueue, cachedData, translationState, baseAppSettings(accountManager: context.sharedContext.accountManager), appearanceSignal) |> map { cachedData, translationState, settings, appearance in
+            
+            let isHidden: Bool
+            if let cachedData = cachedData as? CachedChannelData {
+                isHidden = cachedData.flags.contains(.translationHidden)
+            } else {
+                isHidden = true
             }
-            return (false, "", "")
+            
+            if !isHidden {
+                return (translationState, appearance)
+            } else {
+                return (nil, appearance)
+            }
+            
         } |> deliverOnPrepareQueue
         
-        shouldDisposable.set(should.start(next: { [weak self] translate, from, to in
+        shouldDisposable.set(should.start(next: { [weak self] state, appearance in
             self?.updateState { current in
                 var current = current
-                current.canTranslate = translate
-                current.from = from
-                current.to = to
-                if !current.canTranslate {
-                    current.result = [:]
+                if let state = state {
+                    current.from = state.fromLang
+                    current.to = state.toLang ?? appearance.language.baseLanguageCode
+                    current.canTranslate = true
+                } else {
+                    current.canTranslate = false
+                }
+                if let isEnabled = state?.isEnabled {
+                    current.translate = isEnabled
+                } else {
                     current.translate = false
+                }
+                if !current.canTranslate || !current.translate {
+                    current.result = [:]
                 }
                 return current
             }
@@ -171,15 +265,11 @@ final class ChatLiveTranslateContext {
     }
     
     func toggleTranslate() {
-        updateState { current in
+        _ = updateChatTranslationStateInteractively(engine: context.engine, peerId: peerId, { current in
             var current = current
-            current.translate = !current.translate
-            if !current.translate {
-                current.result = [:]
-                current.queued = []
-            }
+            current = current.withIsEnabled(!current.isEnabled)
             return current
-        }
+        }).start()
     }
     
     var state: Signal<State, NoError> {
@@ -208,7 +298,7 @@ final class ChatLiveTranslateContext {
             
             if self?.holder != ids {
                 self?.holder = ids
-                let signal = Signal<Void, NoError>.complete() |> delay(0.05, queue: prepareQueue)
+                let signal = Signal<Void, NoError>.complete() |> delay(0.01, queue: prepareQueue)
                 
                 self?.holderDisposable.set(signal.start(completed: { [weak self] in
                     guard let `self` = self else {
@@ -235,3 +325,88 @@ final class ChatLiveTranslateContext {
         _ = context.engine.messages.togglePeerMessagesTranslationHidden(peerId: self.peerId, hidden: true).start()
     }
 }
+
+
+
+func chatTranslationState(context: AccountContext, peerId: EnginePeer.Id) -> Signal<ChatTranslationState?, NoError> {
+    let baseLang = appAppearance.language.baseLanguageCode
+    return baseAppSettings(accountManager: context.sharedContext.accountManager)
+    |> mapToSignal { settings in
+        if !settings.translateChats {
+            return .single(nil)
+        }
+        
+        var dontTranslateLanguages: [String] = []
+        if !settings.doNotTranslate.isEmpty {
+            dontTranslateLanguages = Array(settings.doNotTranslate)
+        } else {
+            dontTranslateLanguages = [baseLang]
+        }
+        
+        return cachedChatTranslationState(engine: context.engine, peerId: peerId)
+        |> mapToSignal { cached in
+            if let cached, cached.baseLang == baseLang {
+                if !dontTranslateLanguages.contains(cached.fromLang) {
+                    return .single(cached)
+                } else {
+                    return .single(nil)
+                }
+            } else {
+                return .single(nil)
+                |> then(
+                    context.account.viewTracker.aroundMessageHistoryViewForLocation(.peer(peerId: peerId, threadId: nil), index: .upperBound, anchorIndex: .upperBound, count: 16, fixedCombinedReadStates: nil)
+                    |> filter { messageHistoryView -> Bool in
+                        return messageHistoryView.0.entries.count > 1
+                    }
+                    |> take(1)
+                    |> map { messageHistoryView, _, _ -> ChatTranslationState? in
+                        let messages = messageHistoryView.entries.map(\.message)
+                        
+                        var fromLangs: [String: Int] = [:]
+                        var count = 0
+                        for message in messages {
+                            if let _ = URL(string: message.text) {
+                                continue
+                            }
+                            if message.text.count > 10 {
+                                let text = String(message.text.prefix(100))
+                                let fromLang = Translate.detectLanguage(for: text)
+                                if let fromLang = fromLang {
+                                    fromLangs[fromLang] = (fromLangs[fromLang] ?? 0) + 1
+                                }
+                                count += 1
+                            }
+                            if count >= 10 {
+                                break
+                            }
+                        }
+                        
+                        if let _ = fromLangs["ru"] {
+                            fromLangs["bg"] = nil
+                        }
+                        
+                        var mostFrequent: (String, Int)?
+                        for (lang, count) in fromLangs {
+                            if let current = mostFrequent {
+                                if count > current.1 {
+                                    mostFrequent = (lang, count)
+                                }
+                            } else {
+                                mostFrequent = (lang, count)
+                            }
+                        }
+                        let fromLang = mostFrequent?.0 ?? ""
+                        let state = ChatTranslationState(baseLang: baseLang, fromLang: fromLang, toLang: nil, isEnabled: false)
+                        let _ = updateChatTranslationState(engine: context.engine, peerId: peerId, state: state).start()
+                        if !dontTranslateLanguages.contains(fromLang) {
+                            return state
+                        } else {
+                            return nil
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+

@@ -505,9 +505,9 @@ final class EntertainmentView : View {
     fileprivate var sectionView: NSView
     private let bottomView = View()
     private let borderView = View()
-    fileprivate let emoji: ImageButton = ImageButton()
-    fileprivate let stickers: ImageButton = ImageButton()
-    fileprivate let gifs: ImageButton = ImageButton()
+    fileprivate let emoji: TitleButton = TitleButton()
+    fileprivate let stickers: TitleButton = TitleButton()
+    fileprivate let gifs: TitleButton = TitleButton()
     
     private var premiumView: StickerPremiumHolderView?
 
@@ -521,6 +521,15 @@ final class EntertainmentView : View {
         addSubview(self.bottomView)
         self.bottomView.addSubview(sectionTabs)
         
+        self.emoji.scaleOnClick = true
+        self.emoji.autoSizeToFit = false
+        
+        self.stickers.scaleOnClick = true
+        self.stickers.autoSizeToFit = false
+
+        self.gifs.scaleOnClick = true
+        self.gifs.autoSizeToFit = false
+        
         self.sectionTabs.addSubview(self.emoji)
         self.sectionTabs.addSubview(self.stickers)
         self.sectionTabs.addSubview(self.gifs)
@@ -532,13 +541,40 @@ final class EntertainmentView : View {
         super.updateLocalizationAndTheme(theme: theme)
         let theme = (theme as! TelegramPresentationTheme)
         self.borderView.background = theme.colors.border
-        self.emoji.set(image: theme.icons.entertainment_Emoji, for: .Normal)
-        self.stickers.set(image: theme.icons.entertainment_Stickers, for: .Normal)
-        self.gifs.set(image: theme.icons.entertainment_Gifs, for: .Normal)
-        _ = self.emoji.sizeToFit()
-        _ = self.stickers.sizeToFit()
-        _ = self.gifs.sizeToFit()
         
+        self.emoji.set(font: .medium(.title), for: .Normal)
+        self.emoji.set(color: theme.colors.grayIcon, for: .Normal)
+        self.stickers.set(font: .medium(.title), for: .Normal)
+        self.stickers.set(color: theme.colors.grayIcon, for: .Normal)
+        self.gifs.set(font: .medium(.title), for: .Normal)
+        self.gifs.set(color: theme.colors.grayIcon, for: .Normal)
+
+        
+        self.emoji.set(color: theme.colors.darkGrayText, for: .Highlight)
+        self.stickers.set(color: theme.colors.darkGrayText, for: .Highlight)
+        self.gifs.set(color: theme.colors.darkGrayText, for: .Highlight)
+
+        self.emoji.set(background: theme.colors.background, for: .Normal)
+        self.stickers.set(background: theme.colors.background, for: .Normal)
+        self.gifs.set(background: theme.colors.background, for: .Normal)
+
+        self.emoji.set(background: theme.colors.grayText.withAlphaComponent(0.2), for: .Highlight)
+        self.stickers.set(background: theme.colors.grayText.withAlphaComponent(0.2), for: .Highlight)
+        self.gifs.set(background: theme.colors.grayText.withAlphaComponent(0.2), for: .Highlight)
+
+        
+        self.emoji.set(text: strings().entertainmentEmojiNew, for: .Normal)
+        self.stickers.set(text: strings().entertainmentStickersNew, for: .Normal)
+        self.gifs.set(text: strings().entertainmentGIFNew, for: .Normal)
+        
+        _ = self.emoji.sizeToFit(NSMakeSize(10, 8))
+        _ = self.stickers.sizeToFit(NSMakeSize(10, 8))
+        _ = self.gifs.sizeToFit(NSMakeSize(10, 8))
+        
+        self.emoji.layer?.cornerRadius = self.emoji.frame.height / 2
+        self.stickers.layer?.cornerRadius = self.emoji.frame.height / 2
+        self.gifs.layer?.cornerRadius = self.emoji.frame.height / 2
+
     }
     
     func toggleSearch(_ signal:ValuePromise<SearchState>) {
@@ -608,11 +644,13 @@ final class EntertainmentView : View {
         
         let buttons:[NSView] = [self.emoji, self.stickers, self.gifs].filter { !$0.isHidden }
         
-        self.sectionTabs.setFrameSize(NSMakeSize(buttons.reduce(0, { $0 + $1.frame.width }) + CGFloat(buttons.count - 1) * 20, 40))
+        self.sectionTabs.setFrameSize(NSMakeSize(buttons.reduce(0, { $0 + $1.frame.width }) + CGFloat(buttons.count - 1), 40))
         self.sectionTabs.center()
         
-        for (i, button) in buttons.enumerated() {
-            button.centerY(x: (button.frame.width + 20) * CGFloat(i))
+        var x: CGFloat = 0
+        for button in buttons {
+            button.centerY(x: x)
+            x += button.frame.width
         }
         self.premiumView?.frame = bounds
     }
