@@ -340,7 +340,11 @@ final class ChatInteraction : InterfaceObserver  {
     }
     
     func forwardSelectedMessages() {
-        forwardMessages(presentation.interfaceState.forwardMessages)
+        let messages = context.account.postbox.messagesAtIds(presentation.interfaceState.forwardMessageIds) |> deliverOnMainQueue
+        _ = messages.start(next: { [weak self] messages in
+            self?.forwardMessages(messages)
+        })
+        
     }
     
     func deleteSelectedMessages() {
