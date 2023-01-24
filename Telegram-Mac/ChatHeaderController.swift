@@ -32,7 +32,7 @@ struct ChatHeaderState : Identifiable, Equatable {
         case addContact(block: Bool, autoArchived: Bool)
         case requestChat(String, String)
         case shareInfo
-        case pinned(ChatPinnedMessage, doNotChangeTable: Bool)
+        case pinned(ChatPinnedMessage, ChatLiveTranslateContext.State.Result?, doNotChangeTable: Bool)
         case report(autoArchived: Bool, status: PeerEmojiStatus?)
         case promo(EngineChatList.AdditionalItem.PromoInfo.Content)
         case pendingRequests(Int, [PeerInvitationImportersState.Importer])
@@ -40,8 +40,8 @@ struct ChatHeaderState : Identifiable, Equatable {
         
         static func ==(lhs:Value, rhs: Value) -> Bool {
             switch lhs {
-            case let .pinned(pinnedId, value):
-                if case .pinned(pinnedId, value) = rhs {
+            case let .pinned(pinnedId, translate, value):
+                if case .pinned(pinnedId, translate, value) = rhs {
                     return true
                 } else {
                     return false
@@ -630,19 +630,17 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
     func update(with state: ChatHeaderState, animated: Bool) {
         self._state = state
         switch state.main {
-        case let .pinned(message, _):
-            self.update(message, animated: animated)
+        case let .pinned(message, translate, _):
+            self.update(message, translate: translate, animated: animated)
         default:
             break
         }
     }
     private var translate: ChatLiveTranslateContext.State.Result?
     
-    private func update(_ pinnedMessage: ChatPinnedMessage, animated: Bool) {
+    private func update(_ pinnedMessage: ChatPinnedMessage, translate: ChatLiveTranslateContext.State.Result?, animated: Bool) {
         
         
-        let translate = _state.translate?.result[pinnedMessage.messageId]
-
         
         let animated = animated && (self.pinnedMessage != nil && (!pinnedMessage.isLatest || (self.pinnedMessage?.isLatest != pinnedMessage.isLatest))) && self.translate == translate
 

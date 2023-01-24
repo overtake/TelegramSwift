@@ -692,7 +692,7 @@ class ChatControllerView : View, ChatInputDelegate {
                 value = .shareInfo
             } else if let pinnedMessageId = interfaceState.pinnedMessageId, !interfaceState.interfaceState.dismissedPinnedMessageId.contains(pinnedMessageId.messageId), !interfaceState.hidePinnedMessage, interfaceState.chatMode != .pinned {
                 if pinnedMessageId.message?.restrictedText(chatInteraction.context.contentSettings) == nil {
-                    value = .pinned(pinnedMessageId, doNotChangeTable: interfaceState.chatMode.threadId != nil)
+                    value = .pinned(pinnedMessageId, interfaceState.translateState?.result[pinnedMessageId.messageId], doNotChangeTable: interfaceState.chatMode.threadId != nil)
                 } else {
                     value = .none
                 }
@@ -701,7 +701,7 @@ class ChatControllerView : View, ChatInputDelegate {
             }
         } else if let pinnedMessageId = interfaceState.pinnedMessageId, !interfaceState.interfaceState.dismissedPinnedMessageId.contains(pinnedMessageId.messageId), !interfaceState.hidePinnedMessage, interfaceState.chatMode != .pinned {
             if pinnedMessageId.message?.restrictedText(chatInteraction.context.contentSettings) == nil {
-                value = .pinned(pinnedMessageId, doNotChangeTable: interfaceState.chatMode.threadId != nil)
+                value = .pinned(pinnedMessageId, interfaceState.translateState?.result[pinnedMessageId.messageId], doNotChangeTable: interfaceState.chatMode.threadId != nil)
             } else {
                 value = .none
             }
