@@ -2259,7 +2259,7 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
             tableView.noteHeightOfRows(withIndexesChanged: IndexSet(integer: index))
         }
         self.endTableUpdates()
-        self.tableView.tile()
+//        self.tableView.tile()
     }
     
     public func item(at:Int) -> TableRowItem {
@@ -2762,8 +2762,8 @@ open class TableView: ScrollView, NSTableViewDelegate,NSTableViewDataSource,Sele
         
         self.updatedItems?(self.list)
         
-        self.reflectScrolledClipView(self.clipView)
-        self.tableView.tile()
+//        self.reflectScrolledClipView(self.clipView)
+//        self.tableView.tile()
 
         if oldEmpty != isEmpty || first {
             updateEmpties(animated: !first)

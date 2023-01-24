@@ -198,7 +198,7 @@ class PeerPhotosMonthItem: GeneralRowItem {
             let message = layoutItem.message
             if canForwardMessage(message, chatInteraction: chatInteraction) {
                 items.append(ContextMenuItem(strings().messageContextForward, handler: { [weak self] in
-                    self?.chatInteraction.forwardMessages([message.id])
+                    self?.chatInteraction.forwardMessages([message])
                 }, itemImage: MenuAnimation.menu_forward.value))
             }
             

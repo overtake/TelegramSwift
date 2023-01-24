@@ -536,7 +536,7 @@ class PeerListContainerView : Control {
             } else {
                 current = .init({ _, _ in
                     arguments.joinGroupCall(info)
-                }, context: arguments.context, state: .none(info), frame: rect)
+                }, context: arguments.context, state: .init(main: .none, voiceChat: info), frame: rect)
                 self.callView = current
                 containerView.addSubview(current, positioned: .below, relativeTo: header)
                 
@@ -687,7 +687,7 @@ class PeerListContainerView : Control {
     private func updatePendingRequests(_ state: PeerInvitationImportersState?, arguments: Arguments, animated: Bool) {
         if let state = state {
             let current: ChatPendingRequests
-            let headerState: ChatHeaderState = .pendingRequests(nil, Int(state.count), state.importers)
+            let headerState: ChatHeaderState = .init(main: .pendingRequests(Int(state.count), state.importers))
             if let view = self.header as? ChatPendingRequests {
                 current = view
             } else {

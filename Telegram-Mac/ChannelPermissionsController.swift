@@ -100,6 +100,18 @@ func compactStringForGroupPermission(right: TelegramChatBannedRightsFlags, chann
         return strings().groupPermissionNoSendMessages
     } else if right.contains(.banSendMedia) {
         return strings().groupPermissionNoSendMedia
+    } else if right.contains(.banSendPhotos) {
+        return strings().groupPermissionNoPhotos
+    } else if right.contains(.banSendVideos) {
+        return strings().groupPermissionNoVideos
+    } else if right.contains(.banSendMusic) {
+        return strings().groupPermissionNoMusic
+    } else if right.contains(.banSendFiles) {
+        return strings().groupPermissionNoFiles
+    } else if right.contains(.banSendVoice) {
+        return strings().groupPermissionNoVoiceMessages
+    } else if right.contains(.banSendInstantVideos) {
+        return strings().groupPermissionNoVideoMessages
     } else if right.contains(.banSendGifs) {
         return strings().groupPermissionNoSendGifs
     } else if right.contains(.banEmbedLinks) {
@@ -119,79 +131,21 @@ func compactStringForGroupPermission(right: TelegramChatBannedRightsFlags, chann
     }
 }
 
-let internal_allPossibleGroupPermissionList: [(TelegramChatBannedRightsFlags, TelegramChannelPermission)] = [
-    (.banSendText, .banMembers),
-    (.banSendMedia, .banMembers),
-    (.banSendPhotos, .banMembers),
-    (.banSendVideos, .banMembers),
-    (.banSendGifs, .banMembers),
-    (.banSendMusic, .banMembers),
-    (.banSendFiles, .banMembers),
-    (.banSendVoice, .banMembers),
-    (.banSendInstantVideos, .banMembers),
-    (.banEmbedLinks, .banMembers),
-    (.banSendPolls, .banMembers),
-    (.banAddMembers, .banMembers),
-    (.banPinMessages, .pinMessages),
-    (.banManageTopics, .manageTopics),
-    (.banChangeInfo, .changeInfo)
-]
-
-
-
-public func allGroupPermissionList(peer: Peer) -> [(TelegramChatBannedRightsFlags, TelegramChannelPermission)] {
-    if let channel = peer as? TelegramChannel, channel.flags.contains(.isForum) {
-        return [
-            (.banSendText, .banMembers),
-            (.banSendMedia, .banMembers),
-            (.banAddMembers, .banMembers),
-            (.banPinMessages, .pinMessages),
-            (.banManageTopics, .manageTopics),
-            (.banChangeInfo, .changeInfo)
-        ]
-    } else {
-        return [
-            (.banSendText, .banMembers),
-            (.banSendMedia, .banMembers),
-            (.banAddMembers, .banMembers),
-            (.banPinMessages, .pinMessages),
-            (.banChangeInfo, .changeInfo)
-        ]
-    }
-}
-
-func banSendMediaSubList() -> [(TelegramChatBannedRightsFlags, TelegramChannelPermission)] {
-    return [
-        (.banSendPhotos, .banMembers),
-        (.banSendVideos, .banMembers),
-        (.banSendGifs, .banMembers),
-        (.banSendMusic, .banMembers),
-        (.banSendFiles, .banMembers),
-        (.banSendVoice, .banMembers),
-        (.banSendInstantVideos, .banMembers),
-        (.banEmbedLinks, .banMembers),
-        (.banSendPolls, .banMembers),
-    ]
-}
-
-
-
-let publicGroupRestrictedPermissions: TelegramChatBannedRightsFlags = [
-    .banPinMessages,
-    .banChangeInfo
-]
-
 
 
 func groupPermissionDependencies(_ right: TelegramChatBannedRightsFlags) -> TelegramChatBannedRightsFlags {
-    if right.contains(.banSendMedia) || banSendMediaSubList().contains(where: { $0.0 == right }) {
+    if right.contains(.banEmbedLinks) {
         return [.banSendText]
+    } else if right.contains(.banSendMedia) || banSendMediaSubList().contains(where: { $0.0 == right }) {
+        return []
     } else if right.contains(.banSendGifs) {
-        return [.banSendText]
+        return []
+    } else if right.contains(.banSendText) {
+        return []
     } else if right.contains(.banEmbedLinks) {
-        return [.banSendText]
+        return []
     } else if right.contains(.banSendPolls) {
-        return [.banSendText]
+        return []
     } else if right.contains(.banChangeInfo) {
         return []
     } else if right.contains(.banAddMembers) {
@@ -367,7 +321,6 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
                     for (subRight, _) in banSendMediaSubList() {
                         subItems.append(.init(title: stringForGroupPermission(right: subRight, channel: channel), flags: subRight, isSelected: !effectiveRightsFlags.contains(subRight)))
                     }
-
                 }
             }
             let string: NSMutableAttributedString = NSMutableAttributedString()
@@ -462,12 +415,12 @@ private func entries(state: State, arguments: Arguments) -> [InputDataEntry] {
                     case let .member(_, _, _, banInfo, _):
                         var exceptionsString = ""
                         if let banInfo = banInfo {
-                            for rights in allGroupPermissionList(peer: channel) {
-                                if !item.flags.contains(rights.0) && banInfo.rights.flags.contains(rights.0) {
+                            for (rights, _) in internal_allPossibleGroupPermissionList {
+                                if !defaultBannedRights.flags.contains(rights) && banInfo.rights.flags.contains(rights) {
                                     if !exceptionsString.isEmpty {
                                         exceptionsString.append(", ")
                                     }
-                                    exceptionsString.append(compactStringForGroupPermission(right: rights.0, channel: item.peer.peer as? TelegramChannel))
+                                    exceptionsString.append(compactStringForGroupPermission(right: rights, channel: item.peer.peer as? TelegramChannel))
                                 }
                             }
                             text = exceptionsString
@@ -705,6 +658,11 @@ final class ChannelPermissionsController : TableViewController {
                                     effectiveRightsFlags.insert(right)
                                 }
                             }
+                            for (right, _) in banSendMediaSubList() {
+                                if groupPermissionDependencies(right).contains(rights) {
+                                    effectiveRightsFlags.insert(right)
+                                }
+                            }
                         }
                     }
                     if banSendMediaSubList().allSatisfy({ !effectiveRightsFlags.contains($0.0) }) {
@@ -714,6 +672,7 @@ final class ChannelPermissionsController : TableViewController {
                     }
                     state.modifiedRightsFlags = effectiveRightsFlags
                     return state
+
                 }
                 let state = stateValue.with { $0 }
                 if let modifiedRightsFlags = state.modifiedRightsFlags {

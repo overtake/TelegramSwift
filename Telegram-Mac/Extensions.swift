@@ -2324,28 +2324,6 @@ public extension NSAttributedString {
 }
 
 
-extension Date {
-    
-    static var kernelBootTimeSecs:Int32 {
-        var mib = [ CTL_KERN, KERN_BOOTTIME ]
-        var bootTime = timeval()
-        var bootTimeSize = MemoryLayout<timeval>.size
-        
-        if 0 != sysctl(&mib, UInt32(mib.count), &bootTime, &bootTimeSize, nil, 0) {
-            fatalError("Could not get boot time, errno: \(errno)")
-        }
-        
-        return Int32(bootTime.tv_sec)
-    }
-    var isToday: Bool {
-        return CalendarUtils.isSameDate(self, date: Date(), checkDay: true)
-    }
-    var isTomorrow: Bool {
-        return Calendar.current.isDateInTomorrow(self)
-    }
-}
-
-
 
 
 

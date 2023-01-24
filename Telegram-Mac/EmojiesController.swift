@@ -1250,6 +1250,7 @@ final class AnimatedEmojiesView : Control {
         }
         addSubview(self.tableView)
         
+        searchView.isLeftOrientated = true
         searchView.layer?.cornerRadius = 15
 
         searchContainer.addSubview(searchView)

@@ -174,8 +174,8 @@ func DownloadsController(context: AccountContext, searchValue: Signal<String, No
         }
         
     }
-    interaction.forwardMessages = { ids in
-        showModal(with: ShareModalController(ForwardMessagesObject(context, messageIds: ids)), for: context.window)
+    interaction.forwardMessages = { messages in
+        showModal(with: ShareModalController(ForwardMessagesObject(context, messages: messages)), for: context.window)
     }
     interaction.deleteMessages = { ids in
         let signal = context.account.postbox.transaction { transaction -> [Message] in

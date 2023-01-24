@@ -636,7 +636,7 @@ final class ReactionPeerMenu : ContextMenuItem {
     
     private let disposable = MetaDisposable()
     
-    init(title: String, handler:@escaping()->Void, peer: Peer, context: AccountContext, reaction: Source?, destination: Destination = .common) {
+    init(title: String, handler:@escaping()->Void, peer: Peer, context: AccountContext, reaction: Source?, message: Message? = nil, destination: Destination = .common) {
         self.reaction = reaction
         self.peer = peer
         self.context = context
@@ -661,7 +661,7 @@ final class ReactionPeerMenu : ContextMenuItem {
                         default:
                             threadId = nil
                         }
-                        if peer.canSendMessage(true, threadData: threadData) {
+                        if peer.canSendMessage(true, media: message?.media.first, threadData: threadData) {
                             let menuItem = ContextMenuItem(threadData.info.title, handler: {
                                 if let threadId = threadId {
                                     callback(threadId)

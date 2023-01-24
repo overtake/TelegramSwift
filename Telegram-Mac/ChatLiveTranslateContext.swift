@@ -79,7 +79,7 @@ final class ChatLiveTranslateContext {
         self.context = context
         
         let cachedData = getCachedDataView(peerId: peerId, postbox: context.account.postbox) |> map {
-            $0 as? CachedChannelData
+            $0
         }
         
         let should: Signal<(Bool, String, String), NoError> = combineLatest(queue:  prepareQueue,preloadedChatHistoryViewForLocation(.Initial(count: 30), context: context, chatLocation: .peer(peerId), chatLocationContextHolder: Atomic(value: nil), tagMask: nil, additionalData: []), appearanceSignal, context.account.postbox.loadedPeerWithId(context.peerId), context.account.postbox.loadedPeerWithId(peerId), baseAppSettings(accountManager: context.sharedContext.accountManager), cachedData) |> map { update, appearance, peer, mainPeer, settings, cachedData in
@@ -104,7 +104,14 @@ final class ChatLiveTranslateContext {
                 })
                 let ignore = settings.doNotTranslate.union([appAppearance.language.baseLanguageCode])
                 
-                if peer.isPremium, mainPeer.isChannel || mainPeer.isGroup || mainPeer.isSupergroup || mainPeer.isSupergroup, !languages.isEmpty, settings.translateChannels, cachedData?.flags.contains(.translationHidden) == false {
+                let isHidden: Bool
+                if let cachedData = cachedData as? CachedChannelData {
+                    isHidden = cachedData.flags.contains(.translationHidden)
+                } else {
+                    isHidden = true
+                }
+                
+                if peer.isPremium, mainPeer.isChannel || mainPeer.isSupergroup || mainPeer.isGigagroup, !languages.isEmpty, settings.translateChannels, !isHidden {
                     if !ignore.contains(languages[0]) {
                         return (true, languages[0], appearance.language.baseLanguageCode)
                     }

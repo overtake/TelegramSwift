@@ -227,6 +227,7 @@ private func entries(_ state: State, arguments: Arguments, mediaArguments: Conte
 final class GifKeyboardView : View {
     let tableView = TableView()
     let packsView = HorizontalTableView(frame: NSZeroRect)
+    fileprivate var restrictedView:RestrictionWrappedView?
     private let borderView = View()
     private let tabs = View()
     private let selectionView: View = View(frame: NSMakeRect(0, 0, 36, 36))
@@ -265,6 +266,24 @@ final class GifKeyboardView : View {
     }
  
     
+    func updateRestricion(_ peer: Peer?, animated: Bool) {
+        if let peer = peer, let text = permissionText(from: peer, for: .banSendGifs) {
+            let current: RestrictionWrappedView
+            if let view = self.restrictedView {
+                current = view
+            } else {
+                current = RestrictionWrappedView(text)
+                self.restrictedView = current
+                addSubview(current)
+            }
+            current.update(text)
+        } else if let view = self.restrictedView {
+            performSubviewRemoval(view, animated: animated)
+            self.restrictedView = nil
+        }
+        needsLayout = true
+    }
+    
     override func layout() {
         super.layout()
         self.updateLayout(self.frame.size, transition: .immediate)
@@ -291,6 +310,9 @@ final class GifKeyboardView : View {
         
         transition.updateFrame(view: tableView, frame: NSMakeRect(0, tabs.frame.maxY, size.width, size.height))
 
+        if let restrictedView = restrictedView {
+            transition.updateFrame(view: restrictedView, frame: size.bounds)
+        }
 
         let alpha: CGFloat = searchState?.state == .Focus && tableView.documentOffset.y > 0 ? 1 : 0
         transition.updateAlpha(view: searchBorder, alpha: alpha)
@@ -369,8 +391,23 @@ final class GifKeyboardController : TelegramGenericViewController<GifKeyboardVie
     func update(with interactions:EntertainmentInteractions?, chatInteraction: ChatInteraction) {
         self.interactions = interactions
         self.chatInteraction = chatInteraction
+        if isLoaded() {
+            genericView.updateRestricion(chatInteraction.presentation.peer, animated: false)
+        }
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if let chatInteraction = chatInteraction {
+            genericView.updateRestricion(chatInteraction.presentation.peer, animated: false)
+        }
+    }
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if let chatInteraction = chatInteraction {
+            genericView.updateRestricion(chatInteraction.presentation.peer, animated: false)
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()

@@ -729,14 +729,20 @@ class NStickersView : View {
     }
     
     
-    func updateRestricion(_ peer: Peer?) {
+    func updateRestricion(_ peer: Peer?, animated: Bool) {
         if let peer = peer, let text = permissionText(from: peer, for: .banSendStickers) {
-            restrictedView?.removeFromSuperview()
-            restrictedView = RestrictionWrappedView(text)
-            addSubview(restrictedView!)
-        } else {
-            restrictedView?.removeFromSuperview()
-            restrictedView = nil
+            let current: RestrictionWrappedView
+            if let view = self.restrictedView {
+                current = view
+            } else {
+                current = RestrictionWrappedView(text)
+                self.restrictedView = current
+                addSubview(current)
+            }
+            current.update(text)
+        } else if let view = self.restrictedView {
+            performSubviewRemoval(view, animated: animated)
+            self.restrictedView = nil
         }
         needsLayout = true
     }
@@ -919,7 +925,7 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         self.chatInteraction = chatInteraction
         chatInteraction.add(observer: self)
         if isLoaded() {
-            genericView.updateRestricion(chatInteraction.presentation.peer)
+            genericView.updateRestricion(chatInteraction.presentation.peer, animated: false)
         }
         self.specificPeerId.set(chatInteraction.peerId)
     }
@@ -928,10 +934,10 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
             if let peer = value.peer, let oldPeer = oldValue.peer {
                 if permissionText(from: peer, for: .banSendStickers) != permissionText(from: oldPeer, for: .banSendStickers) {
-                    genericView.updateRestricion(peer)
+                    genericView.updateRestricion(peer, animated: animated)
                 }
             } else if (oldValue.peer != nil) != (value.peer != nil), let peer = value.peer {
-                genericView.updateRestricion(peer)
+                genericView.updateRestricion(peer, animated: animated)
             }
         }
     }
@@ -1002,9 +1008,18 @@ class NStickersViewController: TelegramGenericViewController<NStickersView>, Tab
     }
     
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        if let chatInteraction = chatInteraction {
+            genericView.updateRestricion(chatInteraction.presentation.peer, animated: false)
+        }
+    }
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         self.genericView.updateSelectionState(animated: false)
+        if let chatInteraction = chatInteraction {
+            genericView.updateRestricion(chatInteraction.presentation.peer, animated: false)
+        }
     }
     override func viewDidLoad() {
         super.viewDidLoad()

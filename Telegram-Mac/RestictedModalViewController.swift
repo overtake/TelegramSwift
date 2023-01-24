@@ -20,12 +20,14 @@ private final class RestrictedControllerArguments {
     let changeUntil:()->Void
     let alertError:() -> Void
     let deleteException:()->Void
-    init(context: AccountContext, toggleRight: @escaping (TelegramChatBannedRightsFlags, Bool) -> Void, changeUntil: @escaping () -> Void, alertError: @escaping() -> Void,  deleteException:@escaping()->Void) {
+    let toggleMedia:()->Void
+    init(context: AccountContext, toggleRight: @escaping (TelegramChatBannedRightsFlags, Bool) -> Void, changeUntil: @escaping () -> Void, alertError: @escaping() -> Void,  deleteException:@escaping()->Void, toggleMedia:@escaping()->Void) {
         self.context = context
         self.toggleRight = toggleRight
         self.changeUntil = changeUntil
         self.alertError = alertError
         self.deleteException = deleteException
+        self.toggleMedia = toggleMedia
     }
 }
 
@@ -44,7 +46,8 @@ private enum RestrictedEntryStableId: Hashable {
 
 private enum RestrictedEntry: TableItemListNodeEntry {
     case info(Int32, Peer, TelegramUserPresence?, GeneralViewType)
-    case rightItem(Int32, Int32, String, TelegramChatBannedRightsFlags, Bool, Bool, GeneralViewType)
+    case rightItem(Int32, Int32, NSAttributedString, TelegramChatBannedRightsFlags, Bool, Bool, GeneralViewType)
+    case mediaRightItem(Int32, Int32, String, TelegramChatBannedRightsFlags, Bool, Bool, GeneralViewType)
     case description(Int32, Int32, String, GeneralViewType)
     case section(Int32)
     case timeout(Int32, Int32, String, String, GeneralViewType)
@@ -74,6 +77,12 @@ private enum RestrictedEntry: TableItemListNodeEntry {
             }
         case let .rightItem(sectionId, index, text, flags, value, enabled, viewType):
             if case .rightItem(sectionId, index, text, flags, value, enabled, viewType) = rhs {
+                return true
+            } else {
+                return false
+            }
+        case let .mediaRightItem(sectionId, index, text, flags, value, enabled, viewType):
+            if case .mediaRightItem(sectionId, index, text, flags, value, enabled, viewType) = rhs {
                 return true
             } else {
                 return false
@@ -120,6 +129,8 @@ private enum RestrictedEntry: TableItemListNodeEntry {
             return .timeout
         case let .rightItem(_, _, _, right, _, _, _):
             return .right(right)
+        case let .mediaRightItem(_, _, _, right, _, _, _):
+            return .right(right)
         case .description(_, let index, _, _):
             return .description(index)
         case .exceptionInfo:
@@ -142,6 +153,8 @@ private enum RestrictedEntry: TableItemListNodeEntry {
         case .exceptionInfo(let sectionId, let index, _, _):
             return (sectionId * 1000) + index
         case .rightItem(let sectionId, let index, _, _, _, _, _):
+            return (sectionId * 1000) + Int32(index) + 10
+        case .mediaRightItem(let sectionId, let index, _, _, _, _, _):
             return (sectionId * 1000) + Int32(index) + 10
         case .section(let sectionId):
             return (sectionId + 1) * 1000 - sectionId
@@ -168,8 +181,21 @@ private enum RestrictedEntry: TableItemListNodeEntry {
             }
             return ShortPeerRowItem(initialSize, peer: peer, account: arguments.context.account, context: arguments.context, stableId: stableId, enabled: true, height: 60, photoSize: NSMakeSize(40, 40), statusStyle: ControlStyle(font: .normal(.title), foregroundColor: color), status: string, borderType: [], drawCustomSeparator: false, drawLastSeparator: false, inset: NSEdgeInsets(left: 25, right: 25), drawSeparatorIgnoringInset: false, viewType: viewType, action: {})
         case let .rightItem(_, _, name, right, value, enabled, viewType):
-            //ControlStyle(font: NSFont.)
-            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: name, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: enabled ? theme.colors.text : theme.colors.grayText), type: .switchable(value), viewType: viewType, action: {
+            let action:()->Void
+            if right == .banSendMedia {
+                action = arguments.toggleMedia
+            } else {
+                action = {
+                    arguments.toggleRight(right, !value)
+                }
+            }
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: name.string, nameAttributed: name, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: enabled ? theme.colors.text : theme.colors.grayText), type: .switchable(value), viewType: viewType, action: action, enabled: enabled, switchAppearance: SwitchViewAppearance(backgroundColor: .white, stateOnColor: theme.colors.accent, stateOffColor: theme.colors.redUI, disabledColor: theme.colors.grayBackground, borderColor: .clear), disabledAction: {
+                arguments.alertError()
+            }, switchAction: {
+                arguments.toggleRight(right, !value)
+            })
+        case let .mediaRightItem(_, _, name, right, value, enabled, viewType):
+            return GeneralInteractedRowItem(initialSize, stableId: stableId, name: name, nameStyle: ControlStyle(font: .normal(.title), foregroundColor: enabled ? theme.colors.text : theme.colors.grayText), type: .selectableLeft(value), viewType: viewType, action: {
                 arguments.toggleRight(right, !value)
             }, enabled: enabled, switchAppearance: SwitchViewAppearance(backgroundColor: .white, stateOnColor: theme.colors.accent, stateOffColor: theme.colors.redUI, disabledColor: theme.colors.grayBackground, borderColor: .clear), disabledAction: {
                 arguments.alertError()
@@ -201,6 +227,7 @@ private struct RestrictedControllerState: Equatable {
     var updatedFlags: TelegramChatBannedRightsFlags?
     var updatedTimeout: Int32?
     var updating: Bool = false
+    var mediaRevealed: Bool = false
 }
 private func completeRights(_ flags: TelegramChatBannedRightsFlags) -> TelegramChatBannedRightsFlags {
     var result = flags
@@ -267,9 +294,25 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
         
         let list = allGroupPermissionList(peer: peer)
         for (i, (right, _)) in list.enumerated() {
+            
+            let string: NSMutableAttributedString = NSMutableAttributedString()
+            string.append(string: stringForGroupPermission(right: right, channel: peer), color: theme.colors.text, font: .normal(.title))
+            
+            if right == .banSendMedia {
+                let count = banSendMediaSubList().filter({ !(currentRightsFlags.contains($0.0)) }).count
+                string.append(string: " \(count)/\(banSendMediaSubList().count)", color: theme.colors.text, font: .bold(.small))
+            }
+            
             let defaultEnabled = !defaultBannedRights.flags.contains(right)
-            entries.append(.rightItem(sectionId, index, stringForGroupPermission(right: right, channel: peer), right, defaultEnabled && !currentRightsFlags.contains(right), defaultEnabled && !state.updating, bestGeneralViewType(list, for: i)))
+            entries.append(.rightItem(sectionId, index, string, right, defaultEnabled && !currentRightsFlags.contains(right), defaultEnabled && !state.updating, bestGeneralViewType(list, for: i)))
             index += 1
+            if right == .banSendMedia, state.mediaRevealed {
+                for (subRight, _) in banSendMediaSubList() {
+                    let defaultEnabled = !defaultBannedRights.flags.contains(subRight)
+                    entries.append(.mediaRightItem(sectionId, index, stringForGroupPermission(right: subRight, channel: peer), subRight, defaultEnabled && !currentRightsFlags.contains(subRight), defaultEnabled && !state.updating, .innerItem))
+                    index += 1
+                }
+            }
         }
         
         entries.append(.section(sectionId))
@@ -327,9 +370,25 @@ private func restrictedEntries(state: RestrictedControllerState, accountPeerId: 
                 
         let list = allGroupPermissionList(peer: group)
         for (i, (right, _)) in list.enumerated() {
+            
+            let string: NSMutableAttributedString = NSMutableAttributedString()
+            string.append(string: stringForGroupPermission(right: right, channel: nil), color: theme.colors.text, font: .normal(.title))
+            
+            if right == .banSendMedia {
+                let count = banSendMediaSubList().filter({ !(currentRightsFlags.contains($0.0)) }).count
+                string.append(string: " \(count)/\(banSendMediaSubList().count)", color: theme.colors.text, font: .bold(.small))
+            }
+            
             let defaultEnabled = !defaultBannedRights.flags.contains(right)
-            entries.append(.rightItem(sectionId, index, stringForGroupPermission(right: right, channel: nil), right, defaultEnabled && !currentRightsFlags.contains(right), defaultEnabled && !state.updating, bestGeneralViewType(list, for: i)))
+            entries.append(.rightItem(sectionId, index, string, right, defaultEnabled && !currentRightsFlags.contains(right), defaultEnabled && !state.updating, bestGeneralViewType(list, for: i)))
             index += 1
+            if right == .banSendMedia, state.mediaRevealed {
+                for (subRight, _) in banSendMediaSubList() {
+                    let defaultEnabled = !defaultBannedRights.flags.contains(subRight)
+                    entries.append(.mediaRightItem(sectionId, index, stringForGroupPermission(right: subRight, channel: nil), subRight, defaultEnabled && !currentRightsFlags.contains(subRight), defaultEnabled && !state.updating, .innerItem))
+                    index += 1
+                }
+            }
         }
         
         entries.append(.section(sectionId))
@@ -442,7 +501,7 @@ class RestrictedModalViewController: TableModalViewController {
                         var effectiveRightsFlags: TelegramChatBannedRightsFlags
                         if let updatedFlags = state.updatedFlags {
                             effectiveRightsFlags = updatedFlags
-                        } else if let initialParticipant = initialParticipant, case let .member(member) = initialParticipant, let banInfo = member.banInfo {
+                        } else if let initialParticipant = initialParticipant, case let .member(_, _, _, banInfo?, _) = initialParticipant {
                             effectiveRightsFlags = banInfo.rights.flags
                         } else {
                             effectiveRightsFlags = defaultBannedRightsFlags
@@ -514,6 +573,12 @@ class RestrictedModalViewController: TableModalViewController {
         }, deleteException: { [weak self] in
             self?.updated(TelegramChatBannedRights(flags: TelegramChatBannedRightsFlags(rawValue: 0), untilDate: 0))
             self?.close()
+        }, toggleMedia: {
+            updateState { current in
+                var current = current
+                current.mediaRevealed = !current.mediaRevealed
+                return current
+            }
         })
         
         

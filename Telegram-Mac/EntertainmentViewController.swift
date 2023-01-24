@@ -683,11 +683,19 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             self?.closePopover()
         }
         interactions.sendSticker = { [weak self] file, silent, scheduled, collectionId in
-            self?.chatInteraction?.sendAppFile(file, silent, self?.effectiveSearchView?.query, scheduled, collectionId)
+            if let peer = self?.chatInteraction?.peer, let text = permissionText(from: peer, for: .banSendStickers) {
+                showModalText(for: context.window, text: text)
+            } else {
+                self?.chatInteraction?.sendAppFile(file, silent, self?.effectiveSearchView?.query, scheduled, collectionId)
+            }
             self?.closePopover()
         }
         interactions.sendGIF = { [weak self] file, silent, scheduled in
-            self?.chatInteraction?.sendAppFile(file, silent, self?.effectiveSearchView?.query, scheduled, nil)
+            if let peer = self?.chatInteraction?.peer, let text = permissionText(from: peer, for: .banSendGifs) {
+                showModalText(for: context.window, text: text)
+            } else {
+                self?.chatInteraction?.sendAppFile(file, silent, self?.effectiveSearchView?.query, scheduled, nil)
+            }
             self?.closePopover()
         }
         interactions.sendEmoji = { [weak self] emoji, fromRect in
@@ -695,7 +703,11 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
                 _ = self?.chatInteraction?.sendPlainText(emoji)
                 self?.closePopover()
             } else {
-                _ = self?.chatInteraction?.appendText(.makeEmojiHolder(emoji, fromRect: fromRect))
+                if let peer = self?.chatInteraction?.peer, let text = permissionText(from: peer, for: .banSendText) {
+                    showModalText(for: context.window, text: text)
+                } else {
+                    _ = self?.chatInteraction?.appendText(.makeEmojiHolder(emoji, fromRect: fromRect))
+                }
             }
         }
         
@@ -703,8 +715,12 @@ class EntertainmentViewController: TelegramGenericViewController<EntertainmentVi
             if self?.mode == .selectAvatar {
               
             } else {
-                let text = (sticker.file.customEmojiText ?? sticker.file.stickerText ?? "😀").fixed
-                _ = self?.chatInteraction?.appendText(.makeAnimated(sticker.file, text: text, info: info?.id, fromRect: fromRect))
+                if let peer = self?.chatInteraction?.peer, let text = permissionText(from: peer, for: .banSendText) {
+                    showModalText(for: context.window, text: text)
+                } else {
+                    let text = (sticker.file.customEmojiText ?? sticker.file.stickerText ?? "😀").fixed
+                    _ = self?.chatInteraction?.appendText(.makeAnimated(sticker.file, text: text, info: info?.id, fromRect: fromRect))
+                }
             }
         }
         

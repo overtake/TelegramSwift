@@ -73,11 +73,13 @@ class GeneralInteractedRowView: GeneralRowView {
                     self.selectLeftControl = current
                 }
                 current.update(unselectedImage: theme.icons.chatToggleUnselected, selectedImage: theme.icons.chatToggleSelected, selected: value, animated: animated)
+                
+                current.layer?.opacity = item.enabled ? 1 : 0.7
             } else if let view = self.selectLeftControl {
                 performSubviewRemoval(view, animated: animated)
                 self.selectLeftControl = nil
             }
-            
+                        
             if let badgeNode = item.badgeNode {
                 if badgeView == nil {
                     badgeView = View()
@@ -396,7 +398,7 @@ class GeneralInteractedRowView: GeneralRowView {
             
             switch item.type {
             case let .switchable(enabled):
-                if item.autoswitch {
+                if item.autoswitch && item.switchAction == nil {
                     item.type = .switchable(!enabled)
                     self.switchView?.send(event: .Click)
                     return

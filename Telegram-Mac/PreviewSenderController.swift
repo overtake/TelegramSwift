@@ -979,6 +979,11 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
     }
     
     private var inputPlaceholder: String {
+        
+        if let peer = self.chatInteraction.peer, let _ = permissionText(from: peer, for: .banSendText) {
+            return strings().channelPersmissionMessageBlock
+        }
+        
         var placeholder: String = strings().previewSenderCommentPlaceholder
         if self.genericView.tableView.count == 1 {
             if let item = self.genericView.tableView.firstItem {
@@ -1001,6 +1006,11 @@ class PreviewSenderController: ModalViewController, TGModernGrowingDelegate, Not
         let context = self.context
         let initialSize = self.atomicSize
 
+        
+        if let peer = self.chatInteraction.peer {
+            genericView.textView.inputView.isEditable = permissionText(from: peer, for: .banSendText) == nil
+            genericView.emojiButton.isHidden = !genericView.textView.inputView.isEditable
+        }
         
         genericView.textView.installGetAttach({ attachment, size in
             let rect = size.bounds.insetBy(dx: -1.5, dy: -1.5)

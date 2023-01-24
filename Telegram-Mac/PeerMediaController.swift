@@ -953,8 +953,8 @@
         }
         
         
-        interactions.forwardMessages = { messageIds in
-            showModal(with: ShareModalController(ForwardMessagesObject(context, messageIds: messageIds)), for: context.window)
+        interactions.forwardMessages = { messages in
+            showModal(with: ShareModalController(ForwardMessagesObject(context, messages: messages)), for: context.window)
         }
         
         let openChat:(PeerId, MessageId?)->Void = { [weak self] id, messageId in

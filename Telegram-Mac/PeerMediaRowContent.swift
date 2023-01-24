@@ -96,7 +96,7 @@ class PeerMediaRowItem: GeneralRowItem {
             
             if canForwardMessage(message, chatInteraction: interface) {
                 secondBlock.append(ContextMenuItem(strings().messageContextForward, handler: {
-                    interface.forwardMessages([messageId])
+                    interface.forwardMessages([message])
                 }, itemImage: MenuAnimation.menu_forward.value))
             }
             

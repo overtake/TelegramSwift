@@ -522,7 +522,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             
             let pinImage = data.message.tags.contains(.pinned) ? MenuAnimation.menu_unpin.value : MenuAnimation.menu_pin.value
             
-            let canSendMessage = peer.canSendMessage(data.chatMode.isThreadMode || data.chatMode.isTopicMode, threadData: data.chatInteraction.presentation.threadInfo)
+            let canSendMessage = peer.canSendMessage(data.chatMode.isThreadMode || data.chatMode.isTopicMode, media: data.message.media.first, threadData: data.chatInteraction.presentation.threadInfo)
 
             if let peer = peer as? TelegramChannel, peer.hasPermission(.pinMessages) || (peer.isChannel && peer.hasPermission(.editAllMessages)), canSendMessage {
                 if isNotFailed {
@@ -569,27 +569,27 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
         
         if canForwardMessage(data.message, chatInteraction: data.chatInteraction), !isService {
             let forwardItem = ContextMenuItem(strings().messageContextForward, handler: {
-                data.chatInteraction.forwardMessages([data.message.id])
+                data.chatInteraction.forwardMessages([data.message])
             }, itemImage: MenuAnimation.menu_forward.value)
             let forwardMenu = ContextMenu()
             
-            let forwardObject = ForwardMessagesObject(context, messageIds: [message.id], album: true)
+            let forwardObject = ForwardMessagesObject(context, messages: [message], album: true)
             
             let recent = data.recentUsedPeers.filter {
-                $0.id != context.peerId && $0.canSendMessage() && !$0.isDeleted
+                $0.id != context.peerId && $0.canSendMessage(media: message.media.first) && !$0.isDeleted
             }.prefix(5)
             
             let favorite = data.favoritePeers.filter {
                 !recent.map { $0.id }.contains($0.id)
                 && $0.id != context.peerId
-                && $0.canSendMessage()
+                && $0.canSendMessage(media: message.media.first)
                 && !$0.isDeleted
             }.prefix(5)
             
             let dialogs = data.dialogs.reversed().filter {
                 !(recent + favorite).map { $0.id }.contains($0.id)
                     && $0.id != context.peerId
-                    && $0.canSendMessage()
+                    && $0.canSendMessage(media: message.media.first)
                     && !$0.isDeleted
             }.prefix(5)
             
@@ -600,7 +600,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
                 let title = peer.id == context.peerId ? strings().peerSavedMessages : peer.displayTitle.prefixWithDots(20)
                 let item = ReactionPeerMenu(title: title, handler: {
                     _ = forwardObject.perform(to: [peer.id], threadId: nil).start()
-                }, peer: peer, context: context, reaction: nil, destination: .forward(callback: { threadId in
+                }, peer: peer, context: context, reaction: nil, message: message, destination: .forward(callback: { threadId in
                     _ = forwardObject.perform(to: [peer.id], threadId: makeThreadIdMessageId(peerId: peer.id, threadId: threadId)).start()
                 }))
 
@@ -636,7 +636,7 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             if !items.isEmpty {
                 items.append(ContextSeparatorItem())
                 let more = ContextMenuItem(strings().chatContextForwardMore, handler: { [unowned chatInteraction] in
-                    chatInteraction.forwardMessages([message.id])
+                    chatInteraction.forwardMessages([message])
                 })
                 items.append(more)
             }

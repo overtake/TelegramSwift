@@ -114,8 +114,8 @@ class ChatInputAccessory: View {
                 guard let context = self?.chatInteraction.context else {
                     return
                 }
-                let fwdMessages = state.interfaceState.forwardMessageIds
-                showModal(with: ShareModalController(ForwardMessagesObject(context, messageIds: fwdMessages, emptyPerformOnClose: true)), for: context.window)
+                let fwdMessages = state.interfaceState.forwardMessages
+                showModal(with: ShareModalController(ForwardMessagesObject(context, messages: fwdMessages, emptyPerformOnClose: true)), for: context.window)
                 delay(0.15, closure: {
                     self?.chatInteraction.update({$0.updatedInterfaceState({$0.withoutForwardMessages()})})
                 })

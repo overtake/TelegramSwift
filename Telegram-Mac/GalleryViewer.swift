@@ -882,7 +882,7 @@ class GalleryViewer: NSResponder {
                     let controller = context.bindings.rootNavigation().controller
 
                     
-                    if let peer = message.peers[message.id.peerId], peer.canSendMessage(), let controller = controller as? ChatController {
+                    if let peer = message.peers[message.id.peerId], peer.canSendMessage(media: message.media.first), let controller = controller as? ChatController {
                         if let _ = message.anyMedia as? TelegramMediaImage {
                             items.append(ContextMenuItem(strings().gallerySendHere, handler: { [weak self, weak controller] in
                                 
