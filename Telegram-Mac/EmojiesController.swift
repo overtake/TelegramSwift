@@ -1361,14 +1361,6 @@ final class AnimatedEmojiesView : Control {
         let previous = self.state
         self.state = state
         
-        self.arguments = arguments
-        self.context = context
-        self.tableView.merge(with: sections)
-        self.packsView.merge(with: packs)
-        
-        searchContainer.isHidden = mode == .reactions
-        tableView.scrollerInsets = mode == .reactions ? .init() : .init(left: 0, right: 0, top: 46, bottom: 50)
-        
         let transition: ContainedViewLayoutTransition
         if packs.animated {
             transition = .animated(duration: 0.2, curve: .easeOut)
@@ -1376,6 +1368,15 @@ final class AnimatedEmojiesView : Control {
             transition = .immediate
         }
         self.updateLayout(self.frame.size, transition: transition)
+        
+        self.arguments = arguments
+        self.context = context
+        self.tableView.merge(with: sections)
+        self.packsView.merge(with: packs)
+        
+        searchContainer.isHidden = mode == .reactions
+        tableView.scrollerInsets = mode == .reactions ? .init() : .init(left: 0, right: 0, top: 46, bottom: 50)
+
         
         updateSelectionState(animated: packs.animated)
         updateLocalizationAndTheme(theme: theme)
