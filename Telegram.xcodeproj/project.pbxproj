@@ -594,6 +594,9 @@
 		27EBC7B0275795DE00C6A820 /* ChatReactionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EBC7AF275795DE00C6A820 /* ChatReactionsView.swift */; };
 		27EBC7B227579A7200C6A820 /* Reactions in Frameworks */ = {isa = PBXBuildFile; productRef = 27EBC7B127579A7200C6A820 /* Reactions */; };
 		27ED5A6D2750CDE100BA55A7 /* FoundationUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 27ED5A6C2750CDE100BA55A7 /* FoundationUtils */; };
+		27EE444A297FD9030077AA0F /* PresenceStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DC91DAED681001792B6 /* PresenceStrings.swift */; };
+		27EE444C297FD91B0077AA0F /* DateUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 27EE444B297FD91B0077AA0F /* DateUtils */; };
+		27EE444E297FD9950077AA0F /* CalendarUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 27EE444D297FD9950077AA0F /* CalendarUtils */; };
 		27EFF4BB27BAF19600006834 /* Auth_CodeEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EFF4BA27BAF19600006834 /* Auth_CodeEntry.swift */; };
 		27EFF4BD27BBDF4600006834 /* Auth_PasswordEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EFF4BC27BBDF4600006834 /* Auth_PasswordEntry.swift */; };
 		27EFF4BF27BBF2D600006834 /* Auth_NextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EFF4BE27BBF2D600006834 /* Auth_NextView.swift */; };
@@ -2774,6 +2777,7 @@
 				278926C727550C8800923087 /* Strings in Frameworks */,
 				27D43DCF27919229006968A6 /* libssl.a in Frameworks */,
 				27B6D04B2739388600C785C7 /* TelegramCore in Frameworks */,
+				27EE444C297FD91B0077AA0F /* DateUtils in Frameworks */,
 				278926CB27550CA100923087 /* KeyboardKey in Frameworks */,
 				2745FED9274F95CF00546B05 /* ApiCredentials in Frameworks */,
 				27D43DC5279191B0006968A6 /* OpenSSLEncryption in Frameworks */,
@@ -2781,6 +2785,7 @@
 				2745FED7274F952D00546B05 /* ThemeSettings in Frameworks */,
 				27D43DCC279191FD006968A6 /* libjpeg.a in Frameworks */,
 				27D43DB927918F2C006968A6 /* Mozjpeg in Frameworks */,
+				27EE444E297FD9950077AA0F /* CalendarUtils in Frameworks */,
 				27D43DCE27919229006968A6 /* libcrypto.a in Frameworks */,
 				2745FECB274F947000546B05 /* BuildConfig in Frameworks */,
 				27D43DCB279191F9006968A6 /* libjpeg.a in Frameworks */,
@@ -5900,6 +5905,8 @@
 				27D43DB827918F2C006968A6 /* Mozjpeg */,
 				27D43DC4279191B0006968A6 /* OpenSSLEncryption */,
 				277C209427A2F5940070B3BF /* ManagedFile */,
+				27EE444B297FD91B0077AA0F /* DateUtils */,
+				27EE444D297FD9950077AA0F /* CalendarUtils */,
 			);
 			productName = TelegramShare;
 			productReference = C232EA911E1D07E700C4D38C /* TelegramShare.appex */;
@@ -6503,6 +6510,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				27EE444A297FD9030077AA0F /* PresenceStrings.swift in Sources */,
 				2747969928FEB00700A891F3 /* InlineStickersContext.swift in Sources */,
 				278926CC27550CD300923087 /* ChatPresentationInputQueryResult.swift in Sources */,
 				273BE6C926136D4C00AAFE4E /* ImageCompression.swift in Sources */,
@@ -8103,6 +8111,14 @@
 		27ED5A6C2750CDE100BA55A7 /* FoundationUtils */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = FoundationUtils;
+		};
+		27EE444B297FD91B0077AA0F /* DateUtils */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = DateUtils;
+		};
+		27EE444D297FD9950077AA0F /* CalendarUtils */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = CalendarUtils;
 		};
 		27F3B75327391E6B00B81F10 /* TelegramIconsTheme */ = {
 			isa = XCSwiftPackageProductDependency;

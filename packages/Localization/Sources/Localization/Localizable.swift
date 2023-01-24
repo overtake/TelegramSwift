@@ -5907,6 +5907,12 @@ public final class L10n {
   public static var groupPermissionNoAddMembers: String  { return L10n.tr("Localizable", "GroupPermission.NoAddMembers") }
   /// no info
   public static var groupPermissionNoChangeInfo: String  { return L10n.tr("Localizable", "GroupPermission.NoChangeInfo") }
+  /// no files
+  public static var groupPermissionNoFiles: String  { return L10n.tr("Localizable", "GroupPermission.NoFiles") }
+  /// no music
+  public static var groupPermissionNoMusic: String  { return L10n.tr("Localizable", "GroupPermission.NoMusic") }
+  /// no photos
+  public static var groupPermissionNoPhotos: String  { return L10n.tr("Localizable", "GroupPermission.NoPhotos") }
   /// no pin
   public static var groupPermissionNoPinMessages: String  { return L10n.tr("Localizable", "GroupPermission.NoPinMessages") }
   /// no GIFs
@@ -5923,6 +5929,12 @@ public final class L10n {
   public static var groupPermissionNotAvailableInPublicGroups: String  { return L10n.tr("Localizable", "GroupPermission.NotAvailableInPublicGroups") }
   /// no topics
   public static var groupPermissionNoTopics: String  { return L10n.tr("Localizable", "GroupPermission.NoTopics") }
+  /// no video messages
+  public static var groupPermissionNoVideoMessages: String  { return L10n.tr("Localizable", "GroupPermission.NoVideoMessages") }
+  /// no videos
+  public static var groupPermissionNoVideos: String  { return L10n.tr("Localizable", "GroupPermission.NoVideos") }
+  /// no voice messages
+  public static var groupPermissionNoVoiceMessages: String  { return L10n.tr("Localizable", "GroupPermission.NoVoiceMessages") }
   /// WHAT CAN THIS MEMBER DO?
   public static var groupPermissionSectionTitle: String  { return L10n.tr("Localizable", "GroupPermission.SectionTitle") }
   /// Exception
@@ -6285,15 +6297,15 @@ public final class L10n {
   public static var languageOfficialTransationsHeader: String  { return L10n.tr("Localizable", "Language.OfficialTransationsHeader") }
   /// Are you sure you want to remove this lang-pack?
   public static var languageRemovePack: String  { return L10n.tr("Localizable", "Language.RemovePack") }
-  /// Translate Channels
+  /// Translate Entire Chats
   public static var languageTranslateMessagesChannel: String  { return L10n.tr("Localizable", "Language.TranslateMessages.Channel") }
   /// Do Not Translate
   public static var languageTranslateMessagesDoNotTranslate: String  { return L10n.tr("Localizable", "Language.TranslateMessages.DoNotTranslate") }
   /// TRANSLATE MESSAGES
   public static var languageTranslateMessagesHeader: String  { return L10n.tr("Localizable", "Language.TranslateMessages.Header") }
-  /// Suggest to translate channel messages if app language is different. This is available only for [Premium Users]().
+  /// Translate all messages in chats. This is available only for [Premium Users]().
   public static var languageTranslateMessagesChannelInfo: String  { return L10n.tr("Localizable", "Language.TranslateMessages.Channel.Info") }
-  /// This is available only for [Telegram Premium](premium)
+  /// Subscribe to [Telegram Premium](premium) to translate entire chats.
   public static var languageTranslateMessagesChannelPremium: String  { return L10n.tr("Localizable", "Language.TranslateMessages.Channel.Premium") }
   /// %d
   public static func lastSeenHoursAgoCountable(_ p1: Int) -> String {

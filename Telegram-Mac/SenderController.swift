@@ -489,7 +489,7 @@ class Sender: NSObject {
         return enqueueMessages(account: context.account, peerId: peerId, messages: fwdMessages.reversed())
     }
     
-    public static func shareContact(context: AccountContext, peerId:PeerId, contact:TelegramUser, replyId:MessageId?, sendAsPeerId: PeerId? = nil) -> Signal<[MessageId?], NoError>  {
+    public static func shareContact(context: AccountContext, peerId:PeerId, media:Media, replyId:MessageId?, sendAsPeerId: PeerId? = nil) -> Signal<[MessageId?], NoError>  {
         
         var attributes:[MessageAttribute] = []
         if FastSettings.isChannelMessagesMuted(peerId) {
@@ -499,7 +499,7 @@ class Sender: NSObject {
             attributes.append(SendAsMessageAttribute(peerId: sendAsPeerId))
         }
         
-        return enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: TelegramMediaContact(firstName: contact.firstName ?? "", lastName: contact.lastName ?? "", phoneNumber: contact.phone ?? "", peerId: contact.id, vCardData: nil)), replyToMessageId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])])
+        return enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: "", attributes: attributes, inlineStickers: [:], mediaReference: AnyMediaReference.standalone(media: media), replyToMessageId: nil, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])])
     }
     
     public static func enqueue(media:[MediaSenderContainer], context: AccountContext, peerId:PeerId, replyId: MessageId?, silent: Bool = false, atDate:Date? = nil, sendAsPeerId:PeerId? = nil, query: String? = nil, isSpoiler: Bool = false) ->Signal<[MessageId?], NoError> {

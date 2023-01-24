@@ -25,76 +25,74 @@ protocol ChatHeaderProtocol {
 }
 
 
-
-
-enum ChatHeaderState : Identifiable, Equatable {
-    case none(ChatActiveGroupCallInfo?)
-    case search(ChatActiveGroupCallInfo?, ChatSearchInteractions, Peer?, String?)
-    case addContact(ChatActiveGroupCallInfo?, block: Bool, autoArchived: Bool)
-    case requestChat(ChatActiveGroupCallInfo?, String, String)
-    case shareInfo(ChatActiveGroupCallInfo?)
-    case pinned(ChatActiveGroupCallInfo?, ChatPinnedMessage, doNotChangeTable: Bool)
-    case report(ChatActiveGroupCallInfo?, autoArchived: Bool, status: PeerEmojiStatus?)
-    case promo(ChatActiveGroupCallInfo?, EngineChatList.AdditionalItem.PromoInfo.Content)
-    case translate(ChatActiveGroupCallInfo?, ChatPresentationInterfaceState.TranslateState)
-    case pendingRequests(ChatActiveGroupCallInfo?, Int, [PeerInvitationImportersState.Importer])
-    case restartTopic(ChatActiveGroupCallInfo?)
-    var stableId:Int {
-        switch self {
-        case .none:
-            return 0
-        case .search:
-            return 1
-        case .report:
-            return 2
-        case .addContact:
-            return 3
-        case .pinned:
-            return 4
-        case .promo:
-            return 5
-        case .shareInfo:
-            return 6
-        case .pendingRequests:
-            return 7
-        case .requestChat:
-            return 8
-        case .restartTopic:
-            return 9
-        case .translate:
-            return 10
+struct ChatHeaderState : Identifiable, Equatable {
+    enum Value : Equatable {
+        case none
+        case search(ChatSearchInteractions, Peer?, String?)
+        case addContact(block: Bool, autoArchived: Bool)
+        case requestChat(String, String)
+        case shareInfo
+        case pinned(ChatPinnedMessage, doNotChangeTable: Bool)
+        case report(autoArchived: Bool, status: PeerEmojiStatus?)
+        case promo(EngineChatList.AdditionalItem.PromoInfo.Content)
+        case pendingRequests(Int, [PeerInvitationImportersState.Importer])
+        case restartTopic
+        
+        static func ==(lhs:Value, rhs: Value) -> Bool {
+            switch lhs {
+            case let .pinned(pinnedId, value):
+                if case .pinned(pinnedId, value) = rhs {
+                    return true
+                } else {
+                    return false
+                }
+            case let .addContact(block, autoArchive):
+                if case .addContact(block, autoArchive) = rhs {
+                    return true
+                } else {
+                    return false
+                }
+            default:
+                return lhs.stableId == rhs.stableId
+            }
         }
+        var stableId:Int {
+            switch self {
+            case .none:
+                return 0
+            case .search:
+                return 1
+            case .report:
+                return 2
+            case .addContact:
+                return 3
+            case .pinned:
+                return 4
+            case .promo:
+                return 5
+            case .shareInfo:
+                return 6
+            case .pendingRequests:
+                return 7
+            case .requestChat:
+                return 8
+            case .restartTopic:
+                return 9
+            }
+        }
+        
     }
-
-    var voiceChat: ChatActiveGroupCallInfo? {
-        switch self {
-        case let .none(voiceChat):
-            return voiceChat
-        case let .search(voiceChat, _, _, _):
-            return voiceChat
-        case let .report(voiceChat, _, _):
-            return voiceChat
-        case let .addContact(voiceChat, _, _):
-            return voiceChat
-        case let .pinned(voiceChat, _, _):
-            return voiceChat
-        case let .promo(voiceChat, _):
-            return voiceChat
-        case let .shareInfo(voiceChat):
-            return voiceChat
-        case let .pendingRequests(voiceChat, _, _):
-            return voiceChat
-        case let .requestChat(voiceChat, _, _):
-            return voiceChat
-        case let .restartTopic(voiceChat):
-            return voiceChat
-        case let .translate(voiceChat, _):
-            return voiceChat
-        }
+    var main: Value
+    var voiceChat: ChatActiveGroupCallInfo?
+    var translate: ChatPresentationInterfaceState.TranslateState?
+    
+    
+    var stableId:Int {
+        return main.stableId
     }
     
     var primaryClass: AnyClass? {
-        switch self {
+        switch main {
         case .addContact:
             return AddContactView.self
         case .shareInfo:
@@ -113,31 +111,29 @@ enum ChatHeaderState : Identifiable, Equatable {
             return ChatRequestChat.self
         case .restartTopic:
             return ChatRestartTopic.self
-        case .translate:
-            return ChatTranslateHeader.self
         case .none:
             return nil
         }
     }
-    var secondaryClass: AnyClass? {
-        if let _ = voiceChat {
-            return ChatGroupCallView.self
-        }
-        return nil
+    var secondaryClass: AnyClass {
+        return ChatGroupCallView.self
+    }
+    var thirdClass: AnyClass {
+        return ChatTranslateHeader.self
     }
     
     var height:CGFloat {
-        return primaryHeight + secondaryHeight
+        return primaryHeight + secondaryHeight + thirdHeight
     }
 
     var primaryHeight:CGFloat {
         var height: CGFloat = 0
-        switch self {
+        switch main {
         case .none:
             height += 0
         case .search:
             height += 44
-        case let .report(_, _, status):
+        case let .report(_, status):
             if let _ = status {
                 height += 30
             }
@@ -156,8 +152,6 @@ enum ChatHeaderState : Identifiable, Equatable {
             height += 44
         case .restartTopic:
             height += 44
-        case .translate:
-            height += 44
         }
         return height
     }
@@ -169,39 +163,22 @@ enum ChatHeaderState : Identifiable, Equatable {
         }
         return height
     }
-    
-    var toleranceHeight: CGFloat {
-        switch self {
-        case let .pinned(_, _, doNotChangeTable):
-            return doNotChangeTable ? height - primaryHeight : height
-        default:
-            return height
+    var thirdHeight:CGFloat {
+        var height: CGFloat = 0
+        if let _ = translate {
+            height += 44
         }
+        return height
     }
     
-    static func ==(lhs:ChatHeaderState, rhs: ChatHeaderState) -> Bool {
-        switch lhs {
-        case let .pinned(call, pinnedId, value):
-            if case .pinned(call, pinnedId, value) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .addContact(call, block, autoArchive):
-            if case .addContact(call, block, autoArchive) = rhs {
-                return true
-            } else {
-                return false
-            }
-        case let .translate(call, translate):
-            if case .translate(call, translate) = rhs {
-                return true
-            } else {
-                return false
-            }
-        default:
-            return lhs.stableId == rhs.stableId && lhs.voiceChat == rhs.voiceChat
-        }
+    var toleranceHeight: CGFloat {
+        return 0
+//        switch main {
+//        case let .pinned(_, doNotChangeTable):
+//            return doNotChangeTable ? height - primaryHeight : height
+//        default:
+//            return height
+//        }
     }
 }
 
@@ -209,13 +186,14 @@ enum ChatHeaderState : Identifiable, Equatable {
 class ChatHeaderController {
     
     
-    private var _headerState:ChatHeaderState = .none(nil)
+    private var _headerState:ChatHeaderState = .init(main: .none)
     private let chatInteraction:ChatInteraction
     
     private(set) var currentView:View?
 
     private var primaryView: View?
     private var seconderyView : View?
+    private var thirdView : View?
 
     var state:ChatHeaderState {
         return _headerState
@@ -225,13 +203,15 @@ class ChatHeaderController {
         if _headerState != state {
             _headerState = state
 
-            let (primary, secondary) = viewIfNecessary(primarySize: NSMakeSize(view.frame.width, state.primaryHeight), secondarySize: NSMakeSize(view.frame.width, state.secondaryHeight), animated: animated, p_v: self.primaryView, s_v: self.seconderyView)
+            let (primary, secondary, third) = viewIfNecessary(primarySize: NSMakeSize(view.frame.width, state.primaryHeight), secondarySize: NSMakeSize(view.frame.width, state.secondaryHeight), thirdSize: NSMakeSize(view.frame.width, state.thirdHeight), animated: animated, p_v: self.primaryView, s_v: self.seconderyView, t_v: self.thirdView)
 
             let previousPrimary = self.primaryView
             let previousSecondary = self.seconderyView
-
+            let previousThird = self.thirdView
+            
             self.primaryView = primary
             self.seconderyView = secondary
+            self.thirdView = third
 
             var removed: [View] = []
             var added:[(View, NSPoint, NSPoint, View?)] = []
@@ -245,6 +225,7 @@ class ChatHeaderController {
                     added.append((secondary, NSMakePoint(0, -state.secondaryHeight), NSMakePoint(0, 0), nil))
                 }
             }
+            
             if previousPrimary == nil || previousPrimary != primary {
                 if let previousPrimary = previousPrimary {
                     removed.append(previousPrimary)
@@ -253,19 +234,26 @@ class ChatHeaderController {
                     added.append((primary, NSMakePoint(0, -(state.height - state.secondaryHeight)), NSMakePoint(0, state.secondaryHeight), secondary))
                 }
             }
-
-            if (previousSecondary == nil && secondary != nil) || previousSecondary != nil && secondary == nil {
-                if let primary = primary, previousPrimary == primary {
-                    updated.append((primary, NSMakePoint(0, state.secondaryHeight), secondary))
+            if previousThird == nil || previousThird != third {
+                if let previousThird = previousThird {
+                    removed.append(previousThird)
                 }
-            }
-            if (previousPrimary == nil && primary != nil) || previousPrimary != nil && primary == nil {
-                if let secondary = secondary, previousSecondary == secondary {
-                    updated.append((secondary, NSMakePoint(0, 0), nil))
+                if let third = third {
+                    added.append((third, NSMakePoint(0, -(state.height - state.thirdHeight - state.primaryHeight)), NSMakePoint(0, state.primaryHeight + state.secondaryHeight), nil))
                 }
             }
 
-            if !added.isEmpty || primary != nil  || secondary != nil {
+            if let primary = primary, previousPrimary == primary {
+                updated.append((primary, NSMakePoint(0, state.secondaryHeight), secondary))
+            }
+            if let secondary = secondary, previousSecondary == secondary {
+                updated.append((secondary, NSMakePoint(0, 0), third))
+            }
+            if let third = third, previousThird == third {
+                updated.append((third, NSMakePoint(0, state.primaryHeight + state.secondaryHeight), nil))
+            }
+            
+            if !added.isEmpty || primary != nil || secondary != nil || third != nil {
                 let current: View
                 if let view = currentView {
                     current = view
@@ -324,13 +312,18 @@ class ChatHeaderController {
          (primaryView as? ChatSearchHeader)?.applySearchResponder(true)
     }
     
-    private func viewIfNecessary(primarySize: NSSize, secondarySize: NSSize, animated: Bool, p_v: View?, s_v: View?) -> (primary: View?, secondary: View?) {
+    private func viewIfNecessary(primarySize: NSSize, secondarySize: NSSize, thirdSize: NSSize, animated: Bool, p_v: View?, s_v: View?, t_v: View?) -> (primary: View?, secondary: View?, third: View?) {
+        
         let primary:View?
         let secondary:View?
+        let third: View?
+        
         let primaryRect: NSRect = .init(origin: .zero, size: primarySize)
         let secondaryRect: NSRect = .init(origin: .zero, size: secondarySize)
+        let thirdRect: NSRect = .init(origin: .zero, size: thirdSize)
+
         if p_v == nil || p_v?.className != NSStringFromClass(_headerState.primaryClass ?? NSView.self)  {
-            switch _headerState {
+            switch _headerState.main {
             case .addContact:
                 primary = AddContactView(chatInteraction, state: _headerState, frame: primaryRect)
             case .shareInfo:
@@ -349,8 +342,6 @@ class ChatHeaderController {
                 primary = ChatRequestChat(chatInteraction, state: _headerState, frame: primaryRect)
             case .restartTopic:
                 primary = ChatRestartTopic(chatInteraction, state: _headerState, frame: primaryRect)
-            case .translate:
-                primary = ChatTranslateHeader(chatInteraction, state: _headerState, frame: primaryRect)
             case .none:
                 primary = nil
             }
@@ -359,8 +350,9 @@ class ChatHeaderController {
             primary = p_v
             (primary as? ChatHeaderProtocol)?.update(with: _headerState, animated: animated)
         }
+        
         if let _ = self._headerState.voiceChat {
-            if s_v == nil || s_v?.className != NSStringFromClass(_headerState.secondaryClass ?? NSView.self) {
+            if s_v == nil || s_v?.className != NSStringFromClass(_headerState.secondaryClass) {
                 secondary = ChatGroupCallView(chatInteraction.joinGroupCall, context: chatInteraction.context, state: _headerState, frame: secondaryRect)
                 secondary?.autoresizingMask = [.width]
             } else {
@@ -370,10 +362,23 @@ class ChatHeaderController {
         } else {
             secondary = nil
         }
+        
+        if let _ = self._headerState.translate {
+            if t_v == nil || t_v?.className != NSStringFromClass(_headerState.thirdClass) {
+                third = ChatTranslateHeader(chatInteraction, state: _headerState, frame: thirdRect)
+                third?.autoresizingMask = [.width]
+            } else {
+                third = t_v
+                (third as? ChatHeaderProtocol)?.update(with: _headerState, animated: animated)
+            }
+        } else {
+            third = nil
+        }
 
         primary?.setFrameSize(primarySize)
         secondary?.setFrameSize(secondarySize)
-        return (primary: primary, secondary: secondary)
+        third?.setFrameSize(thirdSize)
+        return (primary: primary, secondary: secondary, third: third)
     }
     
     init(_ chatInteraction:ChatInteraction) {
@@ -501,8 +506,8 @@ private final class ChatSponsoredView : Control, ChatHeaderProtocol {
     }
 
     func update(with state: ChatHeaderState, animated: Bool) {
-        switch state {
-        case let  .promo(_, kind):
+        switch state.main {
+        case let .promo(kind):
             self.kind = kind
         default:
             self.kind = nil
@@ -561,11 +566,12 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
     private var pinnedMessage: ChatPinnedMessage?
     
     private var inlineButton: TitleButton? = nil
-    
+    private var _state: ChatHeaderState
     private let particleList: VerticalParticleListControl = VerticalParticleListControl()
     required init(_ chatInteraction:ChatInteraction, state: ChatHeaderState, frame: NSRect) {
 
         self.chatInteraction = chatInteraction
+        _state = state
         super.init(frame: frame)
         
         dismiss.disableActions()
@@ -622,28 +628,36 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
     }
 
     func update(with state: ChatHeaderState, animated: Bool) {
-        switch state {
-        case let .pinned(_, message, _):
+        self._state = state
+        switch state.main {
+        case let .pinned(message, _):
             self.update(message, animated: animated)
         default:
             break
         }
     }
+    private var translate: ChatLiveTranslateContext.State.Result?
     
     private func update(_ pinnedMessage: ChatPinnedMessage, animated: Bool) {
         
-        let animated = animated && (self.pinnedMessage != nil && (!pinnedMessage.isLatest || (self.pinnedMessage?.isLatest != pinnedMessage.isLatest)))
+        
+        let translate = _state.translate?.result[pinnedMessage.messageId]
+
+        
+        let animated = animated && (self.pinnedMessage != nil && (!pinnedMessage.isLatest || (self.pinnedMessage?.isLatest != pinnedMessage.isLatest))) && self.translate == translate
+
         
         particleList.update(count: pinnedMessage.totalCount, selectedIndex: pinnedMessage.index, animated: animated)
         
         self.dismiss.set(image: pinnedMessage.totalCount <= 1 ? theme.icons.dismissPinned : theme.icons.chat_pinned_list, for: .Normal)
         
-        if pinnedMessage.messageId != self.pinnedMessage?.messageId {
+        if pinnedMessage.messageId != self.pinnedMessage?.messageId || translate != self.translate {
             let oldContainer = self.container
             let newContainer = ChatAccessoryView()
             newContainer.userInteractionEnabled = false
             
-            let newNode = ReplyModel(replyMessageId: pinnedMessage.messageId, context: chatInteraction.context, replyMessage: pinnedMessage.message, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil, customHeader: pinnedMessage.isLatest ? nil : pinnedMessage.totalCount == 2 ? strings().chatHeaderPinnedPrevious : strings().chatHeaderPinnedMessageNumer(pinnedMessage.totalCount - pinnedMessage.index), drawLine: false)
+            
+            let newNode = ReplyModel(replyMessageId: pinnedMessage.messageId, context: chatInteraction.context, replyMessage: pinnedMessage.message, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil, customHeader: pinnedMessage.isLatest ? nil : pinnedMessage.totalCount == 2 ? strings().chatHeaderPinnedPrevious : strings().chatHeaderPinnedMessageNumer(pinnedMessage.totalCount - pinnedMessage.index), drawLine: false, translate: _state.translate?.result[pinnedMessage.messageId])
             
             newNode.view = newContainer
             
@@ -686,7 +700,7 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
             self.node = newNode
         }
         self.pinnedMessage = pinnedMessage
-
+        self.translate = translate
         updateLocalizationAndTheme(theme: theme)
     }
     
@@ -863,8 +877,8 @@ class ChatReportView : Control, ChatHeaderProtocol {
 
     func update(with state: ChatHeaderState, animated: Bool) {
         buttonsContainer.removeAllSubviews()
-        switch state {
-        case let .report(_, autoArchived, status):
+        switch state.main {
+        case let .report(autoArchived, status):
             buttonsContainer.addSubview(report)
             if autoArchived {
                 buttonsContainer.addSubview(unarchiveButton)
@@ -1114,8 +1128,8 @@ class AddContactView : Control, ChatHeaderProtocol {
     }
     
     func update(with state: ChatHeaderState, animated: Bool) {
-        switch state {
-        case let .addContact(_, canBlock, autoArchived):
+        switch state.main {
+        case let .addContact(canBlock, autoArchived):
             buttonsContainer.removeAllSubviews()
 
             if canBlock {
@@ -1315,8 +1329,8 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
     private let calendarController: CalendarController
     required init(_ chatInteraction: ChatInteraction, state: ChatHeaderState, frame: NSRect) {
 
-        switch state {
-        case let .search(_, interactions, _, initialString):
+        switch state.main {
+        case let .search(interactions, _, initialString):
             self.interactions = interactions
             self.parentInteractions = chatInteraction
             self.calendarController = CalendarController(NSMakeRect(0, 0, 300, 300), chatInteraction.context.window, selectHandler: interactions.calendarAction)
@@ -1358,8 +1372,8 @@ class ChatSearchHeader : View, Notifable, ChatHeaderProtocol {
         self.loadingDisposable.set((parentInteractions.loadingMessage.get() |> deliverOnMainQueue).start(next: { [weak self] loading in
             self?.searchView.isLoading = loading
         }))
-        switch state {
-        case let .search(_, _, initialPeer, _):
+        switch state.main {
+        case let .search(_, initialPeer, _):
             if let initialPeer = initialPeer {
                 self.chatInteraction.movePeerToInput(initialPeer)
             }
@@ -2250,8 +2264,8 @@ private final class ChatRequestChat : Control, ChatHeaderProtocol {
         
         self.set(handler: { [weak self] control in
             if let window = control.kitWindow, let state = self?._state {
-                switch state {
-                case let .requestChat(_, _, text):
+                switch state.main {
+                case let .requestChat(_, text):
                     alert(for: window, info: text)
                 default:
                     break
@@ -2286,8 +2300,8 @@ private final class ChatRequestChat : Control, ChatHeaderProtocol {
 
     func update(with state: ChatHeaderState, animated: Bool) {
         _state = state
-        switch state {
-        case let .requestChat(_, text, _):
+        switch state.main {
+        case let .requestChat(text, _):
             let attr = NSMutableAttributedString()
             _ = attr.append(string: text, color: theme.colors.text, font: .normal(.text))
             attr.detectBoldColorInString(with: .medium(.text))
@@ -2399,8 +2413,8 @@ final class ChatPendingRequests : Control, ChatHeaderProtocol {
     func update(with state: ChatHeaderState, animated: Bool) {
       
         
-        switch state {
-        case let .pendingRequests(_, count, peers):
+        switch state.main {
+        case let .pendingRequests(count, peers):
             let text = strings().chatHeaderRequestToJoinCountable(count)
             let layout = TextViewLayout(.initialize(string: text, color: theme.colors.accent, font: .medium(.text)), maximumNumberOfLines: 1)
             layout.measure(width: frame.width - 60)
@@ -2636,7 +2650,7 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
     }
     
     private func makeContextMenu() -> ContextMenu? {
-        guard let state = self._state, case let .translate(_, translate) = state else {
+        guard let translate = self._state?.translate else {
             return nil
         }
         let menu = ContextMenu()
@@ -2675,8 +2689,7 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
         action.autohighlight = false
         action.scaleOnClick = true
         
-        switch state {
-        case let .translate(_, translate):
+        if let translate = state.translate {
             let language = Translate.find(translate.to)
             if let language = language {
                 if translate.translate {
@@ -2687,8 +2700,6 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
                 }
                 textView.sizeToFit()
             }
-        default:
-            break
         }
         updateLocalizationAndTheme(theme: theme)
         needsLayout = true

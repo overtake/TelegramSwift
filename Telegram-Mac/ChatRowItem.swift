@@ -2760,7 +2760,7 @@ class ChatRowItem: TableRowItem {
     func forwardAction() -> Bool {
         if chatInteraction.presentation.state != .selecting, let message = message {
             if canForwardMessage(message, chatInteraction: chatInteraction) {
-                chatInteraction.forwardMessages([message.id])
+                chatInteraction.forwardMessages([message])
                 return true
             }
         }

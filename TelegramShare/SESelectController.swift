@@ -514,7 +514,7 @@ class SESelectController: GenericViewController<ShareModalView>, Notifable {
         
         let inSearchSelected = self.inSearchSelected
         
-        let list:Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> = search.get() |> distinctUntilChanged |> mapToSignal { [weak self] search -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> in
+        let list:Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> = search.get() |> distinctUntilChanged |> mapToSignal { search -> Signal<TableEntriesTransition<[SelectablePeersEntry]>, NoError> in
             
             if search.state == .None {
                 let signal:Signal<(ChatListView,ViewUpdateType), NoError> = account.viewTracker.tailChatListView(groupId: .root, count: 100) |> take(1)

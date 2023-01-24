@@ -90,7 +90,7 @@ final class ChatInteraction : InterfaceObserver  {
     var setupReplyMessage: (MessageId?) -> Void = {_ in}
     var beginMessageSelection: (MessageId?) -> Void = {_ in}
     var deleteMessages: ([MessageId]) -> Void = {_ in }
-    var forwardMessages: ([MessageId]) -> Void = {_ in}
+    var forwardMessages: ([Message]) -> Void = {_ in}
     var reportMessages:(ReportReasonValue, [MessageId]) -> Void = { _, _ in }
     var sendMessage: (Bool, Date?) -> Void = { _, _ in }
     var sendPlainText: (String) -> Void = {_ in}
@@ -340,9 +340,7 @@ final class ChatInteraction : InterfaceObserver  {
     }
     
     func forwardSelectedMessages() {
-        if let ids = presentation.selectionState?.selectedIds {
-            forwardMessages(Array(ids))
-        }
+        forwardMessages(presentation.interfaceState.forwardMessages)
     }
     
     func deleteSelectedMessages() {

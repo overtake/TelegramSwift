@@ -460,6 +460,7 @@ struct ChatPresentationInterfaceState: Equatable {
         var translate: Bool
         var from: String?
         var to: String
+        var result:[MessageId : ChatLiveTranslateContext.State.Result]
     }
     
     let interfaceState: ChatInterfaceState
@@ -693,10 +694,10 @@ struct ChatPresentationInterfaceState: Equatable {
                 }, nil)
             }
             
-            var banList = banSendMediaSubList().map { $0.0 }
-            banList.append(.banSendText)
-            if let peer = peer, let permissionText = permissionText(from: peer, for: .init(banList)) {
-                return .restricted(permissionText)
+            if let peer = peer as? TelegramChannel, !peer.hasPermission(.sendSomething) {
+                if let text = permissionText(from: peer, for: .banSendText) {
+                    return .restricted(text)
+                }
             }
             
             if let blocked = isBlocked, blocked {

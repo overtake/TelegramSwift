@@ -602,19 +602,24 @@ class ShareUrlObject : ShareObject {
 
 class ShareContactObject : ShareObject {
     let user:TelegramUser
+    let media: Media
     init(_ context: AccountContext, user:TelegramUser) {
         self.user = user
+        self.media = TelegramMediaContact(firstName: user.firstName ?? "", lastName: user.lastName ?? "", phoneNumber: user.phone ?? "", peerId: user.id, vCardData: nil)
         super.init(context)
+    }
+    
+    override func possibilityPerformTo(_ peer: Peer) -> Bool {
+        return !excludePeerIds.contains(peer.id) && peer.canSendMessage(media: media)
     }
     
     override func perform(to peerIds:[PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil) -> Signal<Never, String> {
         for peerId in peerIds {
             if let comment = comment, !comment.inputText.isEmpty {
                 let attributes:[MessageAttribute] = attributes(peerId)
-
                 _ = enqueueMessages(account: context.account, peerId: peerId, messages: [EnqueueMessage.message(text: comment.inputText, attributes: attributes, inlineStickers: [:], mediaReference: nil, replyToMessageId: threadId, localGroupingKey: nil, correlationId: nil, bubbleUpEmojiOrStickersets: [])]).start()
             }
-            _ = Sender.shareContact(context: context, peerId: peerId, contact: user, replyId: threadId).start()
+            _ = Sender.shareContact(context: context, peerId: peerId, media: media, replyId: threadId).start()
         }
         return .complete()
     }
@@ -698,19 +703,19 @@ class ShareMessageObject : ShareObject {
         let date = self.scheduleDate
         let withoutSound = self.withoutSound
         for peerId in peerIds {
-            let viewSignal: Signal<PeerId?, NoError> = getCachedDataView(peerId: peerId, postbox: context.account.postbox)
+            let viewSignal: Signal<(Peer, PeerId?), NoError> = combineLatest(context.account.postbox.loadedPeerWithId(peerId), getCachedDataView(peerId: peerId, postbox: context.account.postbox))
             |> take(1)
-            |> map { cachedData in
+            |> map { peer, cachedData in
                 if let cachedData = cachedData as? CachedChannelData {
-                    return cachedData.sendAsPeerId
+                    return (peer, cachedData.sendAsPeerId)
                 } else {
-                    return nil
+                    return (peer, nil)
                 }
             }
-            signals.append(viewSignal |> mapToSignal { sendAs in
+            signals.append(viewSignal |> mapToSignal { (peer, sendAs) in
                 let forward: Signal<[MessageId?], NoError> = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId, replyId: threadId, silent: FastSettings.isChannelMessagesMuted(peerId) || withoutSound, atDate: date, sendAsPeerId: sendAs)
                 var caption: Signal<[MessageId?], NoError>?
-                if let comment = comment, !comment.inputText.isEmpty {
+                if let comment = comment, !comment.inputText.isEmpty, peer.canSendMessage() {
                     let parsingUrlType: ParsingType
                     if peerId.namespace != Namespaces.Peer.SecretChat {
                         parsingUrlType = [.Hashtags]
@@ -744,11 +749,15 @@ class ShareMessageObject : ShareObject {
 }
 
 final class ForwardMessagesObject : ShareObject {
-    fileprivate let messageIds: [MessageId]
+    fileprivate let messages: [Message]
+    
+    var messageIds: [MessageId] {
+        return messages.map { $0.id }
+    }
     private let disposable = MetaDisposable()
     private let album: Bool
-    init(_ context: AccountContext, messageIds: [MessageId], emptyPerformOnClose: Bool = false, album: Bool = false) {
-        self.messageIds = messageIds
+    init(_ context: AccountContext, messages: [Message], emptyPerformOnClose: Bool = false, album: Bool = false) {
+        self.messages = messages
         self.album = album
         super.init(context, emptyPerformOnClose: emptyPerformOnClose)
     }
@@ -760,6 +769,15 @@ final class ForwardMessagesObject : ShareObject {
     override var multipleSelection: Bool {
         return false
     }
+    
+    override func possibilityPerformTo(_ peer: Peer) -> Bool {
+        let canSend = messages.map {
+            return peer.canSendMessage(media: $0.media.first)
+        }.allSatisfy { $0 }
+        return !excludePeerIds.contains(peer.id) && canSend
+    }
+    
+    
     
     override func perform(to peerIds: [PeerId], threadId: MessageId?, comment: ChatTextInputState? = nil) -> Signal<Never, String> {
         
@@ -825,7 +843,10 @@ final class ForwardMessagesObject : ShareObject {
                             delay(0.2, closure: {
                                 _ = showModalSuccess(for: context.window, icon: theme.icons.successModalProgress, delay: 1.0).start()
                             })
-                        } else {
+                        } else if let peer = peer {
+                            
+                            let comment = peer.canSendMessage() ? comment : nil
+                            
                             if let controller = navigation.controller as? ChatController, controller.chatInteraction.chatLocation == .peer(peerId) {
                                 controller.chatInteraction.update({$0.withoutSelectionState().updatedInterfaceState({$0.withUpdatedForwardMessageIds(messageIds).withUpdatedInputState(comment ?? $0.inputState)})})
                             } else {
@@ -883,19 +904,19 @@ final class ForwardMessagesObject : ShareObject {
             let date = self.scheduleDate
             let withoutSound = self.withoutSound
             for peerId in peerIds {
-                let viewSignal: Signal<PeerId?, NoError> = getCachedDataView(peerId: peerId, postbox: context.account.postbox)
+                let viewSignal: Signal<(Peer, PeerId?), NoError> = combineLatest(context.account.postbox.loadedPeerWithId(peerId), getCachedDataView(peerId: peerId, postbox: context.account.postbox))
                 |> take(1)
-                |> map { cachedData in
+                |> map { peer, cachedData in
                     if let cachedData = cachedData as? CachedChannelData {
-                        return cachedData.sendAsPeerId
+                        return (peer, cachedData.sendAsPeerId)
                     } else {
-                        return nil
+                        return (peer, nil)
                     }
                 }
-                signals.append(viewSignal |> mapToSignal { sendAs in
+                signals.append(viewSignal |> mapToSignal { (peer, sendAs) in
                     let forward: Signal<[MessageId?], NoError> = Sender.forwardMessages(messageIds: messageIds, context: context, peerId: peerId, replyId: threadId, silent: FastSettings.isChannelMessagesMuted(peerId) || withoutSound, atDate: date, sendAsPeerId: sendAs)
                     var caption: Signal<[MessageId?], NoError>?
-                    if let comment = comment, !comment.inputText.isEmpty {
+                    if let comment = comment, !comment.inputText.isEmpty, peer.canSendMessage() {
                         let parsingUrlType: ParsingType
                         if peerId.namespace != Namespaces.Peer.SecretChat {
                             parsingUrlType = [.Hashtags]

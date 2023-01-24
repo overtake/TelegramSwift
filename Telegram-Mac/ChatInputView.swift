@@ -164,7 +164,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     private var textPlaceholder: String {
         
-        if let peer = chatInteraction.presentation.peer, let _ = permissionText(from: peer, for: .banSendText) {
+        if let peer = chatInteraction.presentation.peer, let _ = permissionText(from: peer, for: .banSendText), chatInteraction.presentation.state == .normal {
             return strings().channelPersmissionMessageBlock
         }
         
@@ -248,7 +248,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
 
         if let value = value as? ChatPresentationInterfaceState, let oldValue = oldValue as? ChatPresentationInterfaceState {
             
-            if value.effectiveInput != oldValue.effectiveInput {
+            if value.effectiveInput != oldValue.effectiveInput || oldValue.state != value.state {
                 updateInput(value, prevState: oldValue, animated: animated)
             }
             updateAttachments(value,animated)
@@ -428,7 +428,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             self.accessory.change(opacity: 0.0, animated: animated)
         }
         
-        if let peer = chatInteraction.presentation.peer, let text = permissionText(from: peer, for: .banSendText) {
+        if let peer = chatInteraction.presentation.peer, let text = permissionText(from: peer, for: .banSendText), state == .normal {
             let context = chatInteraction.context
             let current: Control
             if let view = self.disallowText {
@@ -456,7 +456,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
     
     func updateInput(_ state:ChatPresentationInterfaceState, prevState: ChatPresentationInterfaceState, animated:Bool = true, initial: Bool = false) -> Void {
         
-        if let peer = state.peer, let _ = permissionText(from: peer, for: .banSendText) {
+        if let peer = state.peer, let _ = permissionText(from: peer, for: .banSendText), state.state == .normal {
             textView.inputView.isEditable = false
         } else {
             switch state.state {
@@ -466,6 +466,7 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
                 textView.inputView.isEditable = false
             }
         }
+        textView.setPlaceholderAttributedString(.initialize(string: textPlaceholder, color: theme.colors.grayText, font: NSFont.normal(theme.fontSize), coreText: false), update: false)
         
         if textView.string() != state.effectiveInput.inputText || state.effectiveInput.attributes != prevState.effectiveInput.attributes {
             let range = NSMakeRange(state.effectiveInput.selectionRange.lowerBound, state.effectiveInput.selectionRange.upperBound - state.effectiveInput.selectionRange.lowerBound)
@@ -926,44 +927,48 @@ class ChatInputView: View, TGModernGrowingDelegate, Notifable {
             
             let result = InputPasteboardParser.proccess(pasteboard: pasteboard, chatInteraction:self.chatInteraction, window: window)
             if result {
-                
-                if let data = pasteboard.data(forType: .kInApp) {
-                    let decoder = AdaptedPostboxDecoder()
-                    if let decoded = try? decoder.decode(ChatTextInputState.self, from: data) {
-                        let attributed = decoded.unique(isPremium: chatInteraction.context.isPremium).attributedString
-                        let current = textView.attributedString().copy() as! NSAttributedString
-                        let currentRange = textView.selectedRange()
-                        let (attributedString, range) = current.appendAttributedString(attributed, selectedRange: currentRange)
-                        let item = SimpleUndoItem(attributedString: current, be: attributedString, wasRange: currentRange, be: range)
-                        self.textView.addSimpleItem(item)
-                        DispatchQueue.main.async { [weak self] in
-                            self?.textView.scrollToCursor()
-                        }
-                        
-                        return true
-                    }
-                } else if let data = pasteboard.data(forType: .rtf) {
-                    if let attributed = (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtfd], documentAttributes: nil)) ?? (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtf], documentAttributes: nil))  {
-                        
-                        let (attributed, attachments) = attributed.applyRtf()
-                        
-                        if !attachments.isEmpty {
-                            rtfAttachmentsDisposable.set((prepareTextAttachments(attachments) |> deliverOnMainQueue).start(next: { [weak self] urls in
-                                if !urls.isEmpty, let chatInteraction = self?.chatInteraction {
-                                    chatInteraction.showPreviewSender(urls, true, attributed)
-                                }
-                            }))
-                        } else {
+                if let disallowText = disallowText {
+                    disallowText.send(event: .Click)
+                    textView.shake(beep: true)
+                } else {
+                    if let data = pasteboard.data(forType: .kInApp) {
+                        let decoder = AdaptedPostboxDecoder()
+                        if let decoded = try? decoder.decode(ChatTextInputState.self, from: data) {
+                            let attributed = decoded.unique(isPremium: chatInteraction.context.isPremium).attributedString
                             let current = textView.attributedString().copy() as! NSAttributedString
                             let currentRange = textView.selectedRange()
                             let (attributedString, range) = current.appendAttributedString(attributed, selectedRange: currentRange)
                             let item = SimpleUndoItem(attributedString: current, be: attributedString, wasRange: currentRange, be: range)
                             self.textView.addSimpleItem(item)
+                            DispatchQueue.main.async { [weak self] in
+                                self?.textView.scrollToCursor()
+                            }
+                            
+                            return true
                         }
-                        DispatchQueue.main.async { [weak self] in
-                            self?.textView.scrollToCursor()
+                    } else if let data = pasteboard.data(forType: .rtf) {
+                        if let attributed = (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtfd], documentAttributes: nil)) ?? (try? NSAttributedString(data: data, options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.rtf], documentAttributes: nil))  {
+                            
+                            let (attributed, attachments) = attributed.applyRtf()
+                            
+                            if !attachments.isEmpty {
+                                rtfAttachmentsDisposable.set((prepareTextAttachments(attachments) |> deliverOnMainQueue).start(next: { [weak self] urls in
+                                    if !urls.isEmpty, let chatInteraction = self?.chatInteraction {
+                                        chatInteraction.showPreviewSender(urls, true, attributed)
+                                    }
+                                }))
+                            } else {
+                                let current = textView.attributedString().copy() as! NSAttributedString
+                                let currentRange = textView.selectedRange()
+                                let (attributedString, range) = current.appendAttributedString(attributed, selectedRange: currentRange)
+                                let item = SimpleUndoItem(attributedString: current, be: attributedString, wasRange: currentRange, be: range)
+                                self.textView.addSimpleItem(item)
+                            }
+                            DispatchQueue.main.async { [weak self] in
+                                self?.textView.scrollToCursor()
+                            }
+                            return true
                         }
-                        return true
                     }
                 }
             }

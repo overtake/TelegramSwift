@@ -12,6 +12,7 @@ import TelegramCore
 import DateUtils
 import TGUIKit
 import MapKit
+import CalendarUtils
 
 func stringForTimestamp(day: Int32, month: Int32, year: Int32) -> String {
     return String(format: "%d.%02d.%02d", day, month, year - 100)
@@ -266,6 +267,30 @@ func stringForFullDate(timestamp: Int32) -> String {
         return ""
     }
 }
+
+
+
+extension Date {
+    
+    static var kernelBootTimeSecs:Int32 {
+        var mib = [ CTL_KERN, KERN_BOOTTIME ]
+        var bootTime = timeval()
+        var bootTimeSize = MemoryLayout<timeval>.size
+        
+        if 0 != sysctl(&mib, UInt32(mib.count), &bootTime, &bootTimeSize, nil, 0) {
+            fatalError("Could not get boot time, errno: \(errno)")
+        }
+        
+        return Int32(bootTime.tv_sec)
+    }
+    var isToday: Bool {
+        return CalendarUtils.isSameDate(self, date: Date(), checkDay: true)
+    }
+    var isTomorrow: Bool {
+        return Calendar.current.isDateInTomorrow(self)
+    }
+}
+
 
 func stringForMediumDate(timestamp: Int32) -> String {
     var t: time_t = Int(timestamp)
