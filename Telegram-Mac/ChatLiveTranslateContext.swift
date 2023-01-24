@@ -91,7 +91,7 @@ private func updateChatTranslationState(engine: TelegramEngine, peerId: EnginePe
     let key = ValueBoxKey(length: 8)
     key.setInt64(0, value: peerId.id._internalGetInt64Value())
     
-    if let state {
+    if let state = state {
         return engine.itemCache.put(collectionId: ApplicationSpecificItemCacheCollectionId.translationState, id: key, item: state)
     } else {
         return engine.itemCache.remove(collectionId: ApplicationSpecificItemCacheCollectionId.translationState, id: key)
@@ -107,7 +107,7 @@ public func updateChatTranslationStateInteractively(engine: TelegramEngine, peer
         return entry?.get(ChatTranslationState.self)
     }
     |> mapToSignal { current -> Signal<Never, NoError> in
-        if let current {
+        if let current = current {
             return updateChatTranslationState(engine: engine, peerId: peerId, state: f(current))
         } else {
             return .never()
@@ -345,7 +345,7 @@ func chatTranslationState(context: AccountContext, peerId: EnginePeer.Id) -> Sig
         
         return cachedChatTranslationState(engine: context.engine, peerId: peerId)
         |> mapToSignal { cached in
-            if let cached, cached.baseLang == baseLang {
+            if let cached = cached, cached.baseLang == baseLang {
                 if !dontTranslateLanguages.contains(cached.fromLang) {
                     return .single(cached)
                 } else {
