@@ -161,7 +161,7 @@ enum PremiumValue : String {
     case advanced_chat_management
     case profile_badge
     case animated_userpics
-    
+    case translations
     func gradient(_ index: Int) -> [NSColor] {
         let colors:[NSColor] = [ NSColor(rgb: 0xF27C30),
                                  NSColor(rgb: 0xE36850),
@@ -175,7 +175,8 @@ enum PremiumValue : String {
                                  NSColor(rgb: 0x5A6EEE),
                                  NSColor(rgb: 0x548DFF),
                                  NSColor(rgb: 0x54A3FF),
-                                 NSColor(rgb: 0x54bdff)]
+                                 NSColor(rgb: 0x54bdff),
+                                 NSColor(rgb: 0x71c8ff)]
         return [colors[index]]
     }
     
@@ -244,6 +245,8 @@ enum PremiumValue : String {
             return NSImage(named: "Icon_Premium_Boarding_Badge")!.precomposed(theme.colors.accent)
         case .animated_userpics:
             return NSImage(named: "Icon_Premium_Boarding_Profile")!.precomposed(theme.colors.accent)
+        case .translations:
+            return NSImage(named: "Icon_Premium_Boarding_Translations")!.precomposed(theme.colors.accent)
         }
     }
     
@@ -273,6 +276,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingBadgeTitle
         case .animated_userpics:
             return strings().premiumBoardingAvatarTitle
+        case .translations:
+            return strings().premiumBoardingTranslateTitle
         }
     }
     func info(_ limits: PremiumLimitConfig) -> String {
@@ -301,6 +306,8 @@ enum PremiumValue : String {
             return strings().premiumBoardingBadgeInfo
         case .animated_userpics:
             return strings().premiumBoardingAvatarInfo
+        case .translations:
+            return strings().premiumBoardingTranslateInfo
         }
     }
 }
@@ -308,7 +315,7 @@ enum PremiumValue : String {
 
 
 private struct State : Equatable {
-    var values:[PremiumValue] = [.double_limits, .more_upload, .faster_download, .voice_to_text, .no_ads, .infinite_reactions, .emoji_status, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics]
+    var values:[PremiumValue] = [.double_limits, .more_upload, .faster_download, .voice_to_text, .no_ads, .infinite_reactions, .emoji_status, .premium_stickers, .animated_emoji, .advanced_chat_management, .profile_badge, .animated_userpics, .translations]
     let source: PremiumLogEventsSource
     
     var premiumProduct: InAppPurchaseManager.Product?

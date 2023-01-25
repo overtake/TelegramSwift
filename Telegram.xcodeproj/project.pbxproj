@@ -597,6 +597,7 @@
 		27EE444A297FD9030077AA0F /* PresenceStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2271DC91DAED681001792B6 /* PresenceStrings.swift */; };
 		27EE444C297FD91B0077AA0F /* DateUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 27EE444B297FD91B0077AA0F /* DateUtils */; };
 		27EE444E297FD9950077AA0F /* CalendarUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 27EE444D297FD9950077AA0F /* CalendarUtils */; };
+		27EE44502981AD000077AA0F /* HelloView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EE444F2981AD000077AA0F /* HelloView.swift */; };
 		27EFF4BB27BAF19600006834 /* Auth_CodeEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EFF4BA27BAF19600006834 /* Auth_CodeEntry.swift */; };
 		27EFF4BD27BBDF4600006834 /* Auth_PasswordEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EFF4BC27BBDF4600006834 /* Auth_PasswordEntry.swift */; };
 		27EFF4BF27BBF2D600006834 /* Auth_NextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27EFF4BE27BBF2D600006834 /* Auth_NextView.swift */; };
@@ -1976,6 +1977,7 @@
 		27EBC7AD275789BC00C6A820 /* Reactions */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Reactions; path = packages/Reactions; sourceTree = "<group>"; };
 		27EBC7AF275795DE00C6A820 /* ChatReactionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatReactionsView.swift; sourceTree = "<group>"; };
 		27ED5A692750CD4000BA55A7 /* FoundationUtils */ = {isa = PBXFileReference; lastKnownFileType = folder; name = FoundationUtils; path = packages/FoundationUtils; sourceTree = "<group>"; };
+		27EE444F2981AD000077AA0F /* HelloView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelloView.swift; sourceTree = "<group>"; };
 		27EFF4BA27BAF19600006834 /* Auth_CodeEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_CodeEntry.swift; sourceTree = "<group>"; };
 		27EFF4BC27BBDF4600006834 /* Auth_PasswordEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_PasswordEntry.swift; sourceTree = "<group>"; };
 		27EFF4BE27BBF2D600006834 /* Auth_NextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Auth_NextView.swift; sourceTree = "<group>"; };
@@ -3293,6 +3295,7 @@
 				27ABFD1F2858C073006C3301 /* DataRainView.swift */,
 				27ABFD262858C65B006C3301 /* FasterStarsView.swift */,
 				27ABFD2C2858C81D006C3301 /* BadgeStarsView.swift */,
+				27EE444F2981AD000077AA0F /* HelloView.swift */,
 			);
 			name = decoration;
 			sourceTree = "<group>";
@@ -7283,6 +7286,7 @@
 				2738A31528ABADB300EC1010 /* ReactionsWindowController.swift in Sources */,
 				9FBE0EE1201FBEFC0060FD1C /* DownloadSettingsViewController.swift in Sources */,
 				9F52F51A2130286E006FC0B5 /* LocationRequest.swift in Sources */,
+				27EE44502981AD000077AA0F /* HelloView.swift in Sources */,
 				27361ED62821234200808241 /* PremiumReactionsModal.swift in Sources */,
 				C2B1B11E1E5F151D00895E0D /* ChannelVisibilityController.swift in Sources */,
 				C205DB9D1EE88765003711DF /* Views.swift in Sources */,
