@@ -251,7 +251,7 @@ class ChatTouchBar: NSTouchBar, NSTouchBarDelegate, Notifable {
     }
     
     @objc private func attachPhotoOrVideo() {
-        chatInteraction?.attachPhotoOrVideo()
+        chatInteraction?.attachPhotoOrVideo(nil)
     }
     @objc private func attachPicture() {
         chatInteraction?.attachPicture()

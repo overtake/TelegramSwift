@@ -222,7 +222,7 @@ class ChatHeaderController {
                     removed.append(previousSecondary)
                 }
                 if let secondary = secondary {
-                    added.append((secondary, NSMakePoint(0, -state.secondaryHeight), NSMakePoint(0, 0), nil))
+                    added.append((secondary, NSMakePoint(0, -state.secondaryHeight), NSMakePoint(0, 0), previousSecondary))
                 }
             }
             
@@ -231,7 +231,7 @@ class ChatHeaderController {
                     removed.append(previousPrimary)
                 }
                 if let primary = primary {
-                    added.append((primary, NSMakePoint(0, -(state.height - state.secondaryHeight)), NSMakePoint(0, state.secondaryHeight), secondary))
+                    added.append((primary, NSMakePoint(0, state.secondaryHeight - state.primaryHeight), NSMakePoint(0, state.secondaryHeight), secondary ?? previousPrimary))
                 }
             }
             if previousThird == nil || previousThird != third {
@@ -239,7 +239,7 @@ class ChatHeaderController {
                     removed.append(previousThird)
                 }
                 if let third = third {
-                    added.append((third, NSMakePoint(0, -(state.height - state.thirdHeight - state.primaryHeight)), NSMakePoint(0, state.primaryHeight + state.secondaryHeight), primary ?? secondary))
+                    added.append((third, NSMakePoint(0, (state.primaryHeight + state.secondaryHeight) - state.thirdHeight), NSMakePoint(0, state.primaryHeight + state.secondaryHeight), primary ?? secondary ?? previousThird))
                 }
             }
 
@@ -266,20 +266,33 @@ class ChatHeaderController {
                     view.addSubview(current)
                     self.currentView = current
                 }
+                
+                for (view, point, above) in updated {
+                    if let above = above {
+                        current.addSubview(view, positioned: .below, relativeTo: above)
+                    } else {
+                        current.addSubview(view)
+                    }
+                    view.change(pos: point, animated: animated)
+                }
                 for view in removed {
                     if let view = view as? ChatHeaderProtocol {
                         view.remove(animated: animated)
                     }
                     if animated {
-                        view.layer?.animatePosition(from: view.frame.origin, to: NSMakePoint(0, view.frame.minY - view.frame.height), removeOnCompletion: false, completion: { [weak view] _ in
+                        view.layer?.animatePosition(from: view.frame.origin, to: NSMakePoint(0, view.frame.minY - view.frame.height), duration: 0.2, removeOnCompletion: false, completion: { [weak view] _ in
                             view?.removeFromSuperview()
                         })
                     } else {
                         view.removeFromSuperview()
                     }
                 }
-                for (view, from, to, below) in added {
-                    current.addSubview(view, positioned: .below, relativeTo: below)
+                for (view, from, to, above) in added {
+                    if let above = above {
+                        current.addSubview(view, positioned: .below, relativeTo: above)
+                    } else {
+                        current.addSubview(view)
+                    }
                     view.setFrameOrigin(to)
                     
                     if animated {
@@ -287,10 +300,7 @@ class ChatHeaderController {
                       //  view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     }
                 }
-//                for (view, point, above) in updated {
-//                    current.addSubview(view, positioned: .below, relativeTo: above)
-//                    view.change(pos: point, animated: animated)
-//                }
+                
             } else {
                 if let currentView = currentView {
                     self.currentView = nil

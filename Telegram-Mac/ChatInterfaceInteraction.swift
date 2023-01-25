@@ -86,7 +86,11 @@ final class ChatInteraction : InterfaceObserver  {
     
     var withToggledSelectedMessage:((ChatPresentationInterfaceState)->ChatPresentationInterfaceState)->Void = { _ in }
     
-
+    enum AttachMediaType {
+        case photo
+        case video
+    }
+    
     var setupReplyMessage: (MessageId?) -> Void = {_ in}
     var beginMessageSelection: (MessageId?) -> Void = {_ in}
     var deleteMessages: ([MessageId]) -> Void = {_ in }
@@ -138,7 +142,7 @@ final class ChatInteraction : InterfaceObserver  {
     var reactionPressed:()->Void = {}
     var clearReactions:()->Void = {}
     var attachFile:(Bool)->Void = { _ in }
-    var attachPhotoOrVideo:()->Void = {}
+    var attachPhotoOrVideo:(AttachMediaType?)->Void = { _ in }
     var attachPicture:()->Void = {}
     var attachLocation:()->Void = {}
     var updateEditingMessageMedia:([String]?, Bool) -> Void = { _, _ in}
