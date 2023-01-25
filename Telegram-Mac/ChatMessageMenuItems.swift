@@ -351,8 +351,8 @@ func chatMenuItems(for message: Message, entry: ChatHistoryEntry?, textLayout: (
             switch translate {
             case .loading:
                 break
-            case .complete:
-                if let _ = message.translationAttribute {
+            case let .complete(toLang):
+                if let _ = message.translationAttribute(toLang: toLang) {
                     muteTranslate = true
                 }
             }

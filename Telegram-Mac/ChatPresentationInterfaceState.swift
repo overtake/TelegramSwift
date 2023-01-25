@@ -460,7 +460,7 @@ struct ChatPresentationInterfaceState: Equatable {
         var translate: Bool
         var from: String?
         var to: String
-        var result:[MessageId : ChatLiveTranslateContext.State.Result]
+        var result:[ChatLiveTranslateContext.State.Key : ChatLiveTranslateContext.State.Result]
     }
     
     let interfaceState: ChatInterfaceState

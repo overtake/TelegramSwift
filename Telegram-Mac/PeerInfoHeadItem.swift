@@ -360,18 +360,6 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
         if peer.groupAccess.canReport {
             items.append(ActionItem(text: strings().peerInfoActionReport, image: theme.icons.profile_report, animation: .menu_report, action: arguments.report))
         }
-        if let cachedData = item.peerView.cachedData as? CachedChannelData {
-            let disabledTranslation = cachedData.flags.contains(.translationHidden)
-            let canTranslate = arguments.context.sharedContext.baseSettings.translateChats
-            
-            if canTranslate && disabledTranslation {
-                items.append(ActionItem(text: strings().peerInfoTranslate, image: theme.icons.profile_translate, animation: .menu_translate, action: { [weak arguments] in
-                    arguments?.enableTranslate()
-                }))
-            }
-        }
-        
-        
         
         switch peer.participationStatus {
         case .member:
@@ -391,6 +379,25 @@ private func actionItems(item: PeerInfoHeadItem, width: CGFloat, theme: Telegram
 
     }
     
+    if let cachedData = item.peerView.cachedData as? CachedChannelData, item.threadId == nil {
+        let disabledTranslation = cachedData.flags.contains(.translationHidden)
+        let canTranslate = item.context.sharedContext.baseSettings.translateChats
+        
+        if canTranslate && disabledTranslation {
+            let item = ActionItem(text: strings().peerInfoTranslate, image: theme.icons.profile_translate, animation: .menu_translate, action: { [weak item] in
+                if let arguments = item?.arguments as? GroupInfoArguments {
+                    arguments.enableTranslate()
+                } else if let arguments = item?.arguments as? ChannelInfoArguments {
+                    arguments.enableTranslate()
+                }
+            })
+            if let index = items.firstIndex(where: { $0.destruct }) {
+                items.insert(item, at: index)
+            } else {
+                items.append(item)
+            }
+        }
+    }
     
     if items.count > rowItemsCount {
         var subItems:[SubActionItem] = []

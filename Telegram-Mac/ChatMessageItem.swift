@@ -360,8 +360,8 @@ class ChatMessageItem: ChatRowItem {
                     switch translate {
                     case .loading:
                         self.isTranslateLoading = true
-                    case .complete:
-                        if let attribute = message.translationAttribute {
+                    case let .complete(toLang: toLang):
+                        if let attribute = message.translationAttribute(toLang: toLang) {
                             text = attribute.text
                             attributes = [TextEntitiesMessageAttribute(entities: attribute.entities)]
                         }
