@@ -207,11 +207,16 @@ final class ChatLiveTranslateContext {
         
         let translationState = chatTranslationState(context: context, peerId: peerId)
         
-        let should: Signal<(ChatTranslationState?, Appearance), NoError> = combineLatest(queue: prepareQueue, cachedData, translationState, baseAppSettings(accountManager: context.sharedContext.accountManager), appearanceSignal) |> map { cachedData, translationState, settings, appearance in
+        let should: Signal<(ChatTranslationState?, Appearance), NoError> = combineLatest(queue: prepareQueue, cachedData, translationState, baseAppSettings(accountManager: context.sharedContext.accountManager), appearanceSignal, getPeerView(peerId: context.peerId, postbox: context.account.postbox)) |> map { cachedData, translationState, settings, appearance, peer in
             
-            let isHidden: Bool
+            var isHidden: Bool
             if let cachedData = cachedData as? CachedChannelData {
                 isHidden = cachedData.flags.contains(.translationHidden)
+            } else {
+                isHidden = true
+            }
+            if let peer = peer {
+                isHidden = !peer.isPremium || isHidden
             } else {
                 isHidden = true
             }

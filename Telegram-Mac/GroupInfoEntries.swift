@@ -2051,7 +2051,7 @@ func groupInfoEntries(view: PeerView, arguments: PeerInfoArguments, inputActivit
 
                     if !channel.flags.contains(.isGigagroup) {
                         if access.canEditMembers {
-                            block.append(.permissions(section: GroupInfoSection.admin.rawValue, count: activePermissionCount.flatMap({ "\(max(0, $0 - 1))/\(permissionList.count - 1)" }) ?? "", viewType: .singleItem))
+                            block.append(.permissions(section: GroupInfoSection.admin.rawValue, count: activePermissionCount.flatMap({ "\(max(0, $0 - 2))/\(permissionList.count - 2)" }) ?? "", viewType: .singleItem))
                         }
                     } else {
                         block.append(.blocked(section: GroupInfoSection.admin.rawValue, count: cachedChannelData.participantsSummary.kickedCount, viewType: .singleItem))
