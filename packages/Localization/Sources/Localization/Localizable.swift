@@ -6309,13 +6309,13 @@ public final class L10n {
   public static var languageOfficialTransationsHeader: String  { return L10n.tr("Localizable", "Language.OfficialTransationsHeader") }
   /// Are you sure you want to remove this lang-pack?
   public static var languageRemovePack: String  { return L10n.tr("Localizable", "Language.RemovePack") }
-  /// Translate Entire Chats
+  /// Translate Entire Chat
   public static var languageTranslateMessagesChannel: String  { return L10n.tr("Localizable", "Language.TranslateMessages.Channel") }
   /// Do Not Translate
   public static var languageTranslateMessagesDoNotTranslate: String  { return L10n.tr("Localizable", "Language.TranslateMessages.DoNotTranslate") }
   /// TRANSLATE MESSAGES
   public static var languageTranslateMessagesHeader: String  { return L10n.tr("Localizable", "Language.TranslateMessages.Header") }
-  /// Translate all messages in chats. This is available only for [Premium Users]().
+  /// Translate all messages in chat. This is available only for [Premium Users]().
   public static var languageTranslateMessagesChannelInfo: String  { return L10n.tr("Localizable", "Language.TranslateMessages.Channel.Info") }
   /// Subscribe to [Telegram Premium](premium) to translate entire chats.
   public static var languageTranslateMessagesChannelPremium: String  { return L10n.tr("Localizable", "Language.TranslateMessages.Channel.Premium") }
@@ -8563,6 +8563,10 @@ public final class L10n {
   public static var premiumBoardingStickersInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Stickers.Info") }
   /// Premium Stickers
   public static var premiumBoardingStickersTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Stickers.Title") }
+  /// Real-time translation of channels and chats into other languages.
+  public static var premiumBoardingTranslateInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Translate.Info") }
+  /// Real-Time Translation
+  public static var premiumBoardingTranslateTitle: String  { return L10n.tr("Localizable", "Premium.Boarding.Translate.Title") }
   /// Ability to read the transcript of any incoming voice message.
   public static var premiumBoardingVoiceInfo: String  { return L10n.tr("Localizable", "Premium.Boarding.Voice.Info") }
   /// Voice-to-Text Conversion

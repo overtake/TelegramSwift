@@ -2697,9 +2697,7 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
         other.submenu = submenu
         
         items.append(other)
-        
-        items.append(ContextSeparatorItem())
-        
+                
         if let from = translate.from, let language = Translate.find(from) {
             items.append(ContextMenuItem(strings().chatTranslateMenuDoNotTranslate(_NSLocalizedString("Translate.Language.\(language.language)")), handler: { [weak self] in
                 self?.chatInteraction.doNotTranslate(from)

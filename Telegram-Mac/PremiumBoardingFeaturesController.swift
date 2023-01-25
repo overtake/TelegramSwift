@@ -173,6 +173,15 @@ final class PremiumBoardingFeaturesView: View {
         })
         slideView.addSlide(animated_userpics)
         
+        
+        let translations = PremiumFeatureSlideView(frame: slideView.bounds)
+        translations.setup(context: context, type: .translations, decoration: .hello, getView: { _ in
+            let view = PremiumDemoLegacyPhoneView(frame: .zero)
+            view.setup(context: context, video: configuration.videos[PremiumValue.translations.rawValue], position: .top)
+            return view
+        })
+        slideView.addSlide(translations)
+        
         switch value {
         case .more_upload:
             slideView.displaySlide(at: 0, animated: false)
@@ -196,6 +205,8 @@ final class PremiumBoardingFeaturesView: View {
             slideView.displaySlide(at: 9, animated: false)
         case .animated_userpics:
             slideView.displaySlide(at: 10, animated: false)
+        case .translations:
+            slideView.displaySlide(at: 11, animated: false)
         default:
             break
         }

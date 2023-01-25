@@ -58,6 +58,7 @@ final class PremiumFeatureSlideView : View, SlideViewProtocol {
         case swirlStars
         case fasterStars
         case badgeStars
+        case hello
     }
     private var bgDecoration: BackgroundDecoration = .none
 
@@ -163,6 +164,16 @@ final class PremiumFeatureSlideView : View, SlideViewProtocol {
                 current = view
             } else {
                 current = BadgeStarsView(frame: content.bounds)
+                self.decorationView = current
+                content.addSubview(current, positioned: .below, relativeTo: content.subviews.first)
+            }
+            current.setVisible(true)
+        case .hello:
+            let current: (NSView & PremiumDecorationProtocol)
+            if let view = self.decorationView {
+                current = view
+            } else {
+                current = HelloView(frame: content.bounds)
                 self.decorationView = current
                 content.addSubview(current, positioned: .below, relativeTo: content.subviews.first)
             }
