@@ -119,7 +119,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                                 canAddAttach = attach.peerTypes.contains(.all) || attach.peerTypes.contains(.bot) || (attach.peerTypes.contains(.sameBot) && attach.peer.id == peer.id)
                             } else if peer.isGroup || peer.isSupergroup {
                                 canAddAttach = attach.peerTypes.contains(.all) || attach.peerTypes.contains(.group)
-                            } else if peer.isChannel {
+                            } else if peer.isChannel, !peer.hasBannedRights(.banSendText) {
                                 canAddAttach = attach.peerTypes.contains(.all) || attach.peerTypes.contains(.channel)
                             } else {
                                 canAddAttach = false
@@ -146,6 +146,7 @@ class ChatInputAttachView: ImageButton, Notifable {
                     }, itemImage: MenuAnimation.menu_camera.value))
                     
                     var canAttachPoll: Bool = false
+                    var canAttachLocation: Bool = true
                     if let peer = chatInteraction.presentation.peer, peer.isGroup || peer.isSupergroup {
                         canAttachPoll = true
                     }
@@ -156,6 +157,8 @@ class ChatInputAttachView: ImageButton, Notifable {
                     if let peer = chatInteraction.presentation.peer as? TelegramChannel {
                         if peer.hasPermission(.sendText) {
                             canAttachPoll = true
+                        } else {
+                            canAttachLocation = false
                         }
                     }
                     if canAttachPoll && permissionText(from: peer, for: .banSendPolls) != nil {
@@ -174,14 +177,15 @@ class ChatInputAttachView: ImageButton, Notifable {
                     }
                     
                     
-                    
-                    items.append(ContextMenuItem(strings().inputAttachPopoverLocation, handler: { [weak self] in
-                        if let permissionText = permissionText(from: peer, for: .banSendText) {
-                            showModalText(for: context.window, text: permissionText)
-                            return
-                        }
-                        self?.chatInteraction.attachLocation()
-                    }, itemImage: MenuAnimation.menu_location.value))
+                    if canAttachLocation {
+                        items.append(ContextMenuItem(strings().inputAttachPopoverLocation, handler: { [weak self] in
+                            if let permissionText = permissionText(from: peer, for: .banSendText) {
+                                showModalText(for: context.window, text: permissionText)
+                                return
+                            }
+                            self?.chatInteraction.attachLocation()
+                        }, itemImage: MenuAnimation.menu_location.value))
+                    }
                 }
                 
                 
