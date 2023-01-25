@@ -143,8 +143,16 @@ final class ChatLiveTranslateContext {
     struct State : Equatable {
         
         enum Result : Equatable {
-            case loading
-            case complete
+            case loading(toLang: String)
+            case complete(toLang: String)
+            var toLang: String {
+                switch self {
+                case let .loading(toLang):
+                    return toLang
+                case let .complete(toLang):
+                    return toLang
+                }
+            }
         }
         
         var canTranslate: Bool
@@ -152,7 +160,15 @@ final class ChatLiveTranslateContext {
         var from: String
         var to: String
         
-        var result:[MessageId : Result]
+        struct Key: Hashable {
+            let id: MessageId
+            let toLang: String
+            
+            static func Key(id: MessageId, toLang: String) -> Key {
+                return .init(id: id, toLang: toLang)
+            }
+        }
+        var result:[Key : Result]
         
         static var `default`: State {
             return .init(canTranslate: false, translate: false, from: "", to: "", result: [:])
@@ -211,9 +227,11 @@ final class ChatLiveTranslateContext {
         shouldDisposable.set(should.start(next: { [weak self] state, appearance in
             self?.updateState { current in
                 var current = current
+                let to = state?.toLang ?? appearance.language.baseLanguageCode
+                let toUpdated = current.to != to
                 if let state = state {
                     current.from = state.fromLang
-                    current.to = state.toLang ?? appearance.language.baseLanguageCode
+                    current.to = to
                     current.canTranslate = true
                 } else {
                     current.canTranslate = false
@@ -223,7 +241,7 @@ final class ChatLiveTranslateContext {
                 } else {
                     current.translate = false
                 }
-                if !current.canTranslate || !current.translate {
+                if !current.canTranslate || !current.translate || toUpdated {
                     current.result = [:]
                 }
                 return current
@@ -232,7 +250,7 @@ final class ChatLiveTranslateContext {
         actionsDisposable.add(state.start(next: { [weak self] state in
             prepareQueue.justDispatch {
                 if !state.queued.isEmpty {
-                    let messages = state.queued.filter { state.result[$0] == nil }
+                    let messages = state.queued.filter { state.result[.Key(id: $0, toLang: state.to)] == nil }
                     if !messages.isEmpty {
                         self?.activateTranslation(for: messages, state: state)
                     }
@@ -248,7 +266,7 @@ final class ChatLiveTranslateContext {
             self?.updateState { current in
                 var current = current
                 for id in msgIds {
-                    current.result[id] = .complete
+                    current.result[.Key(id: id, toLang: current.to)] = .complete(toLang: current.to)
                 }
                 return current
             }
@@ -258,7 +276,7 @@ final class ChatLiveTranslateContext {
             var current = current
             current.queued.removeAll()
             for id in msgIds {
-                current.result[id] = .loading
+                current.result[.Key(id: id, toLang: current.to)] = .loading(toLang: current.to)
             }
             return current
         }
@@ -280,15 +298,19 @@ final class ChatLiveTranslateContext {
     
     func translate(_ message: [Message]) {
         prepareQueue.justDispatch { [weak self] in
-            let ids = message.filter { $0.translationAttribute == nil }.map { $0.id }
-            let translated = message.filter { $0.translationAttribute != nil }.map { $0.id }
+            guard let `self` = self else {
+                return
+            }
+            let toLang = self.stateValue.with { $0.to }
+            let ids = message.filter { $0.translationAttribute(toLang: toLang) == nil }.map { $0.id }
+            let translated = message.filter { $0.translationAttribute(toLang: toLang) != nil }.map { $0.id }
             
             if !translated.isEmpty {
-                self?.updateState { current in
+                self.updateState { current in
                     var current = current
                     if current.translate {
                         for id in translated {
-                            current.result[id] = .complete
+                            current.result[.Key(id: id, toLang: toLang)] = .complete(toLang: toLang)
                         }
                     }
                     return current
@@ -296,11 +318,11 @@ final class ChatLiveTranslateContext {
                 
             }
             
-            if self?.holder != ids {
-                self?.holder = ids
+            if self.holder != ids {
+                self.holder = ids
                 let signal = Signal<Void, NoError>.complete() |> delay(0.01, queue: prepareQueue)
                 
-                self?.holderDisposable.set(signal.start(completed: { [weak self] in
+                self.holderDisposable.set(signal.start(completed: { [weak self] in
                     guard let `self` = self else {
                         return
                     }
@@ -309,7 +331,7 @@ final class ChatLiveTranslateContext {
                         var current = current
                         if current.translate {
                             for id in ids {
-                                if current.result[id] == nil {
+                                if current.result[.Key(id: id, toLang: current.to)] == nil {
                                     current.queued.append(id)
                                 }
                             }
@@ -323,6 +345,27 @@ final class ChatLiveTranslateContext {
     
     func hideTranslation() {
         _ = context.engine.messages.togglePeerMessagesTranslationHidden(peerId: self.peerId, hidden: true).start()
+        _ = updateChatTranslationStateInteractively(engine: context.engine, peerId: peerId, { current in
+            var current = current
+            current = current.withIsEnabled(false)
+            return current
+        }).start()
+    }
+    func showTranslation() {
+        _ = context.engine.messages.togglePeerMessagesTranslationHidden(peerId: self.peerId, hidden: false).start()
+        _ = updateChatTranslationStateInteractively(engine: context.engine, peerId: peerId, { current in
+            var current = current
+            current = current.withIsEnabled(true)
+            return current
+        }).start()
+    }
+    
+    func translate(toLang: String) -> Void {
+        _ = updateChatTranslationStateInteractively(engine: context.engine, peerId: peerId, { current in
+            var current = current
+            current = current.withToLang(toLang)
+            return current
+        }).start()
     }
 }
 

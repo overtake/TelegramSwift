@@ -691,8 +691,16 @@ class ChatControllerView : View, ChatInputDelegate {
             } else if settings.contains(.canShareContact) {
                 value = .shareInfo
             } else if let pinnedMessageId = interfaceState.pinnedMessageId, !interfaceState.interfaceState.dismissedPinnedMessageId.contains(pinnedMessageId.messageId), !interfaceState.hidePinnedMessage, interfaceState.chatMode != .pinned {
+                
+                let translation: ChatLiveTranslateContext.State.Result?
+                if let translate = interfaceState.translateState {
+                    translation = translate.result[.Key(id: pinnedMessageId.messageId, toLang: translate.to)]
+                } else {
+                    translation = nil
+                }
+                
                 if pinnedMessageId.message?.restrictedText(chatInteraction.context.contentSettings) == nil {
-                    value = .pinned(pinnedMessageId, interfaceState.translateState?.result[pinnedMessageId.messageId], doNotChangeTable: interfaceState.chatMode.threadId != nil)
+                    value = .pinned(pinnedMessageId, translation, doNotChangeTable: interfaceState.chatMode.threadId != nil)
                 } else {
                     value = .none
                 }
@@ -701,7 +709,15 @@ class ChatControllerView : View, ChatInputDelegate {
             }
         } else if let pinnedMessageId = interfaceState.pinnedMessageId, !interfaceState.interfaceState.dismissedPinnedMessageId.contains(pinnedMessageId.messageId), !interfaceState.hidePinnedMessage, interfaceState.chatMode != .pinned {
             if pinnedMessageId.message?.restrictedText(chatInteraction.context.contentSettings) == nil {
-                value = .pinned(pinnedMessageId, interfaceState.translateState?.result[pinnedMessageId.messageId], doNotChangeTable: interfaceState.chatMode.threadId != nil)
+                
+                let translation: ChatLiveTranslateContext.State.Result?
+                if let translate = interfaceState.translateState {
+                    translation = translate.result[.Key(id: pinnedMessageId.messageId, toLang: translate.to)]
+                } else {
+                    translation = nil
+                }
+                
+                value = .pinned(pinnedMessageId, translation, doNotChangeTable: interfaceState.chatMode.threadId != nil)
             } else {
                 value = .none
             }
@@ -3026,6 +3042,10 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
                 })
             }), for: context.window)
 
+        }
+        
+        chatInteraction.translateTo = { [weak self] toLang in
+            self?.liveTranslate?.translate(toLang: toLang)
         }
         
         chatInteraction.forwardMessages = { [weak self] messages in
@@ -6595,7 +6615,21 @@ class ChatController: EditableViewController<ChatControllerView>, Notifable, Tab
             return .invoked
         }, with: self, for: .F, priority: .medium, modifierFlags: [.command])
         
+//        #if DEBUG
+//        var shown: Bool = true
+//        self.context.window.set(handler: { [weak self] _ -> KeyHandlerResult in
+//            if shown {
+//                self?.liveTranslate?.hideTranslation()
+//            } else {
+//                self?.liveTranslate?.showTranslation()
+//            }
+//            shown = !shown
+//            return .invoked
+//        }, with: self, for: .T, priority: .supreme, modifierFlags: [.command])
+//
+//        #endif
         
+       
     
 /*
  #if DEBUG

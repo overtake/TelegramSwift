@@ -426,8 +426,8 @@ class ChatMediaItem: ChatRowItem {
                 switch translate {
                 case .loading:
                     isLoading = true
-                case .complete:
-                    if let attribute = message.translationAttribute {
+                case let .complete(toLang):
+                    if let attribute = message.translationAttribute(toLang: toLang) {
                         text = attribute.text
                         attributes = [TextEntitiesMessageAttribute(entities: attribute.entities)]
                     }

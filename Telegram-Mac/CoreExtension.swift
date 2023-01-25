@@ -450,9 +450,9 @@ public extension Message {
         return nil
     }
     
-    var translationAttribute: TranslationMessageAttribute? {
+    func translationAttribute(toLang: String) -> TranslationMessageAttribute? {
         for attr in attributes {
-            if let attr = attr as? TranslationMessageAttribute {
+            if let attr = attr as? TranslationMessageAttribute, attr.toLang == toLang {
                 return attr
             }
         }

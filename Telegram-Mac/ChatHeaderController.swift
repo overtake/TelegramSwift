@@ -239,18 +239,19 @@ class ChatHeaderController {
                     removed.append(previousThird)
                 }
                 if let third = third {
-                    added.append((third, NSMakePoint(0, -(state.height - state.thirdHeight - state.primaryHeight)), NSMakePoint(0, state.primaryHeight + state.secondaryHeight), nil))
+                    added.append((third, NSMakePoint(0, -(state.height - state.thirdHeight - state.primaryHeight)), NSMakePoint(0, state.primaryHeight + state.secondaryHeight), primary ?? secondary))
                 }
             }
 
+            
+            if let secondary = secondary, previousSecondary == secondary {
+                updated.append((secondary, NSMakePoint(0, 0), nil))
+            }
             if let primary = primary, previousPrimary == primary {
                 updated.append((primary, NSMakePoint(0, state.secondaryHeight), secondary))
             }
-            if let secondary = secondary, previousSecondary == secondary {
-                updated.append((secondary, NSMakePoint(0, 0), third))
-            }
             if let third = third, previousThird == third {
-                updated.append((third, NSMakePoint(0, state.primaryHeight + state.secondaryHeight), nil))
+                updated.append((third, NSMakePoint(0, state.primaryHeight + state.secondaryHeight), primary ?? secondary))
             }
             
             if !added.isEmpty || primary != nil || secondary != nil || third != nil {
@@ -286,10 +287,10 @@ class ChatHeaderController {
                       //  view.layer?.animateAlpha(from: 0, to: 1, duration: 0.2)
                     }
                 }
-                for (view, point, above) in updated {
-                    current.addSubview(view, positioned: .below, relativeTo: above)
-                    view.change(pos: point, animated: animated)
-                }
+//                for (view, point, above) in updated {
+//                    current.addSubview(view, positioned: .below, relativeTo: above)
+//                    view.change(pos: point, animated: animated)
+//                }
             } else {
                 if let currentView = currentView {
                     self.currentView = nil
@@ -653,9 +654,8 @@ class ChatPinnedView : Control, ChatHeaderProtocol {
             let oldContainer = self.container
             let newContainer = ChatAccessoryView()
             newContainer.userInteractionEnabled = false
-            
-            
-            let newNode = ReplyModel(replyMessageId: pinnedMessage.messageId, context: chatInteraction.context, replyMessage: pinnedMessage.message, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil, customHeader: pinnedMessage.isLatest ? nil : pinnedMessage.totalCount == 2 ? strings().chatHeaderPinnedPrevious : strings().chatHeaderPinnedMessageNumer(pinnedMessage.totalCount - pinnedMessage.index), drawLine: false, translate: _state.translate?.result[pinnedMessage.messageId])
+                        
+            let newNode = ReplyModel(replyMessageId: pinnedMessage.messageId, context: chatInteraction.context, replyMessage: pinnedMessage.message, isPinned: true, headerAsName: chatInteraction.mode.threadId != nil, customHeader: pinnedMessage.isLatest ? nil : pinnedMessage.totalCount == 2 ? strings().chatHeaderPinnedPrevious : strings().chatHeaderPinnedMessageNumer(pinnedMessage.totalCount - pinnedMessage.index), drawLine: false, translate: translate)
             
             newNode.view = newContainer
             
@@ -2654,18 +2654,53 @@ private final class ChatTranslateHeader : Control, ChatHeaderProtocol {
         let menu = ContextMenu()
         var items: [ContextMenuItem] = []
         
+        let other = ContextMenuItem(strings().chatTranslateMenuTo, itemImage: MenuAnimation.menu_translate.value)
+        
+        var codes = Translate.codes.sorted(by: { lhs, rhs in
+            let lhsSelected = lhs.code.contains(translate.to)
+            let rhsSelected = rhs.code.contains(translate.to)
+            if lhsSelected && !rhsSelected {
+                return true
+            } else if !lhsSelected && rhsSelected {
+                return false
+            } else {
+                return lhs.language < rhs.language
+            }
+        })
+        
+        let codeIndex = codes.firstIndex(where: {
+            $0.code.contains(appAppearance.language.baseLanguageCode)
+        })
+        if let codeIndex = codeIndex {
+            codes.move(at: codeIndex, to: 0)
+        }
+        
+        let submenu = ContextMenu()
+        
+        for code in codes {
+            submenu.addItem(ContextMenuItem(code.language, handler: { [weak self] in
+                if let first = code.code.first {
+                    self?.chatInteraction.translateTo(first)
+                }
+            }, itemImage: code.code.contains(translate.to) ? MenuAnimation.menu_check_selected.value : nil))
+        }
+        other.submenu = submenu
+        
+        items.append(other)
+        
+        items.append(ContextSeparatorItem())
+        
         if let from = translate.from, let language = Translate.find(from) {
             items.append(ContextMenuItem(strings().chatTranslateMenuDoNotTranslate(_NSLocalizedString("Translate.Language.\(language.language)")), handler: { [weak self] in
                 self?.chatInteraction.doNotTranslate(from)
             }, itemImage: MenuAnimation.menu_restrict.value))
         }
         
-        if !translate.translate {
-            items.append(ContextSeparatorItem())
-            items.append(ContextMenuItem(strings().chatTranslateMenuHide, handler: { [weak self] in
-                self?.chatInteraction.hideTranslation()
-            }, itemImage: MenuAnimation.menu_clear_history.value))
-        }
+        items.append(ContextSeparatorItem())
+        items.append(ContextMenuItem(strings().chatTranslateMenuHide, handler: { [weak self] in
+            self?.chatInteraction.hideTranslation()
+        }, itemImage: MenuAnimation.menu_clear_history.value))
+        
         menu.items = items
         
         return menu

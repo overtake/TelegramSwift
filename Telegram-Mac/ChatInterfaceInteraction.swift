@@ -186,6 +186,7 @@ final class ChatInteraction : InterfaceObserver  {
     var toggleTranslate:()->Void = { }
     var hideTranslation:()->Void = { }
     var doNotTranslate:(String)->Void = { _ in }
+    var translateTo:(String)->Void = { _ in }
     var openPendingRequests:()->Void = { }
     var dismissPendingRequests:([PeerId])->Void = { _ in }
     var setupChatThemes:()->Void = { }
@@ -340,10 +341,12 @@ final class ChatInteraction : InterfaceObserver  {
     }
     
     func forwardSelectedMessages() {
-        let messages = context.account.postbox.messagesAtIds(presentation.interfaceState.forwardMessageIds) |> deliverOnMainQueue
-        _ = messages.start(next: { [weak self] messages in
-            self?.forwardMessages(messages)
-        })
+        if let ids = presentation.selectionState?.selectedIds {
+            let messages = context.account.postbox.messagesAtIds(Array(ids)) |> deliverOnMainQueue
+            _ = messages.start(next: { [weak self] messages in
+                self?.forwardMessages(messages)
+            })
+        }
         
     }
     

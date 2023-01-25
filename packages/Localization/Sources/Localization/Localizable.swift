@@ -3591,6 +3591,8 @@ public final class L10n {
   }
   /// Hide
   public static var chatTranslateMenuHide: String  { return L10n.tr("Localizable", "Chat.Translate.Menu.Hide") }
+  /// Choose Another Language
+  public static var chatTranslateMenuTo: String  { return L10n.tr("Localizable", "Chat.Translate.Menu.To") }
   /// Translation bar is now hidden for this channel. You can enable it in profile.
   public static var chatTranslateMenuHideTooltip: String  { return L10n.tr("Localizable", "Chat.Translate.Menu.Hide.Tooltip") }
   /// %d

@@ -256,7 +256,7 @@ class ReplyModel: ChatAccessoryModel {
             }
             
             let text: NSAttributedString
-            if let _ = self.translate, let translateText = message.translationAttribute?.text  {
+            if let translate = self.translate, let translateText = message.translationAttribute(toLang: translate.toLang)?.text  {
                 text = .initialize(string: translateText, color: theme.colors.text, font: .normal(.text))
             } else {
                 text = chatListText(account: context.account, for: message, isPremium: context.isPremium, isReplied: true)
